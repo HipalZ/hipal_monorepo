@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: businesses-redis-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: businesses-redis
+  template:
+    metadata:
+      labels:
+        app: businesses-redis
+    spec:
+      containers:
+      - name: businesses-redis
+        image: redis
+        resources:
+            requests:
+              cpu: '100m'
+              memory: '100Mi'
+            limits:
+              cpu: 100m
+              memory: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: businesses-redis-srv
+spec:
+  selector:
+    app: businesses-redis
+  ports:
+    - name: db
+      protocol: TCP
+      port: 6379
+      targetPort: 6379

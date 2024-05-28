@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-admin-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-admin
+  template:
+    metadata:
+      labels:
+        app: client-admin
+    spec:
+      containers:
+        - name: client-admin
+          image: 750521980800.dkr.ecr.ap-south-1.amazonaws.com/hipal-admin:latest
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_HOST
+              value: "https://api.hipal.life"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: 200m
+              memory: 200Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-admin-srv
+spec:
+  selector:
+    app: client-admin
+  ports:
+    - name: client-admin
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

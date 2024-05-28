@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # This name uniquely identifies the PVC. Will be used in deployment below.
+  name: zones-mongo-claim
+  labels:
+    app: zones-storage-claim
+spec:
+  # Read more about access modes here: http://kubernetes.io/docs/user-guide/persistent-volumes/#access-modes
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2
+  resources:
+    # This is the request for storage. Should be available in the cluster.
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zones-mongo-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zones-mongo
+  template:
+    metadata:
+      labels:
+        app: zones-mongo
+    spec:
+      volumes:
+        - name: zones-mongo-storage
+          persistentVolumeClaim:
+            claimName: zones-mongo-claim
+      containers:
+        - name: zones-mongo
+          image: mongo:6.0.3
+          volumeMounts:
+            - mountPath: /data/db
+              name: zones-mongo-storage
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: 500m
+              memory: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zones-mongo-srv
+spec:
+  selector:
+    app: zones-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

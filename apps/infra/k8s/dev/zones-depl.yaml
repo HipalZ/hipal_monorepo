@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zones-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zones
+  template:
+    metadata:
+      labels:
+        app: zones
+    spec:
+      hostAliases:
+        - ip: "192.168.1.9"
+          hostnames:
+          - "biz.hipal.life"
+          - "api.hipal.life"
+          - "storage.hipal.life"
+      containers:
+        - name: zones
+          image: hipal/zones
+          env:
+            - name: NODE_ENV
+              value: development
+            - name: NODE_OPTIONS
+              value: '--unhandled-rejections=strict'
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: hipal
+            - name: MONGO_URI
+              value: 'mongodb://zones-mongo-srv:27017/zones'
+            - name: REDIS_HOST
+              value: zones-redis-srv
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '100Mi'
+            limits:
+              cpu: 1000m
+              memory: 1000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zones-srv
+spec:
+  selector:
+    app: zones
+  ports:
+    - name: zones
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

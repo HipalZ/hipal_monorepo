@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: settings-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: settings
+  template:
+    metadata:
+      labels:
+        app: settings
+    spec:
+      containers:
+        - name: settings
+          image: 750521980800.dkr.ecr.ap-south-1.amazonaws.com/hipal-settings-staging:latest
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: NODE_OPTIONS
+              value: '--unhandled-rejections=strict'
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: hipal
+            - name: MONGO_URI
+              value: 'mongodb://settings-mongo-srv:27017/settings'
+            - name: REDIS_HOST
+              value: settings-redis-srv
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '100Mi'
+            limits:
+              cpu: 1000m
+              memory: 1000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: settings-srv
+spec:
+  selector:
+    app: settings
+  ports:
+    - name: settings
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

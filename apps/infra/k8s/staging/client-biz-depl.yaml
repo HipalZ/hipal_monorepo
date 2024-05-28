@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-biz-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-biz
+  template:
+    metadata:
+      labels:
+        app: client-biz
+    spec:
+      containers:
+        - name: client-biz
+          image: 750521980800.dkr.ecr.ap-south-1.amazonaws.com/hipal-client-staging:latest
+          env:
+            - name: NODE_ENV
+              value: production
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '100Mi'
+            limits:
+              cpu: 1000m
+              memory: 1000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-biz-srv
+spec:
+  selector:
+    app: client-biz
+  ports:
+    - name: client-biz
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

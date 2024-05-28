@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 150m
+    cert-manager.io/cluster-issuer: "letsencrypt-api"
+spec:
+  tls:
+    - hosts:
+      - api.hipal.life
+      secretName: letsencrypt-api
+  rules:
+    - host: api.hipal.life
+      http:
+        paths:
+          - path: /v1/users/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: users-srv
+                port:
+                  number: 3000
+          - path: /v1/businesses/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: businesses-srv
+                port:
+                  number: 3000
+          - path: /v1/categories/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: categories-srv
+                port:
+                  number: 3000
+          - path: /v1/dishes/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: dishes-srv
+                port:
+                  number: 3000
+          - path: /v1/storage/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: storage-srv
+                port:
+                  number: 3000
+          - path: /v1/reviews/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: reviews-srv
+                port:
+                  number: 3000
+          - path: /v1/settings/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: settings-srv
+                port:
+                  number: 3000

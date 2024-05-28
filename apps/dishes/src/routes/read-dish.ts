@@ -1,0 +1,277 @@
+import express, { Request, Response } from "express";
+import {
+  ClientRoles,
+  requireAuthorization,
+  NotFoundError,
+  currentUser,
+} from "@hipal/common";
+import { Dish } from "../models/dish";
+import { Category } from "../models/category";
+import { Menu } from "../models/menu";
+import { Charges } from "../models/charges";
+import { Extra } from "../models/extra";
+
+const router = express.Router();
+
+router.get(
+  "/v1/dishes",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { businessId, active, queryDish } = req.query;
+    const query = { businessId, queryDish };
+    let existingDishes: any;
+    if (queryDish) {
+      existingDishes = await Dish.find(query).select(
+        "businessId name id availability visibility  dishType kitchenId"
+      );
+      return res.status(200).send(existingDishes);
+    }
+    existingDishes = await Dish.find({
+      businessId,
+    });
+    let Active = 0;
+    let visible = 0;
+    let available = 0;
+    if (active) {
+      existingDishes.forEach((element: any) => {
+        if (element?.visibility && element?.availability) {
+          Active += 1;
+        }
+        if (element?.visibility) {
+          visible += 1;
+        }
+        if (element?.availability) available += 1;
+      });
+
+      return res.status(200).send({ active: Active, visible, available });
+    }
+
+    if (!existingDishes) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDishes);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const existingDish = await Dish.findById(id);
+
+    if (!existingDish) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDish);
+  }
+);
+
+router.get(
+  "/v1/dishes/:businessId/categories",
+  currentUser,
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_FLOOR_MANAGER,
+    ClientRoles.RESTAURANT_MANAGER,
+  ]),
+  async (req: Request, res: Response) => {
+    const { businessId } = req.params;
+    const existingCategories = await Category.find({
+      businessId,
+    });
+
+    if (!existingCategories) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingCategories);
+  }
+);
+
+router.get(
+  "/v1/dishes/All/Dishes",
+
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    const existingDishes = await Dish.find({
+      businessId,
+    }).select(
+      "name price dishType portions.name portions.price extras images description id kitchenId  availability visibility"
+    );
+
+    if (!existingDishes) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDishes);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/takeawayDishes",
+
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    const existingDishes = await Dish.find({
+      businessId,
+    }).select(
+      "name price dishType portions.name portions.price extras images description id kitchenId delivery availability visibility"
+    );
+
+    if (!existingDishes) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDishes);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/deliveryDishes",
+
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    const existingDishes = await Dish.find({
+      businessId,
+    }).select(
+      "name price dishType portions.name portions.price extras images description id kitchenId take_away availability visibility"
+    );
+
+    if (!existingDishes) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDishes);
+  }
+);
+
+router.get(
+  "/v1/dishes/CheckDishes/Business",
+
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    const existingDishes = await Dish.find({
+      businessId,
+    });
+    res.status(200).send(existingDishes);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/getMenu",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { id, businessId } = req.query;
+    const existingMenu = await Menu.find({ businessId });
+
+    if (!existingMenu) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingMenu);
+  }
+);
+router.get(
+  "/v1/dishes/:id/getCharges",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { id, businessId } = req.query;
+
+    const existingCharges = await Charges.find({ businessId });
+
+    if (!existingCharges) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingCharges);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/getExtra",
+  currentUser,
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_FLOOR_MANAGER,
+    ClientRoles.RESTAURANT_MANAGER,
+  ]),
+  async (req: Request, res: Response) => {
+    const { id, businessId, queryExtra } = req.query;
+    let existingExtra;
+    const query = { businessId, queryExtra };
+    if (queryExtra) {
+      existingExtra = await Extra.find(query).select(
+        "businessId name id items availability visibility"
+      );
+      return res.status(200).send(existingExtra);
+    }
+
+    existingExtra = await Extra.find({ businessId });
+
+    if (!existingExtra) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingExtra);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/getExtra/:extraId",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { extraId } = req.params;
+
+    const existingExtra = await Extra.findById(extraId);
+
+    if (!existingExtra) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingExtra);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/getCharges/:chargeId",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { chargeId } = req.params;
+
+    const existingCharges = await Charges.findById(chargeId);
+
+    if (!existingCharges) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingCharges);
+  }
+);
+
+router.get(
+  "/v1/dishes/:id/analytics",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    let existingDishes = await Dish.find({
+      businessId,
+    }).select("name");
+
+    if (!existingDishes) {
+      throw new NotFoundError();
+    }
+
+    res.status(200).send(existingDishes);
+  }
+);
+export { router as readDishesRouter };

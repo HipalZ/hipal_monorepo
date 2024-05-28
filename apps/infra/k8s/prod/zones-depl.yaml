@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zones-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zones
+  template:
+    metadata:
+      labels:
+        app: zones
+    spec:
+      containers:
+        - name: zones
+          image: 750521980800.dkr.ecr.ap-south-1.amazonaws.com/hipal-zones:latest
+          env:
+            - name: CORS_ORIGINS
+              value: "https://hitable.hipal.life,https://hikitchen.hipal.life,https://hibiz.hipal.life,https://pro.hipal.life,https://biz.hipal.life,https://admin.hipal.life,https://api.hipal.life,https://storage.hipal.life,https://dev.hipal.life,https://hipal.life,https://www.hipal.life,http://localhost:3000,https://dev.pro.hipal.life,https://dev.hitable.hipal.life,https://dev.hikitchen.hipal.life,https://dev.hibiz.hipal.life"
+            - name: URL
+              value: "https://api.hipal.life"
+            - name: NODE_ENV
+              value: production
+            - name: NODE_OPTIONS
+              value: "--unhandled-rejections=strict"
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: "http://nats-srv:4222"
+            - name: NATS_CLUSTER_ID
+              value: hipal
+            - name: MONGO_URI
+              value: "mongodb://zones-mongo-srv:27017/zones"
+            - name: REDIS_HOST
+              value: zones-redis-srv
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: 150m
+              memory: 150Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zones-srv
+spec:
+  selector:
+    app: zones
+  ports:
+    - name: zones
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

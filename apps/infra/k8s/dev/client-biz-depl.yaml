@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-biz-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-biz
+  template:
+    metadata:
+      labels:
+        app: client-biz
+    spec:
+      hostAliases:
+        - ip: "192.168.1.9"
+          hostnames:
+          - "biz.hipal.life"
+          - "api.hipal.life"
+          - "storage.hipal.life"
+      containers:
+        - name: client-biz
+          image: hipal/client-biz
+          env:
+            - name: NODE_ENV
+              value: development
+          # resources:
+          #   limits:
+          #     cpu: 2000m
+          #     memory: 2000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-biz-srv
+spec:
+  selector:
+    app: client-biz
+  ports:
+    - name: client-biz
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

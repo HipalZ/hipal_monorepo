@@ -1,0 +1,174 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./infra/k8s/local/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: hipal/users
+      context: users
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/businesses
+      context: businesses
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/categories
+      context: categories
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/dishes
+      context: dishes
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/client-biz
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.js"
+            dest: .
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.vue"
+            dest: .
+    - image: hipal/client-admin
+      context: client-admin
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.js"
+            dest: .
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.vue"
+            dest: .
+    - image: hipal/storage
+      context: storage
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    # - image: hipal/reviews
+    #   context: reviews
+    #   docker:
+    #     dockerfile: Dockerfile
+    #   sync:
+    #     manual:
+    #       - src: "/**/*.ts"
+    #         dest: .
+    - image: hipal/settings
+      context: settings
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/kitchens
+      context: kitchens
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/zones
+      context: zones
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/payments
+      context: payments
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "/**/*.ts"
+            dest: .
+    - image: hipal/client-hi-biz
+      context: client-hi-biz
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.tsx"
+            dest: .
+          - src: "/**/*.js"
+            dest: .
+    - image: hipal/client-hitable
+      context: client-hitable
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.tsx"
+            dest: .
+          - src: "/**/*.js"
+            dest: .
+    - image: hipal/client-hikitchen
+      context: client-hikitchen
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.tsx"
+            dest: .  
+          - src: "/**/*.js"
+            dest: .
+    - image: hipal/client-hipal
+      context: client-hipal
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.tsx"
+            dest: .  
+          - src: "/**/*.js"
+            dest: .
+    - image: hipal/client-pro-hipal
+      context: client-pro-hipal
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.ts"
+            dest: .
+          - src: "**/*.tsx"
+            dest: .  
+          - src: "/**/*.js"
+            dest: .

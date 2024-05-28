@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: categories-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: categories
+  template:
+    metadata:
+      labels:
+        app: categories
+    spec:
+      hostAliases:
+        - ip: "192.168.1.5"
+          hostnames:
+            - "biz.hipal.life"
+            - "api.hipal.life"
+            - "storage.hipal.life"
+      containers:
+        - name: categories
+          image: hipal/categories
+          env:
+            - name: CORS_ORIGINS
+              value: "https://dev.hitable.hipal.life,https://dev.hikitchen.hipal.life,https://dev.hibiz.hipal.life,https://dev.pro.hipal.life,https://dev.biz.hipal.life,https://dev.admin.hipal.life"
+            - name: NODE_ENV
+              value: development
+            - name: URL
+              value: "https://dev.api.hipal.life"
+            - name: NODE_OPTIONS
+              value: "--unhandled-rejections=strict"
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: "http://nats-srv:4222"
+            - name: NATS_CLUSTER_ID
+              value: hipal
+            - name: MONGO_URI
+              value: "mongodb://categories-mongo-srv:27017/categories"
+            - name: REDIS_HOST
+              value: categories-redis-srv
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: 1000m
+              memory: 1000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: categories-srv
+spec:
+  selector:
+    app: categories
+  ports:
+    - name: categories
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-hipal-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-hipal
+  template:
+    metadata:
+      labels:
+        app: client-hipal
+    spec:
+      hostAliases:
+        - ip: "192.168.0.101"
+          hostnames:
+            - "dev.api.hipal.life"
+            - "dev.storage.hipal.life"
+      containers:
+        - name: client-hipal
+          image: hipal/client-hipal
+          env:
+            - name: NODE_ENV
+              value: development
+            - name: NEXT_PUBLIC_API_HOST
+              value: https://dev.api.hipal.life
+          # resources:
+          #   limits:
+          #     cpu: 2000m
+          #     memory: 2000Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-hipal-srv
+spec:
+  selector:
+    app: client-hipal
+  ports:
+    - name: client-hipal
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
