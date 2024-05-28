@@ -3,7 +3,6 @@ import cors from "cors";
 import "express-async-errors"; // Do not remove, it deals with async errors in express routes
 import { json, urlencoded } from "body-parser";
 import cookieSession from "cookie-session";
-import { errorHandler, NotFoundError, currentUser } from "@hipal/common";
 
 import { idempotent } from "./middleware/idempotent";
 
@@ -69,18 +68,11 @@ app.use(
 );
 
 app.use(idempotent);
-app.use(currentUser);
 
 // Register routes
 app.use(createCategoryRouter);
 app.use(readCategoriesRouter);
 app.use(updateCategoriesRouter);
 app.use(deleteCategoriesRouter);
-
-app.all("*", () => {
-  throw new NotFoundError();
-});
-
-app.use(errorHandler);
 
 export { app };

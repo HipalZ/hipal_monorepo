@@ -1,24 +1,16 @@
 import express, { Request, Response } from "express";
-import {
-  currentUser,
-  requireAuthorization,
-  validateRequest,
-  ClientRoles,
-} from "@hipal/common";
-import { CategoryCreatedPublisher } from "../events/publishers/category-created-publisher";
-import { natsWrapper } from "../nats-wrapper";
-import { validateCategory } from "./validators/new-category-validator";
 
-import { Category } from "../models/category";
+import { natsWrapper } from "../nats-wrapper";
+
+import { Category } from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { ClientSession } from "mongoose";
 
 const router = express.Router();
 
 router.post(
   "/v1/categories",
-  validateCategory, 
-  currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  validateRequest,
+
   async (req: Request, res: Response) => {
     const {
       businessId,
@@ -38,7 +30,7 @@ router.post(
       charges,
     } = req.body;
 
-    const category = Category.build({
+    const category = await Category.create({
       businessId,
       name,
       visibility,
@@ -54,15 +46,6 @@ router.post(
       dishes,
       availability,
       charges,
-    });
-    await category.save();
-
-    await new CategoryCreatedPublisher(natsWrapper.client).publish({
-      id: category.id,
-      name: category.name,
-      photo: category.coverImage,
-      businessId: category.businessId,
-      dishes: category.dishes,
     });
 
     res.status(201).send(category);

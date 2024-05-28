@@ -93,3 +93,9 @@ export const dishSchema = z.object({
 });
 
 export type DishType = z.infer<typeof dishSchema>;
+export type PortionType = z.infer<typeof portionSchema>;
+export type ExtraItemType = z.infer<typeof extraItemSchema>;
+export type ExtraType = z.infer<typeof extraSchema>;
+export type FiltersType = z.infer<typeof filtersSchema>;
+// export type CategoryType = z.infer<typeof categorySchema>;
+export type TagType = z.infer<typeof tagSchema>;
