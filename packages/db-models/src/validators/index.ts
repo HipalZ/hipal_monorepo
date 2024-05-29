@@ -1,6 +1,6 @@
 export * from "./category";
 export * from "./dish";
-export * from "./settings" //step 7
+export * from "./settings"; //step 7
 export * from "./business";
 export * from "./loyaltySetting";
 export * from "./role";
@@ -10,3 +10,22 @@ export * from "./userReview";
 export * from "./table";
 export * from "./zone";
 export * from "./swiggy";
+export * from "./settings";
+export * from "./payment";
+export * from "./dues";
+export * from "./paymentMode";
+export * from "./reviews";
+export * from "./reviewsCustomer";
+export * from "./user";
+export * from "./admin";
+export * from "./urlModel";
+export * from "./userReward";
+export * from "./userRewardHistory";
+export * from "./kot";
+export * from "./tempModel";
+export * from "./alert";
+export * from "./kitchen";
+export * from "./kotPassword";
+export * from "./waiterKots";
+export * from "./printer";
+export * from "./userBill";

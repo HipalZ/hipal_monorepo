@@ -1,0 +1,10 @@
+FROM node:16.13.1-alpine3.13
+
+WORKDIR /app
+COPY package.json .
+RUN npm install
+RUN npm i -g @vercel/ncc@0.36.1
+COPY . .
+RUN ncc build src/index.ts -o dist --source-map
+
+CMD ["node", "dist/index.js"]

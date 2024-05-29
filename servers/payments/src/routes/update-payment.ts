@@ -1,19 +1,13 @@
 import express, { Request, Response } from "express";
-import {
-  ClientRoles,
-  requireAuthorization,
-  NotFoundError,
-  currentUser,
-} from "@hipal/common";
-import { Payment } from "../models/payment";
-import moment from "moment";
-import { Dues } from "../models/dues";
 
+import moment from "moment";
+
+import { Payment, Dues } from "@hi/db-models";
 const router = express.Router();
 
 router.put(
   "/v1/payments/:id",
-  currentUser,
+
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -21,17 +15,11 @@ router.put(
     const update = { ...req.body };
     if (remove) {
       const existingPayment = await Payment.findByIdAndDelete(id);
-      if (!existingPayment) {
-        throw new NotFoundError();
-      }
+
       res.status(200).send(existingPayment);
     }
 
     const existingPayment = await Payment.findByIdAndUpdate(id, update);
-
-    if (!existingPayment) {
-      throw new NotFoundError();
-    }
 
     res.status(200).send(existingPayment);
   }

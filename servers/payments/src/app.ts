@@ -3,7 +3,6 @@ import cors from "cors";
 import "express-async-errors"; // Do not remove, it deals with async errors in express routes
 import { json, urlencoded } from "body-parser";
 import cookieSession from "cookie-session";
-import { errorHandler, NotFoundError } from "@hipal/common";
 
 import { idempotent } from "./middleware/idempotent";
 
@@ -75,9 +74,7 @@ app.use(readPaymentsRouter);
 app.use(updatePaymentsRouter);
 
 app.all("*", () => {
-  throw new NotFoundError();
+  throw new Error("Route not found");
 });
-
-app.use(errorHandler);
 
 export { app };

@@ -1,0 +1,1676 @@
+import express, { Request, Response } from "express";
+
+import {
+  Alert,
+  Kitchen,
+  Kot,
+  Kotpassword,
+  Printer,
+  Tempmodel,
+  Userbill,
+  Waiterkot,
+} from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { ClientSession } from "mongoose";
+
+import axios from "axios";
+import moment = require("moment");
+
+import momentTimeZone from "moment-timezone";
+import e = require("express");
+import { razorpayWrapper } from "../razorpay-wrapper";
+
+const { validateWebhookSignature } = require("../utils/razorpay-utils");
+
+import { createHmac } from "crypto";
+import { KOTType } from "@hi/db-models/src/validators";
+
+const router = express.Router();
+
+const currentTime = new Date();
+const options = {
+  timeZone: "Asia/Kolkata",
+  hour: "2-digit" as const,
+  minute: "2-digit" as const,
+};
+const formatter = new Intl.DateTimeFormat("en-US", options);
+const time = formatter.format(currentTime);
+
+const optionsDate = {
+  timeZone: "Asia/Kolkata",
+  year: "numeric" as const,
+  month: "2-digit" as const,
+  day: "2-digit" as const,
+};
+const formatterDate = new Intl.DateTimeFormat("en-US", optionsDate);
+const currentDateAndTime = formatterDate.format(currentTime);
+
+const optionsTimeAndSeconds = {
+  timeZone: "Asia/Kolkata",
+  hour: "2-digit" as const,
+  minute: "2-digit" as const,
+  second: "2-digit" as const,
+  hour12: false, // Use 24-hour time
+};
+const formatterTimesAndSeconds = new Intl.DateTimeFormat(
+  "en-US",
+  optionsTimeAndSeconds
+);
+const kotTime = formatterTimesAndSeconds.format(currentTime);
+
+router.post(
+  "/v1/kitchens/kickOut/kots",
+
+  // requireAuthorization([
+  //   ClientRoles.RESTAURANT_OWNER,
+  //   ClientRoles.RESTAURANT_MANAGER,
+  // ]),
+  async (req: Request, res: Response) => {
+    try {
+      const { zoneId, tableId } = req.body || {};
+
+      const update = await Kot.updateMany(
+        {
+          zoneId,
+          tableId,
+          status: "UNPAID",
+        },
+        {
+          $set: {
+            status: "PAID",
+            cookedAt: Date.now(),
+          },
+        }
+      );
+
+      if (!update) {
+        return res.send({ status: false, message: "Not Found Order" });
+      }
+      await Waiterkot.deleteMany({
+        zoneId: zoneId,
+        tableId: tableId,
+        isAccept: false,
+      });
+
+      res.status(200).send(update);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens",
+
+  async (req: Request, res: Response) => {
+    const { businessId, kitchenName, description, staff } = req.body;
+
+    const kitchen = await Kitchen.create({
+      businessId,
+      kitchenName,
+      description,
+      staff,
+    });
+
+    res.status(201).send(kitchen);
+  }
+);
+
+router.post(
+  "/v1/kitchens/User/WaiterCalling",
+
+  async (req: Request, res: Response) => {
+    try {
+      var currentTime = Date.now();
+      var momentTime = moment(currentTime);
+      var indianTime = momentTime.clone().utcOffset("+05:30").format("HH:mm");
+      let { businessId, tableName, zoneId, tableId } = req.body;
+      const { paid, kitchen, kitchenName, staffId } = req.query;
+      let message;
+      let newStatus;
+      if (paid) {
+        message = "User wants to settle";
+        newStatus = "Settle";
+      } else if (kitchen) {
+        const con = {
+          method: "get",
+          url: `${process.env.URL}/v1/zones/WaiterCalling/kitchen?businessId=${businessId}&staffId=${staffId}`,
+        };
+        let table;
+
+        table = await axios(con);
+        table = table?.data;
+        (zoneId = table?.zoneId),
+          (tableId = table?.id),
+          (message = "kitchen needs you");
+        tableName = kitchenName;
+        newStatus = "Kitchen";
+      } else {
+        (newStatus = "Need assistance"), (message = "Needs your assistance");
+      }
+
+      const config2 = {
+        method: "get",
+        url: `${process.env.URL}/v1/zones/${zoneId}/tables/${tableId}/SingleTable`,
+      };
+      let table;
+
+      try {
+        table = await axios(config2);
+        table = table?.data;
+      } catch (err: any) {
+        return res
+          .status(400)
+          .send({ status: false, message: "need assitance not updated !!" });
+      }
+      let status = "5";
+      if (
+        table?.status != "Need assistance" ||
+        table?.status != "Settle" ||
+        table?.status != "Kitchen"
+      ) {
+        status = table?.status;
+      } else {
+        let alert = await Alert.find({
+          isAlertOn: true,
+          tableId,
+          zoneId,
+          businessId,
+        }).sort({ _id: -1 });
+        console.log(alert);
+        status = alert?.[0].staffId || "5";
+      }
+
+      let obj = {
+        businessId,
+        tableName,
+        zoneId,
+        tableId,
+        message: message,
+        status: newStatus,
+        staffId: status,
+        time: indianTime,
+      };
+      let alert = new Alert(obj);
+      let saveAlert = await alert.save();
+
+      if (!kitchen) {
+        const config = {
+          method: "put",
+          url: `${process.env.URL}/v1/zones/${zoneId}/tables/${tableId}`,
+          data: {
+            status: "Need assistance",
+          },
+        };
+
+        try {
+          await axios(config);
+        } catch (err: any) {
+          return res
+            .status(400)
+            .send({ status: false, message: "need assitance not updated !!" });
+        }
+      }
+
+      if (!saveAlert) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Alert not saved" });
+      } else {
+        return res
+          .status(201)
+          .send({ status: true, message: "Alert saved", data: saveAlert });
+      }
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:kitchenId/kots",
+
+  async (req: Request, res: Response) => {
+    try {
+      var currentTime = Date.now();
+      var momentTime = moment(currentTime);
+      var indianTime = momentTime
+        .clone()
+        .utcOffset("+05:30")
+        .format("HH:mm:ss");
+
+      const { kots }: { kots: KOTType[] } = req.body;
+
+      const created = [];
+      const startedAt = Date.now();
+      for (let i = 0; i < kots.length; i++) {
+        const newKOT = kots[i];
+        const kot = await Kot.create({
+          ...newKOT,
+          startedAt,
+          cookedAt: -1,
+          status: "UNPAID",
+          kotTime: indianTime,
+          date: moment().format("Do MMM YY"),
+        });
+
+        created.push(kot);
+      }
+      res.status(201).send(created);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+const cartToKots = (
+  cart: any,
+  businessId: string,
+  tableId: string,
+  zoneId: string,
+  tableName: string,
+  customerName: string,
+  customerPhone: string
+) => {
+  const kotArray: any = [];
+  for (const dish of Object.values(cart) as any) {
+    for (const variant of dish?.variants) {
+      const extras = variant?.extra ? Object.values(variant.extra) : [];
+      const portions = variant?.portion ? variant?.portion : {};
+
+      const kotObject = {
+        businessId: businessId,
+        kitchenId: dish?.dishData?.kitchenId,
+        zoneId: zoneId,
+        tableId: tableId,
+        staffId: "5",
+        dish: {
+          dishId: dish?.dishId,
+          name: dish?.dishData?.name,
+          price: dish?.dishData?.price,
+          qty: 1,
+          comments: "spicy",
+          extras,
+          portions,
+        },
+        dishType: dish?.dishData?.dishType,
+        category:
+          dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        instructions: variant?.instruction,
+        dishStatus: "cooking",
+        tableName: tableName,
+        avgTime: dish?.dishData?.avgTime,
+        taxes: dish?.dishData?.taxes,
+      };
+
+      kotArray.push(kotObject);
+    }
+  }
+
+  return kotArray;
+};
+
+const getParentData = async (zoneId: string, tableId: string) => {
+  try {
+    const parentTable = await axios({
+      method: "get",
+      url: `${process.env.URL}/v1/zones/${zoneId}/tables/${tableId}/SingleTable`,
+    });
+    return parentTable?.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// new One for waiter
+router.post(
+  "/v1/kitchens/:id/user/kots",
+
+  // requireAuthorization([
+  //   ClientRoles.RESTAURANT_OWNER,
+  //   ClientRoles.RESTAURANT_MANAGER,
+  //   ClientRoles.HIPAL_CUSTOMER,
+  // ]),
+  async (req: Request, res: Response) => {
+    try {
+      let {
+        businessId,
+        zoneId,
+        tableId,
+        tableName,
+        cart,
+        customerName,
+        customerPhone,
+        hiCode,
+      } = req.body || {};
+
+      if (!businessId || !zoneId || !tableId) {
+        return res.status(404).send({
+          status: false,
+          message: "businessId ,TableId,zoneId are required...!",
+        });
+      }
+      let tableInfo;
+
+      const tableConfig = {
+        method: "get",
+        url: `${process.env.URL}/v1/zones/${zoneId}/tables/${tableId}/SingleTable`,
+      };
+
+      try {
+        tableInfo = await axios(tableConfig);
+        tableInfo = tableInfo?.data;
+        if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
+          const parentTable = await getParentData(
+            tableInfo?.parentZoneId,
+            tableInfo?.parentTableId
+          );
+          zoneId = parentTable?.zoneId;
+          tableId = parentTable?.id;
+          tableInfo = parentTable;
+        }
+      } catch (err: any) {
+        console.log(err);
+        return res.status(400).send("something went wrong please try again!");
+      }
+
+      if (hiCode) {
+        const isTableSettled = await Tempmodel.findOne({ hiCode });
+
+        if (
+          isTableSettled ||
+          (hiCode != tableInfo?.hiCode && tableInfo?.hiCode == "")
+        ) {
+          return res
+            .status(403)
+            .send({ message: "Table are Already Setteled....!" });
+        }
+      }
+
+      if (!tableInfo?.role) {
+        let updateTable;
+
+        const updateTableConfig = {
+          method: "put",
+          url: `${process.env.URL}/v1/zones/${zoneId}/tables/${tableId}`,
+          data: {
+            role: {
+              role: "Admin",
+              customerName,
+              customerPhone,
+            },
+            hiCode: Math.floor(Math.random() * 9000) + 1000,
+          },
+        };
+
+        try {
+          updateTable = await axios(updateTableConfig);
+          updateTable = updateTable?.data;
+        } catch (err: any) {
+          console.log(err.message);
+          return res.status(400).send("something went wrong please try again!");
+        }
+        const currentTime = new Date();
+        const options = {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit" as const,
+          minute: "2-digit" as const,
+        };
+        const formatter = new Intl.DateTimeFormat("en-US", options);
+        const time = formatter.format(currentTime);
+
+        const kotArray = cartToKots(
+          cart,
+          businessId,
+          tableId,
+          zoneId,
+          tableName,
+          customerName,
+          customerPhone
+        );
+
+        const obj = {
+          businessId,
+          tableName,
+          staffId: "5",
+          items: kotArray,
+          time: time,
+          date: currentDateAndTime,
+          tableId,
+          zoneId,
+          cart: cart,
+        };
+
+        const savedata = new Waiterkot(obj);
+        await savedata.save();
+        return res.status(201).send({
+          status: true,
+          message: "Create Successfully",
+          role: updateTable?.role,
+          hiCode: updateTable?.hiCode,
+        });
+      } else {
+        if (customerPhone != tableInfo?.role?.customerPhone) {
+          if (!hiCode) {
+            let name = tableInfo?.role?.customerName;
+            if (name) {
+              name = name.charAt(0).toUpperCase() + name.slice(1) || "Friend";
+            }
+            return res.status(400).send({
+              status: false,
+              message: `Enter Valid Hicode !!! ${name} is already on this table`,
+            });
+          }
+
+          if (tableInfo?.hiCode !== hiCode) {
+            return res
+              .status(400)
+              .send({ status: false, message: "Enter Valid Hicode !!!" });
+          }
+        }
+        const currentTime = new Date();
+        const options = {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit" as const,
+          minute: "2-digit" as const,
+        };
+        const formatter = new Intl.DateTimeFormat("en-US", options);
+        const time = formatter.format(currentTime);
+        const kotArray = cartToKots(
+          cart,
+          businessId,
+          tableId,
+          zoneId,
+          tableName,
+          customerName,
+          customerPhone
+        );
+        const obj = {
+          businessId,
+          tableName,
+          staffId: "5",
+          items: kotArray,
+          time: time,
+          date: currentDateAndTime,
+          tableId,
+          zoneId,
+          cart: cart,
+        };
+
+        const savedata = new Waiterkot(obj);
+        await savedata.save();
+
+        if (customerPhone == tableInfo?.role?.customerPhone) {
+          return res.status(201).send({
+            status: true,
+            role: tableInfo?.role,
+            hiCode: tableInfo?.hiCode,
+          });
+        }
+        return res.status(201).send("Create Successfully");
+      }
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+// new One for pos  side
+router.post(
+  "/v1/kitchens/:id/waiter/kots",
+
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        businessId,
+        zoneId,
+        tableId,
+        timeWithSeconds,
+        tableName,
+        cart,
+        waiterName,
+        waiterPhone,
+      } = req.body || {};
+      if (!businessId || !zoneId || !tableId) {
+        return res
+          .status(400)
+          .send("businessId ,TableId,zoneId ar required...!");
+      }
+      const kotDate = new Date().toISOString().replace("T", " ").slice(0, 19);
+      const startedAt = Date.now();
+
+      let kotArray = cartToKots(
+        cart,
+        businessId,
+        tableId,
+        zoneId,
+        tableName,
+        waiterName,
+        waiterPhone
+      );
+      const kots = kotArray.map((newKOT: KOTType) => {
+        return {
+          ...(newKOT as KOTType),
+          startedAt,
+          cookedAt: -1,
+          status: "UNPAID",
+          kotTime: timeWithSeconds,
+          kotDate: kotDate,
+        };
+      });
+      await Kot.insertMany(kots);
+
+      const query = {
+        tableId,
+        status: "UNPAID",
+      };
+      const existingKOTs = await Kot.find(query).select("dishStatus");
+
+      const totalDish = existingKOTs?.length;
+      let delivered = 0;
+
+      for (const existingKOT of existingKOTs) {
+        if (existingKOT?.dishStatus === "delivered") {
+          delivered++;
+        }
+      }
+      const config = {
+        method: "put",
+        url: `${process.env.URL}/v1/zones/:zoneId/tables/${tableId}/settle`,
+        data: {
+          totalDishQuantity: totalDish,
+          deliverdDish: delivered,
+          status: "Active",
+          time: timeWithSeconds?.slice(0, 5),
+        },
+      };
+
+      try {
+        await axios(config);
+      } catch (err: any) {
+        return res.status(400).send(err.message);
+      }
+
+      return res
+        .status(201)
+        .send({ status: true, data: "KOT created successfully" });
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
+  try {
+    const { businessId, printers, billPrinter } = req.body;
+
+    const existingPrinter = await Printer.findOne({ businessId });
+
+    if (existingPrinter) {
+      const updatedPrinter = await Printer.findOneAndUpdate(
+        { businessId },
+        { printers, billPrinter },
+        {
+          new: true,
+        }
+      );
+
+      return res.send(updatedPrinter);
+    } else {
+      const newPrinter = new Printer(req.body);
+      const savedPrinter = await newPrinter.save();
+
+      return res.send(savedPrinter);
+    }
+  } catch (err) {
+    console.error(err); // Log the error for debugging purposes
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal Server Error" });
+  }
+});
+
+router.get("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
+  try {
+    const { businessId } = req.query;
+
+    const existingPrinter = await Printer.findOne({ businessId });
+    return res.send(existingPrinter);
+  } catch (err) {
+    console.error(err); // Log the error for debugging purposes
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal Server Error" });
+  }
+});
+
+router.post("/v1/kitchens/kotPassword", async (req: Request, res: Response) => {
+  try {
+    const { businessId } = req.body;
+    const exitingKotPass = await Kotpassword.findOne({ businessId });
+    if (exitingKotPass) {
+      return res.status(400).send("Already Password set");
+    }
+    let newPass = Math.floor(Math.random() * 9000) + 10000;
+    const savedata = new Kotpassword({ businessId, password: newPass });
+    const saveKotPassword = await savedata.save();
+    return res.status(201).send(saveKotPassword);
+  } catch (err) {
+    console.error(err); // Log the error for debugging purposes
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal Server Error" });
+  }
+});
+
+router.post(
+  "/v1/kitchens/:kitchenId/swiggy",
+  // validateKOT,
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  // validateRequest,
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        businessId,
+        zoneId,
+        tableName,
+        cart,
+        waiterName,
+        waiterPhone,
+        orderId,
+        deletedKotId,
+      } = req.body || {};
+      if (deletedKotId) {
+        await Kot.findByIdAndUpdate(
+          deletedKotId,
+          { isDeleted: true },
+          { new: true }
+        );
+      }
+
+      let object = cart as { cart: any };
+      const currentTime = Date.now();
+      const momentTime = moment(currentTime);
+      const indianTime = momentTime
+        .clone()
+        .utcOffset("+05:30")
+        .format("HH:mm:ss");
+      let kotArray: any[] = [];
+      let DishArray = Object.values(object);
+
+      for (const dish of DishArray) {
+        for (const variant of dish?.variants) {
+          if (
+            variant?.portion ||
+            (variant?.extra && Object.values(variant?.extra).length > 0)
+          ) {
+            let extras = variant?.extra ? Object.values(variant.extra) : [];
+            let portions = variant?.portion ? variant?.portion : {};
+
+            let kotObject = {
+              businessId,
+              kitchenId: dish?.dishData?.kitchenId,
+              zoneId,
+              staffId: "5",
+              dish: {
+                dishId: dish?.dishId,
+                name: dish?.dishData?.name,
+                price: Number(dish.dishData?.price),
+                qty: 1,
+                comments: "spicy",
+                extras,
+                portions,
+              },
+              dishType: dish?.dishData?.dishType,
+              category: dish?.dishData?.categories?.[0]?.name,
+              customerName: waiterName,
+              customerPhone: waiterPhone,
+              instructions: variant?.instruction,
+              dishStatus: "cooking",
+              tableName,
+              orderId,
+            };
+
+            kotArray.push(kotObject);
+          } else {
+            let kotObject = {
+              businessId,
+              kitchenId: dish?.dishData?.kitchenId,
+              zoneId,
+              staffId: "5",
+              dish: {
+                dishId: dish.dishId,
+                name: dish.dishData?.name,
+                price: Number(dish.dishData?.price),
+                qty: 1,
+                comments: "spicy",
+                extras: [],
+                portions: {},
+              },
+              dishType: dish?.dishData?.dishType,
+              category: dish?.dishData?.categories?.[0]?.name,
+              customerName: waiterName,
+              customerPhone: waiterPhone,
+              dishStatus: "cooking",
+              instructions: variant?.instruction,
+              tableName,
+              orderId,
+            };
+            kotArray.push(kotObject);
+          }
+        }
+      }
+
+      const created = [];
+
+      const startedAt = Date.now();
+      for (const newKOT of kotArray) {
+        const kot = await Kot.create({
+          ...(newKOT as KOTType),
+          startedAt,
+          cookedAt: -1,
+          status: "UNPAID",
+          kotTime: indianTime,
+          date: moment().format("Do MMM YY"),
+          kotDate: new Date().toISOString().replace("T", " ").slice(0, 19),
+        });
+
+        created.push(kot);
+      }
+
+      return res.status(201).send(created);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:kitchenId/openItem",
+
+  async (req: Request, res: Response) => {
+    try {
+      const { zoneId, tableId, dishType, kitchenId, businessId } =
+        req.body || {};
+      if (!zoneId || !tableId || !dishType || !kitchenId || !businessId) {
+        return res
+          .status(400)
+          .send("zoneId , tableId, kitchenId , businessId required");
+      }
+      if (!req.body.dish.price || typeof req.body.dish.price == "string") {
+        return res.status(400).send("Price is required");
+      }
+
+      const kot = await Kot.create({
+        ...req.body,
+        startedAt: Date.now(),
+        cookedAt: -1,
+        status: "UNPAID",
+        kotTime: kotTime,
+        kotDate: new Date().toISOString().replace("T", " ").slice(0, 19),
+      });
+
+      const query = {
+        businessId,
+        tableId,
+        zoneId,
+        status: "UNPAID",
+      };
+
+      const existingKOTs = await Kot.find(query).select("dishStatus");
+
+      const totalDish = existingKOTs?.length;
+      let delivered = 0;
+
+      for (const existingKOT of existingKOTs) {
+        if (existingKOT?.dishStatus === "delivered") {
+          delivered++;
+        }
+      }
+      const config = {
+        method: "put",
+        url: `${process.env.URL}/v1/zones/updateDish/${tableId}`,
+        data: {
+          totalDishQuantity: totalDish,
+          deliverdDish: delivered,
+          status: "Active",
+          time: time,
+        },
+      };
+      try {
+        await axios(config);
+      } catch (err: any) {
+        return res.status(500).send({
+          status: false,
+          message: err.message,
+        });
+      }
+
+      res.status(201).send(kot);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:kitchenId/swiggyKots",
+  // validateKOT,
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  // validateRequest,
+  async (req: Request, res: Response) => {
+    try {
+      var currentTime = Date.now();
+      var momentTime = moment(currentTime);
+      var indianTime = momentTime
+        .clone()
+        .utcOffset("+05:30")
+        .format("HH:mm:ss");
+
+      const body = req.body;
+      let kots = body?.kots;
+
+      const created = [];
+      const startedAt = Date.now();
+      for (let i = 0; i < kots.length; i++) {
+        const newKOT = kots[i];
+        const kot = await Kot.create({
+          ...newKOT,
+          startedAt,
+          cookedAt: -1,
+          status: "UNPAID",
+          kotTime: indianTime,
+          date: moment().format("Do MMM YY"),
+        });
+
+        created.push(kot);
+      }
+      res.status(201).send(created);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+const getUpdatedCart = (kots: any, isDeleted: any) => {
+  let cart: any = {};
+
+  for (let i = 0; i < kots.length; i++) {
+    let kot = kots[i];
+    console.log("kot", kot);
+    if (kot?.match != false) {
+      const dishData = {
+        businessId: kot.businessId,
+        name: kot.dish.name,
+        price: kot.dish.price,
+        kitchenId: kot.kitchenId,
+        delete: isDeleted,
+      };
+      const variants: any = [];
+      const extraVariants: any = {};
+      if (kot.dish.extras && kot.dish.extras.length > 0) {
+        kot.dish.extras.forEach((extra: any, index: any) => {
+          extraVariants[`${extra?.name}${index}`] = {
+            name: extra.name,
+            price: extra.price,
+            quantity: extra.quantity,
+          };
+        });
+      }
+
+      // Function to check if an object has any keys
+      const hasKeys = (obj: any) => obj && Object.keys(obj).length > 0;
+
+      // Update portion logic
+      let portion = hasKeys(kot.dish.portions) ? kot.dish.portions : null;
+
+      variants.push({
+        extra: extraVariants,
+        portion: portion,
+      });
+
+      cart[Math.floor(Math.random() * 9000) + 1000] = {
+        dishData,
+        dishId: kot.dish.dishId,
+        variants,
+        quantity: kot.dish.qty || kot.dish.quantity,
+      };
+    }
+  }
+  return cart;
+};
+router.post(
+  "/v1/kitchens/:kitchenId/swiggyOrders",
+  // validateKOT,
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  // validateRequest,
+  async (req: Request, res: Response) => {
+    try {
+      const currentTime = Date.now();
+      const momentTime = moment(currentTime);
+
+      const indianTime = momentTime
+        .clone()
+        .utcOffset("+05:30")
+        .format("HH:mm:ss");
+      const indianTime2 = momentTime
+        .clone()
+        .utcOffset("+05:30")
+        .format("HH:mm");
+
+      const body = req.body;
+
+      const exitingKot = await Kot.findOne({
+        orderId: body?.orderId,
+      });
+      if (exitingKot) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Order Already Exist" });
+      }
+      let dishes: any = [];
+      let zones: any = [];
+      const config = {
+        method: "get",
+        url: `${process.env.URL}/v1/dishes?businessId=${body?.businessId}`,
+      };
+      const con = {
+        method: "get",
+        url: `${process.env.URL}/v1/zones?businessId=${body?.businessId}`,
+      };
+
+      try {
+        let data = await axios(config);
+        let zone = await axios(con);
+
+        dishes = data?.data;
+        zones = zone?.data;
+      } catch (err: any) {
+        console.log(err);
+      }
+
+      zones = zones?.filter((zone: any) => zone?.zoneName == "swiggy");
+
+      let ale = await Alert.create({
+        businessId: body?.businessId,
+        zoneId: zones?.[0]?.id,
+        tableName: "swiggy",
+        staffId: body?.staffId,
+        status: "Swiggy",
+        time: indianTime2,
+        message: "New Order From Swiggy",
+        isAlertOn: true,
+      });
+
+      const isInDesiredList = (itemName: any, desiredList: any) => {
+        return (
+          desiredList &&
+          desiredList.some(
+            (item: any) =>
+              item.name.trim().toLowerCase().replace(/ /g, "") ===
+              itemName.trim().toLowerCase().replace(/ /g, "")
+          )
+        );
+      };
+
+      // Filtering logic
+      let result = body?.result;
+
+      let filteredResults = result.filter((swiggyDish: any, index: number) => {
+        // Find the dish in the comparison array
+        const comparisonDish = dishes.find(
+          (dish: any) =>
+            dish.name.trim().toLowerCase().replace(/ /g, "") ===
+            swiggyDish.dishName.trim().toLowerCase().replace(/ /g, "")
+        );
+
+        // If dish is found, filter its portions and extras
+        if (comparisonDish) {
+          console.log("comparisonDish", comparisonDish);
+          swiggyDish["kitchenId"] = comparisonDish["kitchenId"];
+          swiggyDish.portions = swiggyDish.portions.filter((portion: any) =>
+            isInDesiredList(portion.name, comparisonDish.portions)
+          );
+          swiggyDish.extras = swiggyDish.extras.filter(
+            (extra: any, index: any) =>
+              isInDesiredList(extra.name, comparisonDish.extras?.[index]?.items)
+          );
+          return true;
+        } else {
+          return false;
+        }
+      });
+      let dishNames = filteredResults.map((dish: any) => dish.dishName);
+      let notMatchedDishes = result.filter(
+        (swiggyDish: any, index: number) =>
+          swiggyDish.dishName && !dishNames.includes(swiggyDish.dishName)
+      );
+      for (let i = 0; i < notMatchedDishes.length; i++) {
+        let dish = notMatchedDishes[i];
+        dish["match"] = false;
+      }
+
+      let mergeArray = [...filteredResults, ...notMatchedDishes];
+      let kotArray = [];
+
+      for (let i = 0; i < mergeArray.length; i++) {
+        const dish = mergeArray[i];
+
+        let extras = dish?.extras || [];
+        let portions = dish?.portions || {};
+        if (portions?.length > 0) {
+          portions = { name: portions[0]?.name, price: dish?.price };
+        } else {
+          portions = {};
+        }
+
+        let kotObject = {
+          businessId: body?.businessId,
+          kitchenId: dish?.kitchenId ? dish?.kitchenId : "5",
+          zoneId: zones[0]?.id,
+          staffId: "5",
+          dish: {
+            dishId: Math.floor(Math.random() * 9000) + 1000,
+            name: dish?.dishName,
+            price: dish?.price,
+            qty: dish?.qty,
+            comments: "spicy",
+            extras,
+            portions,
+          },
+          dishType: "Veg",
+          category: dish?.category,
+          customerName: body?.userName,
+          customerPhone: "9999999999",
+          instructions: body?.instructions,
+          dishStatus: "cooking",
+          tableName: "swiggy",
+          orderId: body?.orderId,
+          swiggyBillObj: body?.billObject,
+          match: dish?.match,
+        };
+
+        kotArray.push(kotObject);
+      }
+
+      const created = [];
+      const startedAt = Date.now();
+      for (let i = 0; i < kotArray.length; i++) {
+        const newKOT: any = kotArray[i];
+        let exitingKotByName = await Kot.findOne({
+          "dish.name": newKOT.dish.name,
+          orderId: body?.orderId,
+        });
+        if (exitingKotByName) {
+          return res
+            .status(400)
+            .send({ status: false, message: "Order Already Exist" });
+        }
+        const kot = await Kot.create({
+          ...newKOT,
+          startedAt,
+          cookedAt: -1,
+          status: "UNPAID",
+          kotTime: indianTime,
+          date: moment().format("Do MMM YY"),
+        });
+
+        created.push(kot);
+      }
+      try {
+        let cart = getUpdatedCart(kotArray, false);
+        const kotConfig = {
+          method: "post",
+          url: `https://ws.hipal.life`,
+          data: {
+            businessId: body?.businessId,
+            payload: {
+              tableName: "swiggy",
+              cart: cart,
+              waiterName: "swiggy",
+            },
+          },
+        };
+
+        let print = await axios(kotConfig);
+      } catch (err: any) {
+        console.log(err);
+      }
+      res.status(201).send({ created, zones, mergeArray });
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:kitchenId/kotPrint",
+  async (req: Request, res: Response) => {
+    try {
+      const { kotObject } = req.body || {};
+      const config = {
+        method: "post",
+        url: `https://ws.hipal.life`,
+        data: kotObject,
+      };
+
+      try {
+        await axios(config);
+      } catch (err: any) {
+        return res.status(500).send({
+          status: false,
+          message: err.message,
+        });
+      }
+
+      res.status(200).send("succes");
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:id/transferKot",
+
+  async (req: Request, res: Response) => {
+    try {
+      const { toZoneId, toTableId, kotObjectArray, transferBy } =
+        req.body || {};
+      console.log("kotObjectArray", kotObjectArray);
+      let fromTableId = kotObjectArray?.[0]?.tableId;
+      let fromZoneId = kotObjectArray?.[0]?.zoneId;
+
+      if (!toZoneId || !toTableId || kotObjectArray?.length == 0) {
+        return res.status(400).send({
+          status: false,
+          message: "toZoneId , toTableId , kotObjectArray are required...!",
+        });
+      }
+      const transferKotIds: string[] = [];
+      const kotObjects = kotObjectArray.map((kotObject: any) => {
+        let kotId = kotObject?.id || kotObject?._id;
+        delete kotObject.__v;
+        delete kotObject._id;
+        transferKotIds.push(kotId);
+
+        return {
+          ...kotObject,
+          tableId: toTableId,
+          zoneId: toZoneId,
+          transferBy: transferBy,
+        };
+      });
+      await Kot.insertMany(kotObjects);
+
+      await Kot.deleteMany({ _id: { $in: transferKotIds } });
+
+      let kots = await Kot.find({
+        tableId: toTableId,
+        zoneId: toZoneId,
+        status: "UNPAID",
+      }).select("dishStatus");
+      let deliverdDish = 0;
+      kots.forEach((kot: any) => {
+        if (kot.dishStatus == "delivered") {
+          deliverdDish++;
+        }
+      });
+      let existingKOT = await Kot.find({
+        tableId: fromTableId,
+        zoneId: fromZoneId,
+        status: "UNPAID",
+      }).count();
+      const config = {
+        method: "put",
+        url: `${process.env.URL}/v1/zones/:zoneId/tables/${toTableId}`,
+        data: {
+          status: "Active",
+          totalDishQuantity: kots?.length,
+          deliverdDish: deliverdDish,
+        },
+      };
+      await axios(config);
+      const con = {
+        method: "put",
+        url: `${process.env.URL}/v1/zones/:zoneId/tables/${fromTableId}`,
+        data: {
+          status: existingKOT > 0 ? "Active" : "Empty",
+          totalDishQuantity: existingKOT,
+        },
+      };
+      await axios(con);
+
+      res.status(200).send("transfered successfully");
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:id/mergeKot",
+  async (req: Request, res: Response) => {
+    try {
+      const { tables } = req.body || {};
+
+      let parentTable = tables?.filter(
+        (table: any) => table?.hierarchy == "PARENT"
+      );
+      let tableId = parentTable?.[0]?.tableId;
+
+      for (let index = 0; index < tables.length; index++) {
+        const table = tables[index];
+        if (table?.hierarchy == "CHILD") {
+          let kots = await Kot.find({
+            tableId: table.tableId,
+            zoneId: table.parentZoneId,
+            status: "UNPAID",
+            isDeleted: false,
+          }).lean();
+          let newArray = JSON.parse(JSON.stringify(kots));
+          for (let i = 0; i < newArray.length; i++) {
+            let newKOT: any = newArray[i];
+            let kotId = newKOT._id || newKOT.id;
+            delete newKOT.__v;
+            delete newKOT._id;
+            delete newKOT.id;
+
+            const kot = {
+              ...newKOT,
+              tableId: table.parentTableId,
+              zoneId: table.parentZoneId,
+            };
+            let kotObj = await Kot.create(kot);
+
+            await Kot.findByIdAndDelete(kotId);
+          }
+        }
+      }
+      let kots = await Kot.find({
+        tableId: tables?.[1].parentTableId,
+        zoneId: tables?.[1].parentZoneId,
+        status: "UNPAID",
+        isDeleted: false,
+      }).count();
+      const config = {
+        method: "put",
+        url: `${process.env.URL}/v1/zones/:zoneId/tables/${tableId}`,
+        data: {
+          totalDishQuantity: kots,
+        },
+      };
+
+      await axios(config);
+
+      return res.status(200).send("success");
+    } catch (err: any) {
+      console.log(err);
+      return res.status(500).send({ status: false, message: err.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/:id/deleteKotAlert",
+  // currentUser,
+  // requireAuthorization([
+  //   ClientRoles.RESTAURANT_OWNER,
+  //   ClientRoles.RESTAURANT_MANAGER,
+  // ]),
+  async (req: Request, res: Response) => {
+    let body = req.body || {};
+    console.log("bodys", body?.phone);
+    const token =
+      "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
+    const phoneId = "104262732724546";
+    try {
+      let response = await axios.post(
+        `https://graph.facebook.com/v17.0/${phoneId}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: `${body?.phone}`,
+          type: "template",
+          template: {
+            name: "deleteitem",
+            language: { code: "en" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  // businessName
+                  {
+                    type: "text",
+                    text: `${body?.businessName}`,
+                  },
+
+                  {
+                    type: "text",
+                    text: `${body?.tableName}`,
+                  },
+                  //discountPercentage
+                  {
+                    type: "text",
+                    text: `${body?.date}`,
+                  },
+                  //discountReason
+                  {
+                    type: "text",
+                    text: `${body?.itemName}`,
+                  },
+                  {
+                    type: "text",
+                    text: `${body?.reasonForDelete}`,
+                  },
+                  {
+                    type: "text",
+                    text: `${body?.orderBy}`,
+                  },
+
+                  //waiterName
+                  {
+                    type: "text",
+                    text: `${body?.waiterName}`,
+                  },
+                  {
+                    type: "text",
+                    text: `${body?.itemPrice}`,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.status(200).send("response");
+    } catch (error) {
+      console.error("Error while processing the dues:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/createOrder",
+
+  // requireAuthorization([
+  //   ClientRoles.HIPAL_CUSTOMER,
+  //   ClientRoles.RESTAURANT_OWNER,
+  // ]),
+
+  async (req: Request, res: Response) => {
+    const { total, currency, name, phone, businessId } = req.body || {};
+
+    try {
+      const response = await razorpayWrapper.client.orders.create({
+        amount: total * 100,
+        currency: currency,
+        receipt: "receipt#1",
+        notes: {
+          name: name,
+          phone: phone,
+          businessId: businessId,
+        },
+      });
+
+      res.status(200).send(response.id);
+    } catch (error: any) {
+      console.log("erro", error.error);
+      res.status(400).send(error);
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/validPayment",
+
+  // requireAuthorization([
+  //   ClientRoles.HIPAL_CUSTOMER,
+  //   ClientRoles.RESTAURANT_OWNER,
+  // ]),
+
+  async (req: Request, res: Response) => {
+    const { response } = req.body || {};
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+      response;
+    try {
+      const signature = createHmac(
+        "sha256",
+        process.env.RAZORPAY_SECRET as string
+      )
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+
+      if (signature === razorpay_signature) {
+        res.status(200).send({ status: true });
+      } else {
+        res.status(200).send({ status: false });
+      }
+    } catch (error) {
+      console.log("error", error);
+      res.status(400).send(error);
+    }
+
+    try {
+    } catch (error) {
+      console.log("error", error);
+      res.status(400).send(error);
+    }
+  }
+);
+
+router.post(
+  "/v1/kitchens/razorpay-webhook",
+
+  // requireAuthorization([
+  //   ClientRoles.HIPAL_CUSTOMER,
+  //   ClientRoles.RESTAURANT_OWNER,
+  // ]),
+  async (req: Request, res: Response) => {
+    const { event, payload } = req.body;
+    try {
+      const razorpaySignature = req.headers["x-razorpay-signature"];
+      const razorpayEventId = req.headers["x-razorpay-event-id"];
+
+      const isSignatureValid = validateWebhookSignature(
+        JSON.stringify(req.body),
+        razorpaySignature,
+        process.env.RAZORPAY_WEBHOOK_SECRET as string
+      );
+
+      if (isSignatureValid) {
+        if (event === "payment.captured") {
+          //create alert for payment captured
+          const saveAlert = new Alert({
+            businessId: payload.payment.entity.notes.businessId,
+            tableName: payload.payment.entity.notes.tableName,
+            tableId: payload.payment.entity.notes.tableId,
+            zoneId: payload.payment.entity.notes.zoneId,
+            staffId: payload.payment.entity.notes.staffId,
+            status: "PAID_BY_ONLINE",
+            time: payload.payment.entity.created_at,
+            message: `Paid ${payload.payment.entity.notes.total}`,
+            razorpayPaymentId: payload.payment.entity.id,
+            razorpayOrderId: payload.payment.entity.order_id,
+            razorpayAcquirerData: payload.payment.entity.acquirer_data,
+            mode: payload.payment.entity.method,
+            razorpayEventId: razorpayEventId,
+          });
+          await saveAlert.save();
+          const tableId = payload.payment.entity.notes.tableId;
+
+          const created: any = [];
+          // update all the KOTs to PAID
+          const kots = await Kot.find({
+            tableId,
+            status: "UNPAID",
+          });
+          for (const kotId of kots) {
+            const updatedKOT = await Kot.findByIdAndUpdate(
+              kotId,
+              { status: "PAID", cookedAt: Date.now() },
+              { new: true }
+            );
+            if (updatedKOT?.isDeleted === false) {
+              created.push(updatedKOT);
+            }
+          }
+
+          /**
+           * Represents an array of transformed kitchen items.
+           * Each item contains information about the dish, quantity, amount, category, portions, extras, and comments.
+           */
+          const items = created.map((kot: any) => {
+            const newobj: any = {
+              name: kot.dish?.name,
+              quantity: kot.dish?.qty || kot.dish?.quantity,
+              amount: kot.dish?.price,
+              category: kot.category,
+              portions: kot.dish?.portions,
+              extras: kot.dish?.extras,
+              comments: "spicy",
+            };
+
+            let price = 0;
+            if (newobj.portions) {
+              price =
+                parseInt(newobj.portions.price) *
+                (newobj.quantity || newobj.qty);
+            } else {
+              price = newobj.amount || 0;
+            }
+
+            let extrasPrice = 0;
+            if (newobj.extras?.length > 0) {
+              for (const extra of newobj.extras) {
+                extrasPrice +=
+                  parseInt(extra.price || 0) * (extra.quantity || extra.qty);
+              }
+            }
+
+            newobj.amount = price + extrasPrice || 0;
+
+            return newobj;
+          });
+          // delete hicode,claimedAmount, tips, discount from PaidKot (temp model)
+          await Tempmodel.deleteMany({
+            $or: [
+              { hiCode: payload.payment.entity.notes.hiCode },
+              { tableId: tableId },
+              { claimedTableId: tableId },
+              { tipsTableId: tableId },
+              { discountTableId: tableId },
+            ],
+          });
+          // save current tableId hiCode for validate place order from userSide
+          await Tempmodel.create({
+            hiCode: payload.payment.entity.notes.hiCode,
+          });
+
+          // save payment Object in payment collection
+          const paymentConfig = {
+            method: "POST",
+            url: `${process.env.URL}/v1/payments`,
+            data: {
+              businessId: payload.payment.entity.notes.businessId,
+              items: items,
+              subTotal: Number(payload.payment.entity.notes.subTotal),
+              sgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
+              cgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
+              total: payload.payment.entity.notes.total,
+              paymentMode: payload.payment.entity.method,
+              paymentDate: payload.payment.entity.notes.dayAndDate,
+              mode: payload.payment.entity.method,
+              customerName: payload.payment.entity.notes.name,
+              customerPhone: payload.payment.entity.notes.phone,
+              discount: payload.payment.entity.notes.discount,
+              zoneId: payload.payment.entity.notes.zoneId,
+              tableId: payload.payment.entity.notes.tableId,
+              time: payload.payment.entity.notes.indianTime,
+              tableName: payload.payment.entity.notes.tableName,
+              claimedAmount: payload.payment.entity.notes.claimedAmount,
+              serviceCharge: payload.payment.entity.notes.serviceCharge,
+              tips: payload.payment.entity.notes.tips,
+              zoneType: "Dine In",
+              razorpayPaymentId: payload.payment.entity.id,
+              razorpayOrderId: payload.payment.entity.order_id,
+              razorpayAcquirerData: payload.payment.entity.acquirer_data,
+              razorpayEventId: razorpayEventId,
+            },
+          };
+
+          let data: any;
+          try {
+            const response = await axios(paymentConfig);
+            data = response.data;
+          } catch (err: any) {
+            return res.send({
+              status: false,
+              message: err,
+            });
+          }
+          const updateConfig = {
+            method: "put",
+            url: `${process.env.URL}/v1/zones/${payload.payment.entity.notes.zoneId}/updateOccupied/${payload.payment.entity.notes.tableId}?settle=true`,
+            data: {
+              status: "Empty",
+              activeUser: 0,
+              time: "",
+              totalDishQuantity: 0,
+              deliverdDish: 0,
+              role: null,
+              hiCode: "",
+              mergedBy: "",
+              reservedBy: "",
+            },
+          };
+          try {
+            await axios(updateConfig);
+          } catch (err: any) {
+            return res.status(400).send({
+              status: false,
+              message: err.message,
+            });
+          }
+
+          return res.status(200).send({ status: true, data: "payment " });
+        }
+        if (event === "payment.failed") {
+          // create alert for payment failed
+          const saveAlert = new Alert({
+            businessId: payload.payment.entity.notes.businessId,
+            tableName: payload.payment.entity.notes.tableName,
+            tableId: payload.payment.entity.notes.tableId,
+            zoneId: payload.payment.entity.notes.zoneId,
+            staffId: payload.payment.entity.notes.staffId,
+            status: "FAIL",
+            time: payload.payment.entity.created_at,
+            message: `FAIL ${payload.payment.entity.notes.total}`,
+            razorpayPaymentId: payload.payment.entity.id || "",
+            razorpayOrderId: payload.payment.entity.order_id || "",
+            razorpayAcquirerData: payload.payment.entity.acquirer_data || "",
+            mode: payload.payment.entity.method,
+            razorpayEventId: razorpayEventId || "",
+          });
+          let r = await saveAlert.save();
+
+          return res.status(200).send({ status: false, data: payload });
+        }
+      } else {
+        console.log("Invalid signature");
+        return res.status(200).send("Invalid signature");
+      }
+    } catch (error) {
+      console.log("error", error);
+      res.status(500).send(error);
+    }
+  }
+);
+
+export { router as createKitchenRouter };

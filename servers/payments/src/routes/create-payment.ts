@@ -1,23 +1,16 @@
 import express, { Request, Response } from "express";
-import {
-  currentUser,
-  requireAuthorization,
-  validateRequest,
-  ClientRoles,
-  NotFoundError,
-} from "@hipal/common";
-import { validateCustomer } from "./validators/new-customer-validator";
-import { validateReviews } from "./validators/new-reviews-validator";
 
-import { Payment } from "../models/payment";
-import { PaymentMode } from "../models/paymentMode";
-import { Dues } from "../models/dues";
-import { PaymentAlert } from "../models/paymentAlert";
-import momentTimeZone from "moment-timezone";
-import { BusinessAlert } from "../models/businessAlert";
+import {
+  Payment,
+  PaymentMode,
+  Reviews,
+  ReviewsCustomer,
+  Dues,
+} from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { ClientSession } from "mongoose";
+
 import axios from "axios";
-import { Reviews } from "../models/reviews";
-import { Customer } from "../models/reviewsCustomer";
 
 const crypto = require("crypto");
 const ENC_KEY = process.env.API_KEY; // set random encryption key
@@ -43,9 +36,6 @@ const router = express.Router();
 router.post(
   "/v1/payments",
 
-  currentUser,
-
-  validateRequest,
   async (req: Request, res: Response) => {
     try {
       const {
@@ -99,15 +89,15 @@ router.post(
 
       // const date = new Date().toISOString().replace("T", " ").slice(0, 19);
 
-      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
+      // const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
-      const payment = Payment.build({
+      const payment = await Payment.create({
         businessId,
         businessName,
         address,
         gstin,
         items,
-        date: dayAndDate,
+        date: "dayAndDate",
         subTotal,
         sgst,
         cgst,
@@ -151,51 +141,6 @@ router.post(
         tipsGivenBy,
       });
 
-      // const requestJsonObj = {
-      //   dateTime: date,
-      //   amount: `${total}.00`,
-      //   isMultiSettlement: "0",
-      //   custMobile: customerPhone || "9177914130",
-      //   apiKey: process.env.API_KEY,
-      //   productId: "DEFAULT",
-      //   instrumentId: "NA",
-      //   cardType: "NA",
-      //   txnType: "DIRECT",
-      //   udf3: "NA",
-      //   udf1: "N A",
-      //   udf2: "NA",
-      //   merchantId: process.env.MERCHANT_ID,
-      //   custMail: "generic@hipal.life",
-      //   returnURL: "${process.env.URL}/v1/payments/1pay",
-      //   channelId: "0",
-      //   txnId: payment.id,
-      //   udf4: "NA",
-      //   udf5: "NA",
-      //   cardDetails: "NA",
-      //   Rid: process.env.RESELLER_ID,
-      //   ResellerTxnId: "1533515135351155315",
-      // };
-
-      // const reqData = encrypt(JSON.stringify(requestJsonObj));
-
-      // payment.reqData = reqData;
-      // payment.postURL =
-      //   process.env.paymentURL ||
-      //   "https://pa-preprod.1pay.in/payment/payprocessorV2";
-      // payment.merchantId = process.env.MERCHANT_ID;
-
-      await payment.save();
-
-      // const payment = Payment.build({
-      //   businessId,
-      //   reviewerName,
-      //   description,
-      //   satisfactionRating,
-      //   mostLiked,
-      //   time,
-      // });
-      // await payment.save();
-
       res.status(201).send(payment);
     } catch (err: any) {
       console.log("error", err);
@@ -204,46 +149,39 @@ router.post(
   }
 );
 
-router.post(
-  "/v1/payments/1pay",
+// router.post(
+//   "/v1/payments/1pay",
 
-  currentUser,
-  requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
-  validateRequest,
-  async (req: Request, res: Response) => {
-    const response = JSON.parse(decrypt(req.body.respData));
+//   async (req: Request, res: Response) => {
+//     const response = JSON.parse(decrypt(req.body.respData));
 
-    const existingPayment = await Payment.findById(response["txn_id"]);
+//     const existingPayment = await Payment.findById(response["txn_id"]);
 
-    if (!existingPayment) {
-      throw new NotFoundError();
-    }
+//     existingPayment.paymentMode = response["payment_mode"];
+//     existingPayment.respMsg = response["resp_message"];
+//     existingPayment.tranStatus = response["trans_status"];
+//     existingPayment.respCode = response["resp_code"];
+//     existingPayment.bankRefId = response["bank_ref_id"];
+//     existingPayment.pgRefId = response["pg_ref_id"];
 
-    existingPayment.paymentMode = response["payment_mode"];
-    existingPayment.respMsg = response["resp_message"];
-    existingPayment.tranStatus = response["trans_status"];
-    existingPayment.respCode = response["resp_code"];
-    existingPayment.bankRefId = response["bank_ref_id"];
-    existingPayment.pgRefId = response["pg_ref_id"];
+//     await existingPayment.save();
 
-    await existingPayment.save();
+//     // const payment = Payment.build({
+//     //   businessId,
+//     //   reviewerName,
+//     //   description,
+//     //   satisfactionRating,
+//     //   mostLiked,
+//     //   time,
+//     // });
+//     // await payment.save();
 
-    // const payment = Payment.build({
-    //   businessId,
-    //   reviewerName,
-    //   description,
-    //   satisfactionRating,
-    //   mostLiked,
-    //   time,
-    // });
-    // await payment.save();
-
-    res.redirect(
-      process.env.redirectURL ||
-        `https://biz.hipal.life/order/${existingPayment.id}`
-    );
-  }
-);
+//     res.redirect(
+//       process.env.redirectURL ||
+//         `https://biz.hipal.life/order/${existingPayment.id}`
+//     );
+//   }
+// );
 
 router.post(
   "/v1/payments/Create/Mode",
@@ -309,198 +247,198 @@ router.post(
   }
 );
 
-router.post(
-  "/v1/payments/Create/Alert",
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    let { businessId, uniqueName } = req.body || {};
+// router.post(
+//   "/v1/payments/Create/Alert",
+//   // currentUser,
+//   // requireAuthorization([
+//   //   ClientRoles.RESTAURANT_OWNER,
+//   //   ClientRoles.RESTAURANT_MANAGER,
+//   // ]),
+//   async (req: Request, res: Response) => {
+//     let { businessId, uniqueName } = req.body || {};
 
-    try {
-      let alert = await PaymentAlert.findOne({
-        businessId,
-        uniqueName,
-      });
-      if (alert) {
-        return res.status(400).send("Name Already exit...");
-      } else {
-        await BusinessAlert.create({ ...req.body });
-        alert = new PaymentAlert({ ...req.body });
-      }
+//     try {
+//       let alert = await PaymentAlert.findOne({
+//         businessId,
+//         uniqueName,
+//       });
+//       if (alert) {
+//         return res.status(400).send("Name Already exit...");
+//       } else {
+//         await BusinessAlert.create({ ...req.body });
+//         alert = new PaymentAlert({ ...req.body });
+//       }
 
-      const saveAlert = await alert.save();
-      return res.status(201).send(saveAlert);
-    } catch (error) {
-      console.error("Error while processing the alert:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-);
+//       const saveAlert = await alert.save();
+//       return res.status(201).send(saveAlert);
+//     } catch (error) {
+//       console.error("Error while processing the alert:", error);
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+// );
 
-router.post(
-  "/v1/payments/Generate/Alert",
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    let { businessId } = req.query || {};
+// router.post(
+//   "/v1/payments/Generate/Alert",
+//   // currentUser,
+//   // requireAuthorization([
+//   //   ClientRoles.RESTAURANT_OWNER,
+//   //   ClientRoles.RESTAURANT_MANAGER,
+//   // ]),
+//   async (req: Request, res: Response) => {
+//     let { businessId } = req.query || {};
 
-    try {
-      const getPaymentAlert = await PaymentAlert.find({ businessId });
-      const getPaymentsModes = await PaymentMode.find({ businessId });
+//     try {
+//       const getPaymentAlert = await PaymentAlert.find({ businessId });
+//       const getPaymentsModes = await PaymentMode.find({ businessId });
 
-      const calculateSale = (array: any) => {
-        let summary: any = {
-          totalSale: 0,
-          modes: {},
-        };
+//       const calculateSale = (array: any) => {
+//         let summary: any = {
+//           totalSale: 0,
+//           modes: {},
+//         };
 
-        array.forEach((payment: any) => {
-          if (payment.mode) {
-            if (!summary.modes[payment.mode]) {
-              summary.modes[payment.mode] = 0;
-            }
-            summary.modes[payment.mode] += payment.total;
-          }
-        });
+//         array.forEach((payment: any) => {
+//           if (payment.mode) {
+//             if (!summary.modes[payment.mode]) {
+//               summary.modes[payment.mode] = 0;
+//             }
+//             summary.modes[payment.mode] += payment.total;
+//           }
+//         });
 
-        // Convert modes object to desired format
-        const modesArray = [];
-        for (const [mode, total] of Object.entries(summary.modes) as any) {
-          // Retrieve commission percentage for the mode
-          const commissionPercent = modes[mode] || 0;
+//         // Convert modes object to desired format
+//         const modesArray = [];
+//         for (const [mode, total] of Object.entries(summary.modes) as any) {
+//           // Retrieve commission percentage for the mode
+//           const commissionPercent = modes[mode] || 0;
 
-          // Calculate commission amount
-          const totalCommissionSale = (commissionPercent / 100) * total;
+//           // Calculate commission amount
+//           const totalCommissionSale = (commissionPercent / 100) * total;
 
-          // Adjust totalSale by subtracting commission
-          const adjustedTotalSale = total - totalCommissionSale;
-          summary.totalSale += adjustedTotalSale;
+//           // Adjust totalSale by subtracting commission
+//           const adjustedTotalSale = total - totalCommissionSale;
+//           summary.totalSale += adjustedTotalSale;
 
-          modesArray.push({
-            mode: mode,
-            totalSale: adjustedTotalSale,
-            commissionPercent: commissionPercent,
-            totalCommissionSale: totalCommissionSale,
-          });
-        }
+//           modesArray.push({
+//             mode: mode,
+//             totalSale: adjustedTotalSale,
+//             commissionPercent: commissionPercent,
+//             totalCommissionSale: totalCommissionSale,
+//           });
+//         }
 
-        summary.modes = modesArray;
-        return modesArray;
-      };
-      let modes: any = {};
-      getPaymentsModes.forEach((element) => {
-        if (element?.mode) {
-          if (!modes[element.mode]) {
-            modes[element.mode] = element?.commission;
-          }
-        }
-      });
-      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD"); // Adjust timezone as necessary
-      const existingPayments = await Payment.find({
-        businessId,
-        date: { $regex: `^${dayAndDate}` },
-      });
+//         summary.modes = modesArray;
+//         return modesArray;
+//       };
+//       let modes: any = {};
+//       getPaymentsModes.forEach((element) => {
+//         if (element?.mode) {
+//           if (!modes[element.mode]) {
+//             modes[element.mode] = element?.commission;
+//           }
+//         }
+//       });
+//       const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD"); // Adjust timezone as necessary
+//       const existingPayments = await Payment.find({
+//         businessId,
+//         date: { $regex: `^${dayAndDate}` },
+//       });
 
-      let result = calculateSale(existingPayments);
-      let mewObje: any = {};
-      result.forEach((element) => {
-        if (element?.mode) {
-          if (!mewObje[element.mode]) {
-            mewObje[element.mode] = element?.totalSale;
-          }
-        }
-      });
-      const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
-      for (let i = 0; i < getPaymentAlert.length; i++) {
-        let element = getPaymentAlert[i];
-        if (mewObje[element?.uniqueName]) {
-          if (element?.lower == true) {
-            if (mewObje[element?.uniqueName] < element.amount) {
-              let newData = new BusinessAlert({
-                businessId: element?.businessId,
-                subject: element?.subject,
-                uniqueName: element?.uniqueName,
-                amount: element?.amount,
-                higher: false,
-                date: day,
-                lower: true,
-                value: mewObje[element?.uniqueName],
-              });
-              await newData.save();
-            }
-          } else if (element?.higher == true) {
-            console.log("higher");
-            console.log(
-              "predone",
-              typeof element.amount,
-              typeof mewObje[element?.uniqueName]
-            );
+//       let result = calculateSale(existingPayments);
+//       let mewObje: any = {};
+//       result.forEach((element) => {
+//         if (element?.mode) {
+//           if (!mewObje[element.mode]) {
+//             mewObje[element.mode] = element?.totalSale;
+//           }
+//         }
+//       });
+//       const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
+//       for (let i = 0; i < getPaymentAlert.length; i++) {
+//         let element = getPaymentAlert[i];
+//         if (mewObje[element?.uniqueName]) {
+//           if (element?.lower == true) {
+//             if (mewObje[element?.uniqueName] < element.amount) {
+//               let newData = new BusinessAlert({
+//                 businessId: element?.businessId,
+//                 subject: element?.subject,
+//                 uniqueName: element?.uniqueName,
+//                 amount: element?.amount,
+//                 higher: false,
+//                 date: day,
+//                 lower: true,
+//                 value: mewObje[element?.uniqueName],
+//               });
+//               await newData.save();
+//             }
+//           } else if (element?.higher == true) {
+//             console.log("higher");
+//             console.log(
+//               "predone",
+//               typeof element.amount,
+//               typeof mewObje[element?.uniqueName]
+//             );
 
-            if (mewObje[element?.uniqueName] > element.amount) {
-              let newData = new BusinessAlert({
-                businessId: element?.businessId,
-                subject: element?.subject,
-                uniqueName: element?.uniqueName,
-                amount: element?.amount,
-                higher: true,
-                date: day,
-                lower: false,
-                value: mewObje[element?.uniqueName],
-              });
-              await newData.save();
-            }
-          }
-        }
-      }
+//             if (mewObje[element?.uniqueName] > element.amount) {
+//               let newData = new BusinessAlert({
+//                 businessId: element?.businessId,
+//                 subject: element?.subject,
+//                 uniqueName: element?.uniqueName,
+//                 amount: element?.amount,
+//                 higher: true,
+//                 date: day,
+//                 lower: false,
+//                 value: mewObje[element?.uniqueName],
+//               });
+//               await newData.save();
+//             }
+//           }
+//         }
+//       }
 
-      return res.status(200).send("generate alert !");
-    } catch (error) {
-      console.error("Error while processing the alert:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-);
+//       return res.status(200).send("generate alert !");
+//     } catch (error) {
+//       console.error("Error while processing the alert:", error);
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+// );
 
-router.post(
-  "/v1/payments/createLoyaltyAlert",
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    let { loyaltyId, businessName, ownerName } = req.body || {};
+// router.post(
+//   "/v1/payments/createLoyaltyAlert",
+//   // currentUser,
+//   // requireAuthorization([
+//   //   ClientRoles.RESTAURANT_OWNER,
+//   //   ClientRoles.RESTAURANT_MANAGER,
+//   // ]),
+//   async (req: Request, res: Response) => {
+//     let { loyaltyId, businessName, ownerName } = req.body || {};
 
-    try {
-      let newPass = Math.floor(Math.random() * 9000) + 10000;
-      const exitingLoyaltyAlert = await BusinessAlert.findOne({
-        businessId: loyaltyId,
-        uniqueName: "loyaltyAlert",
-      });
-      if (exitingLoyaltyAlert) {
-        return res.status(400).send("Alert Already Send");
-      }
-      let createAlert = new BusinessAlert({
-        businessId: loyaltyId,
-        value: newPass,
-        subject: `${businessName} want to use your loyalty feature if yes please share your password to ${ownerName}`,
-        uniqueName: "loyaltyAlert",
-      });
+//     try {
+//       let newPass = Math.floor(Math.random() * 9000) + 10000;
+//       const exitingLoyaltyAlert = await BusinessAlert.findOne({
+//         businessId: loyaltyId,
+//         uniqueName: "loyaltyAlert",
+//       });
+//       if (exitingLoyaltyAlert) {
+//         return res.status(400).send("Alert Already Send");
+//       }
+//       let createAlert = new BusinessAlert({
+//         businessId: loyaltyId,
+//         value: newPass,
+//         subject: `${businessName} want to use your loyalty feature if yes please share your password to ${ownerName}`,
+//         uniqueName: "loyaltyAlert",
+//       });
 
-      const saveAlert = await createAlert.save();
-      return res.status(201).send(saveAlert);
-    } catch (error) {
-      console.error("Error while processing the dues:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  }
-);
+//       const saveAlert = await createAlert.save();
+//       return res.status(201).send(saveAlert);
+//     } catch (error) {
+//       console.error("Error while processing the dues:", error);
+//       return res.status(500).json({ error: "Internal server error" });
+//     }
+//   }
+// );
 
 router.post(
   "/v1/payments/discountAlert",
@@ -515,7 +453,7 @@ router.post(
     const token =
       "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
     const phoneId = "104262732724546";
-    const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
+    // const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
     try {
       let response = await axios.post(
@@ -546,7 +484,7 @@ router.post(
                   {
                     type: "date_time",
                     date_time: {
-                      fallback_value: `${day}`,
+                      fallback_value: `${"day"}`,
                       day_of_week: 3,
                       day_of_month: 22,
                       year: 2023,
@@ -815,13 +753,7 @@ router.post(
 // create review
 router.post(
   "/v1/payments/reviews",
-  currentUser,
-  validateReviews,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_MANAGER,
-    ClientRoles.HIPAL_CUSTOMER,
-  ]),
+
   async (req: Request, res: Response) => {
     const { businessId, reviewerPhone, reviewRating } = req.body || {};
 
@@ -832,8 +764,7 @@ router.post(
     }
 
     try {
-      const addReview = Reviews.build(req.body);
-      await addReview.save();
+      const addReview = await Reviews.create(req.body);
 
       if (!addReview) {
         return res.status(400).send("Review not  added");
@@ -850,7 +781,7 @@ router.post(
 //create customer
 router.post(
   "/v1/payments/customer",
-  currentUser,
+
   // validateCustomer,
   // requireAuthorization([
   //   ClientRoles.HIPAL_CUSTOMER,
@@ -865,10 +796,10 @@ router.post(
     }
 
     try {
-      let customer = await Customer.findOne({ businessId, phone });
+      let customer = await ReviewsCustomer.findOne({ businessId, phone });
 
       if (customer) {
-        customer = await Customer.findOneAndUpdate(
+        customer = await ReviewsCustomer.findOneAndUpdate(
           { businessId, phone },
           {
             $inc: { count: 1 },
@@ -877,7 +808,7 @@ router.post(
           { new: true }
         );
       } else {
-        customer = new Customer({
+        customer = new ReviewsCustomer({
           businessId,
           phone,
           name,

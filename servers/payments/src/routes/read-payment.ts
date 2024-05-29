@@ -1,20 +1,14 @@
 import express, { Request, Response } from "express";
+
 import {
-  ClientRoles,
-  requireAuthorization,
-  NotFoundError,
-  currentUser,
-} from "@hipal/common";
-import { Payment } from "../models/payment";
+  Payment,
+  PaymentMode,
+  Reviews,
+  ReviewsCustomer,
+  Dues,
+} from "@hi/db-models";
 import moment from "moment";
 import momentTimeZone from "moment-timezone";
-import { PaymentMode } from "../models/paymentMode";
-import { Dues } from "../models/dues";
-import { BusinessAlert } from "../models/businessAlert";
-import { PaymentAlert } from "../models/paymentAlert";
-import { Reviews } from "../models/reviews";
-import { Customer } from "../models/reviewsCustomer";
-import { Alert } from "../models/alert";
 
 const router = express.Router();
 
@@ -48,11 +42,7 @@ const reviewsFields = [
 
 router.get(
   "/v1/payments",
-  currentUser,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_MANAGER,
-  ]),
+
   async (req: Request, res: Response) => {
     const { id, date, remove } = req.query;
     const query = {
@@ -69,11 +59,15 @@ router.get(
     }
     const existingPayment = await Payment.find(query);
 
-    if (!existingPayment) {
-      throw new NotFoundError();
-    }
-
     res.status(200).send(existingPayment);
+  }
+);
+
+router.get(
+  "/v1/payments/:id/test",
+
+  async (req: Request, res: Response) => {
+    res.status(200).send("payment test");
   }
 );
 
@@ -186,18 +180,10 @@ router.get(
 
 router.get(
   "/v1/payments/:id",
-  currentUser,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_MANAGER,
-  ]),
+
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingPayment = await Payment.findById(id);
-
-    if (!existingPayment) {
-      throw new NotFoundError();
-    }
 
     res.status(200).send(existingPayment);
   }
@@ -205,11 +191,7 @@ router.get(
 
 router.get(
   "/v1/payments/Sale/Api",
-  currentUser,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_MANAGER,
-  ]),
+
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to } = req.query;
@@ -514,7 +496,7 @@ router.get("/v1/payments/Sale/Dues", async (req: Request, res: Response) => {
     });
     let totalDues = 0;
     existingPayments.forEach((element) => {
-      totalDues += element?.total;
+      totalDues += element?.total || 0;
     });
     const userTotals: any = {};
 
@@ -704,46 +686,46 @@ router.get(
   }
 );
 
-router.get("/v1/payments/Get/Alert", async (req: Request, res: Response) => {
-  try {
-    let { businessId, loyalty, value } = req.query;
-    if (loyalty) {
-      const existingAlert = await BusinessAlert.findOne({
-        value: value,
-        uniqueName: "loyaltyAlert",
-      });
+// router.get("/v1/payments/Get/Alert", async (req: Request, res: Response) => {
+//   try {
+//     let { businessId, loyalty, value } = req.query;
+//     if (loyalty) {
+//       const existingAlert = await BusinessAlert.findOne({
+//         value: value,
+//         uniqueName: "loyaltyAlert",
+//       });
 
-      return res.send(existingAlert);
-    }
+//       return res.send(existingAlert);
+//     }
 
-    const existingAlerts = await BusinessAlert.find({
-      businessId,
-    });
+//     const existingAlerts = await BusinessAlert.find({
+//       businessId,
+//     });
 
-    return res.status(200).send(existingAlerts);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Server error" });
-  }
-});
+//     return res.status(200).send(existingAlerts);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ message: "Server error" });
+//   }
+// });
 
-router.get(
-  "/v1/payments/Get/BusinessAlert",
-  async (req: Request, res: Response) => {
-    try {
-      let { businessId } = req.query;
+// router.get(
+//   "/v1/payments/Get/BusinessAlert",
+//   async (req: Request, res: Response) => {
+//     try {
+//       let { businessId } = req.query;
 
-      const existingAlerts = await PaymentAlert.find({
-        businessId,
-      });
+//       const existingAlerts = await PaymentAlert.find({
+//         businessId,
+//       });
 
-      return res.status(200).send(existingAlerts);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
-    }
-  }
-);
+//       return res.status(200).send(existingAlerts);
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).send({ message: "Server error" });
+//     }
+//   }
+// );
 
 router.get(
   "/v1/payments/:id/byUsers",
@@ -1024,7 +1006,7 @@ function addMissingModes(modesArray: any[], paymentModes: any[]) {
 
 router.get(
   "/v1/payments/:id/saleReport",
-  currentUser,
+
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
@@ -1281,7 +1263,7 @@ router.get(
 
 router.get(
   "/v1/payments/:id/discountReport",
-  currentUser,
+
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
@@ -1445,7 +1427,7 @@ router.get(
 
 router.get(
   "/v1/payments/:id/duesReport",
-  currentUser,
+
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
@@ -1504,10 +1486,10 @@ router.get(
         for (let i = 0; i < existingPayments?.length; i++) {
           let payment = existingPayments[i];
           if (payment?.settle) {
-            paidAmount += payment?.total;
+            paidAmount += payment?.total || 0;
           }
           if (!payment?.settle) {
-            pending += payment?.total;
+            pending += payment?.total || 0;
           }
           const out = objectFunction(payment);
 
@@ -1543,10 +1525,10 @@ router.get(
           for (let i = 0; i < existingPayments?.length; i++) {
             let payment = existingPayments[i];
             if (payment?.settle) {
-              paidAmount += payment?.total;
+              paidAmount += payment?.total || 0;
             }
             if (!payment?.settle) {
-              pending += payment?.total;
+              pending += payment?.total || 0;
             }
             const out = objectFunction(payment);
 
@@ -1598,10 +1580,10 @@ router.get(
         for (let i = 0; i < filteredPayments?.length; i++) {
           let payment = filteredPayments[i];
           if (payment?.settle) {
-            paidAmount += payment?.total;
+            paidAmount += payment?.total || 0;
           }
           if (!payment?.settle) {
-            pending += payment?.total;
+            pending += payment?.total || 0;
           }
           const out = objectFunction(payment);
 
@@ -1629,7 +1611,7 @@ router.get(
 
 router.get(
   "/v1/payments/:id/complimentaryReport",
-  currentUser,
+
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
@@ -1794,10 +1776,10 @@ router.get("/v1/payments/:id/tips", async (req: Request, res: Response) => {
     const waiterChips: any = {};
     for (let i = 0; i < existingTips?.length; i++) {
       const payment = existingTips[i];
-      if (!waiterChips[payment?.waiterName]) {
-        waiterChips[payment?.waiterName] = payment?.tips;
+      if (!waiterChips[payment?.waiterName || ""]) {
+        waiterChips[payment?.waiterName || ""] = payment?.tips;
       } else {
-        waiterChips[payment?.waiterName] += payment?.tips;
+        waiterChips[payment?.waiterName || ""] += payment?.tips;
       }
     }
     let ans: any = [];
@@ -2131,7 +2113,7 @@ router.get(
     try {
       let { customerId } = req.params;
 
-      const customer = await Customer.findById(customerId);
+      const customer = await ReviewsCustomer.findById(customerId);
       if (!customer) {
         return res.status(404).send({ message: "customer not found" });
       }
@@ -2152,7 +2134,7 @@ const filterCustomers = async (
   skip: number,
   PAGE_SIZE: number
 ) => {
-  const customer = await Customer.find({
+  const customer = await ReviewsCustomer.find({
     businessId: businessId,
     date: {
       $gte: from,
@@ -2184,7 +2166,7 @@ router.get(
       }
 
       if (findUser) {
-        const customers = await Customer.findOne({
+        const customers = await ReviewsCustomer.findOne({
           businessId,
           phone: findUser,
         });
@@ -2197,7 +2179,7 @@ router.get(
       }
 
       if (!from && !to) {
-        const customers = await Customer.find({
+        const customers = await ReviewsCustomer.find({
           businessId,
           date: {
             $gte: startOfToday.getTime(),
@@ -2242,8 +2224,8 @@ const filterBasedOnDate = async (
   to: number,
   businessId: string
 ) => {
-  const totalCustomers = await Customer.find({ businessId }).count();
-  const [customerStats] = await Customer.aggregate([
+  const totalCustomers = await ReviewsCustomer.find({ businessId }).count();
+  const [customerStats] = await ReviewsCustomer.aggregate([
     {
       $match: {
         businessId: businessId,
@@ -2280,7 +2262,7 @@ const filterBasedOnDate = async (
     },
   ]);
 
-  const latestCustomers = await Customer.find({ businessId })
+  const latestCustomers = await ReviewsCustomer.find({ businessId })
     .select("name phone businessId date")
     .sort({ date: -1 })
     .limit(5);
@@ -2325,8 +2307,7 @@ const filterBasedOnDate = async (
 // Retrieves payments based on the specified date range and business ID.
 router.get(
   "/v1/payments/:id/userDashboard",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       let { from, to } = req.query;
@@ -2368,8 +2349,7 @@ router.get(
 // Retrieves a list of customers who visited the restaurant today.
 router.get(
   "/v1/payments/:id/newCustomer",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       const businessId = req.query.businessId as string;
@@ -2379,7 +2359,7 @@ router.get(
       if (!businessId) {
         return res.status(400).send({ message: "businessId is required" });
       }
-      const newCustomers = await Customer.find({
+      const newCustomers = await ReviewsCustomer.find({
         businessId,
         date: {
           $gte: startOfToday.getTime(),
@@ -2402,8 +2382,7 @@ router.get(
 // Retrieves payment statistics for a specific business and customer phone number
 router.get(
   "/v1/payments/:id/billsByUser",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       const { businessId, phone } = req.query;
@@ -2477,8 +2456,7 @@ router.get(
 // Retrieves the payment bills for a specific business and customer phone number.
 router.get(
   "/v1/payments/:id/customerBills",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       const { businessId, phone, name } = req.query;
@@ -2511,8 +2489,7 @@ router.get(
 // Retrieves reviews from the database based on the provided criteria.
 router.get(
   "/v1/payments/:id/customerReviews",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       const { businessId, phone, name } = req.query;
@@ -2674,8 +2651,7 @@ function calculateStartAndEndOfDay(daysAgo: number, baseDate: Date) {
 //Retrieves the reviews filtered by the current day.
 router.get(
   "/v1/payments/:id/reviewsDashboard",
-  currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
   async (req: Request, res: Response) => {
     try {
       let { from, to } = req.query;
@@ -2760,40 +2736,36 @@ router.get(
   }
 );
 
-router.get(
-  "/v1/payments/:id/paymentAlert",
-  currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    const { businessId, tableId, zoneId } = req.query;
-    const alerts = await Alert.find({
-      businessId,
-      zoneId,
-      isAlertOn: true,
-    });
+// router.get(
+//   "/v1/payments/:id/paymentAlert",
+//   currentUser,
+//   // requireAuthorization([
+//   //   ClientRoles.RESTAURANT_OWNER,
+//   //   ClientRoles.RESTAURANT_MANAGER,
+//   // ]),
+//   async (req: Request, res: Response) => {
+//     const { businessId, tableId, zoneId } = req.query;
+//     const alerts = await Alert.find({
+//       businessId,
+//       zoneId,
+//       isAlertOn: true,
+//     });
 
-    res.status(200).send(alerts);
-  }
-);
+//     res.status(200).send(alerts);
+//   }
+// );
 
-router.get(
-  "/v1/payments/:id/deleteAlert/:alertId",
-  currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    const { alertId } = req.params;
-    const deleteAlert = await Alert.findByIdAndUpdate(alertId, {
-      isAlertOn: false,
-    });
+// router.get(
+//   "/v1/payments/:id/deleteAlert/:alertId",
 
-    res.status(200).send(deleteAlert);
-  }
-);
+//   async (req: Request, res: Response) => {
+//     const { alertId } = req.params;
+//     const deleteAlert = await Alert.findByIdAndUpdate(alertId, {
+//       isAlertOn: false,
+//     });
+
+//     res.status(200).send(deleteAlert);
+//   }
+// );
 
 export { router as readPaymentsRouter };
