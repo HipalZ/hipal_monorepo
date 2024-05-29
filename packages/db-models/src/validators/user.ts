@@ -32,3 +32,5 @@ const UserAttrs = z.object({
 });
 
 export type UserType = z.infer<typeof UserAttrs>;
+export type CustomRoleType = z.infer<typeof CustomRole>;
+export type UserControllerType = z.infer<typeof UserController>;

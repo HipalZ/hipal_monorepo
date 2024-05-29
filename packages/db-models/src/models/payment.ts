@@ -1,5 +1,68 @@
 import mongoose, { Model } from "mongoose";
-import { PaymentType } from "../validators";
+import { PaymentType, ItemType, SwiggyBillObjType } from "../validators";
+
+const Item = {
+  name: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+  },
+  portions: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true,
+  },
+  extras: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true,
+  },
+  comments: {
+    type: String,
+    required: true,
+  },
+}
+
+const SwiggyBillObj = {
+  totalItems: {
+    type: Number,
+    required: true,
+  },
+  subTotal: {
+    type: Number,
+    required: true,
+  },
+  packingCharges: {
+    type: Number,
+    required: true,
+  },
+  RxPayableGST: {
+    type: Number,
+    required: true,
+  },
+  swiggyPayableGST: {
+    type: Number,
+    required: true,
+  },
+  discount: {
+    type: Number,
+    required: true,
+  },
+  totalPrice: {
+    type: Number,
+    required: true,
+  },
+}
+
+const swiggyBillObjSchema = new mongoose.Schema<SwiggyBillObjType>(SwiggyBillObj)
+
+const ItemSchema = new mongoose.Schema<ItemType>(Item)
+
 
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
@@ -26,7 +89,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     items: {
       required: false,
-      type: [Object],
+      type: [ItemSchema],
     },
     subTotal: {
       required: false,
@@ -157,7 +220,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     orderId: String,
     swiggyBillObj: {
-      type: Object,
+      type: swiggyBillObjSchema,
       default: null,
     },
     payment_date: {

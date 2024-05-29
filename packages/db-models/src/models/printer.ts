@@ -21,9 +21,6 @@ const printerSchema = new mongoose.Schema<PrinterType>(
 
 );
 
-
-
-
 const Printer: Model<PrinterType> = mongoose.model<PrinterType>(
     "Printer",
     printerSchema

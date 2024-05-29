@@ -10,9 +10,6 @@ export const createPayment = (
   data: Record<string, any>,
   session: ClientSession
 ) => {
-  console.log("payment data", data);
-
-  // await Payment.create(data, { session: session });
   return data;
 };
 

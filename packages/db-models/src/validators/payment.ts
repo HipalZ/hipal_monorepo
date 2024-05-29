@@ -80,3 +80,5 @@ const PaymentAttrs = z.object({
 });
 
 export type PaymentType = z.infer<typeof PaymentAttrs>;
+export type ItemType = z.infer<typeof Item>;
+export type SwiggyBillObjType = z.infer<typeof SwiggyBillObj>;

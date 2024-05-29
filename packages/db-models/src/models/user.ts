@@ -1,5 +1,56 @@
 import mongoose, { Model } from "mongoose";
-import { UserType } from "../validators";
+import { UserType, CustomRoleType, UserControllerType } from "../validators";
+
+const CustomRole = {
+  businessId: {
+    type: String,
+    required: true,
+  },
+  customRoleId: {
+    type: String,
+    required: true,
+  },
+  roleName: {
+    type: String,
+    required: true,
+  },
+}
+
+const UserController = {
+  hibiz: {
+    type: Boolean,
+    required: false,
+  },
+  dish: {
+    type: Boolean,
+    required: false,
+  },
+  staff: {
+    type: Boolean,
+    required: false,
+  },
+  loyalty: {
+    type: Boolean,
+    required: false,
+  },
+  sale: {
+    type: Boolean,
+    required: false,
+  },
+  reports: {
+    type: Boolean,
+    required: false,
+  },
+  zones_table: {
+    type: Boolean,
+    required: false,
+  },
+
+}
+
+const customRoleSchema = new mongoose.Schema<CustomRoleType>(CustomRole);
+
+const userController = new mongoose.Schema<UserControllerType>(UserController);
 
 const userSchema = new mongoose.Schema<UserType>(
   {
@@ -27,7 +78,7 @@ const userSchema = new mongoose.Schema<UserType>(
       type: String,
     },
     customRole: {
-      type: [Object],
+      type: [customRoleSchema],
       required: false,
     },
     password: {
@@ -35,7 +86,7 @@ const userSchema = new mongoose.Schema<UserType>(
       required: false,
     },
     accessControl: {
-      type: Object,
+      type: userController,
       default: {},
     },
     withScaner: {
