@@ -1,5 +1,22 @@
 import mongoose, { Model } from "mongoose";
-import { SettingsType } from "../validators";
+import { SettingsType, ThemesType } from "../validators";
+
+const themesSchema = new mongoose.Schema<ThemesType>({
+  primaryColor: { type: String },
+  secondaryColor: { type: String },
+  accentColor: { type: String },
+  fontFamily: { type: String },
+  fontURL: { type: String },
+  buttonStyle: { type: String },
+  miniBanner: { type: String },
+  specialBanner: { type: String },
+  endBanner: { type: String },
+  instagramLink: { type: String },
+  facebookLink: { type: String },
+  youtubeLink: { type: String },
+  linkedinLink: { type: String },
+  footerText: { type: String },
+});
 
 const settingsSchema = new mongoose.Schema<SettingsType>(
   {
@@ -9,7 +26,7 @@ const settingsSchema = new mongoose.Schema<SettingsType>(
     },
     themes: {
       required: false,
-      type: Object,
+      type: themesSchema,
     },
     explore: {
       required: false,

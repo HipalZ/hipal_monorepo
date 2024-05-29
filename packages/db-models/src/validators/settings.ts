@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 const Themes = z.object({
@@ -64,3 +63,9 @@ export const settingsSchema = z.object({
 });
 
 export type SettingsType = z.infer<typeof settingsSchema>;
+export type ThemesType = z.infer<typeof Themes>;
+export type ExploreType = z.infer<typeof Explore>;
+export type NavigationType = z.infer<typeof Navigation>;
+export type DishType = z.infer<typeof Dish>;
+export type HighlightType = z.infer<typeof Highlight>;
+export type SpecialOfferType = z.infer<typeof specialOffer>;

@@ -1,4 +1,5 @@
 import mongoose, { Model } from "mongoose";
+const ObjectId = mongoose.Schema.Types.ObjectId
 
 import { AdminType } from "../validators";
 
