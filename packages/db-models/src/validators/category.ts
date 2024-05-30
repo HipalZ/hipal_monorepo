@@ -1,24 +1,19 @@
-import { z } from "zod";
-
-const Dish = z.object({
-  id: z.string(),
-  name: z.string(),
-});
+import { string, z } from "zod";
 
 export const categorySchema = z.object({
   businessId: z.string(),
-  name: z.string(),
+  name: z.string().max(100),
   visibility: z.boolean(),
   timerOn: z.boolean(),
   timerStart: z.string().optional(),
   timerEnd: z.string().optional(),
   availableDays: z.array(z.number()),
-  hierarchy: z.string(),
+  hierarchy: z.enum(["PARENT", "CHILD"]),
   parentCategory: z.string().optional(),
   parentCategoryId: z.string().optional(),
-  coverImage: z.string().optional(),
+  coverImage: z.string().url().optional(),
   links: z.array(z.string()),
-  dishes: z.array(Dish),
+  dishes: z.array(string()),
   version: z.number(),
   availability: z.boolean().default(true),
   charges: z.array(z.unknown()),

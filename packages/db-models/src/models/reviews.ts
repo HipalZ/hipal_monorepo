@@ -39,7 +39,7 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
 );
 
 const Reviews: Model<ReviewsType> = mongoose.model<ReviewsType>(
-  "reviews",
+  "customerReviews",
   reviewsSchema
 );
 

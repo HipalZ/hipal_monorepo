@@ -25,11 +25,6 @@ const specialOffer = z.object({
   redirectName: z.string(),
 });
 
-const Dish = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
 const Highlight = z.object({
   name: z.string(),
   stories: z.array(z.string()),
@@ -43,7 +38,7 @@ const Explore = z.object({
   openFrom: z.string(),
   openTill: z.string(),
   specialOffers: z.array(specialOffer),
-  popular: z.array(Dish),
+  popular: z.array(z.string()),
   highlights: z.array(Highlight),
 });
 
@@ -54,7 +49,7 @@ const Navigation = z.object({
   dishCard: z.string(),
 });
 
-export const settingsSchema = z.object({
+const settingsSchema = z.object({
   businessId: z.string(),
   themes: Themes.optional(),
   explore: Explore.optional(),
@@ -66,6 +61,5 @@ export type SettingsType = z.infer<typeof settingsSchema>;
 export type ThemesType = z.infer<typeof Themes>;
 export type ExploreType = z.infer<typeof Explore>;
 export type NavigationType = z.infer<typeof Navigation>;
-export type DishType = z.infer<typeof Dish>;
 export type HighlightType = z.infer<typeof Highlight>;
 export type SpecialOfferType = z.infer<typeof specialOffer>;

@@ -4,13 +4,8 @@ export * from "./extra";
 export * from "./settings";
 export * from "./business";
 export * from "./loyaltySetting";
-export * from "./role";
-export * from "./userLike";
-export * from "./userHistory";
-export * from "./userReview";
 export * from "./table";
 export * from "./zone";
-export * from "./swiggy";
 export * from "./payment";
 export * from "./reviews";
 export * from "./reviewsCustomer";
@@ -29,5 +24,3 @@ export * from "./kotPassword";
 export * from "./waiterKots";
 export * from "./printer";
 export * from "./userBill";
-
-

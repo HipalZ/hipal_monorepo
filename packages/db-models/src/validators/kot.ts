@@ -19,7 +19,6 @@ const SwiggyBillObject = z
     subTotal: z.number(),
     packingCharges: z.number(),
     RxPayableGST: z.number(),
-    swiggyBillObj: z.number(),
     discount: z.number(),
     totalPrice: z.number(),
     swiggyPayableGST: z.number(),
@@ -74,3 +73,8 @@ const KOTAttrs = z.object({
 });
 
 export type KOTType = z.infer<typeof KOTAttrs>;
+
+export type KotPortionType = z.infer<typeof Portion>;
+export type KotExtraType = z.infer<typeof Extra>;
+export type KotSwiggyBillObjectType = z.infer<typeof SwiggyBillObject>;
+export type KotDishType = z.infer<typeof Dish>;

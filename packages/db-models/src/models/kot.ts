@@ -1,6 +1,128 @@
 import mongoose, { Model } from "mongoose";
 
-import { KOTType } from "../validators";
+import {
+  KOTType,
+  KotDishType,
+  KotPortionType,
+  KotSwiggyBillObjectType,
+  KotExtraType,
+} from "../validators";
+
+const kotExtraSchema = new mongoose.Schema<KotExtraType>(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    qty: {
+      type: Number,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const kotPortionSchema = new mongoose.Schema<KotPortionType>(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    discount: {
+      type: Number,
+      required: false,
+    },
+    default: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const kotSwiggyBillObjectSchema = new mongoose.Schema<KotSwiggyBillObjectType>(
+  {
+    totalItems: {
+      type: String,
+      required: true,
+    },
+    subTotal: {
+      type: Number,
+      required: true,
+    },
+    packingCharges: {
+      type: Number,
+      required: true,
+    },
+    RxPayableGST: {
+      type: Number,
+      required: true,
+    },
+    discount: {
+      type: Number,
+      required: true,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    swiggyPayableGST: {
+      type: Number,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const kotDishSchema = new mongoose.Schema<KotDishType>(
+  {
+    dishId: {
+      type: String,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    qty: {
+      type: Number,
+      required: true,
+    },
+    comments: {
+      type: String,
+      required: false,
+    },
+    extras: {
+      type: [kotExtraSchema],
+      required: false,
+    },
+    portions: {
+      type: [kotPortionSchema],
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 const KOTSchema = new mongoose.Schema<KOTType>(
   {
@@ -37,7 +159,7 @@ const KOTSchema = new mongoose.Schema<KOTType>(
       required: true,
     },
     dish: {
-      type: Object,
+      type: kotDishSchema,
       required: true,
     },
     customerName: {
@@ -94,7 +216,7 @@ const KOTSchema = new mongoose.Schema<KOTType>(
     avgTime: Number,
     taxes: { type: [Object], default: null },
     swiggyBillObj: {
-      type: Object,
+      type: kotSwiggyBillObjectSchema,
       default: null,
     },
     match: {

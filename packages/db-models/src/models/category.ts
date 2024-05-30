@@ -1,11 +1,12 @@
-import mongoose ,{Model} from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { CategoryType } from "../validators";
-
+const ObjectId = mongoose.Schema.Types.ObjectId as any;
 const categorySchema = new mongoose.Schema<CategoryType>(
   {
     businessId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: "Business",
       index: true,
     },
     name: {
@@ -18,7 +19,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     },
     timerOn: {
       type: Boolean,
-      required: true,
+      required: false,
     },
     timerStart: {
       type: String,
@@ -30,10 +31,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     },
     availableDays: {
       type: [Number],
-      required: true,
+      required: false,
     },
     hierarchy: {
       type: String,
+      enum: ["PARENT", "CHILD"],
       required: true,
     },
     parentCategory: {
@@ -42,8 +44,9 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
     },
     parentCategoryId: {
-      type: String,
+      type: ObjectId,
       default: "",
+      ref: "category",
       required: false,
     },
     coverImage: {
@@ -55,8 +58,9 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: true,
     },
     dishes: {
-      type: [Object],
+      type: [ObjectId],
       required: true,
+      ref: "dish",
     },
     availability: {
       type: Boolean,

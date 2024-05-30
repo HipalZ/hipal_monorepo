@@ -66,7 +66,7 @@ const PaymentAttrs = z.object({
   editedBy: z.string().optional(),
   orderId: z.string().optional(),
   swiggyBillObj: SwiggyBillObj.optional(),
-  payment_date: z.number().default(Date.now),
+  payment_date: z.number().default(Date.now()),
   razorpayPaymentId: z.string().optional(),
   razorpayOrderId: z.string().optional(),
   razorpayAcquirerData: z.any().optional(),
@@ -80,5 +80,5 @@ const PaymentAttrs = z.object({
 });
 
 export type PaymentType = z.infer<typeof PaymentAttrs>;
-export type ItemType = z.infer<typeof Item>;
-export type SwiggyBillObjType = z.infer<typeof SwiggyBillObj>;
+export type PaymentItemType = z.infer<typeof Item>;
+export type PaymentSwiggyBillObjType = z.infer<typeof SwiggyBillObj>;

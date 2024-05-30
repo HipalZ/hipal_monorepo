@@ -1,11 +1,114 @@
 import mongoose, { Model } from "mongoose";
-import { DishType } from "../validators";
+import { DishType, PortionType, FiltersType, TagType } from "../validators";
+const ObjectId = mongoose.Schema.Types.ObjectId as any;
+
+const tagsSchema = new mongoose.Schema<TagType>(
+  {
+    name: {
+      type: String,
+      required: false,
+    },
+    color: {
+      type: String,
+      required: false,
+    },
+    icon: {
+      type: String,
+      required: false,
+    },
+    fontColor: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const portionSchema = new mongoose.Schema<PortionType>(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    discount: {
+      type: Number,
+      required: false,
+    },
+    default: {
+      type: Boolean,
+      required: true,
+    },
+    portionType: {
+      type: String,
+      required: false,
+    },
+    id: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const filtersSchema = new mongoose.Schema<FiltersType>(
+  {
+    dishes: {
+      type: [ObjectId],
+      required: false,
+      ref: "dish",
+    },
+    timeToConsume: {
+      type: Number,
+      required: false,
+    },
+    portionBestSuited: {
+      type: String,
+      required: false,
+    },
+    bestWeather: {
+      type: String,
+      required: false,
+    },
+    levelOfSpice: {
+      type: String,
+      required: false,
+    },
+    bestOccasion: {
+      type: String,
+      required: false,
+    },
+    texture: {
+      type: String,
+      required: false,
+    },
+    time: {
+      type: Number,
+      required: false,
+    },
+    metaTag: {
+      type: [String],
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 const dishSchema = new mongoose.Schema<DishType>(
   {
     businessId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: "Business",
       index: true,
     },
     name: {
@@ -38,12 +141,18 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: true,
     },
     categories: {
-      type: [Object],
+      type: [ObjectId],
       required: false,
+      ref: "category",
     },
-    portions: [{}],
+    portions: [
+      {
+        type: [portionSchema],
+        required: false,
+      },
+    ],
     extras: {
-      type: [Object],
+      type: [ObjectId],
       required: false,
       default: [],
     },
@@ -52,18 +161,8 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: true,
     },
     filters: {
-      type: Object,
+      type: filtersSchema,
       required: false,
-      default: {
-        timeToConsume: 0,
-        portionBestSuited: "",
-        bestWeather: "",
-        levelOfSpice: "",
-        bestOccasion: "",
-        texture: "",
-        time: 0,
-        dishes: [],
-      },
     },
     images: {
       type: [String],
@@ -74,7 +173,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
     tags: {
-      type: [Object],
+      type: [tagsSchema],
       required: false,
     },
     links: {
@@ -95,8 +194,6 @@ const dishSchema = new mongoose.Schema<DishType>(
     timestamps: true,
   }
 );
-
-// dishSchema.set("versionKey", "version");
 
 const Dish: Model<DishType> = mongoose.model<DishType>("dish", dishSchema);
 

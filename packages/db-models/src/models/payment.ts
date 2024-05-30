@@ -1,75 +1,83 @@
 import mongoose, { Model } from "mongoose";
-import { PaymentType, ItemType, SwiggyBillObjType } from "../validators";
+const ObjectId = mongoose.Schema.Types.ObjectId as any;
+import {
+  PaymentType,
+  PaymentItemType,
+  PaymentSwiggyBillObjType,
+} from "../validators";
 
-const Item = {
-  name: {
-    type: String,
-    required: true,
+const paymentItemSchema = new mongoose.Schema<PaymentItemType>(
+  {
+    name: {
+      required: true,
+      type: String,
+    },
+    quantity: {
+      required: true,
+      type: Number,
+    },
+    amount: {
+      required: true,
+      type: Number,
+    },
+    portions: {
+      required: false,
+      type: Object,
+    },
+    extras: {
+      required: false,
+      type: Object,
+    },
+    comments: {
+      required: false,
+      type: String,
+    },
   },
-  quantity: {
-    type: Number,
-    required: true,
-  },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  portions: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-  },
-  extras: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-  },
-  comments: {
-    type: String,
-    required: true,
-  },
-}
+  { timestamps: true }
+);
 
-const SwiggyBillObj = {
-  totalItems: {
-    type: Number,
-    required: true,
-  },
-  subTotal: {
-    type: Number,
-    required: true,
-  },
-  packingCharges: {
-    type: Number,
-    required: true,
-  },
-  RxPayableGST: {
-    type: Number,
-    required: true,
-  },
-  swiggyPayableGST: {
-    type: Number,
-    required: true,
-  },
-  discount: {
-    type: Number,
-    required: true,
-  },
-  totalPrice: {
-    type: Number,
-    required: true,
-  },
-}
-
-const swiggyBillObjSchema = new mongoose.Schema<SwiggyBillObjType>(SwiggyBillObj)
-
-const ItemSchema = new mongoose.Schema<ItemType>(Item)
-
+const paymentSwiggyBillObjSchema =
+  new mongoose.Schema<PaymentSwiggyBillObjType>(
+    {
+      totalItems: {
+        required: true,
+        type: Number,
+      },
+      subTotal: {
+        required: true,
+        type: Number,
+      },
+      packingCharges: {
+        required: true,
+        type: Number,
+      },
+      RxPayableGST: {
+        required: true,
+        type: Number,
+      },
+      swiggyPayableGST: {
+        required: true,
+        type: Number,
+      },
+      discount: {
+        required: true,
+        type: Number,
+      },
+      totalPrice: {
+        required: true,
+        type: Number,
+      },
+    },
+    { timestamps: true }
+  );
 
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
     businessId: {
       required: false,
-      type: String,
+      type: ObjectId,
       index: true,
+      ref: "Business",
     },
     businessName: {
       required: false,
@@ -89,7 +97,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     items: {
       required: false,
-      type: [ItemSchema],
+      type: [paymentItemSchema],
     },
     subTotal: {
       required: false,
@@ -220,7 +228,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     orderId: String,
     swiggyBillObj: {
-      type: swiggyBillObjSchema,
+      type: paymentSwiggyBillObjSchema,
       default: null,
     },
     payment_date: {
@@ -264,7 +272,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 );
 
 const Payment: Model<PaymentType> = mongoose.model<PaymentType>(
-  "payment",
+  "Review",
   paymentSchema
 );
 
