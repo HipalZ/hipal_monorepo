@@ -4,14 +4,8 @@ import express, { Request, Response } from "express";
 import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
+import { DishType } from "@hi/db-models/src/validators";
 const router = express.Router();
-
-export const createPayment = (
-  data: Record<string, any>,
-  session: ClientSession
-) => {
-  return data;
-};
 
 router.post(
   "/v1/dishes",
@@ -38,23 +32,10 @@ router.post(
       visibility,
       delayTime,
       availability,
-      dineIn,
-      take_away,
-      delivery,
-      taxes,
     } = req.body;
-    const { menuType } = req.query;
-    if (menuType) {
-      if (menuType == "take-away") {
-        req.body["take_away"] = take_away;
-      }
-      if (menuType == "delivery") {
-        req.body["delivery"] = delivery;
-      }
-    }
 
     return runInTransaction(async (session) => {
-      const dish = Dish.create(
+      const dish = await Dish.create<DishType>(
         {
           businessId,
           name,
@@ -75,18 +56,16 @@ router.post(
           visibility,
           delayTime,
           availability,
-          dineIn,
-          take_away,
-          delivery,
-          taxes,
         },
         {
           session: session,
         }
       );
-
-      // api  call X
-      // api call X
+      await Category.updateMany(
+        { _id: { $in: categories } },
+        { $push: { dishes: dish._id } },
+        { session: session }
+      );
 
       res.status(201).send(dish);
     });

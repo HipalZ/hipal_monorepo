@@ -1,9 +1,10 @@
 import express, { Request, Response } from "express";
 
 const router = express.Router();
-import axios from "axios";
 
-import { Category } from "@hi/db-models";
+import { Category, Dish } from "@hi/db-models";
+import { CategoryType } from "@hi/db-models/src/validators";
+import { isEmpty } from "lodash";
 
 router.get(
   "/v1/categories",
@@ -94,80 +95,81 @@ router.get(
   }
 );
 
-// router.get(
-//   "/v1/categories/All/Categories",
+router.get(
+  "/v1/categories/All/Categories",
 
-//   async (req: Request, res: Response) => {
-//     try {
-//       const { businessId } = req.query;
+  async (req: Request, res: Response) => {
+    try {
+      const { businessId } = req.query;
 
-//       // const businessesData = await axios(paths.businessData(businessId))
-//       const dishesData = await axios(
-//         `${process.env.URL}/v1/dishes/All/Dishes?businessId=${businessId}`
-//       );
-//       const _categoryData = await Category.find({ businessId }).select(
-//         "name  visibility hierarchy parentCategoryId parentCategory id dishes availability visibility"
-//       );
-//       const data = {} as IBusinessData;
+      const dishesData: any = await Dish.find({ businessId }).select(
+        "name price dishType portions.name portions.price extras images description id kitchenId  availability visibility"
+      );
+      const _categoryData = await Category.find({ businessId }).select(
+        "name  visibility hierarchy parentCategoryId parentCategory id dishes availability visibility"
+      );
+      const data = {} as any;
 
-//       const categories = () => {
-//         let result = [] as any;
+      const categories = () => {
+        let result = [] as any;
 
-//         _categoryData?.forEach((category) => {
-//           const newCategory = JSON.parse(JSON.stringify(category));
-//           newCategory.dishes = [];
+        _categoryData?.forEach((category: CategoryType) => {
+          const newCategory: CategoryType = JSON.parse(
+            JSON.stringify(category)
+          );
+          newCategory.dishes = [] as any;
 
-//           for (let dish of category?.dishes) {
-//             const newDish = dishesData?.data.find((d: any) => d.id === dish.id);
+          for (let dish of category?.dishes as any) {
+            const newDish: any = dishesData?.data.find(
+              (d: any) => d.id === dish.id
+            );
 
-//             if (!!newDish)
-//               newCategory.dishes = [...newCategory.dishes, newDish];
-//           }
+            if (!!newDish)
+              newCategory.dishes = [...newCategory.dishes, newDish];
+          }
 
-//           if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory];
-//         });
+          if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory];
+        });
 
-//         return result;
-//       };
+        return result;
+      };
 
-//       data["categories"] = categories();
+      data["categories"] = categories();
 
-//       res.status(200).send({ data: data });
-//     } catch (err: any) {
-//       return res.status(500).send(err.message);
-//     }
-//   }
-// );
+      res.status(200).send({ data: data });
+    } catch (err: any) {
+      return res.status(500).send(err.message);
+    }
+  }
+);
 
-// router.get(
-//   "/v1/categories/Active/Category",
-//   // currentUser,
-//   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
-//   async (req: Request, res: Response) => {
-//     const { businessId } = req.query;
-//     const existingCategory = await Category.find({
-//       businessId,
-//     });
-//     if (!existingCategory) {
-//       throw new NotFoundError();
-//     }
-//     let Active = 0;
-//     let visible = 0;
-//     let available = 0;
+router.get(
+  "/v1/categories/Active/Category",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+    const existingCategory = await Category.find({
+      businessId,
+    });
 
-//     existingCategory.forEach((element: any) => {
-//       if (element?.visibility && element?.availability) {
-//         Active += 1;
-//       }
-//       if (element?.visibility) {
-//         visible += 1;
-//       }
-//       if (element?.availability) available += 1;
-//     });
+    let Active = 0;
+    let visible = 0;
+    let available = 0;
 
-//     return res.status(200).send({ active: Active, visible, available });
-//   }
-// );
+    existingCategory.forEach((element: any) => {
+      if (element?.visibility && element?.availability) {
+        Active += 1;
+      }
+      if (element?.visibility) {
+        visible += 1;
+      }
+      if (element?.availability) available += 1;
+    });
+
+    return res.status(200).send({ active: Active, visible, available });
+  }
+);
 
 // router.get(
 //   "/v1/categories/:id/Takeaway",

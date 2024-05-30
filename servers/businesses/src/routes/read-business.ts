@@ -1,45 +1,37 @@
 import express, { Request, Response } from "express";
-import {Business,Review,LoyaltySettings,userTransactionHistory,Role} from "@hi/db-models";
-import axios from "axios";
-
+import { Business, LoyaltySettings } from "@hi/db-models";
 
 const router = express.Router();
 
-router.get(
-  "/v1/businesses",
-  async (req: Request, res: Response) => {
-    const { clientRole, id } = req.query;
-    if (clientRole === "admin") {
-      const existingBusinesses = await Business.find({});
-      res.status(200).send(existingBusinesses);
-      return;
-    }
-    const userId = req.currentUser?.id;
-    const existingBusinesses = await Business.find({
-      staff: userId || id,
-    });
-
+router.get("/v1/businesses", async (req: Request, res: Response) => {
+  const { clientRole, id } = req.query;
+  if (clientRole === "admin") {
+    const existingBusinesses = await Business.find({});
     res.status(200).send(existingBusinesses);
+    return;
   }
-);
+  const userId = req.currentUser?.id;
+  const existingBusinesses = await Business.find({
+    staff: userId || id,
+  });
 
-router.get(
-  "/v1/businesses/:id",
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { customLink } = req.query;
-    if (customLink) {
-      const existingBusiness = await Business.findOne({ customLink: id });
-      res.send({
-        exists: !!existingBusiness,
-      });
-      return;
-    }
-    const existingBusiness = await Business.findById(id);
+  res.status(200).send(existingBusinesses);
+});
 
-    res.status(200).send(existingBusiness);
+router.get("/v1/businesses/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { customLink } = req.query;
+  if (customLink) {
+    const existingBusiness = await Business.findOne({ customLink: id });
+    res.send({
+      exists: !!existingBusiness,
+    });
+    return;
   }
-);
+  const existingBusiness = await Business.findById(id);
+
+  res.status(200).send(existingBusiness);
+});
 
 router.get(
   "/v1/businesses/get/Single/:businessId",
@@ -90,39 +82,10 @@ router.get(
   "/v1/businesses/:id/testing",
   async (req: Request, res: Response) => {
     try {
-    
       const message = "Test Successfully...!";
       res.status(200).send(message);
     } catch (err: any) {
       console.log("err", err);
-    }
-  }
-);
-
-router.get(
-  "/v1/businesses/:id/allreviews",
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const allReviews = await Review.find({ businessId: id });
-      return allReviews.length > 0
-        ? res.status(200).send(allReviews)
-        : res.status(400).send(allReviews);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
-  }
-);
-
-router.get(
-  "/v1/businesses/:id/reviews/:reviewId",
-  async (req: Request, res: Response) => {
-    try {
-      const { reviewId } = req.params;
-      const review = await Review.findById(reviewId);
-      return res.status(200).send(review);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
     }
   }
 );
@@ -177,127 +140,6 @@ router.get(
     };
 
     return res.status(200).send({ status: true, data: businessIdData });
-  }
-);
-
-router.get(
-  "/v1/businesses/getlatesthistoryorder/:userId",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
-      let PAGE_SIZE = 10;
-      let pageNumber: any = req?.query?.pageNumber || 1;
-
-      const skip: number = (pageNumber - 1) * PAGE_SIZE;
-
-      const history = await userTransactionHistory
-        .find({ userId: userId })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE);
-
-      return res.send({ status: true, data: history });
-    } catch (error: any) {
-      return res.status(500).send({ status: false, message: error.message });
-    }
-  }
-);
-
-router.get(
-  "/v1/businesses/getsingletransaction/:tranactionId",
-  async (req: Request, res: Response) => {
-    try {
-      const { tranactionId } = req.params;
-      const transaction = await userTransactionHistory.findById(tranactionId);
-      if (!transaction)
-        return res
-          .status(404)
-          .send({ status: false, message: "Transaction Not Found !!!" });
-
-      // send the orders to the client
-      return res.send({ status: true, data: transaction });
-    } catch (error: any) {
-      return res.status(500).send({ status: false, message: error.message });
-    }
-  }
-);
-
-router.get(
-  "/v1/businesses/:id/roles",
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const existingRoles = await Role.find({
-      businessId: id,
-    });
- 
-    res.status(200).send(existingRoles);
-  }
-);
-
-router.get(
-  "/v1/businesses/roles/:id",
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const existingRoles = await Role.findById(id);
-
-    res.status(200).send(existingRoles);
-  }
-);
-
-router.get(
-  "/v1/businesses/temp/Business",
-  async (req: Request, res: Response) => {
-    try {
-      const { update } = req.query;
-      const existingBusinesses = await Business.find();
-      let array: any = [];
-      for (let i = 0; i < existingBusinesses?.length; i++) {
-        let element = existingBusinesses[i];
-        let setting: any = [];
-        let dishData: any = [];
-        const config = {
-          method: "get",
-          url: `${process.env.URL}/v1/settings/Check/Business?businessId=${element?.id}`,
-        };
-        try {
-          setting = await axios(config);
-          setting = setting?.data;
-        } catch (err: any) {
-          console.log("err", err);
-        }
-
-        const config2 = {
-          method: "get",
-          url: `${process.env.URL}/v1/dishes/CheckDishes/Business?businessId=${element?.id}`,
-        };
-        try {
-          dishData = await axios(config2);
-          dishData = dishData?.data;
-        } catch (err: any) {
-          console.log("err", err);
-        }
-        if (setting?.length > 0 && dishData.length > 0) {
-          array.push(element.id);
-        }
-      }
-
-      if (update) {
-        for (let i = 0; i < array.length; i++) {
-          let id = array[i];
-          await Business.findByIdAndUpdate(
-            id,
-            { isHasDishData: true, isHasSetting: true },
-            {
-              new: true,
-            }
-          );
-        }
-      }
-
-      res.status(200).send(array);
-    } catch (err: any) {
-      console.log("err", err);
-    }
   }
 );
 

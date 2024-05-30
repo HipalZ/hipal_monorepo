@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const BusinessSchema = z.object({
   businessName: z.string(),
@@ -39,4 +39,4 @@ export const BusinessSchema = z.object({
   withPopCorn: z.boolean().optional(),
 });
 
-export type Business = z.infer<typeof BusinessSchema>;
+export type BusinessType = z.infer<typeof BusinessSchema>;

@@ -1,7 +1,9 @@
 import express, { Request, Response } from "express";
 
 import { natsWrapper } from "../nats-wrapper";
-import { Category } from "@hi/db-models";
+import { Category, Dish } from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { ClientSession } from "mongoose";
 
 const router = express.Router();
 
@@ -11,9 +13,24 @@ router.delete(
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const existingCategory = await Category.findByIdAndDelete(id);
+    return runInTransaction(async (session: ClientSession) => {
+      const category = await Category.findByIdAndDelete(id, {
+        session: session,
+      });
 
-    res.status(200).send({});
+      if (!category) {
+        return res.status(404).send({
+          message: "Category not found",
+        });
+      }
+
+      await Dish.updateMany(
+        { _id: { $in: category.dishes.map((dish) => dish._id) } },
+        { $pull: { categories: id } }
+      );
+
+      return res.status(204).send(category);
+    });
   }
 );
 

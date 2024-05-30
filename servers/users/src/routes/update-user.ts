@@ -10,8 +10,6 @@ import {
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
-import moment from "moment";
-
 
 router.put("/v1/users", (req: Request, res: Response) => {
   const { action } = req.query;
@@ -45,13 +43,5 @@ router.put(
     }
   }
 );
-
-
-
-
-
-
-
-
 
 export { router as updateUserRouter };

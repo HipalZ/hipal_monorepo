@@ -4,14 +4,13 @@ import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { redisWrapper } from "../redis-wrapper";
 
-const moments = require("moment-timezone");
-
 import {
   Admin,
   User,
   UserReward,
   UserRewardHistory,
   UrlModel,
+  LoyaltySettings,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
@@ -754,43 +753,45 @@ router.post(
         tableName,
       } = req.body;
       coins = Math.floor(coins);
-      let loyaltySetting;
-      try {
-        loyaltySetting = await axios.get(
-          `${process.env.URL}/v1/businesses/${businessId}/loyalty`
-        );
-        loyaltySetting = loyaltySetting?.data;
+      return runInTransaction(async (session: ClientSession) => {
+        let loyaltySetting;
+        try {
+          loyaltySetting = await LoyaltySettings.findOne(
+            { businessId },
+            { session }
+          );
 
-        if (password != loyaltySetting?.password) {
-          return res.status(400).send("Wrong Password");
+          if (password != loyaltySetting?.password) {
+            return res.status(400).send("Wrong Password");
+          }
+        } catch (err: any) {
+          console.log("err", err);
         }
-      } catch (err: any) {
-        console.log("err", err);
-      }
 
-      let existingReward = await UserReward.findOneAndUpdate(
-        { userPhone, loyaltyId },
-        { $inc: { rewards: coins } },
-        { new: true }
-      );
-      let data = new UserRewardHistory({
-        userName,
-        userPhone,
-        businessName,
-        waiterName,
-        status: "plus",
-        rewards: coins,
+        let existingReward = await UserReward.findOneAndUpdate(
+          { userPhone, loyaltyId },
+          { $inc: { rewards: coins } },
+          { new: true }
+        );
+        let data = new UserRewardHistory({
+          userName,
+          userPhone,
+          businessName,
+          waiterName,
+          status: "plus",
+          rewards: coins,
 
-        time,
-        date: new Date().toISOString().replace("T", " ").slice(0, 19),
-        currentBalance: existingReward?.rewards,
-        tableName,
-        day: dayAndDate,
-        loyaltyId,
+          time,
+          date: new Date().toISOString().replace("T", " ").slice(0, 19),
+          currentBalance: existingReward?.rewards,
+          tableName,
+          day: dayAndDate,
+          loyaltyId,
+        });
+        await data.save();
+
+        return res.send(existingReward);
       });
-      await data.save();
-
-      return res.send(existingReward);
     } catch (err: any) {
       console.log("err", err);
     }
@@ -809,98 +810,110 @@ router.post(
       const time = momentTime.clone().utcOffset("+05:30").format("HH:mm");
       const { loyaltyId, usersArray, password, businessId, uploadedBy } =
         req.body;
-      let loyaltySetting;
-      try {
-        loyaltySetting = await axios.get(
-          `${process.env.URL}/v1/businesses/${businessId}/loyalty`
-        );
-        loyaltySetting = loyaltySetting?.data;
+      return runInTransaction(async (session: ClientSession) => {
+        let loyaltySetting;
+        try {
+          loyaltySetting = await LoyaltySettings.findOne(
+            { businessId },
+            { session }
+          );
 
-        if (password != loyaltySetting?.password) {
-          return res.status(400).send("Wrong Password");
+          if (password != loyaltySetting?.password) {
+            return res.status(400).send("Wrong Password");
+          }
+        } catch (err: any) {
+          console.log("err", err);
         }
-      } catch (err: any) {
-        console.log("err", err);
-      }
 
-      for (let i = 0; i < usersArray?.length; i++) {
-        let userObject = usersArray?.[i];
+        for (let i = 0; i < usersArray?.length; i++) {
+          let userObject = usersArray?.[i];
 
-        let userExit = await User.findOne({
-          phone: userObject?.userPhone,
-          role: "HIPAL_CUSTOMER",
-        });
+          let userExit = await User.findOne(
+            {
+              phone: userObject?.userPhone,
+              role: "HIPAL_CUSTOMER",
+            },
+            { session }
+          );
 
-        if (userExit) {
-          let existingReward = await UserReward.findOne({
-            userPhone: userObject?.userPhone,
-            loyaltyId,
-          });
+          if (userExit) {
+            let existingReward = await UserReward.findOne({
+              userPhone: userObject?.userPhone,
+              loyaltyId,
+            });
 
-          if (!existingReward) {
-            if (
-              userObject?.rewards > 0 &&
-              userObject?.rewards < loyaltySetting?.rewardLimit
-            ) {
-              const newReward = new UserReward({
-                userPhone: userObject?.userPhone,
-                userName: userExit?.name,
-                loyaltyId,
-                rewards: Math.floor(userObject?.rewards),
-                password: Math.floor(Math.random() * 9000) + 10000,
-                count: 1,
-              });
-              await newReward.save();
-              const data = new UserRewardHistory({
-                userName: userExit?.name,
-                userPhone: userObject?.userPhone,
+            if (!existingReward) {
+              if (
+                userObject?.rewards > 0 &&
+                loyaltySetting?.rewardLimit &&
+                userObject?.rewards < loyaltySetting?.rewardLimit
+              ) {
+                const newReward = new UserReward({
+                  userPhone: userObject?.userPhone,
+                  userName: userExit?.name,
+                  loyaltyId,
+                  rewards: Math.floor(userObject?.rewards),
+                  password: Math.floor(Math.random() * 9000) + 10000,
+                  count: 1,
+                });
+                await newReward.save();
+                const data = new UserRewardHistory({
+                  userName: userExit?.name,
+                  userPhone: userObject?.userPhone,
 
-                waiterName: uploadedBy,
-                status: "plus",
-                rewards: Math.floor(userObject?.rewards),
+                  waiterName: uploadedBy,
+                  status: "plus",
+                  rewards: Math.floor(userObject?.rewards),
 
-                time,
-                date: new Date().toISOString().slice(0, 19).replace("T", " "),
-                currentBalance: Math.floor(userObject?.rewards),
+                  time,
+                  date: new Date().toISOString().slice(0, 19).replace("T", " "),
+                  currentBalance: Math.floor(userObject?.rewards),
 
-                day: dayAndDate,
-                loyaltyId,
-                total: userObject?.total,
-              });
-              await data.save();
-            }
-          } else {
-            if (existingReward?.rewards < loyaltySetting?.rewardLimit) {
-              await UserReward.findOneAndUpdate(
-                { userPhone: userObject?.userPhone, loyaltyId },
-                {
-                  $inc: { rewards: Math.floor(userObject?.rewards), count: 1 },
-                },
-                { new: true }
-              );
-              const data = new UserRewardHistory({
-                userName: userExit?.name,
-                userPhone: userObject?.userPhone,
+                  day: dayAndDate,
+                  loyaltyId,
+                  total: userObject?.total,
+                });
+                await data.save();
+              }
+            } else {
+              if (
+                loyaltySetting?.rewardLimit &&
+                existingReward?.rewards < loyaltySetting?.rewardLimit
+              ) {
+                await UserReward.findOneAndUpdate(
+                  { userPhone: userObject?.userPhone, loyaltyId },
+                  {
+                    $inc: {
+                      rewards: Math.floor(userObject?.rewards),
+                      count: 1,
+                    },
+                  },
+                  { new: true }
+                );
+                const data = new UserRewardHistory({
+                  userName: userExit?.name,
+                  userPhone: userObject?.userPhone,
 
-                waiterName: uploadedBy,
-                status: "plus",
-                rewards: Math.floor(userObject?.rewards),
+                  waiterName: uploadedBy,
+                  status: "plus",
+                  rewards: Math.floor(userObject?.rewards),
 
-                time,
-                date: new Date().toISOString().slice(0, 19).replace("T", " "),
-                currentBalance: Math.floor(userObject?.rewards),
+                  time,
+                  date: new Date().toISOString().slice(0, 19).replace("T", " "),
+                  currentBalance: Math.floor(userObject?.rewards),
 
-                day: dayAndDate,
-                loyaltyId,
-                total: userObject?.total,
-              });
-              await data.save();
+                  day: dayAndDate,
+                  loyaltyId,
+                  total: userObject?.total,
+                });
+                await data.save();
+              }
             }
           }
         }
-      }
 
-      return res.send("uploaded successFully");
+        return res.send("uploaded successFully");
+      });
     } catch (err: any) {
       console.log("err", err);
     }

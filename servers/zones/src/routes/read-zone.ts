@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { Swiggy, Table, Zone } from "@hi/db-models"
+import { Table, Zone } from "@hi/db-models";
 
 const router = express.Router();
 
@@ -8,26 +8,10 @@ router.get(
 
   async (req: Request, res: Response) => {
     const { businessId, swiggy, zoneId, zomato } = req.query;
-    if (swiggy) {
-      const existingZone =
-        (await Swiggy.findOne({
-          businessId,
-          zoneName: "swiggy",
-        })) || {};
-      return res.status(200).send(existingZone);
-    }
-    if (zomato) {
-      const existingZone =
-        (await Swiggy.findOne({
-          businessId,
-          zoneName: "zomato",
-        })) || {};
-      return res.status(200).send(existingZone);
-    }
+
     const existingZones = await Zone.find({
       businessId,
     });
-
 
     res.status(200).send(existingZones);
   }
@@ -98,7 +82,6 @@ router.get(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingZone = await Zone.findById(id);
-
 
     res.status(200).send(existingZone);
   }
@@ -196,7 +179,6 @@ router.get(
     const { id, zoneId } = req.params;
 
     const existingZone = await Zone.findById(zoneId);
-
 
     const existingTable = await Table.findById(id);
 

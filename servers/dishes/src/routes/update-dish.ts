@@ -1,12 +1,11 @@
 import express, { Request, Response } from "express";
 
 import { natsWrapper } from "../nats-wrapper";
-import { Category, Dish, Charges, Extra, Menu } from "@hi/db-models";
+import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 
-import { validateExistingDish } from "./validators/edit-dish-validator";
-
 import { v4 as uuidv4 } from "uuid";
+import { DishType } from "@hi/db-models/src/validators";
 
 const router = express.Router();
 
@@ -14,13 +13,33 @@ router.put(
   "/v1/dishes/:id",
 
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const update = { ...req.body };
-    await Dish.findByIdAndUpdate(id, { $set: update }, { new: true });
+    return runInTransaction(async (session) => {
+      const { id } = req.params;
+      const update = { ...req.body } as DishType;
+      const dish = await Dish.findByIdAndUpdate<DishType>(
+        id,
+        { $set: update },
+        { new: true },
+        { session: session }
+      );
+      if (!dish) {
+        return res.status(404).send({
+          message: "Dish not found",
+        });
+      }
 
-    const dish = await Dish.findById(id);
-
-    res.status(200).send(dish);
+      const categories = await Category.find({ dishes: dish._id });
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        if (category.dishes.includes(dish._id.toString())) {
+          category.dishes = category.dishes.filter(
+            (dishId) => dishId.toString() !== dish._id.toString()
+          );
+          await category.save();
+        }
+      }
+      return res.status(200).send(dish);
+    });
   }
 );
 

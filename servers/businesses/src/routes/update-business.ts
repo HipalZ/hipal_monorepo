@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import axios from "axios";
-import { Business,Review,LoyaltySettings
-
- } from "@hi/db-models";
+import { Business, LoyaltySettings, Tempmodel } from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { ClientSession } from "mongoose";
 const router = express.Router();
 
 router.put(
@@ -17,24 +17,6 @@ router.put(
     });
 
     res.status(200).send(existingBusiness);
-  }
-);
-
-router.put(
-  "/v1/businesses/:id/reviews/:reviewId",
-
-  async (req: Request, res: Response) => {
-    try {
-      const { reviewId } = req.params;
-      const update = { ...req.body };
-      const existingReview = await Review.findByIdAndUpdate(reviewId, update, {
-        new: true,
-      });
-
-      res.status(200).send(existingReview);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
   }
 );
 
@@ -108,28 +90,57 @@ router.put(
 
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const {
+    let {
       password,
       tableId,
       reapply,
       serviceChargeRemovedBy,
       serviceChargeAddedBy,
     } = req.body;
-    const existingBusiness = await Business.findOne({
-      _id: id,
-      serviceChargeRemovalPass: password,
+    return runInTransaction(async (session: ClientSession) => {
+      if (reapply) {
+        serviceChargeRemovedBy = "";
+      }
+      if (!reapply) {
+        serviceChargeAddedBy = "";
+      }
+      const business = await Business.findById(
+        { _id: id, password },
+        { session }
+      );
+      if (!business) {
+        return res.status(400).send("Business not found");
+      }
+
+      const serviceChargeisExist = await Tempmodel.findOne(
+        {
+          tableId,
+          serviceChargeApply: true,
+        },
+        { session }
+      );
+
+      if (serviceChargeisExist && reapply) {
+        return res.status(400).send("Service Charge is already applied");
+      }
+
+      const updateServiceCharge = await Tempmodel.findOneAndUpdate(
+        { tableId: tableId },
+        {
+          $set: {
+            serviceChargeApply: reapply ? true : false,
+            serviceChargeRemovedBy,
+            serviceChargeAddedBy,
+          },
+        },
+
+        { session }
+      );
+
+      res
+        .status(200)
+        .send(`Service charge ${reapply ? "Added" : "removed"} successfully`);
     });
-
-    const con = {
-      method: "put",
-      url: `${process.env.URL}/v1/kitchens/:id/serviceCharge`,
-      data: { tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy },
-    };
-    await axios(con);
-
-    res
-      .status(200)
-      .send(`Service charge ${reapply ? "Added" : "removed"} successfully`);
   }
 );
 

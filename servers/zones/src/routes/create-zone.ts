@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 const router = express.Router();
-import {Zone,Table,Swiggy} from "@hi/db-models"
+import { Zone, Table } from "@hi/db-models";
 
 router.post(
   "/v1/zones",
@@ -64,7 +64,7 @@ router.post(
           .status(400)
           .send({ status: false, message: "TableName must be unique ...!" });
       const zone = await Zone.findById(zoneId);
-     
+
       for (let i = 0; i < staff?.length; i++) {
         // if (!zone.staff.includes(staff[i])) {
         //   throw new NotAuthorizedError();
@@ -102,92 +102,6 @@ router.post(
     }
   }
 );
-
-router.post("/v1/zones/:zoneId/swiggy", async (req: Request, res: Response) => {
-  try {
-    const {
-      zoneName,
-      action,
-      charge,
-      commission,
-      commissionName,
-      chargeName,
-      businessId,
-      password,
-    } = req.body;
-
-    if (!zoneName) {
-      return res.status(400).send("zoneName and charge is required");
-    }
-
-    let zone = await Swiggy.findOne({ zoneName, businessId });
-
-    if (!zone) {
-      let addCharges = [charge];
-      let commissions = [commission];
-      let pass = Math.floor(Math.random() * 9000) + 1000;
-      let body = req.body;
-      body["addCharges"] = addCharges;
-      body["commisions"] = commissions;
-      const newZone = new Swiggy({ ...req.body, password: password || pass });
-      await newZone.save();
-      return res.send(newZone);
-    } else {
-      if (action === "add") {
-        const updatedZone = await Swiggy.findOneAndUpdate(
-          { zoneName, businessId },
-          { $addToSet: { addCharges: charge, commisions: commission } },
-          { new: true }
-        );
-
-        return res.send(updatedZone);
-      } else if (action === "update") {
-        await Swiggy.findOneAndUpdate(
-          { zoneName, businessId },
-          {
-            $pull: {
-              addCharges: {
-                chargeName: chargeName,
-                commissionName: commissionName,
-              },
-            },
-          },
-          { new: true }
-        );
-        const updatedZone = await Swiggy.findOneAndUpdate(
-          { zoneName, businessId },
-          { $addToSet: { addCharges: charge, commisions: commission } },
-          { new: true }
-        );
-        return res.send(updatedZone);
-      } else if (action === "remove") {
-        if (!chargeName) {
-          return res.status(400).send("chargeName is required");
-        }
-
-        const updatedZone = await Swiggy.findOneAndUpdate(
-          { zoneName, businessId },
-          {
-            $pull: {
-              addCharges: {
-                chargeName: chargeName,
-                commissionName: commissionName,
-              },
-            },
-          },
-          { new: true }
-        );
-
-        return res.send(updatedZone);
-      } else {
-        return res.status(400).send("enter valid action");
-      }
-    }
-  } catch (error) {
-    console.log("err", error);
-    return res.status(500).send(error);
-  }
-});
 
 router.post(
   "/v1/zones/:zoneId/bulkTables",

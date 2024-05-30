@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 
 import { natsWrapper } from "../nats-wrapper";
-import { Category, Dish, Charges, Extra, Menu } from "@hi/db-models";
+import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 
 const router = express.Router();
@@ -11,23 +11,25 @@ router.delete(
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const existingDish = await Dish.findByIdAndDelete(id);
+    return runInTransaction(async (session) => {
+      const dish = await Dish.findByIdAndDelete(req.params.id, {
+        session: session,
+      });
 
-    res.status(200).send(existingDish);
-  }
-);
+      if (!dish) {
+        return res.status(404).send({
+          message: "Dish not found",
+        });
+      }
 
-router.delete(
-  "/v1/dishes/:id/getCharges/:chargeId",
+      await Category.updateMany(
+        { dishes: dish._id },
+        { $pull: { dishes: dish._id } },
+        { session: session }
+      );
 
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-
-  async (req: Request, res: Response) => {
-    const { chargeId } = req.params;
-    let updateExtra = await Charges.findByIdAndDelete(chargeId);
-
-    res.status(200).send(updateExtra);
+      return res.status(204).send(dish);
+    });
   }
 );
 
