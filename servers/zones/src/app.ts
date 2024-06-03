@@ -4,7 +4,6 @@ import "express-async-errors"; // Do not remove, it deals with async errors in e
 import { json, urlencoded } from "body-parser";
 import cookieSession from "cookie-session";
 
-
 import { idempotent } from "./middleware/idempotent";
 
 // Routes
@@ -15,7 +14,7 @@ import { deleteZonesRouter } from "./routes/delete-zone";
 
 const app = express();
 app.disable("x-powered-by");
-app.set("trust proxy", true); // * traffic received from ingress
+app.set("trust proxy", true);
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(
@@ -31,6 +30,7 @@ app.use(
       "https://hipal.life",
       "https://www.hipal.life",
       "http://localhost:3000",
+      "http://localhost:3009",
       "https://hipal-hitable.vercel.app",
       "https://dev-hitable.vercel.app",
       "https://hitable.hipal.life",
@@ -77,7 +77,7 @@ app.use(updateZonesRouter);
 app.use(deleteZonesRouter);
 
 app.all("*", () => {
-  throw 'Route not found';
+  throw "Route not found";
 });
 
 // app.use(errorHandler);

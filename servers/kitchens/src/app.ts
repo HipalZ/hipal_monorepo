@@ -28,6 +28,7 @@ app.use(
       "https://hipal.life",
       "https://www.hipal.life",
       "http://localhost:3000",
+      "http://localhost:3009",
       "https://hipal-hitable.vercel.app",
       "https://dev-hitable.vercel.app",
       "https://hitable.hipal.life",
@@ -65,7 +66,6 @@ app.use(
     sameSite: "none",
   })
 );
-
 
 // app.use(idempotent);
 // Register routes

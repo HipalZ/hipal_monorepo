@@ -114,133 +114,123 @@ const addRewardScanUser = async (
         { new: true }
       );
 
-      return 0;
+      return 1;
     }
   }
-  return 0;
 };
 
-router.post(
-  "/v1/users",
+router.post("/v1/users", async (req: Request, res: Response) => {
+  console.log("aaaaa", req.body, req.query);
+  let { name, email, phone, role, customRole, password, otp, accessControl } =
+    req.body;
+  const { action, clientRole, withScan, loyaltyId, businessName } = req.query;
 
-  async (req: Request, res: Response) => {
-    let { name, email, phone, role, customRole, password, otp, accessControl } =
-      req.body;
-    const { action, clientRole, withScan, loyaltyId, businessName } = req.query;
-
-    if (!clientRole) {
-      throw new BadRequestError("clientRole required");
-    }
-    const UserOrAdmin: any = clientRole === "admin" ? Admin : User;
-
-    if (action === "signup") {
-      if (phone?.length < 10) {
-        return res
-          .status(400)
-          .send({ status: false, message: "Phone Number Invalid !!" });
-      }
-
-      let existingUserPhone;
-
-      if (clientRole === "admin") {
-        existingUserPhone = await Admin.findOne({ phone, role });
-      } else {
-        existingUserPhone = await User.findOne({ phone, role });
-      }
-      if (existingUserPhone) {
-        throw new BadRequestError("User registered already");
-      }
-      if (role == "RESTAURANT_OWNER") {
-        password = Math.floor(Math.random() * 9000) + 1000;
-      }
-
-      const user = UserOrAdmin.build({
-        name,
-        email,
-        phone,
-        role,
-        customRole,
-        password,
-        accessControl,
-      });
-
-      await user.save();
-
-      if (
-        user?.role != "RESTAURANT_OWNER" ||
-        user?.role != "RESTAURANT_MANAGER" ||
-        user?.role != "HIPAL_CUSTOMER"
-      ) {
-        const options = {
-          method: "POST",
-          url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            authkey: "387796AmyGlDBq63b2d75aP1",
-          },
-        };
-        await axios(options);
-      }
-
-      // Generate JWT
-      const userJwt = createJWT(user);
-
-      // // Store it on session object
-      if (!customRole) {
-        req.session = {
-          jwt: userJwt,
-        };
-      }
-
-      res.status(201).send(user);
-    } else if (action === "login") {
-      const number = phone;
-
-      // check if phone number is valid
-      if (!number.match(/^\d+$/)) {
-        throw new BadRequestError("Phone number Invalid");
-      }
-
-      let user;
-      if (clientRole === "admin") {
-        user = await Admin.findOne({ phone, role: "HIPAL_ADMIN" });
-      } else {
-        user = await User.findOne({ phone });
-      }
-
-      if (!user) {
-        throw new NotFoundError();
-      }
-
-      // Generate JWT
-      const userJwt = createJWT(user);
-
-      // // Store it on session object
-      if (!customRole) {
-        req.session = {
-          jwt: userJwt,
-        };
-      }
-
-      if (req.query?.withScan == "true") {
-        console.log("uetoy", user);
-        let reward = await addRewardScanUser(
-          phone,
-          loyaltyId,
-          businessName,
-          user?.name
-        );
-
-        return res.status(201).send(user);
-      }
-      res.status(201).send(user);
-    } else if (action === "logout") {
-      req.session = null;
-      res.send({});
-    }
+  if (!clientRole) {
+    throw new BadRequestError("clientRole required");
   }
-);
+  // const UserOrAdmin: any = clientRole === "admin" ? Admin : User;
+
+  if (action === "signup") {
+    if (phone?.length < 10) {
+      return res
+        .status(400)
+        .send({ status: false, message: "Phone Number Invalid !!" });
+    }
+
+    let existingUserPhone;
+
+    if (clientRole === "admin") {
+      existingUserPhone = await Admin.findOne({ phone, role });
+    } else {
+      existingUserPhone = await User.findOne({ phone, role });
+    }
+    if (existingUserPhone) {
+      throw new BadRequestError("User registered already");
+    }
+    if (role == "RESTAURANT_OWNER") {
+      password = Math.floor(Math.random() * 9000) + 1000;
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      phone,
+      role,
+      customRole,
+      password,
+      accessControl,
+    });
+
+    // if (user?.role != "RESTAURANT_OWNER") {
+    //   const options = {
+    //     method: "POST",
+    //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+    //     headers: {
+    //       accept: "application/json",
+    //       "content-type": "application/json",
+    //       authkey: "387796AmyGlDBq63b2d75aP1",
+    //     },
+    //   };
+    //   await axios(options);
+    // }
+
+    // Generate JWT
+    // const userJwt = createJWT(user);
+
+    // // // Store it on session object
+    // if (!customRole) {
+    //   req.session = {
+    //     jwt: userJwt,
+    //   };
+    // }
+
+    res.status(201).send(user);
+  } else if (action === "login") {
+    const number = phone;
+
+    // check if phone number is valid
+    if (!number.match(/^\d+$/)) {
+      throw new BadRequestError("Phone number Invalid");
+    }
+
+    let user;
+    if (clientRole === "admin") {
+      user = await Admin.findOne({ phone, role: "HIPAL_ADMIN" });
+    } else {
+      user = await User.findOne({ phone });
+    }
+
+    if (!user) {
+      throw new NotFoundError();
+    }
+
+    // Generate JWT
+    const userJwt = createJWT(user);
+
+    // // Store it on session object
+    if (!customRole) {
+      req.session = {
+        jwt: userJwt,
+      };
+    }
+
+    if (req.query?.withScan == "true") {
+      console.log("uetoy", user);
+      let reward = await addRewardScanUser(
+        phone,
+        loyaltyId,
+        businessName,
+        user?.name
+      );
+
+      return res.status(201).send(user);
+    }
+    res.status(201).send(user);
+  } else if (action === "logout") {
+    req.session = null;
+    res.send({});
+  }
+});
 
 router.post(
   "/v1/users/waiterLogin",
@@ -566,11 +556,11 @@ router.post(
         .send({ status: false, message: "Phone or Password invalid...!" });
     }
 
-    const userJwt = createJWT(existingUser);
+    // const userJwt = createJWT(existingUser);
 
-    req.session = {
-      jwt: userJwt,
-    };
+    // req.session = {
+    //   jwt: userJwt,
+    // };
     res.status(200).send(existingUser);
   }
 );

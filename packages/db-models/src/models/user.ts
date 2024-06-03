@@ -4,17 +4,17 @@ import { UserType, CustomRoleType, UserControllerType } from "../validators";
 const CustomRole = {
   businessId: {
     type: String,
-    required: true,
+    // required: true,
   },
   customRoleId: {
     type: String,
-    required: true,
+    // required: true,
   },
   roleName: {
     type: String,
-    required: true,
+    // required: true,
   },
-}
+};
 
 const UserController = {
   hibiz: {
@@ -45,8 +45,7 @@ const UserController = {
     type: Boolean,
     required: false,
   },
-
-}
+};
 
 const customRoleSchema = new mongoose.Schema<CustomRoleType>(CustomRole);
 
@@ -88,6 +87,9 @@ const userSchema = new mongoose.Schema<UserType>(
     accessControl: {
       type: userController,
       default: {},
+    },
+    role: {
+      type: String,
     },
     withScaner: {
       type: Boolean,

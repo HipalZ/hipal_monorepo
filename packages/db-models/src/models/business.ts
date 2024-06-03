@@ -29,7 +29,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     logo: {
       type: String,
-      required: true,
+      required: false,
     },
     address: {
       type: String,
