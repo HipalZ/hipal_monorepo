@@ -26,10 +26,11 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
     dishes,
     availability,
     charges,
-  } = req.body;
+  } = req.body as CategoryType;
 
   try {
     await runInTransaction(async (session: ClientSession) => {
+      console.log("req.body", req.body);
       const category = await Category.create(
         {
           businessId,
@@ -50,19 +51,22 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
           version: 0,
         },
         {
-          session,
+          session: session,
         }
       );
+
+      console.log("categorycree", category);
 
       if (!category) {
         throw new Error("Category creation failed");
       }
-
-      // await Dish.updateMany(
-      //   { _id: { $in: dishes } },
-      //   { $push: { categories: category._id } },
-      //   { session }
-      // );
+      // @ts-ignore
+      const categoryId = category._id;
+      await Dish.updateMany(
+        { _id: { $in: dishes } },
+        { $push: { categories: categoryId } },
+        { session }
+      );
     });
 
     return res.status(201).send("Category created");

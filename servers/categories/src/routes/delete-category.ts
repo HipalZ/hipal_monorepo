@@ -25,10 +25,13 @@ router.delete(
           return;
         }
 
-        // await Dish.updateMany(
-        //   { _id: { $in: category.dishes.map((dish) => dish._id) } },
-        //   { $pull: { categories: id } }
-        // );
+        // @ts-ignore
+
+        await Dish.updateMany(
+          // @ts-ignore
+          { _id: { $in: category.dishes.map((dish) => dish._id) } },
+          { $pull: { categories: id } }
+        );
       });
 
       if (categoryNotFound) {

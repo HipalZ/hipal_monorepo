@@ -44,7 +44,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
     },
     parentCategoryId: {
-      type: ObjectId,
+      type: String,
       default: "",
       ref: "category",
       required: false,
