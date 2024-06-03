@@ -24,3 +24,4 @@ export * from "./waiterKots";
 export * from "./printer";
 export * from "./userBill";
 export * from "./settings";
+export * from "./extra";

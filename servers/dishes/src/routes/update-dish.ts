@@ -5,43 +5,44 @@ import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 
 import { v4 as uuidv4 } from "uuid";
-import { DishType } from "@hi/db-models/src/validators";
+import {
+  DishType,
+  ExtraType,
+  KotExtraType,
+} from "@hi/db-models/src/validators";
 
 const router = express.Router();
 
-router.put(
-  "/v1/dishes/:id",
+router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
+  await runInTransaction(async (session) => {
+    const { id } = req.params;
+    const update = { ...req.body } as DishType;
+    const dish = await Dish.findByIdAndUpdate<DishType>(
+      id,
+      { $set: update },
 
-  async (req: Request, res: Response) => {
-    return runInTransaction(async (session) => {
-      const { id } = req.params;
-      const update = { ...req.body } as DishType;
-      const dish = await Dish.findByIdAndUpdate<DishType>(
-        id,
-        { $set: update },
-        { new: true },
-        { session: session }
-      );
-      if (!dish) {
-        return res.status(404).send({
-          message: "Dish not found",
-        });
-      }
+      { session: session }
+    );
+    if (!dish) {
+      res.status(404).send({
+        message: "Dish not found",
+      });
+      return;
+    }
 
-      const categories = await Category.find({ dishes: dish._id });
-      for (let i = 0; i < categories.length; i++) {
-        const category = categories[i];
-        if (category.dishes.includes(dish._id.toString())) {
-          category.dishes = category.dishes.filter(
-            (dishId) => dishId.toString() !== dish._id.toString()
-          );
-          await category.save();
-        }
-      }
-      return res.status(200).send(dish);
-    });
-  }
-);
+    // const categories = await Category.find({ dishes: dish._id });
+    // for (let i = 0; i < categories.length; i++) {
+    //   const category = categories[i];
+    //   if (category.dishes.includes(dish._id.toString())) {
+    //     category.dishes = category.dishes.filter(
+    //       (dishId) => dishId.toString() !== dish._id.toString()
+    //     );
+    //     await category.save();
+    //   }
+    // }
+    res.status(200).send(dish);
+  });
+});
 
 router.put(
   "/v1/dishes/:id/extra/:extraId",
@@ -73,69 +74,69 @@ router.put(
       items: updateExtra?.items,
       id: updateExtra?.id,
     };
-    for (let i = 0; i < dishes?.length; i++) {
-      const dishId = dishes[i]?.id;
+    // for (let i = 0; i < dishes?.length; i++) {
+    //   const dishId = dishes[i]?.id;
 
-      // Find the index of the object with the matching id in the extras array
-      const extraIndex = dishes[i]?.extras.findIndex(
-        (extra: any) => extra.id === extraId
-      );
+    //   // Find the index of the object with the matching id in the extras array
+    //   const extraIndex = dishes[i]?.extras?.findIndex(
+    //     (extra:Dish ) => extra.id === extraId
+    //   );
 
-      if (extraIndex !== -1) {
-        // If the object with the matching id is found, update it
-        const update = {
-          [`extras.${extraIndex}`]: copiedObject,
-        };
+    //   if (extraIndex !== -1) {
+    //     // If the object with the matching id is found, update it
+    //     const update = {
+    //       [`extras.${extraIndex}`]: copiedObject,
+    //     };
 
-        await Dish.findByIdAndUpdate(dishId, { $set: update }, { new: true });
-      } else {
-        console.log("Object not found in extras array");
-      }
-    }
-    for (let i = 0; i < swiggyDishes?.length; i++) {
-      const dishId = swiggyDishes[i]?.id;
+    //     await Dish.findByIdAndUpdate(dishId, { $set: update }, { new: true });
+    //   } else {
+    //     console.log("Object not found in extras array");
+    //   }
+    // }
+    // for (let i = 0; i < swiggyDishes?.length; i++) {
+    //   const dishId = swiggyDishes[i]?.id;
 
-      // Find the index of the object with the matching id in the extras array
-      const extraIndex: any = swiggyDishes[i]?.delivery?.extras.findIndex(
-        (extra: any) => extra.id === extraId
-      );
+    //   // Find the index of the object with the matching id in the extras array
+    //   const extraIndex: any = swiggyDishes[i]?.delivery?.extras.findIndex(
+    //     (extra: any) => extra.id === extraId
+    //   );
 
-      if (extraIndex !== -1) {
-        // If the object with the matching id is found, update it
-        const update: any = {
-          [`delivery.extras.${extraIndex}`]: copiedObject,
-        };
+    //   if (extraIndex !== -1) {
+    //     // If the object with the matching id is found, update it
+    //     const update: any = {
+    //       [`delivery.extras.${extraIndex}`]: copiedObject,
+    //     };
 
-        await Dish.findByIdAndUpdate(dishId, { $set: update }, { new: true });
-      } else {
-        console.log("Object not found in extras array");
-      }
-    }
-
-    res.status(200).send(updateExtra);
-  }
-);
-
-router.put(
-  "/v1/dishes/:id/getCharges/:chargeId",
-
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  // validateExistingDish,
-  // validateRequest,
-
-  async (req: Request, res: Response) => {
-    const { chargeId } = req.params;
-    const update = { ...req.body };
-    let updateExtra = await Charges.findByIdAndUpdate(
-      chargeId,
-      { $set: update },
-      { new: true }
-    );
+    //     await Dish.findByIdAndUpdate(dishId, { $set: update }, { new: true });
+    //   } else {
+    //     console.log("Object not found in extras array");
+    //   }
+    // }
 
     res.status(200).send(updateExtra);
   }
 );
+
+// router.put(
+//   "/v1/dishes/:id/getCharges/:chargeId",
+
+//   // currentUser,
+//   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+//   // validateExistingDish,
+//   // validateRequest,
+
+//   async (req: Request, res: Response) => {
+//     const { chargeId } = req.params;
+//     const update = { ...req.body };
+//     let updateExtra = await Charges.findByIdAndUpdate(
+//       chargeId,
+//       { $set: update },
+//       { new: true }
+//     );
+
+//     res.status(200).send(updateExtra);
+//   }
+// );
 
 router.put(
   "/v1/dishes/:id/updateAll",

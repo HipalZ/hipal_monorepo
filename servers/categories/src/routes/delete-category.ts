@@ -9,28 +9,38 @@ const router = express.Router();
 
 router.delete(
   "/v1/categories/:id",
-
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    return runInTransaction(async (session: ClientSession) => {
-      const category = await Category.findByIdAndDelete(id, {
-        session: session,
+    let categoryNotFound = false;
+
+    try {
+      await runInTransaction(async (session: ClientSession) => {
+        const category = await Category.findByIdAndDelete(id, {
+          session: session,
+        });
+
+        if (!category) {
+          categoryNotFound = true;
+          return;
+        }
+
+        // await Dish.updateMany(
+        //   { _id: { $in: category.dishes.map((dish) => dish._id) } },
+        //   { $pull: { categories: id } }
+        // );
       });
 
-      if (!category) {
+      if (categoryNotFound) {
         return res.status(404).send({
           message: "Category not found",
         });
       }
 
-      await Dish.updateMany(
-        { _id: { $in: category.dishes.map((dish) => dish._id) } },
-        { $pull: { categories: id } }
-      );
-
-      return res.status(204).send(category);
-    });
+      return res.status(204).send("ss");
+    } catch (error) {
+      // handle error
+    }
   }
 );
 

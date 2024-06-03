@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 
-import { Category, Dish, Charges, Extra, Menu } from "@hi/db-models";
+import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 
 const router = express.Router();
@@ -130,30 +130,6 @@ router.get(
 );
 
 router.get(
-  "/v1/dishes/:id/getMenu",
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
-  async (req: Request, res: Response) => {
-    const { id, businessId } = req.query;
-    const existingMenu = await Menu.find({ businessId });
-
-    res.status(200).send(existingMenu);
-  }
-);
-router.get(
-  "/v1/dishes/:id/getCharges",
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
-  async (req: Request, res: Response) => {
-    const { id, businessId } = req.query;
-
-    const existingCharges = await Charges.find({ businessId });
-
-    res.status(200).send(existingCharges);
-  }
-);
-
-router.get(
   "/v1/dishes/:id/getExtra",
 
   async (req: Request, res: Response) => {
@@ -183,19 +159,6 @@ router.get(
     const existingExtra = await Extra.findById(extraId);
 
     res.status(200).send(existingExtra);
-  }
-);
-
-router.get(
-  "/v1/dishes/:id/getCharges/:chargeId",
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
-  async (req: Request, res: Response) => {
-    const { chargeId } = req.params;
-
-    const existingCharges = await Charges.findById(chargeId);
-
-    res.status(200).send(existingCharges);
   }
 );
 

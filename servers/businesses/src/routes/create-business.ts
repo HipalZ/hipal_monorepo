@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
-import { Business, Review,Role ,LoyaltySettings,userTransactionHistory} from "@hi/db-models"
+import { Business, LoyaltySettings } from "@hi/db-models";
 import axios from "axios";
-
 
 const router = express.Router();
 
@@ -104,7 +103,8 @@ router.post(
           .send({ status: false, message: "Business No Found Given Id " });
       }
 
-      let likes = businessObject && businessObject.likes ? businessObject.likes : [];
+      let likes =
+        businessObject && businessObject.likes ? businessObject.likes : [];
 
       if (!likes.includes(userId)) {
         // Add userId to likes array if it doesn't already exist
@@ -131,132 +131,128 @@ router.post(
   }
 );
 
-router.post(
-  "/v1/businesses/:businessId/userReview",
-  async (req: Request, res: Response) => {
-    try {
-      const { businessId } = req.params || {};
+// router.post(
+//   "/v1/businesses/:businessId/userReview",
+//   async (req: Request, res: Response) => {
+//     try {
+//       const { businessId } = req.params || {};
 
-      const {
-        userId,
-        keyword,
-        rating,
-        comment,
-        dateTime,
-        reviewerName,
-        description,
-        satisfactionRating,
-        mostLiked,
-        foodRating,
-        waiterRating,
-      } = req.body || {};
-      if (Object.keys(req.body).length === 0)
-        return res
-          .status(400)
-          .send({ status: false, message: "Body should be not empty !!" });
-      const businessObject = await Business.findById(businessId);
+//       const {
+//         userId,
+//         keyword,
+//         rating,
+//         comment,
+//         dateTime,
+//         reviewerName,
+//         description,
+//         satisfactionRating,
+//         mostLiked,
+//         foodRating,
+//         waiterRating,
+//       } = req.body || {};
+//       if (Object.keys(req.body).length === 0)
+//         return res
+//           .status(400)
+//           .send({ status: false, message: "Body should be not empty !!" });
+//       const businessObject = await Business.findById(businessId);
 
-      // console.log(businessExit)
-      if (!businessObject)
-        return res
-          .status(404)
-          .send({ status: false, message: "Business Not Found Given Id !!" });
-      const review = await Review.create({
-        businessId,
-        userId,
-        keyword,
-        rating,
-        comment,
-        dateTime,
-        businessLogo: businessObject?.logo,
-        businessName: businessObject?.businessName,
-        reviewerName,
-        description,
-        satisfactionRating,
-        mostLiked,
-        foodRating,
-        waiterRating,
-      });
+//       // console.log(businessExit)
+//       if (!businessObject)
+//         return res
+//           .status(404)
+//           .send({ status: false, message: "Business Not Found Given Id !!" });
+//       const review = await Review.create({
+//         businessId,
+//         userId,
+//         keyword,
+//         rating,
+//         comment,
+//         dateTime,
+//         businessLogo: businessObject?.logo,
+//         businessName: businessObject?.businessName,
+//         reviewerName,
+//         description,
+//         satisfactionRating,
+//         mostLiked,
+//         foodRating,
+//         waiterRating,
+//       });
 
-      return res.status(201).send(review);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
-  }
-);
+//       return res.status(201).send(review);
+//     } catch (err: any) {
+//       return res.status(500).send({ status: false, message: err.message });
+//     }
+//   }
+// );
 
-router.post(
-  "/v1/businesses/:businessId/:userId/user-trnsaction-history",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId, businessId } = req.params || {};
-      const businessObject = await Business.findById(businessId);
-      if (!businessObject)
-        return res
-          .status(404)
-          .send({ status: false, message: "Not found.     " });
-      const {
-        order_id,
-        date,
-        phone_number,
-        cart,
-        payment_mode,
-        status,
-        deliver_to,
-        totalWithoutTax,
-        OtherCharges,
-        totalAmount,
-      } = req.body || {};
-      if (Object.keys(req.body).length === 0)
-        return res
-          .status(400)
-          .send({ status: false, message: "Body should be not Empty !!" });
+// router.post(
+//   "/v1/businesses/:businessId/:userId/user-trnsaction-history",
+//   async (req: Request, res: Response) => {
+//     try {
+//       const { userId, businessId } = req.params || {};
+//       const businessObject = await Business.findById(businessId);
+//       if (!businessObject)
+//         return res
+//           .status(404)
+//           .send({ status: false, message: "Not found.     " });
+//       const {
+//         order_id,
+//         date,
+//         phone_number,
+//         cart,
+//         payment_mode,
+//         status,
+//         deliver_to,
+//         totalWithoutTax,
+//         OtherCharges,
+//         totalAmount,
+//       } = req.body || {};
+//       if (Object.keys(req.body).length === 0)
+//         return res
+//           .status(400)
+//           .send({ status: false, message: "Body should be not Empty !!" });
 
-      const obj = {
-        userId,
-        businessId,
-        order_id,
-        phone_number,
-        cart,
-        payment_mode,
-        status,
-        deliver_to,
-        totalWithoutTax,
-        OtherCharges,
-        totalAmount,
-        date,
-        businessLogo: businessObject?.logo,
-        businessName: businessObject?.businessName,
-      };
+//       const obj = {
+//         userId,
+//         businessId,
+//         order_id,
+//         phone_number,
+//         cart,
+//         payment_mode,
+//         status,
+//         deliver_to,
+//         totalWithoutTax,
+//         OtherCharges,
+//         totalAmount,
+//         date,
+//         businessLogo: businessObject?.logo,
+//         businessName: businessObject?.businessName,
+//       };
 
-      let data = new userTransactionHistory(obj);
-      const userHistory = await data.save();
+//       let data = new userTransactionHistory(obj);
+//       const userHistory = await data.save();
 
-      return res.status(201).send({ status: true, data: userHistory });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
-  }
-  // validateUser,
-  //   validateRequest,
-);
+//       return res.status(201).send({ status: true, data: userHistory });
+//     } catch (err: any) {
+//       return res.status(500).send({ status: false, message: err.message });
+//     }
+//   }
+//   // validateUser,
+//   //   validateRequest,
+// );
 
-router.post(
-  "/v1/businesses/:id/roles",
-  async (req: Request, res: Response) => {
-    const { name, description, permissions } = req.body;
-    const { id } = req.params;
+// router.post("/v1/businesses/:id/roles", async (req: Request, res: Response) => {
+//   const { name, description, permissions } = req.body;
+//   const { id } = req.params;
 
-    const role = await Role.create({
-      name,
-      businessId: id,
-      description,
-      permissions,
-    });
-    res.status(201).send(role);
-  }
-);
-
+//   const role = await Role.create({
+//     name,
+//     businessId: id,
+//     description,
+//     permissions,
+//   });
+//   res.status(201).send(role);
+// });
 
 router.post(
   "/v1/businesses/:id/loyalty",

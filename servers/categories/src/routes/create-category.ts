@@ -9,30 +9,28 @@ import { CategoryType, DishType } from "@hi/db-models/src/validators";
 
 const router = express.Router();
 
-router.post(
-  "/v1/categories",
+router.post("/v1/categories", async (req: Request, res: Response) => {
+  const {
+    businessId,
+    name,
+    visibility,
+    timerOn,
+    timerStart,
+    timerEnd,
+    availableDays,
+    hierarchy,
+    parentCategory,
+    parentCategoryId,
+    coverImage,
+    links,
+    dishes,
+    availability,
+    charges,
+  } = req.body;
 
-  async (req: Request, res: Response) => {
-    const {
-      businessId,
-      name,
-      visibility,
-      timerOn,
-      timerStart,
-      timerEnd,
-      availableDays,
-      hierarchy,
-      parentCategory,
-      parentCategoryId,
-      coverImage,
-      links,
-      dishes,
-      availability,
-      charges,
-    } = req.body;
-
-    return runInTransaction(async (session: ClientSession) => {
-      const category = await Category.create<CategoryType>(
+  try {
+    await runInTransaction(async (session: ClientSession) => {
+      const category = await Category.create(
         {
           businessId,
           name,
@@ -52,18 +50,25 @@ router.post(
           version: 0,
         },
         {
-          session: session,
+          session,
         }
       );
-      await Dish.updateMany(
-        { _id: { $in: dishes.map((dish: DishType) => dish._id) } },
-        { $push: { categories: category._id } },
-        { session }
-      );
 
-      return res.status(201).send(category);
+      if (!category) {
+        throw new Error("Category creation failed");
+      }
+
+      // await Dish.updateMany(
+      //   { _id: { $in: dishes } },
+      //   { $push: { categories: category._id } },
+      //   { session }
+      // );
     });
+
+    return res.status(201).send("Category created");
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 export { router as createCategoryRouter };

@@ -1,4 +1,8 @@
-import { app } from './app';
+import mongoose from "mongoose";
+import { app } from "./app";
+import dotenv from "dotenv";
+
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const start = async () => {
   // if (!process.env.JWT_KEY) {
@@ -38,8 +42,10 @@ const start = async () => {
   // process.on('SIGINT', () => natsWrapper.client.close());
   // process.on('SIGTERM', () => natsWrapper.client.close());
 
-  // await mongoose.connect(process.env.MONGO_URI);
-  console.log('connected to mongodb');
+  await mongoose.connect(
+    "mongodb+srv://hipalz:ZYfCIKE6ke5FxJqx@cluster0.5qdkual.mongodb.net/businesses"
+  );
+  console.log("connected to mongodb");
 
   // if (process.env.NODE_ENV === 'production') {
   //   // implement any production recommendations
@@ -47,8 +53,8 @@ const start = async () => {
   //   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   // }
 
-  app.listen(3000, () => {
-    console.log("Listening on port 3000!!");
+  app.listen(3001, () => {
+    console.log("Listening on port 3001!!");
   });
 };
 

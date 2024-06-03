@@ -280,14 +280,275 @@ async function fetchTableData(tableId: string, session: any) {
   }
 }
 
+// router.get(
+//   "/v1/kitchens/:id/temp-bill",
+//   async (req: Request, res: Response) => {
+//     try {
+//       let {
+//         tableId,
+//         hasServiceCharge,
+//         serviceChargePercentage,
+//         gstPercentage,
+//         userSide,
+//       } = req.query as {
+//         tableId: string;
+//         hasServiceCharge: string;
+//         serviceChargePercentage: string;
+//         gstPercentage: string;
+//         userSide: string;
+//       };
+
+//       return runInTransaction(async (session: ClientSession) => {
+//         if (userSide) {
+//           try {
+//             tableId = await fetchTableData(tableId, session);
+//           } catch (err: any) {
+//             console.log(err);
+//           }
+//         }
+
+//         // check if service charge is applied
+//         const serviceChargeApply = await Tempmodel.findOne(
+//           {
+//             tableId,
+//             serviceChargeApply: false,
+//           },
+//           { session }
+//         );
+
+//         let kots: any[] = [];
+
+//         const query = {
+//           status: "UNPAID",
+//           tableId,
+//         } as any;
+
+//         const existingKOTs: any = await Kot.find(
+//           query,
+//           {
+//             businessId: 0,
+//             zoneId: 0,
+//             staffId: 0,
+//             startedAt: 0,
+//             cookedAt: 0,
+//             "dish.comments": 0,
+//             category: 0,
+//             status: 0,
+//             dishStatus: 0,
+//             dishType: 0,
+//             priority: 0,
+//             inventory: 0,
+//             taxes: 0,
+//             swiggyBillObj: 0,
+
+//             match: 0,
+//           },
+//           { session }
+//         );
+
+//         let subTotal: any = 0;
+//         let NOGSTTOTL = 0;
+//         const merged: any = [];
+//         for (let i = 0; i < existingKOTs.length; i++) {
+//           let total;
+//           const obj: any = existingKOTs[i];
+//           kots.push(obj?.id || obj?._id);
+
+//           if (obj?.isDeleted == false) {
+//             if (obj?.isGst == false) {
+//               NOGSTTOTL += obj?.dish?.price * obj?.dish?.qty;
+//             }
+
+//             let newPrice =
+//               obj?.dish?.price * obj?.dish?.qty || obj?.dish?.quantity;
+//             let extraPrice = 0;
+//             let portionPrice = 0;
+//             if (obj?.dish?.extras?.length > 0) {
+//               obj?.dish?.extras.forEach((extra: any) => {
+//                 extraPrice +=
+//                   parseInt(extra?.price || 0) *
+//                   parseInt(extra?.qty || extra?.quantity);
+//               });
+//             }
+
+//             if (obj?.dish?.portions) {
+//               portionPrice = parseInt(obj?.dish?.portions?.price);
+//               total = portionPrice + extraPrice;
+//             } else {
+//               total = newPrice + extraPrice;
+//             }
+
+//             obj.dish.price = total;
+//             subTotal += total;
+//           }
+//         }
+
+//         existingKOTs.forEach((item: any) => {
+//           if (item?.isDeleted == false) {
+//             // Find if the dish already exists in the merged array with the same extras and portions
+//             const existing = merged.find(
+//               (mItem: any) =>
+//                 mItem.dish.dishId === item.dish.dishId &&
+//                 JSON.stringify(mItem.dish?.extras) ===
+//                   JSON.stringify(item.dish?.extras) &&
+//                 JSON.stringify(mItem.dish?.portions) ===
+//                   JSON.stringify(item.dish?.portions)
+//             );
+
+//             if (existing) {
+//               // Merge quantities and update the price
+//               existing.dish.qty += item.dish.qty;
+//               existing.dish.price += item.dish.price;
+//             } else {
+//               // Clone the item and add it to the merged array
+//               merged.push(JSON.parse(JSON.stringify(item)));
+//             }
+//           }
+//         });
+//         let copySubtotal = subTotal;
+//         let discount: Number = 0;
+//         const tableInfo = await Tempmodel.findOne({ tableId }, { session });
+//         if (tableInfo) {
+//           if (tableInfo?.discountMode == "percent") {
+//             let dis = Math.floor(
+//               ((tableInfo.discountPercentage > 100
+//                 ? 100
+//                 : tableInfo.discountPercentage) *
+//                 subTotal) /
+//                 100
+//             );
+//             if (dis > subTotal) {
+//               subTotal = dis;
+//             }
+
+//             subTotal -= dis;
+//             discount = dis;
+//           } else {
+//             let dis = tableInfo.discountAmount;
+//             if (dis > subTotal) {
+//               subTotal = dis;
+//             }
+//             subTotal -= dis;
+//             discount = dis;
+//           }
+//         }
+
+//         let claimedAmount: Number = 0;
+//         if (tableInfo) {
+//           let coins =
+//             tableInfo.claimedAmount > subTotal
+//               ? subTotal
+//               : tableInfo.claimedAmount;
+//           if (coins > subTotal) {
+//             subTotal = coins;
+//           }
+//           subTotal -= coins;
+//           claimedAmount = coins;
+//         }
+//         if (discount > copySubtotal || discount == copySubtotal) {
+//           claimedAmount = 0;
+//         }
+//         let totalTips = 0;
+
+//         if (tableInfo) {
+//           let tip = tableInfo.tipsAmount;
+//           totalTips = tip;
+//           if (totalTips < 0) {
+//             totalTips = 0;
+//           }
+//         }
+//         let serviceCharge = 0;
+//         if (hasServiceCharge == "true" && !serviceChargeApply) {
+//           let percentage = Number(serviceChargePercentage);
+//           serviceCharge = (subTotal * percentage) / 100 || 0;
+//         }
+//         if (discount > copySubtotal || discount == copySubtotal) {
+//           serviceCharge = 0;
+//         }
+//         if (subTotal < 0) {
+//           subTotal = 0;
+//         }
+//         if (serviceCharge < 0) {
+//           serviceCharge = 0;
+//         }
+//         let flag = false;
+//         subTotal += serviceCharge - NOGSTTOTL;
+//         if (subTotal < 0) {
+//           flag = true;
+//         }
+//         let Total: number = 0;
+//         let gst = Number(gstPercentage);
+//         if (isNaN(gst)) {
+//           gst = 0.05;
+//         }
+//         let newSubTotal = 0;
+//         if (flag) {
+//           newSubTotal = serviceCharge;
+//         } else {
+//           newSubTotal = subTotal;
+//         }
+//         let GST = newSubTotal * Number(gst);
+
+//         let SGST = GST / 2;
+//         let CGST = SGST;
+//         if (SGST < 0 || SGST == 0) {
+//           SGST = 0;
+//           CGST = 0;
+//         }
+//         subTotal += SGST + CGST + totalTips;
+//         Total = Math.round(subTotal + NOGSTTOTL);
+
+//         let obj: any = {
+//           subTotal: copySubtotal,
+//           discount,
+//           SGST: Number(SGST?.toFixed(2)),
+//           CGST: Number(CGST?.toFixed(2)),
+//           Total,
+//           kots,
+//           customerName: tableInfo?.customerName,
+//           customerPhone: tableInfo?.customerPhone,
+//           claimedAmount,
+//           duesPersonId: tableInfo?.duesPersonId,
+//           discountDescription: tableInfo?.discountDescription,
+//         };
+
+//         if (
+//           hasServiceCharge == "true" &&
+//           !serviceChargeApply &&
+//           serviceCharge > 0
+//         ) {
+//           obj["serviceCharge"] = Number(serviceCharge?.toFixed(2));
+//         }
+
+//         if (totalTips > 0) {
+//           obj["tips"] = totalTips;
+//         }
+
+//         if (tableInfo) {
+//           obj["discountGivenBy"] = tableInfo?.discountGivenBy;
+//           obj["discountRemovedBy"] = tableInfo?.discountRemovedBy;
+//           obj["serviceChargeRemovedBy"] = tableInfo?.serviceChargeRemovedBy;
+//           obj["serviceChargeAddedBy"] = tableInfo?.serviceChargeAddedBy;
+//           obj["coinsGivenBy"] = tableInfo?.coinsGivenBy;
+//           obj["tipsGivenBy"] = tableInfo?.tipsGivenBy;
+//         }
+
+//         existingKOTs.push(obj);
+
+//         merged.push(obj);
+//         if (merged?.length == 1) {
+//           return res.status(200).send([]);
+//         }
+//         return res.status(200).send(merged);
+//       });
+//     } catch (err: any) {
+//       return res.status(500).send({ status: false, message: err.message });
+//     }
+//   }
+// );
+
 router.get(
   "/v1/kitchens/:id/temp-bill",
-
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_FLOOR_MANAGER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
   async (req: Request, res: Response) => {
     try {
       let {
@@ -304,7 +565,7 @@ router.get(
         userSide: string;
       };
 
-      return runInTransaction(async (session: ClientSession) => {
+      await runInTransaction(async (session: ClientSession) => {
         if (userSide) {
           try {
             tableId = await fetchTableData(tableId, session);
@@ -542,10 +803,14 @@ router.get(
         existingKOTs.push(obj);
 
         merged.push(obj);
+
+        // ... rest of the code ...
+
         if (merged?.length == 1) {
-          return res.status(200).send([]);
+          res.status(200).send([]);
+        } else {
+          res.status(200).send(merged);
         }
-        return res.status(200).send(merged);
       });
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
@@ -553,83 +818,75 @@ router.get(
   }
 );
 
-router.get(
-  "/v1/kitchens/kots/allKot",
+router.get("/v1/kitchens/kots/allKot", async (req: Request, res: Response) => {
+  try {
+    let { businessId, tableId, zoneId, userSide } = req.query;
 
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_FLOOR_MANAGER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
-    try {
-      let { businessId, tableId, zoneId, userSide } = req.query;
+    await runInTransaction(async (session: ClientSession) => {
+      if (userSide) {
+        let tableInfo;
 
-      return runInTransaction(async (session: ClientSession) => {
-        if (userSide) {
-          let tableInfo;
+        try {
+          tableInfo = await Table.findById(tableId, { session });
 
-          try {
-            tableInfo = await Table.findById(tableId, { session });
-
-            if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
-              (tableId = tableInfo?.parentTableId),
-                (zoneId = tableInfo?.parentZoneId);
-            }
-          } catch (err: any) {
-            console.log(err);
-            return res.status(400).send("Table not found!");
+          if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
+            (tableId = tableInfo?.parentTableId),
+              (zoneId = tableInfo?.parentZoneId);
           }
+        } catch (err: any) {
+          console.log(err);
+          res.status(400).send("Table not found!");
+          return;
         }
+      }
 
-        const query = {
-          status: "UNPAID",
-          businessId,
-          tableId,
-          zoneId,
-        } as any;
+      const query = {
+        status: "UNPAID",
+        businessId,
+        tableId,
+        zoneId,
+      } as any;
 
-        const existingKOTs = await Kot.find(
-          query,
-          {
-            staffId: 0,
-            startedAt: 0,
-            cookedAt: 0,
-            "dish.comments": 0,
-            category: 0,
+      const existingKOTs = await Kot.find(
+        query,
+        {
+          staffId: 0,
+          startedAt: 0,
+          cookedAt: 0,
+          "dish.comments": 0,
+          category: 0,
 
-            avgTime: 0,
-            taxes: 0,
-            swiggyBillObj: 0,
-            isGst: 0,
-            inventory: 0,
-          },
-          { session }
-        );
+          avgTime: 0,
+          taxes: 0,
+          swiggyBillObj: 0,
+          isGst: 0,
+          inventory: 0,
+        },
+        { session }
+      );
 
-        const sortedOrders = existingKOTs.sort(
-          (a: any, b: any) => a.kotTime - b.kotTime
-        );
+      const sortedOrders = existingKOTs.sort(
+        (a: any, b: any) => a.kotTime - b.kotTime
+      );
 
-        const groupedOrders = sortedOrders.reduce((acc: any, order: any) => {
-          if (
-            acc.length === 0 ||
-            acc[acc.length - 1][0].kotTime !== order.kotTime
-          ) {
-            acc.push([order]);
-          } else {
-            acc[acc.length - 1].push(order);
-          }
-          return acc;
-        }, []);
+      const groupedOrders = sortedOrders.reduce((acc: any, order: any) => {
+        if (
+          acc.length === 0 ||
+          acc[acc.length - 1][0].kotTime !== order.kotTime
+        ) {
+          acc.push([order]);
+        } else {
+          acc[acc.length - 1].push(order);
+        }
+        return acc;
+      }, []);
 
-        res.status(200).send(groupedOrders);
-      });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(200).send(groupedOrders);
+    });
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.get(
   "/v1/kitchens/getAllKotByWaiter/all",
@@ -699,30 +956,13 @@ router.get(
 
 router.get(
   "/v1/kitchens/all/WaiterOrder",
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_FLOOR_MANAGER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
   async (req: Request, res: Response) => {
     try {
       const { businessId, zoneId, staffId } = req.query;
-      return runInTransaction(async (session: ClientSession) => {
+      await runInTransaction(async (session: ClientSession) => {
         let existingTables = await Table.find({ businessId }, { session });
-        // try {
-        //   tables = await axios.get(
-        //     `${process.env.URL}/v1/zones/${zoneId}/get/Tables?businessId=${businessId}&staffId=${staffId}`
-        //   );
-        //   tables = tables?.data;
-        // } catch (err: any) {
-        //   return res.status(400).send({
-        //     status: false,
-        //     message: "ZoneId not Recieved...! ",
-        //   });
-        // }
+
         let zone = await Zone.findById(zoneId, { session });
-        // console.log("tablein zones",existingTables)
 
         let tables = [...existingTables];
 
@@ -732,7 +972,8 @@ router.get(
 
         if (existingTables?.length == 0) {
           if (zone?.staff?.includes(staffId as string)) {
-            return res.status(200).send(tables);
+            res.status(200).send(tables);
+            return;
           }
         }
 
@@ -1130,7 +1371,7 @@ const CategoryAnalytics = (analytics: any, categories: any) => {
   return optimizedStructure;
 };
 
-const preAnalytics = (kots: any, category: any) => {
+const preAnalyticsCategory = (kots: any, category: any) => {
   let total_items = kots.length;
 
   let category_counts: any = {};
@@ -1179,7 +1420,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
 
   let categories;
   try {
-    return runInTransaction(async (session: ClientSession) => {
+    await runInTransaction(async (session: ClientSession) => {
       categories = await Category.find(
         {
           businessId,
@@ -1217,9 +1458,9 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
           { session }
         ).select("category");
 
-        let ans = preAnalytics(kots, category);
+        let ans = preAnalyticsCategory(kots, category);
 
-        let result = preAnalytics(preKots, category);
+        let result = preAnalyticsCategory(preKots, category);
 
         const data = {
           currentDay: ans,
@@ -1248,7 +1489,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
         });
         let optimizedStructure = CategoryAnalytics(data.currentDay, categories);
 
-        return res.send(optimizedStructure);
+        res.send(optimizedStructure);
       }
       if (from && to) {
         if (from == to) {
@@ -1263,10 +1504,10 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
             { session }
           ).select("category");
 
-          let ans = preAnalytics(kots, category);
+          let ans = preAnalyticsCategory(kots, category);
           let optimizedStructure = CategoryAnalytics(ans, categories);
 
-          return res.send(optimizedStructure);
+          res.send(optimizedStructure);
         }
 
         let fromDate = new Date(String(from).split("-").reverse().join("-"));
@@ -1278,9 +1519,8 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          res.status(400).send("From date cannot be greater than to date.");
+          return;
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1297,10 +1537,10 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
           },
           { session }
         ).select("category");
-        let ans = preAnalytics(kots, category);
+        let ans = preAnalyticsCategory(kots, category);
         let optimizedStructure = CategoryAnalytics(ans, categories);
 
-        return res.send(optimizedStructure);
+        res.send(optimizedStructure);
       }
     });
   } catch (err: any) {
@@ -1368,56 +1608,55 @@ const dishesAnalytics = (analytics: any, kot: any) => {
   return ans;
 };
 
+const preAnalytics = (kots: any, dish: any) => {
+  let total_items = kots.length;
+
+  // Count number of items per category
+  let dish_counts: any = {};
+  kots.forEach((item: any) => {
+    let dish_name = item.dish.name;
+    if (dish_name in dish_counts) {
+      dish_counts[dish_name]++;
+    } else {
+      dish_counts[dish_name] = 1;
+    }
+  });
+
+  // Calculate percentage for each category
+  let dish_percentages: any = {};
+  for (let dish in dish_counts) {
+    dish_percentages[dish] = (dish_counts[dish] / total_items) * 100;
+  }
+
+  // Build the ans array
+  let ans = [];
+  for (let dish in dish_percentages) {
+    let obj: any = {};
+    (obj["name"] = dish),
+      (obj["percentage"] = Math.round(dish_percentages[dish] * 100) / 100); // Round to two decimal places
+    obj["orders"] = dish_counts[dish] || 0;
+    ans.push(obj);
+  }
+  for (let di in dish) {
+    let found = ans.some((item) => item.name === di);
+    if (!found) {
+      ans.push({
+        name: di,
+        percentage: 0,
+        orders: 0,
+      });
+    }
+  }
+  ans?.sort((a, b) => b?.percentage - a?.percentage);
+
+  return ans;
+};
 router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
   const { businessId, from, to } = req.query;
 
-  const preAnalytics = (kots: any, dish: any) => {
-    let total_items = kots.length;
-
-    // Count number of items per category
-    let dish_counts: any = {};
-    kots.forEach((item: any) => {
-      let dish_name = item.dish.name;
-      if (dish_name in dish_counts) {
-        dish_counts[dish_name]++;
-      } else {
-        dish_counts[dish_name] = 1;
-      }
-    });
-
-    // Calculate percentage for each category
-    let dish_percentages: any = {};
-    for (let dish in dish_counts) {
-      dish_percentages[dish] = (dish_counts[dish] / total_items) * 100;
-    }
-
-    // Build the ans array
-    let ans = [];
-    for (let dish in dish_percentages) {
-      let obj: any = {};
-      (obj["name"] = dish),
-        (obj["percentage"] = Math.round(dish_percentages[dish] * 100) / 100); // Round to two decimal places
-      obj["orders"] = dish_counts[dish] || 0;
-      ans.push(obj);
-    }
-    for (let di in dish) {
-      let found = ans.some((item) => item.name === di);
-      if (!found) {
-        ans.push({
-          name: di,
-          percentage: 0,
-          orders: 0,
-        });
-      }
-    }
-    ans?.sort((a, b) => b?.percentage - a?.percentage);
-
-    return ans;
-  };
-
   let dishes;
   try {
-    return runInTransaction(async (session: ClientSession) => {
+    await runInTransaction(async (session: ClientSession) => {
       dishes = await Dish.find(
         {
           businessId,
@@ -1487,7 +1726,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
 
         let optimizedStructure = dishesAnalytics(data.currentDay, kots);
 
-        return res.send(optimizedStructure);
+        res.send(optimizedStructure);
       }
       if (from && to) {
         if (from == to) {
@@ -1502,7 +1741,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
           let ans = preAnalytics(kots, dish);
           let optimizedStructure = dishesAnalytics(ans, kots);
 
-          return res.send(optimizedStructure);
+          res.send(optimizedStructure);
         }
 
         let fromDate = new Date(String(from).split("-").reverse().join("-"));
@@ -1514,9 +1753,8 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          res.status(400).send("From date cannot be greater than to date.");
+          return;
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1536,7 +1774,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
         let ans = preAnalytics(kots, dish);
         let optimizedStructure = dishesAnalytics(ans, kots);
 
-        return res.send(optimizedStructure);
+        res.send(optimizedStructure);
       }
     });
   } catch (err: any) {

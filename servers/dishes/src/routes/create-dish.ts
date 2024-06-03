@@ -4,13 +4,12 @@ import express, { Request, Response } from "express";
 import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
-import { DishType } from "@hi/db-models/src/validators";
+import { DishType, ExtraType } from "@hi/db-models/src/validators";
 const router = express.Router();
 
 router.post(
   "/v1/dishes",
   // validateDish,
-
   async (req: Request, res: Response) => {
     const {
       businessId,
@@ -34,9 +33,9 @@ router.post(
       availability,
     } = req.body;
 
-    return runInTransaction(async (session) => {
-      const dish = await Dish.create<DishType>(
-        {
+    try {
+      await runInTransaction(async (session: ClientSession) => {
+        const dish = new Dish({
           businessId,
           name,
           price,
@@ -56,19 +55,21 @@ router.post(
           visibility,
           delayTime,
           availability,
-        },
-        {
-          session: session,
-        }
-      );
-      await Category.updateMany(
-        { _id: { $in: categories } },
-        { $push: { dishes: dish._id } },
-        { session: session }
-      );
+        });
 
-      res.status(201).send(dish);
-    });
+        await dish.save({ session: session });
+
+        await Category.updateMany(
+          { _id: { $in: categories } },
+          { $push: { dishes: dish._id } },
+          { session: session }
+        );
+      });
+
+      res.status(201).send("Dish created successfully");
+    } catch (e) {
+      // handle error
+    }
   }
 );
 
@@ -91,7 +92,7 @@ router.post(
       items,
     } = req.body;
 
-    const extra = Extra.build({
+    const extra = await Extra.create<ExtraType>({
       businessId,
       name,
       numOptions,
@@ -102,8 +103,6 @@ router.post(
 
       items,
     });
-
-    await extra.save();
 
     res.status(201).send(extra);
   }

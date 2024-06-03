@@ -74,11 +74,9 @@ router.put(
 
 router.put(
   "/v1/kitchens/updateAlert/alert",
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
-      return runInTransaction(async (session: ClientSession) => {
+      await runInTransaction(async (session: ClientSession) => {
         const { alertId, businessId, clearAll } = req.query;
         let alertExit = await Alert.findById(alertId, { session });
         if (clearAll) {
@@ -106,7 +104,7 @@ router.put(
             { isAlertOn: false },
             { session }
           );
-          return res.send(update);
+          res.send(update);
         }
 
         if (!alertExit?.tableId) {
@@ -125,7 +123,7 @@ router.put(
             );
           }
 
-          return res.send("success");
+          res.send("success");
         }
 
         if (alertExit?.status == "Cooked") {
@@ -160,7 +158,7 @@ router.put(
               session,
             });
           } catch (err: any) {
-            return res.status(500).send({
+            res.status(500).send({
               status: false,
               message: err,
             });
@@ -182,7 +180,7 @@ router.put(
           try {
             await Table.findByIdAndUpdate(alert?.tableId, config, { session });
           } catch (err: any) {
-            return res.status(400).send({
+            res.status(400).send({
               status: false,
               message: "need assitance not updated !!",
             });
@@ -192,7 +190,7 @@ router.put(
         res.status(200).send(alert);
       });
     } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+      res.status(500).send({ status: false, message: err.message });
     }
   }
 );
@@ -320,7 +318,6 @@ router.put(
 
 router.put(
   "/v1/kitchens/:id/settle-bill",
-
   async (req: Request, res: Response) => {
     try {
       let {
@@ -347,7 +344,7 @@ router.put(
       } = req.body;
 
       if (!mode || (!Total && Total == null)) {
-        return res.status(400).send("please enter the required fields");
+        return res.status(400).send("Please enter the required fields.");
       }
 
       if (mode === "dues" && !duesPersonId) {
@@ -356,7 +353,7 @@ router.put(
           .send("When mode is 'dues', a dues person must be selected.");
       }
 
-      return runInTransaction(async (session: ClientSession) => {
+      await runInTransaction(async (session: ClientSession) => {
         const created: any = [];
         for (const kotId of kots) {
           const updatedKOT = await Kot.findByIdAndUpdate(
@@ -452,11 +449,9 @@ router.put(
           );
         } catch (err: any) {
           console.error(err);
-          return res
-            .status(400)
-            .send(
-              "Failed to delete the KOTs associated with the table. Please try again."
-            );
+          throw new Error(
+            "Failed to delete the KOTs associated with the table. Please try again."
+          );
         }
         try {
           await Tempmodel.deleteOne(
@@ -469,13 +464,11 @@ router.put(
           console.error(err);
         }
 
-        // await TempModel.deleteOne({ hiCode });
         try {
           await Tempmodel.findOneAndUpdate(
             { tableId: singleKot.tableId },
             { $set: { hiCode } },
-            { upsert: true },
-            { session }
+            { upsert: true, session }
           );
         } catch (err: any) {
           console.error(err);
@@ -486,7 +479,7 @@ router.put(
           activeUser: 0,
           time: indianTime,
           totalDishQuantity: 0,
-          deliverdDish: 0,
+          deliveredDish: 0,
           role: null,
           hiCode: "",
           mergedBy: "",
@@ -498,15 +491,13 @@ router.put(
           });
         } catch (err: any) {
           console.error(err);
-          return res
-            .status(400)
-            .send(
-              "Failed to update the table. Please check your update details and try again."
-            );
+          throw new Error(
+            "Failed to update the table. Please check your update details and try again."
+          );
         }
-
-        return res.status(200).send("settled!");
       });
+
+      res.status(200).send("Settled!");
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
@@ -611,14 +602,16 @@ router.put(
 // );
 
 //new accept order
+
+// TODO solve type error datta
 router.put(
   "/v1/kitchens/:id/acceptOrder/:kotId",
-
   async (req: Request, res: Response) => {
     try {
       const { kotId } = req.params;
       const { waiterName, kotPrinter } = req.body;
-      return runInTransaction(async (session: ClientSession) => {
+
+      await runInTransaction(async (session: ClientSession) => {
         const currentTime = new Date();
 
         const optionsTimeAndSeconds = {
@@ -637,41 +630,35 @@ router.put(
         let getWaiterKot = await Waiterkot.findById(kotId, { session });
 
         if (getWaiterKot?.isAccept) {
-          return res.status(400).send("Order already accepted");
+          throw new Error("Order already accepted");
         }
 
         if (getWaiterKot) {
-          try {
-            const startedAt = Date.now();
-            const kotsToInsert = [];
-            const kotDate = new Date()
-              .toISOString()
-              .replace("T", " ")
-              .slice(0, 19);
-            for (let i = 0; i < (getWaiterKot.items?.length ?? 0); i++) {
-              const newKOT = getWaiterKot?.items?.[i] as unknown as object;
+          const startedAt = Date.now();
+          const kotsToInsert = [];
+          const kotDate = new Date()
+            .toISOString()
+            .replace("T", " ")
+            .slice(0, 19);
+          for (let i = 0; i < (getWaiterKot.items?.length ?? 0); i++) {
+            const newKOT = getWaiterKot?.items?.[i] as unknown as object;
 
-              const kot = await Kot.create(
-                {
-                  ...(newKOT as KOTType),
-                  startedAt,
-                  cookedAt: -1,
-                  status: "UNPAID",
-                  kotTime: kotTime,
-                  kotDate: kotDate,
-                },
-                { session }
-              );
-              kotsToInsert.push(kot);
-            }
-
-            await Kot.insertMany(kotsToInsert, { session });
-          } catch (err: any) {
-            console.log("err", err);
-            return res
-              .status(400)
-              .send("something went wrong please try again");
+            const kot = await Kot.create(
+              {
+                ...(newKOT as KOTType),
+                startedAt,
+                cookedAt: -1,
+                status: "UNPAID",
+                kotTime: kotTime,
+                kotDate: kotDate,
+              },
+              { session }
+            );
+            kotsToInsert.push(kot);
           }
+
+          await Kot.insertMany(kotsToInsert, { session });
+
           let query = {
             tableId: getWaiterKot?.tableId,
             status: "UNPAID",
@@ -681,30 +668,25 @@ router.put(
           );
 
           const totalDish = existingKOTs?.length;
-          let deliverd = 0;
+          let delivered = 0;
           for (let i = 0; i < existingKOTs.length; i++) {
             let obj = existingKOTs[i];
             if (obj?.dishStatus == "delivered") {
-              deliverd += 1;
+              delivered += 1;
             }
           }
 
           const config = {
             totalDishQuantity: totalDish,
-            deliverdDish: deliverd,
+            deliveredDish: delivered,
             status: "Active",
-            time: time,
+            time: currentTime,
           };
 
-          try {
-            await Table.findByIdAndUpdate(getWaiterKot.tableId, config, {
-              session,
-            });
-          } catch (err: any) {
-            return res
-              .status(400)
-              .send("something went wrong please try again");
-          }
+          await Table.findByIdAndUpdate(getWaiterKot.tableId, config, {
+            session,
+          });
+
           await Waiterkot.findByIdAndUpdate(
             kotId,
             {
@@ -713,37 +695,38 @@ router.put(
             },
             { session }
           );
-          try {
-            if (getWaiterKot && kotPrinter) {
-              const ws_config = {
-                method: "POST",
-                url: "https://ws.hipal.life",
-                data: {
-                  businessId: getWaiterKot?.businessId,
-                  payload: {
-                    tableName: getWaiterKot?.tableName,
-                    cart: getWaiterKot?.cart,
-                    waiterName: waiterName,
-                  },
-                },
-              };
-              const res = axios(ws_config);
-            }
-          } catch (err) {
-            console.log(err);
-          }
 
-          return res.status(201).send({
-            status: true,
-            message: "Order Accepted...!",
-          });
+          if (getWaiterKot && kotPrinter) {
+            const ws_config = {
+              method: "POST",
+              url: "https://ws.hipal.life",
+              data: {
+                businessId: getWaiterKot?.businessId,
+                payload: {
+                  tableName: getWaiterKot?.tableName,
+                  cart: getWaiterKot?.cart,
+                  waiterName: waiterName,
+                },
+              },
+            };
+            await axios(ws_config);
+          }
         } else {
-          return res
-            .status(400)
-            .send({ status: false, message: "Not Accepted..." });
+          throw new Error("Order not found");
         }
       });
+
+      return res.status(201).send({
+        status: true,
+        message: "Order Accepted...!",
+      });
     } catch (err: any) {
+      if (
+        err.message === "Order already accepted" ||
+        err.message === "Order not found"
+      ) {
+        return res.status(400).send({ status: false, message: err.message });
+      }
       return res.status(500).send({ status: false, message: err.message });
     }
   }
@@ -800,7 +783,6 @@ router.put(
 
 router.put(
   "/v1/kitchens/update/transferTable",
-
   async (req: Request, res: Response) => {
     try {
       const {
@@ -814,17 +796,16 @@ router.put(
         switchedBy,
       } = req.body;
 
-      return runInTransaction(async (session: ClientSession) => {
-        ///v1/zones/:zoneId/tables/:id/SingleTable
+      await runInTransaction(async (session: ClientSession) => {
         let checkTable;
 
         try {
           checkTable = await Table.findById(toTableId, { session });
           if (checkTable?.status != "Empty") {
-            return res.status(400).send("Table must be Empty");
+            throw new Error("Table must be Empty");
           }
         } catch (err: any) {
-          console.log("err", err);
+          throw new Error("Failed to check table status");
         }
 
         await Kot.updateMany(
@@ -848,7 +829,7 @@ router.put(
         const config = {
           status: "Empty",
           activeUser: 0,
-          time: time,
+          time: new Date(),
           totalDishQuantity: 0,
           deliverdDish: 0,
           role: null,
@@ -860,10 +841,7 @@ router.put(
         try {
           await Table.findByIdAndUpdate(fromTableId, config, { session });
         } catch (err: any) {
-          return res.status(400).send({
-            status: false,
-            message: err.message,
-          });
+          throw new Error("Failed to update from table");
         }
 
         const query = {
@@ -890,16 +868,13 @@ router.put(
           totalDishQuantity: totalDish,
           deliverdDish: delivered,
           status: "Active",
-          time: time,
+          time: new Date(),
         };
 
         try {
           await Table.findByIdAndUpdate(toTableId, con, { session });
         } catch (err: any) {
-          return res.status(400).send({
-            status: false,
-            message: err.message,
-          });
+          throw new Error("Failed to update to table");
         }
 
         await Alert.updateMany(
@@ -934,11 +909,11 @@ router.put(
           },
           { session }
         );
-
-        res.send("switched SuccessFully");
       });
+
+      res.status(200).send("Switched Successfully");
     } catch (err: any) {
-      console.log("err", err);
+      res.status(500).send({ status: false, message: err.message });
     }
   }
 );
@@ -1041,195 +1016,195 @@ router.put(
   }
 );
 
-router.put(
-  "/v1/kitchens/:kitchenId/settle",
+// router.put(
+//   "/v1/kitchens/:kitchenId/settle",
 
-  async (req: Request, res: Response) => {
-    try {
-      const currentTime = Date.now();
-      const momentTime = moment(currentTime);
+//   async (req: Request, res: Response) => {
+//     try {
+//       const currentTime = Date.now();
+//       const momentTime = moment(currentTime);
 
-      const Time = momentTime.clone().utcOffset("+05:30");
+//       const Time = momentTime.clone().utcOffset("+05:30");
 
-      const dayAndDate = Time.format("DD-MM-YYYY");
-      const indianTime = momentTime.clone().utcOffset("+05:30").format("HH:mm");
+//       const dayAndDate = Time.format("DD-MM-YYYY");
+//       const indianTime = momentTime.clone().utcOffset("+05:30").format("HH:mm");
 
-      let {
-        kots,
-        subTotal,
-        Total,
-        SGST,
-        CGST,
-        discount,
-        mode,
-        gstin,
-        customerName,
-        duesPersonId,
-        customerPhone,
-        claimedAmount,
-        discountDescription,
-        serviceCharge,
-        modeBreakDown,
-        otherCharges,
-        zoneType,
-        orderId,
-      } = req.body;
-      if (!mode) {
-        return res.status(400).send("mode Is Required !!");
-      }
+//       let {
+//         kots,
+//         subTotal,
+//         Total,
+//         SGST,
+//         CGST,
+//         discount,
+//         mode,
+//         gstin,
+//         customerName,
+//         duesPersonId,
+//         customerPhone,
+//         claimedAmount,
+//         discountDescription,
+//         serviceCharge,
+//         modeBreakDown,
+//         otherCharges,
+//         zoneType,
+//         orderId,
+//       } = req.body;
+//       if (!mode) {
+//         return res.status(400).send("mode Is Required !!");
+//       }
 
-      if (mode == "dues" && !duesPersonId) {
-        return res.status(400).send("DuesPersonId Is Required !!");
-      }
+//       if (mode == "dues" && !duesPersonId) {
+//         return res.status(400).send("DuesPersonId Is Required !!");
+//       }
 
-      return runInTransaction(async (session: ClientSession) => {
-        const created: any = [];
-        for (let i = 0; i < kots.length; i++) {
-          const newKOT = kots[i];
-          const kot = {
-            status: "PAID",
-            cookedAt: Date.now(),
-          };
-          let singlekot = await Kot.findByIdAndUpdate(newKOT, kot, { session });
+//       return runInTransaction(async (session: ClientSession) => {
+//         const created: any = [];
+//         for (let i = 0; i < kots.length; i++) {
+//           const newKOT = kots[i];
+//           const kot = {
+//             status: "PAID",
+//             cookedAt: Date.now(),
+//           };
+//           let singlekot = await Kot.findByIdAndUpdate(newKOT, kot, { session });
 
-          created.push(singlekot);
-        }
+//           created.push(singlekot);
+//         }
 
-        let singleData = created?.[1] || created?.[0];
+//         let singleData = created?.[1] || created?.[0];
 
-        let businessData;
+//         let businessData;
 
-        try {
-          let response = await Business.findById(singleData?.businessId).select(
-            "businessName logo id serviceCharge serviceChargePercentage gstNumber fssaiLicenseNumber "
-          );
-          businessData = response;
-        } catch (err: any) {
-          return res.status(400).send({
-            status: false,
-            message: err.message,
-          });
-        }
-        let items = [];
+//         try {
+//           let response = await Business.findById(singleData?.businessId).select(
+//             "businessName logo id serviceCharge serviceChargePercentage gstNumber fssaiLicenseNumber "
+//           );
+//           businessData = response;
+//         } catch (err: any) {
+//           return res.status(400).send({
+//             status: false,
+//             message: err.message,
+//           });
+//         }
+//         let items = [];
 
-        for (let i = 0; i < created.length; i++) {
-          let newobj: any = {};
-          (newobj.name = created[i].dish?.name),
-            (newobj.quantity =
-              created[i].dish?.qty || created[i].dish?.quantity);
-          newobj.amount = created[i].dish?.price;
-          newobj.portions = created[i].dish?.portions;
-          (newobj.extras = created[i].dish?.extras),
-            (newobj.comments = "spicy");
-          (newobj.category = created[i].category), items.push(newobj);
-        }
-        for (const item of items) {
-          // Calculate the total price of portions
-          let price;
-          if (item?.portions) {
-            price =
-              parseInt(item?.portions?.price) *
-              parseInt(item?.quantity || item?.qty);
-          } else {
-            price = parseInt(item?.amount);
-          }
-          let extrasPrice = 0;
-          if (item?.extras?.length > 0) {
-            for (const extra of item.extras) {
-              extrasPrice +=
-                parseInt(extra.price || 0) * extra?.quantity || extra?.qty;
-            }
-          }
+//         for (let i = 0; i < created.length; i++) {
+//           let newobj: any = {};
+//           (newobj.name = created[i].dish?.name),
+//             (newobj.quantity =
+//               created[i].dish?.qty || created[i].dish?.quantity);
+//           newobj.amount = created[i].dish?.price;
+//           newobj.portions = created[i].dish?.portions;
+//           (newobj.extras = created[i].dish?.extras),
+//             (newobj.comments = "spicy");
+//           (newobj.category = created[i].category), items.push(newobj);
+//         }
+//         for (const item of items) {
+//           // Calculate the total price of portions
+//           let price;
+//           if (item?.portions) {
+//             price =
+//               parseInt(item?.portions?.price) *
+//               parseInt(item?.quantity || item?.qty);
+//           } else {
+//             price = parseInt(item?.amount);
+//           }
+//           let extrasPrice = 0;
+//           if (item?.extras?.length > 0) {
+//             for (const extra of item.extras) {
+//               extrasPrice +=
+//                 parseInt(extra.price || 0) * extra?.quantity || extra?.qty;
+//             }
+//           }
 
-          item.amount = price + extrasPrice;
-        }
-        const cName =
-          customerName == "undefined" || "" || !customerName
-            ? singleData?.customerName
-            : customerName;
-        const cPhone =
-          customerPhone == "undefined" || "" || !customerPhone
-            ? singleData?.customerPhone
-            : customerPhone;
+//           item.amount = price + extrasPrice;
+//         }
+//         const cName =
+//           customerName == "undefined" || "" || !customerName
+//             ? singleData?.customerName
+//             : customerName;
+//         const cPhone =
+//           customerPhone == "undefined" || "" || !customerPhone
+//             ? singleData?.customerPhone
+//             : customerPhone;
 
-        if (mode == "complimentary") {
-          discount = 0;
-          Total = 0;
-        }
+//         if (mode == "complimentary") {
+//           discount = 0;
+//           Total = 0;
+//         }
 
-        const data = await Payment.create(
-          {
-            businessId: singleData?.businessId,
-            businessName: businessData?.businessName,
-            address: businessData?.address,
-            logo: businessData?.logo,
-            gstin: gstin || "NA",
-            items: items,
-            subTotal: parseInt(subTotal),
-            sgst: Number(SGST?.toFixed(2)),
-            cgst: Number(CGST?.toFixed(2)),
-            total: parseInt(Total),
-            paymentMode: mode || "online",
-            paymentDate: dayAndDate,
-            mode: mode || "online",
-            customerId: Math.floor(
-              Math.random() * (999999 - 100000 + 1) + 100000
-            ),
-            customerName: cName,
-            customerPhone: cPhone,
-            discount: parseInt(discount),
-            zoneId: singleData?.zoneId,
-            tableId: singleData?.tableId,
-            time: indianTime,
-            tableName: singleData?.tableName,
-            duesPersonId: duesPersonId,
-            discountDescription,
-            claimedAmount,
-            serviceCharge,
-            modeBreakDown,
-            otherCharges,
-            zoneType: "Take Away",
-            swiggyBillObj: singleData?.swiggyBillObj,
-            orderId,
-          },
-          { session }
-        );
+//         const data = await Payment.create(
+//           {
+//             businessId: singleData?.businessId,
+//             businessName: businessData?.businessName,
+//             address: businessData?.address,
+//             logo: businessData?.logo,
+//             gstin: gstin || "NA",
+//             items: items,
+//             subTotal: parseInt(subTotal),
+//             sgst: Number(SGST?.toFixed(2)),
+//             cgst: Number(CGST?.toFixed(2)),
+//             total: parseInt(Total),
+//             paymentMode: mode || "online",
+//             paymentDate: dayAndDate,
+//             mode: mode || "online",
+//             customerId: Math.floor(
+//               Math.random() * (999999 - 100000 + 1) + 100000
+//             ),
+//             customerName: cName,
+//             customerPhone: cPhone,
+//             discount: parseInt(discount),
+//             zoneId: singleData?.zoneId,
+//             tableId: singleData?.tableId,
+//             time: indianTime,
+//             tableName: singleData?.tableName,
+//             duesPersonId: duesPersonId,
+//             discountDescription,
+//             claimedAmount,
+//             serviceCharge,
+//             modeBreakDown,
+//             otherCharges,
+//             zoneType: "Take Away",
+//             swiggyBillObj: singleData?.swiggyBillObj,
+//             orderId,
+//           },
+//           { session }
+//         );
 
-        await Alert.updateMany(
-          {
-            zoneId: singleData.zoneId,
-            businessId: singleData.businessId,
-          },
-          { isAlertOn: false },
-          { session }
-        );
-        let obj = [
-          {
-            businessId: singleData?.businessId,
-            tableName: singleData?.tableName,
-            zoneId: singleData?.zoneId,
-            staffId: singleData?.staffId,
-            status: "Paid",
-            time: indianTime,
-            message: `Paid ${Total}`,
-          },
-        ];
-        for (let i = 0; i < obj.length; i++) {
-          let saveAlert = new Alert(obj[i], { session });
-          await saveAlert.save();
-        }
+//         await Alert.updateMany(
+//           {
+//             zoneId: singleData.zoneId,
+//             businessId: singleData.businessId,
+//           },
+//           { isAlertOn: false },
+//           { session }
+//         );
+//         let obj = [
+//           {
+//             businessId: singleData?.businessId,
+//             tableName: singleData?.tableName,
+//             zoneId: singleData?.zoneId,
+//             staffId: singleData?.staffId,
+//             status: "Paid",
+//             time: indianTime,
+//             message: `Paid ${Total}`,
+//           },
+//         ];
+//         for (let i = 0; i < obj.length; i++) {
+//           let saveAlert = new Alert(obj[i], { session });
+//           await saveAlert.save();
+//         }
 
-        return res.status(200).send({
-          status: true,
-          message: "Payment Done Successfully.....!",
-          data: data,
-        });
-      });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
-  }
-);
+//         return res.status(200).send({
+//           status: true,
+//           message: "Payment Done Successfully.....!",
+//           data: data,
+//         });
+//       });
+//     } catch (err: any) {
+//       return res.status(500).send({ status: false, message: err.message });
+//     }
+//   }
+// );
 
 router.put(
   "/v1/kitchens/:id/orderBySwiggy",

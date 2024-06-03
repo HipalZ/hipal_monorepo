@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import { app } from "./app";
 import { natsWrapper } from "./nats-wrapper";
 import { razorpayWrapper } from "./razorpay-wrapper";
+import dotenv from "dotenv";
 
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const start = async () => {
   // if (!process.env.JWT_KEY) {
   //   throw new Error("JWT_KEY must be defined");
@@ -53,7 +55,7 @@ const start = async () => {
   // process.on("SIGINT", () => natsWrapper.client.close());
   // process.on("SIGTERM", () => natsWrapper.client.close());
 
-  // await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGO_URL as string);
   console.log("connected to mongodb");
 
   // if (process.env.NODE_ENV === "production") {
@@ -62,8 +64,8 @@ const start = async () => {
   //   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   // }
 
-  app.listen(3000, () => {
-    console.log("Listening on port 3000!!");
+  app.listen(3004, () => {
+    console.log("Listening on port 3004!!");
   });
 };
 

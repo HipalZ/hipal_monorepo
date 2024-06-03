@@ -97,50 +97,53 @@ router.put(
       serviceChargeRemovedBy,
       serviceChargeAddedBy,
     } = req.body;
-    return runInTransaction(async (session: ClientSession) => {
-      if (reapply) {
-        serviceChargeRemovedBy = "";
-      }
-      if (!reapply) {
-        serviceChargeAddedBy = "";
-      }
-      const business = await Business.findById(
-        { _id: id, password },
-        { session }
-      );
-      if (!business) {
-        return res.status(400).send("Business not found");
-      }
+    try {
+      await runInTransaction(async (session: ClientSession) => {
+        if (reapply) {
+          serviceChargeRemovedBy = "";
+        }
+        if (!reapply) {
+          serviceChargeAddedBy = "";
+        }
+        const business = await Business.findById(
+          { _id: id, password },
+          { session }
+        );
+        if (!business) {
+          throw new Error("Business not found");
+        }
 
-      const serviceChargeisExist = await Tempmodel.findOne(
-        {
-          tableId,
-          serviceChargeApply: true,
-        },
-        { session }
-      );
-
-      if (serviceChargeisExist && reapply) {
-        return res.status(400).send("Service Charge is already applied");
-      }
-
-      const updateServiceCharge = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        {
-          $set: {
-            serviceChargeApply: reapply ? true : false,
-            serviceChargeRemovedBy,
-            serviceChargeAddedBy,
+        const serviceChargeisExist = await Tempmodel.findOne(
+          {
+            tableId,
+            serviceChargeApply: true,
           },
-        },
+          { session }
+        );
 
-        { session }
-      );
+        if (serviceChargeisExist && reapply) {
+          throw new Error("Service Charge is already applied");
+        }
+
+        await Tempmodel.findOneAndUpdate(
+          { tableId: tableId },
+          {
+            $set: {
+              serviceChargeApply: reapply ? true : false,
+              serviceChargeRemovedBy,
+              serviceChargeAddedBy,
+            },
+          },
+          { session }
+        );
+      });
 
       res
         .status(200)
         .send(`Service charge ${reapply ? "Added" : "removed"} successfully`);
-    });
+    } catch (error: any) {
+      res.status(400).send(error.message);
+    }
   }
 );
 

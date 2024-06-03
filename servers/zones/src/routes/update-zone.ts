@@ -269,63 +269,73 @@ router.put(
 router.put(
   "/v1/zones/:zoneId/tables/:id/KickOutTable",
   async (req: Request, res: Response) => {
-    var currentTime = Date.now();
-    var momentTime = moment(currentTime);
-    var indianTime = momentTime.clone().utcOffset("+05:30").format("HH:mm:ss");
+    const currentTime = Date.now();
+    const momentTime = moment(currentTime);
+    const indianTime = momentTime
+      .clone()
+      .utcOffset("+05:30")
+      .format("HH:mm:ss");
     const { id, zoneId } = req.params;
-    return runInTransaction(async (session: ClientSession) => {
-      let data = {
-        zoneId,
-        tableId: id,
-      };
 
-      try {
-        const update = await Kot.updateMany(
-          {
-            zoneId,
-            tableId: id,
-            status: "UNPAID",
-          },
-          {
-            $set: {
-              status: "PAID",
-              cookedAt: Date.now(),
+    try {
+      await runInTransaction(async (session: ClientSession) => {
+        const data = {
+          zoneId,
+          tableId: id,
+        };
+
+        try {
+          const update = await Kot.updateMany(
+            {
+              zoneId,
+              tableId: id,
+              status: "UNPAID",
             },
-          },
-          { session: session }
-        );
+            {
+              $set: {
+                status: "PAID",
+                cookedAt: Date.now(),
+              },
+            },
+            { session }
+          );
 
-        if (!update) {
-          return res.send({ status: false, message: "Not Found Order" });
+          if (!update) {
+            throw new Error("Not Found Order");
+          }
+
+          await Waiterkot.deleteMany(
+            {
+              zoneId: zoneId,
+              tableId: id,
+              isAccept: false,
+            },
+            { session }
+          );
+        } catch (err: any) {
+          throw new Error(err.message);
         }
-        await Waiterkot.deleteMany(
-          {
-            zoneId: zoneId,
-            tableId: id,
-            isAccept: false,
-          },
-          { session: session }
-        );
-      } catch (err: any) {
-        return res.status(500).send({ status: false, message: err });
-      }
-      const update = {
-        status: "Empty",
-        activeUser: 0,
-        time: indianTime,
-        totalDishQuantity: 0,
-        deliverdDish: 0,
-        role: null,
-        hiCode: "",
-        mergedBy: "",
-        reservedBy: "",
-      };
-      const existingTable = await Table.findByIdAndUpdate(id, update, {
-        session: session,
+
+        const update = {
+          status: "Empty",
+          activeUser: 0,
+          time: indianTime,
+          totalDishQuantity: 0,
+          deliverdDish: 0,
+          role: null,
+          hiCode: "",
+          mergedBy: "",
+          reservedBy: "",
+        };
+
+        await Table.findByIdAndUpdate(id, update, { session });
       });
 
-      res.status(200).send(existingTable);
-    });
+      const existingTable = await Table.findById(id);
+      return res.status(200).send(existingTable);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
   }
 );
 
@@ -354,128 +364,127 @@ router.put(
 );
 router.put(
   "/v1/zones/:zoneId/mergeTables",
-
   async (req: Request, res: Response) => {
     const { businessId, tables, mergedBy } = req.body;
     if (!businessId || tables?.length == 1) {
-      return res.status(400).send("cann't merge single table");
+      return res.status(400).send("Cannot merge a single table");
     }
 
-    return runInTransaction(async (session: ClientSession) => {
-      let tableObj: any = {};
-      tables.forEach((table: any) => {
-        if (!tableObj[table?.name]) {
-          tableObj[table?.name] = {
-            name: table?.name,
-            id: table?.tableId,
-          };
-        }
-      });
-      let tableNames = Object.values(tableObj);
-
-      let findParentTable = tables?.filter(
-        (table: any) => table?.hierarchy == "PARENT"
-      );
-
-      const parentTable = await Table.findById(findParentTable?.[0]?.tableId, {
-        session: session,
-      });
-      if (parentTable?.isMerge) {
-        return res.status(400).send("Table Already merged");
-      }
-
-      for (let i = 0; i < tables?.length; i++) {
-        let table = tables[i];
-        if (table?.hierarchy === "PARENT") {
-          await Table.findByIdAndUpdate(
-            table?.tableId,
-            {
-              isMerge: true,
-              hierarchy: "PARENT",
-              mergeTables: tableNames,
-              mergedBy,
-            },
-            { new: true },
-            { session: session }
-          );
-        } else {
-          await Table.findByIdAndUpdate(
-            table?.tableId,
-            {
-              isMerge: true,
-              ...table,
-              status: "Active",
-              activeUser: parentTable?.activeUser,
-              totalDishQuantity: parentTable?.totalDishQuantity,
-              deliverdDish: parentTable?.deliverdDish,
-              mergeTables: tableNames,
-            },
-            { new: true },
-            { session: session }
-          );
-        }
-      }
-
-      let filterParentTable = tables?.filter(
-        (table: any) => table?.hierarchy == "PARENT"
-      );
-      let tableId = filterParentTable?.[0]?.tableId;
-
-      for (let index = 0; index < tables.length; index++) {
-        const table = tables[index];
-        if (table?.hierarchy == "CHILD") {
-          let kots = await Kot.find(
-            {
-              tableId: table.tableId,
-              zoneId: table.parentZoneId,
-              status: "UNPAID",
-              isDeleted: false,
-            },
-            { session: session }
-          ).lean();
-          let newArray = JSON.parse(JSON.stringify(kots));
-          for (let i = 0; i < newArray.length; i++) {
-            let newKOT: any = newArray[i];
-            let kotId = newKOT._id || newKOT.id;
-            delete newKOT.__v;
-            delete newKOT._id;
-            delete newKOT.id;
-
-            const kot = {
-              ...newKOT,
-              tableId: table.parentTableId,
-              zoneId: table.parentZoneId,
+    try {
+      await runInTransaction(async (session: ClientSession) => {
+        let tableObj: any = {};
+        tables.forEach((table: any) => {
+          if (!tableObj[table?.name]) {
+            tableObj[table?.name] = {
+              name: table?.name,
+              id: table?.tableId,
             };
-            await Kot.create(kot, { session: session });
+          }
+        });
+        let tableNames = Object.values(tableObj);
 
-            await Kot.findByIdAndDelete(kotId, { session: session });
+        let findParentTable = tables?.filter(
+          (table: any) => table?.hierarchy == "PARENT"
+        );
+
+        const parentTable = await Table.findById(
+          findParentTable?.[0]?.tableId,
+          {
+            session: session,
+          }
+        );
+        if (parentTable?.isMerge) {
+          throw new Error("Table already merged");
+        }
+
+        for (let i = 0; i < tables?.length; i++) {
+          let table = tables[i];
+          if (table?.hierarchy === "PARENT") {
+            await Table.findByIdAndUpdate(
+              table?.tableId,
+              {
+                isMerge: true,
+                hierarchy: "PARENT",
+                mergeTables: tableNames,
+                mergedBy,
+              },
+              { new: true, session }
+            );
+          } else {
+            await Table.findByIdAndUpdate(
+              table?.tableId,
+              {
+                isMerge: true,
+                ...table,
+                status: "Active",
+                activeUser: parentTable?.activeUser,
+                totalDishQuantity: parentTable?.totalDishQuantity,
+                deliverdDish: parentTable?.deliverdDish,
+                mergeTables: tableNames,
+              },
+              { new: true, session }
+            );
           }
         }
-      }
-      let kots = await Kot.find(
-        {
-          tableId: tables?.[1].parentTableId,
-          zoneId: tables?.[1].parentZoneId,
-          status: "UNPAID",
-          isDeleted: false,
-        },
-        {
-          session: session,
-        }
-      ).count();
 
-      await Table.findByIdAndUpdate(
-        tableId,
-        {
-          totalDishQuantity: kots,
-        },
-        {
-          session: session,
-        }
-      );
+        for (let index = 0; index < tables.length; index++) {
+          const table = tables[index];
+          if (table?.hierarchy == "CHILD") {
+            let kots = await Kot.find(
+              {
+                tableId: table.tableId,
+                zoneId: table.parentZoneId,
+                status: "UNPAID",
+                isDeleted: false,
+              },
+              { session: session }
+            ).lean();
+            let newArray = JSON.parse(JSON.stringify(kots));
+            for (let i = 0; i < newArray.length; i++) {
+              let newKOT: any = newArray[i];
+              let kotId = newKOT._id || newKOT.id;
+              delete newKOT.__v;
+              delete newKOT._id;
+              delete newKOT.id;
 
-      res.status(200).send("merge success");
-    });
+              const kot = {
+                ...newKOT,
+                tableId: table.parentTableId,
+                zoneId: table.parentZoneId,
+              };
+              await Kot.create(kot, { session: session });
+
+              await Kot.findByIdAndDelete(kotId, { session: session });
+            }
+          }
+        }
+        let kots = await Kot.find(
+          {
+            tableId: tables?.[1].parentTableId,
+            zoneId: tables?.[1].parentZoneId,
+            status: "UNPAID",
+            isDeleted: false,
+          },
+          {
+            session: session,
+          }
+        ).count();
+
+        await Table.findByIdAndUpdate(
+          findParentTable?.[0]?.tableId,
+          {
+            totalDishQuantity: kots,
+          },
+          {
+            session: session,
+          }
+        );
+      });
+
+      res.status(200).send("Merge success");
+    } catch (err: any) {
+      res.status(500).send({ status: false, message: err.message });
+    }
   }
 );
 
