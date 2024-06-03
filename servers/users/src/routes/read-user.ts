@@ -48,20 +48,17 @@ router.get(
   async (req: Request, res: Response) => {
     const { clientRole } = req.query;
     if (clientRole === "user") {
-      const userId = req.currentUser?.id;
-      const existingUser = await User.findById(userId);
-
-      res.status(200).send({
-        currentUser: existingUser,
-      });
+      // const userId = req.currentUser?.id;
+      // const existingUser = await User.findById(userId);
+      // res.status(200).send({
+      //   currentUser: existingUser,
+      // });
     } else if (clientRole === "admin") {
-      const userId = req.currentUser?.id;
-
-      const admin = await Admin.findById(userId);
-
-      res.status(200).send({
-        currentUser: admin,
-      });
+      // const userId = req.currentUser?.id;
+      // const admin = await Admin.findById(userId);
+      // res.status(200).send({
+      //   currentUser: admin,
+      // });
     }
   }
 );

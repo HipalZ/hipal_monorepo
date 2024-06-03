@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, validateRequest } from "@hipal/common";
+// import { BadRequestError, NotFoundError, validateRequest } from "@hipal/common";
 import axios from "axios";
 import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -125,9 +125,9 @@ router.post("/v1/users", async (req: Request, res: Response) => {
     req.body;
   const { action, clientRole, withScan, loyaltyId, businessName } = req.query;
 
-  if (!clientRole) {
-    throw new BadRequestError("clientRole required");
-  }
+  // if (!clientRole) {
+  //   throw new BadRequestError("clientRole required");
+  // }
   // const UserOrAdmin: any = clientRole === "admin" ? Admin : User;
 
   if (action === "signup") {
@@ -144,9 +144,9 @@ router.post("/v1/users", async (req: Request, res: Response) => {
     } else {
       existingUserPhone = await User.findOne({ phone, role });
     }
-    if (existingUserPhone) {
-      throw new BadRequestError("User registered already");
-    }
+    // if (existingUserPhone) {
+    //   throw new BadRequestError("User registered already");
+    // }
     if (role == "RESTAURANT_OWNER") {
       password = Math.floor(Math.random() * 9000) + 1000;
     }
@@ -189,9 +189,9 @@ router.post("/v1/users", async (req: Request, res: Response) => {
     const number = phone;
 
     // check if phone number is valid
-    if (!number.match(/^\d+$/)) {
-      throw new BadRequestError("Phone number Invalid");
-    }
+    // if (!number.match(/^\d+$/)) {
+    //   throw new BadRequestError("Phone number Invalid");
+    // }
 
     let user;
     if (clientRole === "admin") {
@@ -200,9 +200,9 @@ router.post("/v1/users", async (req: Request, res: Response) => {
       user = await User.findOne({ phone });
     }
 
-    if (!user) {
-      throw new NotFoundError();
-    }
+    // if (!user) {
+    //   throw new NotFoundError();
+    // }
 
     // Generate JWT
     const userJwt = createJWT(user);
@@ -235,7 +235,7 @@ router.post("/v1/users", async (req: Request, res: Response) => {
 router.post(
   "/v1/users/waiterLogin",
   // validateUser,
-  validateRequest,
+  // validateRequest,
   async (req: Request, res: Response) => {
     const { phone, password, businessId } = req.body;
 
@@ -322,14 +322,14 @@ router.post(
 router.post(
   "/v1/users/otp",
 
-  validateRequest,
+  // validateRequest,
   async (req: Request, res: Response) => {
     const { phone } = req.body;
     const { clientRole } = req.query;
 
-    if (!clientRole) {
-      throw new BadRequestError("clientRole required");
-    }
+    // if (!clientRole) {
+    //   throw new BadRequestError("clientRole required");
+    // }
 
     const UserOrAdmin = clientRole === "admin" ? Admin : User;
 
@@ -340,15 +340,15 @@ router.post(
       user = await User.findOne({ phone });
     }
 
-    if (!user) {
-      throw new NotFoundError();
-    }
+    // if (!user) {
+    //   throw new NotFoundError();
+    // }
 
     const number = phone;
     // check if phone number is valid
-    if (!number.match(/^\d+$/)) {
-      throw new BadRequestError("Phone number is invalid");
-    }
+    // if (!number.match(/^\d+$/)) {
+    //   throw new BadRequestError("Phone number is invalid");
+    // }
 
     let otp;
     otp = await redisWrapper.client.get(`number:${number}:code`);
@@ -415,7 +415,6 @@ router.post(
 router.post(
   "/v1/users/chef/Login",
   // validateUser,
-  validateRequest,
   async (req: Request, res: Response) => {
     const { phone, password, businessId } = req.body;
     const { withBusinessId } = req.query;
@@ -903,7 +902,6 @@ router.post("/v1/users/addBulkCoins", async (req: Request, res: Response) => {
 router.post(
   "/v1/users/signup",
 
-  validateRequest,
   async (req: Request, res: Response) => {
     let { phone, role, name, email, accessControl } = req.body;
     if (!phone || !role) {
