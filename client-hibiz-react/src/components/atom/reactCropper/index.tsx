@@ -1,0 +1,81 @@
+import { useCroppedImage } from "@/components/store/useCroppedImage";
+import { useRef, forwardRef, useImperativeHandle } from "react";
+import {
+  FixedCropper,
+  ImageRestriction,
+  FixedCropperRef,
+} from "react-advanced-cropper";
+import "react-advanced-cropper/dist/style.css";
+
+export const cropImage = (imageSrc, coordinates) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // This enables CORS
+    img.src = imageSrc;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = coordinates.width;
+      canvas.height = coordinates.height;
+      ctx &&
+        ctx.drawImage(
+          img,
+          coordinates.left,
+          coordinates.top,
+          coordinates.width,
+          coordinates.height,
+          0,
+          0,
+          coordinates.width,
+          coordinates.height
+        );
+      resolve(canvas.toDataURL());
+    };
+    img.onerror = (err) => {
+      reject(err);
+    };
+  });
+};
+
+const ReactCropper = forwardRef(({ image, width, height }, ref) => {
+  const setCroppedImage = useCroppedImage((s) => s.setCroppedImage);
+  const cropperRef = useRef<FixedCropperRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    getCoordinates: () => cropperRef.current?.getCoordinates(),
+  }));
+
+  const onChange = async (cropper) => {
+    const coordinates = cropper.getCoordinates();
+    try {
+      const croppedDataUrl = await cropImage(image, coordinates);
+      if (typeof croppedDataUrl === "string") {
+        setCroppedImage(croppedDataUrl);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <FixedCropper
+      ref={cropperRef}
+      src={image}
+      onChange={onChange}
+      stencilProps={{
+        movable: false,
+        resizable: false,
+      }}
+      stencilSize={{
+        width: width ? width : 100,
+        height: height ? height : 100,
+      }}
+      imageRestriction={ImageRestriction.stencil}
+    />
+  );
+});
+
+ReactCropper.displayName = "ReactCropper";
+
+export default ReactCropper;

@@ -1,0 +1,225 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap');
+
+/* Or create a specific class to use the font */
+.plus-jakarta-font {
+	font-family: Plus Jakarta Sans, sans-serif;
+}
+
+.syne-font {
+	font-family: 'Syne', sans-serif;
+  }
+  
+  .syne-font-semibold {
+	font-family: 'Syne', sans-serif;
+	font-weight: 500; 
+  }
+  .syne-font-bold {
+	font-family: 'Syne', sans-serif;
+	font-weight: 600; 
+  }
+  
+  .syne-font-black {
+	font-family: 'Syne', sans-serif;
+	font-weight: 800; 
+  }
+
+@keyframes marquee {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(-50%);
+	} 
+}
+.marquee {
+	animation: marquee 15s linear infinite;
+	white-space: nowrap;
+	width: 200%;
+	display: flex;
+	overflow: hidden;
+}
+@keyframes marquee1 {
+	0% {
+		transform: translateX(100%);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
+}
+
+.marquee1 {
+	animation: marquee1 15s linear infinite;
+	white-space: nowrap;
+	width: 200%;
+	display: flex;
+	overflow: hidden;
+}
+.typed {
+	overflow: hidden;
+	white-space: nowrap;
+	width: 0;
+	height: auto;
+	animation: typing 1.5s steps(30, end) forwards, 2s stay 1.5s forwards;
+}
+.animation-bounce {
+	animation: bounce 1.5s linear;
+}
+
+@keyframes bounce {
+	0%,
+	33.33%,
+	66.66%,
+	100% {
+		transform: translate3d(0%, 0, 0);
+		animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+	}
+	16.66%,
+	50%,
+	83.33% {
+		transform: translate3d(10%, 0, 0);
+		animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+	}
+}
+
+@keyframes typing {
+	from {
+		width: 0%;
+	}
+	to {
+		width: 100%;
+	}
+}
+
+@keyframes stay {
+	from {
+		width: 100%;
+	}
+	to {
+		width: 100%;
+	}
+}
+body::-webkit-scrollbar {
+	display: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.smooth-scroll {
+	scroll-behavior: smooth;
+}
+.on_active_bounce {
+	@apply transition-all scale-100 active:scale-95;
+}
+
+.splide__pagination .is-active {
+	@apply bg-primary-focus;
+}
+
+#specialOffers .splide__slide ~ .is-active {
+	@apply transition-all scale-100;
+}
+#specialOffers .splide__slide {
+	@apply transition-all scale-90;
+}
+
+@layer base {
+	html,
+	body {
+		@apply fixed inset-0 overflow-auto tracking-wide scroll-smooth; /* Fix for mobile device viewport */
+		/* font-family: 'Inter', sans-serif; */
+	}
+
+	* {
+		@apply font-medium tracking-wide;
+		/* font-family: 'Inter', sans-serif; */
+		/* font-family: 'Montserrat', sans-serif; */
+	}
+	input[type='password'] {
+		font: large Verdana, sans-serif;
+		letter-spacing: 1px;
+	}
+	.btn-ghost {
+		@apply hover:!bg-transparent;
+	}
+}
+
+/* This will make website look more like mobile app */
+* {
+	-webkit-touch-callout: none; /* prevent call out to copy image, etc when tap to hold */
+	-webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* prevent tap highlight color / shadow */
+	-webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
+}
+
+ 
+  .tilted-card:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .tilted-card:before {
+	content: '';
+	position: absolute;
+	top: 0; right: 0; bottom: 0; left: 0;
+	background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+	border-radius: inherit;
+  }
+  @keyframes slideUp {
+	from { transform: translateY(20px); opacity: 0; }
+	to { transform: translateY(0); opacity: 1; }
+  }
+  .tilted-card {
+	animation: slideUp 0.5s ease-out;
+  }
+  .tilted-card h1 {
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .tilted-card button {
+	background-color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.5em 1em;
+	transition: background-color 0.3s;
+  }
+  .tilted-card button:hover {
+	background-color: #f0f0f0;
+  }
+
+  .tilted-card button {
+	padding: 10px 15px; /* Larger padding for easy tapping */
+  }
+  .tilted-card button {
+	background-color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.5em 1em;
+	transition: background-color 0.3s;
+  }
+  .tilted-card button:hover {
+	background-color: #f0f0f0;
+  }
+  
+  .tilted-card:active {
+	transform: rotateZ(5deg); 
+  }
+
+  @media screen and (min-width: 480px) {
+	body{
+		background-color: #fff;
+		border: 1px solid hsl(var(--p) / var(--tw-border-opacity));
+	}
+  }

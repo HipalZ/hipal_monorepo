@@ -1,0 +1,5 @@
+name,description,price,avgTime,dishType,kitchenName
+Manchurian,Best manchurian,25,25,VEG,kot-1
+rice bowl,Best manchurian,50,20,NON_VEG,kot-2
+noodles,something good,30,50,VEG,kot-1
+bowl,nothing much,100,20,Sona,kot-2
