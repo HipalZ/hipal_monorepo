@@ -16,7 +16,6 @@ const AddExtras = ({
 }) => {
   const [extras, setExtras] = useState<Extra[]>([]);
   const searchText = useSearch((s) => s.searchText);
-  const setSearchText = useSearch((s) => s.setSearchText);
 
   useEffect(() => {
     setExtras(selectedData);
@@ -25,18 +24,14 @@ const AddExtras = ({
   function handleActiveClick(selectedData: Extra) {
     setExtras((prev: any) => {
       const index = prev.findIndex(
-        (item: Extra) => item.id === selectedData.id
+        (item: Extra) => item._id === selectedData._id
       );
       if (index !== -1) {
-        return prev.filter((item: Extra) => item.id !== selectedData.id);
+        return prev.filter((item: Extra) => item._id !== selectedData._id);
       }
         return [...prev, selectedData];
     });
   }
-
-  useEffect(() => {
-    setSearchText('')
-  }, [])
 
   const extrasData = useMemo(
     () =>
@@ -52,9 +47,9 @@ const AddExtras = ({
         <SearchPanel />
         {searchText === '' ? Data?.map((eachData) => (
           <div
-            key={eachData.id}
+            key={eachData._id}
             onClick={() => handleActiveClick(eachData)}
-            className={`${extras.some((item) => item.id === eachData.id)
+            className={`${extras.some((item) => item._id === eachData._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -62,7 +57,7 @@ const AddExtras = ({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={extras.some((item) => item.id === eachData.id)}
+                checked={extras.some((item) => item._id === eachData._id)}
                 className="mr-2 rounded-sm"
               />
               <h1 className="mx-2 text-base">{eachData.name}</h1>
@@ -70,9 +65,9 @@ const AddExtras = ({
           </div>
         )) : extrasData?.map((eachData) => (
           <div
-            key={eachData.id}
+            key={eachData._id}
             onClick={() => handleActiveClick(eachData)}
-            className={`${extras.some((item) => item.id === eachData.id)
+            className={`${extras.some((item) => item._id === eachData._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -80,7 +75,7 @@ const AddExtras = ({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={extras.some((item) => item.id === eachData.id)}
+                checked={extras.some((item) => item._id === eachData._id)}
                 className="mr-2 rounded-sm"
               />
               <h1 className="mx-2 text-base">{eachData.name}</h1>

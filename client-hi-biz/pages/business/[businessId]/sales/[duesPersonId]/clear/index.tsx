@@ -56,7 +56,7 @@ function Clear() {
   );
 
   const selectedDuesTotal = selectedDuesIds.reduce((sum, id) => {
-    const due = dues.find((due) => due.id === id);
+    const due = dues.find((due) => due._id === id);
     return sum + (due?.total || 0);
   }, 0);
 
@@ -120,12 +120,12 @@ function Clear() {
       <div className="space-y-4">
         {dues?.map((due, index) => (
           <div
-            onKeyDown={()=>toggleSelect(due.id)}
-            key={due.id}
+            onKeyDown={()=>toggleSelect(due._id)}
+            key={due._id}
             className={`mx-6 border mt-4 rounded-md px-4 py-2 ${
-              selectedDues[due.id] ? "bg-[#219653]/10 border-[#219653]" : ""
+              selectedDues[due._id] ? "bg-[#219653]/10 border-[#219653]" : ""
             }`}
-            onClick={() => toggleSelect(due.id)}
+            onClick={() => toggleSelect(due._id)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center justify-between">
@@ -134,7 +134,7 @@ function Clear() {
                     display: "inline-block",
                     width: "16px",
                     height: "16px",
-                    background: selectedDues[due.id]
+                    background: selectedDues[due._id]
                       ? "rgba(33, 150, 83, 0.10)"
                       : "#ffffff",
                     border: "1px solid #219653",
@@ -146,9 +146,9 @@ function Clear() {
                 >
                   <input
                     type="checkbox"
-                    checked={selectedDues[due.id] || false}
-                    onClick={() => toggleSelect(due.id)}
-                    onChange={() => toggleSelect(due.id)}
+                    checked={selectedDues[due._id] || false}
+                    onClick={() => toggleSelect(due._id)}
+                    onChange={() => toggleSelect(due._id)}
                     style={{
                       opacity: 0,
                       width: "100%",
@@ -156,7 +156,7 @@ function Clear() {
                       margin: 0,
                     }}
                   />
-                  {selectedDues[due.id] && (
+                  {selectedDues[due._id] && (
                     <span
                       style={{
                         position: "absolute",

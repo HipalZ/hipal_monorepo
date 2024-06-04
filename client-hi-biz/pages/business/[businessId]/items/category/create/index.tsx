@@ -79,8 +79,8 @@ const AddCategory: React.FC = () => {
 	const handleToggleVisibility = () => setVisibility(!visibility);
 
 	const toggleDishSelection = (dish: Dish) => {
-		if (selectedDishes.some((selectedDish) => selectedDish.id === dish.id)) {
-			removeDish(dish.id);
+		if (selectedDishes.some((selectedDish) => selectedDish._id === dish._id)) {
+			removeDish(dish._id);
 		} else {
 			addDish(dish);
 		}
@@ -92,7 +92,7 @@ const AddCategory: React.FC = () => {
 	const handleCrop = async () => {
 		const cropper = cropperRef.current;
 		if (cropper) {
-			const coordinates = cropper.getCoordinates();
+			const coordinates = cropper?.getCoordinates();
 			if (coordinates) {
 				try {
 					const croppedDataUrl = await cropImage(croppingImage, coordinates);
@@ -131,6 +131,7 @@ const AddCategory: React.FC = () => {
 		}
 		setLoading(true);
 		const url = await storeImageAfterSave(imageFile);
+		const selectedDishesIds = selectedDishes.map((dish) => dish._id);
 		const payload = {
 			businessId: businessId,
 			name: categoryName,
@@ -144,7 +145,7 @@ const AddCategory: React.FC = () => {
 			parentCategoryId: parentCategoryId,
 			coverImage: url,
 			links: [],
-			dishes: selectedDishes,
+			dishes: selectedDishesIds,
 			availability: availability,
 			charges: [],
 		};
@@ -283,7 +284,7 @@ const AddCategory: React.FC = () => {
 				<div className="grid gap-4 pb-6 mt-4 grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{selectedDishes.map((dish) => (
 						<div
-							key={dish?.id}
+							key={dish?._id}
 							className="relative flex items-center border rounded-md border-[#cacaca]"
 						>
 							<div className="flex items-center pb-8 mt-2 ml-2 rounded-md">
@@ -292,7 +293,7 @@ const AddCategory: React.FC = () => {
 							</div>
 							<button type="button"
 								className="absolute text-blue-500 rounded-md bottom-2 on_active_bounce right-4"
-								onClick={() => removeDish(dish?.id)}
+								onClick={() => removeDish(dish?._id)}
 							>
 								Remove
 							</button>

@@ -1,5 +1,5 @@
 import Header from "@/components/molecules/header";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useState } from "react";
 import { BsChevronLeft } from "react-icons/bs";
 import Hi from "@/assets/svg/hi.svg";
 import DateRangePicker from "@/components/molecules/dateRangePicker";
@@ -25,7 +25,6 @@ function Tips() {
 	const { inTime, outTime } = useTimings();
 	const [pageNumber, setPageNumber] = useState(1);
 	const pageNumberFunction = (newPage: number) => {
-		console.log("NEW PAGE", newPage)
 		setPageNumber(newPage);
 	};
 	const [data, setData] = useState<IProps>({

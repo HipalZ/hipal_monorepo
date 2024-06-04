@@ -93,7 +93,7 @@ const Customerz = () => {
     const fetchAllCustomerz = async () => {
         if (timeStampStart === 0 || timeStampEnd === 0 || businessId === undefined) { return; }
         try {
-            const response = await axios.get(`v1/payments/:id/customers?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`)
+            const response = await axios.get(`/v1/payments/:id/customers?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`)
             setAllCustomerzDetails(response.data);
             return response.data;
         } catch (err) {
@@ -104,7 +104,7 @@ const Customerz = () => {
     const fetchNewCustomerz = async () => {
         if (timeStampStart === 0 || timeStampEnd === 0 || businessId === undefined) { return; }
         try {
-            const response = await axios.get(`v1/payments/:id/newCustomer?businessId=${businessId}&pageNumber=${pageNumber}`)
+            const response = await axios.get(`/v1/payments/:id/newCustomer?businessId=${businessId}&pageNumber=${pageNumber}`)
             setNewCustomerzDetails(response.data)
             return response.data;
         } catch (err) {
@@ -168,8 +168,7 @@ const Customerz = () => {
     const getUserByNumber = async (phone: string) => {
         if (timeStampStart === 0 || timeStampEnd === 0 || businessId === undefined) { return; }
         try {
-            const response = await axios.get(`v1/payments/:id/customers?businessId=${businessId}&findUser=${phone}`)
-            console.log([response.data]);
+            const response = await axios.get(`/v1/payments/:id/customers?businessId=${businessId}&findUser=${phone}`)
             setAllCustomerzDetails([response.data]);
         } catch (err) {
             console.log(err);

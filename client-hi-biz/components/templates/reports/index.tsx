@@ -11,10 +11,10 @@ import { toast } from "react-toastify";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
 
 const reportObject = [
-	{ id: 1, name: "Sales report" },
-	{ id: 2, name: "Dues report" },
-	{ id: 3, name: "Discount report" },
-	{ id: 4, name: "Complimentory report" },
+	{ _id: 1, name: "Sales report" },
+	{ _id: 2, name: "Dues report" },
+	{ _id: 3, name: "Discount report" },
+	{ _id: 4, name: "Complimentory report" },
 ];
 
 const Reports = () => {
@@ -58,8 +58,8 @@ const Reports = () => {
 
 	const handleCheckboxChange = (item: any) => {
 		setSelectReportName(item.name);
-		setSelectedReport(item.id);
-		fetchReportData(item.id);
+		setSelectedReport(item._id);
+		fetchReportData(item._id);
 	};
 
 	const downloadSelectedReportExcel = () => {
@@ -70,7 +70,7 @@ const Reports = () => {
 		setLoading(true);
 		let reportData = apiData[selectedReport];
 
-		if (!reportData || reportData.length === 0) {
+		if (!reportData || reportData?.length === 0) {
 			toast.error("No data available for the selected report.");
 			setLoading(false);
 			return;
@@ -78,7 +78,7 @@ const Reports = () => {
 		if (selectedReport === 1) {
 			const allCategories = Array.from(
 				new Set(
-					reportData.flatMap((report: any) => Object.keys(report.categories)),
+					reportData?.flatMap((report: any) => Object.keys(report.categories)),
 				),
 			);
 
@@ -188,12 +188,12 @@ const Reports = () => {
 				{reportObject.map((item) => (
 					<div
 						onClick={() => handleCheckboxChange(item)}
-						key={item.id}
+						key={item._id}
 						className="flex items-center px-6 py-4 border rounded-md border-[#cacaca] focus:outline-none"
 					>
 						<input
 							type="radio"
-							checked={selectedReport === item.id}
+							checked={selectedReport === item._id}
 							className="mr-2"
 						/>
 						{item.name}

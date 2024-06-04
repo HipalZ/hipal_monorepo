@@ -37,13 +37,13 @@ const CustomerBillsReviews = () => {
         }
     }
 
-    const {isLoading, error, data:billsData, refetch} = useQuery<ICustomerReviews>({
+    const { isLoading, error, data: billsData, refetch } = useQuery<ICustomerReviews>({
         queryKey: ['customerzBillsReviews', businessId, customerzPhone],
         queryFn: fetchSingleCustomerDetails,
-        enabled: !!businessId && !!customerzPhone 
+        enabled: !!businessId && !!customerzPhone
     })
 
-    if(error) return <ErrorComponent refetch={refetch} />
+    if (error) return <ErrorComponent refetch={refetch} />
 
     const CustomerzBillsReviews = () => {
         return (
@@ -88,15 +88,15 @@ const CustomerBillsReviews = () => {
                         <h1 className="text-xl text-[#2B354D]">
                             Bills
                         </h1>
-                        {billsData?.latestBills && billsData.latestBills.length > 0 ?<button type="button" onClick={viewAllBills} className="border border-[#2B354D] on_active_bounce font-medium px-4 py-2 rounded-xl focus:outline-none text-base">
+                        {billsData?.latestBills && billsData.latestBills.length > 0 ? <button type="button" onClick={viewAllBills} className="border border-[#2B354D] on_active_bounce font-medium px-4 py-2 rounded-xl focus:outline-none text-base">
                             View All
-                        </button>: null}
+                        </button> : null}
                     </article>
                 </section>
                 <section className="relative masonry-layout w-full px-6 mt-2 overflow-auto scroll-smooth space-y-4">
                     {billsData?.latestBills && billsData.latestBills.length > 0 ? (
-                        billsData.latestBills.map((bill:customerzBills) => (
-                            <div key={bill.id}>
+                        billsData.latestBills.map((bill: customerzBills) => (
+                            <div key={bill._id}>
                                 <Disclosure>
                                     {({ open }) => (
                                         <>
@@ -140,7 +140,7 @@ const CustomerBillsReviews = () => {
                                                                 <span>Rupees</span>
                                                             </div>
                                                         </div>
-                                                        {bill?.items?.map((item, index:number) => (
+                                                        {bill?.items?.map((item, index: number) => (
                                                             <div
                                                                 className="mt-1 font-medium opacity-70"
                                                                 key={`${item.name}-${item.amount}${index}`}
@@ -171,18 +171,18 @@ const CustomerBillsReviews = () => {
                         <h1 className="text-xl text-[#2B354D]">
                             Reviewz
                         </h1>
-                        {billsData?.latestReviews && billsData?.latestReviews?.length >0 ? <button type="button" onClick={viewAllReviewz} className="border border-[#2B354D] on_active_bounce font-medium px-4 py-2 rounded-xl focus:outline-none text-base">
+                        {billsData?.latestReviews && billsData?.latestReviews?.length > 0 ? <button type="button" onClick={viewAllReviewz} className="border border-[#2B354D] on_active_bounce font-medium px-4 py-2 rounded-xl focus:outline-none text-base">
                             View All
-                        </button>:null}
+                        </button> : null}
                     </article>
                 </section>
                 <section className="masonry-layout w-full px-6 my-6 overflow-auto scroll-smooth space-y-4">
-                    {billsData?.latestReviews?.map((review:Review) => {
+                    {billsData?.latestReviews?.map((review: Review) => {
                         const date = new Date(review.date);
                         const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
 
                         return (
-                            <article key={review.id} className="bg-[#fbfbfb] p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item ">
+                            <article key={review._id} className="bg-[#fbfbfb] p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item ">
                                 <h1>{formattedDate}</h1>
                                 <div
                                     className="Stars"
@@ -193,7 +193,7 @@ const CustomerBillsReviews = () => {
                                 <p className="my-4">{review.description}</p>
                                 {review.improvementAreas.length && <p>Suggest To Improve:-</p>}
                                 <section className="overflow-x-auto flex flex-wrap gap-4 my-2">
-                                    {review.improvementAreas.map((suggestion:string) => {
+                                    {review.improvementAreas.map((suggestion: string) => {
                                         return (
                                             <h1 key={suggestion} className="inline-block truncate overflow-hidden px-5 py-2 justify-center items-center border bg-base-100 border-[#cacaca] rounded-full">
                                                 <span >{suggestion}</span>
@@ -213,21 +213,15 @@ const CustomerBillsReviews = () => {
         switch (selectedSubIcon) {
             case "customerzBills":
                 return (
-                    <>
-                        <CustomerzBills />
-                    </>
+                    <CustomerzBills />
                 )
             case "customerzReviews":
                 return (
-                    <>
-                        <CustomerzReviews />
-                    </>
+                    <CustomerzReviews />
                 )
             default:
                 return (
-                    <>
-                        <CustomerzBillsReviews />
-                    </>
+                    <CustomerzBillsReviews />
                 )
         }
     }

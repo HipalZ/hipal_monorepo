@@ -44,7 +44,7 @@ const ChangePasswordModal = ({
     }
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_HOST}/v1/users/staff/Single?staffId=${staffId}&password=${password}`
+        `/v1/users/staff/Single?staffId=${staffId}&password=${password}`
       );
       onPasswordChange(password);
       setPassword("");

@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import ErrorComponent from "@/components/errorComponent";
 
 interface IDuesPersons {
+	_id: string;
 	businessId: string;
 	duesPersonNames: string;
 	id: string;
@@ -40,7 +41,6 @@ const SalesDues = ({ initialData,isLoadingDues }: { initialData: SaleDuesRespons
 				`/v1/payments/Get/Dues?businessId=${businessId}`,
 			);
 			setDuesPersons(res.data);
-			console.log(res.data)
 			return res.data;
 		} catch (error) {
 			console.log(error);
@@ -76,10 +76,10 @@ const SalesDues = ({ initialData,isLoadingDues }: { initialData: SaleDuesRespons
 			)}
 			<div className="pb-[6rem] masonry-layout mx-6 mt-6">
 				{duesPersons
-					? duesPersons.map((due, i) => (
+					? duesPersons.map((due) => (
 						<div
-							key={due?.id}
-							onClick={() => handleClick(due?.id)}
+							key={due?._id}
+							onClick={() => handleClick(due?._id)}
 							className=" on_active_bounce masonry-item bg-white text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"
 						>
 							<div className="flex items-center px-4 py-2">

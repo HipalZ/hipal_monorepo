@@ -1,3 +1,4 @@
+import { useSearch } from "@/components/store/useSearch";
 import type { IDish } from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { useRouter } from "next/router";
@@ -7,6 +8,7 @@ const DishContent = ({
 	dishes,
 	searchText,
 }: { dishes: IDish[]; searchText: string }) => {
+	const setSearchText = useSearch((s) => s.setSearchText);
 	const [dishesData, setDishesData] = useState<IDish[]>([]);
 	const dishData = useMemo(
 		() =>
@@ -22,14 +24,15 @@ const DishContent = ({
 	const router = useRouter();
 	const { businessId } = router.query as { businessId: string };
 	const handleEditButton = (zone: any) => {
-		const { id } = zone;
-		router.push(`/business/${businessId}/items/editDish/${id}`);
+		const { _id } = zone;
+		router.push(`/business/${businessId}/items/editDish/${_id}`);
 	};
 	const [isLoading , setIsLoading] = useState(false);
 	const addDish = () => {
 		setIsLoading(true);
 		router.push(routePathsWithId[PAGE_TYPES.ADD_DISH](businessId));
 		setIsLoading(false);
+		setSearchText('')
 	};
 	useEffect(() => {
 		router.query.tab = "Dish";
@@ -42,7 +45,7 @@ const DishContent = ({
 					dishesData && dishesData.length > 0 ? (
 						dishesData.map((dish: IDish) => (
 							<div
-								key={dish.id}
+								key={dish._id}
 								className="flex justify-between mx-6 p-4 border border-[#cacaca] m-4 rounded-md my-3 px-4 py-4"
 							>
 								<h1  className="truncate w-72">{dish?.name}</h1>
@@ -63,7 +66,7 @@ const DishContent = ({
 				) : dishData && dishesData.length > 0 ? (
 					dishData.map((dish: IDish) => (
 						<div
-							key={dish.id}
+							key={dish._id}
 							className="flex justify-between mx-6 p-4 border border-[#cacaca] m-4 rounded-md my-3 px-4 py-4"
 						>
 							<h1 className="truncate w-72">{dish?.name}</h1>

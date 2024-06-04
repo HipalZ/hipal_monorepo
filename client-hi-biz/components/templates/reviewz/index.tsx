@@ -128,7 +128,7 @@ const Reviewz = () => {
                         const date = new Date(review.date);
                         const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
                         return (
-                            <article key={review.id} className="bg-[#fbfbfb] p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item space-y-4">
+                            <article key={review._id} className="bg-[#fbfbfb] p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item space-y-4">
                                 <h1>{formattedDate}</h1>
                                 {review?.reviewRating && <div
                                     className="Stars"
@@ -163,7 +163,7 @@ const Reviewz = () => {
                         const date = new Date(review.date);
                         const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
                         return (
-                            <article key={review.id} className="p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item ">
+                            <article key={review._id} className="p-4 border bg-base-100 border-[#cacaca] rounded-xl masonry-item ">
                                 <h1>{formattedDate}</h1>
                                 <div
                                     className="Stars"

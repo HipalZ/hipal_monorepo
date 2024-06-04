@@ -22,9 +22,9 @@ const ACCharges = ({
 
   function handleActiveClick(selectedData: ICharges[]) {
     setActiveClick((prev) => {
-      const index = prev.findIndex((item) => item.id === selectedData?.id);
+      const index = prev.findIndex((item) => item._id === selectedData?._id);
       if (index !== -1) {
-        return prev.filter((item) => item.id !== selectedData?.id);
+        return prev.filter((item) => item._id !== selectedData?._id);
       } {
         return [...prev, selectedData];
       }
@@ -37,9 +37,9 @@ const ACCharges = ({
         <h1 className="text-2xl text-[#2B354D]">Add Charges to the zone</h1>
         {acCharges?.map((charge: ICharges) => (
           <div
-            key={charge.id}
+            key={charge._id}
             onClick={() => handleActiveClick(charge)}
-            className={`${activeClick?.some((item) => item.id === charge.id)
+            className={`${activeClick?.some((item) => item._id === charge._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -47,7 +47,7 @@ const ACCharges = ({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={activeClick?.some((item) => item.id === charge.id)}
+                checked={activeClick?.some((item) => item._id === charge._id)}
                 className="mr-2 rounded-sm"
               />
               <RiExchangeDollarLine />

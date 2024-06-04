@@ -35,7 +35,7 @@ const LoyaltyHistoryAccordion = ({
 					<LoadingSpinner />
 				) : items.length > 0 ? (
 					items.map((item) => (
-						<Disclosure key={item.id}>
+						<Disclosure key={item._id}>
 							{({ open }) => (
 								<Disclosure>
 									{({ open }) => (

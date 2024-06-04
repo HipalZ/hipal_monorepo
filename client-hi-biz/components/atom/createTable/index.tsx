@@ -67,10 +67,10 @@ const CreateTables = ({
 		});
 	}
 	const handleZonesData = (id: string) => {
-		const selectedZone = postZones.find((zone:IZones) => zone.id === id);
+		const selectedZone = postZones.find((zone:IZones) => zone._id === id);
 
 		const newStaffs = postStaffs.filter(
-			(eachStaff:IStaffs) => selectedZone ? selectedZone.staff.includes(eachStaff.id) :'',
+			(eachStaff:IStaffs) => selectedZone ? selectedZone.staff.includes(eachStaff._id) :'',
 		);
 
 		setStaffs(newStaffs);
@@ -150,15 +150,15 @@ const CreateTables = ({
 						{postZones?.map((zone: IZones) => {
 							return (
 								<div
-									key={zone?.id}
-									onClick={() => handleZonesData(zone?.id)}
-									onKeyUp={() => handleZonesData(zone?.id)}
+									key={zone?._id}
+									onClick={() => handleZonesData(zone?._id)}
+									onKeyUp={() => handleZonesData(zone?._id)}
 									className="border-1 border-[#CACACA] bg-white rounded-md my-5 p-3 border"
 								>
 									<div className="flex items-center">
 										<input
 											type="checkbox"
-											checked={tableData?.zoneId === zone.id}
+											checked={tableData?.zoneId === zone._id}
 											onChange={() => {}}
 											className="mr-2 rounded-sm"
 										/>
@@ -173,11 +173,11 @@ const CreateTables = ({
 						{staffs?.map((staff: IStaffs) => {
 							return (
 								<div
-									key={staff?.id}
-									onClick={() => handleActiveClick(staff.id)}
-									onKeyUp={() => handleActiveClick(staff.id)}
+									key={staff?._id}
+									onClick={() => handleActiveClick(staff._id)}
+									onKeyUp={() => handleActiveClick(staff._id)}
 									className={`${
-										activeClick.includes(staff.id)
+										activeClick.includes(staff._id)
 											? "border-[#2B354D] border-2"
 											: "border-1 border-[#CACACA]"
 									} bg-white rounded-md my-5 p-3 border`}
@@ -185,7 +185,7 @@ const CreateTables = ({
 									<div className="flex items-center">
 										<input
 											type="checkbox"
-											checked={tableData?.staff?.includes(staff?.id)}
+											checked={tableData?.staff?.includes(staff?._id)}
 											onChange={() => {}}
 											className="mr-2 rounded-sm"
 										/>

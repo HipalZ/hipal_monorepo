@@ -35,7 +35,7 @@ const ChangeOwnerPassword = ({
     try {
       const config = {
         method: "put",
-        url: `/v1/users/${user?.id}/updateUser`,
+        url: `/v1/users/${user?._id}/updateUser`,
         data: {
           password: password,
         },

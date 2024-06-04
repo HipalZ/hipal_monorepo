@@ -81,6 +81,8 @@ function LoyalityCard({
           style={{
             maxWidth: "calc(20%)",
             whiteSpace: "nowrap",
+            height:'100px',
+            width:'100px'
           }}
         >
           <Image

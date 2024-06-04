@@ -7,6 +7,7 @@ export interface Item {
 }
 
 export interface Bill {
+  _id: string;
   serviceCharge: number;
   businessId: string;
   businessName: string;
@@ -155,6 +156,7 @@ export interface AlertData {
 }
 
 export type Customer = {
+  _id: string;
   userPhone: string;
   userName: string;
   loyaltyId: string;
@@ -164,6 +166,7 @@ export type Customer = {
 };
 
 export interface IZones {
+  _id: string;
   businessId: string;
   zoneName: string;
   zoneType: string;
@@ -177,6 +180,7 @@ export interface IZones {
 }
 
 export interface ICharges {
+  _id: string;
   businessId: string;
   chargeName: string;
   chargeType: string;
@@ -214,6 +218,7 @@ interface ICustomRole {
   roleName: string;
 }
 export interface IStaffs {
+  _id: string;
   name: string;
   email: string;
   phone: string;
@@ -223,6 +228,7 @@ export interface IStaffs {
   id: string;
 }
 export interface ITables {
+  _id:string
   staffs?: any;
   businessId: string;
   zoneId: string;
@@ -254,6 +260,7 @@ export interface IDineIn {
   categories?: ICategory[];
 }
 export type Category = {
+  _id: string;
   id: string;
   name: string;
 };
@@ -271,6 +278,7 @@ type ExtraItem = {
 };
 
 export type Extra = {
+  _id: string;
   id: string;
   name: string;
   numOptions: number;
@@ -317,10 +325,12 @@ export type Dish = {
 };
 
 export type IDish = {
+  _id: string;
   id: string;
   name: string;
 };
 export interface IKitchen {
+  _id: string
   businessId: string;
   kitchenName: string;
   description: string;
@@ -328,6 +338,7 @@ export interface IKitchen {
   id: string;
 }
 export interface ICategory {
+  _id: string
   businessId: string;
   name: string;
   visibility: boolean;
@@ -349,6 +360,7 @@ export interface IDelivery {
   extras: Extra[] | IDish;
 }
 export interface IPortion {
+  _id: string;
   name: string;
   price: string;
   portionType: string;
@@ -366,6 +378,7 @@ export interface AddOnItem {
 }
 
 export interface IAddOn {
+  _id: string;
   businessId: string;
   name: string;
   addOnType: string;
@@ -442,6 +455,7 @@ export interface NavigatorWithNetworkInformation extends Navigator {
 }
 
 export interface ICustomer {
+  _id: string;
   name: string;
   id: string;
   phone: string;

@@ -53,13 +53,13 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
     const handleZonesData = (newZoneId: string) => {
         // Find and update the old zone to remove the table's ID
         const updatedZones = postZones.map((zone) => {
-            if (zone.id === tableData.zoneId) {
+            if (zone._id === tableData.zoneId) {
                 // Remove the table's ID from the old zone
-                const updatedTables = zone.tables.filter(tableId => tableId !== table.id);
+                const updatedTables = zone.tables.filter(tableId => tableId !== table._id);
                 return { ...zone, tables: updatedTables };
-            } else if (zone.id === newZoneId) {
+            } else if (zone._id === newZoneId) {
                 // Add the table's ID to the new zone
-                const updatedTables = [...zone.tables, table.id];
+                const updatedTables = [...zone.tables, table._id];
                 return { ...zone, tables: updatedTables };
             }
             return zone;
@@ -69,8 +69,8 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
         setPostZones(updatedZones);
 
         // Update other states as previously
-        const selectedZone = postZones.find(zone => zone.id === newZoneId);
-        const newStaffs = postStaffs.filter(staff => selectedZone?.staff?.includes(staff.id));
+        const selectedZone = postZones.find(zone => zone._id === newZoneId);
+        const newStaffs = postStaffs.filter(staff => selectedZone?.staff?.includes(staff._id));
         setStaffs(newStaffs);
         setEachZoneId(newZoneId);
         setTableData({ ...tableData, zoneId: newZoneId });
@@ -115,9 +115,9 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
                         {staffs?.map((staff: IStaffs) => {
                             return (
                                 <div
-                                    key={staff?.id}
-                                    onClick={() => handleActiveClick(staff?.id)}
-                                    className={`${activeClick.includes(staff?.id)
+                                    key={staff?._id}
+                                    onClick={() => handleActiveClick(staff?._id)}
+                                    className={`${activeClick.includes(staff?._id)
                                         ? "border-[#2B354D]  border-2"
                                         : " border-1 border-[#CACACA]"
                                         } bg-white rounded-md my-5 p-3 border`}
@@ -125,7 +125,7 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
                                     <div className="flex items-center">
                                         <input
                                             type="checkbox"
-                                            checked={activeClick.includes(staff?.id)}
+                                            checked={activeClick.includes(staff?._id)}
                                             className="mr-2 rounded-sm"
                                             readOnly
                                         />

@@ -61,7 +61,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose,compulsoryQ
     const isDuplicateName = variants.some(
       (variant) =>
         variant.name.toLowerCase() === variantName.toLowerCase() &&
-        variant.id !== (currentVariant?.id || "")
+        variant._id !== (currentVariant?._id || "")
     );
     if (isDuplicateName) {
       toast.error("Variant already exists");
@@ -69,7 +69,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose,compulsoryQ
     }
 
     const newVariant = {
-      id: currentVariant ? currentVariant.id : uuidv4(),
+      id: currentVariant ? currentVariant._id : uuidv4(),
       name: variantName,
       ExtraType: variantType,
       description: variantDescription,
@@ -79,7 +79,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose,compulsoryQ
       visibility: variantVisibility,
     };
     if (currentVariant) {
-      editVariant(newVariant.id, newVariant);
+      editVariant(newVariant._id, newVariant);
     } else {
       addVariant(newVariant);
     }

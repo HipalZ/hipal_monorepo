@@ -37,7 +37,7 @@ const Tables = () => {
 	}, [businessId, data?.zones, data?.staff, data?.tables]);
 	const getTablesData = async (businessId:string) => {
 		try {
-		  const tables = await axios.get(`${process.env.NEXT_PUBLIC_API_HOST}/v1/zones/all/tables?businessId=${businessId}`);
+		  const tables = await axios.get(`/v1/zones/all/tables?businessId=${businessId}`);
 		  setData({
 			tables: tables.data,
 		  });
@@ -48,7 +48,7 @@ const Tables = () => {
 	  };
 	const getStaffData = async (businessId:string) => {
 		try {
-		  const staff = await axios.get(`${process.env.NEXT_PUBLIC_API_HOST}/v1/users/${businessId}`);
+		  const staff = await axios.get(`/v1/users/${businessId}`);
 		  setData({
 			staff: staff?.data
 		  });
@@ -89,7 +89,7 @@ const Tables = () => {
 		setIsLoading(true);
 		try {
 			const config = {
-				url: paths.updateTableApi(data?.id),
+				url: paths.updateTableApi(data?._id),
 				method: "PUT",
 				mode: "cors",
 				headers: {
@@ -119,7 +119,7 @@ const Tables = () => {
 		<>
 			<div className="relative p-4 space-y-4 mb-20">
 				{createdTable?.map((table) => {
-					const zone = postZones?.find((zone) => table?.zoneId === zone?.id);
+					const zone = postZones?.find((zone) => table?.zoneId === zone?._id);
 					const countStaffs = table?.staff?.length;
 					return (
 						<div
@@ -140,7 +140,7 @@ const Tables = () => {
 										onClick={async () => {
 											setIsLoading(true);
 											await downloadURI(
-												table?.id,
+												table?._id,
 												table?.name,
 												table?.zoneId,
 												businessId,

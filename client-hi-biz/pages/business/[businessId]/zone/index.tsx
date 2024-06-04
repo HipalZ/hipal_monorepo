@@ -125,7 +125,7 @@ const AddZone = () => {
 		setTableModal(false);
 	}
 	function handleAddStaff(activeClick: IStaffs[]) {
-		const staffIds = activeClick.map((staff: IStaffs) => staff.id);
+		const staffIds = activeClick.map((staff: IStaffs) => staff._id);
 		setPostStaffs(activeClick);
 		setZoneData((prevZone) => {
 			return {
@@ -212,7 +212,7 @@ const AddZone = () => {
 								{zoneType?.map((zone: any) => (
 									<option
 										className="!bg-white !text-[#2B354D]"
-										key={zone?.id}
+										key={zone?._id}
 										value={zone?.type}
 									>
 										{zone?.type}
@@ -237,7 +237,7 @@ const AddZone = () => {
 					{postStaffs?.map((staff: IStaffs, index: number) => {
 						return (
 							<div
-								key={staff?.id}
+								key={staff?._id}
 								className="p-3 my-4 border rounded-md border-1"
 							>
 								<div className="flex items-center">
@@ -276,7 +276,7 @@ const AddZone = () => {
 					{postCharges?.map((acChar: ICharges, index: number) => {
 						return (
 							<div
-								key={acChar?.id}
+								key={acChar?._id}
 								className="p-3 my-4 border rounded-md border-1"
 							>
 								<div className="flex items-center">
@@ -329,7 +329,7 @@ const AddZone = () => {
 				{tableModal && (
 					<PopUp show={tableModal} onClose={closeTableModal}>
 						<AddTables
-							zoneId={zoneData?.id}
+							zoneId={zoneData?._id}
 							closeModal={closeTableModal}
 							postStaffs={postStaffs}
 							setTableModal={setTableModal}

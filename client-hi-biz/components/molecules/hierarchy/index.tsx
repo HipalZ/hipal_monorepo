@@ -44,7 +44,7 @@ const HierarchyComponent: React.FC<ICategoryComponent> = ({
 
   const getParent = (category: ICategory) => {
     setSelectedCategory(category);
-    setParentCategoryId(category.id);
+    setParentCategoryId(category._id);
     setParentCategory(category.name);
   };
 
@@ -105,10 +105,10 @@ const HierarchyComponent: React.FC<ICategoryComponent> = ({
                   .filter((ele) => ele.name !== categoryName)
                   .map((parent) => (
                     <div
-                      key={parent?.id}
+                      key={parent?._id}
                       onClick={() => getParent(parent)}
                       className={`p-4 border border-[#cacaca] rounded-md ${
-                        selectedCategory?.id === parent?.id
+                        selectedCategory?._id === parent?._id
                           ? "bg-[#2B354D]/90 text-white"
                           : "bg-white text-[#2B354D]"
                       }`}

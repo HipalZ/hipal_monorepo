@@ -12,7 +12,7 @@ interface PaymentMethod {
   businessId: string;
   mode: string;
   commission: number;
-  id: string;
+  _id: string;
 }
 interface SettlePopupProps {
   closeModal: () => void;
@@ -91,7 +91,7 @@ const SettlePopup: React.FC<SettlePopupProps> = ({
         {paymentMethods.map((method) => (
           <button
             type="button"
-            key={method.id} // <-- Use the method's id for the key
+            key={method._id} // <-- Use the method's id for the key
             onClick={() => handleSuggestionClick(method.mode)}
             className={`font-medium text-sm px-3 on_active_bounce py-2 rounded-lg capitalize ${
               paymentMode === method.mode

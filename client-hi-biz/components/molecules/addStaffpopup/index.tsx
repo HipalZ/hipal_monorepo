@@ -116,7 +116,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
       customRole: selectedRole
         ? {
             businessId: businessId,
-            customRoleId: selectedRole.id,
+            customRoleId: selectedRole._id,
             permissions: selectedRole.permissions,
             roleName: selectedRole.name,
           }

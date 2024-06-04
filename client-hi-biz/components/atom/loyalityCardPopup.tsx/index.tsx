@@ -56,20 +56,20 @@ const LoyalityCardPopup = () => {
     },
     {
       src: {
-        beans: beans(fontColor).beans,
+        beans: beans(fontColor || "#ffffff").beans,
       },
     },
     {
-      src: { bud: bud(fontColor).bud },
+      src: { bud: bud(fontColor || "#ffffff").bud },
     },
     {
-      src: { bowl: bowl(fontColor).bowl },
+      src: { bowl: bowl(fontColor || "#ffffff").bowl },
     },
     {
-      src: { love: love(fontColor).love },
+      src: { love: love(fontColor || "#ffffff").love },
     },
     {
-      src: { flower: flower(fontColor).flower },
+      src: { flower: flower(fontColor || "#ffffff").flower },
     },
   ];
   const mapCards = () => {
@@ -211,8 +211,8 @@ const LoyalityCardPopup = () => {
             <LoyalityCard
               logo={logo || businessData?.logo}
               croppedImage={croppedImage}
-              cardColor={cardColor || themes?.secondaryColor}
-              fontColor={fontColor || themes?.accentColor}
+              cardColor={cardColor || themes?.secondaryColor || "#000000"}
+              fontColor={fontColor || themes?.accentColor || "#ffffff"}
               src={cardPattern}
               size={"lg"}
             />
@@ -263,7 +263,6 @@ const LoyalityCardPopup = () => {
               placeholder="Color picker or hex code"
             />
           </div>
-
           <div className="px-6 py-4 pb-20 bg-white">
             <h1 className="text-[#2B354D] font-semibold mb-4">
               Logo for the card

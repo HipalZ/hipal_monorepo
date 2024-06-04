@@ -47,7 +47,7 @@ const AddOns = ({
 						<div className="px-6 mt-6 masonry-layout">
 							{addOnData.map((addOn) => (
 								<div
-									key={addOn?.id}
+									key={addOn?._id}
 									className="py-2 px-4 border masonry-item border-[#cacaca] rounded-md space-y-2"
 								>
 									<h6 className="font-semibold truncate w-48">{addOn?.name}</h6>
@@ -55,7 +55,7 @@ const AddOns = ({
 										<span>{addOn?.items?.length} variations</span>
 										<button
 											type="button"
-											onClick={() => EditAddOn(addOn?.id)}
+											onClick={() => EditAddOn(addOn?._id)}
 											className="text-[#2F80ED]"
 										>
 											Edit
@@ -71,7 +71,7 @@ const AddOns = ({
 					<div className="px-6 mt-6 masonry-layout">
 						{addOnSearch.map((addOn) => (
 							<div
-								key={addOn?.id}
+								key={addOn?._id}
 								className="py-2 px-4 border masonry-item border-[#cacaca] rounded-md mt-6 space-y-2"
 							>
 								<h6 className="font-semibold truncate w-48">{addOn?.name}</h6>
@@ -79,7 +79,7 @@ const AddOns = ({
 									<span>{addOn?.items?.length} variations</span>
 									<button
 										type="button"
-										onClick={() => EditAddOn(addOn?.id)}
+										onClick={() => EditAddOn(addOn?._id)}
 										className="text-[#2F80ED]"
 									>
 										Edit

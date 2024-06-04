@@ -94,7 +94,7 @@ function Loyalty() {
 			) : (
 				<>
 					<TabsContent />
-					<LoyalitySetup existsLoyality={isLoyaltyExists} />
+					<LoyalitySetup existsLoyalty={isLoyaltyExists} />
 				</>
 			)}
 		</>

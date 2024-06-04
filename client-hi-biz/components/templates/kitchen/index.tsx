@@ -9,10 +9,10 @@ import { useSelectedIcon } from "@/components/store/useSelectedIcon";
 import AddKitchen from "./addKitchen";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import ErrorComponent from "@/components/errorComponent";
 
 interface IKitchen {
+	_id: string;
 	businessId: string;
 	kitchenName: string;
 	description: string;
@@ -125,7 +125,7 @@ const KitchenDashboard = ({
 					) : (
 						kitchens?.map((kitchen) => (
 							<div
-								key={kitchen.id}
+								key={kitchen._id}
 								className="flex justify-between masonry-item relative items-center px-4 pb-6 pt-2 border border-[#cacaca] rounded-md"
 							>
 								<div className="">
@@ -135,7 +135,7 @@ const KitchenDashboard = ({
 											router.push(
 												routePathsWithIds[PAGE_TYPES.EDIT_KITCHEN](
 													businessId,
-													kitchen.id,
+													kitchen._id,
 												),
 											)
 										}

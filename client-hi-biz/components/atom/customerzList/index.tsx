@@ -22,14 +22,14 @@ export const BeforeMemoCustomerzList = (data: { customerData: ICustomer[] }) => 
             {customerData?.length
                 ? customerData.map((data) => (
                     <div
-                        key={data?.id}
+                        key={data?._id}
                         className="px-4 on_active_bounce masonry-item bg-white text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"
                     >
                         <div className="flex items-center py-2">
                             <MdPerson className="mr-2" />
                             <h1 className="text-lg">{data.name}</h1>
                         </div>
-                        <div onClick={() => customerDetails(data.id, data.name, data.phone)} className="flex items-center justify-between py-2">
+                        <div onClick={() => customerDetails(data._id, data.name, data.phone)} className="flex items-center justify-between py-2">
                             <span className="text-sm">Dined on {formatDate(new Date(data.date))}</span>
                             <span className="justify-self">view</span>
                         </div>

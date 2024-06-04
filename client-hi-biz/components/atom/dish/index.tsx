@@ -40,14 +40,14 @@ const DishComponent: React.FC<DishComponentProps> = ({
 					{filteredDishes?.map((dish) => (
 						<div
 							onClick={() => toggleDishSelection(dish)}
-							key={dish.id}
+							key={dish._id}
 							className="flex items-center border border-[#cacaca] bg-white p-4 rounded-md"
 						>
 							<input
 								type="checkbox"
-								id={`checkbox-${dish.id}`}
+								id={`checkbox-${dish._id}`}
 								checked={selectedDishes.some(
-									(selectedDish) => selectedDish.id === dish.id,
+									(selectedDish) => selectedDish._id === dish._id,
 								)}
 								className="w-4 h-4 form-checkbox focus:ring-0 focus:outline-none"
 							/>

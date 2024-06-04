@@ -115,8 +115,8 @@ const EditCategory: React.FC = () => {
 	};
 
 	const toggleDishSelection = (dish: Dish) => {
-		if (selectedDishes.some((selectedDish) => selectedDish.id === dish.id)) {
-			removeDish(dish.id);
+		if (selectedDishes.some((selectedDish) => selectedDish._id === dish._id)) {
+			removeDish(dish._id);
 		} else {
 			addDish(dish);
 		}
@@ -153,7 +153,7 @@ const EditCategory: React.FC = () => {
 			coverImage = uploadedImageUrl ?? "";
 		}
 		setLoading(true)
-
+		const selectedDishesIds = selectedDishes.map((dish) => dish._id);
 		const payload = {
 			businessId: businessId,
 			name: categoryName,
@@ -167,14 +167,14 @@ const EditCategory: React.FC = () => {
 			parentCategoryId: parentCategoryId,
 			coverImage: coverImage,
 			links: [],
-			dishes: selectedDishes,
+			dishes: selectedDishesIds,
 			availability: availability,
 			charges: [],
 		};
 
 		try {
 			await axios.put(
-				`/v1/categories/${data?.category?.id}`,
+				`/v1/categories/${data?.category?._id}`,
 				payload,
 			);
 			toast.success("Category updated successfully");
@@ -189,7 +189,7 @@ const EditCategory: React.FC = () => {
 		try {
 			const config = {
 				method: "DELETE",
-				url: `/v1/categories/${data?.category?.id}`,
+				url: `/v1/categories/${data?.category?._id}`,
 			};
 			const response = await axios(config);
 			toast.success("Category deleted successfully");
@@ -218,7 +218,6 @@ const EditCategory: React.FC = () => {
 				category: category.data,
 				allCategories: allCategories.data,
 			};
-			console.log("data cat", data.category);
 			setData(data);
 			setSelectedDishes(data.category.dishes);
 			setCategoryName(data.category.name);
@@ -348,7 +347,7 @@ const EditCategory: React.FC = () => {
 				<div className="grid gap-4 pb-6 mt-4 grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{selectedDishes?.map((dish) => (
 						<div
-							key={dish?.id}
+							key={dish?._id}
 							className="relative flex items-center border rounded-md border-[#cacaca]"
 						>
 							<div className="flex items-center pb-8 mt-2 ml-2 rounded-md">
@@ -358,7 +357,7 @@ const EditCategory: React.FC = () => {
 							<button
 								type="button"
 								className="absolute text-blue-500 rounded-md bottom-2 on_active_bounce right-4"
-								onClick={() => removeDish(dish?.id)}
+								onClick={() => removeDish(dish?._id)}
 							>
 								Remove
 							</button>

@@ -32,9 +32,9 @@ const AddZoneStaffs = ({
 
   function handleActiveClick(selectedData: any) {
     setActiveClick((prev: any) => {
-      const index = prev.findIndex((item: any) => item.id === selectedData.id);
+      const index = prev.findIndex((item: any) => item._id === selectedData._id);
       if (index !== -1) {
-        return prev.filter((item: any) => item.id !== selectedData.id);
+        return prev.filter((item: any) => item._id !== selectedData._id);
       }
         return [...prev, selectedData];
     });
@@ -48,9 +48,9 @@ const AddZoneStaffs = ({
         {searchText === "" ? Data?.map((eachData: IStaffs) =>
         (
           <div
-            key={eachData.id}
+            key={eachData._id}
             onClick={() => handleActiveClick(eachData)}
-            className={`${activeClick?.some(item => item.id === eachData.id)
+            className={`${activeClick?.some(item => item._id === eachData._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -58,7 +58,7 @@ const AddZoneStaffs = ({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={activeClick?.some(item => item.id === eachData.id)}
+                checked={activeClick?.some(item => item._id === eachData._id)}
                 className="mr-2 rounded-sm"
               />
               <BsFillPersonFill />
@@ -72,9 +72,9 @@ const AddZoneStaffs = ({
           </div>
         )
         ) : staffData?.map((eachData) => (<div
-          key={eachData.id}
+          key={eachData._id}
           onClick={() => handleActiveClick(eachData)}
-          className={`${activeClick?.some(item => item.id === eachData.id)
+          className={`${activeClick?.some(item => item._id === eachData._id)
             ? "border-[#2B354D] border-2"
             : "border-1 border-[#CACACA]"
             } bg-white rounded-md my-5 p-3 border`}
@@ -82,7 +82,7 @@ const AddZoneStaffs = ({
           <div className="flex items-center">
             <input
               type="checkbox"
-              checked={activeClick?.some(item => item.id === eachData.id)}
+              checked={activeClick?.some(item => item._id === eachData._id)}
               className="mr-2 rounded-sm"
             />
             <BsFillPersonFill />

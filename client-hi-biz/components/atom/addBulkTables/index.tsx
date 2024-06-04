@@ -27,7 +27,7 @@ const AddBulkTables = ({ zoneId, staffs, closeModal, closeEditPopModal }: any) =
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>, id: any) {
     setArrayTables((currentTables) =>
       currentTables.map((table) =>
-        table.id === id ? { ...table, name: e.target.value } : table
+        table._id === id ? { ...table, name: e.target.value } : table
       )
     );
   }
@@ -38,7 +38,7 @@ const AddBulkTables = ({ zoneId, staffs, closeModal, closeEditPopModal }: any) =
   ) {
     setArrayTables((currentTables) =>
       currentTables.map((table) =>
-        table.id === id ? { ...table, name: e.target.value } : table
+        table._id === id ? { ...table, name: e.target.value } : table
       )
     );
   }
@@ -82,14 +82,14 @@ const AddBulkTables = ({ zoneId, staffs, closeModal, closeEditPopModal }: any) =
             return (
               <div
                 key={index}
-                className={`${activeClick.includes(staff?.id)
+                className={`${activeClick.includes(staff?._id)
                     ? "border-[#2B354D]  border-2"
                     : " border-1 border-[#CACACA]"
                   } bg-white rounded-md my-5 p-3 border`}
               >
                 <div className="flex items-center">
                   <input
-                    onClick={() => handleActiveClick(staff?.id)}
+                    onClick={() => handleActiveClick(staff?._id)}
                     type="checkbox"
                     className="mr-2 rounded-sm"
                   />

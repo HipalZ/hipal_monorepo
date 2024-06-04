@@ -23,23 +23,7 @@ function Cards({ size, src, imageSrc, isActive, fontColor, logo }: ICard) {
       marginTag: "m-2",
     },
   };
-  const [name, setName] = useState<any>(null);
-  const [image, setImage] = useState<any>(null);
-  // const [croppedImage, setCroppedImage] = useState(null);
-  useEffect(() => {
-    if (
-      src?.beans ||
-      src?.bowl ||
-      src?.love ||
-      src?.flower ||
-      src?.bud ||
-      src?.triangle ||
-      src?.wave
-    ) {
-      setName(Object?.keys(src)[0]);
-      setImage(Object?.values(src)[0]);
-    }
-  }, [src]);
+
   const businessName = useBusinessData((s) => s.businessData?.businessName);
   const businessLogo = useBusinessData((s) => s.businessData?.logo);
   const croppedImage = useCroppedImage((s) => s.croppedImage);
@@ -68,13 +52,15 @@ function Cards({ size, src, imageSrc, isActive, fontColor, logo }: ICard) {
           style={{
             maxWidth: "calc(20%)",
             whiteSpace: "nowrap",
+            height:'50px',
+            width:'50px'
           }}
         >
           <Image
             src={croppedImage || businessLogo || logo!}
             alt="logo"
-            width={100}
-            height={100}
+            width={50}
+            height={50}
           />
         </div>
         <h1

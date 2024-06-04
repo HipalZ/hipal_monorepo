@@ -265,13 +265,13 @@ function Bills({
 															await fetchPaymentMethods();
 															setLoadingPopup(false);
 															openModal("settle");
-															setEditBillId(bill?.id);
+															setEditBillId(bill?._id);
 														}}
 														className="border border-[#cacaca] font-semibold text-center rounded-md py-1 mb-4"
 													>
 														Edit Payment Mode
 													</div>
-													{isModalOpen && editBillId === bill.id && (
+													{isModalOpen && editBillId === bill._id && (
 														<PopUp show={isModalOpen} onClose={closeModal}>
 															{footButton.toLowerCase() === "settle" && (
 																<div className="relative min-h-[70vh]">
@@ -295,7 +295,7 @@ function Bills({
 																				)
 																				.map((method) => {
 																					return (
-																						<div key={method.id}>
+																						<div key={method._id}>
 																							<div
 																								className={`${
 																									bill?.mode === method?.mode
@@ -309,7 +309,7 @@ function Bills({
 																								}
 																							>
 																								<input
-																									id={`method-${method.id}`}
+																									id={`method-${method._id}`}
 																									type="checkbox"
 																									value={selectedPaymentMethod}
 																									checked={
@@ -371,7 +371,7 @@ function Bills({
 																			.map((method) => (
 																				<div
 																				
-																					key={method.id}
+																					key={method._id}
 																					className={`flex items-center px-4 py-2 border rounded-xl ${
 																						multiplePaymentMethods.includes(
 																							method?.mode,
@@ -386,7 +386,7 @@ function Bills({
 																					}
 																				>
 																					<input
-																						id={`method-${method.id}`}
+																						id={`method-${method._id}`}
 																						type="checkbox"
 																						checked={multiplePaymentMethods.includes(
 																							method?.mode,

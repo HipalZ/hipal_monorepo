@@ -61,7 +61,7 @@ const LoyaltyCustomer = () => {
 				) : loyalCustomers && loyalCustomers.length > 0 ? (
 					loyalCustomers?.map((customer) => (
 						<div
-							key={customer.id}
+							key={customer._id}
 							onKeyDown={() => handleClick(customer)}
 							onClick={() => handleClick(customer)}
 							className="masonry-item bg-white hover:bg-[#2B354D]/10 cursor-pointer text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"

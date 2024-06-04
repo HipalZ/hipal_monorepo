@@ -24,13 +24,13 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
     if (type === "dish") {
       endpoint = `/v1/dishes/${id}`;
       const updatedDishes = data.dishes?.map((dish) =>
-        dish.id === id ? { ...dish, [field]: !currentValue } : dish
+        dish._id === id ? { ...dish, [field]: !currentValue } : dish
       );
       updatedData = { dishes: updatedDishes };
     } else if (type === "category") {
       endpoint = `/v1/categories/${id}`;
       const updatedCategories = data.categories?.map((category) =>
-        category.id === id ? { ...category, [field]: !currentValue } : category
+        category._id === id ? { ...category, [field]: !currentValue } : category
       );
       updatedData = { categories: updatedCategories };
     }
@@ -50,7 +50,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
     <div className="masonry-layout px-6 mt-6 pb-[5rem]">
       {data?.categories?.map((category: ICategory) => (
         <div
-          key={category.id}
+          key={category._id}
           className="masonry-item p-4 border border-[#cacaca] rounded-md"
         >
           <div className="mb-4">
@@ -65,7 +65,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                 checked={category.visibility}
                 onChange={() =>
                   handleToggle(
-                    category.id,
+                    category._id,
                     "visibility",
                     category.visibility,
                     "category"
@@ -86,7 +86,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                 checked={category.availability}
                 onChange={() =>
                   handleToggle(
-                    category.id,
+                    category._id,
                     "availability",
                     category.availability,
                     "category"
@@ -106,17 +106,17 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
               .filter((catDish) =>
                 data.dishes?.some(
                   (dish) =>
-                    dish?.id === catDish?.id &&
+                    dish?._id === catDish?._id &&
                     dish?.name
                       ?.toLowerCase()
                       .includes(searchText?.toLowerCase())
                 )
               )
               .map((catDish) => {
-                const dish = data?.dishes?.find((d) => d?.id === catDish?.id);
+                const dish = data?.dishes?.find((d) => d?._id === catDish?._id);
                 return dish ? (
                   <div
-                    key={dish.id}
+                    key={dish._id}
                     className="flex flex-col p-4 border border-[#cacaca] rounded-md"
                   >
                     <span className="mb-2 font-semibold">{dish?.name}</span>
@@ -127,7 +127,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                         checked={dish?.visibility}
                         onChange={() =>
                           handleToggle(
-                            dish.id,
+                            dish._id,
                             "visibility",
                             dish?.visibility,
                             "dish"
@@ -150,7 +150,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                         checked={dish?.availability}
                         onChange={() =>
                           handleToggle(
-                            dish.id,
+                            dish._id,
                             "availability",
                             dish?.availability,
                             "dish"

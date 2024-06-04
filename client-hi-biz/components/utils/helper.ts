@@ -229,7 +229,6 @@ export async function downloadURI(id: string, name: string, zoneId: string, busi
   const payload = {
     longUrl: longUrl,
   };
-  console.log(longUrl)
 
   try {
     const response = await axios.post("https://api.hipal.life/v1/users/usrShortner", payload, {

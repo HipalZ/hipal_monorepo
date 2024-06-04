@@ -24,10 +24,8 @@ import {
 } from "@/components/utils/helper";
 import Image from "next/image";
 import AddRecommendedDishes from "@/components/atom/addRecommendedDishes";
-import SwiggyDish from "@/components/atom/swiggyDish";
 import { toast } from "react-toastify";
 import AddExtras from "@/components/atom/addExtras";
-import ZomatoDish from "@/components/atom/zomatoDish";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
@@ -159,35 +157,14 @@ function AddDish() {
     kitchenId: selectedKitchenId,
     filters: {
       dishes: [],
+      metaTags:dishTags,
     },
     images: [""],
     description: "",
-    tags: dishTags,
     links: [],
     delayTime: "",
     availability: availability,
-    delivery: {
-      name: swiggyDishName,
-      dishPrice: null,
-      visibility: swiggyVisibility,
-      availability: swiggyAvailability,
-      kitchenId: swiggySelectedKitchenId,
-      extras: [],
-      categories: [],
-      portions: [],
-    },
-    take_away: {
-      name: zomatoDishName,
-      dishPrice: zomatoDishPrice,
-      visibility: zomatoVisibility,
-      availability: zomatoAvailability,
-      kitchenId: zomatoSelectedKitchenId,
-      extras: [],
-      categories: [],
-      portions: [],
-    },
     version: 0,
-    id: "",
   };
 
   const [data, setData] = useState<Dish>(testData);
@@ -207,10 +184,10 @@ function AddDish() {
         return router.push(`/business/${businessId}?tab=Kitchen`);
       }
       setSelectedKitchenId(kitchens?.data[0]?._id);
-      setSwiggySelectedKitchenId(kitchens?.data[0]?.id);
-      setZomatoSelectedKitchenId(kitchens?.data[0]?.id);
+      setSwiggySelectedKitchenId(kitchens?.data[0]?._id);
+      setZomatoSelectedKitchenId(kitchens?.data[0]?._id);
       return data;
-    } catch (err) {}
+    } catch (err) { }
   };
 
   async function getCategoryDishesApi() {
@@ -221,7 +198,7 @@ function AddDish() {
       setData((prev) => {
         return { ...prev, categories: category?.data };
       });
-    } catch (err) {}
+    } catch (err) { }
   }
   async function getRecommendedDishes() {
     try {
@@ -242,7 +219,7 @@ function AddDish() {
       setData((prev) => {
         return { ...prev, extras: addOns?.data };
       });
-    } catch (err) {}
+    } catch (err) { }
   }
 
   const {
@@ -266,12 +243,11 @@ function AddDish() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleTagsClick = async (event) => {
-    const value = event.target.innerText;
-    if (dishTags.includes(value)) {
-      setDishTags(dishTags.filter((keyword) => keyword !== value));
+  const handleTagsClick = async (tag:string) => {
+    if (dishTags.includes(tag)) {
+      setDishTags(dishTags.filter((keyword) => keyword !== tag));
     } else {
-      setDishTags([...dishTags, value]);
+      setDishTags([...dishTags, tag]);
     }
   };
 
@@ -283,7 +259,7 @@ function AddDish() {
       dishData?.price !== 0 &&
       selectedKitchenId !== "" &&
       dishData?.dishType !==
-        "select a dish type".replace(/[^a-zA-Z ]/, "").toLowerCase() &&
+      "select a dish type".replace(/[^a-zA-Z ]/, "").toLowerCase() &&
       dishData?.dishType !== "";
     // Check portions validity (return true if portions array is empty)
     if (!isDishValid) {
@@ -351,6 +327,9 @@ function AddDish() {
     }
     setLoading(true);
     const imageUrls = await handleSave();
+    const postAddOnsIds = postAddOns.map(item => item._id);
+    const postCategoryIds = postCategory.map(item => item._id);
+    const postRecommendIds = postRecommend.map(item => item._id);
     try {
       const config = {
         mode: "cors",
@@ -364,42 +343,16 @@ function AddDish() {
           businessId: businessId,
           availability: availability,
           visibility: visibility,
-          categories: postCategory,
-          extras: postAddOns,
+          categories: postCategoryIds,
+          extras: postAddOnsIds,
           portions: portions,
-          tags: dishTags,
           filters: {
-            dishes: postRecommend,
+            dishes: postRecommendIds,
+            metaTags:dishTags,
           },
           kitchenId: selectedKitchenId,
           description: description,
           images: imageUrls,
-          delivery: {
-            name: swiggyDishName,
-            dishPrice: swiggyDishPrice,
-            visibility: swiggyVisibility,
-            availability: swiggyAvailability,
-            kitchenId:
-              swiggySelectedKitchenId === undefined
-                ? selectedKitchenId
-                : swiggySelectedKitchenId,
-            extras: swiggyPostAddOns,
-            portions: swiggyPortions,
-            categories: swiggyPostCategory,
-          },
-          take_away: {
-            name: zomatoDishName,
-            dishPrice: zomatoDishPrice,
-            visibility: zomatoVisibility,
-            availability: zomatoAvailability,
-            kitchenId:
-              zomatoSelectedKitchenId === undefined
-                ? selectedKitchenId
-                : zomatoSelectedKitchenId,
-            extras: zomatoPostAddOns,
-            portions: zomatoPortions,
-            categories: zomatoPostCategory,
-          },
         },
       };
       const response = await axios(config);
@@ -523,12 +476,7 @@ function AddDish() {
   const addNewImageField = () => {
     setDisplayImages((prev) => [...prev, ""]);
   };
-  function toggleLoyality() {
-    setToggleSwiggySwitch(!toggleSwiggySwitch);
-  }
-  function toggleZomatoLoyality() {
-    setToggleZomatoSwitch(!toggleZomatoSwitch);
-  }
+
   const [categoryPopup, setCategoryPopup] = useState(false);
   const [recommendPopup, setRecommendPopup] = useState(false);
   const [addOnPopUp, setAddOnPopUp] = useState(false);
@@ -677,6 +625,7 @@ function AddDish() {
           </div>
           <div className="relative w-full px-6 mt-4">
             <select
+              key={dishData?.dishType}
               onChange={(e) => handleDishType(e)}
               value={dishData?.dishType
                 ?.replace(/[^a-zA-Z ]/, "")
@@ -686,7 +635,7 @@ function AddDish() {
               {dishTypes?.map((dish: any) => (
                 <option
                   className="!bg-white !text-[#2B354D]"
-                  key={dish?.id}
+                  key={dish?._id}
                   value={dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}
                 >
                   {dish?.type}
@@ -695,9 +644,6 @@ function AddDish() {
             </select>
           </div>
           <div className="mx-6 my-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
-            <div className="border-b pb-2 border-[#cacaca]">
-              <h1 className="text-2xl">Basic - Dine In</h1>
-            </div>
             <div className="mt-2 space-y-4">
               <div>
                 <label
@@ -707,7 +653,7 @@ function AddDish() {
                   Dish Price <span className="text-red-500">*</span>
                 </label>
                 <input
-                  onChange={(e) => handleDishPrice(e)}
+                  onChange={handleDishPrice}
                   value={dishData?.price}
                   id="dishPrice"
                   type="text"
@@ -731,8 +677,8 @@ function AddDish() {
                   {kitchen?.map((kitchen: IKitchen) => (
                     <option
                       className="!bg-white !text-[#2B354D]"
-                      key={kitchen?.id}
-                      value={kitchen?.id}
+                      key={kitchen?._id}
+                      value={kitchen?._id}
                     >
                       {kitchen?.kitchenName}
                     </option>
@@ -755,7 +701,7 @@ function AddDish() {
                   {postCategory?.map((category: ICategory, index: number) => {
                     return (
                       <div
-                        key={category?.id}
+                        key={category?._id}
                         className="flex flex-col p-3 my-2 border rounded-md border-1"
                       >
                         <div className="flex items-center">
@@ -812,7 +758,7 @@ function AddDish() {
                 </div>
                 {portions?.map((portion, index) => (
                   <div
-                    key={portion?.id}
+                    key={portion?._id}
                     className="rounded-lg border-1 border p-2 space-y-2 border-[#cacaca]"
                   >
                     <button
@@ -872,7 +818,7 @@ function AddDish() {
                         {dishTypes?.map((dish: any) => (
                           <option
                             className="!bg-white !text-[#2B354D]"
-                            key={dish?.id}
+                            key={dish?._id}
                             value={dish?.type
                               ?.replace(/[^a-zA-Z ]/, "")
                               .toLowerCase()}
@@ -922,7 +868,7 @@ function AddDish() {
               })}
             </div>
           </div>
-          <div
+          {/* <div
             className={`${
               toggleSwiggySwitch ? "" : "opacity-50"
             } rounded-md border mx-6 border-[#cacaca]`}
@@ -965,8 +911,8 @@ function AddDish() {
             ) : (
               ""
             )}
-          </div>
-          <div
+          </div> */}
+          {/* <div
             className={`${
               toggleZomatoSwitch ? "" : "opacity-50"
             } rounded-md border mx-6 border-[#cacaca] my-4`}
@@ -1009,9 +955,9 @@ function AddDish() {
             ) : (
               ""
             )}
-          </div>
+          </div> */}
           <div className="mx-6 mt-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
-            <div className="relative flex justify-between w-full my-4 mt-4">
+            <div className="relative flex justify-between w-full mt-4">
               <h1 className="text-xl">Display</h1>
               <div onClick={addNewImageField}>
                 <button
@@ -1112,7 +1058,7 @@ function AddDish() {
                 {postRecommend?.map((dishes: IDish, index: number) => {
                   return (
                     <div
-                      key={dishes?.id}
+                      key={dishes?._id}
                       className="flex flex-col p-3 my-2 border rounded-md md:my-0 border-1"
                     >
                       <div className="flex items-center">
@@ -1140,14 +1086,12 @@ function AddDish() {
               {tags.map((tag) => {
                 return (
                   <div
-                    onKeyDown={handleTagsClick}
-                    onClick={handleTagsClick}
+                    onClick={()=>handleTagsClick(tag?.text)}
                     key={tag?.text}
-                    className={`${
-                      dishTags.includes(tag?.text)
+                    className={`${dishTags.includes(tag?.text)
                         ? "bg-primary/50 text-base-100 font-medium"
                         : "text-primary bg-base-200"
-                    } flex inline-block truncate overflow-hidden px-5 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full`}
+                      } flex inline-block truncate overflow-hidden px-5 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full`}
                   >
                     <Image src={tag?.image} alt="tags" width={20} height={20} />{" "}
                     &nbsp;
@@ -1164,9 +1108,8 @@ function AddDish() {
           type="button"
           disabled={isSubmitting}
           onClick={postAddDish}
-          className={`${
-            loading ? "pointer-events-none opacity-50" : ""
-          } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+          className={`${loading ? "pointer-events-none opacity-50" : ""
+            } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
         >
           {loading ? "Loading..." : "Create"}
         </button>

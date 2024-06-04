@@ -210,7 +210,7 @@ const AddAddOn = () => {
       >
         {variants.map((variant) => (
           <div
-            key={variant.id}
+            key={variant._id}
             className="border border-[#cacaca] rounded-md p-2"
           >
             <div className="truncate w-48">{variant?.name}</div>
@@ -224,7 +224,7 @@ const AddAddOn = () => {
                 <button
                   type="button"
                   className="text-[#2F80ED]"
-                  onClick={() => handleDeleteVariant(variant.id)}
+                  onClick={() => handleDeleteVariant(variant._id)}
                 >
                   Delete
                 </button>

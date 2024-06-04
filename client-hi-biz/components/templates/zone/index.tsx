@@ -138,7 +138,7 @@ const AddZone = ({refetchZoneData}:any) => {
 		setTableModal(false);
 	}
 	function handleAddStaff(activeClick: IStaffs[]) {
-		const staffIds = activeClick?.map((staff: IStaffs) => staff.id);
+		const staffIds = activeClick?.map((staff: IStaffs) => staff._id);
 		setZoneData((prevZone) => {
 			return {
 				...prevZone,
@@ -229,7 +229,7 @@ const AddZone = ({refetchZoneData}:any) => {
 								{zoneType?.map((zone: any) => (
 									<option
 										className="!bg-white !text-[#2B354D]"
-										key={zone?.id}
+										key={zone?._id}
 										value={zone?.type}
 									>
 										{zone?.type}
@@ -254,7 +254,7 @@ const AddZone = ({refetchZoneData}:any) => {
 					{postStaffs?.map((staff: IStaffs, index: number) => {
 						return (
 							<div
-								key={staff?.id}
+								key={staff?._id}
 								className="p-3 my-4 border rounded-md border-1"
 							>
 								<div className="flex items-center">
@@ -269,45 +269,6 @@ const AddZone = ({refetchZoneData}:any) => {
 										type="button"
 										onClick={() => removeStaff(index)}
 										className="on_active_bounce text-[#2F80ED]"
-									>
-										Remove
-									</button>
-								</div>
-							</div>
-						);
-					})}
-				</div>
-				<div className="rounded-lg mx-6 my-6 border border-1 border-[#CACACA] px-4">
-					<div className="flex justify-between my-4">
-						<h1 className="text-base text-[#2B354D]">Add Charges</h1>
-						<div>
-							<button
-								type="button"
-								onClick={addACCharges}
-								className="px-4 py-1 border rounded-md on_active_bounce border-1 "
-							>
-								Add
-							</button>
-						</div>
-					</div>
-					{postCharges?.map((acChar: ICharges, index: number) => {
-						return (
-							<div
-								key={acChar?.id}
-								className="p-3 my-4 border rounded-md border-1"
-							>
-								<div className="flex items-center">
-									<RiExchangeDollarLine />
-									<h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
-								</div>
-								<div className="flex justify-between mt-4">
-									<p className="text-sm text-[#2B354D]/70">
-										{acChar?.value}% on billing
-									</p>
-									<button
-										type="button"
-										onClick={() => removeACCharges(index)}
-										className="text-[#2F80ED]"
 									>
 										Remove
 									</button>
@@ -346,7 +307,7 @@ const AddZone = ({refetchZoneData}:any) => {
 				{tableModal && (
 					<PopUp show={tableModal} onClose={closeTableModal}>
 						<AddTables
-							zoneId={zoneData?.id}
+							zoneId={zoneData?._id}
 							closeModal={closeTableModal}
 							postStaffs={postStaffs}
 							setTableModal={setTableModal}

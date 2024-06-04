@@ -10,8 +10,7 @@ import AddZone from "@/components/templates/zone";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import ErrorComponent from "@/components/errorComponent";
-import axios from "axios";
-import { paths } from "@/components/utils/paths";
+import axios from "@/axios";
 import { useSelectedButtonStore } from "@/components/store/useSelectBtn";
 
 const classCard = {
@@ -27,17 +26,16 @@ function Zones() {
 	const router = useRouter();
 	const { businessId } = router.query as { businessId: string };
 	const { setSelectedSubIcon, selectedSubIcon } = useSelectedIcon();
-	const { selectedButton } = useSelectedButtonStore();
 	const handleEditButton = (zone: IZones) => {
-		const { id } = zone;
-		router.push(`/business/${businessId}/zone/${id}`);
+		const { _id } = zone;
+		router.push(`/business/${businessId}/zone/${_id}`);
 	};
 	const handleAddZone = () => {
 		setSelectedSubIcon("addZones");
 	};
 	const getTablesData = async (businessId: string) => {
 		try {
-			const tables = await axios.get(`${process.env.NEXT_PUBLIC_API_HOST}/v1/zones/all/tables?businessId=${businessId}`);
+			const tables = await axios.get(`/v1/zones/all/tables?businessId=${businessId}`);
 			setData({
 				tables: tables.data,
 			});
@@ -49,9 +47,8 @@ function Zones() {
 
 	const getZonesData = async (businessId: string) => {
 		try {
-			const zones = await axios.get(`${process.env.NEXT_PUBLIC_API_HOST}/v1/zones?businessId=${businessId}`);
+			const zones = await axios.get(`/v1/zones?businessId=${businessId}`);
 			setData({ zones: zones?.data })
-			console.log(zones.data)
 			return zones.data;
 		} catch (error) {
 			console.error('Error fetching data:', error);
@@ -79,7 +76,7 @@ function Zones() {
 			<div className="mb-[10rem]">
 				{zones?.map((zone) => {
 					return (
-						<div key={zone?.id}>
+						<div key={zone?._id}>
 							<div className="p-3 mx-6 mt-6 border border-gray-200 rounded-lg border-1">
 								<div className="pb-3 flex justify-between items-center">
 									<h1 className="capitalize text-base text-[#2B354D] font-semibold">
@@ -96,20 +93,20 @@ function Zones() {
 								</div>
 								{zone?.tables && zone?.tables?.length > 0 ?
 									<>
-										<hr className="bg-[#cacaca] h-0.5"/>
+										<hr className="bg-[#cacaca] h-0.5" />
 										<div className="pb-3 flex justify-between items-center border-b-1 border-[#cacaca] border-b mb-2">
 											<h1 className="mt-3 text-[#2B354D]/70">
 												Tables in this zone
 											</h1>
 											<p>{zone?.tables?.length}</p>
 										</div>
-										</> : null
+									</> : null
 								}
 								<div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
 									{tables?.map(
 										(table) =>
-											table?.zoneId === zone?.id && (
-												<div key={table?.id} className="my-1">
+											table?.zoneId === zone?._id && (
+												<div key={table?._id} className="my-1">
 													<div className="flex items-center rounded-lg p-2 border border-[#CACACA] w-full">
 														<div className="flex justify-between">
 															<MdOutlineTableBar
@@ -123,7 +120,7 @@ function Zones() {
 															onClick={async () => {
 																setIsLoading(true);
 																await downloadURI(
-																	table?.id,
+																	table?._id,
 																	table?.name,
 																	table?.zoneId,
 																	businessId,
@@ -163,16 +160,12 @@ function Zones() {
 		switch (selectedSubIcon) {
 			case "addZones":
 				return (
-					<>
-						<AddZone refetchZoneData={refetchZoneData} />
-					</>
+					<AddZone refetchZoneData={refetchZoneData} />
 				);
 
 			default:
 				return (
-					<>
-						<ZonesData />
-					</>
+					<ZonesData />
 				);
 		}
 	};

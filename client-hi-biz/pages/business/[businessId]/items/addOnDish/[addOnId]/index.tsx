@@ -53,7 +53,7 @@ const EditAddOn = () => {
 	const handleDeleteVariant = (variant: Variant) => {
 		setDeletePopup(true);
 		setStoreDeleteVariant((prev) => {
-			return { ...prev, id: variant?.id, name: variant?.name };
+			return { ...prev, id: variant?._id, name: variant?.name };
 		});
 	};
 	const handleEditVariant = (variant: Variant) => {
@@ -149,7 +149,7 @@ const EditAddOn = () => {
 		enabled: !!addOnId,
 	})
 	function deleteItem() {
-		deleteVariant(storeDeleteVariant?.id);
+		deleteVariant(storeDeleteVariant?._id);
 		setDeletePopup(false);
 	}
 
@@ -246,7 +246,7 @@ const EditAddOn = () => {
 			>
 				{variants.map((variant) => (
 					<div
-						key={variant.id}
+						key={variant._id}
 						className="border border-[#cacaca] rounded-md p-2"
 					>
 						<div className="truncate w-48">{variant?.name}</div>

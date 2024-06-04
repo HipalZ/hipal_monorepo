@@ -18,12 +18,12 @@ const AddTables = ({ postZones, zoneId, staffs, closeModal, postStaffs, setTable
 
   const addTables = [
     {
-      id: 1,
+      _id: 1,
       text: "Create new tables",
       description: "Create a new table",
     },
     {
-      id: 2,
+      _id: 2,
       text: "Add bulk tables",
       description: "Add many tables at once",
     },
@@ -43,10 +43,10 @@ const AddTables = ({ postZones, zoneId, staffs, closeModal, postStaffs, setTable
           {addTables.map((addTable, index) => {
             return (
               <div
-                key={addTable?.id}
+                key={addTable?._id}
                 onClick={() => handleActiveClick(index)}
                 onKeyUp={() => handleActiveClick(index)}
-                className={`${addTable?.id === 2 ? "opacity-50 pointer-events-none" : ""} ${activeClick === index
+                className={`${addTable?._id === 2 ? "opacity-50 pointer-events-none" : ""} ${activeClick === index
                   ? "border-[#2B354D] border-2"
                   : " border-1 border-[#CACACA]"
                   } bg-white rounded-md my-5 p-3 border`}

@@ -52,7 +52,7 @@ const AddKitchen = ({ setSelectedButton }: IProps) => {
 			return;
 		}
 		setLoading(true);
-		const staffIds = selectedStaff.map((staff) => staff.id);
+		const staffIds = selectedStaff.map((staff) => staff._id);
 		const config = {
 			businessId: businessId,
 			kitchenName: kitchenName,
@@ -148,7 +148,7 @@ const AddKitchen = ({ setSelectedButton }: IProps) => {
 								</p>
 								<button
 									type="button"
-									onClick={() => deselectStaff(staff.id)}
+									onClick={() => deselectStaff(staff._id)}
 									className="on_active_bounce text-[#2F80ED]"
 								>
 									Remove

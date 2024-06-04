@@ -45,7 +45,7 @@ export const useDishSelectionStore = create<DishSelectionStore>((set) => ({
     })),
   removeDish: (dishId) =>
     set((state) => ({
-      selectedDishes: state.selectedDishes.filter((dish) => dish.id !== dishId),
+      selectedDishes: state.selectedDishes.filter((dish) => dish._id !== dishId),
     })),
   setHierarchy: (hierarchy) => set({ hierarchy }),
   setVisibility: (visibility: boolean) => set({ visibility }),

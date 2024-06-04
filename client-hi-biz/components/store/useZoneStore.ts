@@ -21,8 +21,8 @@ export const useZoneStore = create<IData>((set) => ({
         const updatedTables = [...state.data.tables, tableData];
 
         const updatedZones = state?.data?.zones.map((zone) => {
-            if (zone.id === tableData.zoneId) {
-                const updatedZoneTables = zone.tables ? [...zone.tables, tableData.id] : [tableData.id];
+            if (zone._id === tableData.zoneId) {
+                const updatedZoneTables = zone.tables ? [...zone.tables, tableData._id] : [tableData._id];
                 return { ...zone, tables: updatedZoneTables };
             }
             return zone;
@@ -38,7 +38,7 @@ export const useZoneStore = create<IData>((set) => ({
     }),
     editTable: (tableData) => set((state) => {
         const updatedTables = state?.data?.tables.map(table => {
-            if (table.id === tableData.id) {
+            if (table._id === tableData._id) {
                 return { ...table, ...tableData };
             }
             return table;

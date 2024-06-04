@@ -19,12 +19,7 @@ const AddRecommendedDishes = <T extends DataArray>({
 }) => {
   const [recommendDish, setRecommendDish] = useState<IDish[] | Category[]>([]);
   const searchText = useSearch((s) => s.searchText);
-  const setSearchText = useSearch((s) => s.setSearchText);
-  useEffect(() => {
-    setSearchText('')
-  }, [])
-  const closeSearchBox = () => {
-  };
+
   useEffect(() => {
     setRecommendDish(selectedData)
   }, [])
@@ -37,11 +32,11 @@ const AddRecommendedDishes = <T extends DataArray>({
   )
   function handleActiveClick(selectedData: IDish | Category) {
     setRecommendDish((prev) => {
-      const index = prev.findIndex((item) => item.id === selectedData.id);
+      const index = prev.findIndex((item) => item._id === selectedData._id);
       if (index !== -1) {
-        return prev.filter((item) => item.id !== selectedData.id);
+        return prev.filter((item) => item._id !== selectedData._id);
       }
-      return [...prev, { id: selectedData.id, name: selectedData.name }];
+      return [...prev, { _id: selectedData._id, name: selectedData.name }];
     });
   }
 
@@ -49,12 +44,12 @@ const AddRecommendedDishes = <T extends DataArray>({
     <div className="bg-[#F5F5F5] rounded-t-[1.5rem]">
       <div className="px-6 py-5 overflow-y-auto max-h-[85vh]">
         <h1 className="text-2xl text-[#2B354D] mb-2">Add {headerText}</h1>
-        <SearchPanel closeSearchBox={closeSearchBox} />
+        <SearchPanel  />
         {searchText === '' ? Data?.map((eachData) => (
           <div
-            key={eachData.id}
+            key={eachData._id}
             onClick={() => handleActiveClick(eachData)}
-            className={`${recommendDish.some((item) => item.id === eachData.id)
+            className={`${recommendDish.some((item) => item._id === eachData._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -62,7 +57,7 @@ const AddRecommendedDishes = <T extends DataArray>({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={recommendDish?.some((item) => item.id === eachData.id)}
+                checked={recommendDish?.some((item) => item._id === eachData._id)}
                 className="mr-2 rounded-sm"
               />
               <h1 className="mx-2 text-base">{eachData.name}</h1>
@@ -70,9 +65,9 @@ const AddRecommendedDishes = <T extends DataArray>({
           </div>
         )) : dishData?.map((eachData) => (
           <div
-            key={eachData?.id}
+            key={eachData?._id}
             onClick={() => handleActiveClick(eachData)}
-            className={`${recommendDish?.some((item) => item.id === eachData.id)
+            className={`${recommendDish?.some((item) => item._id === eachData._id)
               ? "border-[#2B354D] border-2"
               : "border-1 border-[#CACACA]"
               } bg-white rounded-md my-5 p-3 border`}
@@ -80,7 +75,7 @@ const AddRecommendedDishes = <T extends DataArray>({
             <div className="flex items-center">
               <input
                 type="checkbox"
-                checked={recommendDish?.some((item) => item.id === eachData.id)}
+                checked={recommendDish?.some((item) => item._id === eachData._id)}
                 className="mr-2 rounded-sm"
               />
               <h1 className="mx-2 text-base">{eachData.name}</h1>

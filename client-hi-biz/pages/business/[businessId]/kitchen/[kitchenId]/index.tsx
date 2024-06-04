@@ -29,7 +29,7 @@ const EditKitchen = () => {
       kitchenName: "",
       description: "",
       staff: [],
-      id: ""
+      _id: ""
     },
   })
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,17 +65,16 @@ const EditKitchen = () => {
       setIsNameError(true);
       return;
     }
-    const staffIds = selectedStaff.map((staff) => staff.id);
+    const staffIds = selectedStaff.map((staff) => staff._id);
     const config = {
       businessId: businessId,
       kitchenName: kitchenName,
       description: kitchenName,
       staff: staffIds,
     };
-
     try {
       await axios.put(
-        `/v1/kitchens/${data.kitchen.id}`,
+        `/v1/kitchens/${data.kitchen._id}`,
         config
       );
       toast.success(`${kitchenName} has been edited`);
@@ -87,7 +86,7 @@ const EditKitchen = () => {
 
   useEffect(() => {
     const staffMembers = data.staffs.filter((staff) =>
-      data.kitchen.staff.includes(staff.id)
+      data.kitchen.staff.includes(staff._id)
     );
 
     initializeKitchen(data.kitchen.kitchenName, staffMembers);
@@ -159,7 +158,7 @@ const EditKitchen = () => {
         {selectedStaff.length > 0 &&
           selectedStaff?.map((staff: IStaffs) => {
             return (
-              <div key={staff?.id} className="p-3 my-4 border rounded-md border-1">
+              <div key={staff?._id} className="p-3 my-4 border rounded-md border-1">
                 <div className="flex items-center">
                   <BsFillPersonFill />
                   <h1 className="mx-2 text-base">{staff?.name}</h1>
@@ -169,7 +168,7 @@ const EditKitchen = () => {
                     {staff?.customRole?.[0].roleName}
                   </p>
                   <button type="button"
-                    onClick={() => deselectStaff(staff.id)}
+                    onClick={() => deselectStaff(staff._id)}
                     className="on_active_bounce text-[#2F80ED]"
                   >
                     Remove
@@ -187,11 +186,11 @@ const EditKitchen = () => {
         </div>
         <div>
           {data.dishes
-            ?.filter((ele: Dish) => ele.kitchenId === data.kitchen.id)
+            ?.filter((ele: Dish) => ele.kitchenId === data.kitchen._id)
             .map((dish: Dish) => {
               return (
                 <div
-                  key={dish?.id}
+                  key={dish?._id}
                   className="flex justify-between p-4 border border-[#cacaca] rounded-md my-5"
                 >
                   <div className="flex space-x-4">

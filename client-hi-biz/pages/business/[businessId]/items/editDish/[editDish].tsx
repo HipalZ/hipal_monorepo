@@ -18,7 +18,7 @@ import { BsChevronLeft } from "react-icons/bs";
 import Hi from "@/assets/svg/hi.svg";
 import { MdDinnerDining } from "react-icons/md";
 import Switch from "react-switch";
-import SwiggyDish from "@/components/atom/swiggyDish";
+// import SwiggyDish from "@/components/atom/swiggyDish";
 import Image from "next/image";
 import PopUp from "@/components/atom/popUp";
 import AddRecommendedDishes from "@/components/atom/addRecommendedDishes";
@@ -26,7 +26,7 @@ import { toast } from "react-toastify";
 import AddExtras from "@/components/atom/addExtras";
 import { dishTypes, tags } from "../addDish";
 import DeleteConfirmationModal from "@/components/atom/deleteUser";
-import ZomatoDish from "@/components/atom/zomatoDish";
+// import ZomatoDish from "@/components/atom/zomatoDish";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import ErrorComponent from "@/components/errorComponent";
@@ -39,8 +39,8 @@ function EditDish() {
 	const { editDish } = router?.query as {
 		editDish: string;
 	};
-	const [toggleSwiggySwitch, setToggleSwiggySwitch] = useState(false);
-	const [toggleZomatoSwitch, setToggleZomatoSwitch] = useState(false);
+	// const [toggleSwiggySwitch, setToggleSwiggySwitch] = useState(false);
+	// const [toggleZomatoSwitch, setToggleZomatoSwitch] = useState(false);
 	const [availability, setAvailability] = useState(true);
 	const [visibility, setVisibility] = useState(true);
 	const [kitchen, setKitchen] = useState<IKitchen[]>([]);
@@ -53,27 +53,27 @@ function EditDish() {
 	const [description, setDescription] = useState<string>("");
 	const [portions, setPortions] = useState<IPortion[]>([]);
 	const [postCategory, setPostCategory] = useState<IDish[]>([]);
-	const [swiggySelectedKitchenId, setSwiggySelectedKitchenId] = useState("");
-	const [swiggyDishName, setSwiggyDishName] = useState<string>("");
-	const [swiggyDishPrice, setSwiggyDishPrice] = useState<string>("");
-	const [swiggyPortions, setSwiggyPortions] = useState<IPortion[]>([]);
-	const [swiggyCategoryPopup, setSwiggyCategoryPopup] = useState(false);
-	const [swiggyAddOnPopUp, setSwiggyAddOnPopUp] = useState(false);
-	const [swiggyPostAddOns, setSwiggyPostAddOns] = useState<Extra[]>([]);
-	const [swiggyAvailability, setSwiggyAvailability] = useState(true);
-	const [swiggyVisibility, setSwiggyVisibility] = useState(true);
-	const [swiggyPostCategory, setSwiggyPostCategory] = useState<IDish[]>([]);
-	const [zomatoSelectedKitchenId, setZomatoSelectedKitchenId] =
-		useState<string>("");
-	const [zomatoDishName, setZomatoDishName] = useState<string>("");
-	const [zomatoDishPrice, setZomatoDishPrice] = useState<string>("");
-	const [zomatoPortions, setZomatoPortions] = useState<IPortion[]>([]);
-	const [zomatoCategoryPopup, setZomatoCategoryPopup] = useState(false);
-	const [zomatoAddOnPopUp, setZomatoAddOnPopUp] = useState(false);
-	const [zomatoPostAddOns, setZomatoPostAddOns] = useState<IDish[]>([]);
-	const [zomatoAvailability, setZomatoAvailability] = useState(true);
-	const [zomatoVisibility, setZomatoVisibility] = useState(true);
-	const [zomatoPostCategory, setZomatoPostCategory] = useState<IDish[]>([]);
+	// const [swiggySelectedKitchenId, setSwiggySelectedKitchenId] = useState("");
+	// const [swiggyDishName, setSwiggyDishName] = useState<string>("");
+	// const [swiggyDishPrice, setSwiggyDishPrice] = useState<string>("");
+	// const [swiggyPortions, setSwiggyPortions] = useState<IPortion[]>([]);
+	// const [swiggyCategoryPopup, setSwiggyCategoryPopup] = useState(false);
+	// const [swiggyAddOnPopUp, setSwiggyAddOnPopUp] = useState(false);
+	// const [swiggyPostAddOns, setSwiggyPostAddOns] = useState<Extra[]>([]);
+	// const [swiggyAvailability, setSwiggyAvailability] = useState(true);
+	// const [swiggyVisibility, setSwiggyVisibility] = useState(true);
+	// const [swiggyPostCategory, setSwiggyPostCategory] = useState<IDish[]>([]);
+	// const [zomatoSelectedKitchenId, setZomatoSelectedKitchenId] =
+	// 	useState<string>("");
+	// const [zomatoDishName, setZomatoDishName] = useState<string>("");
+	// const [zomatoDishPrice, setZomatoDishPrice] = useState<string>("");
+	// const [zomatoPortions, setZomatoPortions] = useState<IPortion[]>([]);
+	// const [zomatoCategoryPopup, setZomatoCategoryPopup] = useState(false);
+	// const [zomatoAddOnPopUp, setZomatoAddOnPopUp] = useState(false);
+	// const [zomatoPostAddOns, setZomatoPostAddOns] = useState<IDish[]>([]);
+	// const [zomatoAvailability, setZomatoAvailability] = useState(true);
+	// const [zomatoVisibility, setZomatoVisibility] = useState(true);
+	// const [zomatoPostCategory, setZomatoPostCategory] = useState<IDish[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [displayImages, setDisplayImages] = useState([]);
 	const [dishTags, setDishTags] = useState<string[]>([])
@@ -98,37 +98,37 @@ function EditDish() {
 		kitchenId: selectedKitchenId,
 		filters: {
 			dishes: [],
+			metaTags:dishTags,
 		},
 		images: [],
 		description: "",
-		tags: dishTags,
 		links: [],
 		taxes: [],
 		delayTime: "",
 		availability: availability,
-		delivery: {
-			dishPrice: swiggyDishPrice,
-			visibility: swiggyVisibility,
-			availability: swiggyAvailability,
-			kitchenId: swiggySelectedKitchenId,
-			extras: swiggyPostAddOns,
-			categories: swiggyPostCategory,
-			portions: swiggyPortions,
-		},
-		take_away: {
-			dishPrice: zomatoDishPrice,
-			visibility: zomatoVisibility,
-			availability: zomatoAvailability,
-			kitchenId: zomatoSelectedKitchenId,
-			extras: zomatoPostAddOns,
-			categories: zomatoPostCategory,
-			portions: zomatoPortions,
-		},
+		// delivery: {
+		// 	dishPrice: swiggyDishPrice,
+		// 	visibility: swiggyVisibility,
+		// 	availability: swiggyAvailability,
+		// 	kitchenId: swiggySelectedKitchenId,
+		// 	extras: swiggyPostAddOns,
+		// 	categories: swiggyPostCategory,
+		// 	portions: swiggyPortions,
+		// },
+		// take_away: {
+		// 	dishPrice: zomatoDishPrice,
+		// 	visibility: zomatoVisibility,
+		// 	availability: zomatoAvailability,
+		// 	kitchenId: zomatoSelectedKitchenId,
+		// 	extras: zomatoPostAddOns,
+		// 	categories: zomatoPostCategory,
+		// 	portions: zomatoPortions,
+		// },
 		version: 0,
 		id: editDish,
 	};
 	const [dishData, setDishData] = useState<Dish>(testData);
-	const [data, setData] = useState<Dish>(testData);
+	// const [data, setData] = useState<Dish>(testData);
 	const [loadingData, setLoadingData] = useState(false);
 	const handleTagsClick = async (event) => {
 		const value = event.target.innerText
@@ -159,32 +159,32 @@ function EditDish() {
 			setAvailability(data?.dish?.availability);
 			setVisibility(data?.dish?.visibility);
 			setDisplayImages(data?.dish?.images)
-			setDishTags(data?.dish?.tags || []);
-			if (data?.dish?.delivery) {
-				if (data?.dish?.delivery?.dishPrice !== "") {
-					setToggleSwiggySwitch(true);
-				}
-				setSwiggySelectedKitchenId(data?.dish?.delivery?.kitchenId);
-				setSwiggyDishPrice(data?.dish?.delivery?.dishPrice);
-				setSwiggyPortions(data?.dish?.delivery?.portions);
-				setSwiggyAvailability(data?.dish?.delivery?.availability);
-				setSwiggyVisibility(data?.dish?.delivery?.visibility);
-				setSwiggyPostAddOns(data?.dish?.delivery?.extras);
-				setSwiggyPostCategory(data?.dish?.delivery?.categories);
-			}
-			if (data?.dish?.take_away) {
-				if (data?.dish?.take_away?.dishPrice !== "") {
-					setToggleZomatoSwitch(true);
-				}
-				setZomatoSelectedKitchenId(data?.dish?.take_away?.kitchenId);
-				setZomatoDishPrice(data?.dish?.take_away?.dishPrice);
-				setZomatoPortions(data?.dish?.take_away?.portions);
-				setZomatoAvailability(data?.dish?.take_away?.availability);
-				setZomatoVisibility(data?.dish?.take_away?.visibility);
-				setZomatoPostAddOns(data?.dish?.take_away?.extras);
-				setZomatoPostCategory(data?.dish?.take_away?.categories);
-			}
-			setData(data);
+			setDishTags(data?.dish?.filters?.metaTags || []);
+			// if (data?.dish?.delivery) {
+			// 	if (data?.dish?.delivery?.dishPrice !== "") {
+			// 		setToggleSwiggySwitch(true);
+			// 	}
+			// 	setSwiggySelectedKitchenId(data?.dish?.delivery?.kitchenId);
+			// 	setSwiggyDishPrice(data?.dish?.delivery?.dishPrice);
+			// 	setSwiggyPortions(data?.dish?.delivery?.portions);
+			// 	setSwiggyAvailability(data?.dish?.delivery?.availability);
+			// 	setSwiggyVisibility(data?.dish?.delivery?.visibility);
+			// 	setSwiggyPostAddOns(data?.dish?.delivery?.extras);
+			// 	setSwiggyPostCategory(data?.dish?.delivery?.categories);
+			// }
+			// if (data?.dish?.take_away) {
+			// 	if (data?.dish?.take_away?.dishPrice !== "") {
+			// 		setToggleZomatoSwitch(true);
+			// 	}
+			// 	setZomatoSelectedKitchenId(data?.dish?.take_away?.kitchenId);
+			// 	setZomatoDishPrice(data?.dish?.take_away?.dishPrice);
+			// 	setZomatoPortions(data?.dish?.take_away?.portions);
+			// 	setZomatoAvailability(data?.dish?.take_away?.availability);
+			// 	setZomatoVisibility(data?.dish?.take_away?.visibility);
+			// 	setZomatoPostAddOns(data?.dish?.take_away?.extras);
+			// 	setZomatoPostCategory(data?.dish?.take_away?.categories);
+			// }
+			// setData(data);
 			return data;
 		} catch (err) { }
 
@@ -203,9 +203,9 @@ function EditDish() {
 			const category = await axios.get(
 				`/v1/categories?businessId=${businessId}&queryCategories=true`,
 			);
-			setData((prev) => {
-				return { ...prev, categories: category?.data };
-			});
+			// setData((prev) => {
+			// 	return { ...prev, categories: category?.data };
+			// });
 			setCategory(category?.data)
 		} catch (err) { }
 		setLoading(false);
@@ -215,9 +215,9 @@ function EditDish() {
 			const dishes = await axios.get(
 				`/v1/dishes?businessId=${businessId}&queryDish=true`,
 			);
-			setData((prev) => {
-				return { ...prev, dishes: dishes?.data };
-			});
+			// setData((prev) => {
+			// 	return { ...prev, dishes: dishes?.data };
+			// });
 			setRecommendedDishes(dishes?.data);
 		} catch (e) {
 			console.log(e);
@@ -227,40 +227,40 @@ function EditDish() {
 		try {
 			const addOns = await axios.get(paths.getExtraApi(businessId));
 			setAddOns(addOns?.data);
-			setData((prev) => {
-				return { ...prev, extras: addOns?.data };
-			});
+			// setData((prev) => {
+			// 	return { ...prev, extras: addOns?.data };
+			// });
 		} catch (err) { }
 	}
 
-	useEffect(() => {
-		if (data?.dish?.delivery) {
-			if (data?.dish?.delivery?.dishPrice !== "") {
-				setToggleSwiggySwitch(true);
-			}
-			setSwiggySelectedKitchenId(data?.dish?.delivery?.kitchenId);
-			setSwiggyDishName(data?.dish?.delivery?.name);
-			setSwiggyDishPrice(data?.dish?.delivery?.dishPrice);
-			setSwiggyPortions(data?.dish?.delivery?.portions);
-			setSwiggyAvailability(data?.dish?.delivery?.availability);
-			setSwiggyVisibility(data?.dish?.delivery?.visibility);
-			setSwiggyPostAddOns(data?.dish?.delivery?.extras);
-			setSwiggyPostCategory(data?.dish?.delivery?.categories);
-		}
-		if (data?.dish?.take_away) {
-			if (data?.dish?.take_away?.dishPrice !== "") {
-				setToggleZomatoSwitch(true);
-			}
-			setZomatoSelectedKitchenId(data?.dish?.take_away?.kitchenId);
-			setZomatoDishName(data?.dish?.take_away?.name);
-			setZomatoDishPrice(data?.dish?.take_away?.dishPrice);
-			setZomatoPortions(data?.dish?.take_away?.portions);
-			setZomatoAvailability(data?.dish?.take_away?.availability);
-			setZomatoVisibility(data?.dish?.take_away?.visibility);
-			setZomatoPostAddOns(data?.dish?.take_away?.extras);
-			setZomatoPostCategory(data?.dish?.take_away?.categories);
-		}
-	}, [data]);
+	// useEffect(() => {
+	// 	if (data?.dish?.delivery) {
+	// 		if (data?.dish?.delivery?.dishPrice !== "") {
+	// 			setToggleSwiggySwitch(true);
+	// 		}
+	// 		setSwiggySelectedKitchenId(data?.dish?.delivery?.kitchenId);
+	// 		setSwiggyDishName(data?.dish?.delivery?.name);
+	// 		setSwiggyDishPrice(data?.dish?.delivery?.dishPrice);
+	// 		setSwiggyPortions(data?.dish?.delivery?.portions);
+	// 		setSwiggyAvailability(data?.dish?.delivery?.availability);
+	// 		setSwiggyVisibility(data?.dish?.delivery?.visibility);
+	// 		setSwiggyPostAddOns(data?.dish?.delivery?.extras);
+	// 		setSwiggyPostCategory(data?.dish?.delivery?.categories);
+	// 	}
+	// 	if (data?.dish?.take_away) {
+	// 		if (data?.dish?.take_away?.dishPrice !== "") {
+	// 			setToggleZomatoSwitch(true);
+	// 		}
+	// 		setZomatoSelectedKitchenId(data?.dish?.take_away?.kitchenId);
+	// 		setZomatoDishName(data?.dish?.take_away?.name);
+	// 		setZomatoDishPrice(data?.dish?.take_away?.dishPrice);
+	// 		setZomatoPortions(data?.dish?.take_away?.portions);
+	// 		setZomatoAvailability(data?.dish?.take_away?.availability);
+	// 		setZomatoVisibility(data?.dish?.take_away?.visibility);
+	// 		setZomatoPostAddOns(data?.dish?.take_away?.extras);
+	// 		setZomatoPostCategory(data?.dish?.take_away?.categories);
+	// 	}
+	// }, [data]);
 
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -282,8 +282,7 @@ function EditDish() {
 
 		const isNameDuplicate = recommendedDishes?.some(
 			(everyDish) => {
-				const isDuplicate = everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase() && everyDish.id !== editDish
-				console.log(everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase())
+				const isDuplicate = everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase() && everyDish._id !== editDish
 				return isDuplicate;
 			}
 		);
@@ -306,30 +305,30 @@ function EditDish() {
 		let allSwiggyPortionsValid = true;
 		let isZomatoValid = true;
 		let allZomatoPortionsValid = true;
-		isSwiggyValid = swiggyDishPrice !== "";
-		if (!isSwiggyValid && toggleSwiggySwitch) {
-			toast.error("Please check the swiggy price")
-			return false
-		}
-		if (toggleSwiggySwitch && swiggyPortions?.length > 0) {
-			allSwiggyPortionsValid = validPortionCheck(swiggyPortions);
-			if (!allSwiggyPortionsValid) {
-				toast.error("Please check the swiggy portions")
-				return false
-			}
-		}
-		isZomatoValid = zomatoDishPrice !== "";
-		if (!isZomatoValid && toggleZomatoSwitch) {
-			toast.error("Please check the zomato price")
-			return false
-		}
-		if (toggleZomatoSwitch && zomatoPortions?.length > 0) {
-			allZomatoPortionsValid = validPortionCheck(zomatoPortions);
-			if (!allZomatoPortionsValid) {
-				toast.error("Please check the zomato portions")
-				return false;
-			}
-		}
+		// isSwiggyValid = swiggyDishPrice !== "";
+		// if (!isSwiggyValid && toggleSwiggySwitch) {
+		// 	toast.error("Please check the swiggy price")
+		// 	return false
+		// }
+		// if (toggleSwiggySwitch && swiggyPortions?.length > 0) {
+		// 	allSwiggyPortionsValid = validPortionCheck(swiggyPortions);
+		// 	if (!allSwiggyPortionsValid) {
+		// 		toast.error("Please check the swiggy portions")
+		// 		return false
+		// 	}
+		// }
+		// isZomatoValid = zomatoDishPrice !== "";
+		// if (!isZomatoValid && toggleZomatoSwitch) {
+		// 	toast.error("Please check the zomato price")
+		// 	return false
+		// }
+		// if (toggleZomatoSwitch && zomatoPortions?.length > 0) {
+		// 	allZomatoPortionsValid = validPortionCheck(zomatoPortions);
+		// 	if (!allZomatoPortionsValid) {
+		// 		toast.error("Please check the zomato portions")
+		// 		return false;
+		// 	}
+		// }
 		return true
 	}
 
@@ -361,37 +360,37 @@ function EditDish() {
 					portions: portions,
 					filters: {
 						dishes: postRecommend,
+						metaTags:dishTags,
 					},
 					kitchenId: selectedKitchenId,
 					description: description,
-					tags: dishTags,
 					images: imageUrls,
-					delivery: {
-						name: swiggyDishName,
-						dishPrice: swiggyDishPrice,
-						visibility: swiggyVisibility,
-						availability: swiggyAvailability,
-						kitchenId:
-							swiggySelectedKitchenId === undefined
-								? selectedKitchenId
-								: swiggySelectedKitchenId,
-						extras: swiggyPostAddOns,
-						portions: swiggyPortions,
-						categories: swiggyPostCategory,
-					},
-					take_away: {
-						name: zomatoDishName,
-						dishPrice: zomatoDishPrice,
-						visibility: zomatoVisibility,
-						availability: zomatoAvailability,
-						kitchenId:
-							zomatoSelectedKitchenId === undefined
-								? selectedKitchenId
-								: zomatoSelectedKitchenId,
-						extras: zomatoPostAddOns,
-						portions: zomatoPortions,
-						categories: zomatoPostCategory,
-					},
+					// delivery: {
+					// 	name: swiggyDishName,
+					// 	dishPrice: swiggyDishPrice,
+					// 	visibility: swiggyVisibility,
+					// 	availability: swiggyAvailability,
+					// 	kitchenId:
+					// 		swiggySelectedKitchenId === undefined
+					// 			? selectedKitchenId
+					// 			: swiggySelectedKitchenId,
+					// 	extras: swiggyPostAddOns,
+					// 	portions: swiggyPortions,
+					// 	categories: swiggyPostCategory,
+					// },
+					// take_away: {
+					// 	name: zomatoDishName,
+					// 	dishPrice: zomatoDishPrice,
+					// 	visibility: zomatoVisibility,
+					// 	availability: zomatoAvailability,
+					// 	kitchenId:
+					// 		zomatoSelectedKitchenId === undefined
+					// 			? selectedKitchenId
+					// 			: zomatoSelectedKitchenId,
+					// 	extras: zomatoPostAddOns,
+					// 	portions: zomatoPortions,
+					// 	categories: zomatoPostCategory,
+					// },
 				},
 			};
 			const response = await axios(config);
@@ -429,13 +428,11 @@ function EditDish() {
 
 	const fileInputRefs = useRef<any>([]);
 	const [imageFiles, setImageFiles] = useState<(File | null)[]>([null]);
-	// const [imageArr, setImageArr] = useState<string[]>([]);
 
 	const handleClose = () => {
 		setShowCropper(false);
 	};
 
-	// prefinal
 	const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
 		const file = event.target.files?.[0];
 		if (file) {
@@ -466,11 +463,10 @@ function EditDish() {
 	};
 
 
-	// prefinal
 	const handleCrop = async () => {
 		const cropper = cropperRef.current;
 		if (cropper) {
-			const coordinates = cropper.getCoordinates();
+			const coordinates = cropper?.getCoordinates();
 			try {
 				const croppedDataUrl = await cropImage(croppingImage, coordinates);
 				if (typeof croppedDataUrl === "string") {
@@ -508,20 +504,18 @@ function EditDish() {
 			}
 			return displayImages[index] || null; // Use existing URL if not modified
 		}));
-		// setImageArr(imageUrls.filter((url) => url !== null));
 		return imageUrls;
 	};
 
 	const addNewImageField = () => {
-		// setImageArr((prev) => [...prev, ""]);
 		setDisplayImages((prev) => [...prev, ""]);
 	};
-	function toggleLoyality() {
-		setToggleSwiggySwitch(!toggleSwiggySwitch);
-	}
-	function toggleZomatoLoyality() {
-		setToggleZomatoSwitch(!toggleZomatoSwitch);
-	}
+	// function toggleLoyality() {
+	// 	setToggleSwiggySwitch(!toggleSwiggySwitch);
+	// }
+	// function toggleZomatoLoyality() {
+	// 	setToggleZomatoSwitch(!toggleZomatoSwitch);
+	// }
 	const [categoryPopup, setCategoryPopup] = useState(false);
 	const [recommendPopup, setRecommendPopup] = useState(false);
 	const [addOnPopUp, setAddOnPopUp] = useState(false);
@@ -614,7 +608,6 @@ function EditDish() {
 	};
 
 	const handleRemoveImageUrl = async (index: number) => {
-		// setImageArr((prev) => prev.filter((_, idx) => idx !== index));
 		setDisplayImages((prev) => prev.filter((_, idx) => idx !== index))
 		setImageFiles((prev) => prev.filter((_, idx) => idx !== index));
 	};
@@ -674,7 +667,7 @@ function EditDish() {
 					<div className="relative w-full px-6 mt-4">
 						<input
 							type="text"
-							onChange={(e) => handleNameDish(e)}
+							onChange={handleNameDish}
 							maxLength={50}
 							value={dishData?.name}
 							id="floating_outlined"
@@ -688,7 +681,7 @@ function EditDish() {
 					</div>
 					<div className="relative w-full px-6 mt-4">
 						<select
-							onChange={(e) => handleDishType(e)}
+							onChange={handleDishType}
 							value={dishData?.dishType
 								?.replace(/[^a-zA-Z ]/, "")
 								.toLowerCase()}
@@ -697,7 +690,7 @@ function EditDish() {
 							{dishTypes?.map((dish: any) => (
 								<option
 									className="!bg-white !text-[#2B354D]"
-									key={dish?.id}
+									key={dish?._id}
 									value={dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}
 								>
 									{dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}
@@ -706,9 +699,6 @@ function EditDish() {
 						</select>
 					</div>
 					<div className="mx-6 my-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
-						<div className="border-b pb-2 border-[#cacaca]">
-							<h1 className="text-2xl">Basic - Dine In</h1>
-						</div>
 						<div className="mt-2 space-y-4">
 							<div>
 								<label
@@ -718,7 +708,7 @@ function EditDish() {
 									Dish Price <span className="text-red-500">*</span>
 								</label>
 								<input
-									onChange={(e) => handleDishPrice(e)}
+									onChange={handleDishPrice}
 									value={dishData?.price}
 									maxLength={4}
 									id="dishPrice"
@@ -742,8 +732,8 @@ function EditDish() {
 									{kitchen?.map((kitchen: IKitchen) => (
 										<option
 											className="!bg-white !text-[#2B354D]"
-											key={kitchen?.id}
-											value={kitchen?.id}
+											key={kitchen?._id}
+											value={kitchen?._id}
 										>
 											{kitchen?.kitchenName}
 										</option>
@@ -766,7 +756,7 @@ function EditDish() {
 									{postCategory?.map((category: ICategory, index: number) => {
 										return (
 											<div
-												key={category?.id}
+												key={category?._id}
 												className="flex flex-col p-3 mt-2 border rounded-md border-1"
 											>
 												<div className="flex items-center">
@@ -823,7 +813,7 @@ function EditDish() {
 								</div>
 								{portions?.map((portion, index) => (
 									<div
-										key={portion?.id}
+										key={portion?._id}
 										className="rounded-lg border-1 border p-2 space-y-2 border-[#cacaca]"
 									>
 										<button
@@ -883,7 +873,7 @@ function EditDish() {
 												{dishTypes?.map((dish: any) => (
 													<option
 														className="!bg-white !text-[#2B354D]"
-														key={dish?.id}
+														key={dish?._id}
 														value={dish?.type
 															?.replace(/[^a-zA-Z ]/, "")
 															.toLowerCase()}
@@ -912,7 +902,7 @@ function EditDish() {
 							{postAddOns?.map((addon: Extra, index: number) => {
 								return (
 									<div
-										key={addon?.id}
+										key={addon?._id}
 										className="flex flex-col p-3 my-2 border rounded-md border-1"
 									>
 										<div className="flex items-center">
@@ -933,7 +923,7 @@ function EditDish() {
 							})}
 						</div>
 					</div>
-					<div
+					{/* <div
 						className={`${toggleSwiggySwitch ? "" : "opacity-50"
 							} rounded-md border mx-6 border-[#cacaca]`}
 					>
@@ -1018,7 +1008,7 @@ function EditDish() {
 						) : (
 							""
 						)}
-					</div>
+					</div> */}
 					<div className="mx-6 mt-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
 						<div className="relative flex justify-between w-full my-4 mt-4">
 							<h1 className="text-xl">Display</h1>
@@ -1033,7 +1023,7 @@ function EditDish() {
 						</div>
 						<div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
 							{displayImages?.map((image, index) => (
-								<div key={index.toString()} className="flex mt-2">
+								<div key={`image+${index}`} className="flex mt-2">
 									{image ? (
 										<div className="relative aspect-square">
 											<div>
@@ -1122,7 +1112,7 @@ function EditDish() {
 								{postRecommend?.map((dishes: IDish, index: number) => {
 									return (
 										<div
-											key={dishes?.id}
+											key={dishes?._id}
 											className="flex flex-col p-3 my-2 border rounded-md border-1"
 										>
 											<div className="flex items-center">

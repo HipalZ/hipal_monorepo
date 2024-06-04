@@ -34,7 +34,6 @@ function CustomerzBills() {
             const response = await axios.get(`/v1/payments/:id/customerBills?businessId=${businessId}&phone=${customerzPhone}&pageNumber=${pageNumber}`)
             setCustomerzName(response.data.customerName);
             setBillsData(response.data.bills);
-            console.log(response.data)
             return response.data;
         } catch (err) {
             console.log(err);
@@ -82,7 +81,7 @@ function CustomerzBills() {
             <section className="relative masonry-layout w-full px-6 mt-2 overflow-auto scroll-smooth space-y-4">
                 {billsData && billsData.length > 0 ? (
                     billsData.map((bill) => (
-                        <div key={bill.id}>
+                        <div key={bill._id}>
                             <Disclosure>
                                 {({ open }) => (
                                     <>

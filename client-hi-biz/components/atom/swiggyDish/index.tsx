@@ -141,9 +141,9 @@ const SwiggyDish = ({
       const category = await axios.get(paths.getCategoryApi(businessId));
       const allDishes = category?.data?.reduce(
         (acc: any[], category: ICategory) => {
-          const seenIds = new Set(acc.map((dish) => dish.id));
+          const seenIds = new Set(acc.map((dish) => dish._id));
           const uniqueDishes = category.dishes.filter(
-            (dish) => !seenIds.has(dish.id)
+            (dish) => !seenIds.has(dish._id)
           );
           return acc.concat(uniqueDishes);
         },
@@ -224,8 +224,8 @@ const SwiggyDish = ({
               {kitchen?.map((kitchen: any) => (
                 <option
                   className="!bg-white !text-[#2B354D]"
-                  key={kitchen?.id}
-                  value={kitchen?.id}
+                  key={kitchen?._id}
+                  value={kitchen?._id}
                 >
                   {kitchen?.kitchenName}
                 </option>
@@ -245,7 +245,7 @@ const SwiggyDish = ({
               {postCategory?.map((category: ICategory, index: number) => {
                 return (
                   <div
-                    key={category?.id}
+                    key={category?._id}
                     className="flex flex-col p-3 mt-2 border rounded-md border-1"
                   >
                     <div className="flex items-center">
@@ -359,7 +359,7 @@ const SwiggyDish = ({
                     {dishTypes?.map((dish: any) => (
                       <option
                         className="!bg-white !text-[#2B354D]"
-                        key={dish?.id}
+                        key={dish?._id}
                         value={dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}
                       >
                         {dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}

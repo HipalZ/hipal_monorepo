@@ -41,8 +41,8 @@ function Business() {
   const router = useRouter();
   const filteredBusinesses = businesses?.filter(
     (business: IBusinessData) =>
-      business?.staff?.includes(user.id) ||
-      business.id === user?.customRole?.[0]?.businessId
+      business?.staff?.includes(user._id) ||
+      business._id === user?.customRole?.[0]?.businessId
   );
 
   const handleRoute = async (businessId: string) => {

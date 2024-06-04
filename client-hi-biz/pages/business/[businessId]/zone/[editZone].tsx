@@ -51,7 +51,7 @@ const EditZone = () => {
       tables: [],
       Occupied: 2,
       charges: [],
-      id: ""
+      _id: ""
 
     }, staff: [], tables: [], charges: []
   });
@@ -61,18 +61,15 @@ const EditZone = () => {
         const zone = await axios.get(paths.getZoneById(editZone));
         const staff = await axios.get(paths.getStaffApi(businessId));
         const tables = await axios.get(paths.getTablesApi(businessId));
-        const charges = await axios.get(paths.getChargesApi(businessId));
         setData({
           zone: zone.data,
           staff: staff.data,
           tables: tables.data,
-          charges: charges.data,
         });
         return {
           zone: zone.data,
           staff: staff.data,
           tables: tables.data,
-          charges: charges.data,
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -88,23 +85,23 @@ const EditZone = () => {
   useEffect(() => {
     setZoneData(data?.zone);
     const filteredTables = data?.tables?.filter((table: ITables) =>
-      table.zoneId === data?.zone?.id && data?.zone?.tables?.includes(table.id)
+      table.zoneId === data?.zone?._id && data?.zone?.tables?.includes(table._id)
     );
     setExistingTable(filteredTables);
     setStaffs(data?.staff);
     setAcCharge(data?.charges);
     const filteredStaffs = data?.staff?.filter((filStaff: IStaffs) =>
-      data?.zone?.staff?.includes(filStaff.id)
+      data?.zone?.staff?.includes(filStaff._id)
     );
     setPostStaffs(filteredStaffs);
     const filteredCharges = data?.charges?.filter((charge: ICharges) =>
-      data?.zone?.charges?.some((zoneCharge: ICharges) => zoneCharge.id === charge.id)
+      data?.zone?.charges?.some((zoneCharge: ICharges) => zoneCharge._id === charge._id)
     );
     setPostCharges(filteredCharges);
   }, [data])
   function handleAddStaff(activeClick: IStaffs[]) {
     setPostStaffs(activeClick)
-    const staffIds = activeClick.map((staff: IStaffs) => staff.id);
+    const staffIds = activeClick.map((staff: IStaffs) => staff._id);
     setZoneData((prevZone) => {
       return {
         ...prevZone,
@@ -142,13 +139,13 @@ const EditZone = () => {
   }
   function removeACCharges(idToRemove: string) {
     setPostCharges((prev: any) =>
-      prev.filter((charge: any) => charge.id !== idToRemove)
+      prev.filter((charge: any) => charge._id !== idToRemove)
     );
   }
 
   function removeStaff(idToRemove: string) {
     setPostStaffs((prev: any) =>
-      prev.filter((staff: any) => staff.id !== idToRemove)
+      prev.filter((staff: any) => staff._id !== idToRemove)
     );
   }
 
@@ -195,8 +192,8 @@ const EditZone = () => {
         data: {
           ...zoneData,
           charges: postCharges,
-          staff: postStaffs.map((staff) => staff.id),
-          tables: existingTable.map((table) => table?.id),
+          staff: postStaffs.map((staff) => staff._id),
+          tables: existingTable.map((table) => table?._id),
         },
       };
 
@@ -225,7 +222,7 @@ const EditZone = () => {
 
   function removeTable() {
     if (selectedTableForDeletion) {
-      setExistingTable(existingTable => existingTable?.filter((table) => table?.id !== selectedTableForDeletion?.id))
+      setExistingTable(existingTable => existingTable?.filter((table) => table?._id !== selectedTableForDeletion?._id))
       setSelectedTableForDeletion({});
       setRemovePopup(false);
     }
@@ -277,7 +274,7 @@ const EditZone = () => {
                 {zoneType?.map((zone: any) => (
                   <option
                     className="!bg-white !text-[#2B354D]"
-                    key={zone?.id}
+                    key={zone?._id}
                     value={zone?.type}
                   >
                     {zone?.type}
@@ -299,7 +296,7 @@ const EditZone = () => {
           {postStaffs?.map((staff: IStaffs) => {
             return (
               <div
-                key={staff?.id}
+                key={staff?._id}
                 className="p-3 my-4 border rounded-md border-1"
               >
                 <div className="flex items-center">
@@ -310,44 +307,8 @@ const EditZone = () => {
                   <p className="text-sm text-[#2B354D]/70">{staff?.customRole[0]?.roleName}</p>
                   <button
                     type="button"
-                    onClick={() => removeStaff(staff?.id)}
+                    onClick={() => removeStaff(staff?._id)}
                     className="on_active_bounce text-[#2F80ED]"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="rounded-lg mx-6 my-6 border border-1 border-[#CACACA] px-4">
-          <div className="flex justify-between my-4">
-            <h1 className="text-base text-[#2B354D]">Edit Charges</h1>
-            <div>
-              <button
-                type="button"
-                onClick={addACCharges}
-                className="px-4 py-1 border rounded-md on_active_bounce border-1 "
-              >
-                Edit
-              </button>
-            </div>
-          </div>
-          {postCharges?.map((acChar: ICharges) => {
-            return (
-              <div key={acChar?.id} className="p-3 my-4 border rounded-md border-1">
-                <div className="flex items-center">
-                  <RiExchangeDollarLine />
-                  <h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
-                </div>
-                <div className="flex justify-between mt-4">
-                  <p className="text-sm text-[#2B354D]/70">
-                    {acChar?.value}% on billing
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => removeACCharges(acChar?.id)}
-                    className="text-[#2F80ED]"
                   >
                     Remove
                   </button>
@@ -363,7 +324,7 @@ const EditZone = () => {
           <div className="space-y-3 mt-3">
             {existingTable?.map((table, index) => {
               return (
-                <div key={table?.id}>
+                <div key={table?._id}>
                   <div
                     className="flex justify-between items-center w-full rounded-lg p-2 border on_active_bounce border-[#CACACA]"
                   >
@@ -376,13 +337,6 @@ const EditZone = () => {
                         {table?.name}
                       </div>
                     </div>
-                    {/* <button
-                      type="button"
-                      onClick={() => editTable(table)}
-                      className="float-right text-[#2B354D] border border-1 border-[#EAE7EA] bg-[#EAE7EA] rounded-full px-2 py-0.5"
-                    >
-                      ✖
-                    </button> */}
                   </div>
                   {removePopup && <PopUp show={removePopup} onClose={closePopUpModal}>
                     <DeleteConfirmationModal text={`Are you sure you want to remove ${selectedTableForDeletion?.name} from zone ?`} closeModal={() => setRemovePopup(false)} onDelete={removeTable} />
@@ -395,7 +349,7 @@ const EditZone = () => {
             {createdTable?.map((table) => {
               return (
                 <div
-                  key={table?.id}
+                  key={table?._id}
                   className="rounded-lg p-2 border on_active_bounce border-[#CACACA] space-y-6"
                 >
                   <div className="on_active_bounce">
@@ -412,7 +366,7 @@ const EditZone = () => {
           </div>
         </div>
       </div>
-      <div className="sticky mx-6 my-6 bottom-5">
+      <div className="fixed w-full px-6 bottom-5">
         <button
           type="button"
           onClick={saveZone}

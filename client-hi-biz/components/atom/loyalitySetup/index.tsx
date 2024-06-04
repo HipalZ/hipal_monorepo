@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import axios from "@/axios";
 import { toast } from "react-toastify";
 import { useLoyalityData } from "@/components/store/useLoyality";
-import { isEmpty, set } from "lodash-es";
+import { isEmpty } from "lodash-es";
 import { useCroppedImage } from "@/components/store/useCroppedImage";
 import useBusinessData from "@/components/store/useBusinessData";
 import { storeImageFiles } from "@/components/utils/helper";
@@ -24,10 +24,10 @@ import {
   waveToDataUrl,
 } from "../pathPattern";
 
-type ILoyalitySetUpProps = {
-  existsLoyality: boolean;
+type ILoyaltySetUpProps = {
+  existsLoyalty: boolean;
 };
-const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
+const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [toggleSwitch, setToggleSwitch] = useState(false);
@@ -87,7 +87,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
   const [bonusWarn, setBonusWarn] = useState(false);
   function handleSignUpBonus(e: any) {
     let value = e.target.value;
-    if (value?.length < 5 && value <= 5000) {
+    if (value?.length < 5 && value <= 5000 && value<=rewardLimit) {
       value = Math.abs(value.replace(/[^0-9\b]/g, ""));
       setSignUpBonus(value);
       setBonusWarn(false);
@@ -186,9 +186,13 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
   }
   function setupRewardLimit(e: any) {
     let value = e.target.value;
-    if (value?.length < 7) {
+    if (value?.length < 5) {
       value = Math.abs(value.replace(/[^0-9\b]/g, ""));
       setRewardLimit(value);
+    }
+    if(value < signUpBonus){
+      setSignUpBonus(0);
+      setBonusWarn(true);
     }
   }
   function handleBlur() {
@@ -205,7 +209,8 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       setIsClaimChecked(true);
     }
   }
-  function handleRewardLimitBlur() {
+  function handleRewardLimitBlur(e) {
+    const value = e.target.value;
     if (rewardLimit?.toString().length > 0) {
       setIsRewardLimitChecked(false);
     } else {
@@ -240,7 +245,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     mimeType: string
   ) {
     if (
-      base64.includes("storage.hipal.life" || "picsum.photos") ||
+      base64.includes("storage.hipal.life") ||
       base64.length === 0
     )
       return;
@@ -305,7 +310,6 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     ) {
       return toast.error("Please fill all the details");
     }
-    console.log("businessId", businessId);
     if (businessId === undefined || "") return;
     setLoading(true);
     const config = {
@@ -534,34 +538,6 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
               <>
                 <div className="px-4 h-[9rem] my-5 rounded-md border border-1 border-[#CACACA]">
                   <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
-                    Set the sign up Bonus (optional)
-                  </h1>
-                  <h6 className="mb-3.5 text-[#2B354D] opacity-50 text-sm">
-                    Customer&apos;s first signups will only get the bonus
-                  </h6>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      maxLength={5}
-                      className={`${
-                        bonusWarn &&
-                        (!signUpBonus || signUpBonus.toString().length === 0)
-                          ? "border border-red-500"
-                          : ""
-                      } w-full px-2.5 rounded-md pr-6`}
-                      placeholder="Enter Coinz"
-                      onChange={handleSignUpBonus}
-                      value={signUpBonus || ""}
-                    />
-                    {bonusWarn ? (
-                      <small style={{ color: "red" }}>
-                        * Max bonus coinz should be less than or equal to 5000
-                      </small>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="px-4 h-[9rem] my-5 rounded-md border border-1 border-[#CACACA]">
-                  <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
                     Set the coinz
                   </h1>
                   <h6 className="mb-3.5 text-[#2B354D] opacity-50 text-sm">
@@ -594,7 +570,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                   ) : null}
                 </div>
                 <div className="px-4 h-[9rem] my-5 rounded-md border border-1 border-[#CACACA]">
-                  <h1 className="mt-2.5 mb-1.5 text-sm font-semibold">
+                  <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
                     Set the maximum claim amount of the bill
                   </h1>
                   <h6 className="mb-3.5 text-[#2B354D] opacity-50 text-sm">
@@ -627,7 +603,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                   ) : null}
                 </div>
                 <div className="px-4 h-[6rem] my-5 rounded-md border border-1 border-[#CACACA]">
-                  <h1 className="mt-2.5 mb-1.5 text-sm font-semibold">
+                  <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
                     Set the expiry date for loyalty coinz.
                   </h1>
                   <div className="relative">
@@ -651,8 +627,8 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                   </div>
                 </div>
                 <div className="px-4 h-[6rem] my-5 rounded-md border border-1 border-[#CACACA]">
-                  <h1 className="mt-2.5 mb-1.5 text-sm font-semibold">
-                    Set the max reward limit
+                  <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
+                    Set the max reward limit (upto 5000)
                   </h1>
                   <div className="relative">
                     <input
@@ -676,6 +652,34 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                       * please enter reward limit
                     </div>
                   ) : null}
+                </div>
+                <div className="px-4 h-[9rem] my-5 rounded-md border border-1 border-[#CACACA]">
+                  <h1 className="mt-2.5 mb-1.5 text-base font-semibold">
+                    Set the sign up Bonus (optional)
+                  </h1>
+                  <h6 className="mb-3.5 text-[#2B354D] opacity-50 text-sm">
+                    Customer&apos;s first sign ups will only get the bonus
+                  </h6>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      maxLength={5}
+                      className={`${
+                        bonusWarn &&
+                        (!signUpBonus || signUpBonus.toString().length === 0)
+                          ? "border border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
+                      placeholder="Enter Coinz"
+                      onChange={handleSignUpBonus}
+                      value={signUpBonus || ""}
+                    />
+                    {bonusWarn ? (
+                      <small style={{ color: "red" }}>
+                        * Bonus coinz should be less than or equal to reward limit
+                      </small>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="px-4 h-28 my-5 rounded-md flex flex-col justify-center border border-1 border-[#CACACA]">
                   <div className="mb-2">
@@ -712,7 +716,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                 <div className="flex flex-col px-4 h-52 rounded-md border border-1 border-[#CACACA]">
                   <div className="my-4">
                     <h1 className="text-base font-semibold">
-                      Set up the loyality card for your users to see in the
+                      Set up the loyalty card for your users to see in the
                       digital menu
                     </h1>
                   </div>
@@ -774,7 +778,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
               <div className="px-4 h-[9.5rem] my-5 rounded-md border border-1 border-[#CACACA]">
                 <h1 className="mt-2.5 mb-1.5 text-base font-semibold">OTP</h1>
                 <h6 className="mb-3.5 text-[#2B354D] opacity-50 text-sm">
-                  Please enter the OTP send to the owner of exisitng loyalty
+                  Please enter the OTP send to the owner of existing loyalty
                   Business (valid till 3 days)
                 </h6>
                 <div>
