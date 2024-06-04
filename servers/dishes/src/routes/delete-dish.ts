@@ -24,10 +24,9 @@ router.delete(
           dishNotFound = true;
           return;
         }
-
         await Category.updateMany(
-          { dishes: dish._id },
-          { $pull: { dishes: dish._id } },
+          { _id: { $in: dish.categories } },
+          { $pull: { dishes: id } },
           { session: session }
         );
       });

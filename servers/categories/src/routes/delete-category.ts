@@ -25,12 +25,10 @@ router.delete(
           return;
         }
 
-        // @ts-ignore
-
         await Dish.updateMany(
-          // @ts-ignore
-          { _id: { $in: category.dishes.map((dish) => dish._id) } },
-          { $pull: { categories: id } }
+          { _id: { $in: category.dishes } },
+          { $pull: { categories: id } },
+          { session: session }
         );
       });
 
@@ -40,9 +38,12 @@ router.delete(
         });
       }
 
-      return res.status(204).send("ss");
+      return res.status(200).send("deleted");
     } catch (error) {
-      // handle error
+      console.error(error);
+      return res.status(500).send({
+        message: "An error occurred while deleting the category",
+      });
     }
   }
 );

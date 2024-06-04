@@ -197,6 +197,6 @@ const dishSchema = new mongoose.Schema<DishType>(
   }
 );
 
-const Dish: Model<DishType> = mongoose.model<DishType>("dish", dishSchema);
+const Dish: Model<DishType> = mongoose.model<DishType>("Dish", dishSchema);
 
 export { Dish };

@@ -66,7 +66,7 @@ router.post(
           // @ts-ignore
           { _id: { $in: categories } },
           // @ts-ignore
-          { $push: { dishes: dish._id } },
+          { $push: { dishes: dish[0]._id } },
           { session: session }
         );
       });

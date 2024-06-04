@@ -10,38 +10,70 @@ import {
   ExtraType,
   KotExtraType,
 } from "@hi/db-models/src/validators";
+import { ClientSession } from "mongoose";
 
 const router = express.Router();
 
 router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
-  await runInTransaction(async (session) => {
-    const { id } = req.params;
-    const update = { ...req.body } as DishType;
-    const dish = await Dish.findByIdAndUpdate<DishType>(
-      id,
-      { $set: update },
+  const { id } = req.params;
+  const update = { ...req.body } as DishType;
 
-      { session: session }
-    );
-    if (!dish) {
-      res.status(404).send({
+  let updatedDish: DishType | null = null;
+  let dishNotFound = false;
+
+  try {
+    await runInTransaction(async (session: ClientSession) => {
+      const dish = await Dish.findById(id).session(session);
+
+      if (!dish) {
+        dishNotFound = true;
+        return;
+      }
+
+      const currentCategories = dish.categories || [];
+      const updatedCategories = update.categories || [];
+
+      // Update the dish
+      updatedDish = await Dish.findByIdAndUpdate<DishType>(
+        id,
+        { $set: update },
+        { new: true, session: session }
+      );
+
+      // Handle new categories added to the dish
+      const newCategories = updatedCategories.filter(
+        (category: string) => !currentCategories.includes(category)
+      );
+      await Category.updateMany(
+        { _id: { $in: newCategories } },
+        { $addToSet: { dishes: id } },
+        { session: session }
+      );
+
+      // Handle existing categories removed from the dish
+      const removedCategories = currentCategories.filter(
+        (category) => !updatedCategories.includes(category)
+      );
+      await Category.updateMany(
+        { _id: { $in: removedCategories } },
+        { $pull: { dishes: id } },
+        { session: session }
+      );
+    });
+
+    if (dishNotFound) {
+      return res.status(404).send({
         message: "Dish not found",
       });
-      return;
     }
 
-    // const categories = await Category.find({ dishes: dish._id });
-    // for (let i = 0; i < categories.length; i++) {
-    //   const category = categories[i];
-    //   if (category.dishes.includes(dish._id.toString())) {
-    //     category.dishes = category.dishes.filter(
-    //       (dishId) => dishId.toString() !== dish._id.toString()
-    //     );
-    //     await category.save();
-    //   }
-    // }
-    res.status(200).send(dish);
-  });
+    return res.status(200).send("updated successFully");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      message: "An error occurred while updating the dish",
+    });
+  }
 });
 
 router.put(

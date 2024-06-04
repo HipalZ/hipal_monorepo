@@ -59,11 +59,14 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
       if (!category) {
         throw new Error("Category creation failed");
       }
-      console.log("dish", dishes);
+      // throw new Error("Category creation failed");
       // @ts-ignore
-      const categoryId = category._id;
-      const g = await Dish.find();
-      console.log("Category created", g);
+      const categoryId = category[0]._id;
+      let dish = await Dish.updateMany(
+        { _id: { $in: dishes } },
+        { $push: { categories: categoryId } },
+        { session }
+      );
     });
 
     return res.status(201).send("Category created");
