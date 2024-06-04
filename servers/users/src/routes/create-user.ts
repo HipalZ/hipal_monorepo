@@ -255,11 +255,11 @@ router.post(
     }
 
     // Generate JWT
-    const userJwt = createJWT(existingUser);
+    // const userJwt = createJWT(existingUser);
 
-    req.session = {
-      jwt: userJwt,
-    };
+    // req.session = {
+    //   jwt: userJwt,
+    // };
     res.status(201).send(existingUser);
   }
 );
@@ -433,11 +433,11 @@ router.post(
           .status(400)
           .send({ status: false, message: "Phone or Password invalid...!" });
       }
-      const userJwt = createJWT(existingUser);
+      // const userJwt = createJWT(existingUser);
 
-      req.session = {
-        jwt: userJwt,
-      };
+      // req.session = {
+      //   jwt: userJwt,
+      // };
       res.status(200).send(existingUser);
     } else {
       const existingUser = await User.findOne({
@@ -449,11 +449,11 @@ router.post(
           .status(400)
           .send({ status: false, message: "Phone  invalid...!" });
       }
-      const userJwt = createJWT(existingUser);
+      // const userJwt = createJWT(existingUser);
 
-      req.session = {
-        jwt: userJwt,
-      };
+      // req.session = {
+      //   jwt: userJwt,
+      // };
       res.status(200).send(existingUser);
     }
   }

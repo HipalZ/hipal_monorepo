@@ -30,7 +30,6 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
 
   try {
     await runInTransaction(async (session: ClientSession) => {
-      console.log("req.body", req.body);
       const category = await Category.create(
         [
           {
@@ -57,18 +56,14 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
         }
       );
 
-      console.log("categorycree", category);
-
       if (!category) {
         throw new Error("Category creation failed");
       }
+      console.log("dish", dishes);
       // @ts-ignore
       const categoryId = category._id;
-      await Dish.updateMany(
-        { _id: { $in: dishes } },
-        { $push: { categories: categoryId } },
-        { session }
-      );
+      const g = await Dish.find();
+      console.log("Category created", g);
     });
 
     return res.status(201).send("Category created");

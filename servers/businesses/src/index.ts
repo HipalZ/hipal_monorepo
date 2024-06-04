@@ -42,9 +42,7 @@ const start = async () => {
   // process.on('SIGINT', () => natsWrapper.client.close());
   // process.on('SIGTERM', () => natsWrapper.client.close());
 
-  await mongoose.connect(
-    "mongodb+srv://hipalz:ZYfCIKE6ke5FxJqx@cluster0.5qdkual.mongodb.net/businesses"
-  );
+  await mongoose.connect(process.env.MONGO_URL as string);
   console.log("connected to mongodb");
 
   // if (process.env.NODE_ENV === 'production') {

@@ -158,8 +158,9 @@ const dishSchema = new mongoose.Schema<DishType>(
       default: [],
     },
     kitchenId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: "Kitchen",
     },
     filters: {
       type: filtersSchema,
