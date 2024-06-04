@@ -14,6 +14,7 @@ interface IAddStaff {
   getStaff: () => void;
 }
 interface IRole {
+  _id: string;
   id: string;
   name: string;
   permissions: string[];
@@ -114,11 +115,11 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
       role: "RESTAURANT_MANAGER",
       customRole: selectedRole
         ? {
-          businessId: businessId,
-          customRoleId: selectedRole.id,
-          permissions: selectedRole.permissions,
-          roleName: selectedRole.name,
-        }
+            businessId: businessId,
+            customRoleId: selectedRole.id,
+            permissions: selectedRole.permissions,
+            roleName: selectedRole.name,
+          }
         : null,
       accessControl: {
         dish: hibizSubServices.addAndDeleteItems.value,
@@ -152,13 +153,18 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
     }
   };
 
-  const { isLoading, error, data:roles, refetch } = useQuery({
-    queryKey: ['roles', businessId],
+  const {
+    isLoading,
+    error,
+    data: roles,
+    refetch,
+  } = useQuery({
+    queryKey: ["roles", businessId],
     queryFn: getAllRoles,
     enabled: !!businessId,
-  })
+  });
 
-  if (error) return <ErrorComponent refetch={refetch} />
+  if (error) return <ErrorComponent refetch={refetch} />;
 
   return (
     <>
@@ -199,7 +205,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
               Phone {errors.name && <span className="text-red-500">*</span>}
             </span>
             <input
-            maxLength={10}
+              maxLength={10}
               onChange={(e) => {
                 const value = e.target.value;
                 // Allow only digits and limit to 10 digits
@@ -220,14 +226,14 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
             <select
               onChange={(e) => {
                 const selectedRoleId = e.target.value;
-                const role = roles.find((r: IRole) => r.id === selectedRoleId);
+                const role = roles.find((r: IRole) => r._id === selectedRoleId);
                 setSelectedRole(role ?? null);
               }}
               className="block w-full rounded-md"
             >
               <option value="">Select Role</option>
               {roles?.map((role: IRole) => (
-                <option key={role?.id} value={role?.id}>
+                <option key={role?._id} value={role?._id}>
                   {role?.name}
                 </option>
               ))}

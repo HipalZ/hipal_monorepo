@@ -291,9 +291,8 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       setPasswordChecked(false);
     }
     if (!isValid) return toast.error("Please fill all the details");
-    // const imageFile = await base64ToFile(logo, "image.jpg", "image/jpeg");
-    const imageUrl = "https://picsum.photos/200/300";
-    // await storeImageFiles(imageFile as File);
+    const imageFile = await base64ToFile(logo, "image.jpg", "image/jpeg");
+    const imageUrl = await storeImageFiles(imageFile as File);
     if (imageUrl !== undefined) {
       setLogo(imageUrl);
     } else {

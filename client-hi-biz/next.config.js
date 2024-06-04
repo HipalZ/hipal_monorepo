@@ -46,7 +46,6 @@ const nextConfig = withPWA({
 			"pal-tribe.s3.ap-south-1.amazonaws.com",
 			"storage.hipal.life",
 			"dev.storage.hipal.life",
-			"picsum.photos",
 		],
 		//   // formats: ['image/avif', 'image/webp'],
 		//   minimumCacheTTL: 3600,

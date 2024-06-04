@@ -76,15 +76,12 @@ function TaxAndCharges() {
     }
 
     try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_HOST}/v1/businesses/${businessId}`,
-        {
-          serviceCharge: true,
-          serviceChargePercentage: Number(percentage),
-          serviceChargeRemovalPass:
-            password || businessData?.serviceChargeRemovalPass,
-        }
-      );
+      const response = await axios.put(`/v1/businesses/${businessId}`, {
+        serviceCharge: true,
+        serviceChargePercentage: Number(percentage),
+        serviceChargeRemovalPass:
+          password || businessData?.serviceChargeRemovalPass,
+      });
       setBusinessData(response.data);
       toast.success("Service Charges added successfully");
     } catch (error) {
@@ -181,7 +178,7 @@ function TaxAndCharges() {
       try {
         const response = await axios.delete(
           `/v1/dishes/:id/getCharges/${chargeId}`
-        ); 
+        );
 
         if (response.status === 200 || response.status === 201) {
           getAllTaxes();
@@ -209,21 +206,21 @@ function TaxAndCharges() {
     }
   };
 
-  const {isLoading, error, data} = useQuery({
-    queryKey:["getCharges", businessId],
-    queryFn:getAllTaxes,
-    enabled: !! businessId,
-  })
+  // const { isLoading, error, data } = useQuery({
+  //   queryKey: ["getCharges", businessId],
+  //   queryFn: getAllTaxes,
+  //   enabled: !!businessId,
+  // });
 
-  if(isLoading) return <LoadingSpinner />
-  if(error) return <div>Error: {error.message}</div>
+  // if (isLoading) return <LoadingSpinner />;
+  // if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div className="relative bg-white">
       <div className="bg-[#f5f5f5] sticky top-0 z-50 w-full border-b border-[#CACACA]">
         <Header
           title="Charges"
-          onBack={()=>setSelectedIcon("")}
+          onBack={() => setSelectedIcon("")}
           leftIcon={<BsChevronLeft />}
           centerImage={Hi}
           rightImage={Hi}
