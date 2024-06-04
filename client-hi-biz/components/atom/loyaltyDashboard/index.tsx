@@ -63,7 +63,7 @@ const LoyaltyDashboard = () => {
 	const getData = async () => {
 		const config = {
 			method: "GET",
-			url: `${process.env.NEXT_PUBLIC_API_HOST}/v1/users/:businessId/loyaltyDashboard?loyaltyId=${loyaltyId}`,
+			url: `/v1/users/:businessId/loyaltyDashboard?loyaltyId=${loyaltyId}`,
 		};
 		try {
 			const response = await axios(config);

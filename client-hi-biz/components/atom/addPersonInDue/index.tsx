@@ -1,4 +1,4 @@
-import axios from '@/axios';
+import axios from "@/axios";
 import { useRouter } from "next/router";
 import type React from "react";
 import { memo, useEffect, useRef, useState } from "react";
@@ -23,7 +23,7 @@ const AddPersonInDue: React.FC<AddPersonInDueProps> = ({ closeModal }) => {
 
     const config = {
       method: "POST",
-      url: `${process.env.NEXT_PUBLIC_API_HOST}/v1/payments/Create/Dues`,
+      url: `/v1/payments/Create/Dues`,
       data: {
         businessId: businessId,
         duesPersonNames: inputValue,
@@ -32,7 +32,7 @@ const AddPersonInDue: React.FC<AddPersonInDueProps> = ({ closeModal }) => {
 
     try {
       const response = await axios(config);
-      if(response){
+      if (response) {
         setInputValue("");
         toast.success("Person added successfully");
         closeModal();
@@ -73,11 +73,13 @@ const AddPersonInDue: React.FC<AddPersonInDueProps> = ({ closeModal }) => {
         maxLength={50}
       />
       <button
-        type='button'
+        type="button"
         onClick={addPerson}
-        className={`${isLoading ? 'pointer-events-none opacity-50' : ''} w-full mt-6 mx-auto on_active_bounce text-white bg-[#2B354D] px-4 py-2 rounded-lg`}
+        className={`${
+          isLoading ? "pointer-events-none opacity-50" : ""
+        } w-full mt-6 mx-auto on_active_bounce text-white bg-[#2B354D] px-4 py-2 rounded-lg`}
       >
-        {isLoading ? 'Loading...' : 'Add'}
+        {isLoading ? "Loading..." : "Add"}
       </button>
     </div>
   );

@@ -35,32 +35,37 @@ router.post(
 
     try {
       await runInTransaction(async (session: ClientSession) => {
-        const dish = new Dish({
-          businessId,
-          name,
-          price,
-          swiggy,
-          discount,
-          avgTime,
-          dishType,
-          categories,
-          portions,
-          extras,
-          kitchenId,
-          filters,
-          images,
-          description,
-          tags,
-          links,
-          visibility,
-          delayTime,
-          availability,
-        });
-
-        await dish.save({ session: session });
-
+        const dish = await Dish.create(
+          [
+            {
+              businessId,
+              name,
+              price,
+              swiggy,
+              discount,
+              avgTime,
+              dishType,
+              categories,
+              portions,
+              extras,
+              kitchenId,
+              filters,
+              images,
+              description,
+              tags,
+              links,
+              visibility,
+              delayTime,
+              availability,
+            },
+          ],
+          { session: session }
+        );
+        // @ts-ignore
         await Category.updateMany(
+          // @ts-ignore
           { _id: { $in: categories } },
+          // @ts-ignore
           { $push: { dishes: dish._id } },
           { session: session }
         );

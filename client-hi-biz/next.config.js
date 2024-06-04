@@ -41,12 +41,17 @@ const nextConfig = withPWA({
 	reactStrictMode: true,
 	swcMinify: true,
 	staticPageGenerationTimeout: 3600,
-	// images: {
-	//   domains: ["pal-tribe.s3.ap-south-1.amazonaws.com", "storage.hipal.life","dev.storage.hipal.life"],
-	//   // formats: ['image/avif', 'image/webp'],
-	//   minimumCacheTTL: 3600,
-	//   // unoptimized: true,
-	// },
+	images: {
+		domains: [
+			"pal-tribe.s3.ap-south-1.amazonaws.com",
+			"storage.hipal.life",
+			"dev.storage.hipal.life",
+			"picsum.photos",
+		],
+		//   // formats: ['image/avif', 'image/webp'],
+		//   minimumCacheTTL: 3600,
+		//   // unoptimized: true,
+	},
 	transpilePackages: [...Object.keys(dependencies)],
 	typescript: {
 		// !! WARN !!

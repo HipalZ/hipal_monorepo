@@ -4,7 +4,7 @@ import PopUp from "../popUp";
 import LoyalityCardPopup from "../loyalityCardPopup.tsx";
 import LoyalityCard from "../loyalityCard";
 import { useRouter } from "next/router";
-import axios from '@/axios';
+import axios from "@/axios";
 import { toast } from "react-toastify";
 import { useLoyalityData } from "@/components/store/useLoyality";
 import { isEmpty, set } from "lodash-es";
@@ -14,7 +14,15 @@ import { storeImageFiles } from "@/components/utils/helper";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useSelectedButtonStore } from "@/components/store/useSelectBtn";
 import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
-import { beans, bowl, bud, flower, love, triangleToDataurl, waveToDataUrl } from "../pathPattern";
+import {
+  beans,
+  bowl,
+  bud,
+  flower,
+  love,
+  triangleToDataurl,
+  waveToDataUrl,
+} from "../pathPattern";
 
 type ILoyalitySetUpProps = {
   existsLoyality: boolean;
@@ -37,7 +45,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
   const { setIsLoyaltyExists, isLoyaltyExists } = useBusinessData();
   const [isRewardChecked, setIsRewardChecked] = useState(false);
   const [expiryDateChecked, setExpiryDateChecked] = useState(false);
-  const [passwordChecked, setPasswordChecked] = useState(false)
+  const [passwordChecked, setPasswordChecked] = useState(false);
   const [isClaimChecked, setIsClaimChecked] = useState(false);
   const [isRewardLimitChecked, setIsRewardLimitChecked] = useState(false);
   const [otpValue, setOtpValue] = useState<number | null>(null);
@@ -63,7 +71,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     setRewardLimit,
     setExpiryDate,
     password,
-    setPassword
+    setPassword,
   } = useLoyalityData();
   const { businessId } = router.query as { businessId: string };
 
@@ -77,23 +85,23 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
   }
 
   const [bonusWarn, setBonusWarn] = useState(false);
-  function handleSignUpBonus(e:any){
+  function handleSignUpBonus(e: any) {
     let value = e.target.value;
-    if (value?.length < 5 && value<=5000) {
+    if (value?.length < 5 && value <= 5000) {
       value = Math.abs(value.replace(/[^0-9\b]/g, ""));
       setSignUpBonus(value);
-      setBonusWarn(false)
-      setTimeout(()=>{
-        setBonusWarn(false)
-      },5000)
-    }else{
-      setBonusWarn(true)
+      setBonusWarn(false);
+      setTimeout(() => {
+        setBonusWarn(false);
+      }, 5000);
+    } else {
+      setBonusWarn(true);
     }
   }
 
   function addExpiryDate(e: any) {
     const rawDate = e.target.value;
-    setExpiryDateChecked(false)
+    setExpiryDateChecked(false);
     setExpiryDate(rawDate);
   }
   const imageCardPattern = [
@@ -110,40 +118,44 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
 
     { love: love(fontColor).love },
 
-    { flower: flower(fontColor).flower },];
+    { flower: flower(fontColor).flower },
+  ];
 
   useEffect(() => {
     if (!existsLoyality) {
       setLoyaltyId("new");
     }
     if (existingLoyalty?.loyaltyId) {
-      setToggleSwitch(true)
-      const matchedPattern = imageCardPattern.find(pattern =>
+      setToggleSwitch(true);
+      const matchedPattern = imageCardPattern.find((pattern) =>
         Object.keys(pattern).includes(existingLoyalty?.cardPattern)
       );
       if (matchedPattern !== undefined) {
-        setCardPattern({ [existingLoyalty?.cardPattern]: matchedPattern[existingLoyalty?.cardPattern] });
+        setCardPattern({
+          [existingLoyalty?.cardPattern]:
+            matchedPattern[existingLoyalty?.cardPattern],
+        });
       }
       setFontColor(existingLoyalty?.fontColor);
       setPassword(existingLoyalty?.password);
-      setLogo(existingLoyalty?.logo)
-      setCroppedImage(existingLoyalty?.logo)
-      setRewardLimit(existingLoyalty?.rewardLimit)
+      setLogo(existingLoyalty?.logo);
+      setCroppedImage(existingLoyalty?.logo);
+      setRewardLimit(existingLoyalty?.rewardLimit);
       setRewardsValue(existingLoyalty?.setReward);
       setSignUpBonus(existingLoyalty?.signUpBonus);
       setMaximumClaim(existingLoyalty?.setClaimAmount);
-      setExpiryDate(existingLoyalty?.expiryDate)
+      setExpiryDate(existingLoyalty?.expiryDate);
     } else {
       setFontColor("");
       setPassword("");
-      setRewardLimit(0)
+      setRewardLimit(0);
       setRewardsValue(0);
       setSignUpBonus(0);
       setMaximumClaim(0);
-      setExpiryDate("")
-      setLogo(defaultLogo || '')
-      setFontColor(themes?.primaryColor)
-      setCardColor(themes?.secondaryColor)
+      setExpiryDate("");
+      setLogo(defaultLogo || "");
+      setFontColor(themes?.primaryColor);
+      setCardColor(themes?.secondaryColor);
     }
   }, []);
   const closeModal = () => {
@@ -170,7 +182,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
   }
   function handlePassword(e: any) {
     setPassword(e.target.value);
-    setPasswordChecked(false)
+    setPasswordChecked(false);
   }
   function setupRewardLimit(e: any) {
     let value = e.target.value;
@@ -227,8 +239,12 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     filename: string,
     mimeType: string
   ) {
-    if (base64.includes("storage.hipal.life") || base64.length === 0) return;
-    const byteString = atob(base64.split(",")[1]);
+    if (
+      base64.includes("storage.hipal.life" || "picsum.photos") ||
+      base64.length === 0
+    )
+      return;
+    const byteString = atob(base64?.split(",")[1]);
     const arrayBuffer = new ArrayBuffer(byteString.length);
     const intArray = new Uint8Array(arrayBuffer);
 
@@ -258,9 +274,9 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     }
     if (expiryDate === "") {
       isValid = false;
-      setExpiryDateChecked(true)
+      setExpiryDateChecked(true);
     } else {
-      setExpiryDateChecked(false)
+      setExpiryDateChecked(false);
     }
     if (!rewardLimit || rewardLimit.toString().length === 0) {
       setIsRewardLimitChecked(true);
@@ -269,14 +285,15 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       setIsRewardLimitChecked(false);
     }
     if (password === "") {
-      setPasswordChecked(true)
+      setPasswordChecked(true);
       isValid = false;
     } else {
-      setPasswordChecked(false)
+      setPasswordChecked(false);
     }
     if (!isValid) return toast.error("Please fill all the details");
-    const imageFile = await base64ToFile(logo, "image.jpg", "image/jpeg");
-    const imageUrl = await storeImageFiles(imageFile as File);
+    // const imageFile = await base64ToFile(logo, "image.jpg", "image/jpeg");
+    const imageUrl = "https://picsum.photos/200/300";
+    // await storeImageFiles(imageFile as File);
     if (imageUrl !== undefined) {
       setLogo(imageUrl);
     } else {
@@ -289,7 +306,8 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     ) {
       return toast.error("Please fill all the details");
     }
-    if (businessId === undefined || '') return;
+    console.log("businessId", businessId);
+    if (businessId === undefined || "") return;
     setLoading(true);
     const config = {
       method: "POST",
@@ -300,7 +318,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
         setReward: rewardsValue,
         expiryDate: expiryDate,
         rewardLimit: rewardLimit,
-        signUpBonus:signUpBonus,
+        signUpBonus: signUpBonus,
         setClaimAmount: maximumClaim,
         password: password,
         origin: origin,
@@ -318,7 +336,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       }
       setIsLoyaltyExists(!isEmptyData);
       if (response?.status === 200 || response?.status === 201) {
-        setExistingLoyalty(response?.data)
+        setExistingLoyalty(response?.data);
         toast.success("Loyality added successfully");
       }
     } catch (error) {
@@ -344,9 +362,9 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     }
     if (expiryDate === "") {
       isValid = false;
-      setExpiryDateChecked(true)
+      setExpiryDateChecked(true);
     } else {
-      setExpiryDateChecked(false)
+      setExpiryDateChecked(false);
     }
     if (!rewardLimit || rewardLimit.toString().length === 0) {
       setIsRewardLimitChecked(true);
@@ -355,10 +373,10 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       setIsRewardLimitChecked(false);
     }
     if (password === "") {
-      setPasswordChecked(true)
+      setPasswordChecked(true);
       isValid = false;
     } else {
-      setPasswordChecked(false)
+      setPasswordChecked(false);
     }
     if (!isValid) return toast.error("Please fill all the details");
 
@@ -369,37 +387,32 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
     } else {
       setLogo(logo);
     }
-    if (
-      rewardsValue === undefined ||
-      maximumClaim === undefined
-    ) {
+    if (rewardsValue === undefined || maximumClaim === undefined) {
       return toast.error("Please fill all the details");
     }
     const config = {
-      method: 'PUT',
+      method: "PUT",
       url: `/v1/businesses/${businessId}/updateLoyalty`,
       data: {
         setReward: rewardsValue,
         expiryDate: expiryDate,
         rewardLimit: rewardLimit,
         setClaimAmount: maximumClaim,
-        signUpBonus:signUpBonus,
+        signUpBonus: signUpBonus,
         password: password,
         cardPattern: cardPattern && Object.keys(cardPattern)[0],
         cardColor: cardColor,
         fontColor: fontColor,
         logo: imageUrl === undefined ? logo : imageUrl,
       },
-    }
+    };
     try {
       const response = await axios(config);
       if (response.status === 200 || response.status === 201) {
         toast.success("Loyality updated successfully");
-        setExistingLoyalty(response?.data)
+        setExistingLoyalty(response?.data);
       }
-    } catch (err) {
-
-    }
+    } catch (err) {}
   }
   async function handleOtp(e: any) {
     const value = e.target.value;
@@ -420,8 +433,8 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
       if (response.status === 200 || response.status === 201) {
         toast.success("Loyality added successfully");
         setExistingLoyalty((prev) => {
-          return { ...prev, loyaltyId: loyaltyValue }
-        })
+          return { ...prev, loyaltyId: loyaltyValue };
+        });
       }
     } catch (error) {
       toast.error("Error adding Loyality. Please try again later.");
@@ -452,8 +465,9 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
         {toggleSwitch && (
           <>
             <div
-              className={`px-4 ${loyaltyId === "new" ? "h-[10.5rem]" : "h-[12.5rem]"
-                } my-5 rounded-md border border-1 border-[#CACACA]`}
+              className={`px-4 ${
+                loyaltyId === "new" ? "h-[10.5rem]" : "h-[12.5rem]"
+              } my-5 rounded-md border border-1 border-[#CACACA]`}
             >
               <h1 className="mt-2.5 text-base font-semibold">
                 Choose the type of loyality
@@ -461,21 +475,29 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
               <div className="flex mt-3.5">
                 <div className="pointer-events-none opacity-50">
                   {/* // onClick={existsLoyality ? showError : () => existingId("existing")} */}
-                  <button type="button"
-                    className={`${loyaltyId === "existing"
-                      ? "bg-[#2B354D] text-white"
-                      : "bg-white text-[#2B354D]"
-                      } text-sm on_active_bounce rounded-md border border-1 border-[#2B354D] px-2.5 py-1.5`}
+                  <button
+                    type="button"
+                    className={`${
+                      loyaltyId === "existing"
+                        ? "bg-[#2B354D] text-white"
+                        : "bg-white text-[#2B354D]"
+                    } text-sm on_active_bounce rounded-md border border-1 border-[#2B354D] px-2.5 py-1.5`}
                   >
                     Use an Existing ID
                   </button>
                 </div>
-                <div onKeyDown={() => createNewId("new")} onClick={() => createNewId("new")} className="ml-4">
-                  <button type="button"
-                    className={`${loyaltyId === "new"
-                      ? "bg-[#2B354D] text-white"
-                      : "bg-white text-[#2B354D]"
-                      } text-sm on_active_bounce rounded-md px-2.5 py-1.5 border border-1 border-[#2B354D]`}
+                <div
+                  onKeyDown={() => createNewId("new")}
+                  onClick={() => createNewId("new")}
+                  className="ml-4"
+                >
+                  <button
+                    type="button"
+                    className={`${
+                      loyaltyId === "new"
+                        ? "bg-[#2B354D] text-white"
+                        : "bg-white text-[#2B354D]"
+                    } text-sm on_active_bounce rounded-md px-2.5 py-1.5 border border-1 border-[#2B354D]`}
                   >
                     Create a New ID
                   </button>
@@ -522,16 +544,21 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     <input
                       type="text"
                       maxLength={5}
-                      className={`${bonusWarn &&
+                      className={`${
+                        bonusWarn &&
                         (!signUpBonus || signUpBonus.toString().length === 0)
-                        ? "border border-red-500"
-                        : ""
-                        } w-full px-2.5 rounded-md pr-6`}
+                          ? "border border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Enter Coinz"
                       onChange={handleSignUpBonus}
                       value={signUpBonus || ""}
                     />
-                    {bonusWarn ? <small style={{color:'red'}}>* Max bonus coinz should be less than or equal to 5000</small> : null}
+                    {bonusWarn ? (
+                      <small style={{ color: "red" }}>
+                        * Max bonus coinz should be less than or equal to 5000
+                      </small>
+                    ) : null}
                   </div>
                 </div>
                 <div className="px-4 h-[9rem] my-5 rounded-md border border-1 border-[#CACACA]">
@@ -545,11 +572,12 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     <input
                       type="text"
                       maxLength={5}
-                      className={`${isRewardChecked &&
+                      className={`${
+                        isRewardChecked &&
                         (!rewardsValue || rewardsValue.toString().length === 0)
-                        ? "border border-red-500"
-                        : ""
-                        } w-full px-2.5 rounded-md pr-6`}
+                          ? "border border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Percentage"
                       onBlur={handleBlur}
                       onChange={settingUpReward}
@@ -560,7 +588,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     </span>
                   </div>
                   {isRewardChecked &&
-                    (!rewardsValue || rewardsValue.toString().length === 0) ? (
+                  (!rewardsValue || rewardsValue.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter reward value
                     </div>
@@ -576,11 +604,12 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                   <div className="relative">
                     <input
                       type="text"
-                      className={`${isClaimChecked &&
+                      className={`${
+                        isClaimChecked &&
                         (!maximumClaim || maximumClaim.toString().length === 0)
-                        ? "border border-red-500"
-                        : ""
-                        } w-full px-2.5 rounded-md pr-6`}
+                          ? "border border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Percentage"
                       onBlur={handleClaimBlur}
                       onChange={settingUpClaim}
@@ -592,7 +621,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     </span>
                   </div>
                   {isClaimChecked &&
-                    (!maximumClaim || maximumClaim.toString().length === 0) ? (
+                  (!maximumClaim || maximumClaim.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter maximum claim value
                     </div>
@@ -603,14 +632,22 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     Set the expiry date for loyalty coinz.
                   </h1>
                   <div className="relative">
-                    <select value={expiryDate} onChange={addExpiryDate} className={`${expiryDateChecked ? "border border-1 border-red-500" : ""} w-full px-2.5 rounded-md pr-6`}>
-                      <option value=''>Select Expiry Date</option>
-                      <option value='183'>6 months</option>
-                      <option value='365'>1 year</option>
-                      <option value='730'>2 years</option>
-                      <option value='1095'>3 years</option>
-                      <option value='1460'>4 years</option>
-                      <option value='1825'>5 years</option>
+                    <select
+                      value={expiryDate}
+                      onChange={addExpiryDate}
+                      className={`${
+                        expiryDateChecked
+                          ? "border border-1 border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
+                    >
+                      <option value="">Select Expiry Date</option>
+                      <option value="183">6 months</option>
+                      <option value="365">1 year</option>
+                      <option value="730">2 years</option>
+                      <option value="1095">3 years</option>
+                      <option value="1460">4 years</option>
+                      <option value="1825">5 years</option>
                     </select>
                   </div>
                 </div>
@@ -621,11 +658,12 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                   <div className="relative">
                     <input
                       type="text"
-                      className={`${isRewardLimitChecked &&
+                      className={`${
+                        isRewardLimitChecked &&
                         (!rewardLimit || rewardLimit.toString().length === 0)
-                        ? "border border-red-500"
-                        : ""
-                        } w-full px-2.5 rounded-md pr-6`}
+                          ? "border border-red-500"
+                          : ""
+                      } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Reward limit"
                       onBlur={handleRewardLimitBlur}
                       onChange={setupRewardLimit}
@@ -634,7 +672,7 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     />
                   </div>
                   {isRewardLimitChecked &&
-                    (!rewardLimit || rewardLimit.toString().length === 0) ? (
+                  (!rewardLimit || rewardLimit.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter reward limit
                     </div>
@@ -653,11 +691,14 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                       maxLength={4}
                       onChange={handlePassword}
                       value={password || ""}
-                      className={`${passwordChecked ? 'border border-red-500' : ''} w-full px-2.5 rounded-md pl-4 pr-10 mb-0 ml-0 mr-0 bg-white text-base text-gray-900 bg-transparent border-gray-800 border dark:text-white focus:outline-none focus:border-[#4071F1] dark:border-gray-600 peer`}
+                      className={`${
+                        passwordChecked ? "border border-red-500" : ""
+                      } w-full px-2.5 rounded-md pl-4 pr-10 mb-0 ml-0 mr-0 bg-white text-base text-gray-900 bg-transparent border-gray-800 border dark:text-white focus:outline-none focus:border-[#4071F1] dark:border-gray-600 peer`}
                       placeholder="Enter Password (Max 4 characters)"
                       required
                     />
-                    <button type="button"
+                    <button
+                      type="button"
                       onClick={togglePasswordVisibility}
                       className="absolute flex items-center justify-center w-6 h-6 text-gray-500 rounded-full top-2 right-2 focus:outline-none"
                     >
@@ -693,28 +734,38 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
                     className="mt-auto ml-auto mb-4"
                     onClick={() => setCardModal(true)}
                   >
-                    <button type="button" className="hover:underline text-[#2F80ED] text-base font-semibold">
+                    <button
+                      type="button"
+                      className="hover:underline text-[#2F80ED] text-base font-semibold"
+                    >
                       Edit
                     </button>
                   </div>
                 </div>
                 <div className="mt-6 sticky bottom-5">
-                  <button type="button"
-                    onClick={isLoyaltyExists ? (e) => handleUpdateLoyalty(e, businessId) : (e) => saveLoyalityData(e, businessId)}
+                  <button
+                    type="button"
+                    onClick={
+                      isLoyaltyExists
+                        ? (e) => handleUpdateLoyalty(e, businessId)
+                        : (e) => saveLoyalityData(e, businessId)
+                    }
                     className="text-white rounded-md bg-[#2B354D] py-2.5 w-full"
                   >
-                    {`${!existsLoyality ? 'Save' : 'Update'}`}
+                    {`${!existsLoyality ? "Save" : "Update"}`}
                   </button>
                 </div>
               </>
             )}
             {loyaltyId === "existing" && !openOtp && (
               <div onKeyDown={sendAlert} onClick={sendAlert} className="mt-6">
-                <button type="button"
-                  className={`${loyaltyValue.length === 24
-                    ? "opacity-100 pointer-events-auto on_active_bounce "
-                    : "pointer-events-none opacity-50"
-                    } text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+                <button
+                  type="button"
+                  className={`${
+                    loyaltyValue.length === 24
+                      ? "opacity-100 pointer-events-auto on_active_bounce "
+                      : "pointer-events-none opacity-50"
+                  } text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
                 >
                   Send an Alert
                 </button>
@@ -741,11 +792,14 @@ const LoyalitySetup = ({ existsLoyality }: ILoyalitySetUpProps) => {
             )}
             {loyaltyId === "existing" && openOtp && (
               <div className="mt-6">
-                <button type="button"
+                <button
+                  type="button"
                   onClick={handleExistingData}
-                  className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+                  className={`${
+                    loading ? "pointer-events-none opacity-50" : ""
+                  } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
                 >
-                  {loading ? 'Loading...' : 'Verify and Save'}
+                  {loading ? "Loading..." : "Verify and Save"}
                 </button>
               </div>
             )}

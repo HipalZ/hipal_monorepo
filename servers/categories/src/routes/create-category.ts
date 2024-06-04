@@ -26,30 +26,32 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
     dishes,
     availability,
     charges,
-  } = req.body as CategoryType;
+  } = req.body;
 
   try {
     await runInTransaction(async (session: ClientSession) => {
       console.log("req.body", req.body);
       const category = await Category.create(
-        {
-          businessId,
-          name,
-          visibility,
-          timerOn,
-          timerStart,
-          timerEnd,
-          availableDays,
-          hierarchy,
-          parentCategory,
-          parentCategoryId,
-          coverImage,
-          links,
-          dishes,
-          availability,
-          charges,
-          version: 0,
-        },
+        [
+          {
+            businessId,
+            name,
+            visibility,
+            timerOn,
+            timerStart,
+            timerEnd,
+            availableDays,
+            hierarchy,
+            parentCategory,
+            parentCategoryId,
+            coverImage,
+            links,
+            dishes,
+            availability,
+            charges,
+            version: 0,
+          },
+        ],
         {
           session: session,
         }
