@@ -25,6 +25,7 @@ export const loyaltySchema = z.object({
   expiryDate: z.string().optional(),
   loyaltyExpiryDate: z.number(),
   rewardLimit: z.number(),
+  signUpBonus: z.number(),
 });
 
 export type LoyaltyType = z.infer<typeof loyaltySchema>;

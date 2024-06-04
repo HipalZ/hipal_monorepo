@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
-import { Business, LoyaltySettings } from "@hi/db-models";
+import { Business, LoyaltySettings, Role } from "@hi/db-models";
 import axios from "axios";
+import { currentUser } from "@hipal/common";
 
 const router = express.Router();
 
@@ -321,6 +322,24 @@ router.post(
     } catch (err: any) {
       console.log("err", err);
     }
+  }
+);
+
+router.post(
+  "/v1/businesses/:id/roles",
+
+  async (req: Request, res: Response) => {
+    const { name, description, permissions } = req.body;
+    const { id } = req.params;
+
+    const role = await Role.create({
+      name,
+      businessId: id,
+      description,
+      permissions,
+    });
+
+    res.status(201).send(role);
   }
 );
 

@@ -24,3 +24,4 @@ export * from "./kotPassword";
 export * from "./waiterKots";
 export * from "./printer";
 export * from "./userBill";
+export * from "./role";

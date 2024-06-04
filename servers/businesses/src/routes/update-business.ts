@@ -35,6 +35,7 @@ router.put(
       logo,
       expiryDate,
       rewardLimit,
+      signUpBonus,
     } = req.body;
     const existingLoyalty = await LoyaltySettings.findOneAndUpdate(
       { businessId: id },
@@ -49,6 +50,7 @@ router.put(
         logo,
         expiryDate,
         rewardLimit,
+        signUpBonus,
       },
       {
         new: true,

@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { Business, LoyaltySettings } from "@hi/db-models";
+import { Business, LoyaltySettings, Role } from "@hi/db-models";
 
 const router = express.Router();
 
@@ -197,6 +197,28 @@ router.get(
     } catch (err: any) {
       console.log("err", err);
     }
+  }
+);
+
+router.get("/v1/businesses/roles/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const existingRoles = await Role.findById(id);
+
+  res.status(200).send(existingRoles);
+});
+
+router.get(
+  "/v1/businesses/:id/roles",
+  // currentUser,
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  async (req: Request, res: Response) => {
+    console.log("aaaaa");
+    const { id } = req.params;
+    const existingRoles = await Role.find({
+      businessId: id,
+    });
+
+    res.status(200).send(existingRoles);
   }
 );
 

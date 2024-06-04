@@ -51,6 +51,10 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     rewardLimit: {
       type: Number,
     },
+    signUpBonus: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
