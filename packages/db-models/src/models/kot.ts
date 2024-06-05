@@ -12,15 +12,15 @@ const kotExtraSchema = new mongoose.Schema<KotExtraType>(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
     },
     price: {
       type: Number,
-      required: true,
+      required: false,
     },
     qty: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   {
@@ -32,11 +32,11 @@ const kotPortionSchema = new mongoose.Schema<KotPortionType>(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
     },
     price: {
       type: Number,
-      required: true,
+      required: false,
     },
     discount: {
       type: Number,
@@ -44,7 +44,7 @@ const kotPortionSchema = new mongoose.Schema<KotPortionType>(
     },
     default: {
       type: Boolean,
-      required: true,
+      required: false,
     },
   },
   {
@@ -113,10 +113,12 @@ const kotDishSchema = new mongoose.Schema<KotDishType>(
     extras: {
       type: [kotExtraSchema],
       required: false,
+      default: [],
     },
     portions: {
-      type: [kotPortionSchema],
+      type: kotPortionSchema,
       required: false,
+      default: {},
     },
   },
   {

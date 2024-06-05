@@ -273,7 +273,7 @@ const cartToKots = (
         tableId: tableId,
         staffId: "5",
         dish: {
-          dishId: dish?.dishId,
+          dishId: dish?.dishData._id,
           name: dish?.dishData?.name,
           price: dish?.dishData?.price,
           qty: 1,
@@ -544,15 +544,14 @@ router.post(
             kotDate: kotDate,
           };
         });
+
         await Kot.insertMany(kots, { session });
 
         const query = {
           tableId,
           status: "UNPAID",
         };
-        const existingKOTs = await Kot.find(query, { session }).select(
-          "dishStatus"
-        );
+        const existingKOTs = await Kot.find(query).select("dishStatus");
 
         const totalDish = existingKOTs?.length;
         let delivered = 0;
@@ -578,8 +577,10 @@ router.post(
           throw err;
         }
       });
-      if (responseMessage === "KOT created successfully") {
-        return res.status(201).send({ status: true, data: responseMessage });
+      if (responseMessage == "KOT created successfully") {
+        return res
+          .status(201)
+          .send({ status: true, data: "KOT created successfully" });
       } else {
         return res.status(400).send(responseMessage);
       }

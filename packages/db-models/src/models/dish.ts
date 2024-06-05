@@ -64,7 +64,7 @@ const filtersSchema = new mongoose.Schema<FiltersType>(
     dishes: {
       type: [ObjectId],
       required: false,
-      ref: "dish",
+      ref: "Dish",
     },
     timeToConsume: {
       type: Number,
@@ -156,6 +156,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: [ObjectId],
       required: false,
       default: [],
+      ref: "Extra",
     },
     kitchenId: {
       type: ObjectId,

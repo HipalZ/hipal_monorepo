@@ -32,7 +32,7 @@ const Dish = z.object({
   qty: z.number(),
   comments: z.string(),
   extras: z.array(Extra),
-  portions: z.array(Portion),
+  portions: Portion,
 });
 
 const KOTAttrs = z.object({

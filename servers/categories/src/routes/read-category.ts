@@ -102,41 +102,17 @@ router.get(
     try {
       const { businessId } = req.query;
 
-      const dishesData: any = await Dish.find({ businessId }).select(
-        "name price dishType portions.name portions.price extras images description id kitchenId  availability visibility"
-      );
-      const _categoryData = await Category.find({ businessId }).select(
-        "name  visibility hierarchy parentCategoryId parentCategory id dishes availability visibility"
-      );
-      const data = {} as any;
-
-      const categories = () => {
-        let result = [] as any;
-
-        _categoryData?.forEach((category: CategoryType) => {
-          const newCategory: CategoryType = JSON.parse(
-            JSON.stringify(category)
-          );
-          newCategory.dishes = [] as any;
-
-          for (let dish of category?.dishes as any) {
-            const newDish: any = dishesData?.data.find(
-              (d: any) => d.id === dish.id
-            );
-
-            if (!!newDish)
-              newCategory.dishes = [...newCategory.dishes, newDish];
-          }
-
-          if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory];
+      const _categoryData = await Category.find({ businessId })
+        .select(
+          "name  visibility hierarchy parentCategoryId parentCategory id  availability visibility"
+        )
+        .populate({
+          path: "dishes",
+          populate: {
+            path: "extras",
+          },
         });
-
-        return result;
-      };
-
-      data["categories"] = categories();
-
-      res.status(200).send({ data: data });
+      return res.status(200).send({ data: { categories: _categoryData } });
     } catch (err: any) {
       return res.status(500).send(err.message);
     }

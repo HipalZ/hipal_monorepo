@@ -264,11 +264,11 @@ router.get(
   }
 );
 
-async function fetchTableData(tableId: string, session: any) {
+async function fetchTableData(tableId: string) {
   let tableData;
 
   try {
-    tableData = await Table.findById(tableId, { session });
+    tableData = await Table.findById(tableId);
 
     if (tableData?.isMerge && tableData?.hierarchy == "CHILD") {
       tableId = tableData?.parentTableId;
@@ -568,20 +568,17 @@ router.get(
       await runInTransaction(async (session: ClientSession) => {
         if (userSide) {
           try {
-            tableId = await fetchTableData(tableId, session);
+            tableId = await fetchTableData(tableId);
           } catch (err: any) {
             console.log(err);
           }
         }
 
         // check if service charge is applied
-        const serviceChargeApply = await Tempmodel.findOne(
-          {
-            tableId,
-            serviceChargeApply: false,
-          },
-          { session }
-        );
+        const serviceChargeApply = await Tempmodel.findOne({
+          tableId,
+          serviceChargeApply: false,
+        });
 
         let kots: any[] = [];
 
@@ -590,28 +587,24 @@ router.get(
           tableId,
         } as any;
 
-        const existingKOTs: any = await Kot.find(
-          query,
-          {
-            businessId: 0,
-            zoneId: 0,
-            staffId: 0,
-            startedAt: 0,
-            cookedAt: 0,
-            "dish.comments": 0,
-            category: 0,
-            status: 0,
-            dishStatus: 0,
-            dishType: 0,
-            priority: 0,
-            inventory: 0,
-            taxes: 0,
-            swiggyBillObj: 0,
+        const existingKOTs: any = await Kot.find(query, {
+          businessId: 0,
+          zoneId: 0,
+          staffId: 0,
+          startedAt: 0,
+          cookedAt: 0,
+          "dish.comments": 0,
+          category: 0,
+          status: 0,
+          dishStatus: 0,
+          dishType: 0,
+          priority: 0,
+          inventory: 0,
+          taxes: 0,
+          swiggyBillObj: 0,
 
-            match: 0,
-          },
-          { session }
-        );
+          match: 0,
+        });
 
         let subTotal: any = 0;
         let NOGSTTOTL = 0;
@@ -638,7 +631,7 @@ router.get(
               });
             }
 
-            if (obj?.dish?.portions) {
+            if (obj?.dish?.portions && obj?.dish?.portions?.price) {
               portionPrice = parseInt(obj?.dish?.portions?.price);
               total = portionPrice + extraPrice;
             } else {
@@ -674,7 +667,7 @@ router.get(
         });
         let copySubtotal = subTotal;
         let discount: Number = 0;
-        const tableInfo = await Tempmodel.findOne({ tableId }, { session });
+        const tableInfo = await Tempmodel.findOne({ tableId });
         if (tableInfo) {
           if (tableInfo?.discountMode == "percent") {
             let dis = Math.floor(
@@ -803,9 +796,6 @@ router.get(
         existingKOTs.push(obj);
 
         merged.push(obj);
-
-        // ... rest of the code ...
-
         if (merged?.length == 1) {
           res.status(200).send([]);
         } else {
@@ -960,9 +950,9 @@ router.get(
     try {
       const { businessId, zoneId, staffId } = req.query;
       await runInTransaction(async (session: ClientSession) => {
-        let existingTables = await Table.find({ businessId }, { session });
+        let existingTables = await Table.find({ businessId });
 
-        let zone = await Zone.findById(zoneId, { session });
+        let zone = await Zone.findById(zoneId);
 
         let tables = [...existingTables];
 
@@ -980,15 +970,12 @@ router.get(
         let tablesArray: any = [];
         existingTables.forEach((ele: any) => tablesArray.push(ele.id));
 
-        let existingKitchens = await Waiterkot.find(
-          {
-            businessId,
-            zoneId,
-            isAccept: false,
-            isReject: false,
-          },
-          { session }
-        );
+        let existingKitchens = await Waiterkot.find({
+          businessId,
+          zoneId,
+          isAccept: false,
+          isReject: false,
+        });
 
         existingKitchens = existingKitchens.filter((ele: any) =>
           tablesArray.includes(ele?.tableId)
