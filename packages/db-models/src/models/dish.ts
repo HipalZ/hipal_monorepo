@@ -94,7 +94,7 @@ const filtersSchema = new mongoose.Schema<FiltersType>(
       type: Number,
       required: false,
     },
-    metaTag: {
+    metaTags: {
       type: [String],
       required: false,
     },

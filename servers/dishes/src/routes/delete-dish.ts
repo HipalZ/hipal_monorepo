@@ -37,7 +37,7 @@ router.delete(
         });
       }
 
-      return res.status(204).send();
+      return res.status(200).send("deleted");
     } catch (error) {
       // handle error
     }

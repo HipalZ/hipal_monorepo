@@ -18,7 +18,7 @@ const filtersSchema = z.object({
   bestOccasion: z.string(),
   texture: z.string(),
   time: z.number(),
-  metaTag: z.array(z.string()),
+  metaTags: z.array(z.string()),
 });
 
 const tagSchema = z.object({
@@ -50,7 +50,7 @@ export const dishSchema = z.object({
     texture: "",
     time: 0,
     dishes: [],
-    metaTag: [], // added this line
+    metaTags: [], // added this line
   }),
   images: z.array(z.string()).optional(),
   description: z.string().optional(),

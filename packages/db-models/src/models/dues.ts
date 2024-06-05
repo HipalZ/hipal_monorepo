@@ -23,13 +23,7 @@ const duesSchema = new mongoose.Schema(
     duesPersonNames: String,
   },
   {
-    toJSON: {
-      transform(doc, ret) {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-      },
-    },
+    timestamps: true,
   }
 );
 
