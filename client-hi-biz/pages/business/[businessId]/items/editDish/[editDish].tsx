@@ -301,10 +301,10 @@ function EditDish() {
 		}
 
 		// Check Swiggy validity
-		let isSwiggyValid = true;
-		let allSwiggyPortionsValid = true;
-		let isZomatoValid = true;
-		let allZomatoPortionsValid = true;
+		// let isSwiggyValid = true;
+		// let allSwiggyPortionsValid = true;
+		// let isZomatoValid = true;
+		// let allZomatoPortionsValid = true;
 		// isSwiggyValid = swiggyDishPrice !== "";
 		// if (!isSwiggyValid && toggleSwiggySwitch) {
 		// 	toast.error("Please check the swiggy price")
@@ -342,6 +342,9 @@ function EditDish() {
 		}
 		setLoading(true)
 		const imageUrls = await handleSave()
+		const postAddOnsIds = postAddOns.map(item => item._id);
+		const postCategoryIds = postCategory.map(item => item._id);
+		const postRecommendIds = postRecommend.map(item => item._id);
 		try {
 			const config = {
 				mode: "cors",
@@ -355,11 +358,11 @@ function EditDish() {
 					businessId: businessId,
 					availability: availability,
 					visibility: visibility,
-					categories: postCategory,
-					extras: postAddOns,
+					categories: postCategoryIds,
+					extras: postAddOnsIds,
 					portions: portions,
 					filters: {
-						dishes: postRecommend,
+						dishes: postRecommendIds,
 						metaTags:dishTags,
 					},
 					kitchenId: selectedKitchenId,
