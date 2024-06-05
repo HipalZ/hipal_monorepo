@@ -1,5 +1,5 @@
 import HeaderButton from "@/components/atoms/buttons/headerButton";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useState } from "react";
 import {
 	MdAlarm,
 	MdDelete,
@@ -10,8 +10,6 @@ import { TbToolsKitchen2 } from "react-icons/tb";
 import { SiGoogleassistant } from "react-icons/si";
 import { HiSearch, HiX } from "react-icons/hi";
 import { BiBowlRice, BiPlus } from "react-icons/bi";
-import HiPalLogo from "../../../assets/svg/hipalLogoNew.svg";
-import Image from "next/image";
 import axios from "@/axios";
 import { useRouter } from "next/router";
 import type { IStatus } from "@/components/types/hiTableData";
@@ -290,7 +288,7 @@ function Status() {
 						>
 							<button
 								type="button"
-								onClick={() => handleDishStatus(selectedDishStatus?.id)}
+								onClick={() => handleDishStatus(selectedDishStatus?._id)}
 								className="py-4 w-[85%] space-x-2 text-base-100 bg-primary rounded-full"
 							>
 								Mark as delivered
@@ -309,7 +307,7 @@ function Status() {
 						onConfirm={handleConfirm}
 						closeModal={() => setIsPriorityPopupOpen(false)}
 						selectedDishStatus={selectedDishStatus}
-						kotId={selectedDishStatus?.id}
+						kotId={selectedDishStatus?._id}
 						getAllStatusData={getAllStatusData}
 					/>
 				</DayOutPopup>

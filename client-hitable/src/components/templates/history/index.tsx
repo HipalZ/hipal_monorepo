@@ -15,6 +15,7 @@ export const headerButtons = [
 type Order = {
   date: string;
   id: string;
+  _id: string;
   isAccept: boolean;
   isEdit: boolean;
   isReject: boolean;

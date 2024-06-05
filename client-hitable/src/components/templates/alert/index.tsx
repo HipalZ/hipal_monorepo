@@ -3,14 +3,10 @@ import Assistance from "@/components/atoms/status/assistance";
 import Clean from "@/components/atoms/status/clean";
 import Cooked from "@/components/atoms/status/cooked";
 import Paid from "@/components/atoms/status/paid";
-import Header from "@/components/molecules/header";
 import React, { memo, useState } from "react";
-import { HiSearch, HiX } from "react-icons/hi";
 import { MdCreditCard } from "react-icons/md";
 import { SiGoogleassistant } from "react-icons/si";
 import { TbToolsKitchen2 } from "react-icons/tb";
-import Image from "next/image";
-import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { useRouter } from "next/router";
 import axios from "@/axios";
 import { useLogin } from "@/components/store/useLogin";
@@ -55,7 +51,7 @@ const STATUS_COMPONENT_MAP = {
 	swiggy: Assistance,
 };
 
-function Alert({ setCurrentView }) {
+function Alert() {
 	const { paymentsData, alertData, setAlertData, setNewAlertsCount } =
 		useAlert();
 	const [search, setSearch] = useState("");
@@ -100,20 +96,6 @@ function Alert({ setCurrentView }) {
 		}
 	}
 
-	const popOver = (search = "") => {
-		if (search.length > 0) {
-			if (!searchOpen) {
-				setSearchOpen(true);
-			}
-		} else {
-			setSearchOpen(false);
-		}
-	};
-
-	const searchClick = () => {
-		setSearchOpen(!searchOpen);
-		setSearch("");
-	};
 	const handlePrevPage = () => {
 		if (pageNumber > 1) {
 			setPageNumber(pageNumber - 1);
@@ -202,29 +184,17 @@ function Alert({ setCurrentView }) {
 								searchOpen ? "w-[100%] transition-all mb-6" : "w-[30%] disabled"
 							} mt-6 `}
 						>
-							<label htmlFor="simple-search" className="sr-only">
-								Search
-							</label>
-							<div className="relative">
-								{searchOpen ? (
-									<HiX className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
-								) : (
-									<HiSearch className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
-								)}
-								<input
-									onClick={searchClick}
-									onChange={(e) => {
-										setSearch(e.target.value);
-										popOver(e.target.value);
-									}}
-									value={search}
-									type="text"
-									id="simple-search"
-									className="border  border-gray-300 text-gray-900 text-sm rounded-xl focus:outline-none focus:border-primary block w-full pl-4 p-1.5"
-									placeholder="Search"
-									required
-								/>
-							</div>
+							<input
+								onChange={(e) => {
+									setSearch(e.target.value);
+								}}
+								value={search}
+								type="search"
+								id="simple-search"
+								className="border  border-gray-300 text-gray-900 text-sm rounded-xl focus:outline-none focus:border-primary block w-full pl-4 p-1.5"
+								placeholder="Search"
+								required
+							/>
 						</div>
 					</div>
 				</div>
@@ -317,9 +287,8 @@ const AlertList = ({ data, handleClick }) => {
 		const Component = STATUS_COMPONENT_MAP[ele?.status?.toLowerCase()];
 		return (
 			<div
-				onKeyDown={() => handleClick(ele.id)}
-				key={`${ele?.status?.toLowerCase()}-${ele.id || index}`}
-				onClick={() => handleClick(ele.id)}
+				key={`${ele?.status?.toLowerCase()}-${ele._id || index}`}
+				onClick={() => handleClick(ele._id)}
 			>
 				{Component && <Component {...ele} />}
 			</div>

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 interface IDishWithParent {
     id: string;
+    _id: string;
     name: string;
     parentCategoryName: string;
 }

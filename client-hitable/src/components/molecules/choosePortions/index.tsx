@@ -11,31 +11,36 @@ function ChoosePortions({ dishData }: { dishData: IDish }) {
     tableId = "012345";
   }
   const { cart, setCart } = useCart();
-  const portions = useMemo(() => dishData?.portions || [], [dishData]);
+
+  const portions = useMemo(() => (dishData?.portions || []).flat(), [dishData]);
 
   const editDishPortion = (portion: any) => {
-  
-	const updatedCart = cart[tableId]
-	const filteredCart = Object.entries(updatedCart).reduce((acc, [key, value]) => {
-		if (value !== undefined) {
-			acc[key] = value;
-		}
-		return acc;
-	}, {});
+    const updatedCart = cart[tableId] || {};
+    const filteredCart = Object.entries(updatedCart).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
 
-    let index = 0
-    if ((cart[tableId]?.[dishData?.id]?.variants || []).length !== 0) {
-    	index = (cart[tableId]?.[dishData?.id]?.variants || []).length - 1
+    if (!filteredCart[dishData._id]) {
+      filteredCart[dishData._id] = { variants: [] };
     }
 
-    filteredCart[dishData?.id].variants[index].portion = portion
-    setCart(tableId, dishData?.id, filteredCart[dishData?.id])
+    let index = filteredCart[dishData._id].variants.length !== 0
+      ? filteredCart[dishData._id].variants.length - 1
+      : 0;
+
+    if (!filteredCart[dishData._id].variants[index]) {
+      filteredCart[dishData._id].variants[index] = { portion: {} };
+    }
+
+    filteredCart[dishData._id].variants[index].portion = portion;
+    setCart(tableId, dishData._id, filteredCart[dishData._id]);
   };
 
-  // Converting isDishPortionSelected to a useMemo function
   const isDishPortionSelected = (portion: any) => {
-    const cartDishData = cart?.[tableId]?.[dishData?.id] || {};
-
+    const cartDishData = cart?.[tableId]?.[dishData?._id] || {};
 
     if (cartDishData) {
       if ((cartDishData?.variants || []).length === 0) {
@@ -90,7 +95,6 @@ function ChoosePortions({ dishData }: { dishData: IDish }) {
                     className="ml-auto mr-2 radio radio-primary radio-sm"
                     onChange={() => editDishPortion(portion)}
                     checked={isDishPortionSelected(portion)}
-                    defaultChecked={isDishPortionSelected(portion)}
                   />
                 </td>
               </tr>

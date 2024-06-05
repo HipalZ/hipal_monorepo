@@ -12,7 +12,7 @@ import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
 import { toast } from "react-toastify";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { useLoyaltyStore } from "@/components/store/useLoyaltyData";
-import type { AxiosError } from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 function HiTable() {
 	const { phoneNumber, password, setPhoneNumber, setPassword, setIsLogin } =
@@ -46,19 +46,15 @@ function HiTable() {
 				},
 			};
 
-			const user = await axios(config);
-			const res = user.data;
+			const response = await axios(config);
 
-			if (!isEmpty(res)) {
-				setUserDetails(res);
+			if (response.status === 201) {
+				const { _id, ...otherData } = response.data;
+				setUserDetails({ id: _id, ...otherData });
+				setIsLogin(true);
+				router.push(`${singleRoute[PAGE_TYPES.ZONE](`${businessId}`)}`);
 			}
-
-			setIsLogin(true);
-			router.push(`${singleRoute[PAGE_TYPES.ZONE](`${businessId}`)}`);
 		} catch (err) {
-			if ((err as AxiosError)?.response?.status === 400) {
-				return toast.error("Phone or Password invalid...!");
-			}
 			return toast.error("Phone or Password invalid...!");
 		}
 	};
@@ -69,6 +65,7 @@ function HiTable() {
 				`/v1/businesses/get/Single/${businessId}`,
 			);
 			setBusinessData(response.data);
+			return response.data;
 		} catch (error) {
 			console.error("Error fetching business data:", error);
 		}
@@ -78,17 +75,27 @@ function HiTable() {
 			const response = await axios.get(`/v1/businesses/${businessId}/loyalty`);
 			const data = response.data;
 			setLoyaltyData(data);
+			return data;
 		} catch (error) {
 			console.error("Error fetching loyalty data:", error);
 		}
 	};
 
-	useEffect(() => {
-		if (businessId) {
-			fetchBusinessData();
-			getLoyaltySetting(businessId);
-		}
-	}, [businessId]);
+	const { data, isLoading, error } = useQuery({
+		queryKey: ["businessData", businessId],
+		queryFn: fetchBusinessData,
+		enabled: !!businessId,
+	});
+
+	const {
+		data: loyaltyData,
+		isLoading: loyaltyIsLoading,
+		error: loyaltyError,
+	} = useQuery({
+		queryKey: ["loyaltySetting", businessId],
+		queryFn: () => getLoyaltySetting(businessId),
+		enabled: !!businessId,
+	});
 
 	return (
 		<div>

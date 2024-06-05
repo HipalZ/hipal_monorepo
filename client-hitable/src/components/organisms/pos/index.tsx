@@ -84,9 +84,9 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 
 		categories.map((category) => {
 			if (category.hierarchy === "PARENT") {
-				parentDetailsMap[category.id] = {
+				parentDetailsMap[category._id] = {
 					name: category.name,
-					parentId: category.id,
+					parentId: category._id,
 				};
 			}
 		});
@@ -105,7 +105,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 				}
 				parentChildrenMap[parentCategoryId].children.push({
 					name: category.name,
-					id: category.id,
+					id: category._id,
 				});
 			}
 		});
@@ -114,38 +114,42 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 	}, []);
 
 	const organizedData = organizeCategories(childCategories);
-	
+
 	const getDishPrice = (
-		dishData: IDish,
+		dishData: any,
 		selectedPortion: any,
 		selectedExtras: any,
 	) => {
 		let price = 0;
-		if (selectedPortion === undefined) {
-			price += dishData?.price;
+		if (!selectedPortion) {
+			price += dishData?.price || 0;
+		} else {
+			const flatPortions = dishData?.portions.flat();
+			const portion = flatPortions?.find(
+				(portion) => portion?.name === selectedPortion,
+			);
+			if (portion) {
+				price += portion.price;
+			}
 		}
-		// Add portion price
-		const portion = dishData?.portions.find(
-			(portion) => portion?.name === selectedPortion,
-		);
-		if (portion) {
-			price += Number.parseFloat(portion.price);
-		}
+
 		// Add extra prices
-		selectedExtras.map((extra: any) => {
+		selectedExtras.forEach((extra: any) => {
 			price += extra?.price * extra?.quantity;
 		});
+
 		return price?.toFixed(2);
 	};
 
 	const handleDeleteItem = (
 		tableId: string,
-		dishId: string,
+		dishId: any,
 		variantId: string,
 	) => {
 		const tableCart = { ...cart[tableId] };
 
 		const dishItem = tableCart[dishId];
+		console.log(dishItem);
 		if (dishItem) {
 			const filteredVariants = dishItem.variants.filter(
 				(variant) => variant.id !== variantId,
@@ -163,7 +167,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 	const sendCart = async () => {
 		setIsSending(true);
 		const time = new Date().toLocaleTimeString("it-IT");
-	
+
 		try {
 			const config = {
 				method: "post",
@@ -228,7 +232,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 					const dishLower = dish?.name?.toLowerCase();
 					if (
 						dishLower.includes(search.toLowerCase()) &&
-						!dishIds.has(dish?.id)
+						!dishIds.has(dish?._id)
 					) {
 						const dishWithParent = {
 							...dish,
@@ -237,7 +241,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 								: category.name,
 						};
 						newSearchDishes.push(dishWithParent);
-						dishIds.add(dish?.id);
+						dishIds.add(dish?._id);
 					}
 				}
 			}
@@ -245,7 +249,9 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 
 			// Call setSearchHistory for each new dish
 			for (const dish of newSearchDishes) {
-				if (!searchHistory.some((historyDish) => historyDish.id === dish.id)) {
+				if (
+					!searchHistory.some((historyDish) => historyDish._id === dish._id)
+				) {
 					setSearchHistory(dish);
 				}
 			}
@@ -265,20 +271,21 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 					) : (
 						<ChildCategory childCategories={childCategories} show={false} />
 					)}
-					<div
-						className={`${
-							Object.keys(cart).length === 0 ? "bottom-6" : "bottom-[5rem]"
-						} bg-primary fixed z-1000 left-1/2 transition-all duration-500 transform -translate-x-1/2 text-base-100 flex items-center justify-center py-2 px-6 rounded-2xl`}
-					>
-						<MdOutlineWidgets className="mr-2 text-2xl" />
+					{organizedData.length > 0 && (
 						<div
-							onKeyDown={() => menuOpenModal("menubtn")}
-							onClick={() => menuOpenModal("menubtn")}
-							className="text-lg font-medium"
+							className={`${
+								Object.keys(cart).length === 0 ? "bottom-6" : "bottom-[5rem]"
+							} bg-primary fixed z-1000 left-1/2 transition-all duration-500 transform -translate-x-1/2 text-base-100 flex items-center justify-center py-2 px-6 rounded-2xl`}
 						>
-							Menu
+							<MdOutlineWidgets className="mr-2 text-2xl" />
+							<div
+								onClick={() => menuOpenModal("menubtn")}
+								className="text-lg font-medium"
+							>
+								Menu
+							</div>
 						</div>
-					</div>
+					)}
 
 					{menu === "menubtn" && (
 						<>
@@ -323,6 +330,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 												const name = dishData?.name;
 												return variants?.map((variant, variantIndex) => {
 													const { portion, extra, id, quantity } = variant;
+													console.log(variant);
 													const selectedPortion = portion?.name;
 													const selectedExtra = extra
 														? Object.values(extra)?.filter(
@@ -331,7 +339,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 														: [];
 													return (
 														<div
-															key={`${dishData?.id}-${index}-${variantIndex}`}
+															key={`${dishData?._id}-${index}-${variantIndex}`}
 														>
 															<div className="relative flex justify-between mt-4">
 																<div className="mr-4">
@@ -354,7 +362,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 																			{selectedExtra.map(
 																				(extraItem: any, extraIndex) => (
 																					<div
-																						key={`${dishData?.id}-${index}-${variantIndex}-${extraIndex}`}
+																						key={`${dishData?._id}-${index}-${variantIndex}-${extraIndex}`}
 																					>
 																						<span className="mr-2 text-sm">
 																							{extraItem?.quantity}
@@ -383,7 +391,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 																			onClick={() =>
 																				handleDeleteItem(
 																					tableId,
-																					dishData?.id,
+																					dishData?._id,
 																					id,
 																				)
 																			}
@@ -405,7 +413,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 																	setActiveInputId={setActiveInputId}
 																	addInstruction={addInstruction}
 																	cart={cart}
-																	dishId={dishData?.id}
+																	dishId={dishData?._id}
 																	variantId={id}
 																	tableId={tableId}
 																/>
@@ -427,7 +435,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 																			setActiveInputId={setActiveInputId}
 																			variant={variant}
 																			cart={cart}
-																			dishId={dishData?.id}
+																			dishId={dishData?._id}
 																			variantId={id}
 																			tableId={tableId}
 																		/>

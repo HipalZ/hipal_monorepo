@@ -97,6 +97,7 @@ export interface IOrder {
   customerName: string;
   customerPhone: string;
   id: string;
+  _id: string;
 }
 
 export interface ICategory {
@@ -114,6 +115,7 @@ export interface ICategory {
   availability: boolean;
   version: number;
   id: string;
+  _id: string;
   childCate: IChildCategory[];
 }
 
@@ -134,6 +136,7 @@ export interface IChildCategory {
   availability: boolean;
   version: number;
   id: string;
+  _id: string;
 }
 
 export interface IBusinessData {
@@ -149,6 +152,7 @@ export interface IBusinessData {
     address: string;
     staff: string[];
     id: string;
+    _id: string;
   };
   dishesData?: IDish[];
   dishData?: IDish;
@@ -213,6 +217,7 @@ export interface ISettings {
     dishCard: string;
   };
   id: string;
+  _id: string;
 }
 export interface IDish {
   businessId: string;
@@ -246,16 +251,19 @@ export interface IDish {
   links: never[];
   version: number;
   id: string;
+  _id: string;
 }
 
 export interface IExtras {
   id: string;
+  _id: string;
   addOnType?: string
   maxQuantity: number;
   name?: string;
   numOptions: number;
   numSelections: number;
   compulsory: number;
+  quantity: number;
   items: IExtraItem[];
 }
 export interface ICategory {
@@ -269,6 +277,7 @@ export interface ICategory {
   coverImage: string;
   version: number;
   id: string;
+  _id: string;
 }
 
 export interface ICategoryTypes {
@@ -281,15 +290,17 @@ export interface ICategorySubTypes {
 
 export interface IExtraItem {
   id: string;
+  _id: string;
   ExtraType?: string
   name: string;
   price: string;
   maxQuantity: number;
+  quantity: number;
 }
 
 export interface IPortion {
   name: string;
-  price: string;
+  price: number;
   discount: string;
   default: boolean | string;
 }
@@ -300,6 +311,7 @@ export interface Kitchen {
   description: string;
   staff: any[]; // Define more specifically if you have the structure of staff
   id: string;
+  _id: string;
 }
 export interface Item {
   name: string;
@@ -336,6 +348,7 @@ export interface Bill {
   duesPersonId: string;
   settle: boolean;
   id: string;
+  _id: string;
 }
 
 export type BillsData = Bill[];
@@ -343,6 +356,7 @@ export type BillsData = Bill[];
 export interface IMerge {
   name: string;
   id: string;
+  _id: string;
 }
 export interface ITable {
   businessId: string;
@@ -358,6 +372,7 @@ export interface ITable {
   role: null | string;
   hiCode: string;
   id: string;
+  _id: string;
   mergeTables: IMerge[]
   isMerge: boolean;
   parentTableId: string;
@@ -373,11 +388,11 @@ export interface IZoneData {
 	tables: string[];
 	Occupied: number;
 	id: string;
+  _id: string;
 }
 export interface IZone {
   zoneName: string;
   tables: ITable[];
-  
 }
 export interface ITransformedTable {
   tableId: string;

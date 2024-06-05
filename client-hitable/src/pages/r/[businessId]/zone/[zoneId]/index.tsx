@@ -56,7 +56,7 @@ function Test() {
 			case "table":
 				return <Table />;
 			case "alert":
-				return <Alert setCurrentView={setCurrentView} />;
+				return <Alert />;
 			case "order":
 				return <Orders setCurrentView={setCurrentView} />;
 			case "status":

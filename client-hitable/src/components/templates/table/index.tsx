@@ -144,11 +144,10 @@ const Table = () => {
 				data: { phone: phoneNumber, password: password },
 			};
 
-			const user = await axios(config);
-			const res = user.data;
-
-			if (!isEmpty(res)) {
-				setUserDetails(res);
+			const response = await axios(config);
+			if (response.status === 201) {
+				const { _id, ...otherData } = response.data;
+				setUserDetails({ id: _id, ...otherData });
 				setIsLogin(true);
 				result();
 			} else {
@@ -231,7 +230,7 @@ const Table = () => {
 	});
 
 	const handleTableClick = useCallback(
-		(tableData: any) => {
+		(tableData: ITable) => {
 			setTableLocal(tableData);
 		},
 		[setTableLocal],
@@ -309,25 +308,26 @@ const Table = () => {
 				<div className="grid items-center gap-0 grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{search.length === 0 ? (
 						<>
-							{data?.map((ele, index) => (
+							{data?.map((ele:ITable, index:number) => (
 								<Link
 									key={`${ele.id + zoneId}search${index}`}
 									href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
 										businessId,
 										zoneId,
-										ele?.id,
+										ele?._id,
 									)}`}
 									passHref
 								>
 									<div
 										onClick={() => handleTableClick(ele)}
 										className={`${
-											classByStatus[ele?.status?.toLowerCase() || 'empty']?.classNames
+											classByStatus[ele?.status?.toLowerCase() || "empty"]
+												?.classNames
 										} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
 									>
 										<div
 											className={`${
-												classByStatus[ele?.status?.toLowerCase() || 'empty']
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.businessNameClasses
 											} text-black`}
 										>
@@ -343,12 +343,14 @@ const Table = () => {
 										</div>
 										<MdOutlinePeopleOutline
 											className={`${
-												classByStatus[ele?.status?.toLowerCase()|| 'empty' ]?.tableClasses
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.tableClasses
 											}`}
 										/>
 										<div
 											className={`${
-												classByStatus[ele?.status?.toLowerCase() || 'empty']?.numberClasses
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.numberClasses
 											}`}
 										>
 											{ele?.activeUser < 10
@@ -394,25 +396,26 @@ const Table = () => {
 						</>
 					) : (
 						<>
-							{searchResults?.map((ele, index) => (
+							{searchResults?.map((ele:ITable, index:number) => (
 								<Link
 									key={`${ele.id + zoneId}search${index}`}
 									href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
 										businessId,
 										zoneId,
-										ele?.id,
+										ele?._id,
 									)}`}
 									passHref
 								>
 									<div
 										onClick={() => handleTableClick(ele)}
 										className={`${
-											classByStatus[ele?.status?.toLowerCase() || "empty" ]?.classNames
+											classByStatus[ele?.status?.toLowerCase() || "empty"]
+												?.classNames
 										} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
 									>
 										<div
 											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty" ]
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.businessNameClasses
 											} text-black`}
 										>
@@ -428,12 +431,14 @@ const Table = () => {
 										</div>
 										<MdOutlinePeopleOutline
 											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty" ]?.tableClasses
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.tableClasses
 											}`}
 										/>
 										<div
 											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty" ]?.numberClasses
+												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.numberClasses
 											}`}
 										>
 											{ele?.activeUser < 10

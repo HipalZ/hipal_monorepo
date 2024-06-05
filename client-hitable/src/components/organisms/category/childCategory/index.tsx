@@ -39,18 +39,18 @@ export default function ChildCategory({
     <div className="relative w-full mt-6 masonry-layout pb-[5rem]">
       {childCategories?.map((category, index) => (
         <section
-          id={category?.id}
+          id={category?._id}
           key={index}
           className="masonry-item w-[85%] max-w-md mx-auto bg-base-100 rounded-2xl border border-[#cacaca]"
         >
           <div
             className="flex items-center justify-between w-full p-4 text-lg font-medium text-left rounded-2xl"
-            onClick={() => toggleOpenChild(category?.id)}
+            onClick={() => toggleOpenChild(category?._id)}
           >
             <div className="w-[80%]">{category?.name}</div>
             <div>{category?.dishes?.length}</div>
           </div>
-          {openChild === category?.id && (
+          {openChild === category?._id && (
             <div className="text-sm text-gray-500 transition-all duration-300">
               <div className="h-[0.125rem] bg-primary"></div>
               <DishMenu

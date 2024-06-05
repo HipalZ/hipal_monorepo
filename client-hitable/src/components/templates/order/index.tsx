@@ -2,7 +2,6 @@ import React, { memo, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "@/axios";
 import { useLogin } from "@/components/store/useLogin";
-import { Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
 import { useAlert } from "@/components/store/useAlert";
 import { type ICartDish, useCart } from "@/components/store/useCart";
@@ -144,7 +143,7 @@ function Orders({ setCurrentView }) {
 			{orderData.length > 0 ? (
 				<div className="pb-[5rem]">
 					{orderData.map((ele) => {
-						if (orderAcceptedIds.includes(ele.id)) {
+						if (orderAcceptedIds.includes(ele._id)) {
 							return null;
 						}
 						return (

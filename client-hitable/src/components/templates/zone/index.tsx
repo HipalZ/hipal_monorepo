@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import HiPalLogo from "../../../assets/svg/hipalLogoNew.svg";
 import Image from "next/image";
-import { MdMenuOpen, MdTableRestaurant } from "react-icons/md";
+import { MdMenuOpen } from "react-icons/md";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/axios";
 import { useRouter } from "next/router";
@@ -10,17 +10,14 @@ import DayOutPopup from "@/components/atoms/dayoutPopup";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { updateTheme } from "@/components/utils/themes";
 import Loader from "@/components/atoms/loader";
-import { useListZone } from "@/components/store/useListZones";
 import { useZoneStore } from "@/components/store/useZone";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import type { AxiosError } from "axios";
-import { IZone, IZoneData } from "@/components/types/hiTableData";
+import { IZoneData } from "@/components/types/hiTableData";
 
 function Zones({ setCurrentView }) {
-	const { lastUpdate, setLastUpdate } = useListZone();
 	const setZone = useZoneStore((state) => state.setZone);
-	const [zoneData,setZoneData] = useState<IZoneData[]>([]);
 	const { setSelectedZone } = useLogin();
 	const businessData = useBusinessStore((s) => s.businessData);
 	const router = useRouter();
@@ -55,10 +52,10 @@ function Zones({ setCurrentView }) {
 		setZoneName(zone?.zoneName);
 
 		if (zone?.zoneType === "Dine In") {
-			router.push(routePaths[PAGE_TYPES.TABLES](businessId, zone?.id));
+			router.push(routePaths[PAGE_TYPES.TABLES](businessId, zone?._id));
 		} else {
 			setZone(zone);
-			router.push(routePaths[PAGE_TYPES.TAKE_AWAY](businessId, zone?.id));
+			router.push(routePaths[PAGE_TYPES.TAKE_AWAY](businessId, zone?._id));
 			updateTheme(zone?.zoneName);
 		}
 	};
@@ -84,11 +81,9 @@ function Zones({ setCurrentView }) {
 	
 			const orderedZones = [...otherZones, ...takeawayZones];
 	
-			setLastUpdate(Date.now());
-			setZoneData(orderedZones);
 			updateTheme("normal");
 	
-			return zones;
+			return orderedZones;
 		} catch (error) {
 			if ((error as AxiosError)?.response?.status === 401) {
 				router.push(`/r/${businessId}/login`);
@@ -227,7 +222,6 @@ function Zones({ setCurrentView }) {
 						className={`flex justify-between items-center py-6 border border-base-300 rounded-xl ${
 							isLogin ? "bg-base-100" : "bg-gray-200"
 						}`}
-						onKeyUp={() => handleOnClick(ele)}
 					>
 						<div
 							className={`truncate pl-6 w-[70%] ${

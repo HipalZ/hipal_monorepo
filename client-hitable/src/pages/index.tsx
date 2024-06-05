@@ -2,7 +2,6 @@ import type React from "react";
 import { useEffect } from "react";
 import HiTableLogo from "../assets/svg/HiTableLogo.svg";
 import welcome from "../assets/svg/welcomeLogo.svg";
-import { isEmpty } from "lodash-es";
 import Image from "next/image";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/axios";
@@ -44,21 +43,17 @@ function HiTable() {
 				},
 			};
 
-			const user = await axios(config);
-			const res = user.data;
-			console.log(res);
-			if (!isEmpty(res)) {
-				setUserDetails(res);
-			}
-			if (user.status === 200) {
+			const response = await axios(config);
+			
+			if (response.status === 200) {
+				const { _id, ...otherData } = response.data;
+				setUserDetails({ id: _id, ...otherData });
+				toast.success(`Hi ${response?.data?.name}`);
 				router.push(
 					`${singleRoute[PAGE_TYPES.LOGIN](
-						`${user?.data?.customRole?.[0].businessId}`,
+						`${response?.data?.customRole?.[0].businessId}`,
 					)}`,
 				);
-				if (user?.data?.customRole?.[0].businessId) {
-					toast.success(`Hi ${user?.data?.name}`);
-				}
 			}
 		} catch (err) {
 			console.log(err);

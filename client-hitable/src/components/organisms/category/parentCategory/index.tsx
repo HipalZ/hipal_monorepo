@@ -11,11 +11,12 @@ export default function ParentCategory({
   closeModal: () => void;
 }) {
   const setChildId = useLogin((s) => s.setChildId);
+  console.log(parentCategory);
   return (
     <div className="relative w-full px-4">
       {parentCategory.map((ele) => (
         <div
-          key={ele.id}
+          key={ele._id}
           className="w-full max-w-md mx-auto bg-base-100 px- rounded-2xl"
         >
           <Disclosure>
@@ -34,14 +35,14 @@ export default function ParentCategory({
                 </Disclosure.Button>
                 {ele?.children?.map((child) => (
                   <Disclosure.Panel
-                    key={child?.id}
+                    key={child?._id}
                     className="py-2 text-sm text-gray-500 transition-all duration-300"
                   >
                     <div className="flex justify-between">
-                      <Link href={`#${child.id}`} passHref>
+                      <Link href={`#${child._id}`} passHref>
                         <div
                           onClick={() => {
-                            setChildId(child?.id);
+                            setChildId(child?._id);
                             closeModal();
                           }}
                           className="ml-[1.5rem]"

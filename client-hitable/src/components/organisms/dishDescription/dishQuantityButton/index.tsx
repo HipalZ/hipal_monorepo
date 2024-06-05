@@ -51,33 +51,33 @@ function DishQuantityBtn({
   const handleDeleteItem = () => {
     const updatedCart = { ...cart };
 
-    if (updatedCart[tableId] && updatedCart[tableId][dishData.id]) {
-      delete updatedCart[tableId][dishData.id];
+    if (updatedCart[tableId] && updatedCart[tableId][dishData._id]) {
+      delete updatedCart[tableId][dishData._id];
 
       if (Object.keys(updatedCart[tableId]).length === 0) {
         delete updatedCart[tableId];
       }
     }
-    setCart(tableId, dishData.id, updatedCart[tableId] || {});
+    setCart(tableId, dishData._id, updatedCart[tableId] || {});
 
-    closeBottomPanel(dishData.id);
+    closeBottomPanel(dishData._id);
   };
 
 
   return (
     <>
-      {(cart?.[tableId]?.[dishData.id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
+      {(cart?.[tableId]?.[dishData._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
         <button
           className="bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
           onClick={() => {
-            handleQty((cart[tableId]?.[dishData.id]?.variants?.length || 0)+1);
+            handleQty((cart[tableId]?.[dishData._id]?.variants?.length || 0)+1);
           }}
         >
           Add
         </button>
       ) : (
         <QuantityPicker
-          quantity={(cart[tableId]?.[dishData.id]?.variants?.length || 0)}
+          quantity={(cart[tableId]?.[dishData._id]?.variants?.length || 0)}
           setQuantity={handleQty}
           minQuantity={0}
           isDeleteAble={isDeleteAble as boolean}
@@ -107,13 +107,13 @@ export function handleDishQty(
     const tableCart = cart[tableId] || {};
 
     // Adding the dish to the cart
-    if ((tableCart?.[dishData?.id]?.variants?.length || 0) < newQuantity) {
+    if ((tableCart?.[dishData?._id]?.variants?.length || 0) < newQuantity) {
       // const thisDish = dishData as IDish;
       if (
         dishData?.portions?.length > 0 ||
         (dishData?.extras?.[0]?.numSelections || 0) > 0
       ) {
-        openBottomPanel(dishData?.id);
+        openBottomPanel(dishData?._id);
       }
 
       const portion = dishData?.portions?.find((p) => p?.default === true);
@@ -129,39 +129,39 @@ export function handleDishQty(
         });
       });
       // If dish is not already in the cart for this table, add it
-      if (!tableCart[dishData?.id]) {
-        tableCart[dishData?.id] = {
+      if (!tableCart[dishData?._id]) {
+        tableCart[dishData?._id] = {
           dishData: dishData,
-          dishId: dishData?.id,
+          dishId: dishData?._id,
           parentCategoryName: categoryName,
           variants: [{ id: addedDishId, extra: extra, portion: portion }],
         };
       } else {
         // If dish is already in the cart, update it
-        tableCart[dishData?.id].variants.push({
+        tableCart[dishData?._id].variants.push({
           id: addedDishId,
           extra: extra,
           portion: portion,
         });
       }
-      setCart(tableId, dishData.id, tableCart[dishData?.id]);
+      setCart(tableId, dishData._id, tableCart[dishData?._id]);
     } else {
       // Handle reducing the quantity of the dish in the cart
-      if (tableCart[dishData?.id]) {
-        const variants = tableCart[dishData?.id].variants;
+      if (tableCart[dishData?._id]) {
+        const variants = tableCart[dishData?._id].variants;
         if (variants.length > 0) {
           variants.pop();
           if (variants.length === 0) {
-            delete tableCart[dishData?.id];
+            delete tableCart[dishData?._id];
           } else {
-            tableCart[dishData?.id].variants = variants;
+            tableCart[dishData?._id].variants = variants;
           }
         }
 
-        setCart(tableId, dishData.id, tableCart[dishData?.id]);
+        setCart(tableId, dishData._id, tableCart[dishData?._id]);
       }
 
-      closeBottomPanel(dishData?.id);
+      closeBottomPanel(dishData?._id);
     }
   };
 }

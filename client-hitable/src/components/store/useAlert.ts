@@ -12,6 +12,7 @@ interface IAlertData {
   message: string;
   isAlertOn: boolean;
   id: string;
+  _id: string;
   isExtraSelected: boolean;
 }
 
