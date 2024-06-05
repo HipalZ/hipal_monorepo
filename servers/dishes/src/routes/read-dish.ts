@@ -14,14 +14,14 @@ router.get(
     const query = { businessId, queryDish };
     let existingDishes: any;
     if (queryDish) {
-      existingDishes = await Dish.find(query).select(
-        "businessId name id availability visibility  dishType kitchenId"
-      );
+      existingDishes = await Dish.find(query)
+        .select("businessId name id availability visibility dishType kitchenId")
+        .populate("categories");
       return res.status(200).send(existingDishes);
     }
     existingDishes = await Dish.find({
       businessId,
-    });
+    }).populate("categories");
     let Active = 0;
     let visible = 0;
     let available = 0;
@@ -53,8 +53,11 @@ router.get(
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const existingDish = await Dish.findById(id).populate("categories");
-
+    const existingDish = await Dish.findById(id).populate([
+      "categories",
+      "extras",
+      "filters.dishes",
+    ]);
     res.status(200).send(existingDish);
   }
 );

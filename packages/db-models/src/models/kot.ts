@@ -118,7 +118,6 @@ const kotDishSchema = new mongoose.Schema<KotDishType>(
     portions: {
       type: kotPortionSchema,
       required: false,
-      default: {},
     },
   },
   {

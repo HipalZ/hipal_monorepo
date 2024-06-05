@@ -16,9 +16,11 @@ router.get(
     let existingCategories;
 
     if (queryCategories) {
-      existingCategories = await Category.find(query).select(
-        "name hierarchy  parentCategory parentCategoryId businessId id dishes availability visibility"
-      );
+      existingCategories = await Category.find(query)
+        .select(
+          "name hierarchy  parentCategory parentCategoryId businessId id availability visibility"
+        )
+        .populate("dishes");
       return res.status(200).send(existingCategories);
     }
 

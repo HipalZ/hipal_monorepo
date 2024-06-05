@@ -551,7 +551,9 @@ router.post(
           tableId,
           status: "UNPAID",
         };
-        const existingKOTs = await Kot.find(query).select("dishStatus");
+        const existingKOTs = await Kot.find(query, null, { session }).select(
+          "dishStatus"
+        );
 
         const totalDish = existingKOTs?.length;
         let delivered = 0;

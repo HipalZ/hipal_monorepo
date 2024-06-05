@@ -148,7 +148,7 @@ const dishSchema = new mongoose.Schema<DishType>(
     },
     portions: [
       {
-        type: [portionSchema],
+        type: portionSchema,
         required: false,
       },
     ],
