@@ -45,7 +45,7 @@ router.get(
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const existingCategory = await Category.findById(id);
+    const existingCategory = await Category.findById(id).populate("dishes");
 
     res.status(200).send(existingCategory);
   }

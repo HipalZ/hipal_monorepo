@@ -60,7 +60,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     dishes: {
       type: [ObjectId],
       required: true,
-      ref: "dish",
+      ref: "Dish",
     },
     availability: {
       type: Boolean,

@@ -53,7 +53,7 @@ router.get(
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const existingDish = await Dish.findById(id);
+    const existingDish = await Dish.findById(id).populate("categories");
 
     res.status(200).send(existingDish);
   }
