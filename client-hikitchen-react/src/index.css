@@ -1,0 +1,69 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 12px;
+  border: 3px solid #143F40;
+  border-radius: 3px;
+  appearance: none;
+  outline: none;
+  position: relative;
+  cursor: pointer;
+  background-color: white;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.custom-checkbox:checked {
+  background-color: white;
+}
+
+.custom-checkbox:checked::after {
+  content: '✔';
+  font-size: 10px;
+  color: #00FF00 !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+}
+
+.masonry-layout {
+  column-count: 1; 
+  column-gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .masonry-layout {
+    column-count: 2; 
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-layout {
+    column-count: 3; 
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-layout {
+    column-count: 4; 
+  }
+}
+
+.masonry-item {
+  break-inside: avoid-column;
+  margin-bottom: 24px;
+}
+
+.masonry-item:after {
+  content: '';
+  display: block;
+  
+}
