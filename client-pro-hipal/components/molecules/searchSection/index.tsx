@@ -138,7 +138,7 @@ function SearchSection({ closeSearchBox }: { closeSearchBox: () => void }) {
 									<div className='flex flex-col mx-2 '>
 										{filterCategory?.map((ele, index) => (
 											<Link
-												href={`${routePaths.category(businessId)}#${ele?.id}`}
+												href={`${routePaths.category(businessId)}#${ele?._id}`}
 												key={index}
 												passHref
 											>
@@ -161,7 +161,7 @@ function SearchSection({ closeSearchBox }: { closeSearchBox: () => void }) {
 													</div>
 													<Link
 														key={index}
-														href={`${routePaths.dish(businessId, ele?.id)}`}
+														href={`${routePaths.dish(businessId, ele?._id)}`}
 														passHref
 														className='border-0'
 													>

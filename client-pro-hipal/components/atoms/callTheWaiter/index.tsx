@@ -99,7 +99,7 @@ function CallWaiter() {
 							Need any assiatance from us?
 						</div>
 						<div className='flex justify-center mx-[1rem] mt-4 font-medium'>
-							<Link href={routePaths[PAGE_TYPES.SIGN_IN](businessId)}>
+							<Link href={routePaths[PAGE_TYPES.SIGN_UP](businessId)}>
 								<button
 									onClick={closeModal}
 									className='px-8 py-1 rounded-full shadow-lg btn btn-primary shadow-base-200'

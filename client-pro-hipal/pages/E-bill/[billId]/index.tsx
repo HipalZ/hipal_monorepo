@@ -79,7 +79,7 @@ const Bill = () => {
 						<div className='overflow-auto max-h-[15rem] min-h-[15rem] pb-4'>
 							{eBill.slice(0, eBill.length - 2).map((bill, index) => (
 								<div
-									key={bill?.id}
+									key={bill?._id}
 									className={`flex justify-between capitalize font-[500] mx-4 mt-4 text-[#072D4B] text-[1rem] leading-[1.25rem] ${
 										index !== eBill.length - 3 ? 'pb-4 border-b-2 border-dashed' : ''
 									}`}

@@ -83,7 +83,7 @@ export default LoyaltyCardPage;
 
 async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business) => business.id);
+	return response.data.map((business) => business._id);
 }
 // // Only grab the entry for this page
 export async function getStaticPaths() {

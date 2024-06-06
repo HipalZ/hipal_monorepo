@@ -413,7 +413,7 @@ export default memo(function Payment({ data }: any) {
 					<hr className='bg-primary h-0.5 mx-4 my-4' />
 					{finalBill.slice(0, finalBill.length - 1).map((bill, index) => (
 						<div
-							key={bill?.id}
+							key={bill?._id}
 							className={`flex justify-between mx-4 capitalize font-[500] text-base-content text-base ${
 								index !== finalBill.length - 3 ? 'pb-4' : ''
 							}`}
@@ -710,7 +710,7 @@ export default memo(function Payment({ data }: any) {
 
 async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness())
-	return response.data.map((business) => business.id)
+	return response.data.map((business) => business._id)
 }
 // Only grab the entry for this page
 export async function getStaticPaths() {

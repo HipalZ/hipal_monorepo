@@ -1,5 +1,4 @@
 import { useAllBusiness } from "@components/store/useAllBusiness";
-import { useStatus } from "@components/store/useStatus";
 import {
 	Accordion,
 	AccordionBody,
@@ -42,7 +41,7 @@ export default function CartStatus({dishStatusData}) {
 									return null;
 								}
 								return (
-									<div key={`dishStatus${kot?.id}${i}`}>
+									<div key={`dishStatus${kot?._id}${i}`}>
 										{ele.dishStatus !== "" && (
 											<div className="">
 												<div className="capitalize font-normal mb-2 text-primary text-[0.875rem] -mt-2 leading-[1rem]">
@@ -53,7 +52,7 @@ export default function CartStatus({dishStatusData}) {
 												</div>
 												<div className="px-4 mb-8 border border-base-200 bg-base-200/30 rounded-xl">
 													{ele.map((kot: any, i: number) => (
-														<div key={`kot${i}${kot?.id}`}>
+														<div key={`kot${i}${kot?._id}`}>
 															<div className="flex justify-between mx-4 mt-2">
 																<div className="w-[60%] -ml-4 font-[500] text-base-content">
 																	{kot?.dish?.name}

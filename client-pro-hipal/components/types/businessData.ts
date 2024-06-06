@@ -130,6 +130,7 @@ export interface ISettings {
 	id: string
 }
 export interface IDish {
+	_id:string
 	businessId: string
 	availability: false
 	name: string
@@ -164,6 +165,7 @@ export interface IDish {
 	id: string
 }
 export interface IExtras {
+	_id: string
 	id: string
 	addOnType?: string
 	maxQuantity: number
@@ -175,6 +177,7 @@ export interface IExtras {
 }
 
 export interface ICategory {
+	_id: string
 	businessId: string
 	name: string
 	visibility: boolean
@@ -204,6 +207,7 @@ export interface ICategorySubTypes {
 }
 
 export interface IExtraItem {
+	_id: string
 	id: string
 	ExtraType?: string
 	name: string

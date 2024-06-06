@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface ILoyaltySetting {
+	businessId: string
 	loyaltyId: string
 	cardColor: string
 	fontColor: string
@@ -9,6 +10,7 @@ interface ILoyaltySetting {
 	setReward: number
 	setClaimAmount: number
 	logo?: string
+	signUpBonus: number,
 }
 
 export const useLoyaltyData = create(
@@ -26,6 +28,7 @@ export const useLoyaltyData = create(
 				cardColor: '',
 				fontColor: '',
 				logo: '',
+				signUpBonus: 0,
 			},
 			setLoyaltySetting: (loyaltySetting: ILoyaltySetting) =>
 				set({ loyaltySetting: loyaltySetting }),

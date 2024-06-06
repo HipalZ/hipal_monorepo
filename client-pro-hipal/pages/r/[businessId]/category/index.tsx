@@ -72,7 +72,7 @@ export default memo(function Category({ data }: { data: IBusinessData }) {
 
 async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business) => business.id);
+	return response.data.map((business) => business._id);
 }
 
 // Only grab the entry for this page
@@ -113,7 +113,7 @@ export async function getStaticProps(context: {
 			const hashedCategories = new Map();
 
 			_categoryData?.data.forEach((category) => {
-				hashedCategories.set(category?.id, category);
+				hashedCategories.set(category?._id, category);
 			});
 
 			const categoryOrder = data.settings?.categoryOrder || [];
@@ -142,12 +142,12 @@ export async function getStaticProps(context: {
 				if (!category?.visibility) return;
 
 				if (category?.hierarchy === "PARENT") {
-					mainType[category?.id] = category;
+					mainType[category?._id] = category;
 					return;
 				} else if (!isEmpty(category?.dishes)) {
 					subTypes[category?.parentCategoryId] = {
 						...subTypes[category?.parentCategoryId],
-						[category.id]: category,
+						[category._id]: category,
 					};
 				}
 			});
@@ -155,7 +155,7 @@ export async function getStaticProps(context: {
 			// Removing empty main categories
 			Object.keys(mainType).forEach((key) => {
 				if (
-					!subTypes?.[mainType?.[key]?.id] &&
+					!subTypes?.[mainType?.[key]?._id] &&
 					isEmpty(mainType?.[key]?.dishes)
 				)
 					delete mainType[key];
@@ -176,8 +176,8 @@ export async function getStaticProps(context: {
 				const newCategory = JSON.parse(JSON.stringify(category));
 				newCategory.dishes = [];
 
-				for (let dish of category.dishes) {
-					const newDish = dishesData?.data.find((d) => d.id === dish.id);
+				for (let dishId of category.dishes) {
+					const newDish = dishesData?.data.find((d) => d._id === dishId);
 
 					if (!!newDish) newCategory.dishes = [...newCategory.dishes, newDish];
 				}

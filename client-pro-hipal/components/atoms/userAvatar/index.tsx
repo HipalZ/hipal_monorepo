@@ -13,7 +13,7 @@ function UserAvatar({
 	const router = useRouter()
 	const { businessId } = router.query
 
-	if (isEmpty(userDetails)) return null
+	if (isEmpty(userDetails.name)) return null
 
 	return (
 		<div {...props}>

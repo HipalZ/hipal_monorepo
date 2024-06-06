@@ -18,7 +18,7 @@ function ProfileLikePage() {
 			method: 'POST',
 			url: `/v1/businesses/${id}/userlike`,
 			data: {
-				userId: userDetails.id,
+				userId: userDetails._id,
 			},
 		}
 		await axios(config)
@@ -39,7 +39,7 @@ function ProfileLikePage() {
 	const searchRestaurants = (data || []).filter(
 		(ele) =>
 			ele?.businessName?.toLowerCase().includes(search?.toLowerCase()) &&
-			ele.likes.includes(userDetails.id),
+			ele.likes.includes(userDetails._id),
 	)
 
 	if (isPending) return 'Loading...'
@@ -86,9 +86,9 @@ function ProfileLikePage() {
 					{searchRestaurants?.map((ele, index) => (
 						<div key={index.toString()} className='relative focus:text-red-500'>
 							<BsSuitHeartFill
-								onClick={() => handleOnClick(ele.id)}
+								onClick={() => handleOnClick(ele._id)}
 								className={`absolute w-[1.5rem] h-[1.5rem] right-[1.2rem] focus:text-red-500 bottom-[5rem] z-10 ${
-									ele.likes.includes(userDetails.id) ? 'text-red-500' : 'text-white/90'
+									ele.likes.includes(userDetails._id) ? 'text-red-500' : 'text-white/90'
 								}`}
 							/>
 							<div className='relative'>
@@ -103,7 +103,7 @@ function ProfileLikePage() {
 									}
 									alt='Banner pic'
 								/>
-								<div className='rounded-b-2xl absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black to-transparent'/>
+								<div className='absolute bottom-0 left-0 w-full rounded-b-2xl h-1/2 bg-gradient-to-t from-black to-transparent'/>
 							</div>
 							<div className='flex mt-[0.5rem]'>
 								<div className='bg-white w-[3rem] h-[3rem] mt-[0.5rem]'>

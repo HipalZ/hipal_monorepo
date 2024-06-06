@@ -48,12 +48,12 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 
 	const handleQuantityChange = (newQuantity, item: IExtraItem, itemId: string) => {
 		const newCart = structuredClone(cartItem)
-		const index = newCart?.[dishData?.id]?.variants?.length - 1 || 0
+		const index = newCart?.[dishData?._id]?.variants?.length - 1 || 0
 
 		if (newQuantity === 0) {
-			delete newCart[dishData?.id].variants[index].extra[itemId]
+			delete newCart[dishData?._id].variants[index].extra[itemId]
 		} else {
-			newCart[dishData?.id].variants[index].extra[itemId] = {
+			newCart[dishData?._id].variants[index].extra[itemId] = {
 				...item,
 				quantity: newQuantity,
 			}
@@ -63,8 +63,8 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 	}
 
 	const getQuantity = (itemId: string) => {
-		const index = cartItem?.[dishData?.id]?.variants?.length - 1 || 0
-		return cartItem?.[dishData?.id]?.variants?.[index]?.extra?.[itemId]?.quantity || 0
+		const index = cartItem?.[dishData?._id]?.variants?.length - 1 || 0
+		return cartItem?.[dishData?._id]?.variants?.[index]?.extra?.[itemId]?.quantity || 0
 	}
 	if (isEmpty(extras)) {
 		return null
@@ -75,7 +75,7 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 	}
 	function validateCompulsoryExtras() {
 		const variantsExtra =
-			cartItem?.[dishData?.id]?.variants?.[cartItem?.[dishData?.id]?.variants?.length - 1 || 0]
+			cartItem?.[dishData?._id]?.variants?.[cartItem?.[dishData?._id]?.variants?.length - 1 || 0]
 				?.extra || {}
 		let newValidationResults = [...validationExtras]
 		let newSelectedItemsCount = { ...selectedItemsCount }
@@ -85,15 +85,15 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 			let selectedItemsSet: { [key: string]: number } = {}
 			extra.items.forEach((item) => {
 				Object.values(variantsExtra).forEach((variantExtra: any) => {
-					if (variantExtra?.id === item?.id) {
-						selectedItemsSet[variantExtra?.id] = variantExtra?.quantity
+					if (variantExtra?._id === item?._id) {
+						selectedItemsSet[variantExtra?._id] = variantExtra?.quantity
 						return setSelectedItems(selectedItemsSet)
 					}
 				})
 			})
 			selectedCount = Object.values(selectedItemsSet).reduce((a, b) => a + b, 0)
 			newSelectionsCount[index] = selectedCount === extra?.maxQuantity
-			newSelectedItemsCount[extra?.id] = selectedCount
+			newSelectedItemsCount[extra?._id] = selectedCount
 			newValidationResults[index] = selectedCount >= extra.compulsory
 		})
 		setSelectedItemsCount(newSelectedItemsCount)
@@ -103,18 +103,18 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 		return isValid
 	}
 	const disableExtra = (extra, item) => {
-		if (selectedItemsCount[extra?.id] === undefined) return
+		if (selectedItemsCount[extra?._id] === undefined) return
 		if (extra?.addOnType === 'single') return true
 		let itemIsSelected = false
 		Object.keys(selectedItems).forEach((itemKey: any) => {
-			if (itemKey === item?.id || itemKey === item?.name) {
+			if (itemKey === item?._id || itemKey === item?.name) {
 				itemIsSelected = true
 			} else {
 				itemIsSelected = true
 			}
 		})
-		if (extra?.id !== '') {
-			return selectedItemsCount[extra?.id] >= extra?.maxQuantity && !itemIsSelected
+		if (extra?._id !== '') {
+			return selectedItemsCount[extra?._id] >= extra?.maxQuantity && !itemIsSelected
 		}
 	}
 	function displayAlertPopUp() {
@@ -175,7 +175,7 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 								<div className='flex'>
 									{extra?.compulsory > 0 && (
 										<div className='w-8 text-sm '>
-											{Object.values(selectedItemsCount)[extraIndex]}/{extra?.id ? extra.maxQuantity : extra?.numSelections}
+											{Object.values(selectedItemsCount)[extraIndex]}/{extra?._id ? extra.maxQuantity : extra?.numSelections}
 										</div>
 									)}
 									<div className='flex justify-self-end'>
@@ -194,15 +194,15 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 											<tbody>
 												{(extra?.items || []).map((item, index) => {
 													let itemId: string = '';
-													if (item?.id !== undefined) {
-														itemId = item?.id
+													if (item?._id !== undefined) {
+														itemId = item?._id
 													} else if (item?.name) {
 														itemId = camelCase(item?.name + extraIndex)
 													}
 													const isDisabled = disableExtra(extra, item)
 													return (
 														<tr
-															className={`${item.visibility ? '' : 'hidden'} flex flex-row transition-all  ${(getQuantity(itemId) === item?.maxQuantity || selectedItemsCount[extra?.id] === extra?.maxQuantity) &&
+															className={`${item.visibility ? '' : 'hidden'} flex flex-row transition-all  ${(getQuantity(itemId) === item?.maxQuantity || selectedItemsCount[extra?._id] === extra?.maxQuantity) &&
 																getQuantity(itemId) === 0 &&
 																extra?.name
 																? 'opacity-50'

@@ -2,7 +2,6 @@ import BackButton from "@components/atoms/backButton";
 import PlaceholderImg from "@components/atoms/placeholder/img";
 import TableDetails from "@components/organisms/hicode/tableDetails";
 import { _useAllBusiness } from "@components/store/useAllBusiness";
-import useIdDetails from "@components/store/useIdDetails";
 import { useLogin } from "@components/store/useLogin";
 import { useRoutingFlow } from "@components/store/useRoutingFlow";
 import { getRandomBlurImg } from "@components/utils/images";

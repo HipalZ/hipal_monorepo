@@ -22,11 +22,11 @@ function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategor
 
 	const closeModal = () => {
 		if (variantType === 'portion') {
-			closeBottomPanel(dishData?.id)
+			closeBottomPanel(dishData?._id)
 		}
 		const itemValidation = checkValidation()
 		if (itemValidation) {
-			closeBottomPanel(dishData?.id)
+			closeBottomPanel(dishData?._id)
 		} else {
 			setBounceButton(true)
 			setTimeout(() => setBounceButton(false), 1000)
@@ -42,7 +42,7 @@ function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategor
 			openBottomPanel,
 			setCart,
 			closeBottomPanel,
-		)(cart?.[dishData?.id]?.variants?.length || 0 )
+		)(cart?.[dishData?._id]?.variants?.length || 0 )
 	}
 	const closeModalNothing = (e: any) => {
 		// e.preventDefault()
@@ -50,7 +50,7 @@ function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategor
 
 	return (
 		<>
-			<Transition show={isBottomPanelOpened(dishData?.id)} as={Fragment}>
+			<Transition show={isBottomPanelOpened(dishData?._id)} as={Fragment}>
 				<Dialog as='div' className='relative !z-[99999999]' onClose={(e) => closeModalNothing(e)}>
 					<Transition.Child
 						as={Fragment}

@@ -1,8 +1,6 @@
 import BottomButton from '@components/molecules/bottomButton'
-import { useLogin } from '@components/store/useLogin'
 import { useRoutingFlow } from '@components/store/useRoutingFlow'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import { memo } from 'react'
 
 function ExploreBottomButton() {

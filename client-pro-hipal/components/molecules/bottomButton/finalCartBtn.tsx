@@ -40,7 +40,7 @@ function FinalCartBtn() {
 
 	const localLogin = async () => {
 		toast.error("session expired");
-		router.push(`${routePaths[PAGE_TYPES.SIGN_IN](`${businessId}`)}`);
+		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`);
 	};
 
 	const handlePlaceOrder = async () => {

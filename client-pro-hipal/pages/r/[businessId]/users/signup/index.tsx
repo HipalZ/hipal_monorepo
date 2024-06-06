@@ -33,7 +33,7 @@ function SignUp() {
 
 		const config = {
 			method: 'PUT',
-			url: `/v1/users/${userDetails?.id}/updateUser`,
+			url: `/v1/users/${userDetails?._id}/updateUser`,
 			data: userData,
 		}
 		try {

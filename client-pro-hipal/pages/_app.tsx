@@ -5,7 +5,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Script from 'next/script'
 import NextNProgress from 'nextjs-progressbar'
-import React, { memo, startTransition, useEffect, useState } from 'react'
+import React, { memo,useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ToastContainer } from 'react-toastify'
@@ -28,21 +28,6 @@ export default memo(function MyApp({ Component, pageProps }: AppProps) {
 			setActiveDishType('ALL')
 		}
 	}, [])
-
-	useEffect(() => {
-		startTransition(() => {
-			if (!window.location.href.includes('#')) {
-				setTimeout(() => {
-					if (typeof document === 'undefined') return null
-					;(document.querySelector('body') as HTMLBodyElement).scrollTo({
-						top: 0,
-						left: 0,
-						behavior: 'smooth' as any,
-					})
-				}, 0)
-			}
-		})
-	}, [router.pathname])
 
 	useEffect(() => {
 		if (router.asPath.includes('r')) {

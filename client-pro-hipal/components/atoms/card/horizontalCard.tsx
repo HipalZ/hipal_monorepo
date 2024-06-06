@@ -21,20 +21,20 @@ function HorizontalCard({
 	noAddBtn,
 	isTopScrollWithSubTypes,
 	noDescription,
-	redirection,
+	redirectToDish,
 }: {
 	dishData: IDish;
 	noAddBtn?: boolean;
 	noDescription?: boolean;
 	isTopScrollWithSubTypes?: boolean;
-	redirection?: (id: string, categories: ICat) => void;
+	redirectToDish?: (id: string, categories: ICat) => void;
 }) {
 	const coverImage = dishData?.images?.[0];
 	const isAvailable = dishData?.availability;
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [selectedDish, setSelectedDish] = useState(null);
 	const cart = useCart((s) => s.cart);
-	const isDishInCart = cart.hasOwnProperty(dishData.id);
+	const isDishInCart = cart.hasOwnProperty(dishData._id);
 	const openModal = (dishData) => {
 		setSelectedDish(dishData);
 		setIsModalOpen(true);
@@ -47,7 +47,7 @@ function HorizontalCard({
 
 	return (
 		<section
-			id={`${dishData.id}`}
+			id={`${dishData._id}`}
 			className={`
   ${isAvailable ? "mx-6" : "opacity-80 px-6"}
   ${!isTopScrollWithSubTypes ? "scroll-mt-[15rem]" : "scroll-mt-[11.2rem]"}
@@ -128,8 +128,7 @@ function HorizontalCard({
 							</div>
 						) : noDescription ? (
 							<div
-								onClick={() => redirection(dishData.id, dishData.categories)}
-								className=""
+								onClick={() => redirectToDish(dishData._id, dishData.categories)}
 							>
 								<PlaceholderImg className="w-32 h-32 overflow-hidden rounded-xl" />
 							</div>

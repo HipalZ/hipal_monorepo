@@ -19,7 +19,7 @@ function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal
 		if (recommendationList.length === 0) return []
 
 		return recommendationList.map(({ id }) => {
-			const dishData = dishesData?.find((dish) => dish.id === id)
+			const dishData = dishesData?.find((dish) => dish._id === id)
 			return dishData
 		})
 	}, [dishData?.filters?.dishes, dishesData])

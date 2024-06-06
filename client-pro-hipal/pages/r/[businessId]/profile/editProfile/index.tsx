@@ -49,7 +49,7 @@ function ProfileEdit() {
 		try {
 			const config = {
 				method: 'PUT',
-				url: `/v1/users/${userData?.id}/updateUser`,
+				url: `/v1/users/${userData?._id}/updateUser`,
 				data: {
 					name: data.name,
 					phone: data.phone,
@@ -206,7 +206,7 @@ function ProfileEdit() {
 					</div>
 				</form>
 
-				<div className='flex flex-wrap opacity-50 justify-center'>
+				<div className='flex flex-wrap justify-center opacity-50'>
 					<Image src={HipalLogo} alt='HipalLogo' />
 				</div>
 				<div className='text-[0.6125rem] pb-[1.5rem] opacity-50 flex flex-wrap justify-center'>
