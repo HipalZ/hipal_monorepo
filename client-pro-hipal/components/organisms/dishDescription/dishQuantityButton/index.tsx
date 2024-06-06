@@ -25,7 +25,15 @@ function DishQuantityButton({ dishData, isDeleteAble }: { dishData: any; isDelet
 				closeBottomPanel,
 			)(quantity)
 		},
-		[cart, dishData, openBottomPanel, setCart, closeBottomPanel, isActiveParentCategory,isActiveParentCategoryName], // Included closeBottomPanel in the dependencies
+		[
+			cart,
+			dishData,
+			openBottomPanel,
+			setCart,
+			closeBottomPanel,
+			isActiveParentCategory,
+			isActiveParentCategoryName,
+		], // Included closeBottomPanel in the dependencies
 	)
 
 	const handleDeleteItem = () => {
@@ -51,9 +59,11 @@ function DishQuantityButton({ dishData, isDeleteAble }: { dishData: any; isDelet
 		<>
 			{(cart?.[dishData?._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
 				<button
-					type="button"
+					type='button'
 					className='bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case'
-					onClick={() => {handleQuantity((cart?.[dishData?._id]?.variants?.length || 0) + 1);}}
+					onClick={() => {
+						handleQuantity((cart?.[dishData?._id]?.variants?.length || 0) + 1)
+					}}
 				>
 					Add
 				</button>
@@ -66,7 +76,11 @@ function DishQuantityButton({ dishData, isDeleteAble }: { dishData: any; isDelet
 					onDeleteItem={() => handleDeleteItem()}
 				/>
 			)}
-			<BottomPanel dishData={dishData} isActiveParentCategory={isActiveParentCategory} isActiveParentCategoryName={isActiveParentCategoryName} />
+			<BottomPanel
+				dishData={dishData}
+				isActiveParentCategory={isActiveParentCategory}
+				isActiveParentCategoryName={isActiveParentCategoryName}
+			/>
 		</>
 	)
 }
@@ -76,7 +90,7 @@ export default memo(DishQuantityButton)
 export function handleDishQuantity(
 	cart: { [dishId: string]: any },
 	isActiveParentCategory: string,
-	isActiveParentCategoryName:string,
+	isActiveParentCategoryName: string,
 	dishData: IDish,
 	openBottomPanel: (panelName: string) => void,
 	setCart: (data: { [dishId: string]: any }) => void,
@@ -109,7 +123,7 @@ export function handleDishQuantity(
 						parentCategoryName: isActiveParentCategoryName,
 						variants: [
 							{
-								id: addedDishId,
+								_id: addedDishId,
 								extra: {},
 								portion: portion,
 							},
@@ -119,7 +133,7 @@ export function handleDishQuantity(
 			} else {
 				const newCart = { ...cart }
 				newCart[dishData?._id].variants.push({
-					id: addedDishId,
+					_id: addedDishId,
 					extra: {},
 					portion: portion,
 				})

@@ -81,9 +81,9 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 		let newSelectedItemsCount = { ...selectedItemsCount }
 		let newSelectionsCount: any = []
 		let selectedCount: number = 0
-		dishData.extras.forEach((extra, index) => {
+		dishData?.extras?.forEach((extra, index) => {
 			let selectedItemsSet: { [key: string]: number } = {}
-			extra.items.forEach((item) => {
+			extra?.items?.forEach((item) => {
 				Object.values(variantsExtra).forEach((variantExtra: any) => {
 					if (variantExtra?._id === item?._id) {
 						selectedItemsSet[variantExtra?._id] = variantExtra?.quantity
@@ -128,7 +128,7 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 	}
 
 	const allItemsVisibility = (index) => {
-		return dishData?.extras[index]?.items?.some(item => item.visibility);
+		return dishData?.extras[index]?.items?.some((item) => item.visibility)
 	}
 
 	return (
@@ -155,16 +155,18 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 								className='flex justify-between py-3 mx-6 prose cursor-pointer'
 							>
 								<div
-									className={`${bounceButton && !validationExtras[extraIndex] ? 'animation-bounce' : ''
-										}`}
+									className={`${
+										bounceButton && !validationExtras[extraIndex] ? 'animation-bounce' : ''
+									}`}
 								>
 									<h5 className='w-[12rem] text-sm font-medium capitalize text-base-content'>
 										{extra?.name || ''}
 									</h5>
 									{extra?.compulsory >= 0 && (
 										<span
-											className={`text-xs font-normal ${extra?.compulsory === 0 ? '' : '!text-primary '
-												}`}
+											className={`text-xs font-normal ${
+												extra?.compulsory === 0 ? '' : '!text-primary '
+											}`}
 										>
 											Select up to {extra?.maxQuantity} (
 											{extra?.compulsory > 0 ? ' ' + extra?.compulsory : ''}{' '}
@@ -175,7 +177,8 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 								<div className='flex'>
 									{extra?.compulsory > 0 && (
 										<div className='w-8 text-sm '>
-											{Object.values(selectedItemsCount)[extraIndex]}/{extra?._id ? extra.maxQuantity : extra?.numSelections}
+											{Object.values(selectedItemsCount)[extraIndex]}/
+											{extra?._id ? extra.maxQuantity : extra?.numSelections}
 										</div>
 									)}
 									<div className='flex justify-self-end'>
@@ -189,11 +192,15 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 							</div>
 							{activeIndex === extraIndex && (
 								<div className='pb-4'>
-									<div className={`${allItemsVisibility(extraIndex) ? 'border border-primary ' : ''} max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out opacity-100 rounded-xl`}>
+									<div
+										className={`${
+											allItemsVisibility(extraIndex) ? 'border border-primary ' : ''
+										} max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out opacity-100 rounded-xl`}
+									>
 										<table className='table w-full table-compact table-zebra '>
 											<tbody>
 												{(extra?.items || []).map((item, index) => {
-													let itemId: string = '';
+													let itemId: string = ''
 													if (item?._id !== undefined) {
 														itemId = item?._id
 													} else if (item?.name) {
@@ -202,21 +209,23 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 													const isDisabled = disableExtra(extra, item)
 													return (
 														<tr
-															className={`${item.visibility ? '' : 'hidden'} flex flex-row transition-all  ${(getQuantity(itemId) === item?.maxQuantity || selectedItemsCount[extra?._id] === extra?.maxQuantity) &&
+															className={`${
+																item.visibility ? '' : 'hidden'
+															} flex flex-row transition-all  ${
+																(getQuantity(itemId) === item?.maxQuantity ||
+																	selectedItemsCount[extra?._id] === extra?.maxQuantity) &&
 																getQuantity(itemId) === 0 &&
 																extra?.name
-																? 'opacity-50'
-																: 'opacity-100'
-																} ${item.availability ? '' : 'opacity-90 pointer-events-none'}`}
+																	? 'opacity-50'
+																	: 'opacity-100'
+															} ${item.availability ? '' : 'opacity-90 pointer-events-none'}`}
 															key={index.toString()}
 														>
 															<td className='min-h-16 max-h-20 !pl-3 !text-xs w-1/3 flex flex-col flex-wrap'>
 																<span className='w-full my-auto capitalize whitespace-pre-wrap'>
 																	{item?.name || ''}
 																</span>
-																<sub className='pb-2 text-[0.65rem]'>
-																	Max:{item?.maxQuantity}
-																</sub>
+																<sub className='pb-2 text-[0.65rem]'>Max:{item?.maxQuantity}</sub>
 															</td>
 															<td className=' !text-xs w-1/3 text-center font-semibold flex flex-row'>
 																<span className='mx-auto my-auto '>
@@ -224,18 +233,24 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 																</span>
 															</td>
 															<td className=' !text-xs w-1/3 text-center font-semibold flex flex-row'>
-																{item.availability ? <span className='pr-2 my-auto ml-auto'>
-																	<QuantityPickerNonOutline
-																		quantity={getQuantity(itemId)}
-																		setQuantity={(q) => handleQuantityChange(q, item, itemId)}
-																		minQuantity={0}
-																		extra={extra}
-																		item={item}
-																		selectedItemsCount={selectedItemsCount}
-																		isDisabled={isDisabled}
-																		displayAlertPopUp={displayAlertPopUp}
-																	/>
-																</span>: <h4 className='text-[0.75rem] flex items-center'>Item Not Available</h4>}
+																{item.availability ? (
+																	<span className='pr-2 my-auto ml-auto'>
+																		<QuantityPickerNonOutline
+																			quantity={getQuantity(itemId)}
+																			setQuantity={(q) => handleQuantityChange(q, item, itemId)}
+																			minQuantity={0}
+																			extra={extra}
+																			item={item}
+																			selectedItemsCount={selectedItemsCount}
+																			isDisabled={isDisabled}
+																			displayAlertPopUp={displayAlertPopUp}
+																		/>
+																	</span>
+																) : (
+																	<h4 className='text-[0.75rem] flex items-center'>
+																		Item Not Available
+																	</h4>
+																)}
 															</td>
 														</tr>
 													)
