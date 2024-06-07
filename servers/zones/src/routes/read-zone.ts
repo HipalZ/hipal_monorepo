@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { Table, Zone } from "@hi/db-models";
-
+import { authentication } from "../middleware/auth";
 const router = express.Router();
 
 router.get(
@@ -60,6 +60,7 @@ router.get(
 
 router.get(
   "/v1/zones/getAllZoneByWaiter",
+  authentication,
 
   async (req: Request, res: Response) => {
     try {

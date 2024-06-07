@@ -98,18 +98,18 @@ router.get(
     try {
       const { businessId, isAlertOn, zoneId, staffId } = req.query;
 
-      const swiggyAlerts = await Alert.find({
-        businessId: businessId,
-        isAlertOn: true,
-        tableName: { $in: ["swiggy", "zomato"] },
-      });
+      // const swiggyAlerts = await Alert.find({
+      //   businessId: businessId,
+      //   isAlertOn: true,
+      //   tableName: { $in: ["swiggy", "zomato"] },
+      // });
 
       let existingAlerts = await Alert.find({
         zoneId: zoneId,
         businessId,
         isAlertOn,
       }).sort({ _id: -1 });
-      existingAlerts = [...swiggyAlerts, ...existingAlerts];
+      existingAlerts = [...existingAlerts];
 
       if (isAlertOn == "false") {
         let PAGE_SIZE = 10;
@@ -817,7 +817,7 @@ router.get("/v1/kitchens/kots/allKot", async (req: Request, res: Response) => {
         let tableInfo;
 
         try {
-          tableInfo = await Table.findById(tableId, { session });
+          tableInfo = await Table.findById(tableId, null, { session });
 
           if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
             (tableId = tableInfo?.parentTableId),
@@ -825,7 +825,7 @@ router.get("/v1/kitchens/kots/allKot", async (req: Request, res: Response) => {
           }
         } catch (err: any) {
           console.log(err);
-          res.status(400).send("Table not found!");
+          res.status(400).send("Table not found");
           return;
         }
       }
@@ -852,6 +852,7 @@ router.get("/v1/kitchens/kots/allKot", async (req: Request, res: Response) => {
           isGst: 0,
           inventory: 0,
         },
+
         { session }
       );
 
@@ -1412,6 +1413,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
         {
           businessId,
         },
+        null,
         { session }
       ).select("name hierarchy  parentCategory  parentCategoryId ");
 
@@ -1435,6 +1437,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
             businessId,
             kotDate: { $regex: `^${dayAndDate}` },
           },
+          null,
           { session }
         ).select("category");
         let preKots = await Kot.find(
@@ -1442,6 +1445,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
             businessId,
             kotDate: { $regex: `^${previousDate}` },
           },
+          null,
           { session }
         ).select("category");
 
@@ -1488,6 +1492,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
                 $regex: `^${String(from).split("-").reverse().join("-")}`,
               },
             },
+            null,
             { session }
           ).select("category");
 
@@ -1522,6 +1527,7 @@ router.get("/v1/kitchens/:id/Category", async (req: Request, res: Response) => {
               $lte: formattedToDate,
             },
           },
+          null,
           { session }
         ).select("category");
         let ans = preAnalyticsCategory(kots, category);
@@ -1648,6 +1654,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
         {
           businessId,
         },
+        null,
         { session }
       ).select("name");
 
@@ -1671,6 +1678,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
             businessId,
             kotDate: { $regex: `^${dayAndDate}` },
           },
+          null,
           { session }
         ).select("dish  category");
 
@@ -1679,6 +1687,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
             businessId,
             kotDate: { $regex: `^${previousDate}` },
           },
+          null,
           { session }
         ).select("dish  category");
 
@@ -1717,13 +1726,17 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
       }
       if (from && to) {
         if (from == to) {
-          const kots = await Kot.find({
-            businessId,
+          const kots = await Kot.find(
+            {
+              businessId,
 
-            kotDate: {
-              $regex: `^${String(from).split("-").reverse().join("-")}`,
+              kotDate: {
+                $regex: `^${String(from).split("-").reverse().join("-")}`,
+              },
             },
-          }).select("dish category");
+            null,
+            { session }
+          ).select("dish category");
 
           let ans = preAnalytics(kots, dish);
           let optimizedStructure = dishesAnalytics(ans, kots);
@@ -1756,6 +1769,7 @@ router.get("/v1/kitchens/:id/Dishes", async (req: Request, res: Response) => {
               $lte: formattedToDate,
             },
           },
+          null,
           { session }
         ).select("dish category");
         let ans = preAnalytics(kots, dish);

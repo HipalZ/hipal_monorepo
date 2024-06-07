@@ -32,6 +32,8 @@ router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
 
       const currentCategories = dish.categories || [];
       const updatedCategories = update.categories || [];
+      console.log("currentCategories", currentCategories);
+      console.log("updatedCategories", updatedCategories);
 
       // Update the dish
       updatedDish = await Dish.findByIdAndUpdate<DishType>(
@@ -42,8 +44,9 @@ router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
 
       // Handle new categories added to the dish
       const newCategories = updatedCategories.filter(
-        (category: string) => !currentCategories.includes(category)
+        (category) => !currentCategories.includes(category.toString())
       );
+      console.log("newCategories", newCategories);
       await Category.updateMany(
         { _id: { $in: newCategories } },
         { $addToSet: { dishes: id } },
@@ -52,8 +55,9 @@ router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
 
       // Handle existing categories removed from the dish
       const removedCategories = currentCategories.filter(
-        (category) => !updatedCategories.includes(category)
+        (category) => !updatedCategories.includes(category.toString())
       );
+      console.log("removedCategories", removedCategories);
       await Category.updateMany(
         { _id: { $in: removedCategories } },
         { $pull: { dishes: id } },

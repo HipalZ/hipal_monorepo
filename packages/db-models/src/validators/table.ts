@@ -1,12 +1,20 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export const TableSchema = z.object({
+const TableSchema = z.object({
   businessId: z.string(),
   zoneId: z.string(),
   name: z.string(),
   capacity: z.number(),
   staff: z.array(z.string()),
-  status: z.enum(["Occupied", "Settled", "Clean", "Empty", "Reserved", "Need assistance", "Active"]),
+  status: z.enum([
+    "Occupied",
+    "Settled",
+    "Clean",
+    "Empty",
+    "Reserved",
+    "Need assistance",
+    "Active",
+  ]),
   activeUser: z.number(),
   time: z.string(),
   totalDishQuantity: z.number(),
@@ -22,4 +30,4 @@ export const TableSchema = z.object({
   reservedBy: z.string().optional(),
 });
 
-export type Table = z.infer<typeof TableSchema>;
+export type TableTypes = z.infer<typeof TableSchema>;

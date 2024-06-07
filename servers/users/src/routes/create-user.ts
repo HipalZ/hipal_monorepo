@@ -21,6 +21,21 @@ import moment = require("moment");
 
 const router = express.Router();
 
+const createAccessToken = (user: any) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
+      customRole: user.customRole,
+    },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "3m" } // Add 7 day expiration
+  );
+};
+
 const createJWT = (user: any) => {
   return jwt.sign(
     {
@@ -31,15 +46,31 @@ const createJWT = (user: any) => {
       role: user.role,
       customRole: user.customRole,
     },
-    process.env.JWT_KEY!
+    process.env.JWT_SECRET as string
   );
 };
 
-const addRewardScanUser = async (
-  phone: any,
-  loyaltyId: any,
-  businessName: any,
-  name: any
+const createRefreshToken = (user: any) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
+      customRole: user.customRole,
+    },
+    process.env.JWT_SECRET as string,
+    { expiresIn: "5m" } // Add 30 day expiration
+  );
+};
+
+const addSignUpBonus = async (
+  phone: string,
+  loyaltyId: string,
+
+  name: string,
+  bonus: number
 ) => {
   const currentTime = Date.now();
   const indianTime = moment(currentTime).utcOffset("+05:30");
@@ -55,7 +86,7 @@ const addRewardScanUser = async (
       userPhone: phone,
       userName: name,
       loyaltyId,
-      rewards: 50,
+      rewards: bonus,
       password: Math.floor(Math.random() * 9000) + 10000,
       scanCount: 1,
     });
@@ -64,43 +95,35 @@ const addRewardScanUser = async (
     const data = new UserRewardHistory({
       userName: name,
       userPhone: phone,
-      businessName,
-
       status: "plus",
-      rewards: 50,
-
+      rewards: bonus,
       time,
       date: new Date().toISOString().slice(0, 19).replace("T", " "),
-      currentBalance: 50,
+      currentBalance: bonus,
       day: dayAndDate,
       loyaltyId,
     });
 
     await data.save();
     return 1;
-  } else {
-    let userRewardExit = await UserReward.findOne({
-      userPhone: phone,
-      loyaltyId,
-    });
-    if (!userRewardExit?.scanCount || userRewardExit?.scanCount == 0) {
+  } else if (existingReward) {
+    if (!existingReward?.scanCount || existingReward?.scanCount == 0) {
       let userReward = await UserReward.findOneAndUpdate(
         { userPhone: phone, loyaltyId },
-        { $inc: { rewards: 50, scanCount: 1 } },
+        { $inc: { rewards: bonus, scanCount: 1 } },
         { new: true }
       );
 
       const data = new UserRewardHistory({
         userName: userReward?.userName || name,
         userPhone: userReward?.userPhone || phone,
-        businessName,
 
         status: "plus",
-        rewards: 50,
+        rewards: bonus,
 
         time,
         date: new Date().toISOString().slice(0, 19).replace("T", " "),
-        currentBalance: userReward?.rewards || 50,
+        currentBalance: userReward?.rewards || bonus,
         day: dayAndDate,
         loyaltyId,
       });
@@ -117,120 +140,267 @@ const addRewardScanUser = async (
       return 1;
     }
   }
+  return 1;
 };
 
-router.post("/v1/users", async (req: Request, res: Response) => {
-  console.log("aaaaa", req.body, req.query);
-  let { name, email, phone, role, customRole, password, otp, accessControl } =
-    req.body;
-  const { action, clientRole, withScan, loyaltyId, businessName } = req.query;
+router.post(
+  "/v1/users/:id/signUp",
 
-  // if (!clientRole) {
-  //   throw new BadRequestError("clientRole required");
-  // }
-  // const UserOrAdmin: any = clientRole === "admin" ? Admin : User;
+  async (req: Request, res: Response) => {
+    let { phone, role } = req.body;
 
-  if (action === "signup") {
-    if (phone?.length < 10) {
-      return res
-        .status(400)
-        .send({ status: false, message: "Phone Number Invalid !!" });
-    }
+    try {
+      let existingUser;
+      existingUser = await User.findOne({ phone, role });
+      // try {
+      //   const options = {
+      //     method: "POST",
+      //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+      //     headers: {
+      //       accept: "application/json",
+      //       "content-type": "application/json",
+      //       authkey: "387796AmyGlDBq63b2d75aP1",
+      //     },
+      //   };
+      //   await axios(options);
+      // } catch (e: any) {
+      //   console.log(e);
+      //   return res.status(500).send({ status: false, message: e.message });
+      // }
 
-    let existingUserPhone;
+      if (existingUser) {
+        return res.status(400).send(existingUser);
+      }
+      const user = await User.create(req.body);
 
-    if (clientRole === "admin") {
-      existingUserPhone = await Admin.findOne({ phone, role });
-    } else {
-      existingUserPhone = await User.findOne({ phone, role });
-    }
-    // if (existingUserPhone) {
-    //   throw new BadRequestError("User registered already");
-    // }
-    if (role == "RESTAURANT_OWNER") {
-      password = Math.floor(Math.random() * 9000) + 1000;
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      phone,
-      role,
-      customRole,
-      password,
-      accessControl,
-    });
-
-    // if (user?.role != "RESTAURANT_OWNER") {
-    //   const options = {
-    //     method: "POST",
-    //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
-    //     headers: {
-    //       accept: "application/json",
-    //       "content-type": "application/json",
-    //       authkey: "387796AmyGlDBq63b2d75aP1",
-    //     },
-    //   };
-    //   await axios(options);
-    // }
-
-    // Generate JWT
-    // const userJwt = createJWT(user);
-
-    // // // Store it on session object
-    // if (!customRole) {
-    //   req.session = {
-    //     jwt: userJwt,
-    //   };
-    // }
-
-    res.status(201).send(user);
-  } else if (action === "login") {
-    const number = phone;
-
-    // check if phone number is valid
-    // if (!number.match(/^\d+$/)) {
-    //   throw new BadRequestError("Phone number Invalid");
-    // }
-
-    let user;
-    if (clientRole === "admin") {
-      user = await Admin.findOne({ phone, role: "HIPAL_ADMIN" });
-    } else {
-      user = await User.findOne({ phone });
-    }
-
-    // if (!user) {
-    //   throw new NotFoundError();
-    // }
-
-    // Generate JWT
-    const userJwt = createJWT(user);
-
-    // // Store it on session object
-    if (!customRole) {
-      req.session = {
-        jwt: userJwt,
-      };
-    }
-
-    if (req.query?.withScan == "true") {
-      console.log("uetoy", user);
-      let reward = await addRewardScanUser(
-        phone,
-        loyaltyId,
-        businessName,
-        user?.name
-      );
+      // const userJwt = createJWT(user);
+      // req.session = {
+      //   jwt: userJwt,
+      // };
 
       return res.status(201).send(user);
+    } catch (e: any) {
+      console.log(e);
+      return res.status(500).send({ status: false, message: e.message });
     }
-    res.status(201).send(user);
-  } else if (action === "logout") {
-    req.session = null;
-    res.send({});
   }
-});
+);
+
+router.post(
+  "/v1/users/:id/signIn",
+  // validateUser,
+  // validateRequest,
+  async (req: Request, res: Response) => {
+    let { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } =
+      req.body;
+
+    try {
+      let existingUser;
+      existingUser = await User.findByIdAndUpdate(
+        userId,
+        { name },
+        { new: true }
+      ).lean();
+      if (!existingUser) {
+        return res.status(400).send("User not found");
+      }
+      // try {
+      //   if (
+      //     loyaltyId &&
+      //     signUpBonus &&
+      //     signUpBonus > 0 &&
+      //     role == "HIPAL_CUSTOMER"
+      //   ) {
+      //     await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+      //   }
+      // } catch (e) {
+      //   console.log(e);
+      // }
+
+      // const options = {
+      //   method: "GET",
+      //   url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+      //   headers: {
+      //     accept: "application/json",
+      //     authkey: "387796AmyGlDBq63b2d75aP1",
+      //   },
+      // };
+
+      // const response = await axios(options);
+      // console.log("response", response);
+
+      // if (
+      //   response?.data?.message === "Mobile no. not found" ||
+      //   response?.data?.message === "OTP not match"
+      // ) {
+      //   return res
+      //     .status(400)
+      //     .send({ status: false, message: "Please enter valid Otp !!" });
+      // }
+      // const userJwt = createJWT(existingUser);
+      // req.session = {
+      //   jwt: userJwt,
+      // };
+
+      // if (loyaltyId && signUpBonus > 0) {
+      //   const userReward = await UserReward.findOne({
+      //     userPhone: phone,
+      //     loyaltyId,
+      //   });
+      //   const modifyUser = {
+      //     ...existingUser,
+
+      //     reward: signUpBonus,
+      //     count: userReward?.scanCount,
+      //   };
+      //   return res.status(200).send(modifyUser);
+      // }
+
+      return res.status(200).send(existingUser);
+    } catch (e: any) {
+      console.log(e);
+      return res.status(500).send({ status: false, message: e.message });
+    }
+  }
+);
+
+router.post(
+  "/v1/users",
+  // validateUser,
+  // validateRequest,
+  async (req: Request, res: Response) => {
+    let { name, email, phone, role, customRole, password, otp, accessControl } =
+      req.body;
+    const { action, clientRole, withScan, loyaltyId, businessName } = req.query;
+
+    // if (!clientRole) {
+    //   throw new BadRequestError("clientRole required");
+    // }
+    const UserOrAdmin: any = clientRole === "admin" ? Admin : User;
+
+    if (action === "signup") {
+      if (phone?.length < 10) {
+        return res
+          .status(400)
+          .send({ status: false, message: "Phone Number Invalid !!" });
+      }
+
+      let existingUserPhone;
+
+      if (clientRole === "admin") {
+        existingUserPhone = await Admin.findOne({ phone, role });
+      } else {
+        existingUserPhone = await User.findOne({ phone, role });
+      }
+      // if (existingUserPhone) {
+      //   throw new BadRequestError("User registered already");
+      // }
+      if (role == "RESTAURANT_OWNER") {
+        password = Math.floor(Math.random() * 9000) + 1000;
+      }
+
+      const user = UserOrAdmin.build({
+        name,
+        email,
+        phone,
+        role,
+        customRole,
+        password,
+        accessControl,
+      });
+
+      await user.save();
+
+      // if (
+      //   user?.role != "RESTAURANT_OWNER" ||
+      //   user?.role != "RESTAURANT_MANAGER"
+      // ) {
+      //   const options = {
+      //     method: "POST",
+      //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+      //     headers: {
+      //       accept: "application/json",
+      //       "content-type": "application/json",
+      //       authkey: "387796AmyGlDBq63b2d75aP1",
+      //     },
+      //   };
+      //   await axios(options);
+      // }
+
+      // Generate JWT
+      // const userJwt = createJWT(user);
+
+      // // // Store it on session object
+      // if (!customRole) {
+      //   req.session = {
+      //     jwt: userJwt,
+      //   };
+      // }
+
+      res.status(201).send(user);
+    } else if (action === "login") {
+      const number = phone;
+
+      // check if phone number is valid
+      // if (!number.match(/^\d+$/)) {
+      //   throw new BadRequestError("Phone number Invalid");
+      // }
+
+      let user;
+      if (clientRole === "admin") {
+        user = await Admin.findOne({ phone, role: "HIPAL_ADMIN" });
+      } else {
+        user = await User.findOne({ phone });
+      }
+
+      // if (!user) {
+      //   throw new NotFoundError();
+      // }
+
+      // if (user?.role != "RESTAURANT_OWNER") {
+      //   const options = {
+      //     method: "GET",
+      //     url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${number}`,
+      //     headers: {
+      //       accept: "application/json",
+      //       authkey: "387796AmyGlDBq63b2d75aP1",
+      //     },
+      //   };
+
+      //   const response = await axios(options);
+
+      //   if (
+      //     response?.data?.message === "Mobile no. not found" ||
+      //     response?.data?.message === "OTP not match"
+      //   ) {
+      //     return res
+      //       .status(400)
+      //       .send({ status: false, message: "Please enter valid Otp !!" });
+      //   }
+      // } else {
+      //   const code = await redisWrapper.client.get(`number:${number}:code`);
+
+      //   if (otp !== code) {
+      //     throw new BadRequestError("Invalid code");
+      //   }
+      // }
+
+      // Generate JWT
+      // const userJwt = createJWT(user);
+
+      // // // Store it on session object
+      // if (!customRole) {
+      //   req.session = {
+      //     jwt: userJwt,
+      //   };
+      // }
+      res.status(201).send(user);
+    } else if (action === "logout") {
+      req.session = null;
+      res.send({});
+    }
+  }
+);
 
 router.post(
   "/v1/users/waiterLogin",
@@ -255,11 +425,19 @@ router.post(
     }
 
     // Generate JWT
-    // const userJwt = createJWT(existingUser);
+    const accessToken = createAccessToken(existingUser);
+    const refreshToken = createRefreshToken(existingUser);
 
-    // req.session = {
-    //   jwt: userJwt,
-    // };
+    // Store it on cockies object
+
+    res.cookie("accessToken", accessToken, {
+      // httpOnly: true,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      // httpOnly: true,
+    });
+
     res.status(201).send(existingUser);
   }
 );

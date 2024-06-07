@@ -23,7 +23,7 @@ import { razorpayWrapper } from "../razorpay-wrapper";
 const { validateWebhookSignature } = require("../utils/razorpay-utils");
 
 import { createHmac } from "crypto";
-import { KOTType } from "@hi/db-models/src/validators";
+import { KOTType, TableTypes } from "@hi/db-models/src/validators";
 
 const router = express.Router();
 
@@ -302,7 +302,7 @@ const cartToKots = (
 
 const getParentData = async (zoneId: string, tableId: string, session: any) => {
   try {
-    const parentTable = await Table.findById(tableId, { session });
+    const parentTable = await Table.findById(tableId, null, { session });
     return parentTable;
   } catch (error) {
     console.log(error);
@@ -336,7 +336,7 @@ router.post(
         let tableInfo;
 
         try {
-          tableInfo = await Table.findById(tableId, { session });
+          tableInfo = await Table.findById(tableId, null, { session });
           if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
             const parentTable = await getParentData(
               tableInfo?.parentZoneId,
@@ -354,7 +354,9 @@ router.post(
         }
 
         if (hiCode) {
-          const isTableSettled = await Tempmodel.findOne({ hiCode });
+          const isTableSettled = await Tempmodel.findOne({ hiCode }, null, {
+            session,
+          });
 
           if (
             isTableSettled ||
@@ -368,7 +370,7 @@ router.post(
         }
 
         if (!tableInfo?.role) {
-          let updateTable;
+          let updateTable: any;
 
           const update = {
             role: {
@@ -380,12 +382,11 @@ router.post(
           };
 
           try {
-            updateTable = await Table.findByIdAndUpdate(
-              tableId,
-              update,
-
-              { session }
-            );
+            updateTable = await Table.findByIdAndUpdate(tableId, update, {
+              new: true,
+              session,
+              rawResult: true,
+            });
           } catch (err: any) {
             console.log(err.message);
             res.status(400).send("something went wrong please try again!");
@@ -422,13 +423,13 @@ router.post(
             cart: cart,
           };
 
-          const savedata = new Waiterkot(obj, { session });
-          await savedata.save();
+          await Waiterkot.create([obj], { session: session });
+          console.log("updateTable", updateTable);
           res.status(201).send({
             status: true,
             message: "Create Successfully",
-            role: updateTable?.role,
-            hiCode: updateTable?.hiCode,
+            role: updateTable?.value?.role,
+            hiCode: updateTable?.value?.hiCode,
           });
           return;
         } else {
@@ -442,8 +443,8 @@ router.post(
                 status: false,
                 message: `Enter Valid Hicode !!! ${name} is already on this table`,
               });
-              return;
             }
+            console.log("tableInfo", tableInfo, "hiCode", hiCode);
 
             if (tableInfo?.hiCode !== hiCode) {
               res
@@ -481,8 +482,7 @@ router.post(
             cart: cart,
           };
 
-          const savedata = new Waiterkot(obj, { session });
-          await savedata.save();
+          await Waiterkot.create([obj], { session });
 
           if (customerPhone == tableInfo?.role?.customerPhone) {
             res.status(201).send({
@@ -490,8 +490,9 @@ router.post(
               role: tableInfo?.role,
               hiCode: tableInfo?.hiCode,
             });
-            return;
           }
+          res.status(201).send("Create Successfully");
+          return;
         }
       });
     } catch (err: any) {
@@ -943,210 +944,6 @@ const getUpdatedCart = (kots: any, isDeleted: any) => {
   }
   return cart;
 };
-// router.post(
-//   "/v1/kitchens/:kitchenId/swiggyOrders",
-//   // validateKOT,
-//   // currentUser,
-//   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-//   // validateRequest,
-//   async (req: Request, res: Response) => {
-//     try {
-//       const currentTime = Date.now();
-//       const momentTime = moment(currentTime);
-
-//       const indianTime = momentTime
-//         .clone()
-//         .utcOffset("+05:30")
-//         .format("HH:mm:ss");
-//       const indianTime2 = momentTime
-//         .clone()
-//         .utcOffset("+05:30")
-//         .format("HH:mm");
-
-//       const body = req.body;
-
-//       const exitingKot = await Kot.findOne({
-//         orderId: body?.orderId,
-//       });
-//       if (exitingKot) {
-//         return res
-//           .status(400)
-//           .send({ status: false, message: "Order Already Exist" });
-//       }
-//       let dishes: any = [];
-//       let zones: any = [];
-//       const config = {
-//         method: "get",
-//         url: `${process.env.URL}/v1/dishes?businessId=${body?.businessId}`,
-//       };
-//       const con = {
-//         method: "get",
-//         url: `${process.env.URL}/v1/zones?businessId=${body?.businessId}`,
-//       };
-
-//       try {
-//         let data = await axios(config);
-//         let zone = await axios(con);
-
-//         dishes = data?.data;
-//         zones = zone?.data;
-//       } catch (err: any) {
-//         console.log(err);
-//       }
-
-//       zones = zones?.filter((zone: any) => zone?.zoneName == "swiggy");
-
-//       let ale = await Alert.create({
-//         businessId: body?.businessId,
-//         zoneId: zones?.[0]?.id,
-//         tableName: "swiggy",
-//         staffId: body?.staffId,
-//         status: "Swiggy",
-//         time: indianTime2,
-//         message: "New Order From Swiggy",
-//         isAlertOn: true,
-//       });
-
-//       const isInDesiredList = (itemName: any, desiredList: any) => {
-//         return (
-//           desiredList &&
-//           desiredList.some(
-//             (item: any) =>
-//               item.name.trim().toLowerCase().replace(/ /g, "") ===
-//               itemName.trim().toLowerCase().replace(/ /g, "")
-//           )
-//         );
-//       };
-
-//       // Filtering logic
-//       let result = body?.result;
-
-//       let filteredResults = result.filter((swiggyDish: any, index: number) => {
-//         // Find the dish in the comparison array
-//         const comparisonDish = dishes.find(
-//           (dish: any) =>
-//             dish.name.trim().toLowerCase().replace(/ /g, "") ===
-//             swiggyDish.dishName.trim().toLowerCase().replace(/ /g, "")
-//         );
-
-//         // If dish is found, filter its portions and extras
-//         if (comparisonDish) {
-//           console.log("comparisonDish", comparisonDish);
-//           swiggyDish["kitchenId"] = comparisonDish["kitchenId"];
-//           swiggyDish.portions = swiggyDish.portions.filter((portion: any) =>
-//             isInDesiredList(portion.name, comparisonDish.portions)
-//           );
-//           swiggyDish.extras = swiggyDish.extras.filter(
-//             (extra: any, index: any) =>
-//               isInDesiredList(extra.name, comparisonDish.extras?.[index]?.items)
-//           );
-//           return true;
-//         } else {
-//           return false;
-//         }
-//       });
-//       let dishNames = filteredResults.map((dish: any) => dish.dishName);
-//       let notMatchedDishes = result.filter(
-//         (swiggyDish: any, index: number) =>
-//           swiggyDish.dishName && !dishNames.includes(swiggyDish.dishName)
-//       );
-//       for (let i = 0; i < notMatchedDishes.length; i++) {
-//         let dish = notMatchedDishes[i];
-//         dish["match"] = false;
-//       }
-
-//       let mergeArray = [...filteredResults, ...notMatchedDishes];
-//       let kotArray = [];
-
-//       for (let i = 0; i < mergeArray.length; i++) {
-//         const dish = mergeArray[i];
-
-//         let extras = dish?.extras || [];
-//         let portions = dish?.portions || {};
-//         if (portions?.length > 0) {
-//           portions = { name: portions[0]?.name, price: dish?.price };
-//         } else {
-//           portions = {};
-//         }
-
-//         let kotObject = {
-//           businessId: body?.businessId,
-//           kitchenId: dish?.kitchenId ? dish?.kitchenId : "5",
-//           zoneId: zones[0]?.id,
-//           staffId: "5",
-//           dish: {
-//             dishId: Math.floor(Math.random() * 9000) + 1000,
-//             name: dish?.dishName,
-//             price: dish?.price,
-//             qty: dish?.qty,
-//             comments: "spicy",
-//             extras,
-//             portions,
-//           },
-//           dishType: "Veg",
-//           category: dish?.category,
-//           customerName: body?.userName,
-//           customerPhone: "9999999999",
-//           instructions: body?.instructions,
-//           dishStatus: "cooking",
-//           tableName: "swiggy",
-//           orderId: body?.orderId,
-//           swiggyBillObj: body?.billObject,
-//           match: dish?.match,
-//         };
-
-//         kotArray.push(kotObject);
-//       }
-
-//       const created = [];
-//       const startedAt = Date.now();
-//       for (let i = 0; i < kotArray.length; i++) {
-//         const newKOT: any = kotArray[i];
-//         let exitingKotByName = await Kot.findOne({
-//           "dish.name": newKOT.dish.name,
-//           orderId: body?.orderId,
-//         });
-//         if (exitingKotByName) {
-//           return res
-//             .status(400)
-//             .send({ status: false, message: "Order Already Exist" });
-//         }
-//         const kot = await Kot.create({
-//           ...newKOT,
-//           startedAt,
-//           cookedAt: -1,
-//           status: "UNPAID",
-//           kotTime: indianTime,
-//           date: moment().format("Do MMM YY"),
-//         });
-
-//         created.push(kot);
-//       }
-//       try {
-//         let cart = getUpdatedCart(kotArray, false);
-//         const kotConfig = {
-//           method: "post",
-//           url: `https://ws.hipal.life`,
-//           data: {
-//             businessId: body?.businessId,
-//             payload: {
-//               tableName: "swiggy",
-//               cart: cart,
-//               waiterName: "swiggy",
-//             },
-//           },
-//         };
-
-//         let print = await axios(kotConfig);
-//       } catch (err: any) {
-//         console.log(err);
-//       }
-//       res.status(201).send({ created, zones, mergeArray });
-//     } catch (err: any) {
-//       return res.status(500).send({ status: false, message: err.message });
-//     }
-//   }
-// );
 
 router.post(
   "/v1/kitchens/:kitchenId/kotPrint",
@@ -1218,6 +1015,7 @@ router.post(
             zoneId: toZoneId,
             status: "UNPAID",
           },
+          null,
           { session }
         ).select("dishStatus");
         let deliverdDish = 0;
@@ -1232,8 +1030,9 @@ router.post(
             zoneId: fromZoneId,
             status: "UNPAID",
           },
+          null,
           { session }
-        ).count();
+        ).select("dishStatus");
         const config = {
           status: "Active",
           totalDishQuantity: kots?.length,
@@ -1241,8 +1040,8 @@ router.post(
         };
         await Table.findByIdAndUpdate(toTableId, config, { session });
         const con = {
-          status: existingKOT > 0 ? "Active" : "Empty",
-          totalDishQuantity: existingKOT,
+          status: existingKOT?.length > 0 ? "Active" : "Empty",
+          totalDishQuantity: existingKOT.length,
         };
         await Table.findByIdAndUpdate(fromTableId, con, { session });
 

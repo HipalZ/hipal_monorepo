@@ -21,7 +21,7 @@ router.get(
     }
     existingDishes = await Dish.find({
       businessId,
-    }).populate("categories");
+    }).populate(["categories", "extras", "filters.dishes"]);
     let Active = 0;
     let visible = 0;
     let available = 0;

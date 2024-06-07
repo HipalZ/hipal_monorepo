@@ -389,6 +389,7 @@ router.put(
 
         const parentTable = await Table.findById(
           findParentTable?.[0]?.tableId,
+          null,
           {
             session: session,
           }
@@ -437,6 +438,7 @@ router.put(
                 status: "UNPAID",
                 isDeleted: false,
               },
+              null,
               { session: session }
             ).lean();
             let newArray = JSON.parse(JSON.stringify(kots));
@@ -465,15 +467,16 @@ router.put(
             status: "UNPAID",
             isDeleted: false,
           },
+          null,
           {
             session: session,
           }
-        ).count();
+        );
 
         await Table.findByIdAndUpdate(
           findParentTable?.[0]?.tableId,
           {
-            totalDishQuantity: kots,
+            totalDishQuantity: kots?.length,
           },
           {
             session: session,

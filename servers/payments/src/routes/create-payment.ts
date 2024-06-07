@@ -9,6 +9,7 @@ import {
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
+import momentTimeZone from "moment-timezone";
 
 import axios from "axios";
 
@@ -87,9 +88,9 @@ router.post(
         tipsGivenBy,
       } = req.body;
 
-      // const date = new Date().toISOString().replace("T", " ").slice(0, 19);
+      const date = new Date().toISOString().replace("T", " ").slice(0, 19);
 
-      // const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
+      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
       const payment = await Payment.create({
         businessId,
@@ -97,7 +98,7 @@ router.post(
         address,
         gstin,
         items,
-        date: "dayAndDate",
+        date: dayAndDate,
         subTotal,
         sgst,
         cgst,

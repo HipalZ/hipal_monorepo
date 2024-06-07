@@ -39,7 +39,7 @@ router.put("/v1/categories/:id", async (req: Request, res: Response) => {
 
       // Handle new dishes added to the category
       const newDishes = updatedDishes.filter(
-        (dish: string) => !currentDishes.includes(dish)
+        (dish: string) => !currentDishes.includes(dish.toString())
       );
       await Dish.updateMany(
         { _id: { $in: newDishes } },
@@ -49,7 +49,7 @@ router.put("/v1/categories/:id", async (req: Request, res: Response) => {
 
       // Handle existing dishes removed from the category
       const removedDishes = currentDishes.filter(
-        (dish) => !updatedDishes.includes(dish)
+        (dish) => !updatedDishes.includes(dish.toString())
       );
       await Dish.updateMany(
         { _id: { $in: removedDishes } },

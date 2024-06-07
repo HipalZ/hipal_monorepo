@@ -4,6 +4,8 @@ import axios from "axios";
 
 import moment from "moment";
 
+import momentTimeZone from "moment-timezone";
+
 import {
   Alert,
   Business,
@@ -342,7 +344,7 @@ router.put(
         indianTime,
         hiCode,
       } = req.body;
-
+      const payDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
       if (!mode || (!Total && Total == null)) {
         return res.status(400).send("Please enter the required fields.");
       }
@@ -413,34 +415,39 @@ router.put(
         }
 
         const paymentConfig = await Payment.create(
-          {
-            businessId: singleKot?.businessId,
-            items,
-            subTotal: Number(subTotal),
-            sgst: Number(SGST.toFixed(2)),
-            cgst: Number(CGST.toFixed(2)),
-            total: Number(Total),
-            paymentMode: mode || "online",
-            paymentDate: dayAndDate,
-            mode: mode || "online",
-            customerName: cName,
-            customerPhone: cPhone,
-            discount: Number(discount),
-            zoneId: singleKot?.zoneId,
-            tableId: singleKot?.tableId,
-            time: indianTime,
-            tableName: singleKot?.tableName,
-            duesPersonId,
-            discountDescription,
-            claimedAmount,
-            serviceCharge,
-            modeBreakDown,
-            waiterName,
-            tips,
-            zoneType,
-          },
+          [
+            {
+              businessId: singleKot?.businessId,
+              items,
+              subTotal: Number(subTotal),
+              sgst: Number(SGST.toFixed(2)),
+              cgst: Number(CGST.toFixed(2)),
+              date: payDate,
+              total: Number(Total),
+              paymentMode: mode || "online",
+              paymentDate: dayAndDate,
+              mode: mode || "online",
+              customerName: cName,
+              customerPhone: cPhone,
+              discount: Number(discount),
+              zoneId: singleKot?.zoneId,
+              tableId: singleKot?.tableId,
+              time: indianTime,
+              tableName: singleKot?.tableName,
+              duesPersonId,
+              discountDescription,
+              claimedAmount,
+              serviceCharge,
+              modeBreakDown,
+              waiterName,
+              tips,
+              zoneType,
+            },
+          ],
           { session }
         );
+
+        console.log("paymentConfig", paymentConfig);
 
         try {
           await Waiterkot.deleteMany(
@@ -610,6 +617,9 @@ router.put(
     try {
       const { kotId } = req.params;
       const { waiterName, kotPrinter } = req.body;
+      if (!kotId) {
+        return res.status(400).send("kotId is required");
+      }
 
       await runInTransaction(async (session: ClientSession) => {
         const currentTime = new Date();
@@ -627,7 +637,7 @@ router.put(
         );
         const kotTime = formatterTimesAndSeconds.format(currentTime);
 
-        let getWaiterKot = await Waiterkot.findById(kotId, { session });
+        let getWaiterKot = await Waiterkot.findById(kotId, null, { session });
 
         if (getWaiterKot?.isAccept) {
           throw new Error("Order already accepted");
@@ -643,17 +653,14 @@ router.put(
           for (let i = 0; i < (getWaiterKot.items?.length ?? 0); i++) {
             const newKOT = getWaiterKot?.items?.[i] as unknown as object;
 
-            const kot = await Kot.create(
-              {
-                ...(newKOT as KOTType),
-                startedAt,
-                cookedAt: -1,
-                status: "UNPAID",
-                kotTime: kotTime,
-                kotDate: kotDate,
-              },
-              { session }
-            );
+            const kot = {
+              ...(newKOT as KOTType),
+              startedAt,
+              cookedAt: -1,
+              status: "UNPAID",
+              kotTime: kotTime,
+              kotDate: kotDate,
+            };
             kotsToInsert.push(kot);
           }
 
@@ -663,7 +670,7 @@ router.put(
             tableId: getWaiterKot?.tableId,
             status: "UNPAID",
           };
-          const existingKOTs = await Kot.find(query, { session }).select(
+          const existingKOTs = await Kot.find(query, null, { session }).select(
             "dishStatus"
           );
 
@@ -680,7 +687,7 @@ router.put(
             totalDishQuantity: totalDish,
             deliveredDish: delivered,
             status: "Active",
-            time: currentTime,
+            time: time,
           };
 
           await Table.findByIdAndUpdate(getWaiterKot.tableId, config, {
@@ -800,7 +807,7 @@ router.put(
         let checkTable;
 
         try {
-          checkTable = await Table.findById(toTableId, { session });
+          checkTable = await Table.findById(toTableId, null, { session });
           if (checkTable?.status != "Empty") {
             throw new Error("Table must be Empty");
           }
@@ -829,7 +836,7 @@ router.put(
         const config = {
           status: "Empty",
           activeUser: 0,
-          time: new Date(),
+          time: new Date().toISOString().replace("T", " ").slice(0, 19),
           totalDishQuantity: 0,
           deliverdDish: 0,
           role: null,
@@ -851,7 +858,7 @@ router.put(
           status: "UNPAID",
         };
 
-        const existingKOTs = await Kot.find(query, { session }).select(
+        const existingKOTs = await Kot.find(query, null, { session }).select(
           "dishStatus"
         );
 
@@ -868,7 +875,7 @@ router.put(
           totalDishQuantity: totalDish,
           deliverdDish: delivered,
           status: "Active",
-          time: new Date(),
+          time: new Date().toISOString().replace("T", " ").slice(0, 19),
         };
 
         try {

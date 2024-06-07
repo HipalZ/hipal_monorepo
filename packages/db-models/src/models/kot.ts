@@ -21,6 +21,7 @@ const kotExtraSchema = new mongoose.Schema<KotExtraType>(
     qty: {
       type: Number,
       required: false,
+      default: 1,
     },
   },
   {
