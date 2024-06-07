@@ -115,6 +115,7 @@ export interface UserProfile {
   id: string;
 }
 export interface IBusinessData {
+  _id: string;
   businessName: string;
   registeredName: string;
   businessType: string;

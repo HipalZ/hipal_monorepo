@@ -33,7 +33,7 @@ function HorizontalCard({
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [selectedDish, setSelectedDish] = useState(null)
 	const cart = useCart((s) => s.cart)
-	const isDishInCart = cart.hasOwnProperty(dishData.id)
+	const isDishInCart = cart.hasOwnProperty(dishData._id)
 	const openModal = (dishData) => {
 		setSelectedDish(dishData)
 		setIsModalOpen(true)
@@ -47,7 +47,7 @@ function HorizontalCard({
 
 	return (
 		<section
-			id={`${dishData?.id}`}
+			id={`${dishData?._id}`}
 			className={`
   ${isAvailable ? 'mx-6' : 'opacity-80 px-6'}
   ${!isTopScrollWithSubTypes ? 'scroll-mt-[15rem]' : 'scroll-mt-[11.2rem]'}
@@ -61,6 +61,9 @@ function HorizontalCard({
 								<FoodType type={dishData.dishType as FOOD_TYPES} />
 							</div>
 						)}
+						{/* {dishData ?   <div>
+							<span></span>
+						</div> : null} */}
 						{!isAvailable && (
 							<>
 								<span>
@@ -120,7 +123,7 @@ function HorizontalCard({
 							</div>
 						) : noDescription ? (
 							<div
-								onClick={() => redirection(dishData.id, dishData.categories)}
+								onClick={() => redirection(dishData._id, dishData.categories)}
 								className=""
 							>
 								<PlaceholderImg className="w-32 h-32 overflow-hidden rounded-xl" />

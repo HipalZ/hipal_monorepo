@@ -1,13 +1,12 @@
 import type React from "react";
-import HiKitchenLogo from "../assets/svg/hiBizlogo.svg";
+import HiKitchenLogo from "@/assets/svg/hiBizlogo.svg";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { toast } from "react-toastify";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import Sir from "../assets/svg/sir2.svg";
+import Sir from "@/assets/svg/sir2.svg";
 import axios from "@/axios";
-import { isEmpty } from "lodash-es";
 
 function Login() {
 	const {
@@ -42,7 +41,8 @@ function Login() {
 			};
 
 			const user = await axios(config);
-			if (!isEmpty(user.data)) {
+			const isData = user?.data && Object.keys(user?.data)?.length > 0
+			if (isData) {
 				setUser(user.data);
 			}
 			if (user.status === 200) {
@@ -68,12 +68,10 @@ function Login() {
 					<Image className="w-[85vw] h-[40vh]" src={Sir} alt="Hi Logo" />
 				</div>
 			</div>
-
 			<div className="mx-6 flex flex-col text-3xl font-medium text-start text-[#2B354D]">
 				<span className="mt-6">Hey,</span>
 				<span className="">Welcome Back!</span>
 			</div>
-
 			<div className="flex flex-col items-center justify-center px-6 pb-12">
 				<div className="relative w-full px-0 mt-6 mb-[5.89rem] ml-0 mr-0 space-y-4">
 					<div className="relative w-full">
@@ -129,4 +127,3 @@ function Login() {
 }
 
 export default Login;
-// [#EF522F]

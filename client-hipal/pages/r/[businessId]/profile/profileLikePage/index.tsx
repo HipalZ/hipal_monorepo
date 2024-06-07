@@ -21,7 +21,7 @@ function ProfileLikePage() {
 			method: 'POST',
 			url: `/v1/businesses/${id}/userlike`,
 			data: {
-				userId: userDetails.id,
+				userId: userDetails._id,
 			},
 		}
 
@@ -42,7 +42,7 @@ function ProfileLikePage() {
 	const searchRestaurants = (data || []).filter(
 		(ele) =>
 			ele?.businessName?.toLowerCase().includes(search?.toLowerCase()) &&
-			ele.likes.includes(userDetails.id),
+			ele.likes.includes(userDetails._id),
 	)
 
 	return (
@@ -88,9 +88,9 @@ function ProfileLikePage() {
 					{searchRestaurants?.map((ele, index) => (
 						<div key={index} className='relative focus:text-red-500'>
 							<BsSuitHeartFill
-								onClick={() => handleOnClick(ele.id)}
+								onClick={() => handleOnClick(ele._id)}
 								className={`absolute w-[1.5rem] h-[1.5rem] right-[1.2rem] focus:text-red-500 bottom-[5rem] z-10 ${
-									ele.likes.includes(userDetails.id) ? 'text-red-500' : 'text-white/90'
+									ele.likes.includes(userDetails._id) ? 'text-red-500' : 'text-white/90'
 								}`}
 							/>
 							<div className='relative'>

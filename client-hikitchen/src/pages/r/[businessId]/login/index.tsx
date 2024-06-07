@@ -1,7 +1,7 @@
 import React from "react";
 import welcome from "@/assets/svg/hikitchen.svg";
 import HiKitchenLogo from "@/assets/svg/hikitchenlogo.svg";
-import { isEmpty, set } from "lodash-es";
+import { isEmpty } from "lodash-es";
 import Image from "next/image";
 import axios from "@/axios";
 import { useRouter } from "next/router";

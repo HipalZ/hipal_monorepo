@@ -67,12 +67,12 @@ function DishesList() {
 								className={`min-h-60  ${
 									isTopScrollWithSubTypes ? 'scroll-mt-[15rem]' : 'scroll-mt-[11.2rem]'
 								} bg-base-100 w-full pb-4`}
-								id={category.id}
+								id={category._id}
 								key={index}
 								onTouchStart={(e) => {
-									setActiveCategory(category.id)
+									setActiveCategory(category._id)
 									setActiveParentCategory(
-										category?.parentCategoryId ? category?.parentCategoryId : category.id,
+										category?.parentCategoryId ? category?.parentCategoryId : category._id,
 									)
 								}}
 							>
@@ -116,7 +116,7 @@ function DishesList() {
 										category?.dishes.map(
 											(dishData, index) =>
 												dishData?.visibility && (
-													<div key={`${dishData?.id}${index}`}>
+													<div key={`${dishData?._id}${index}`}>
 														<HorizontalCard
 															dishData={dishData}
 															isTopScrollWithSubTypes={isTopScrollWithSubTypes}

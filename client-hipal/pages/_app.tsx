@@ -8,8 +8,9 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Script from "next/script";
 import NextNProgress from "nextjs-progressbar";
-import { memo, startTransition, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { memo, useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -18,6 +19,7 @@ const queryClient = new QueryClient();
 
 export default memo(function MyApp({ Component, pageProps }: AppProps) {
 	const router = useRouter();
+	const [applyCss, setApplyCss] = useState<boolean>(false)
 	let { isActiveDishType, setActiveDishType } = useActiveClass();
 
 	useEffect(() => {
@@ -27,19 +29,10 @@ export default memo(function MyApp({ Component, pageProps }: AppProps) {
 	}, []);
 
 	useEffect(() => {
-		startTransition(() => {
-			if (!window.location.href.includes("#")) {
-				setTimeout(() => {
-					if (typeof document === "undefined") return null;
-					(document.querySelector("body") as HTMLBodyElement).scrollTo({
-						top: 0,
-						left: 0,
-						behavior: "smooth" as any,
-					});
-				}, 0);
-			}
-		});
-	}, [router.pathname]);
+		if (router.asPath.includes('r')) {
+			setApplyCss(true)
+		}
+	}, [router])
 
 	return (
 		<div >
@@ -69,18 +62,22 @@ export default memo(function MyApp({ Component, pageProps }: AppProps) {
 				/>
 			</Head>
 
-			<ToastContainer />
-			<QueryClientProvider client={queryClient}>
-				<NextNProgress color={"hsl(var(--p))"} />
-				<ThemeProvider>
-					<div
-						
-						
-					>
+			<div
+				style={{
+					width: '100%',
+					maxWidth: applyCss ? '30rem' : '100%',
+					margin: applyCss ? '0 auto' : '0',
+				}}
+			>
+				<ToastContainer className='z-[999999]' />
+				<QueryClientProvider client={queryClient}>
+					<NextNProgress color={'hsl(var(--p))'} />
+					<ThemeProvider>
 						<Component {...pageProps} />
-					</div>
-				</ThemeProvider>
-			</QueryClientProvider>
+					</ThemeProvider>
+					<ReactQueryDevtools />
+				</QueryClientProvider>
+			</div>
 		</div>
 	);
 });

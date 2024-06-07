@@ -17,7 +17,7 @@ function SubTypes() {
 	const allCategoriesTypes = useMemo(() => data?.allCategoriesTypes, [data?.allCategoriesTypes])
 	const parentCategory = useMemo(
 		() =>
-			data?.categories?.filter((ele: any) => ele?.id === isActiveCategory)?.[0]?.parentCategoryId,
+			data?.categories?.filter((ele: any) => ele?._id === isActiveCategory)?.[0]?.parentCategoryId,
 		[isActiveCategory, data?.categories],
 	)
 
@@ -54,21 +54,21 @@ function SubTypes() {
 					>
 						{Object.values(subTypes).map((item: ICategory, index: number) => (
 							<div
-								id={'subType' + item?.id}
+								id={'subType' + item?._id}
 								className='relative ml-4 snap-center'
 								key={item.name + index}
 							>
 								<Link
 									className='on_active_bounce rounded-full  flex flex-col capitalize !px-2 !py-1 text-sm min-w-fit font-[550] space-y-2 text-base-content'
-									href={`#${item?.id}`}
+									href={`#${item?._id}`}
 									onClick={() => {
-										setActiveCategory(item?.id)
+										setActiveCategory(item?._id)
 										setActiveParentCategory(item?.parentCategoryId ? item?.parentCategoryId : '')
 									}}
 								>
 									<div
 										className={`!w-12 !h-12 rounded-lg overflow-hidden mx-auto ${
-											isActiveCategory === item?.id ? 'scale-125' : ''
+											isActiveCategory === item?._id ? 'scale-125' : ''
 										}`}
 									>
 										{!!item.coverImage ? (
@@ -93,7 +93,7 @@ function SubTypes() {
 
 									<span
 										className={`font-semibold text-center px-2 text-[0.725rem] w-[5rem] ${
-											isActiveCategory === item?.id ? 'text-primary ' : ''
+											isActiveCategory === item?._id ? 'text-primary ' : ''
 										} `}
 									>
 										{item?.name}
@@ -101,7 +101,7 @@ function SubTypes() {
 
 									<div
 										className={`${
-											isActiveCategory === item.id ? 'bg-primary' : 'bg-transparent'
+											isActiveCategory === item._id ? 'bg-primary' : 'bg-transparent'
 										}  w-full h-0.5 rounded-full -pb-2 mx-auto`}
 									></div>
 								</Link>

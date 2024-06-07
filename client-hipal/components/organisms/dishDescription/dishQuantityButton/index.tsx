@@ -38,16 +38,16 @@ function DishQuantityButton({
 	if (dishData.businessId === '6548e7493f83cee25155ffc9') return null
 	return (
 		<>
-			{(cart?.[dishData?.id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
+			{(cart?.[dishData?._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
 				<button
 					className='bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case'
-					onClick={() => handleQuantity((cart?.[dishData?.id]?.variants?.length || 0) + 1)}
+					onClick={() => handleQuantity((cart?.[dishData?._id]?.variants?.length || 0) + 1)}
 				>
 					Add
 				</button>
 			) : (
 				<QuantityPicker
-					quantity={cart?.[dishData?.id]?.variants?.length || 0}
+					quantity={cart?.[dishData?._id]?.variants?.length || 0}
 					setQuantity={handleQuantity}
 					minQuantity={0}
 					isDeleteAble={isDeleteAble}
@@ -70,10 +70,10 @@ export function handleDishQuantity(
 	closeBottomPanel: (panelName: string) => void,
 ): (newQuantity: number) => void {
 	return (newQuantity: number) => {
-		if ((cart?.[dishData?.id]?.variants?.length || 0) < newQuantity) {
+		if ((cart?.[dishData?._id]?.variants?.length || 0) < newQuantity) {
 			const thisDish = dishData as IDish
 			if (thisDish?.portions?.length > 0 || thisDish?.extras?.[0]?.numSelections > 0) {
-				openBottomPanel(dishData?.id)
+				openBottomPanel(dishData?._id)
 			}
 			const portion = (dishData?.portions || []).find((p: IPortion) => {
 				// Check if 'default' is true when it's a boolean, or convert it to a boolean if it's a string
@@ -83,18 +83,18 @@ export function handleDishQuantity(
 
 			const extra: { [extraId: string]: any } = {}
 			;(dishData?.extras?.[0]?.items || []).forEach((e: any) => {
-				extra[e?.id] = {
+				extra[e?._id] = {
 					...e,
 					quantity: 0,
 				}
 			})
 
-			if (cart?.[dishData?.id] === undefined) {
+			if (cart?.[dishData?._id] === undefined) {
 				setCart({
 					...cart,
-					[dishData?.id]: {
+					[dishData?._id]: {
 						dishData: dishData,
-						dishId: dishData?.id,
+						dishId: dishData?._id,
 						variants: [
 							{
 								extra: {},
@@ -105,7 +105,7 @@ export function handleDishQuantity(
 				})
 			} else {
 				const newCart = { ...cart }
-				newCart[dishData?.id].variants.push({
+				newCart[dishData?._id].variants.push({
 					extra: {},
 					portion: portion,
 				})
@@ -113,22 +113,22 @@ export function handleDishQuantity(
 				setCart(newCart)
 			}
 		} else {
-			if (cart?.[dishData?.id]) {
+			if (cart?.[dishData?._id]) {
 				const newCart = { ...cart }
-				if (newCart[dishData?.id].variants.length === 0) {
-					delete newCart[dishData?.id]
+				if (newCart[dishData?._id].variants.length === 0) {
+					delete newCart[dishData?._id]
 				} else {
-					newCart[dishData?.id].variants.pop()
+					newCart[dishData?._id].variants.pop()
 				}
 
-				if (newCart[dishData?.id].variants.length === 0) {
-					delete newCart[dishData?.id]
+				if (newCart[dishData?._id].variants.length === 0) {
+					delete newCart[dishData?._id]
 				}
 
 				setCart(newCart)
 			}
 
-			closeBottomPanel(dishData?.id)
+			closeBottomPanel(dishData?._id)
 		}
 	}
 }

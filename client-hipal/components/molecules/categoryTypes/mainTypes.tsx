@@ -64,32 +64,32 @@ function MainTypes() {
 					.filter((item) => item?.visibility)
 					.map((item: ICategory, index: number) => {
 						const activeSubType =
-							Object.keys(data?.allCategoriesTypes?.sub?.[item.id || ''] || {})?.[0] || null
+							Object.keys(data?.allCategoriesTypes?.sub?.[item._id || ''] || {})?.[0] || null
 						return (
 							<SplideSlideWrapper key={index + (item?.name || '')}>
-								<div id={item?.id} className='relative' key={item.name + index}>
+								<div id={item?._id} className='relative' key={item.name + index}>
 									<a
 										className={` on_active_bounce
 											btn btn-sm rounded-full flex flex-row capitalize !h-[2.4rem]  !min-h-[2.0625rem] !px-2 text-sm min-w-fit  btn-primary font-[550] space-x-2 text-base-100/60   btn-outline focus:!bg-transparent active:!bg-primary-content hover:!bg-transparent focus:!text-primary active:!text-primary hover:!text-primary focus:!shadow-none active:!shadow-none hover:!shadow-none ${
-												isActiveParentCategory == item?.id ? 'bg-primary/20' : ''
+												isActiveParentCategory == item?._id ? 'bg-primary/20' : ''
 											}
 										`}
-										href={`#${activeSubType || item?.id}`}
+										href={`#${activeSubType || item?._id}`}
 										onClick={() => {
 											setActiveDishTypes({
 												...activeDishTypes,
-												activeMainType: item?.id,
+												activeMainType: item?._id,
 												activeSubType: activeSubType,
 											})
 											setActiveCategory(activeSubType || '')
-											setActiveParentCategory(item?.id)
+											setActiveParentCategory(item?._id)
 											setActiveParentCategoryName(item?.name || '')
 										}}
 									>
 										{!!item.coverImage && (
 											<div
 												className={` !w-6 !h-6 ${
-													isActiveParentCategory === item?.id ? 'scale-125' : ''
+													isActiveParentCategory === item?._id ? 'scale-125' : ''
 												}`}
 											>
 												<Image

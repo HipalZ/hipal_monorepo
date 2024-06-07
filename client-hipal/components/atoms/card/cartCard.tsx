@@ -22,7 +22,7 @@ function CartCard({ cartDish, showStatus }: { cartDish: ICartDish; showStatus?: 
 	const dishData = useMemo(() => {
 		if (!cartDish) return null
 
-		return { ...(data?.dishesData || []).find((d) => d.id === cartDish.dishId), ...cartDish }
+		return { ...(data?.dishesData || []).find((d) => d._id === cartDish.dishId), ...cartDish }
 	}, [data, cartDish]) as IDish | any
 
 	useEffect(() => {
@@ -86,7 +86,7 @@ function CartCard({ cartDish, showStatus }: { cartDish: ICartDish; showStatus?: 
 				<div className='flex flex-row px-2 py-2 prose '>
 					<div className='flex-col flex-shrink-0 hidden my-auto '>
 						<Link
-							href={`${routePaths.dish(businessId, dishData?.id || '')}`}
+							href={`${routePaths.dish(businessId, dishData?._id || '')}`}
 							passHref
 							className='flex pt-2 my-auto border-0'
 						>
@@ -138,10 +138,10 @@ function CartCard({ cartDish, showStatus }: { cartDish: ICartDish; showStatus?: 
 									<div className='flex flex-col space-y-2'>
 										<DishQuantityButton dishData={dishData} isDeleteAble />
 										<span className='text-base-content/80 !mb-auto text-xs ml-auto mr-3'>
-											{cart?.[dishData?.id]?.variants?.length > 0 && (
-												<span> {cart?.[dishData?.id]?.variants?.length}x </span>
+											{cart?.[dishData?._id]?.variants?.length > 0 && (
+												<span> {cart?.[dishData?._id]?.variants?.length}x </span>
 											)}
-											{determineTotalPrice(dishData, cart?.[dishData?.id]?.variants)}
+											{determineTotalPrice(dishData, cart?.[dishData?._id]?.variants)}
 										</span>
 									</div>
 								) : (

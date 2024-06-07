@@ -8,13 +8,12 @@ import HipeopleLogo from "@/assets/svg/hiBizlogo.svg";
 import axios from "@/axios";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useState } from "react";
 import Header from "@/components/molecules/header";
 import { BsChevronLeft } from "react-icons/bs";
 import useBusinessData from "@/components/store/useBusinessData";
 import { paths } from "@/components/utils/paths";
 import { useLoyalityData } from "@/components/store/useLoyality";
-import { isEmpty } from "lodash-es";
 import type { IBusinessData } from "@/components/types/businessData";
 import { toast } from "react-toastify";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
@@ -55,14 +54,14 @@ function Business() {
       getThemes(businessId);
       getBusinessLoyalty(businessId);
       router.push(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](businessId));
-    } catch (error) {}
+    } catch (error) { }
   };
   const getThemes = async (businessId: string) => {
     try {
       const response = await axios.get(`${paths.getTheme(businessId)}`);
       const data = await response.data;
       setThemes(data?.[0]?.themes);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const getBusinessLoyalty = async (businessId: string) => {
@@ -70,8 +69,8 @@ function Business() {
       const res = await axios.get(`${paths.getLoyalty(businessId)}`);
       const data = await res.data;
       setLoyaltyId(data?.loyaltyId);
-      const isEmptyData = isEmpty(data);
-      setIsLoyaltyExists(!isEmptyData);
+      const isData = data && Object.keys(data)?.length > 0;
+      setIsLoyaltyExists(isData);
       if (data) {
         setRewardLimit(data?.rewardLimit);
         setExpiryDate(data?.expiryDate);
@@ -84,7 +83,7 @@ function Business() {
         setLogo(data?.logo);
       }
       setExistingLoyalty(data);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const getBusiness = async () => {
@@ -102,7 +101,6 @@ function Business() {
         toast.error("connection refused please login");
         return router.push("/login");
       }
-      console.log(response.data);
       setBusinesses(response.data);
       return [response.data];
     } catch (error) {
@@ -174,18 +172,19 @@ function Business() {
             <div
               onClick={() => handleRoute(ele._id)}
               key={ele._id}
-              className={`${
-                ele?.status
+              className={`${ele?.status
                   ? "pointer-events-auto"
                   : "pointer-events-none opacity-75"
-              } p-4 bg-white border on_active_bounce rounded-xl`}
+                } p-4 bg-white border on_active_bounce rounded-xl`}
             >
-              <div className="pb-6"></div>
+              <div className="pb-6">
+                {ele?.logo && (
+                  <Image src={ele?.logo} width={50} height={50} alt="" />
+                )}</div>
               <div className="flex items-center pt-4 mb-2 text-xs">
                 <span
-                  className={`w-2 h-2 me-3 rounded-full ${
-                    ele?.status ? "bg-green-500" : "bg-red-500"
-                  }`}
+                  className={`w-2 h-2 me-3 rounded-full ${ele?.status ? "bg-green-500" : "bg-red-500"
+                    }`}
                 ></span>
                 <p>{ele?.status ? "Active" : "In Active"}</p>
               </div>

@@ -41,8 +41,6 @@ export const routePaths = {
 	[PAGE_TYPES.DISH_ID]: (businessId: string, dishId: string) =>
 		withBusinessId(businessId, `/category#${dishId}`),
 
-	[PAGE_TYPES.ALL_CATEGORY]: (businessId: string) => withBusinessId(businessId, '/category/all'),
-
 	[PAGE_TYPES.FINAL_CART]: (businessId: string) => withBusinessId(businessId, '/finalCart'),
 	[PAGE_TYPES.LIVE_CART]: (businessId: string) => withBusinessId(businessId, '/liveCart'),
 
@@ -131,10 +129,6 @@ export const FLOW = {
 		},
 	},
 	[FLOW_TYPES.MENU_TO_CHILD_CATEGORY]: {
-		[PAGE_TYPES.EXPLORER]: {
-			from: routePaths[PAGE_TYPES.EXPLORER],
-			to: routePaths[PAGE_TYPES.ALL_CATEGORY],
-		},
 		[PAGE_TYPES.CATEGORY]: {
 			from: routePaths[PAGE_TYPES.ALL_CATEGORY],
 			to: routePaths[PAGE_TYPES.FINAL_CART],

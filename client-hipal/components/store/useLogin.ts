@@ -1,40 +1,37 @@
-import axios from '../../utils/axios'
+import axios from '@utils/axios'
 import { toast } from 'react-toastify'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+interface IUserData {
+	[x: string]: any
+	name?: string
+	email?: string
+	phone: string
+	role: string
+	id: string
+	userDescription?: string;
+	reward?: number;
+	count?: number;
+	_id:string
+}
+interface IRole {
+	role: string
+	customerName: string
+	customerPhone: string
+}
+
 interface IUseLogin {
-	phoneNumber: string
-	name: string
-	email: string
-	userDetails: {
-		name?: string
-		email?: string
-		phone?: string
-		role?: string
-		id?: string
-		userDiscription?: string
-	}
+	userDetails: IUserData
 	isLogin?: boolean
-	showLogin: boolean
 	hiCode: string
 	errorMsg: string
-	role: {
-		role?: string
-		customerName?: string
-		customerPhone?: string
-	}
 	direction: string
-	loyaltyOneId: string
-	setLoyaltyOneId: (d: string) => void
+	role: IRole
 
-	setPhoneNumber: (d: string) => void
-	setName: (d: string) => void
-	setEmail: (d: string) => void
-	setUserDetails: (d: any) => void
-	setRole: (d: any) => void
+	setUserDetails: (d: IUserData) => void
+	setRole: (d: IRole) => void
 	setIsLogin: (d: boolean) => void
-	setShowLogin: (d: boolean) => void
 	setHiCode: (d: string) => void
 	setErrorMsg: (d: string) => void
 	setDirection: (d: string) => void
@@ -47,46 +44,52 @@ interface IUseLogin {
 export const useLogin = create(
 	persist<IUseLogin>(
 		(set, get) => ({
-			phoneNumber: '',
-			name: '',
-			email: '',
-			userDetails: {},
+			userDetails: {
+				id: '',
+				count: 0,
+				email: '',
+				name: '',
+				phone: '',
+				reward: 0,
+				role: '',
+				userDescription: '',
+				_id:''
+			},
 			isLogin: false,
 			showLogin: false,
 			hiCode: '',
 			errorMsg: '',
-			role: {},
+			role: {
+				role: '',
+				customerName: '',
+				customerPhone: '',
+			},
 			direction: '',
-			loyaltyOneId: '',
 
-			setLoyaltyOneId: (d: string) => set({ loyaltyOneId: d }),
-			setPhoneNumber: (d: string) => set({ phoneNumber: d }),
-			setName: (d: string) => set({ name: d }),
-			setEmail: (d: string) => set({ email: d }),
-			setUserDetails: (d: any) => set({ userDetails: d }),
-			setRole: (d: any) => set({ role: d }),
+			setUserDetails: (d: IUserData) => set({ userDetails: d }),
 			setIsLogin: (d: boolean) => set({ isLogin: d }),
-			setShowLogin: (d: boolean) => set({ showLogin: d }),
 			setHiCode: (d: string) => set({ hiCode: d }),
 			setErrorMsg: (d: string) => set({ errorMsg: d }),
 			setDirection: (d: string) => set({ direction: d }),
+			setRole: (d: IRole) => set({ role: d }),
+
 			isLoginCred: () =>
-				get()?.phoneNumber?.length === 10 && get()?.name?.length > 0 && get()?.email?.length > 0,
+				get()?.userDetails.phone?.length === 10,
 
 			sendOtp: async () => {
-				toast.success('otp send sucessfully')
+				toast.success('otp send successfully')
 				let config = {
 					method: 'POST',
-					url: 'v1/users/otp?clientRole=user',
+					url: '/v1/users/otp?clientRole=user',
 					data: {
-						phone: `${get().phoneNumber}`,
+						phone: `${get().userDetails.phone}`,
 					},
 				}
 				return await axios(config)
 			},
 		}),
 		{
-			name: 'useHipalLogin',
+			name: 'useLogin',
 		},
 	),
 )

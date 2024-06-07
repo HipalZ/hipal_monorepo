@@ -7,7 +7,6 @@ import { useRouter } from "next/router";
 import axios from "@/axios";
 import { toast } from "react-toastify";
 import { useLoyalityData } from "@/components/store/useLoyality";
-import { isEmpty } from "lodash-es";
 import { useCroppedImage } from "@/components/store/useCroppedImage";
 import useBusinessData from "@/components/store/useBusinessData";
 import { storeImageFiles } from "@/components/utils/helper";
@@ -87,7 +86,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
   const [bonusWarn, setBonusWarn] = useState(false);
   function handleSignUpBonus(e: any) {
     let value = e.target.value;
-    if (value?.length < 5 && value <= 5000 && value<=rewardLimit) {
+    if (value?.length < 5 && value <= 5000 && value <= rewardLimit) {
       value = Math.abs(value.replace(/[^0-9\b]/g, ""));
       setSignUpBonus(value);
       setBonusWarn(false);
@@ -190,7 +189,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
       value = Math.abs(value.replace(/[^0-9\b]/g, ""));
       setRewardLimit(value);
     }
-    if(value < signUpBonus){
+    if (value < signUpBonus) {
       setSignUpBonus(0);
       setBonusWarn(true);
     }
@@ -333,13 +332,11 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
     };
     try {
       const response = await axios(config);
-      const isEmptyData = isEmpty(response?.data);
-      if (!isEmptyData) {
-        setSelectedButton("Dashboard");
-      }
-      setIsLoyaltyExists(!isEmptyData);
+      const isData = response?.data && Object.keys(response?.data).length > 0
+      setIsLoyaltyExists(isData);
       if (response?.status === 200 || response?.status === 201) {
         setExistingLoyalty(response?.data);
+        setSelectedButton("Dashboard");
         toast.success("Loyality added successfully");
       }
     } catch (error) {
@@ -415,7 +412,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
         toast.success("Loyality updated successfully");
         setExistingLoyalty(response?.data);
       }
-    } catch (err) {}
+    } catch (err) { }
   }
   async function handleOtp(e: any) {
     const value = e.target.value;
@@ -468,23 +465,21 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
         {toggleSwitch && (
           <>
             <div
-              className={`px-4 ${
-                loyaltyId === "new" ? "h-[10.5rem]" : "h-[12.5rem]"
-              } my-5 rounded-md border border-1 border-[#CACACA]`}
+              className={`px-4 ${loyaltyId === "new" ? "h-[10.5rem]" : "h-[12.5rem]"
+                } my-5 rounded-md border border-1 border-[#CACACA]`}
             >
               <h1 className="mt-2.5 text-base font-semibold">
-                Choose the type of loyality
+                Choose the type of loyalty
               </h1>
               <div className="flex mt-3.5">
                 <div className="pointer-events-none opacity-50">
                   {/* // onClick={existsLoyality ? showError : () => existingId("existing")} */}
                   <button
                     type="button"
-                    className={`${
-                      loyaltyId === "existing"
+                    className={`${loyaltyId === "existing"
                         ? "bg-[#2B354D] text-white"
                         : "bg-white text-[#2B354D]"
-                    } text-sm on_active_bounce rounded-md border border-1 border-[#2B354D] px-2.5 py-1.5`}
+                      } text-sm on_active_bounce rounded-md border border-1 border-[#2B354D] px-2.5 py-1.5`}
                   >
                     Use an Existing ID
                   </button>
@@ -496,11 +491,10 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                 >
                   <button
                     type="button"
-                    className={`${
-                      loyaltyId === "new"
+                    className={`${loyaltyId === "new"
                         ? "bg-[#2B354D] text-white"
                         : "bg-white text-[#2B354D]"
-                    } text-sm on_active_bounce rounded-md px-2.5 py-1.5 border border-1 border-[#2B354D]`}
+                      } text-sm on_active_bounce rounded-md px-2.5 py-1.5 border border-1 border-[#2B354D]`}
                   >
                     Create a New ID
                   </button>
@@ -547,12 +541,11 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     <input
                       type="text"
                       maxLength={5}
-                      className={`${
-                        isRewardChecked &&
-                        (!rewardsValue || rewardsValue.toString().length === 0)
+                      className={`${isRewardChecked &&
+                          (!rewardsValue || rewardsValue.toString().length === 0)
                           ? "border border-red-500"
                           : ""
-                      } w-full px-2.5 rounded-md pr-6`}
+                        } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Percentage"
                       onBlur={handleBlur}
                       onChange={settingUpReward}
@@ -563,7 +556,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     </span>
                   </div>
                   {isRewardChecked &&
-                  (!rewardsValue || rewardsValue.toString().length === 0) ? (
+                    (!rewardsValue || rewardsValue.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter reward value
                     </div>
@@ -579,12 +572,11 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                   <div className="relative">
                     <input
                       type="text"
-                      className={`${
-                        isClaimChecked &&
-                        (!maximumClaim || maximumClaim.toString().length === 0)
+                      className={`${isClaimChecked &&
+                          (!maximumClaim || maximumClaim.toString().length === 0)
                           ? "border border-red-500"
                           : ""
-                      } w-full px-2.5 rounded-md pr-6`}
+                        } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Percentage"
                       onBlur={handleClaimBlur}
                       onChange={settingUpClaim}
@@ -596,7 +588,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     </span>
                   </div>
                   {isClaimChecked &&
-                  (!maximumClaim || maximumClaim.toString().length === 0) ? (
+                    (!maximumClaim || maximumClaim.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter maximum claim value
                     </div>
@@ -610,11 +602,10 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     <select
                       value={expiryDate}
                       onChange={addExpiryDate}
-                      className={`${
-                        expiryDateChecked
+                      className={`${expiryDateChecked
                           ? "border border-1 border-red-500"
                           : ""
-                      } w-full px-2.5 rounded-md pr-6`}
+                        } w-full px-2.5 rounded-md pr-6`}
                     >
                       <option value="">Select Expiry Date</option>
                       <option value="183">6 months</option>
@@ -633,12 +624,11 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                   <div className="relative">
                     <input
                       type="text"
-                      className={`${
-                        isRewardLimitChecked &&
-                        (!rewardLimit || rewardLimit.toString().length === 0)
+                      className={`${isRewardLimitChecked &&
+                          (!rewardLimit || rewardLimit.toString().length === 0)
                           ? "border border-red-500"
                           : ""
-                      } w-full px-2.5 rounded-md pr-6`}
+                        } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Reward limit"
                       onBlur={handleRewardLimitBlur}
                       onChange={setupRewardLimit}
@@ -647,7 +637,7 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     />
                   </div>
                   {isRewardLimitChecked &&
-                  (!rewardLimit || rewardLimit.toString().length === 0) ? (
+                    (!rewardLimit || rewardLimit.toString().length === 0) ? (
                     <div className="text-red-500 text-sm mb-1">
                       * please enter reward limit
                     </div>
@@ -664,12 +654,11 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                     <input
                       type="text"
                       maxLength={5}
-                      className={`${
-                        bonusWarn &&
-                        (!signUpBonus || signUpBonus.toString().length === 0)
+                      className={`${bonusWarn &&
+                          (!signUpBonus || signUpBonus.toString().length === 0)
                           ? "border border-red-500"
                           : ""
-                      } w-full px-2.5 rounded-md pr-6`}
+                        } w-full px-2.5 rounded-md pr-6`}
                       placeholder="Enter Coinz"
                       onChange={handleSignUpBonus}
                       value={signUpBonus || ""}
@@ -694,9 +683,8 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                       maxLength={4}
                       onChange={handlePassword}
                       value={password || ""}
-                      className={`${
-                        passwordChecked ? "border border-red-500" : ""
-                      } w-full px-2.5 rounded-md pl-4 pr-10 mb-0 ml-0 mr-0 bg-white text-base text-gray-900 bg-transparent border-gray-800 border dark:text-white focus:outline-none focus:border-[#4071F1] dark:border-gray-600 peer`}
+                      className={`${passwordChecked ? "border border-red-500" : ""
+                        } w-full px-2.5 rounded-md pl-4 pr-10 mb-0 ml-0 mr-0 bg-white text-base text-gray-900 bg-transparent border-gray-800 border dark:text-white focus:outline-none focus:border-[#4071F1] dark:border-gray-600 peer`}
                       placeholder="Enter Password (Max 4 characters)"
                       required
                     />
@@ -764,11 +752,10 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
               <div onKeyDown={sendAlert} onClick={sendAlert} className="mt-6">
                 <button
                   type="button"
-                  className={`${
-                    loyaltyValue.length === 24
+                  className={`${loyaltyValue.length === 24
                       ? "opacity-100 pointer-events-auto on_active_bounce "
                       : "pointer-events-none opacity-50"
-                  } text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+                    } text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
                 >
                   Send an Alert
                 </button>
@@ -798,9 +785,8 @@ const LoyalitySetup = ({ existsLoyalty: existsLoyality }: ILoyaltySetUpProps) =>
                 <button
                   type="button"
                   onClick={handleExistingData}
-                  className={`${
-                    loading ? "pointer-events-none opacity-50" : ""
-                  } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+                  className={`${loading ? "pointer-events-none opacity-50" : ""
+                    } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
                 >
                   {loading ? "Loading..." : "Verify and Save"}
                 </button>

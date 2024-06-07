@@ -1,5 +1,4 @@
 import ProfileHeader from '@components/molecules/profileHeader'
-import { useCart } from '@components/store/useCart'
 import { useLogin } from '@components/store/useLogin'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -254,7 +253,7 @@ function OrderHistory() {
 								{activeIndex === index && (
 									<div className='mt-6 mb-4 text-[#002D4B]'>
 										<h1 className='mb-1 text-sm font-semibold'>Order Details:</h1>
-										<p className='mb-3 text-xs font-medium'>OrderId: {ele?.id}</p>
+										<p className='mb-3 text-xs font-medium'>OrderId: {ele?._id}</p>
 										<h1 className='mb-1 text-sm font-semibold'>Payment:</h1>
 										<p className='mb-3 text-xs font-medium'>Paid: {ele?.paymentMode}</p>
 										<h1 className='mb-1 text-sm font-semibold'>Date:</h1>

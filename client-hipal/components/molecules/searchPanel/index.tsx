@@ -89,7 +89,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 
 	const redirectToDish = (dishId: string, category: ICat) => {
 		console.log(dishId, category);
-		setActiveCategory(category?.[0]?.id);
+		setActiveCategory(category?.[0]?._id);
 		setSearchOpen(!search);
 		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId));
 	};
@@ -147,7 +147,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 							present ? (
 								<div className="">
 									<Link
-										href={`${routePaths.category(businessId)}#${present?.id}`}
+										href={`${routePaths.category(businessId)}#${present?._id}`}
 										passHref
 									>
 										<div
@@ -184,7 +184,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 									<hr className="mt-[5rem] opacity-25" />
 									<div className="">
 										{dishData?.map((dish, index) => (
-											<div key={dish.id}>
+											<div key={dish._id}>
 												<HorizontalCard
 													key={`${dish.name}${index}`}
 													dishData={dish}
@@ -198,7 +198,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 								</div>
 							) : (
 								dishData?.map((dish, index) => (
-									<div key={dish.id}>
+									<div key={dish._id}>
 										<HorizontalCard
 											key={`${dish.name}${index}`}
 											dishData={dish}

@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Sir from "@/assets/svg/sir2.svg";
 import axios from "@/axios";
-import { isEmpty } from "lodash-es";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 function Login() {
   const {
@@ -48,11 +47,12 @@ function Login() {
       };
 
       const user = await axios(config);
-      if (!isEmpty(user.data)) {
+      const isData = user?.data && Object.keys(user?.data)?.length > 0;
+      if (isData) {
         setUser(user.data);
       }
       if (user.status === 200) {
-        toast.success("Login Succsessfully");
+        toast.success("Login Successfully");
         setIsLogin(true);
         router.push(routePaths[PAGE_TYPES.BUSINESS]());
       } else {
@@ -67,7 +67,6 @@ function Login() {
 
   return (
     <>
-    
     <div className="bg-[#f6e8dd] min-h-screen flex flex-col lg:items-center md:items-center justify-between px-0 md:px-[20vw] lg:px-[40vw]">
       <div className="flex flex-col items-center justify-center pt-4 ">
         <div className="mt-4">

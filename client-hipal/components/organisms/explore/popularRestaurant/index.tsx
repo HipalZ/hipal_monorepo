@@ -12,13 +12,13 @@ function PopularRestaurant() {
 	const { businessId } = router.query as { businessId: string }
 	const { data } = useAllBusiness()
 	const handleRecommendedDishClick = (dish) => {
-		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dish.id))
+		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dish._id))
 	}
 
 	let FilterPopularDishes: any = []
 
 	data?.settings?.explore?.popular?.map(({ id }) => {
-		const dishData = data?.dishesData?.find((dish) => dish.id === id)
+		const dishData = data?.dishesData?.find((dish) => dish._id === id)
 		FilterPopularDishes.push(dishData)
 	})
 
@@ -51,7 +51,7 @@ function PopularRestaurant() {
 						</div>
 
 						{FilterPopularDishes?.map((dishData, key) => (
-							<SplideSlide key={`${key}FilterPopularDishes` + (dishData?.id || '')}>
+							<SplideSlide key={`${key}FilterPopularDishes` + (dishData?._id || '')}>
 								{dishData && (
 									<DiscountDishCard
 										businessId={businessId}

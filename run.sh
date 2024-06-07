@@ -133,3 +133,16 @@ npm run dev &
 
 cd ../../
 
+# Navigate to the directory
+
+cd client-pro-hipal
+
+# Print a message to the console
+
+echo "Starting the client-pro-hipal server..."
+
+# Run the pnpm start command
+npm i &&
+npm run dev &
+
+cd ../../

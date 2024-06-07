@@ -73,7 +73,7 @@ const LoyaltyId = () => {
 							</span>
 						)}
 					</h1>
-					{Array.isArray(itemData) &&
+					{Array.isArray(itemData) ?
 						itemData.map((item, index) => {
 							return item.status === 'plus' ? (
 								<div
@@ -197,11 +197,11 @@ const LoyaltyId = () => {
 									</div>
 								</div>
 							)
-						})}
+						}): <center>No Data Found</center>}
 				</div>
 			</div>
 		</>
 	)
 }
 
-export default memo(LoyaltyId)
+export default LoyaltyId

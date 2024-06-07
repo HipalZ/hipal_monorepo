@@ -10,18 +10,18 @@ function ChoosePortions({ dishData }) {
 		const newCart = JSON.parse(JSON.stringify(cart))
 
 		let index = 0
-		if ((newCart?.[dishData?.id]?.variants || []).length !== 0) {
-			index = (newCart?.[dishData?.id]?.variants || []).length - 1
+		if ((newCart?.[dishData?._id]?.variants || []).length !== 0) {
+			index = (newCart?.[dishData?._id]?.variants || []).length - 1
 		}
 
-		newCart[dishData?.id].variants[index].portion = portion
+		newCart[dishData?._id].variants[index].portion = portion
 
 		setCart(newCart)
 	}
 
 	// Converting isDishPortionSelected to a useMemo function
 	const isDishPortionSelected = (portion: any) => {
-		const cartDishData = cart?.[dishData?.id] || {}
+		const cartDishData = cart?.[dishData?._id] || {}
 
 		if (cartDishData) {
 			if ((cartDishData?.variants || []).length === 0) {

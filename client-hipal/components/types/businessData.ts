@@ -13,6 +13,7 @@ export interface IBusinessData {
 		address: string
 		staff: string[]
 		id: string
+		_id:string
 	}
 	dishesData?: IDish[]
 	dishData?: IDish
@@ -80,6 +81,7 @@ export interface ISettings {
 	id: string
 }
 export interface IDish {
+	[x: string]: any
 	businessId: string
 	availability: false
 	name: string
@@ -115,6 +117,7 @@ export interface IDish {
 }
 
 export interface IExtras {
+	[x: string]: any
 	id: string
 	addOnType?: string
 	maxQuantity: number
@@ -127,6 +130,7 @@ export interface IExtras {
 
 
 export interface ICategory {
+	[x: string]: string
 	businessId: string
 	name: string
 	visibility: boolean
@@ -156,6 +160,7 @@ export interface ICategorySubTypes {
 }
 
 export interface IExtraItem {
+	[x: string]: undefined
 	maxQuantity?: number
 	id: string
 	ExtraType?: string

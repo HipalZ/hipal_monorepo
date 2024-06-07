@@ -26,6 +26,7 @@ import { memo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@components/atoms/loader/skeletonLoader";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { IBusinessData } from "@components/types/businessData";
 
 const ExploreBottomButton = dynamic(
 	() => import("@components/organisms/explore/exploreBottomButton"),
@@ -91,7 +92,7 @@ const StoriesComponent = dynamic(
 
 
 
-function Explore() {
+function Explore(data:IBusinessData) {
 	const router = useRouter();
 	const {
 		tableId: paramTableID,
@@ -104,48 +105,7 @@ function Explore() {
 		businessId: string;
 		name: string;
 	};
-	const [data, setData] = useState({
-		settings: {},
-		businessesData: {},
-		dishesData: {},
-	});
-  
-	useEffect(() => {
-	  async function fetchData(businessId) {
-		try {
-		  const settings = (await axios(paths.settings(businessId))) || {};
-		  const businessesData = await axios(paths.businessData(businessId));
-		  const dishesData = (await axios(paths.dishesData(businessId))) || {};
-		  const data = {};
-  
-		  data["settings"] = JSON.parse(JSON.stringify(settings?.data?.[0])) || {};
-		  data["businessesData"] = businessesData?.data || {};
-		  data["dishesData"] = dishesData?.data || {};
-  
-		  set(
-			data,
-			"settings.explore.openFrom",
-			getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom),
-		  );
-		  set(
-			data,
-			"settings.explore.openTill",
-			getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill),
-		  );
-  
-		  initializeAllBusiness(data);
-  
-		  setData(data);
-		} catch (err) {
-		  console.error('Error fetching data:', err.message, err.response?.data);
-		  router.push(`/r/${businessId}/explore`);
-		}
-	  }
-  
-	  if (businessId) {
-		fetchData(businessId);
-	  }
-	}, [businessId]);
+	
 	const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
 	const { loyaltySetting, setLoyaltySetting } = useLoyaltyData();
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -370,68 +330,68 @@ function Explore() {
 
 export default memo(Explore);
 
-// // Only grab the entry for this page
-// async function fetchAllBusinessIds() {
-// 	const response = await axios.get(paths.listAllBusiness());
-// 	return response.data.map((business) => business._id);
-// }
-// // Only grab the entry for this page
-// export async function getStaticPaths() {
-// 	try {
-// 		// Replace with a function that fetches all business IDs from your database or API
-// 		const businessIds = await fetchAllBusinessIds();
-// 		const paths = businessIds.map((businessId) => ({
-// 			params: { businessId: businessId },
-// 		}));
+// Only grab the entry for this page
+async function fetchAllBusinessIds() {
+	const response = await axios.get(paths.listAllBusiness());
+	return response.data.map((business) => business._id);
+}
+// Only grab the entry for this page
+export async function getStaticPaths() {
+	try {
+		// Replace with a function that fetches all business IDs from your database or API
+		const businessIds = await fetchAllBusinessIds();
+		const paths = businessIds.map((businessId) => ({
+			params: { businessId: businessId },
+		}));
 
-// 		return { paths, fallback: "blocking" };
-// 	} catch (error) {
-// 		// console.error('Error fetching business IDs:', error)
-// 		return { paths: [], fallback: "blocking" };
-// 	}
-// }
+		return { paths, fallback: "blocking" };
+	} catch (error) {
+		// console.error('Error fetching business IDs:', error)
+		return { paths: [], fallback: "blocking" };
+	}
+}
 
-// export async function getStaticProps(context: {
-// 	req: NextRequest;
-// 	res: NextResponse;
-// 	params: { businessId: string };
-// }) {
-// 	const businessId = context?.params?.businessId || "";
-// 	try {
-// 		const settings = (await axios(paths.settings(businessId))) || {};
-// 		const businessesData = await axios(paths.businessData(businessId));
-// 		const dishesData = (await axios(paths.dishesData(businessId))) || {};
-// 		const data = {};
+export async function getStaticProps(context: {
+	req: NextRequest;
+	res: NextResponse;
+	params: { businessId: string };
+}) {
+	const businessId = context?.params?.businessId || "";
+	try {
+		const settings = (await axios(paths.settings(businessId))) || {};
+		const businessesData = await axios(paths.businessData(businessId));
+		const dishesData = (await axios(paths.dishesData(businessId))) || {};
+		const data = {};
 
-// 		data["settings"] = JSON.parse(JSON.stringify(settings?.data?.[0])) || {};
-// 		data["businessesData"] = businessesData?.data || {};
-// 		data["dishesData"] = dishesData?.data || {};
+		data["settings"] = JSON.parse(JSON.stringify(settings?.data?.[0])) || {};
+		data["businessesData"] = businessesData?.data || {};
+		data["dishesData"] = dishesData?.data || {};
 
-// 		set(
-// 			data,
-// 			"settings.explore.openFrom",
-// 			getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom),
-// 		);
-// 		set(
-// 			data,
-// 			"settings.explore.openTill",
-// 			getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill),
-// 		);
+		set(
+			data,
+			"settings.explore.openFrom",
+			getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom),
+		);
+		set(
+			data,
+			"settings.explore.openTill",
+			getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill),
+		);
 
-// 		initializeAllBusiness(data);
+		initializeAllBusiness(data);
 
-// 		return {
-// 			props: {
-// 				data,
-// 			},
-// 			revalidate: 1020,
-// 		};
-// 	} catch (err: any) {
-// 		// console.error('Error fetching data for dish:', err.message, err.response?.data)
-// 		return {
-// 			redirect: {
-// 				destination: `/r/${context?.params?.businessId}/explore`,
-// 			},
-// 		};
-// 	}
-// }
+		return {
+			props: {
+				data,
+			},
+			revalidate: 1020,
+		};
+	} catch (err: any) {
+		// console.error('Error fetching data for dish:', err.message, err.response?.data)
+		return {
+			redirect: {
+				destination: `/r/${context?.params?.businessId}/explore`,
+			},
+		};
+	}
+}

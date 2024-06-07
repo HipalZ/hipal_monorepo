@@ -10,7 +10,6 @@ import Script from "next/script";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useRouter } from "next/router";
 import axios from "@/axios";
-import { isEmpty } from "lodash-es";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -64,7 +63,8 @@ export default function App({ Component, pageProps }: AppProps) {
 				};
 
 				const user = await axios(config);
-				if (!isEmpty(user.data)) {
+				const isData = user?.data && Object.keys(user?.data)?.length > 0
+				if (isData) {
 					setUser(user.data);
 				}
 				if (user.status === 200) {

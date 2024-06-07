@@ -35,7 +35,7 @@ function QuantityPickerNonOutline({
 		if (extra?.maxQuantity === 0) {
 			return;
 		}
-		const currentSelectedCount = selectedItemsCount[extra?.id] || 0;
+		const currentSelectedCount = selectedItemsCount[extra?._id] || 0;
 		const maxAllowed = extra?.maxQuantity || extra?.numSelections;
 
 		setIsChecked(isChecked);
@@ -75,8 +75,8 @@ function QuantityPickerNonOutline({
 						type="button"
 						className='btn btn-xs btn-outline btn-primary aspect-square !px-0 !py-0 !min-h-4 !h-6 !w-6 flex flex-col border-0  rounded-full !my-auto'
 						onClick={
-							extra?.id
-								? (quantity === item?.maxQuantity || selectedItemsCount[extra?.id] === extra?.maxQuantity
+							extra?._id
+								? (quantity === item?.maxQuantity || selectedItemsCount[extra?._id] === extra?.maxQuantity
 									? displayAlertPopUp
 									: onIncreaseQuantity)
 								: (isDisabled && quantity === 0 && extra?.name

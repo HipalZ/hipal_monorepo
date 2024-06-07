@@ -223,3 +223,242 @@ body::-webkit-scrollbar {
 		border: 1px solid hsl(var(--p) / var(--tw-border-opacity));
 	}
   }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+}
+
+@keyframes glow {
+    0% {
+        transform: scale(0.75);
+    }
+    50% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(0.75);
+    }
+}
+
+.animate-spin {
+    animation: 
+	spin 5.5s linear infinite;
+    -webkit-animation: 
+	spin 5.5s linear infinite;
+    -moz-animation: 
+	spin 5.5s linear infinite;
+    transform-origin: center;
+}
+  
+.animate-glow {
+    animation: 
+	glow 1.5s linear infinite;
+    -webkit-animation: 
+	glow 1.5s linear infinite;
+    -moz-animation: 
+	glow 1.5s linear infinite;
+}
+
+@keyframes horizontal_spin {
+	0% {
+		transform: rotateY(0deg);
+	}
+	100% {
+		transform: rotateY(360deg);
+	}
+}
+
+.spin_horizontal {
+	animation: horizontal_spin 2s linear infinite;
+	-moz-animation: horizontal_spin 2s linear infinite;
+	-webkit-animation: horizontal_spin 2s linear infinite;
+}
+ 
+
+  @keyframes bounce {
+	from,
+	20%,
+	40%,
+	60%,
+	80%,
+	to {
+	  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+	}
+  
+	0% {
+	  opacity: 0;
+	  transform: scale3d(0.3, 0.3, 0.3);
+	}
+  
+	20% {
+	  transform: scale3d(1.1, 1.1, 1.1);
+	}
+  
+	40% {
+	  transform: scale3d(0.9, 0.9, 0.9);
+	}
+  
+	60% {
+	  opacity: 1;
+	  transform: scale3d(1.03, 1.03, 1.03);
+	}
+  
+	80% {
+	  transform: scale3d(0.97, 0.97, 0.97);
+	}
+  
+	to {
+	  opacity: 1;
+	  transform: scale3d(1, 1, 1);
+	}
+  }
+  
+  .animated {
+	animation: bounce 1s linear;
+	-webkit-animation:  bounce 1s linear;
+	-moz-animation:  bounce 1s linear;
+  }
+  
+  @keyframes zoomIn {
+	from {
+	  opacity: 0;
+	  transform: scale3d(0.3, 0.3, 0.3);
+	}
+  
+	50% {
+	  opacity: 1;
+	}
+  }
+  
+  .zoomIn {
+	-webkit-animation: zoomIn 0.2s linear;
+	animation: zoomIn 0.2s linear;
+	-moz-animation: zoomIn 0.2s linear;
+  }
+
+  .coin-container{
+	position: relative;
+	z-index: 2;
+  }
+
+  .loyalty_card_gradient {
+    background: linear-gradient(to bottom, #F8D76E, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22.5rem;
+    height: 22.5rem;
+    z-index: -10;
+    border-radius: 50%;
+    opacity: 0.375;
+    overflow: hidden;
+    transform: translate(-50%, 8%) rotate(180deg);
+}
+
+.loyalty_card_gradient2 {
+    background: linear-gradient(to bottom, #F8D76E, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10.5rem;
+    height: 10.5rem;
+    z-index: -10;
+    border-radius: 50%;
+    opacity: 0.375;
+    overflow: hidden;
+	transform: translate(29%, -159%) rotate(45deg);
+}
+
+.gradient-text {
+	background: linear-gradient(to right,#E2B8BD, #BE95EB, #FCA7A9,#F3764A);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+  }
+
+  @keyframes wave-animation {
+	0% { transform: rotate(0deg); }
+	25% { transform: rotate(14deg); }
+	50% { transform: rotate(-14deg); }
+	75% { transform: rotate(0deg); }
+	100% { transform: rotate(0deg); }
+  }
+  
+  .wave-hand {
+	animation: wave-animation 1s infinite linear;
+	display: inline-block;
+  }
+
+  
+  @keyframes backInUp {
+	0% {
+	  transform: translateY(-1200px) scale(0.7);
+	  opacity: 0.7;
+	}
+  
+	80% {
+	  transform: translateY(0px) scale(0.7);
+	  opacity: 0.7;
+	}
+  
+	100% {
+	  transform: scale(1);
+	  opacity: 1;
+	}
+  }
+  
+  .backInUp {
+	animation: backInUp 1s ease-out forwards;
+  }
+  
+  @keyframes tada {
+	from {
+	  transform: scale3d(1, 1, 1);
+	}
+  
+	10%, 20% {
+	  transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg);
+	}
+  
+	30%, 50%, 70%, 90% {
+	  transform: scale3d(1.25, 1.25, 1.25) rotate3d(0, 0, 1, 3deg);
+	}
+  
+	40%, 60%, 80% {
+	  transform: scale3d(1.25, 1.25, 1.25) rotate3d(0, 0, 1, -3deg);
+	}
+  
+	to {
+	  transform: scale3d(1, 1, 1);
+	}
+  }
+  
+  .tada {
+	animation: tada 2s linear;
+  }
+  
+  @keyframes shine {
+	0% {
+	  background-position: -200% 0;
+	}
+	100% {
+	  background-position: 200% 0;
+	}
+  }
+  
+  .shine-effect {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width:130%;
+	height: 100%;
+	background: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 70%);
+	background-size: 200% 100%;
+	animation: shine 2s 2;
+	pointer-events: none;
+  }

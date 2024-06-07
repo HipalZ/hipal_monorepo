@@ -91,7 +91,7 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
 			dishPriceByVariants = cartDish?.variants?.length || 1
 		}
 
-		total += dishPriceByVariants * (data?.dishesData?.find((d) => d.id === dishId)?.price || 1)
+		total += dishPriceByVariants * (data?.dishesData?.find((d) => d._id === dishId)?.price || 1)
 	})
 	return total
 }

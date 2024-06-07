@@ -1,11 +1,9 @@
 import { initializeAllBusiness } from "@components/store/useAllBusiness";
 import useBusinessDetails from "@components/store/useBusinessDetails";
-import { useRoutingFlow } from "@components/store/useRoutingFlow";
 import { getTimeIn12HrFormat } from "@components/utils/helpers";
 import { paths } from "@components/utils/paths";
 import axios from "@utils/axios";
 import { set } from "lodash-es";
-import isEmpty from "lodash-es/isEmpty";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import type { NextRequest, NextResponse } from "next/server";
@@ -26,6 +24,7 @@ import MainLoyalty from "@components/atoms/mainLoyalty";
 import { useLogin } from "@components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@components/utils/routes";
 import SkeletonLoader from "@components/atoms/loader/skeletonLoader";
+import { IBusinessData } from "@components/types/businessData";
 // import PageName from '@components/molecules/pageName'
 
 const MainBackground = dynamic(
@@ -85,7 +84,7 @@ const Footer = dynamic(() => import("@components/molecules/footer"), {
 	loading: () => <SkeletonLoader height={450} />,
 });
 
-function Explore({ data }) {
+function Explore({data}:IBusinessData) {
 	const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
 	const { loyaltySetting, setLoyaltySetting } = useLoyaltyData();
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,6 +134,10 @@ function Explore({ data }) {
 	];
 
 	useEffect(() => {
+		setBusinessDetails({
+			businessName: data?.businessesData?.businessName,
+			logo: data?.businessesData?.logo,
+		});
 		initializeAllBusiness(data);
 	}, [data]);
 
@@ -163,13 +166,6 @@ function Explore({ data }) {
 	useEffect(() => {
 		getLoyaltyCard();
 	}, []);
-
-	useEffect(() => {
-		setBusinessDetails({
-			businessName: data?.businessesData?.businessName,
-			logo: data?.businessesData?.logo,
-		});
-	}, [data]);
 
 	const redirectToMenu = () => {
 		router.push(routePaths[PAGE_TYPES.CATEGORY](businessId));
@@ -240,7 +236,7 @@ export default memo(Explore);
 
 async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business) => business.id);
+	return response.data.map((business) => business._id);
 }
 export async function getStaticPaths() {
 	try {

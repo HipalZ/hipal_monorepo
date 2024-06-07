@@ -2,6 +2,7 @@ import DinningSVG from "@assets/svg/dinningSVG";
 import CartCard from "@components/atoms/card/cartCard";
 import { useActiveClass } from "@components/store/useActiveClass";
 import {
+	_useAllBusiness,
 	initializeAllBusiness,
 	useAllBusiness,
 } from "@components/store/useAllBusiness";
@@ -59,7 +60,7 @@ const Header = dynamic(() => import("@components/molecules/header"), {
 	loading: () => <SkeletonLoader />,
 });
 
-export default memo(function Dine({ data }: { data: IBusinessData }) {
+export default memo(function Dine() {
 	const router = useRouter();
 	const { businessId } = router.query as { businessId: string };
 	const businessDetails = useBusinessDetails((s) => s.businessDetails);
@@ -67,6 +68,7 @@ export default memo(function Dine({ data }: { data: IBusinessData }) {
 	const isLogin = useLogin((s) => s.isLogin);
 	const setDirection = useLogin((s) => s.setDirection);
 	const { data: _data } = useAllBusiness();
+	const { data:finalCartData } = _useAllBusiness();
 	const { cart } = useCart();
 	const deferredCart = useDeferredValue(cart);
 	const { loyaltySetting } = useLoyaltyData();
@@ -112,9 +114,10 @@ export default memo(function Dine({ data }: { data: IBusinessData }) {
 		[_data, cart],
 	);
 
+
 	useEffect(() => {
-		initializeAllBusiness(data);
-	}, [data]);
+		initializeAllBusiness(finalCartData);
+	}, [finalCartData]);
 
 	function redirectLoginPage() {
 		if (!isLogin) {
@@ -207,104 +210,3 @@ export default memo(function Dine({ data }: { data: IBusinessData }) {
 		</div>
 	);
 });
-
-// Only grab the entry for this page
-async function fetchAllBusinessIds() {
-	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business) => business.id);
-}
-export async function getStaticPaths() {
-	try {
-		// Replace with a function that fetches all business IDs from your database or API
-		const businessIds = await fetchAllBusinessIds();
-		const paths = businessIds.map((businessId) => ({
-			params: { businessId: businessId },
-		}));
-		return { paths, fallback: "blocking" };
-	} catch (error) {
-		console.error("Error fetching business IDs:", error);
-		return { paths: [], fallback: "blocking" };
-	}
-}
-
-export async function getStaticProps(context: {
-	req: NextRequest;
-	res: NextResponse;
-	params: { businessId: string };
-}) {
-	try {
-		const businessId = context?.params?.businessId || "";
-		const settings = (await axios(paths.settings(businessId))) || {};
-		const dishesData = (await axios(paths.dishesData(businessId))) || {};
-		const categoryData = await axios(paths.categoryByBusiness(businessId));
-		const data = {};
-
-		data["settings"] = settings?.data?.[0] || {};
-		data["dishesData"] = dishesData?.data || {};
-
-		const allCategoriesTypes = () => {
-			const mainType = {};
-			const subTypes = {};
-
-			categoryData?.data.forEach((category) => {
-				if (category?.hierarchy === "PARENT") {
-					mainType[category?.id] = category;
-				} else {
-					if (!!subTypes[category?.parentCategory]) {
-						subTypes[category?.parentCategory] = [
-							...subTypes[category?.parentCategory],
-							category,
-						];
-					} else {
-						subTypes[category?.parentCategory] = [category];
-					}
-				}
-			});
-
-			return {
-				main: mainType,
-				sub: subTypes,
-			};
-		};
-
-		data["allCategoriesTypes"] = allCategoriesTypes();
-
-		const categories = () => {
-			let result = [] as any;
-
-			categoryData?.data?.forEach((category) => {
-				const newCategory = JSON.parse(JSON.stringify(category));
-				newCategory.dishes = [];
-
-				for (let dish of category.dishes) {
-					const newDish = dishesData?.data.find((d) => d.id === dish.id);
-
-					if (!!newDish) newCategory.dishes = [...newCategory.dishes, newDish];
-				}
-
-				result = [...result, newCategory];
-			});
-
-			return result;
-		};
-		data["categories"] = categories();
-
-		initializeAllBusiness(data);
-
-		return {
-			props: { data },
-			revalidate: 1610,
-		};
-	} catch (err: any) {
-		console.error(
-			"Error fetching data for dish:",
-			err.message,
-			err.response?.data,
-		);
-		return {
-			redirect: {
-				destination: `/r/${context?.params?.businessId}/explore`,
-			},
-		};
-	}
-}
