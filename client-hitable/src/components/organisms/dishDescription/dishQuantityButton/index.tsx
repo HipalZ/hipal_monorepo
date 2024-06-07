@@ -22,8 +22,8 @@ function DishQuantityBtn({
   if (!tableId) {
     tableId = "012345";
   }
-  const cart = useCart((s) => s.cart)
-  const setCart: any = useCart((s) => s.setCart)
+  const cart = useCart((s) => s.cart);
+  const setCart: any = useCart((s) => s.setCart);
 
   const handleQty = useCallback(
     (quantity: number) => {
@@ -63,21 +63,23 @@ function DishQuantityBtn({
     closeBottomPanel(dishData._id);
   };
 
-
   return (
     <>
-      {(cart?.[tableId]?.[dishData._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
+      {(cart?.[tableId]?.[dishData._id]?.variants?.length || 0) <= 0 &&
+      !isDeleteAble ? (
         <button
           className="bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
           onClick={() => {
-            handleQty((cart[tableId]?.[dishData._id]?.variants?.length || 0)+1);
+            handleQty(
+              (cart[tableId]?.[dishData._id]?.variants?.length || 0) + 1
+            );
           }}
         >
           Add
         </button>
       ) : (
         <QuantityPicker
-          quantity={(cart[tableId]?.[dishData._id]?.variants?.length || 0)}
+          quantity={cart[tableId]?.[dishData._id]?.variants?.length || 0}
           setQuantity={handleQty}
           minQuantity={0}
           isDeleteAble={isDeleteAble as boolean}

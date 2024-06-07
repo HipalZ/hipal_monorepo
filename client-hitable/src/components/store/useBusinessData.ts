@@ -30,9 +30,10 @@ export interface BusinessData {
   hipeople: boolean;
   hibiz: boolean;
   kotPrinter: boolean;
-  serviceCharge:boolean;
+  serviceCharge: boolean;
   serviceChargePercentage: number;
   id: string;
+  _id: string;
   serviceControl: {
     discountPassword: number;
   };

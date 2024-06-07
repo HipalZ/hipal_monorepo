@@ -1,5 +1,5 @@
 import axiosConstructor, { isAxiosError } from "axios";
-
+import { useUserToken } from "./components/store/useUserToken";
 const axios = axiosConstructor.create({
   // baseURL: process.env.NEXT_PUBLIC_API_HOST,
   withCredentials: true,
@@ -7,6 +7,14 @@ const axios = axiosConstructor.create({
 
 axios.interceptors.request.use(
   (config) => {
+    const { accessToken, refreshToken } = useUserToken.getState(); // Ensure you're getting the latest tokens
+
+    if (accessToken) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+    if (refreshToken) {
+      config.headers["x-refresh-with"] = refreshToken;
+    }
     // Modify the baseURL based on the request URL
     if (config.url.startsWith("/v1/businesses")) {
       config.baseURL = "http://localhost:3001";

@@ -10,8 +10,9 @@ interface IUseLogin {
   isLogin?: boolean;
   zoneName?: string;
   loyaltyId?: string;
-  childId?:string
+  childId?: string;
   userDetails: {
+    _id: any;
     name?: string;
     phoneNumber?: string;
     phone?: string;
@@ -25,7 +26,7 @@ interface IUseLogin {
       roleName: string;
     }[];
   };
-  
+
   selectedZone?: {
     businessId: string;
     zoneName: string;
@@ -51,7 +52,7 @@ interface IUseLogin {
   setIsLogin: (d: boolean) => void;
   setGrouped_customers: (d: any) => void;
   setSelectedZone: (zone: any) => void;
-  setChildId:(d:string)=>void
+  setChildId: (d: string) => void;
 }
 
 export const useLogin = create(
@@ -68,8 +69,8 @@ export const useLogin = create(
       loyaltyId: "",
       grouped_customers: {},
       selectedZone: undefined,
-      childId:"",
-      setChildId:(d:string)=>set({childId:d}),
+      childId: "",
+      setChildId: (d: string) => set({ childId: d }),
       setSelectedZone: (zone: any) => set({ selectedZone: zone }),
       setPhoneNumber: (d: string) => set({ phoneNumber: d }),
       setName: (d: string) => set({ name: d }),

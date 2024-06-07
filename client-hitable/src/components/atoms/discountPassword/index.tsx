@@ -3,7 +3,6 @@ import { useBusinessStore } from "@/components/store/useBusinessData";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 
-
 type ApplyDiscountProps = {
   onClose: () => void;
   openModal: (str: SettlePageTypes) => void;
@@ -46,7 +45,7 @@ const ApplyDiscount: React.FC<ApplyDiscountProps> = ({
       />
       <div className="flex justify-between mt-6 pb-9">
         <button
-        type="button"
+          type="button"
           onClick={handleApplyDiscount}
           className="w-full px-6 py-3 text-sm bg-primary text-base-100 rounded-3xl"
         >

@@ -9,6 +9,7 @@ interface ITable {
     capacity?: number;
     deliverDish?: number;
     id: string;
+    _id?: string;
     hiCode?: string;
     name?: string;
     staff?: string[];
@@ -44,9 +45,9 @@ export const useTable = create(
         zoneId: "",
         edit: false,
         isMerge: false,
-        hierarchy: '',
-        parentTableId: '',
-        parentZoneId: '',
+        hierarchy: "",
+        parentTableId: "",
+        parentZoneId: "",
         mergeTables: [],
       },
       setTableData: (data) =>

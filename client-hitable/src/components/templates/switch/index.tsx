@@ -12,7 +12,7 @@ import Loader from "@/components/atoms/loader";
 import { useQuery } from "@tanstack/react-query";
 import { useLogin } from "@/components/store/useLogin";
 
-function Switch({setCurrentView}) {
+function Switch({ setCurrentView }) {
   const router = useRouter();
   const { businessId, zoneId } = router.query as {
     businessId: string;
@@ -46,43 +46,44 @@ function Switch({setCurrentView}) {
       table.status.toLowerCase() === "empty"
   );
   const fetchZones = async () => {
-		try {
-			const res = await axios.get(
-				`/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`,
-			);
-			setBusinesses([res?.data]);
-			return res?.data;
-		} catch (error) {
-			toast.error("Error fetching tables");
-		}
-	};
+    try {
+      const res = await axios.get(
+        `/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`
+      );
+      setBusinesses([res?.data]);
+      return res?.data;
+    } catch (error) {
+      toast.error("Error fetching tables");
+    }
+  };
 
-	const { isLoading, error, data } = useQuery({
-		queryKey: ["tables", businessId, zoneId],
-		queryFn: fetchZones,
-		enabled: !!zoneId && !!businessId,
-	});
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["tables", businessId, zoneId],
+    queryFn: fetchZones,
+    enabled: !!zoneId && !!businessId,
+  });
 
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-screen">
-				<Loader />
-			</div>
-		);
-	}
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
 
   const handleTableTransfer = async (toTable) => {
-    if (tableData.id === toTable.id) {
+    if (tableData._id === toTable._id) {
       toast.error("You cannot switch to the same table.");
       return;
     }
+    console.log("tableData", tableData);
     const body = {
       businessId: businessId,
       fromZoneId: tableData.zoneId,
-      fromTableId: tableData.id,
+      fromTableId: tableData._id,
       fromTableName: tableData.name,
       toZoneId: toTable.zoneId,
-      toTableId: toTable.id,
+      toTableId: toTable._id,
       toTableName: toTable.name,
       switchedBy: userDetails.name,
     };
@@ -106,7 +107,7 @@ function Switch({setCurrentView}) {
       <div className="flex items-center justify-between text-xl font-medium">
         <div>Switch Table</div>
         <div>{tableData?.name}</div>
-        <div onClick={() => setCurrentView('kick')}>
+        <div onClick={() => setCurrentView("kick")}>
           <HiX />
         </div>
       </div>
@@ -124,13 +125,13 @@ function Switch({setCurrentView}) {
         <>
           {filteredTables.map((table) => (
             <div
-              key={table.id}
+              key={table._id}
               className="w-full max-w-md p-4 mx-auto mt-6 border bg-base-100 rounded-2xl"
             >
               <div className="flex justify-between">
                 <div>{table.name}</div>
                 <button
-                type="button"
+                  type="button"
                   onClick={() => openModal(table)}
                   className="px-4 py-1 font-medium border text-primary border-primary rounded-2xl"
                 >
@@ -176,12 +177,15 @@ function Switch({setCurrentView}) {
                                 .map((table) => (
                                   <div
                                     onClick={() => openModal(table)}
-                                    key={table.id}
+                                    key={table._id}
                                     className="flex items-center justify-between py-4 mb-2 border-b border-dashed"
                                   >
                                     <div>{table?.name}</div>
                                     <div className="on_active_bounce">
-                                      <button type="button" className="px-4 py-1 font-medium border text-primary border-primary rounded-2xl">
+                                      <button
+                                        type="button"
+                                        className="px-4 py-1 font-medium border text-primary border-primary rounded-2xl"
+                                      >
                                         Switch
                                       </button>
                                     </div>
@@ -213,7 +217,7 @@ function Switch({setCurrentView}) {
             Cancel
           </span>
           <button
-          type="button"
+            type="button"
             onClick={() => handleTableTransfer(targetTable)}
             className="px-6 py-2 -mr-6 text-sm bg-primary text-base-100 rounded-3xl"
           >
