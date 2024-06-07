@@ -4,17 +4,20 @@ import express, { Request, Response } from 'express';
 import { ClientSession } from 'mongoose';
 import { categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
-import validate from 'express-zod-safe';
 import { validateRequest } from 'zod-express-middleware';
 // import { validateRequest } from "../middleware/request";
 import { z } from 'zod';
 
 const router = express.Router();
 
+
 //TODO: remove v1 from the route
 router.post(
   '/v1/categories',
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: categorySchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
     const {
       businessId,
       name,
