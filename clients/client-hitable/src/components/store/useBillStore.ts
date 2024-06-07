@@ -1,8 +1,6 @@
 // store.ts
-import {create} from 'zustand';
+import { create } from 'zustand';
 import type { IStatus } from '../types/hiTableData';
-
-
 
 interface BillStore {
   billData: IStatus[];

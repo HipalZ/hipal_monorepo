@@ -1,57 +1,57 @@
-import { useAllBusiness } from '@components/store/useAllBusiness'
-import { memo } from 'react'
-import { IoLogoLinkedin, IoLogoYoutube } from 'react-icons/io'
-import { IoLogoFacebook, IoLogoInstagram } from 'react-icons/io5'
+import { useAllBusiness } from "@components/store/useAllBusiness"
+import { memo } from "react"
+import { IoLogoLinkedin, IoLogoYoutube } from "react-icons/io"
+import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5"
 
 function Footer() {
 	const { data } = useAllBusiness()
 	return (
 		<>
-			<div className='flex flex-col space-y-4 '>
+			<div className="flex flex-col space-y-4 ">
 				{data?.settings?.themes?.footerText && (
-					<div className='px-4 text-lg mt-[1rem] text-base-100-content'>
+					<div className="px-4 text-lg mt-[1rem] text-base-100-content">
 						{data?.settings?.themes?.footerText}
 					</div>
 				)}
 
-				<div className='flex flex-row px-2 space-x-2 '>
+				<div className="flex flex-row px-2 space-x-2 ">
 					{data?.settings?.themes?.instagramLink && (
 						<a
 							href={data?.settings?.themes?.instagramLink}
-							aria-label='instagram'
-							className='btn btn-ghost !px-1 !py-0 my-auto'
+							aria-label="instagram"
+							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
-							<IoLogoInstagram className='my-auto text-3xl text-base-content/80' />
+							<IoLogoInstagram className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
 
 					{data?.settings?.themes?.facebookLink && (
 						<a
 							href={data?.settings?.themes?.facebookLink}
-							aria-label='facebook'
-							className='btn btn-ghost !px-1 !py-0 my-auto'
+							aria-label="facebook"
+							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
-							<IoLogoFacebook className='my-auto text-3xl text-base-content/80' />
+							<IoLogoFacebook className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
 
 					{data?.settings?.themes?.youtubeLink && (
 						<a
 							href={data?.settings?.themes?.youtubeLink}
-							aria-label='youtube'
-							className='btn btn-ghost !px-1 !py-0 my-auto'
+							aria-label="youtube"
+							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
-							<IoLogoYoutube className='my-auto text-3xl text-base-content/80' />
+							<IoLogoYoutube className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
 
 					{data?.settings?.themes?.linkedinLink && (
 						<a
 							href={data?.settings?.themes?.linkedinLink}
-							aria-label='youtube'
-							className='btn btn-ghost !px-1 !py-0 my-auto'
+							aria-label="youtube"
+							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
-							<IoLogoLinkedin className='my-auto text-3xl text-base-content/80' />
+							<IoLogoLinkedin className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
 				</div>
@@ -87,8 +87,8 @@ function Footer() {
 					</div>
 				)} */}
 
-				<div className='flex flex-col px-6 py-5 bg-base-300'>
-					<span className='mx-auto mb-auto text-sm font-bold tracking-wider text-base-content'>
+				<div className="flex flex-col px-6 py-5 bg-base-300">
+					<span className="mx-auto mb-auto text-sm font-bold tracking-wider text-base-content">
 						Copyright by Paltribe
 					</span>
 				</div>

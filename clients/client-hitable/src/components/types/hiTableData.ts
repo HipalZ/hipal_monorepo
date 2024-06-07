@@ -44,8 +44,8 @@ export interface IStatus {
   packingCharges: number;
   RxPayableGST: number;
   swiggyPayableGST: number;
-  priority:boolean;
-  isDeleted:boolean;
+  priority: boolean;
+  isDeleted: boolean;
   transferBy: string;
   switchedBy: string;
   mergedBy: string;
@@ -257,7 +257,7 @@ export interface IDish {
 export interface IExtras {
   id: string;
   _id: string;
-  addOnType?: string
+  addOnType?: string;
   maxQuantity: number;
   name?: string;
   numOptions: number;
@@ -271,7 +271,7 @@ export interface ICategory {
   name: string;
   visibility: boolean;
   timerOn: boolean;
-  hierarchy: string | "PARENT";
+  hierarchy: string | 'PARENT';
   parentCategory: string;
   parentCategoryId?: string;
   coverImage: string;
@@ -291,7 +291,7 @@ export interface ICategorySubTypes {
 export interface IExtraItem {
   id: string;
   _id: string;
-  ExtraType?: string
+  ExtraType?: string;
   name: string;
   price: string;
   maxQuantity: number;
@@ -373,21 +373,21 @@ export interface ITable {
   hiCode: string;
   id: string;
   _id: string;
-  mergeTables: IMerge[]
+  mergeTables: IMerge[];
   isMerge: boolean;
   parentTableId: string;
   parentZoneId: string;
   hierarchy: string;
-  tableId: string
+  tableId: string;
 }
 
 export interface IZoneData {
-	zoneName: string;
-	zoneType: string;
-	staff: string[];
-	tables: string[];
-	Occupied: number;
-	id: string;
+  zoneName: string;
+  zoneType: string;
+  staff: string[];
+  tables: string[];
+  Occupied: number;
+  id: string;
   _id: string;
 }
 export interface IZone {
@@ -412,6 +412,6 @@ export interface NetworkInformation extends EventTarget {
 
 export interface NavigatorWithNetworkInformation extends Navigator {
   connection?: NetworkInformation;
-  mozConnection?: NetworkInformation; 
-  webkitConnection?: NetworkInformation; 
+  mozConnection?: NetworkInformation;
+  webkitConnection?: NetworkInformation;
 }

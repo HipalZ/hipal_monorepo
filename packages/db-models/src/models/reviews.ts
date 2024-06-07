@@ -1,6 +1,6 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model } from 'mongoose';
 
-import { ReviewsType } from "../validators";
+import { ReviewsType } from '../validators';
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
   {
@@ -19,8 +19,8 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     reviewRating: {
       required: true,
       type: Number,
-      min: [1, "Review rating must be at least 1"],
-      max: [5, "Review rating must be at most 5"],
+      min: [1, 'Review rating must be at least 1'],
+      max: [5, 'Review rating must be at most 5'],
     },
     description: {
       type: String,
@@ -35,12 +35,9 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Reviews: Model<ReviewsType> = mongoose.model<ReviewsType>(
-  "customerReviews",
-  reviewsSchema
-);
+const Reviews: Model<ReviewsType> = mongoose.model<ReviewsType>('customerReviews', reviewsSchema);
 
 export { Reviews };

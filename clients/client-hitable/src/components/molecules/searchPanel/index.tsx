@@ -1,13 +1,13 @@
 import { useSearch } from '@/components/store/useSearch';
-import React, { useState } from 'react';
-import { HiX, HiSearch } from 'react-icons/hi';
+import { useState } from 'react';
+import { HiSearch, HiX } from 'react-icons/hi';
 
 function SearchComponent({ activeButton, onSearch }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const search = useSearch((s) => s.searchText);
   const setSearch = useSearch((s) => s.setSearchText);
   const { isFocused, setIsFocused } = useSearch();
-  const popOver = (search = "") => {
+  const popOver = (search = '') => {
     if (search.length > 0) {
       if (!searchOpen) {
         setSearchOpen(true);
@@ -19,7 +19,7 @@ function SearchComponent({ activeButton, onSearch }) {
 
   const searchClick = () => {
     setSearchOpen(!searchOpen);
-    setSearch("");
+    setSearch('');
   };
 
   const handleInputChange = (e) => {
@@ -35,22 +35,19 @@ function SearchComponent({ activeButton, onSearch }) {
   };
   return (
     <div
-      className={`${activeButton.toLowerCase() === "status" ||
-        activeButton.toLowerCase() === "settle"
-        ? "hidden"
-        : ""
-        } relative flex justify-between items-center pb-1`}
+      className={`${
+        activeButton.toLowerCase() === 'status' || activeButton.toLowerCase() === 'settle' ? 'hidden' : ''
+      } relative flex items-center justify-between pb-1`}
     >
-
-      <div className={`${search?.length === 0 && isFocused ? "w-[80%] mr-2" : "w-full"} `}>
+      <div className={`${search?.length === 0 && isFocused ? 'mr-2 w-[80%]' : 'w-full'} `}>
         <label htmlFor="simple-search" className="sr-only">
           Search
         </label>
         <div className="relative">
           {searchOpen ? (
-            <HiX className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
+            <HiX className="text-primary/80 dark:text-primary pointer-events-none absolute inset-y-0 right-2 top-[0.625rem] flex h-4 w-4 items-center" />
           ) : (
-            <HiSearch className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
+            <HiSearch className="text-primary/80 dark:text-primary pointer-events-none absolute inset-y-0 right-2 top-[0.625rem] flex h-4 w-4 items-center" />
           )}
           <input
             onClick={searchClick}
@@ -59,17 +56,21 @@ function SearchComponent({ activeButton, onSearch }) {
             value={search}
             type="text"
             id="simple-search"
-            className="border  border-gray-300 text-gray-900 text-sm rounded-xl focus:outline-none focus:border-primary block w-full pl-4 p-1.5"
+            className="focus:border-primary  block w-full rounded-xl border border-gray-300 p-1.5 pl-4 text-sm text-gray-900 focus:outline-none"
             placeholder="Search"
             required
           />
         </div>
       </div>
-      {search?.length === 0 && isFocused &&
-        <button type="button" onClick={() => setIsFocused(false)} className="bg-base-100 text-base-content rounded-xl px-4 flex text-sm py-2 border on_active_bounce">
+      {search?.length === 0 && isFocused && (
+        <button
+          type="button"
+          onClick={() => setIsFocused(false)}
+          className="bg-base-100 text-base-content on_active_bounce flex rounded-xl border px-4 py-2 text-sm"
+        >
           Cancel
-        </button >
-      }
+        </button>
+      )}
     </div>
   );
 }

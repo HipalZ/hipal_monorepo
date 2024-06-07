@@ -1,6 +1,6 @@
-import { useRouter } from 'next/router'
-import { memo, useEffect } from 'react'
-import { MdOutlineChevronLeft } from 'react-icons/md'
+import { useRouter } from "next/router"
+import { memo, useEffect } from "react"
+import { MdOutlineChevronLeft } from "react-icons/md"
 
 interface BackButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
 	/**
@@ -28,12 +28,12 @@ function BackButton({ onBackURL, ...props }: BackButtonProps) {
 
 	return (
 		<button
-			className='flex flex-row w-10 h-10 mr-auto rounded-full bg-black/40 on_active_bounce'
+			className="flex flex-row w-10 h-10 mr-auto rounded-full bg-black/40 on_active_bounce"
 			onClick={onBack}
 			{...props}
 		>
-			<div className='flex flex-row m-auto'>
-				<MdOutlineChevronLeft className='text-3xl text-white ' />
+			<div className="flex flex-row m-auto">
+				<MdOutlineChevronLeft className="text-3xl text-white " />
 			</div>
 		</button>
 	)

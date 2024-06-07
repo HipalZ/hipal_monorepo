@@ -1,33 +1,26 @@
-import axios from "@/axios";
-import { useBusinessStore } from "@/components/store/useBusinessData";
-import { useLogin } from "@/components/store/useLogin";
-import { useTable } from "@/components/store/useTable";
-import type { ICategory, Kitchen } from "@/components/types/hiTableData";
-import { getUpdatedCart } from "@/components/utils/helpers";
-import { PAGE_TYPES, newRoutes } from "@/components/utils/routes";
-import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
-import { v4 as uuid4 } from "uuid";
-import { toast } from "react-toastify";
-import Loader from "@/components/atoms/loader";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import axios from '@/axios';
+import Loader from '@/components/atoms/loader';
+import { useBusinessStore } from '@/components/store/useBusinessData';
+import { useLogin } from '@/components/store/useLogin';
+import { useTable } from '@/components/store/useTable';
+import type { ICategory, Kitchen } from '@/components/types/hiTableData';
+import { getUpdatedCart } from '@/components/utils/helpers';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { v4 as uuid4 } from 'uuid';
 
 interface IData {
   categories: ICategory[];
   kitchens: Kitchen[];
 }
-const AddTempDish = ({
-  onClose,
-  setCurrentView,
-}: {
-  onClose: () => void;
-  setCurrentView: (str: string) => void;
-}) => {
-  const [dishName, setDishName] = useState("");
-  const [dishType, setDishType] = useState("");
-  const [categoryType, setCategoryType] = useState("");
-  const [kitchen, setKitchen] = useState("");
-  const [price, setPrice] = useState("");
+const AddTempDish = ({ onClose, setCurrentView }: { onClose: () => void; setCurrentView: (str: string) => void }) => {
+  const [dishName, setDishName] = useState('');
+  const [dishType, setDishType] = useState('');
+  const [categoryType, setCategoryType] = useState('');
+  const [kitchen, setKitchen] = useState('');
+  const [price, setPrice] = useState('');
   const userDetails = useLogin((s) => s.userDetails);
   const phone = useLogin((s) => s.phoneNumber);
   const tableName = useTable((s) => s.tableData.name);
@@ -50,7 +43,7 @@ const AddTempDish = ({
   };
 
   const handlePriceChange = (e) => {
-    const value = e.target.value?.replace(/[^0-9]/g, "");
+    const value = e.target.value?.replace(/[^0-9]/g, '');
     setPrice(value);
   };
 
@@ -71,24 +64,24 @@ const AddTempDish = ({
 
     setSending(true);
 
-    if (dishName.trim() === "") {
-      toast.error("Please enter the name of the dish.");
+    if (dishName.trim() === '') {
+      toast.error('Please enter the name of the dish.');
       return;
     }
     if (!price) {
-      toast.error("Please enter the price of the dish.");
+      toast.error('Please enter the price of the dish.');
       return;
     }
     if (!dishType) {
-      toast.error("Please select a dish type.");
+      toast.error('Please select a dish type.');
       return;
     }
     if (!categoryType) {
-      toast.error("Please select a category.");
+      toast.error('Please select a category.');
       return;
     }
     if (!kitchen) {
-      toast.error("Please select a kitchen.");
+      toast.error('Please select a kitchen.');
       return;
     }
 
@@ -97,14 +90,14 @@ const AddTempDish = ({
       kitchenId: kitchen,
       zoneId: zoneId,
       tableId: tableId,
-      staffId: "5",
+      staffId: '5',
 
       dish: {
         dishId: uuid4(),
         name: dishName,
         price: Number(price),
         qty: qty,
-        comments: "spicy",
+        comments: 'spicy',
         extras: [],
       },
       dishType: dishType,
@@ -115,15 +108,12 @@ const AddTempDish = ({
       isGst: isGst,
     };
     try {
-      const response = await axios.post(
-        "/v1/kitchens/:kitchenId/openItem",
-        requestBody
-      );
+      const response = await axios.post('/v1/kitchens/:kitchenId/openItem', requestBody);
       const getCart = getUpdatedCart(requestBody, false);
       if (getCart && businessData?.kotPrinter) {
         const config = {
-          method: "POST",
-          url: "https://ws.hipal.life",
+          method: 'POST',
+          url: 'https://ws.hipal.life',
           data: {
             businessId: businessId,
             payload: {
@@ -134,27 +124,23 @@ const AddTempDish = ({
         };
         const response = axios(config);
       }
-      toast.success("Quick Dish added successfully.");
-      setDishName("");
-      setPrice("");
-      setDishType("");
-      setCategoryType("");
-      setKitchen("");
+      toast.success('Quick Dish added successfully.');
+      setDishName('');
+      setPrice('');
+      setDishType('');
+      setCategoryType('');
+      setKitchen('');
       onClose();
-      setCurrentView("pos");
+      setCurrentView('pos');
     } catch (error) {
-      console.error("Error submitting dish:", error);
+      console.error('Error submitting dish:', error);
     }
   };
 
   const getKitchenAndCategory = async () => {
     try {
-      const categories = await axios.get(
-        `/v1/categories?businessId=${businessId}`
-      );
-      const filterCategory = categories.data.filter(
-        (ele) => ele.hierarchy === "PARENT"
-      );
+      const categories = await axios.get(`/v1/categories?businessId=${businessId}`);
+      const filterCategory = categories.data.filter((ele) => ele.hierarchy === 'PARENT');
       const kitchens = await axios.get(`/v1/kitchens?businessId=${businessId}`);
       const data = {
         categories: filterCategory,
@@ -162,7 +148,7 @@ const AddTempDish = ({
       };
       setData(data);
     } catch (error) {
-      console.error("Error fetching staff details:", error);
+      console.error('Error fetching staff details:', error);
     }
   };
 
@@ -171,7 +157,7 @@ const AddTempDish = ({
     error,
     data: categoryData,
   } = useQuery({
-    queryKey: ["getKitchenAndCategory", businessId],
+    queryKey: ['getKitchenAndCategory', businessId],
     queryFn: getKitchenAndCategory,
     enabled: !!businessId,
   });
@@ -192,20 +178,20 @@ const AddTempDish = ({
   }
 
   return (
-    <div className="pb-[7rem] h-[80vh] overflow-auto">
+    <div className="h-[80vh] overflow-auto pb-[7rem]">
       <div className="m-6">
         <div className="font-[500]">Add Temp Dish</div>
 
         {/* Dish Name Input */}
         <div className="mt-4 space-y-2 text-sm">
           <span>
-            {" "}
+            {' '}
             Name of the Dish <span className="text-red-500">*</span>
           </span>
           <input
             value={dishName}
             onChange={handleNameChange}
-            className="w-full border border-[#79747E] px-4 py-2 rounded-xl"
+            className="w-full rounded-xl border border-[#79747E] px-4 py-2"
             type="text"
             placeholder="Name"
             max={16}
@@ -217,7 +203,7 @@ const AddTempDish = ({
           <input
             value={price}
             onChange={handlePriceChange}
-            className="w-full border border-[#79747E] px-4 py-2 rounded-xl"
+            className="w-full rounded-xl border border-[#79747E] px-4 py-2"
             type="tel"
             placeholder="price"
             maxLength={6}
@@ -227,13 +213,12 @@ const AddTempDish = ({
 
         {/* Dish Type Dropdown */}
         <div className="mt-4 space-y-2 text-sm">
-          <span className="font-medium">Dish Type</span>{" "}
-          <span className="text-red-500">*</span>
+          <span className="font-medium">Dish Type</span> <span className="text-red-500">*</span>
           <select
             onChange={handleDishTypeChange}
-            value={dishType || ""}
+            value={dishType || ''}
             id="dishType"
-            className="block text-sm w-full pt-2 pb-2 bg-base-100 px-2 pr-[7rem] mb-0 ml-0 mr-0 text-gray-900 bg-transparent border-gray-800 rounded-xl border dark:text-base-100 focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+            className="bg-base-100 dark:text-base-100 peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-gray-800 bg-transparent px-2 pb-2 pr-[7rem] pt-2 text-sm text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D]"
           >
             <option value="">Select a dish type</option>
             <option value="veg">Veg</option>
@@ -246,13 +231,12 @@ const AddTempDish = ({
 
         {/* Variant Type Dropdown */}
         <div className="mt-4 space-y-2 text-sm">
-          <span className="font-medium">Select Category</span>{" "}
-          <span className="text-red-500">*</span>
+          <span className="font-medium">Select Category</span> <span className="text-red-500">*</span>
           <select
             onChange={handleCategoryChange}
-            value={categoryType || ""}
+            value={categoryType || ''}
             id="category"
-            className="block w-full pt-2 pb-2 bg-base-100 px-2 pr-[7rem] mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border-gray-800 rounded-xl border dark:text-base-100 focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+            className="bg-base-100 dark:text-base-100 peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-gray-800 bg-transparent px-2 pb-2 pr-[7rem] pt-2 text-sm text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D]"
           >
             <option value="">Select Category</option>
             {data?.categories.map((ele, i) => (
@@ -265,13 +249,12 @@ const AddTempDish = ({
 
         {/* Kitchen Dropdown */}
         <div className="mt-4 space-y-2 text-sm">
-          <span className="font-medium">Kitchen</span>{" "}
-          <span className="text-red-500">*</span>
+          <span className="font-medium">Kitchen</span> <span className="text-red-500">*</span>
           <select
             onChange={handleKitchenChange}
-            value={kitchen || ""}
+            value={kitchen || ''}
             id="kitchenType"
-            className="block w-full pt-2 pb-2 bg-base-100 px-2 pr-[7rem] mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border-gray-800 rounded-xl border dark:text-base-100 focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+            className="bg-base-100 dark:text-base-100 peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-gray-800 bg-transparent px-2 pb-2 pr-[7rem] pt-2 text-sm text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D]"
           >
             <option value="">Select kitchen</option>
             {data?.kitchens?.map((ele, i) => (
@@ -281,16 +264,9 @@ const AddTempDish = ({
             ))}
           </select>
         </div>
-        <article className="flex items-center justify-between p-4 my-6 border border-base-content rounded-xl">
+        <article className="border-base-content my-6 flex items-center justify-between rounded-xl border p-4">
           <h4>Gst</h4>
-          <input
-            onChange={() => setIsGst(!isGst)}
-            type="checkbox"
-            id="gst"
-            name="gst"
-            checked={isGst}
-            className="w-5 h-5"
-          />
+          <input onChange={() => setIsGst(!isGst)} type="checkbox" id="gst" name="gst" checked={isGst} className="h-5 w-5" />
         </article>
 
         {/* Quantity */}
@@ -302,7 +278,7 @@ const AddTempDish = ({
                 type="button"
                 onClick={() => setQty(qty - 1)}
                 disabled={qty === 1}
-                className="px-4 py-2 text-sm border rounded-xl bg-base-100 text-primary border-primary"
+                className="bg-base-100 text-primary border-primary rounded-xl border px-4 py-2 text-sm"
               >
                 -
               </button>
@@ -312,7 +288,7 @@ const AddTempDish = ({
             <button
               type="button"
               onClick={() => setQty(qty + 1)}
-              className="px-4 py-2 text-sm border rounded-xl bg-base-100 text-primary border-primary"
+              className="bg-base-100 text-primary border-primary rounded-xl border px-4 py-2 text-sm"
             >
               +
             </button>
@@ -321,12 +297,8 @@ const AddTempDish = ({
       </div>
 
       {/* Confirmation Button */}
-      <div className="fixed bottom-0 flex items-center justify-end w-full px-4 py-4 bg-primary">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-6 py-2 text-sm rounded-full bg-base-100"
-        >
+      <div className="bg-primary fixed bottom-0 flex w-full items-center justify-end px-4 py-4">
+        <button type="button" onClick={handleSubmit} className="bg-base-100 rounded-full px-6 py-2 text-sm">
           Confirm
         </button>
       </div>

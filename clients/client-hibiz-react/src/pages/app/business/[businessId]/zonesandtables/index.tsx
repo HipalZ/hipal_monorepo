@@ -1,9 +1,7 @@
-import Dinein from "@/components/templates/dinein";
+import Dinein from '@/components/templates/dinein';
 
 const MenuPage = () => {
-  return (
-    <Dinein/>
-  )
+  return <Dinein />;
 };
 
 export default MenuPage;

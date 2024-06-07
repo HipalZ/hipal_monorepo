@@ -1,10 +1,8 @@
 import { startTransition, useEffect, useState } from 'react';
-import { useOwnerLogin } from './components/store/useOwnerLogin';
-import MainRouter from './routes'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { PAGE_TYPES, routePaths } from './components/utils/routes';
-import axios from '@/axios';
+import { useOwnerLogin } from './components/store/useOwnerLogin';
+import MainRouter from './routes';
 
 interface AccessControl {
   dish: boolean;
@@ -16,12 +14,12 @@ interface AccessControl {
 }
 
 const routeToPermissionMap: { [key: string]: keyof AccessControl } = {
-  "/items": "dish",
-  "/loyalty": "loyalty",
-  "/zonesandtables": "zones_tables",
-  "/sales": "sale",
-  "/staff": "staff",
-  "/reports": "reports",
+  '/items': 'dish',
+  '/loyalty': 'loyalty',
+  '/zonesandtables': 'zones_tables',
+  '/sales': 'sale',
+  '/staff': 'staff',
+  '/reports': 'reports',
 };
 
 function App() {
@@ -68,9 +66,9 @@ function App() {
         const permissionKey = routeToPermissionMap[routeKey];
         if (!user.accessControl[permissionKey]) {
           toast.error("You don't have access to this page.");
-          startTransition(()=>{
+          startTransition(() => {
             navigate('/business');
-          })
+          });
         }
       }
     }
@@ -80,9 +78,9 @@ function App() {
     if (!isLoggedIn) {
       const timeout = setTimeout(() => {
         toast.error('Session TimeOut');
-        startTransition(()=>{
+        startTransition(() => {
           navigate('/');
-        })
+        });
       }, 60000);
       return () => clearTimeout(timeout);
     }
@@ -123,19 +121,11 @@ function App() {
   }, []);
   return (
     <div className="App">
-      {!isOnline && (
-        <div className="text-center text-white bg-red-500">
-          Please check your internet connection
-        </div>
-      )}
-      {isOnline && isSlow && (
-        <div className="bg-[#ef9b0f] text-white text-center">
-          ⚠ Your connection is too slow
-        </div>
-      )}
+      {!isOnline && <div className="bg-red-500 text-center text-white">Please check your internet connection</div>}
+      {isOnline && isSlow && <div className="bg-[#ef9b0f] text-center text-white">⚠ Your connection is too slow</div>}
       <MainRouter />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

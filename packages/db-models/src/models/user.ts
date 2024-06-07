@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { UserType, CustomRoleType, UserControllerType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { CustomRoleType, UserControllerType, UserType } from '../validators';
 
 const CustomRole = {
   businessId: {
@@ -56,11 +56,11 @@ const userSchema = new mongoose.Schema<UserType>(
     name: {
       type: String,
       required: false,
-      default: "",
+      default: '',
     },
     email: {
       type: String,
-      default: "",
+      default: '',
     },
     phone: {
       type: String,
@@ -98,9 +98,9 @@ const userSchema = new mongoose.Schema<UserType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const User: Model<UserType> = mongoose.model<UserType>("User", userSchema);
+const User: Model<UserType> = mongoose.model<UserType>('User', userSchema);
 
 export { User };

@@ -7,7 +7,6 @@ import { useRouter } from 'next/router'
 import { memo, useEffect, useMemo } from 'react'
 
 function DishesTypes() {
-
 	const setActiveDishTypes = useDishTypes((s) => s.setActiveDishTypes)
 	const activeDishTypes = useDishTypes((s) => s.activeDishTypes)
 	const data = _useAllBusiness((s) => s.data)

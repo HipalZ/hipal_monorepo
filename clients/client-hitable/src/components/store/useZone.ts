@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface Zone {
   businessId: string;
@@ -35,7 +35,7 @@ export const useZoneStore = create(
       setZone: (zone) => set({ zone }),
     }),
     {
-      name: "zone-storage",
-    }
-  )
+      name: 'zone-storage',
+    },
+  ),
 );

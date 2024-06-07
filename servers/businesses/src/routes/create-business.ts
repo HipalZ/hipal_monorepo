@@ -1,12 +1,11 @@
-import express, { Request, Response } from "express";
-import { Business, LoyaltySettings, Role } from "@hi/db-models";
-import axios from "axios";
-import { currentUser } from "@hipal/common";
+import { Business, LoyaltySettings, Role } from '@hi/db-models';
+import axios from 'axios';
+import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
 router.post(
-  "/v1/businesses",
+  '/v1/businesses',
 
   async (req: Request, res: Response) => {
     const {
@@ -61,7 +60,7 @@ router.post(
       gstNumber,
       fssaiLicenseNumber,
       status: false,
-      tier: "ON THE HOUSE",
+      tier: 'ON THE HOUSE',
       open,
       close,
       isHasSetting,
@@ -86,51 +85,45 @@ router.post(
     await business.save();
 
     res.status(201).send(business);
-  }
+  },
 );
 
-router.post(
-  "/v1/businesses/:businessId/userlike",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.body || {};
-      const { businessId } = req.params || {};
+router.post('/v1/businesses/:businessId/userlike', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body || {};
+    const { businessId } = req.params || {};
 
-      const businessObject = await Business.findById(businessId);
+    const businessObject = await Business.findById(businessId);
 
-      if (!businessObject) {
-        return res
-          .status(404)
-          .send({ status: false, message: "Business No Found Given Id " });
-      }
-
-      let likes =
-        businessObject && businessObject.likes ? businessObject.likes : [];
-
-      if (!likes.includes(userId)) {
-        // Add userId to likes array if it doesn't already exist
-        likes.push(userId);
-      } else {
-        // Remove userId from likes array if it already exists
-        likes = likes.filter((ele: any) => ele !== userId);
-      }
-
-      let updateBusinessLike = await Business.findByIdAndUpdate(
-        businessId,
-        {
-          $set: {
-            likes: likes,
-          },
-        },
-        { new: true }
-      );
-
-      return res.status(201).send({ status: true, data: updateBusinessLike });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (!businessObject) {
+      return res.status(404).send({ status: false, message: 'Business No Found Given Id ' });
     }
+
+    let likes = businessObject && businessObject.likes ? businessObject.likes : [];
+
+    if (!likes.includes(userId)) {
+      // Add userId to likes array if it doesn't already exist
+      likes.push(userId);
+    } else {
+      // Remove userId from likes array if it already exists
+      likes = likes.filter((ele: any) => ele !== userId);
+    }
+
+    let updateBusinessLike = await Business.findByIdAndUpdate(
+      businessId,
+      {
+        $set: {
+          likes: likes,
+        },
+      },
+      { new: true },
+    );
+
+    return res.status(201).send({ status: true, data: updateBusinessLike });
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 // router.post(
 //   "/v1/businesses/:businessId/userReview",
@@ -256,7 +249,7 @@ router.post(
 // });
 
 router.post(
-  "/v1/businesses/:id/loyalty",
+  '/v1/businesses/:id/loyalty',
 
   async (req: Request, res: Response) => {
     try {
@@ -266,16 +259,14 @@ router.post(
       if (verify) {
         let alert;
         try {
-          alert = await axios.get(
-            `${process.env.URL}/v1/payments/Get/Alert?loyalty=true&value=${password}`
-          );
+          alert = await axios.get(`${process.env.URL}/v1/payments/Get/Alert?loyalty=true&value=${password}`);
           alert = alert?.data;
-          console.log("alert", alert);
+          console.log('alert', alert);
         } catch (err: any) {
-          console.log("err", err);
+          console.log('err', err);
         }
         if (!alert) {
-          return res.status(400).send("please enter valid password");
+          return res.status(400).send('please enter valid password');
         }
 
         let ExitSetting = await LoyaltySettings.findOne({
@@ -283,12 +274,12 @@ router.post(
           origin: true,
         });
         if (!ExitSetting) {
-          return res.status(400).send("Loyalty settings Not found ");
+          return res.status(400).send('Loyalty settings Not found ');
         }
         let newPass = Math.floor(Math.random() * 9000) + 10000;
         const alreadyExit = await LoyaltySettings.findOne({ businessId });
         if (alreadyExit) {
-          return res.status(400).send("Loyalty Setting Already Created!!");
+          return res.status(400).send('Loyalty Setting Already Created!!');
         }
         let data = new LoyaltySettings({
           businessId,
@@ -310,7 +301,7 @@ router.post(
       });
 
       if (ExitSetting) {
-        return res.status(400).send("already exist");
+        return res.status(400).send('already exist');
       }
       let newPass = Math.floor(Math.random() * 9000) + 10000;
       let data = new LoyaltySettings({
@@ -320,13 +311,13 @@ router.post(
       const saveLoyaltySetup = await data.save();
       return res.status(201).send(saveLoyaltySetup);
     } catch (err: any) {
-      console.log("err", err);
+      console.log('err', err);
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/businesses/:id/roles",
+  '/v1/businesses/:id/roles',
 
   async (req: Request, res: Response) => {
     const { name, description, permissions } = req.body;
@@ -340,7 +331,7 @@ router.post(
     });
 
     res.status(201).send(role);
-  }
+  },
 );
 
 export { router as createUserRouter };

@@ -1,8 +1,8 @@
-import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from '@components/utils/routes'
-import { isEmpty } from 'lodash-es'
-import { useRouter } from 'next/router'
-import { useCallback, useMemo } from 'react'
-import { _useAllBusiness } from './useAllBusiness'
+import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@components/utils/routes"
+import { isEmpty } from "lodash-es"
+import { useRouter } from "next/router"
+import { useCallback, useMemo } from "react"
+import { _useAllBusiness } from "./useAllBusiness"
 
 function useRoutingFlow() {
 	const router = useRouter()
@@ -28,8 +28,8 @@ function useRoutingFlow() {
 	 * @returns {string} path key
 	 */
 	const pathKey = useMemo(() => {
-		const dishId = (router?.query?.dishId || '') as string
-		const currentPath = (router.asPath || '').split('#')?.[0]
+		const dishId = (router?.query?.dishId || "") as string
+		const currentPath = (router.asPath || "").split("#")?.[0]
 
 		for (const key in routePaths) {
 			if (routePaths[key](businessId, dishId) === currentPath) return key

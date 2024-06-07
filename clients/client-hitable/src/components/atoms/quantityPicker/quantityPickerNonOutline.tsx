@@ -1,6 +1,6 @@
-import { IExtraItem, IExtras } from "@/components/types/hiTableData";
-import { memo } from "react";
-import { HiMinusSm, HiPlusSm } from "react-icons/hi";
+import { IExtraItem, IExtras } from '@/components/types/hiTableData';
+import { memo } from 'react';
+import { HiMinusSm, HiPlusSm } from 'react-icons/hi';
 
 function QuantityPickerNonOutline({
   quantity,
@@ -46,50 +46,44 @@ function QuantityPickerNonOutline({
   };
   return (
     <>
-      {extra?.addOnType === 'multiple' ? <div className='flex flex-row mx-1 my-auto'>
-        {/* Decrease */}
-        <div className='flex flex-col w-1/3'>
-          <button
-            className='btn btn-xs btn-outline btn-primary aspect-square !px-0 !py-0 !min-h-4 !h-6 !w-6 flex flex-col border-0  rounded-full !my-auto '
-            onClick={
-              isDisabled && quantity === 0 && extra?.name ? displayAlertPopUp : onDecreaseQuantity
-            }
-          >
-            <HiMinusSm size={24} className='p-0 m-auto' />
-          </button>
-        </div>
+      {extra?.addOnType === 'multiple' ? (
+        <div className="mx-1 my-auto flex flex-row">
+          {/* Decrease */}
+          <div className="flex w-1/3 flex-col">
+            <button
+              className="btn btn-xs btn-outline btn-primary !min-h-4 !my-auto flex aspect-square !h-6 !w-6 flex-col rounded-full border-0  !px-0 !py-0 "
+              onClick={isDisabled && quantity === 0 && extra?.name ? displayAlertPopUp : onDecreaseQuantity}
+            >
+              <HiMinusSm size={24} className="m-auto p-0" />
+            </button>
+          </div>
 
-        {/* Quantity */}
-        <span className=' w-1/3 !py-0 px-2 flex flex-col text-xs font-bold my-auto mx-auto text-center text-base-content'>
-          {quantity}
-        </span>
+          {/* Quantity */}
+          <span className=" text-base-content mx-auto my-auto flex w-1/3 flex-col !py-0 px-2 text-center text-xs font-bold">{quantity}</span>
 
-        {/* Increase */}
-        <div className='flex flex-col w-1/3'>
-          <button
-            className='btn btn-xs btn-outline btn-primary aspect-square !px-0 !py-0 !min-h-4 !h-6 !w-6 flex flex-col border-0  rounded-full !my-auto'
-            onClick={
-              extra?.id
-                ? (quantity === item?.maxQuantity || selectedItemsCount[extra?.id] === extra?.maxQuantity
-                  ? displayAlertPopUp
-                  : onIncreaseQuantity)
-                : (isDisabled && quantity === 0 && extra?.name
-                  ? displayAlertPopUp
-                  : onIncreaseQuantity)
-            }
-          >
-            <HiPlusSm size={24} />
-          </button>
+          {/* Increase */}
+          <div className="flex w-1/3 flex-col">
+            <button
+              className="btn btn-xs btn-outline btn-primary !min-h-4 !my-auto flex aspect-square !h-6 !w-6 flex-col rounded-full border-0  !px-0 !py-0"
+              onClick={
+                extra?.id
+                  ? quantity === item?.maxQuantity || selectedItemsCount[extra?.id] === extra?.maxQuantity
+                    ? displayAlertPopUp
+                    : onIncreaseQuantity
+                  : isDisabled && quantity === 0 && extra?.name
+                    ? displayAlertPopUp
+                    : onIncreaseQuantity
+              }
+            >
+              <HiPlusSm size={24} />
+            </button>
+          </div>
         </div>
-      </div> : <div
-        className='flex flex-row mx-1 my-auto'>
-        <input
-          type="checkbox"
-          checked={quantity > 0}
-          className='scale-110'
-          onChange={(e) => handleCheckboxChange(e.target.checked)}
-        />
-      </div>}
+      ) : (
+        <div className="mx-1 my-auto flex flex-row">
+          <input type="checkbox" checked={quantity > 0} className="scale-110" onChange={(e) => handleCheckboxChange(e.target.checked)} />
+        </div>
+      )}
     </>
   );
 }

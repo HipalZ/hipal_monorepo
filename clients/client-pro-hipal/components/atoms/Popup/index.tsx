@@ -4,7 +4,7 @@ import { Fragment } from 'react'
 export default function Popup({
 	children,
 	show,
-	onClose, 
+	onClose,
 }: {
 	children: React.ReactNode
 	show: boolean

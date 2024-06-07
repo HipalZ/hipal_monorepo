@@ -1,9 +1,7 @@
-import Settings from "@/components/templates/settings";
+import Settings from '@/components/templates/settings';
 
 const SettingsPage = () => {
-  return (
-    <Settings/>
-  )
+  return <Settings />;
 };
 
 export default SettingsPage;

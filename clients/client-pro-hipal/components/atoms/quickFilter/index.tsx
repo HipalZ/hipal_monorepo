@@ -87,7 +87,11 @@ function QuickFilter() {
 								<div className='w-5 h-5 p-[0.125rem] border-2 border-green-900'>
 									<div className='w-[0.725rem] h-[0.725rem] bg-green-900 rounded-full'></div>
 								</div>
-								<div className={`${isActiveDishType.toLowerCase() === 'veg' ? 'font-bold' : ''} ml-3`}>Veg</div>
+								<div
+									className={`${isActiveDishType.toLowerCase() === 'veg' ? 'font-bold' : ''} ml-3`}
+								>
+									Veg
+								</div>
 							</div>
 							<div
 								className={`${
@@ -98,7 +102,9 @@ function QuickFilter() {
 								<div className='w-5 h-5 p-[0.125rem] border-2 border-red-900'>
 									<div className='w-[0.725rem] h-[0.725rem] bg-red-900 rounded-full'></div>
 								</div>
-								<div className={`${isActiveDishType.toLowerCase() === 'nonveg' ? 'font-bold' : ''} ml-3`}>
+								<div
+									className={`${isActiveDishType.toLowerCase() === 'nonveg' ? 'font-bold' : ''} ml-3`}
+								>
 									NonVeg
 								</div>
 							</div>
@@ -111,7 +117,9 @@ function QuickFilter() {
 								<div className='w-5 h-5 p-[0.125rem] border-2 border-[#02614b]'>
 									<div className='w-[0.725rem] h-[0.725rem] bg-[#02614b] rounded-full'></div>
 								</div>
-								<div className={`${isActiveDishType.toLowerCase() === 'vegan' ? 'font-bold' : ''} ml-3`}>
+								<div
+									className={`${isActiveDishType.toLowerCase() === 'vegan' ? 'font-bold' : ''} ml-3`}
+								>
 									Vegan
 								</div>
 							</div>
@@ -124,7 +132,11 @@ function QuickFilter() {
 								<div className='w-5 h-5 p-[0.125rem] border-2 border-[#D2C903]'>
 									<div className='w-[0.725rem] h-[0.725rem] bg-[#D2C903] rounded-full'></div>
 								</div>
-								<div className={`${isActiveDishType.toLowerCase() === 'egg' ? 'font-bold' : ''} ml-3`}>Egg</div>
+								<div
+									className={`${isActiveDishType.toLowerCase() === 'egg' ? 'font-bold' : ''} ml-3`}
+								>
+									Egg
+								</div>
 							</div>
 
 							<div

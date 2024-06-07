@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { UserRewardHistoryType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { UserRewardHistoryType } from '../validators';
 
 const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   {
@@ -57,13 +57,9 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const UserRewardHistory: Model<UserRewardHistoryType> =
-  mongoose.model<UserRewardHistoryType>(
-    "userRewardHistory",
-    userRewardHistorySchema
-  );
+const UserRewardHistory: Model<UserRewardHistoryType> = mongoose.model<UserRewardHistoryType>('userRewardHistory', userRewardHistorySchema);
 
 export { UserRewardHistory };

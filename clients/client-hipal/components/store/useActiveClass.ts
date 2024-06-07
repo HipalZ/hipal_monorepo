@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface IUseSettings {
 	isActiveCategory: string
@@ -15,17 +15,18 @@ interface IUseSettings {
 export const useActiveClass = create(
 	persist<IUseSettings>(
 		(set) => ({
-			isActiveCategory: '',
-			isActiveDishType: '',
-			isActiveParentCategory: '',
-			isActiveParentCategoryName: '',
-			setActiveParentCategoryName: (category) => set(() => ({ isActiveParentCategoryName: category })),
+			isActiveCategory: "",
+			isActiveDishType: "",
+			isActiveParentCategory: "",
+			isActiveParentCategoryName: "",
+			setActiveParentCategoryName: (category) =>
+				set(() => ({ isActiveParentCategoryName: category })),
 			setActiveParentCategory: (category) => set(() => ({ isActiveParentCategory: category })),
 			setActiveCategory: (categoryId) => set(() => ({ isActiveCategory: categoryId })),
 			setActiveDishType: (dishTypeId) => set(() => ({ isActiveDishType: dishTypeId })),
 		}),
 		{
-			name: 'activecategory',
+			name: "activecategory",
 		},
 	),
 )

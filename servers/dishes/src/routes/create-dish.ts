@@ -1,14 +1,14 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 // import { validateDish } from "./validators/new-dish-validator";
 
-import { Category, Dish, Extra } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
-import { DishType, ExtraType } from "@hi/db-models/src/validators";
+import { Category, Dish, Extra } from '@hi/db-models';
+import { ExtraType } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 const router = express.Router();
 
 router.post(
-  "/v1/dishes",
+  '/v1/dishes',
   // validateDish,
   async (req: Request, res: Response) => {
     const {
@@ -59,7 +59,7 @@ router.post(
               availability,
             },
           ],
-          { session: session }
+          { session: session },
         );
         // @ts-ignore
         await Category.updateMany(
@@ -67,19 +67,19 @@ router.post(
           { _id: { $in: categories } },
           // @ts-ignore
           { $push: { dishes: dish[0]._id } },
-          { session: session }
+          { session: session },
         );
       });
 
-      res.status(201).send("Dish created successfully");
+      res.status(201).send('Dish created successfully');
     } catch (e) {
       // handle error
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/dishes/extra",
+  '/v1/dishes/extra',
   // validateDish,
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
@@ -110,7 +110,7 @@ router.post(
     });
 
     res.status(201).send(extra);
-  }
+  },
 );
 
 // router.post(

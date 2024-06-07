@@ -1,10 +1,9 @@
-
 import UserAvatar from '@components/atoms/userAvatar'
 import { _useAllBusiness } from '@components/store/useAllBusiness'
 import { getRandomBlurImg } from '@components/utils/images'
 import dynamic from 'next/dynamic'
 import Image from 'next/legacy/image'
-import { memo} from 'react'
+import { memo } from 'react'
 import img from '../../../../assets/img/hitable_dish.png'
 import SkeletonLoader from '@components/atoms/loader/skeletonLoader'
 
@@ -41,7 +40,7 @@ function MainBackground() {
 					placeholder='blur'
 					blurDataURL={getRandomBlurImg(700, 700)}
 					priority={true}
-					loading="eager"
+					loading='eager'
 					decoding='sync'
 				/>
 			</div>
@@ -49,13 +48,13 @@ function MainBackground() {
 			<UserAvatar className='absolute top-4 right-4' />
 
 			<div className='absolute inset-x-0 flex flex-row px-4 py-3 mb-10 bottom-1 '>
-					<div className='my-auto'>
-						<RestaurantTime />
-					</div>
-					<div className='flex flex-row ml-auto space-x-2'>
-						<RestaurantLocation className='my-auto' />
-						<ContactRestaurant className='my-auto' />
-					</div>
+				<div className='my-auto'>
+					<RestaurantTime />
+				</div>
+				<div className='flex flex-row ml-auto space-x-2'>
+					<RestaurantLocation className='my-auto' />
+					<ContactRestaurant className='my-auto' />
+				</div>
 			</div>
 		</div>
 	)

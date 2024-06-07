@@ -1,16 +1,16 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import axios from "@/axios";
-import { Disclosure } from "@headlessui/react";
-import { FiChevronDown } from "react-icons/fi";
-import { HiX } from "react-icons/hi";
-import DayOutPopup from "@/components/atoms/dayoutPopup";
-import { useTable } from "@/components/store/useTable";
-import { toast } from "react-toastify";
-import type { ITable, ITransformedTable } from "@/components/types/hiTableData";
-import { useQuery } from "@tanstack/react-query";
-import Loader from "@/components/atoms/loader";
-import { useLogin } from "@/components/store/useLogin";
+import axios from '@/axios';
+import DayOutPopup from '@/components/atoms/dayoutPopup';
+import Loader from '@/components/atoms/loader';
+import { useLogin } from '@/components/store/useLogin';
+import { useTable } from '@/components/store/useTable';
+import type { ITable, ITransformedTable } from '@/components/types/hiTableData';
+import { Disclosure } from '@headlessui/react';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { FiChevronDown } from 'react-icons/fi';
+import { HiX } from 'react-icons/hi';
+import { toast } from 'react-toastify';
 
 const MergeTables = ({ setCurrentView }) => {
   const router = useRouter();
@@ -21,7 +21,7 @@ const MergeTables = ({ setCurrentView }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const tableData = useTable((s) => s.tableData);
   const [businesses, setBusinesses] = useState<any>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [tableDatas, setTableDatas] = useState<ITransformedTable[]>([]);
   const userDetails = useLogin((s) => s.userDetails);
 
@@ -38,32 +38,26 @@ const MergeTables = ({ setCurrentView }) => {
   };
 
   const allTables = businesses.flatMap((zone) => zone.tables);
-  const filteredTables = allTables.filter(
-    (table) =>
-      table.name.toLowerCase().includes(searchTerm) &&
-      table.status.toLowerCase() === "empty"
-  );
+  const filteredTables = allTables.filter((table) => table.name.toLowerCase().includes(searchTerm) && table.status.toLowerCase() === 'empty');
 
   const fetchZones = async () => {
     try {
-      const res = await axios.get(
-        `/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`
-      );
+      const res = await axios.get(`/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`);
       setBusinesses([res?.data]);
       return res?.data;
     } catch (error) {
-      toast.error("Error fetching tables");
+      toast.error('Error fetching tables');
     }
   };
   const { isLoading, error, data } = useQuery({
-    queryKey: ["tables", businessId, zoneId],
+    queryKey: ['tables', businessId, zoneId],
     queryFn: fetchZones,
     enabled: !!zoneId && !!businessId,
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <Loader />
       </div>
     );
@@ -73,13 +67,13 @@ const MergeTables = ({ setCurrentView }) => {
     const parentData = {
       tableId: tableData?._id,
       name: tableData.name,
-      hierarchy: "PARENT",
-      parentTableId: "",
-      parentZoneId: "",
+      hierarchy: 'PARENT',
+      parentTableId: '',
+      parentZoneId: '',
     };
     try {
       const config = {
-        method: "PUT",
+        method: 'PUT',
         url: `/v1/zones/:zoneId/mergeTables?businessId=${businessId}`,
         data: {
           businessId: businessId,
@@ -89,15 +83,15 @@ const MergeTables = ({ setCurrentView }) => {
       };
       const response = await axios(config);
       if (response.status === 200 || response.status === 201) {
-        toast.success("Table Merged Successfully");
-        setCurrentView("pos");
+        toast.success('Table Merged Successfully');
+        setCurrentView('pos');
       } else {
-        toast.error("Table Already Merged");
-        setCurrentView("kick");
+        toast.error('Table Already Merged');
+        setCurrentView('kick');
       }
     } catch (err: any) {
       if (err?.response?.status === 400) {
-        toast.error("Table Already Merged");
+        toast.error('Table Already Merged');
       }
     }
   };
@@ -105,15 +99,12 @@ const MergeTables = ({ setCurrentView }) => {
     return {
       tableId: data._id,
       name: data.name,
-      hierarchy: "CHILD",
+      hierarchy: 'CHILD',
       parentTableId: tableData?._id,
       parentZoneId: tableData?.zoneId,
     };
   }
-  function handleCheckboxChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-    data: any
-  ) {
+  function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>, data: any) {
     if (e.target.checked) {
       addTablesData(data);
     } else {
@@ -129,11 +120,11 @@ const MergeTables = ({ setCurrentView }) => {
     setTableDatas((prev) => prev.filter((item) => item?.tableId !== data._id));
   }
   return (
-    <div className="relative w-full bg-secondary min-h-screen px-6 pb-[10rem] pt-6 overflow-auto scroll-smooth">
+    <div className="bg-secondary relative min-h-screen w-full overflow-auto scroll-smooth px-6 pb-[10rem] pt-6">
       <div className="flex items-center justify-between text-xl font-medium">
         <div>Merge Table</div>
         <div>{tableData?.name}</div>
-        <div onClick={() => setCurrentView("kick")}>
+        <div onClick={() => setCurrentView('kick')}>
           <HiX />
         </div>
       </div>
@@ -143,7 +134,7 @@ const MergeTables = ({ setCurrentView }) => {
           placeholder="Search Table"
           value={searchTerm}
           onChange={handleSearchChange}
-          className="w-full p-2 border border-[#cacaca] rounded-md bg-base-100"
+          className="bg-base-100 w-full rounded-md border border-[#cacaca] p-2"
         />
       </div>
 
@@ -153,14 +144,11 @@ const MergeTables = ({ setCurrentView }) => {
             if (!table?.isMerge) {
               return null;
             }
-            if (table.status.toLowerCase() === "active") {
+            if (table.status.toLowerCase() === 'active') {
               return null;
             }
             return (
-              <div
-                key={table._id}
-                className="w-full max-w-md p-4 mx-auto mt-6 border bg-base-100 rounded-2xl"
-              >
+              <div key={table._id} className="bg-base-100 mx-auto mt-6 w-full max-w-md rounded-2xl border p-4">
                 <div className="flex justify-between">
                   <input type="checkbox" />
                   <div>{table.name}</div>
@@ -172,30 +160,20 @@ const MergeTables = ({ setCurrentView }) => {
       ) : (
         <>
           {businesses?.map((zone, index) => (
-            <div
-              id={zone.zoneId}
-              key={zone.zoneId}
-              className="w-full max-w-md border mx-auto p-4 mt-6 bg-base-100 rounded-2xl scroll-mt-[13.2rem]"
-            >
+            <div id={zone.zoneId} key={zone.zoneId} className="bg-base-100 mx-auto mt-6 w-full max-w-md scroll-mt-[13.2rem] rounded-2xl border p-4">
               <Disclosure defaultOpen={index === 0}>
                 {({ open }) => (
                   <Disclosure>
                     <div>
-                      <Disclosure.Button className="flex justify-between w-full px-4 text-lg font-medium text-left rounded-2xl">
-                        <div className="w-[80%] mt-[0.125rem] -ml-4">
-                          {zone.zoneName}
-                        </div>
-                        <span className="mt-1 -mr-4">{zone.tables.length}</span>
-                        <FiChevronDown
-                          className={`${
-                            open ? "rotate-180 transform" : ""
-                          } h-5 w-5 mt-2 -mr-2`}
-                        />
+                      <Disclosure.Button className="flex w-full justify-between rounded-2xl px-4 text-left text-lg font-medium">
+                        <div className="-ml-4 mt-[0.125rem] w-[80%]">{zone.zoneName}</div>
+                        <span className="-mr-4 mt-1">{zone.tables.length}</span>
+                        <FiChevronDown className={`${open ? 'rotate-180 transform' : ''} -mr-2 mt-2 h-5 w-5`} />
                       </Disclosure.Button>
                       <div>
                         {open && (
-                          <Disclosure.Panel className="pt-4 pb-2 text-sm text-gray-500 transition-all duration-300">
-                            <div className="h-[0.125rem] bg-primary" />
+                          <Disclosure.Panel className="pb-2 pt-4 text-sm text-gray-500 transition-all duration-300">
+                            <div className="bg-primary h-[0.125rem]" />
                             <div className="mt-2 ">
                               {zone.tables
                                 .filter((table) => table._id !== tableData?._id)
@@ -203,21 +181,13 @@ const MergeTables = ({ setCurrentView }) => {
                                   if (table?.isMerge) {
                                     return null;
                                   }
-                                  if (table.status.toLowerCase() === "active") {
+                                  if (table.status.toLowerCase() === 'active') {
                                     return null;
                                   }
                                   return (
-                                    <div
-                                      key={table._id}
-                                      className="flex items-center justify-start py-4 mb-2 space-x-3 border-b border-dashed"
-                                    >
-                                      <label className="flex items-center justify-start w-full space-x-3 cursor-pointer">
-                                        <input
-                                          type="checkbox"
-                                          onChange={(e) =>
-                                            handleCheckboxChange(e, table)
-                                          }
-                                        />
+                                    <div key={table._id} className="mb-2 flex items-center justify-start space-x-3 border-b border-dashed py-4">
+                                      <label className="flex w-full cursor-pointer items-center justify-start space-x-3">
+                                        <input type="checkbox" onChange={(e) => handleCheckboxChange(e, table)} />
                                         <div>{table?.name}</div>
                                       </label>
                                     </div>
@@ -237,39 +207,24 @@ const MergeTables = ({ setCurrentView }) => {
       )}
 
       <DayOutPopup show={isModalOpen} onClose={closeModal}>
-        <div className="mt-4 ml-4 text-xl font-bold capitalize text-base-content">
-          {tableData?.name}
+        <div className="text-base-content ml-4 mt-4 text-xl font-bold capitalize">{tableData?.name}</div>
+        <div className="ml-4 mt-4 font-semibold">
+          Do you want to Merge {tableDatas.map((table) => (table.name.length > 4 ? `${table.name.slice(0, 4)}..` : table.name)).join(' + ')} to{' '}
+          {tableData?.name} in zone ?
         </div>
-        <div className="mt-4 ml-4 font-semibold">
-          Do you want to Merge{" "}
-          {tableDatas
-            .map((table) =>
-              table.name.length > 4 ? `${table.name.slice(0, 4)}..` : table.name
-            )
-            .join(" + ")}{" "}
-          to {tableData?.name} in zone ?
-        </div>
-        <div className="flex justify-between mx-12 mt-6 pb-9">
-          <button
-            type="button"
-            onClick={closeModal}
-            className="px-6 py-2 -mr-6 text-sm bg-red-500 text-base-100 rounded-3xl"
-          >
+        <div className="mx-12 mt-6 flex justify-between pb-9">
+          <button type="button" onClick={closeModal} className="text-base-100 -mr-6 rounded-3xl bg-red-500 px-6 py-2 text-sm">
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={() => mergeTable()}
-            className="px-6 py-2 -mr-6 text-sm bg-primary text-base-100 rounded-3xl"
-          >
+          <button type="button" onClick={() => mergeTable()} className="bg-primary text-base-100 -mr-6 rounded-3xl px-6 py-2 text-sm">
             Merge
           </button>
         </div>
       </DayOutPopup>
-      <div onClick={() => openModal()} className="flex justify-center mb-5">
+      <div onClick={() => openModal()} className="mb-5 flex justify-center">
         <button
           type="button"
-          className="on_active_bounce fixed bottom-6 z-50 bg-primary rounded-full w-[20.5rem] font-[600] py-[0.75rem] text-base-100 text-[18px] leading-[1.15rem]"
+          className="on_active_bounce bg-primary text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem]"
         >
           Merge
         </button>

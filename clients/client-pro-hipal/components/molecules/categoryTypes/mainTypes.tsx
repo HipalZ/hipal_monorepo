@@ -65,18 +65,22 @@ function MainTypes() {
 				gap: '1rem',
 				paddingBottom: '1.25rem',
 				marginTop: '-0.5rem',
-		  }
+			}
 		: {
 				display: 'flex',
 				flexDirection: 'row',
 				overflowX: 'auto',
 				padding: '1.25rem 0',
 				gap: '0rem',
-		  }
+			}
 
 	return !!mainTypes ? (
 		<div className='flex flex-row w-full mx-auto hide-scrollbar'>
-			<div ref={mainContainerRef} style={containerStyles} className={`whitespace-nowrap ${!isAllCategoryPage ? 'hide-scrollbar' : ''}`}>
+			<div
+				ref={mainContainerRef}
+				style={containerStyles}
+				className={`whitespace-nowrap ${!isAllCategoryPage ? 'hide-scrollbar' : ''}`}
+			>
 				{Object.values(mainTypes)
 					.filter((item) => item?.visibility)
 					.map((item: ICategory, index: number) => {

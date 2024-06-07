@@ -1,8 +1,8 @@
-import BottomButton from '@components/molecules/bottomButton'
-import { useRouter } from 'next/router'
-import { memo } from 'react'
-import Link from 'next/link'
-import { routePaths } from '@components/utils/routes'
+import BottomButton from "@components/molecules/bottomButton"
+import { useRouter } from "next/router"
+import { memo } from "react"
+import Link from "next/link"
+import { routePaths } from "@components/utils/routes"
 
 function FinalCartBtn() {
 	const router = useRouter()
@@ -11,8 +11,8 @@ function FinalCartBtn() {
 		<div>
 			<Link href={`${routePaths.category(businessId)}`} passHref>
 				<BottomButton>
-					<div className='flex flex-row space-x-2 capitalize'>
-						<span className='my-auto'>Order More</span>
+					<div className="flex flex-row space-x-2 capitalize">
+						<span className="my-auto">Order More</span>
 					</div>
 				</BottomButton>
 			</Link>

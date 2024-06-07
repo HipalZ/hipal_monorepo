@@ -1,6 +1,6 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model } from 'mongoose';
 
-import { UrlType } from "../validators";
+import { UrlType } from '../validators';
 
 const urlSchema = new mongoose.Schema<UrlType>(
   {
@@ -16,9 +16,9 @@ const urlSchema = new mongoose.Schema<UrlType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const UrlModel: Model<UrlType> = mongoose.model<UrlType>("UrlModel", urlSchema);
+const UrlModel: Model<UrlType> = mongoose.model<UrlType>('UrlModel', urlSchema);
 
 export { UrlModel };

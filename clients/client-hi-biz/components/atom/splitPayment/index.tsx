@@ -1,5 +1,5 @@
-import React, { memo, useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 
 interface SplitPaymentModalProps {
   splitFinalClick: (data: any) => void;
@@ -11,24 +11,15 @@ interface PaymentBreakdown {
   [method: string]: number;
 }
 
-const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
-  billAmount,
-  selectedMethods,
-  splitFinalClick,
-}) => {
-  const [paymentBreakdown, setPaymentBreakdown] = useState<PaymentBreakdown>(
-    {}
-  );
+const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({ billAmount, selectedMethods, splitFinalClick }) => {
+  const [paymentBreakdown, setPaymentBreakdown] = useState<PaymentBreakdown>({});
 
   useEffect(() => {
     const initialAmount = billAmount / selectedMethods.length;
-    const initialBreakdown: PaymentBreakdown = selectedMethods.reduce(
-      (acc, method) => {
-        acc[method] = Math.round(initialAmount * 100) / 100;
-        return acc;
-      },
-      {} as PaymentBreakdown
-    );
+    const initialBreakdown: PaymentBreakdown = selectedMethods.reduce((acc, method) => {
+      acc[method] = Math.round(initialAmount * 100) / 100;
+      return acc;
+    }, {} as PaymentBreakdown);
     setPaymentBreakdown(initialBreakdown);
   }, [selectedMethods, billAmount]);
 
@@ -51,10 +42,7 @@ const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
         if (remainingAmount >= billAmount / selectedMethods.length) {
           updatedBreakdown[m] = remainingAmount / (selectedMethods.length - 1);
         } else {
-          updatedBreakdown[m] = Math.min(
-            remainingAmount,
-            billAmount / selectedMethods.length
-          );
+          updatedBreakdown[m] = Math.min(remainingAmount, billAmount / selectedMethods.length);
           remainingAmount -= updatedBreakdown[m];
         }
       }
@@ -80,7 +68,7 @@ const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
           />
         </div>
       )),
-    [selectedMethods, paymentBreakdown]
+    [selectedMethods, paymentBreakdown],
   );
 
   return (
@@ -89,13 +77,9 @@ const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
         <div>split payment</div>
         <div>₹ {billAmount}</div>
       </div>
-      <div className="z-50 pb-6 space-y-4">{inputFields}</div>
+      <div className="z-50 space-y-4 pb-6">{inputFields}</div>
       <div className="flex items-end justify-end">
-        <button
-          type="button"
-          className="w-[40%] py-2 rounded-full bg-[#2b354d] text-white"
-          onClick={() => splitFinalClick(paymentBreakdown)}
-        >
+        <button type="button" className="w-[40%] rounded-full bg-[#2b354d] py-2 text-white" onClick={() => splitFinalClick(paymentBreakdown)}>
           Submit
         </button>
       </div>

@@ -1,357 +1,327 @@
-import Header from "@/components/molecules/header";
-import type React from "react";
-import { memo, useEffect, useState } from "react";
-import { BsChevronLeft, BsPostcardHeart } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import { BiDownload, BiSolidReceipt } from "react-icons/bi";
-import SubheaderButtonList from "@/components/atom/subHeaderBtn";
-import { useSelectedButtonStore } from "@/components/store/useSelectBtn";
-import DateRangePicker from "@/components/molecules/dateRangePicker";
-import { GiReceiveMoney } from "react-icons/gi";
-import { MdSpaceDashboard } from "react-icons/md";
-import SalesComponent, {
-	type ISalesResponse,
-} from "@/components/organisms/sales";
-import Bills from "@/components/atom/accordion";
-import SalesDues from "@/components/atom/salesDues";
-import { useRouter } from "next/router";
-import useTimings from "@/components/store/useTimings";
-import type {
-	BillsData,
-	IModes,
-	SaleDuesResponse,
-} from "@/components/types/businessData";
-import axios from "@/axios";
-import PopUp from "@/components/atom/popUp";
-import DownloadBills from "@/components/atom/downloadBill";
-import { LuSettings } from "react-icons/lu";
-import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
-import { AiOutlinePercentage } from "react-icons/ai";
-import SalesTips from "@/components/atom/salesTips";
-import SalesDiscount from "@/components/atom/salesDiscount";
-import { exportToExcel } from "@/components/utils/helper";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import { usePaymentMethodsStore } from "@/components/store/usePaymentStore";
-import { useQuery } from "@tanstack/react-query";
+import Hi from '@/assets/svg/hi.svg';
+import axios from '@/axios';
+import Bills from '@/components/atom/accordion';
+import DownloadBills from '@/components/atom/downloadBill';
+import PopUp from '@/components/atom/popUp';
+import SalesDiscount from '@/components/atom/salesDiscount';
+import SalesDues from '@/components/atom/salesDues';
+import SalesTips from '@/components/atom/salesTips';
+import SubheaderButtonList from '@/components/atom/subHeaderBtn';
+import DateRangePicker from '@/components/molecules/dateRangePicker';
+import Header from '@/components/molecules/header';
+import SalesComponent, { type ISalesResponse } from '@/components/organisms/sales';
+import { usePaymentMethodsStore } from '@/components/store/usePaymentStore';
+import { useSelectedButtonStore } from '@/components/store/useSelectBtn';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import useTimings from '@/components/store/useTimings';
+import type { BillsData, IModes, SaleDuesResponse } from '@/components/types/businessData';
+import { exportToExcel } from '@/components/utils/helper';
+import { PAGE_TYPES, routePathsWithId } from '@/components/utils/routes';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import type React from 'react';
+import { memo, useEffect, useState } from 'react';
+import { AiOutlinePercentage } from 'react-icons/ai';
+import { BiDownload, BiSolidReceipt } from 'react-icons/bi';
+import { BsChevronLeft, BsPostcardHeart } from 'react-icons/bs';
+import { GiReceiveMoney } from 'react-icons/gi';
+import { LuSettings } from 'react-icons/lu';
+import { MdSpaceDashboard } from 'react-icons/md';
 
 const buttons = [
-	{
-		text: "Dashboard",
-		Icon: MdSpaceDashboard,
-	},
-	{
-		text: "Bills",
-		Icon: BiSolidReceipt,
-	},
-	{
-		text: "Tips",
-		Icon: BsPostcardHeart,
-	},
-	{
-		text: "Discount",
-		Icon: AiOutlinePercentage,
-	},
-	{
-		text: "Dues",
-		Icon: GiReceiveMoney,
-	},
+  {
+    text: 'Dashboard',
+    Icon: MdSpaceDashboard,
+  },
+  {
+    text: 'Bills',
+    Icon: BiSolidReceipt,
+  },
+  {
+    text: 'Tips',
+    Icon: BsPostcardHeart,
+  },
+  {
+    text: 'Discount',
+    Icon: AiOutlinePercentage,
+  },
+  {
+    text: 'Dues',
+    Icon: GiReceiveMoney,
+  },
 ];
 interface ICost {
-	totalCost: number;
+  totalCost: number;
 }
 const Sales = () => {
-	const { setSelectedIcon } = useSelectedIcon();
-	const router = useRouter();
-	const { businessId } = router.query as { businessId: string };
-	const [pageNumber, setPageNumber] = useState(1);
-	const selectedButton = useSelectedButtonStore((s) => s.selectedButton);
-	const setSelectedButton = useSelectedButtonStore((s) => s.setSelectedButton);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [billsData, setBillsData] = useState<BillsData | null>(null);
-	const [filteredData, setFilteredData] = useState<BillsData | null>(null);
-	const [selectedMode, setSelectedMode] = useState("mode");
+  const { setSelectedIcon } = useSelectedIcon();
+  const router = useRouter();
+  const { businessId } = router.query as { businessId: string };
+  const [pageNumber, setPageNumber] = useState(1);
+  const selectedButton = useSelectedButtonStore((s) => s.selectedButton);
+  const setSelectedButton = useSelectedButtonStore((s) => s.setSelectedButton);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [billsData, setBillsData] = useState<BillsData | null>(null);
+  const [filteredData, setFilteredData] = useState<BillsData | null>(null);
+  const [selectedMode, setSelectedMode] = useState('mode');
 
-	const { inTime, outTime, selectedRange } = useTimings();
+  const { inTime, outTime, selectedRange } = useTimings();
 
-	const { lastUpdated, paymentMethods, setPaymentMethods } =
-		usePaymentMethodsStore();
+  const { lastUpdated, paymentMethods, setPaymentMethods } = usePaymentMethodsStore();
 
-	const pageNumberFunction = (newPage: number) => {
-		setPageNumber(newPage);
-	};
+  const pageNumberFunction = (newPage: number) => {
+    setPageNumber(newPage);
+  };
 
-	const openModal = () => {
-		setIsModalOpen(true);
-	};
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
 
-	const closeModal = () => {
-		setIsModalOpen(false);
-	};
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
-	const setting = () => {
-		router.push(routePathsWithId[PAGE_TYPES.ALERT_SETTING](businessId));
-	};
+  const setting = () => {
+    router.push(routePathsWithId[PAGE_TYPES.ALERT_SETTING](businessId));
+  };
 
-	useEffect(() => {
-		if (router.query.tab === "home") {
-			setSelectedButton("Dashboard");
-		} else {
-			const key = router.query.tab?.toString() || "Dashboard";
-			setSelectedButton(key);
-		}
-	}, [router.query.tab]);
+  useEffect(() => {
+    if (router.query.tab === 'home') {
+      setSelectedButton('Dashboard');
+    } else {
+      const key = router.query.tab?.toString() || 'Dashboard';
+      setSelectedButton(key);
+    }
+  }, [router.query.tab]);
 
-	// bills page
-	const fetchBillsData = async () => {
-		let url = `/v1/payments/Sale/Bill?businessId=${businessId}&pageNumber=${pageNumber}`;
-		if (selectedMode && selectedMode !== "mode") {
-			url += `&mode=${selectedMode}`;
-		}
-		if (inTime && outTime) {
-			url += `&from=${inTime}&to=${outTime}`;
-		}
-		try {
-			const res = await axios.get(url);
-			setBillsData(res.data);
-			setFilteredData(res.data);
-			return res.data
-		} catch (error) {
-			console.error("Error fetching sales report:", error);
-		}
-	};
-	
-	// sales report
-	const getSalesReport = async () => {
-		let url = `/v1/payments/:id/saleDashboard?businessId=${businessId}`;
-		if (inTime && outTime) {
-			url += `&from=${inTime}&to=${outTime}`;
-		}
-		try {
-			const res = await axios.get(url);
-			return res.data;
-		} catch (error) {
-			console.error("Error fetching sales report:", error);
-		}
-	};
+  // bills page
+  const fetchBillsData = async () => {
+    let url = `/v1/payments/Sale/Bill?businessId=${businessId}&pageNumber=${pageNumber}`;
+    if (selectedMode && selectedMode !== 'mode') {
+      url += `&mode=${selectedMode}`;
+    }
+    if (inTime && outTime) {
+      url += `&from=${inTime}&to=${outTime}`;
+    }
+    try {
+      const res = await axios.get(url);
+      setBillsData(res.data);
+      setFilteredData(res.data);
+      return res.data;
+    } catch (error) {
+      console.error('Error fetching sales report:', error);
+    }
+  };
 
-	// sales dues
-	const getSalesDues = async () => {
-		try {
-			const response = await axios.get(
-				`/v1/payments/Sale/Dues?businessId=${businessId}`,
-			);
-			return response.data
-		} catch (error) {
-			console.error("Error fetching data:", error);
-		}
-	};
+  // sales report
+  const getSalesReport = async () => {
+    let url = `/v1/payments/:id/saleDashboard?businessId=${businessId}`;
+    if (inTime && outTime) {
+      url += `&from=${inTime}&to=${outTime}`;
+    }
+    try {
+      const res = await axios.get(url);
+      return res.data;
+    } catch (error) {
+      console.error('Error fetching sales report:', error);
+    }
+  };
 
+  // sales dues
+  const getSalesDues = async () => {
+    try {
+      const response = await axios.get(`/v1/payments/Sale/Dues?businessId=${businessId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
-	function openModes(e: React.ChangeEvent<HTMLSelectElement>) {
-		setSelectedMode(e.target.value);
-		if (billsData) { return; }
-		refetchBillsData();
-	}
-	const getRunningTableCost = async () => {
-		try {
-			const response = await axios(
-				`/v1/kitchens/:id/runningTablesCost?businessId=${businessId}`,
-			);
-			return response.data;
-		} catch (error) {
-			console.error("Error fetching data:", error);
-		}
-	};
+  function openModes(e: React.ChangeEvent<HTMLSelectElement>) {
+    setSelectedMode(e.target.value);
+    if (billsData) {
+      return;
+    }
+    refetchBillsData();
+  }
+  const getRunningTableCost = async () => {
+    try {
+      const response = await axios(`/v1/kitchens/:id/runningTablesCost?businessId=${businessId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
-	const { isLoading, error, data: runCost } = useQuery<ICost>({
-		queryKey: ["runningTableCost", businessId],
-		queryFn: getRunningTableCost,
-		enabled: !!businessId && !!selectedRange,
-	})
+  const {
+    isLoading,
+    error,
+    data: runCost,
+  } = useQuery<ICost>({
+    queryKey: ['runningTableCost', businessId],
+    queryFn: getRunningTableCost,
+    enabled: !!businessId && !!selectedRange,
+  });
 
-	const { isLoading: isLoadingSales, error: salesError, data: salesData } = useQuery<ISalesResponse | null>({
-		queryKey: ["salesReport", businessId, inTime, outTime],
-		queryFn: getSalesReport,
-		enabled: !!businessId && !!inTime && !!outTime,
-	})
+  const {
+    isLoading: isLoadingSales,
+    error: salesError,
+    data: salesData,
+  } = useQuery<ISalesResponse | null>({
+    queryKey: ['salesReport', businessId, inTime, outTime],
+    queryFn: getSalesReport,
+    enabled: !!businessId && !!inTime && !!outTime,
+  });
 
-	const { isLoading: isLoadingDues, error: duesError, data: dues } = useQuery<SaleDuesResponse | null>({
-		queryKey: ["salesDues", businessId, selectedButton === "Dues"],
-		queryFn: getSalesDues,
-		enabled: !!businessId && (selectedButton === "Dues"),
-	})
+  const {
+    isLoading: isLoadingDues,
+    error: duesError,
+    data: dues,
+  } = useQuery<SaleDuesResponse | null>({
+    queryKey: ['salesDues', businessId, selectedButton === 'Dues'],
+    queryFn: getSalesDues,
+    enabled: !!businessId && selectedButton === 'Dues',
+  });
 
-	const { isLoading: isLoadingBills, error: billsError, data: bill, refetch: refetchBillsData } = useQuery({
-		queryKey: ["billsData", businessId, inTime, outTime, selectedButton === "Bills",pageNumber],
-		queryFn: fetchBillsData,
-		enabled: !!businessId && !!inTime && !!outTime && (selectedButton === "Bills") && !!pageNumber,
-	})
+  const {
+    isLoading: isLoadingBills,
+    error: billsError,
+    data: bill,
+    refetch: refetchBillsData,
+  } = useQuery({
+    queryKey: ['billsData', businessId, inTime, outTime, selectedButton === 'Bills', pageNumber],
+    queryFn: fetchBillsData,
+    enabled: !!businessId && !!inTime && !!outTime && selectedButton === 'Bills' && !!pageNumber,
+  });
 
-	const fetchPaymentMethods = async () => {
-		if (!(lastUpdated === null || Date.now() - lastUpdated > 3 * 60000)) {
-			return;
-		}
-		try {
-			const response = await axios.get(
-				`/v1/payments/Get/Modes?businessId=${businessId}`,
-			);
-			const data: IModes[] = response?.data;
-			setPaymentMethods(data);
-		} catch (error) {
-			console.error("Failed to fetch payment methods", error);
-		}
-	};
+  const fetchPaymentMethods = async () => {
+    if (!(lastUpdated === null || Date.now() - lastUpdated > 3 * 60000)) {
+      return;
+    }
+    try {
+      const response = await axios.get(`/v1/payments/Get/Modes?businessId=${businessId}`);
+      const data: IModes[] = response?.data;
+      setPaymentMethods(data);
+    } catch (error) {
+      console.error('Failed to fetch payment methods', error);
+    }
+  };
 
-	useEffect(() => {
-		let filtered: BillsData | any = [];
-		if (
-			selectedMode?.toLowerCase() !== "mode" &&
-			selectedMode?.toLowerCase() === "multiple"
-		) {
-			filtered = billsData?.filter(
-				(item) => item?.mode === selectedMode.toLowerCase(),
-			);
-			setFilteredData(filtered);
-		} else if (
-			selectedMode?.toLowerCase() !== "mode" &&
-			selectedMode?.toLowerCase() !== "multiple"
-		) {
-			filtered = billsData?.filter((item) => {
-				return (
-					item?.mode?.toLowerCase() === selectedMode?.toLowerCase() ||
-					(item?.mode?.toLowerCase() === "multiple" &&
-						item?.modeBreakDown?.[selectedMode?.toLowerCase()])
-				);
-			});
-			setFilteredData(filtered);
-		} else {
-			setFilteredData(billsData);
-		}
-	}, [selectedMode, billsData]);
+  useEffect(() => {
+    let filtered: BillsData | any = [];
+    if (selectedMode?.toLowerCase() !== 'mode' && selectedMode?.toLowerCase() === 'multiple') {
+      filtered = billsData?.filter((item) => item?.mode === selectedMode.toLowerCase());
+      setFilteredData(filtered);
+    } else if (selectedMode?.toLowerCase() !== 'mode' && selectedMode?.toLowerCase() !== 'multiple') {
+      filtered = billsData?.filter((item) => {
+        return (
+          item?.mode?.toLowerCase() === selectedMode?.toLowerCase() ||
+          (item?.mode?.toLowerCase() === 'multiple' && item?.modeBreakDown?.[selectedMode?.toLowerCase()])
+        );
+      });
+      setFilteredData(filtered);
+    } else {
+      setFilteredData(billsData);
+    }
+  }, [selectedMode, billsData]);
 
-	// if (isLoading) return <LoadingSpinner />
-	// if(isLoadingBills && selectedButton==="Bills")return <>loading..</>
-	// if(isLoadingDues && selectedButton === "Dues") return <>Loading ..</>
-	// if (selectedButton === "Dashboard" && salesError) {
-	// 	if (salesError) return <div>Error: {salesError.message}</div>
-	// }
-	// if (error) return <div>Error: {error.message}</div>
+  // if (isLoading) return <LoadingSpinner />
+  // if(isLoadingBills && selectedButton==="Bills")return <>loading..</>
+  // if(isLoadingDues && selectedButton === "Dues") return <>Loading ..</>
+  // if (selectedButton === "Dashboard" && salesError) {
+  // 	if (salesError) return <div>Error: {salesError.message}</div>
+  // }
+  // if (error) return <div>Error: {error.message}</div>
 
-	return (
-		<div className="bg-white">
-			<div className="bg-[#f5f5f5] sticky top-0 z-50">
-				<Header
-					title="Sales"
-					onBack={() => {
-						router.query.tab = "";
-						setSelectedIcon("");
-					}}
-					leftIcon={<BsChevronLeft />}
-					centerImage={Hi}
-					rightImage={Hi}
-					isIconBusinessShow={true}
-				/>
-				<SubheaderButtonList buttons={buttons} />
-				<div className="flex justify-between px-6 mt-2 pb-4 border-b border-[#CACACA]">
-					<div className="text-2xl font-medium">{selectedButton}</div>
-					{selectedButton === "Bills" && (
-						<div className="flex space-x-4">
-							<div onKeyDown={fetchPaymentMethods} onClick={fetchPaymentMethods}>
-								<select
-									onChange={openModes}
-									className="capitalize bg-white text-sm space-x-2 px-2 flex justify-center items-center border border-[#cacaca] rounded-lg focus:border-[#cacaca] focus:ring-0 focus:outline-none"
-								>
-									<option value="mode">Mode</option>
-									{paymentMethods.length > 0 && (
-										<option value="multiple">Split</option>
-									)}
-									{paymentMethods.map((mode, index) => {
-										return (
-											<option
-												className="capitalize"
-												key={index.toString()}
-												value={mode.mode}
-											>
-												{mode.mode}
-											</option>
-										);
-									})}
-								</select>
-							</div>
-							<div className="bg-white on_active_bounce text-sm space-x-2 px-2 flex justify-center items-center border border-[#cacaca] rounded-lg">
-								<BiDownload />
-								<button type="button" onClick={openModal}>
-									CSV
-								</button>
-							</div>
-						</div>
-					)}
-					{selectedButton === "Dashboard" && (
-						<div
-							onKeyDown={() => exportToExcel(salesData)}
-							onClick={() => exportToExcel(salesData)}
-							className="bg-white on_active_bounce text-sm space-x-2 px-2 flex justify-center items-center border border-[#cacaca] rounded-lg"
-						>
-							<BiDownload />
-							<button type="button">CSV</button>
-						</div>
-					)}
-					{selectedButton === "Alert" && (
-						<div
-							onKeyDown={setting}
-							onClick={setting}
-							className="bg-white on_active_bounce text-sm space-x-2 px-2 flex justify-center items-center border border-[#cacaca] rounded-lg"
-						>
-							<LuSettings />
-						</div>
-					)}
-				</div>
-			</div>
+  return (
+    <div className="bg-white">
+      <div className="sticky top-0 z-50 bg-[#f5f5f5]">
+        <Header
+          title="Sales"
+          onBack={() => {
+            router.query.tab = '';
+            setSelectedIcon('');
+          }}
+          leftIcon={<BsChevronLeft />}
+          centerImage={Hi}
+          rightImage={Hi}
+          isIconBusinessShow={true}
+        />
+        <SubheaderButtonList buttons={buttons} />
+        <div className="mt-2 flex justify-between border-b border-[#CACACA] px-6 pb-4">
+          <div className="text-2xl font-medium">{selectedButton}</div>
+          {selectedButton === 'Bills' && (
+            <div className="flex space-x-4">
+              <div onKeyDown={fetchPaymentMethods} onClick={fetchPaymentMethods}>
+                <select
+                  onChange={openModes}
+                  className="flex items-center justify-center space-x-2 rounded-lg border border-[#cacaca] bg-white px-2 text-sm capitalize focus:border-[#cacaca] focus:outline-none focus:ring-0"
+                >
+                  <option value="mode">Mode</option>
+                  {paymentMethods.length > 0 && <option value="multiple">Split</option>}
+                  {paymentMethods.map((mode, index) => {
+                    return (
+                      <option className="capitalize" key={index.toString()} value={mode.mode}>
+                        {mode.mode}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="on_active_bounce flex items-center justify-center space-x-2 rounded-lg border border-[#cacaca] bg-white px-2 text-sm">
+                <BiDownload />
+                <button type="button" onClick={openModal}>
+                  CSV
+                </button>
+              </div>
+            </div>
+          )}
+          {selectedButton === 'Dashboard' && (
+            <div
+              onKeyDown={() => exportToExcel(salesData)}
+              onClick={() => exportToExcel(salesData)}
+              className="on_active_bounce flex items-center justify-center space-x-2 rounded-lg border border-[#cacaca] bg-white px-2 text-sm"
+            >
+              <BiDownload />
+              <button type="button">CSV</button>
+            </div>
+          )}
+          {selectedButton === 'Alert' && (
+            <div
+              onKeyDown={setting}
+              onClick={setting}
+              className="on_active_bounce flex items-center justify-center space-x-2 rounded-lg border border-[#cacaca] bg-white px-2 text-sm"
+            >
+              <LuSettings />
+            </div>
+          )}
+        </div>
+      </div>
 
-			{selectedButton === "Dashboard" ||
-				selectedButton === "Bills" ||
-				selectedButton === "Discount" ? (
-				<DateRangePicker />
-			) : (
-				""
-			)}
-			{selectedButton === "Dashboard" ? (
-				<SalesComponent
-					isLoadingSales={isLoadingSales}
-					salesData={salesData ? salesData : null}
-					runCost={runCost?.totalCost || 0}
-				/>
-			) : selectedButton === "Bills" ? (
-				<Bills
-					isLoadingBills={isLoadingBills}
-					pageNumberFunction={pageNumberFunction}
-					billsData={filteredData}
-					fetchBillsData={fetchBillsData}
-				/>
-			) : selectedButton === "Dues" ? (
-				<>{dues && <SalesDues initialData={dues} isLoadingDues={isLoadingDues} />}</>
-			) : selectedButton === "Tips" ? (
-				<SalesTips />
-			) : selectedButton === "Discount" ? (
-				<SalesDiscount />
-			) : (
-				<div className="fixed z-20 flex items-center justify-center space-x-4 transform -translate-x-1/2 left-1/2 top-1/2">
-					Something is wrong Please Go Back
-				</div>
-			)}
+      {selectedButton === 'Dashboard' || selectedButton === 'Bills' || selectedButton === 'Discount' ? <DateRangePicker /> : ''}
+      {selectedButton === 'Dashboard' ? (
+        <SalesComponent isLoadingSales={isLoadingSales} salesData={salesData ? salesData : null} runCost={runCost?.totalCost || 0} />
+      ) : selectedButton === 'Bills' ? (
+        <Bills isLoadingBills={isLoadingBills} pageNumberFunction={pageNumberFunction} billsData={filteredData} fetchBillsData={fetchBillsData} />
+      ) : selectedButton === 'Dues' ? (
+        <>{dues && <SalesDues initialData={dues} isLoadingDues={isLoadingDues} />}</>
+      ) : selectedButton === 'Tips' ? (
+        <SalesTips />
+      ) : selectedButton === 'Discount' ? (
+        <SalesDiscount />
+      ) : (
+        <div className="fixed left-1/2 top-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">
+          Something is wrong Please Go Back
+        </div>
+      )}
 
-			{isModalOpen && (
-				<PopUp show={isModalOpen} onClose={closeModal}>
-					<DownloadBills
-						inTime={inTime}
-						outTime={outTime}
-						closeModal={closeModal}
-						billsData={billsData}
-					/>
-				</PopUp>
-			)}
-		</div>
-	);
+      {isModalOpen && (
+        <PopUp show={isModalOpen} onClose={closeModal}>
+          <DownloadBills inTime={inTime} outTime={outTime} closeModal={closeModal} billsData={billsData} />
+        </PopUp>
+      )}
+    </div>
+  );
 };
 
 export default memo(Sales);

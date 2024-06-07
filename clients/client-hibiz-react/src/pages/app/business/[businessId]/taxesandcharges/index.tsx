@@ -1,9 +1,7 @@
-import TaxAndCharges from "@/components/templates/taxesandcharges";
+import TaxAndCharges from '@/components/templates/taxesandcharges';
 
 const TaxesAndChargesPage = () => {
-  return (
-    <TaxAndCharges/>
-  )
+  return <TaxAndCharges />;
 };
 
 export default TaxesAndChargesPage;

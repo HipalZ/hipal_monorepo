@@ -1,8 +1,8 @@
-import { isEmpty } from 'lodash-es'
-import { memo } from 'react'
-import { AiOutlineStar } from 'react-icons/ai'
-import { BsSunFill } from 'react-icons/bs'
-import { MdLocalOffer } from 'react-icons/md'
+import { isEmpty } from "lodash-es"
+import { memo } from "react"
+import { AiOutlineStar } from "react-icons/ai"
+import { BsSunFill } from "react-icons/bs"
+import { MdLocalOffer } from "react-icons/md"
 
 function DishTag({
 	tags,
@@ -34,12 +34,12 @@ function DishTag({
 		<>
 			<div
 				className={
-					'px-3 rounded-[8px] text-primary text-[0.813rem]  leading-3 font-bold normal-case flex flex-row gap-2'
+					"px-3 rounded-[8px] text-primary text-[0.813rem]  leading-3 font-bold normal-case flex flex-row gap-2"
 				}
-				style={{ color: tag?.color || 'hsl(var(--bc))' }}
+				style={{ color: tag?.color || "hsl(var(--bc))" }}
 			>
-				<Icon className='w-6 h-6 my-auto' />
-				<span className='my-auto'>{tag.text}</span>
+				<Icon className="w-6 h-6 my-auto" />
+				<span className="my-auto">{tag.text}</span>
 			</div>
 		</>
 	)

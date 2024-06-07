@@ -1,7 +1,7 @@
-import axios from '@utils/axios'
-import { toast } from 'react-toastify'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import axios from "@utils/axios"
+import { toast } from "react-toastify"
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface IUserData {
 	[x: string]: any
@@ -10,10 +10,10 @@ interface IUserData {
 	phone: string
 	role: string
 	id: string
-	userDescription?: string;
-	reward?: number;
-	count?: number;
-	_id:string
+	userDescription?: string
+	reward?: number
+	count?: number
+	_id: string
 }
 interface IRole {
 	role: string
@@ -39,32 +39,30 @@ interface IUseLogin {
 	sendOtp: () => Promise<any>
 }
 
-
-
 export const useLogin = create(
 	persist<IUseLogin>(
 		(set, get) => ({
 			userDetails: {
-				id: '',
+				id: "",
 				count: 0,
-				email: '',
-				name: '',
-				phone: '',
+				email: "",
+				name: "",
+				phone: "",
 				reward: 0,
-				role: '',
-				userDescription: '',
-				_id:''
+				role: "",
+				userDescription: "",
+				_id: "",
 			},
 			isLogin: false,
 			showLogin: false,
-			hiCode: '',
-			errorMsg: '',
+			hiCode: "",
+			errorMsg: "",
 			role: {
-				role: '',
-				customerName: '',
-				customerPhone: '',
+				role: "",
+				customerName: "",
+				customerPhone: "",
 			},
-			direction: '',
+			direction: "",
 
 			setUserDetails: (d: IUserData) => set({ userDetails: d }),
 			setIsLogin: (d: boolean) => set({ isLogin: d }),
@@ -73,14 +71,13 @@ export const useLogin = create(
 			setDirection: (d: string) => set({ direction: d }),
 			setRole: (d: IRole) => set({ role: d }),
 
-			isLoginCred: () =>
-				get()?.userDetails.phone?.length === 10,
+			isLoginCred: () => get()?.userDetails.phone?.length === 10,
 
 			sendOtp: async () => {
-				toast.success('otp send successfully')
+				toast.success("otp send successfully")
 				let config = {
-					method: 'POST',
-					url: '/v1/users/otp?clientRole=user',
+					method: "POST",
+					url: "/v1/users/otp?clientRole=user",
 					data: {
 						phone: `${get().userDetails.phone}`,
 					},
@@ -89,7 +86,7 @@ export const useLogin = create(
 			},
 		}),
 		{
-			name: 'useLogin',
+			name: "useLogin",
 		},
 	),
 )

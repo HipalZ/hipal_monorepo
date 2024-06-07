@@ -1,121 +1,95 @@
-import HeaderButton from "@/components/atoms/buttons/headerButton";
-import React, { useState, memo, useCallback } from "react";
-import { MdAlarm } from "react-icons/md";
-import { TbToolsKitchen2 } from "react-icons/tb";
-import { SiGoogleassistant } from "react-icons/si";
-import { MdOutlineDinnerDining, MdOutlinePeopleOutline } from "react-icons/md";
-import { HiSearch, HiX } from "react-icons/hi";
-import axios from "@/axios";
-import { useLogin } from "@/components/store/useLogin";
-import { useTable } from "@/components/store/useTable";
-import type { ITable } from "@/components/types/hiTableData";
-import { isEmpty } from "lodash";
-import { toast } from "react-toastify";
-import { useQuery } from "@tanstack/react-query";
-import Loader from "@/components/atoms/loader";
-import { AxiosError } from "axios";
-import { useRouter } from "next/router";
-import Link from "next/link";
-import { PAGE_TYPES, newRoutes } from "@/components/utils/routes";
+import axios from '@/axios';
+import HeaderButton from '@/components/atoms/buttons/headerButton';
+import Loader from '@/components/atoms/loader';
+import { useLogin } from '@/components/store/useLogin';
+import { useTable } from '@/components/store/useTable';
+import type { ITable } from '@/components/types/hiTableData';
+import { PAGE_TYPES, newRoutes } from '@/components/utils/routes';
+import { useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { memo, useCallback, useState } from 'react';
+import { MdAlarm, MdOutlineDinnerDining, MdOutlinePeopleOutline } from 'react-icons/md';
+import { SiGoogleassistant } from 'react-icons/si';
+import { TbToolsKitchen2 } from 'react-icons/tb';
+import { toast } from 'react-toastify';
 
 const filterButtons = [
   {
-    name: "Active",
+    name: 'Active',
     Icon: MdAlarm,
-    text: "Active",
+    text: 'Active',
   },
   {
-    name: "Empty",
+    name: 'Empty',
     Icon: TbToolsKitchen2,
-    text: "Empty",
+    text: 'Empty',
   },
   {
-    name: "Need Assistance",
+    name: 'Need Assistance',
     Icon: SiGoogleassistant,
-    text: "Assistant",
+    text: 'Assistant',
   },
 ];
 
 const classByStatus: { [key: string]: any } = {
   occupied: {
-    classNames:
-      "relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#E3EFFF]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+    classNames: 'relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#E3EFFF]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
   reserved: {
-    classNames:
-      "relative h-[3.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-gray-200",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-2 w-[50%]",
-    tableClasses: "right-8 top-2 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-2 text-sm font-[500] text-primary",
+    classNames: 'relative h-[3.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-gray-200',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-2 w-[50%]',
+    tableClasses: 'right-8 top-2 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-2 text-sm font-[500] text-primary',
   },
   empty: {
-    classNames:
-      "relative h-[3.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-base-100",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-2 w-[50%]",
-    tableClasses: "right-8 top-2 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-2 text-sm font-[500] text-primary",
+    classNames: 'relative h-[3.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-base-100',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-2 w-[50%]',
+    tableClasses: 'right-8 top-2 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-2 text-sm font-[500] text-primary',
   },
   active: {
-    classNames:
-      "relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#DBFFE2]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+    classNames: 'relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#DBFFE2]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
   settled: {
-    classNames:
-      "relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFF3D3]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+    classNames: 'relative h-[5.75rem] mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFF3D3]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
-  "need assistance": {
-    classNames:
-      "relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+  'need assistance': {
+    classNames: 'relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
   kitchen: {
-    classNames:
-      "relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+    classNames: 'relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
   settle: {
-    classNames:
-      "relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]",
-    businessNameClasses:
-      "absolute font-[500] capitalize truncate left-6 top-9 w-[50%]",
-    tableClasses: "right-8 top-6 absolute text-[1rem] opacity-50",
-    numberClasses: "absolute right-6 bottom-6 text-sm font-[500] text-primary",
+    classNames: 'relative h-[5.75rem]  mx-6 mb-4 border border-[#e1e1e1]/50 rounded-xl bg-[#FFE5E5]',
+    businessNameClasses: 'absolute font-[500] capitalize truncate left-6 top-9 w-[50%]',
+    tableClasses: 'right-8 top-6 absolute text-[1rem] opacity-50',
+    numberClasses: 'absolute right-6 bottom-6 text-sm font-[500] text-primary',
   },
 };
 
 const Table = () => {
   const [tableData, setTableData] = useState<ITable[]>([]);
   const [originalZoneData, setOriginalZoneData] = useState<ITable[]>([]);
-  const [search, setSearch] = useState("");
-  const [activeButton, setActiveButton] = useState("");
-  const {
-    phoneNumber,
-    password,
-    setIsLogin,
-    userDetails,
-    zoneName,
-    setUserDetails,
-  } = useLogin();
+  const [search, setSearch] = useState('');
+  const [activeButton, setActiveButton] = useState('');
+  const { phoneNumber, password, setIsLogin, userDetails, zoneName, setUserDetails } = useLogin();
   const setTableLocal = useTable((s) => s.setTableData);
   const router = useRouter();
   const { businessId, zoneId } = router.query as {
@@ -126,11 +100,9 @@ const Table = () => {
   const handleOnclick = (filterName: string) => {
     if (filterName === activeButton) {
       setTableData(originalZoneData);
-      setActiveButton("");
+      setActiveButton('');
     } else {
-      const filteredData = originalZoneData.filter(
-        (ele) => ele?.status?.toLowerCase() === filterName.toLowerCase()
-      );
+      const filteredData = originalZoneData.filter((ele) => ele?.status?.toLowerCase() === filterName.toLowerCase());
       setTableData(filteredData);
       setActiveButton(filterName);
     }
@@ -139,8 +111,8 @@ const Table = () => {
   const waiterLogin = useCallback(async () => {
     try {
       const config = {
-        method: "POST",
-        url: "/v1/users/waiterLogin",
+        method: 'POST',
+        url: '/v1/users/waiterLogin',
         data: { phone: phoneNumber, password: password },
       };
 
@@ -151,12 +123,12 @@ const Table = () => {
         setIsLogin(true);
         result();
       } else {
-        toast.error("Phone or Password invalid...!");
+        toast.error('Phone or Password invalid...!');
       }
     } catch (err) {
       if (err instanceof AxiosError) {
         if (err.response && err.response.status === 400) {
-          toast.error("Phone or Password invalid...!");
+          toast.error('Phone or Password invalid...!');
         } else {
           console.log(err);
         }
@@ -166,9 +138,7 @@ const Table = () => {
 
   const result = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `/v1/zones/${zoneId}/tables/ByWaiter?businessId=${businessId}&staffId=${userDetails?.id}`
-      );
+      const response = await axios.get(`/v1/zones/${zoneId}/tables/ByWaiter?businessId=${businessId}&staffId=${userDetails?.id}`);
       const res = response.data;
       const capacityMap = res.reduce((map, table) => {
         map[table._id] = table.capacity;
@@ -177,22 +147,16 @@ const Table = () => {
 
       const processedData = res
         .map((table) => {
-          if (table.isMerge && table.hierarchy === "PARENT") {
-            const totalCapacity = table.mergeTables.reduce(
-              (total, mergedTable) => {
-                return total + capacityMap[mergedTable.id];
-              },
-              0
-            );
-            console.log("totalCapacity", totalCapacity);
+          if (table.isMerge && table.hierarchy === 'PARENT') {
+            const totalCapacity = table.mergeTables.reduce((total, mergedTable) => {
+              return total + capacityMap[mergedTable.id];
+            }, 0);
+            console.log('totalCapacity', totalCapacity);
             return { ...table, capacity: totalCapacity };
           }
           return table;
         })
-        .filter(
-          (table) =>
-            !table.isMerge || (table.isMerge && table.hierarchy === "PARENT")
-        );
+        .filter((table) => !table.isMerge || (table.isMerge && table.hierarchy === 'PARENT'));
 
       setOriginalZoneData(processedData);
       setTableData(processedData);
@@ -202,7 +166,7 @@ const Table = () => {
       }));
 
       const statusOrder = {
-        "need assistance": 1,
+        'need assistance': 1,
         active: 2,
         occupied: 3,
         empty: 4,
@@ -225,7 +189,7 @@ const Table = () => {
   }, [businessId, userDetails?.id, zoneId, waiterLogin]);
 
   const { isLoading, error, data } = useQuery({
-    queryKey: ["zones", businessId],
+    queryKey: ['zones', businessId],
     queryFn: result,
     enabled: !!businessId && !!userDetails?.id && !!zoneId,
   });
@@ -234,31 +198,29 @@ const Table = () => {
     (tableData: ITable) => {
       setTableLocal(tableData);
     },
-    [setTableLocal]
+    [setTableLocal],
   );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <Loader />
       </div>
     );
   }
   const goToHome = () => {
-    toast.error("Session has ended Please login again");
+    toast.error('Session has ended Please login again');
     router.push(`/r/${businessId}/login`);
   };
 
   const searchTables = () => {
-    return tableData.filter((tables: ITable) =>
-      tables.name.toLowerCase().includes(search.toLowerCase())
-    );
+    return tableData.filter((tables: ITable) => tables.name.toLowerCase().includes(search.toLowerCase()));
   };
   const searchResults = searchTables();
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <button onClick={goToHome} className="btn" type="button">
           Retry
         </button>
@@ -268,11 +230,9 @@ const Table = () => {
 
   return (
     <div className="pb-6">
-      <div className="sticky top-0 z-50 bg-secondary">
-        <section className="flex items-center justify-between mx-4 mt-4">
-          <div className="font-bold capitalize text-base-content">
-            {zoneName}
-          </div>
+      <div className="bg-secondary sticky top-0 z-50">
+        <section className="mx-4 mt-4 flex items-center justify-between">
+          <div className="text-base-content font-bold capitalize">{zoneName}</div>
 
           <div className="relative">
             <input
@@ -282,115 +242,63 @@ const Table = () => {
               value={search}
               type="search"
               id="simple-search"
-              className="border border-gray-300 text-gray-900 text-sm rounded-xl focus:outline-none focus:border-primary block pl-4 p-1.5"
+              className="focus:border-primary block rounded-xl border border-gray-300 p-1.5 pl-4 text-sm text-gray-900 focus:outline-none"
               placeholder="Search"
               required
             />
           </div>
         </section>
-        <div className="sticky flex justify-between pb-6 mx-6 mt-6 ">
+        <div className="sticky mx-6 mt-6 flex justify-between pb-6 ">
           {filterButtons.map(({ name, Icon, text }, index) => (
             <HeaderButton
               onClick={() => handleOnclick(name)}
               key={`${index}${name}`}
-              className={
-                activeButton === name
-                  ? "bg-blue-500 focus:font-[500] focus:rounded-full focus:text-primary focus:bg-primary/10 "
-                  : ""
-              }
+              className={activeButton === name ? 'focus:text-primary focus:bg-primary/10 bg-blue-500 focus:rounded-full focus:font-[500] ' : ''}
             >
-              <Icon className="mt-1 mr-1 -ml-1 text-primary" />
+              <Icon className="text-primary -ml-1 mr-1 mt-1" />
               {text}
             </HeaderButton>
           ))}
         </div>
       </div>
       <div className="mb-[4rem]">
-        <div className="grid items-center gap-0 grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid-col-1 grid items-center gap-0 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {search.length === 0 ? (
             <>
               {data?.map((ele: ITable, index: number) => (
-                <Link
-                  key={`${ele.id + zoneId}search${index}`}
-                  href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
-                    businessId,
-                    zoneId,
-                    ele?._id
-                  )}`}
-                  passHref
-                >
+                <Link key={`${ele.id + zoneId}search${index}`} href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](businessId, zoneId, ele?._id)}`} passHref>
                   <div
                     onClick={() => handleTableClick(ele)}
-                    className={`${
-                      classByStatus[ele?.status?.toLowerCase() || "empty"]
-                        ?.classNames
-                    } ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
+                    className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.classNames} ${ele.isMerge ? 'bg-[#d6ebda]' : ''}`}
                   >
-                    <div
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.businessNameClasses
-                      } text-black`}
-                    >
+                    <div className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.businessNameClasses} text-black`}>
                       {ele.isMerge
-                        ? ele.mergeTables
-                            .map((table) =>
-                              table.name.length > 4
-                                ? `${table.name.slice(0, 4)}...`
-                                : table.name
-                            )
-                            .join(" + ")
+                        ? ele.mergeTables.map((table) => (table.name.length > 4 ? `${table.name.slice(0, 4)}...` : table.name)).join(' + ')
                         : ele.name}
                     </div>
-                    <MdOutlinePeopleOutline
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.tableClasses
-                      }`}
-                    />
-                    <div
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.numberClasses
-                      }`}
-                    >
-                      {ele?.activeUser < 10
-                        ? `0${ele?.activeUser}`
-                        : ele?.activeUser == null
-                        ? "00"
-                        : ele?.activeUser}
-                      /
+                    <MdOutlinePeopleOutline className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.tableClasses}`} />
+                    <div className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.numberClasses}`}>
+                      {ele?.activeUser < 10 ? `0${ele?.activeUser}` : ele?.activeUser == null ? '00' : ele?.activeUser}/
                       {ele?.capacity < 10 ? `0${ele?.capacity}` : ele?.capacity}
                     </div>
-                    {ele?.status?.toLowerCase() !== "empty" &&
-                      ele?.status?.toLowerCase() !== "reserved" && (
-                        <div>
-                          <div className="absolute top-3 left-6 text-sm font-[500] text-primary">
-                            {ele?.time}
-                          </div>
-                        </div>
-                      )}
-                    <div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
+                    {ele?.status?.toLowerCase() !== 'empty' && ele?.status?.toLowerCase() !== 'reserved' && (
+                      <div>
+                        <div className="text-primary absolute left-6 top-3 text-sm font-[500]">{ele?.time}</div>
+                      </div>
+                    )}
+                    <div className="text-base-content/40 absolute bottom-2 left-6 text-sm font-normal capitalize">
                       {ele.status}
-                      {ele.isMerge ? " (Merged) " : ""}
+                      {ele.isMerge ? ' (Merged) ' : ''}
                     </div>
-                    {ele?.status?.toLowerCase() !== "empty" &&
-                      ele?.status?.toLowerCase() !== "reserved" && (
-                        <div>
-                          <MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
-                          <div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
-                            {ele?.totalDishQuantity < 10
-                              ? `0${ele?.deliverdDish}`
-                              : ele?.deliverdDish == null
-                              ? "00"
-                              : ele?.deliverdDish}
-                            /
-                            {ele?.totalDishQuantity < 10
-                              ? `0${ele?.totalDishQuantity}`
-                              : ele?.totalDishQuantity}
-                          </div>
+                    {ele?.status?.toLowerCase() !== 'empty' && ele?.status?.toLowerCase() !== 'reserved' && (
+                      <div>
+                        <MdOutlineDinnerDining className="absolute right-[5.5rem] top-6 text-[1rem] opacity-50" />
+                        <div className="text-primary absolute bottom-6 right-20 text-sm font-[500]">
+                          {ele?.totalDishQuantity < 10 ? `0${ele?.deliverdDish}` : ele?.deliverdDish == null ? '00' : ele?.deliverdDish}/
+                          {ele?.totalDishQuantity < 10 ? `0${ele?.totalDishQuantity}` : ele?.totalDishQuantity}
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -398,87 +306,39 @@ const Table = () => {
           ) : (
             <>
               {searchResults?.map((ele: ITable, index: number) => (
-                <Link
-                  key={`${ele.id + zoneId}search${index}`}
-                  href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
-                    businessId,
-                    zoneId,
-                    ele?._id
-                  )}`}
-                  passHref
-                >
+                <Link key={`${ele.id + zoneId}search${index}`} href={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](businessId, zoneId, ele?._id)}`} passHref>
                   <div
                     onClick={() => handleTableClick(ele)}
-                    className={`${
-                      classByStatus[ele?.status?.toLowerCase() || "empty"]
-                        ?.classNames
-                    } ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
+                    className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.classNames} ${ele.isMerge ? 'bg-[#d6ebda]' : ''}`}
                   >
-                    <div
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.businessNameClasses
-                      } text-black`}
-                    >
+                    <div className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.businessNameClasses} text-black`}>
                       {ele.isMerge
-                        ? ele.mergeTables
-                            .map((table) =>
-                              table.name.length > 4
-                                ? `${table.name.slice(0, 4)}...`
-                                : table.name
-                            )
-                            .join(" + ")
+                        ? ele.mergeTables.map((table) => (table.name.length > 4 ? `${table.name.slice(0, 4)}...` : table.name)).join(' + ')
                         : ele.name}
                     </div>
-                    <MdOutlinePeopleOutline
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.tableClasses
-                      }`}
-                    />
-                    <div
-                      className={`${
-                        classByStatus[ele?.status?.toLowerCase() || "empty"]
-                          ?.numberClasses
-                      }`}
-                    >
-                      {ele?.activeUser < 10
-                        ? `0${ele?.activeUser}`
-                        : ele?.activeUser == null
-                        ? "00"
-                        : ele?.activeUser}
-                      /
+                    <MdOutlinePeopleOutline className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.tableClasses}`} />
+                    <div className={`${classByStatus[ele?.status?.toLowerCase() || 'empty']?.numberClasses}`}>
+                      {ele?.activeUser < 10 ? `0${ele?.activeUser}` : ele?.activeUser == null ? '00' : ele?.activeUser}/
                       {ele?.capacity < 10 ? `0${ele?.capacity}` : ele?.capacity}
                     </div>
-                    {ele?.status?.toLowerCase() !== "empty" &&
-                      ele?.status?.toLowerCase() !== "reserved" && (
-                        <div>
-                          <div className="absolute top-3 left-6 text-sm font-[500] text-primary">
-                            {ele?.time}
-                          </div>
-                        </div>
-                      )}
-                    <div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
+                    {ele?.status?.toLowerCase() !== 'empty' && ele?.status?.toLowerCase() !== 'reserved' && (
+                      <div>
+                        <div className="text-primary absolute left-6 top-3 text-sm font-[500]">{ele?.time}</div>
+                      </div>
+                    )}
+                    <div className="text-base-content/40 absolute bottom-2 left-6 text-sm font-normal capitalize">
                       {ele.status}
-                      {ele.isMerge ? " (Merged) " : ""}
+                      {ele.isMerge ? ' (Merged) ' : ''}
                     </div>
-                    {ele?.status?.toLowerCase() !== "empty" &&
-                      ele?.status?.toLowerCase() !== "reserved" && (
-                        <div>
-                          <MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
-                          <div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
-                            {ele?.totalDishQuantity < 10
-                              ? `0${ele?.deliverdDish}`
-                              : ele?.deliverdDish == null
-                              ? "00"
-                              : ele?.deliverdDish}
-                            /
-                            {ele?.totalDishQuantity < 10
-                              ? `0${ele?.totalDishQuantity}`
-                              : ele?.totalDishQuantity}
-                          </div>
+                    {ele?.status?.toLowerCase() !== 'empty' && ele?.status?.toLowerCase() !== 'reserved' && (
+                      <div>
+                        <MdOutlineDinnerDining className="absolute right-[5.5rem] top-6 text-[1rem] opacity-50" />
+                        <div className="text-primary absolute bottom-6 right-20 text-sm font-[500]">
+                          {ele?.totalDishQuantity < 10 ? `0${ele?.deliverdDish}` : ele?.deliverdDish == null ? '00' : ele?.deliverdDish}/
+                          {ele?.totalDishQuantity < 10 ? `0${ele?.totalDishQuantity}` : ele?.totalDishQuantity}
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 </Link>
               ))}

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 export interface Variant {
   id: string;
@@ -51,8 +51,8 @@ type FormActions = {
 };
 
 const useAddOnStore = create<FormState & FormActions>((set) => ({
-  addOnName: "",
-  addOnType: "",
+  addOnName: '',
+  addOnType: '',
   noOfOptions: 0,
   selections: 0,
   maxQuantity: 0,
@@ -67,12 +67,12 @@ const useAddOnStore = create<FormState & FormActions>((set) => ({
   variants: [],
   currentVariant: null,
 
-  setAddOnName: (name:string) => set({ addOnName: name }),
-  setAddOnType: (type:string) => set({ addOnType: type }),
-  setNoOfOptions: (options:number) => set({ noOfOptions: options }),
-  setSelections: (selections:number) => set({ selections: selections }),
-  setMaxQuantity: (quantity:number) => set({ maxQuantity: quantity }),
-  setCompulsoryQuantity: (quantity:number) => set({ compulsoryQuantity: quantity }),
+  setAddOnName: (name: string) => set({ addOnName: name }),
+  setAddOnType: (type: string) => set({ addOnType: type }),
+  setNoOfOptions: (options: number) => set({ noOfOptions: options }),
+  setSelections: (selections: number) => set({ selections: selections }),
+  setMaxQuantity: (quantity: number) => set({ maxQuantity: quantity }),
+  setCompulsoryQuantity: (quantity: number) => set({ compulsoryQuantity: quantity }),
   setVariantName: (name) => set({ variantName: name }),
   setVariantType: (type) => set({ variantType: type }),
   setVariantPrice: (price) => set({ variantPrice: price }),
@@ -82,18 +82,17 @@ const useAddOnStore = create<FormState & FormActions>((set) => ({
   setVariantDescription: (description) => set({ variantDescription: description }),
   setCurrentVariant: (variant) => set({ currentVariant: variant }),
   setVariants: (variants: Variant[]) => set({ variants }),
-  addVariant: (variant) =>
-  set((state) => ({ variants: [...state.variants, variant] })),
+  addVariant: (variant) => set((state) => ({ variants: [...state.variants, variant] })),
 
-editVariant: (id, updatedVariant) =>
-  set((state) => ({
-    variants: state.variants.map((v) => (v.id === id ? updatedVariant : v)),
-  })),
+  editVariant: (id, updatedVariant) =>
+    set((state) => ({
+      variants: state.variants.map((v) => (v.id === id ? updatedVariant : v)),
+    })),
 
-deleteVariant: (id) =>
-  set((state) => ({
-    variants: state.variants.filter((v) => v.id !== id),
-  })),
+  deleteVariant: (id) =>
+    set((state) => ({
+      variants: state.variants.filter((v) => v.id !== id),
+    })),
 }));
 
 export default useAddOnStore;

@@ -1,5 +1,5 @@
-import { useCart } from '@components/store/useCart'
-import { memo, useMemo } from 'react'
+import { useCart } from "@components/store/useCart"
+import { memo, useMemo } from "react"
 
 function EmptyCartBtn() {
 	const { cart, emptyCart } = useCart()
@@ -12,9 +12,9 @@ function EmptyCartBtn() {
 
 	return (
 		<button
-			className='btn btn-primary btn-outline btn-xs my-auto rounded-full'
+			className="btn btn-primary btn-outline btn-xs my-auto rounded-full"
 			onClick={emptyCart}
-			type='button'
+			type="button"
 		>
 			Empty Cart
 		</button>

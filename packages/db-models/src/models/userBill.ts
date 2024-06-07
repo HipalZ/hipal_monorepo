@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { UserBillType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { UserBillType } from '../validators';
 
 const userBillSchema = new mongoose.Schema<UserBillType>(
   {
@@ -23,12 +23,9 @@ const userBillSchema = new mongoose.Schema<UserBillType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Userbill: Model<UserBillType> = mongoose.model<UserBillType>(
-  "userbill",
-  userBillSchema
-);
+const Userbill: Model<UserBillType> = mongoose.model<UserBillType>('userbill', userBillSchema);
 
 export { Userbill };

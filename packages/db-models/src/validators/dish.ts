@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const portionSchema = z.object({
   name: z.string(),
@@ -43,11 +43,11 @@ export const dishSchema = z.object({
   kitchenId: z.string(),
   filters: filtersSchema.default({
     timeToConsume: 0,
-    portionBestSuited: "",
-    bestWeather: "",
-    levelOfSpice: "",
-    bestOccasion: "",
-    texture: "",
+    portionBestSuited: '',
+    bestWeather: '',
+    levelOfSpice: '',
+    bestOccasion: '',
+    texture: '',
     time: 0,
     dishes: [],
     metaTags: [], // added this line

@@ -1,24 +1,24 @@
-import DinningSVG from "@assets/svg/dinningSVG";
-import CartCard from "@components/atoms/card/cartCard";
-import { useActiveClass } from "@components/store/useActiveClass";
+import DinningSVG from "@assets/svg/dinningSVG"
+import CartCard from "@components/atoms/card/cartCard"
+import { useActiveClass } from "@components/store/useActiveClass"
 import {
 	_useAllBusiness,
 	initializeAllBusiness,
 	useAllBusiness,
-} from "@components/store/useAllBusiness";
-import { useCart } from "@components/store/useCart";
-import type { IBusinessData } from "@components/types/businessData";
-import { getGrandTotal } from "@components/utils/helpers";
-import { paths } from "@components/utils/paths";
-import { PAGE_TYPES, routePaths } from "@components/utils/routes";
-import axios from "@utils/axios";
-import { useRouter } from "next/router";
-import type { NextRequest, NextResponse } from "next/server";
-import { memo, useCallback, useDeferredValue, useEffect, useMemo } from "react";
-import { BiDish } from "react-icons/bi";
-import { useLogin } from "@components/store/useLogin";
-import useLoyaltyData from "@components/store/useLoyaltyData";
-import useBusinessDetails from "@components/store/useBusinessDetails";
+} from "@components/store/useAllBusiness"
+import { useCart } from "@components/store/useCart"
+import type { IBusinessData } from "@components/types/businessData"
+import { getGrandTotal } from "@components/utils/helpers"
+import { paths } from "@components/utils/paths"
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import axios from "@utils/axios"
+import { useRouter } from "next/router"
+import type { NextRequest, NextResponse } from "next/server"
+import { memo, useCallback, useDeferredValue, useEffect, useMemo } from "react"
+import { BiDish } from "react-icons/bi"
+import { useLogin } from "@components/store/useLogin"
+import useLoyaltyData from "@components/store/useLoyaltyData"
+import useBusinessDetails from "@components/store/useBusinessDetails"
 import {
 	beans,
 	bowl,
@@ -27,55 +27,50 @@ import {
 	love,
 	triangleToDataurl,
 	waveToDataUrl,
-} from "@components/atoms/card/pathPattern";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-import SkeletonLoader from "@components/atoms/loader/skeletonLoader";
+} from "@components/atoms/card/pathPattern"
+import Link from "next/link"
+import dynamic from "next/dynamic"
+import SkeletonLoader from "@components/atoms/loader/skeletonLoader"
 
-const TopBackground = dynamic(
-	() => import("@components/molecules/topBackground"),
-	{
-		ssr: false,
-		loading: () => <SkeletonLoader height={350} />,
-	},
-);
+const TopBackground = dynamic(() => import("@components/molecules/topBackground"), {
+	ssr: false,
+	loading: () => <SkeletonLoader height={350} />,
+})
 
 const SubLoyalty = dynamic(() => import("@components/atoms/subLoyalty"), {
 	ssr: false,
 	loading: () => <SkeletonLoader />,
-});
-
-
+})
 
 const PageName = dynamic(() => import("@components/molecules/pageName"), {
 	ssr: false,
 	loading: () => <SkeletonLoader />,
-});
+})
 const Footer = dynamic(() => import("@components/molecules/footer"), {
 	ssr: false,
 	loading: () => <SkeletonLoader height={450} />,
-});
+})
 const Header = dynamic(() => import("@components/molecules/header"), {
 	ssr: false,
 	loading: () => <SkeletonLoader />,
-});
+})
 
 export default memo(function Dine() {
-	const router = useRouter();
-	const { businessId } = router.query as { businessId: string };
-	const businessDetails = useBusinessDetails((s) => s.businessDetails);
-	const isActiveCategory = useActiveClass((s) => s.isActiveCategory);
-	const isLogin = useLogin((s) => s.isLogin);
-	const setDirection = useLogin((s) => s.setDirection);
-	const { data: _data } = useAllBusiness();
-	const { data:finalCartData } = _useAllBusiness();
-	const { cart } = useCart();
-	const deferredCart = useDeferredValue(cart);
-	const { loyaltySetting } = useLoyaltyData();
+	const router = useRouter()
+	const { businessId } = router.query as { businessId: string }
+	const businessDetails = useBusinessDetails((s) => s.businessDetails)
+	const isActiveCategory = useActiveClass((s) => s.isActiveCategory)
+	const isLogin = useLogin((s) => s.isLogin)
+	const setDirection = useLogin((s) => s.setDirection)
+	const { data: _data } = useAllBusiness()
+	const { data: finalCartData } = _useAllBusiness()
+	const { cart } = useCart()
+	const deferredCart = useDeferredValue(cart)
+	const { loyaltySetting } = useLoyaltyData()
 	const findPattern = (pattern: string) => {
-		const value = srcColor?.find((item) => item?.src?.hasOwnProperty(pattern));
-		return value?.src;
-	};
+		const value = srcColor?.find((item) => item?.src?.hasOwnProperty(pattern))
+		return value?.src
+	}
 	const srcColor = [
 		{
 			src: { wave: waveToDataUrl(loyaltySetting?.cardColor, "white").wave },
@@ -102,45 +97,38 @@ export default memo(function Dine() {
 		{
 			src: { flower: flower(loyaltySetting?.fontColor).flower },
 		},
-	];
+	]
 
 	const sortedDishes = useCallback(() => {
-		const newCart = { ...deferredCart };
-		return newCart;
-	}, [deferredCart]);
+		const newCart = { ...deferredCart }
+		return newCart
+	}, [deferredCart])
 
-	const _getGrandTotal = useMemo(
-		() => getGrandTotal(cart, _data),
-		[_data, cart],
-	);
-
+	const _getGrandTotal = useMemo(() => getGrandTotal(cart, _data), [_data, cart])
 
 	useEffect(() => {
-		initializeAllBusiness(finalCartData);
-	}, [finalCartData]);
+		initializeAllBusiness(finalCartData)
+	}, [finalCartData])
 
 	function redirectLoginPage() {
 		if (!isLogin) {
-			return routePaths[PAGE_TYPES.SIGN_UP](businessId);
+			return routePaths[PAGE_TYPES.SIGN_UP](businessId)
 		}
 	}
 
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {
-			setDirection(str);
-			return routePaths[PAGE_TYPES.SIGN_UP](businessId);
-		} 
-		setDirection("");
-		return routePaths[PAGE_TYPES.LOYALTY](businessId);
-	};
+			setDirection(str)
+			return routePaths[PAGE_TYPES.SIGN_UP](businessId)
+		}
+		setDirection("")
+		return routePaths[PAGE_TYPES.LOYALTY](businessId)
+	}
 
 	return (
 		<div className="relative flex flex-col w-full">
 			<TopBackground
-				onBackURL={`${routePaths[PAGE_TYPES.CATEGORY_BY_ID](
-					businessId,
-					isActiveCategory,
-				)}`}
+				onBackURL={`${routePaths[PAGE_TYPES.CATEGORY_BY_ID](businessId, isActiveCategory)}`}
 			/>
 			<Header
 				hideBackBtn
@@ -194,10 +182,7 @@ export default memo(function Dine() {
 								logo={businessDetails?.logo}
 								cardColor={loyaltySetting?.cardColor}
 								fontColor={loyaltySetting?.fontColor}
-								src={
-									findPattern(loyaltySetting?.cardPattern) ||
-									beans(loyaltySetting?.fontColor)
-								}
+								src={findPattern(loyaltySetting?.cardPattern) || beans(loyaltySetting?.fontColor)}
 							/>
 						</div>
 					</Link>
@@ -208,5 +193,5 @@ export default memo(function Dine() {
 
 			{/* <FinalCartBtn /> */}
 		</div>
-	);
-});
+	)
+})

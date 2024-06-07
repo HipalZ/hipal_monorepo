@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const PaymentModeAttrs = z.object({
   businessId: z.string().optional(),

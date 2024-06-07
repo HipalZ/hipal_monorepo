@@ -1,6 +1,6 @@
-import useTimings from "@/components/store/useTimings";
-import type { DailyReviewAnalysis } from "@/components/types/businessData";
-import { useEffect, useState } from "react";
+import useTimings from '@/components/store/useTimings';
+import type { DailyReviewAnalysis } from '@/components/types/businessData';
+import { useEffect, useState } from 'react';
 
 const ReviewBarChart = (props: { data: DailyReviewAnalysis[] }) => {
   const { data } = props;
@@ -15,28 +15,27 @@ const ReviewBarChart = (props: { data: DailyReviewAnalysis[] }) => {
       datesArr.push(formattedDate);
     }
     setDatesArr(datesArr);
-  }
+  };
 
   useEffect(() => {
     getDates(new Date(timeStampStart));
-  }, [timeStampStart])
+  }, [timeStampStart]);
 
   return (
     <>
       <section id="chart">
-        {data.length && data.map((item, index) => {
-          return (
-            <div className="date" key={index.toString()}>
-              <div className="review-bars">
-                <div className="positive" style={{ 'height': `${(item.positivePercentage)}%` } as React.CSSProperties}>
+        {data.length &&
+          data.map((item, index) => {
+            return (
+              <div className="date" key={index.toString()}>
+                <div className="review-bars">
+                  <div className="positive" style={{ height: `${item.positivePercentage}%` } as React.CSSProperties}></div>
+                  <div className="negative" style={{ height: `${item.negativePercentage}%` } as React.CSSProperties}></div>
                 </div>
-                <div className="negative" style={{ 'height': `${(item.negativePercentage)}%` } as React.CSSProperties}>
-                </div>
+                <div className="date-value mx-2">{datesArr[index]}</div>
               </div>
-              <div className="date-value mx-2">{datesArr[index]}</div>
-            </div>
-          )
-        })}
+            );
+          })}
       </section>
     </>
   );

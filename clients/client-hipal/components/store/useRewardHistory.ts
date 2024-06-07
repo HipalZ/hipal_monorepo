@@ -1,5 +1,5 @@
-import { UserData } from '@components/types/businessData'
-import { create } from 'zustand'
+import { UserData } from "@components/types/businessData"
+import { create } from "zustand"
 
 interface IUserRewardData {
 	totalReward?: number
@@ -18,20 +18,20 @@ interface IuserRewardHistoryState {
 export const useRewardHistory = create<IuserRewardHistoryState>((set) => ({
 	rewardHistory: {
 		items: {
-			userPhone: '',
-			userName: '',
+			userPhone: "",
+			userName: "",
 			rewards: 0,
 			currentBalance: 0,
-			status: '',
-			date: '',
-			time: '',
-			businessName: '',
-			waiterName: '',
+			status: "",
+			date: "",
+			time: "",
+			businessName: "",
+			waiterName: "",
 			items: [],
-			tableName: '',
-			day: '',
-			loyaltyId: '',
-			id: '',
+			tableName: "",
+			day: "",
+			loyaltyId: "",
+			id: "",
 		},
 	},
 	setRewardHistory: (rewardHistory: IUserRewardData) => set({ rewardHistory }),

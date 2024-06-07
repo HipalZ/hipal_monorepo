@@ -1,13 +1,11 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
-import { Category, Dish } from "@hi/db-models";
-import { CategoryType } from "@hi/db-models/src/validators";
-import { isEmpty } from "lodash";
+import { Category } from '@hi/db-models';
 
 router.get(
-  "/v1/categories",
+  '/v1/categories',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
@@ -17,10 +15,8 @@ router.get(
 
     if (queryCategories) {
       existingCategories = await Category.find(query)
-        .select(
-          "name hierarchy  parentCategory parentCategoryId businessId id availability visibility"
-        )
-        .populate("dishes");
+        .select('name hierarchy  parentCategory parentCategoryId businessId id availability visibility')
+        .populate('dishes');
       return res.status(200).send(existingCategories);
     }
 
@@ -29,32 +25,32 @@ router.get(
     });
 
     res.status(200).send(existingCategories);
-  }
+  },
 );
 
 router.get(
-  "/v1/categories/:id/test",
+  '/v1/categories/:id/test',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
-    res.status(200).send("working");
-  }
+    res.status(200).send('working');
+  },
 );
 
 router.get(
-  "/v1/categories/:id",
+  '/v1/categories/:id',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const existingCategory = await Category.findById(id).populate("dishes");
+    const existingCategory = await Category.findById(id).populate('dishes');
 
     res.status(200).send(existingCategory);
-  }
+  },
 );
 
 router.get(
-  "/v1/categories/get/allChildCategory",
+  '/v1/categories/get/allChildCategory',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -69,17 +65,17 @@ router.get(
 
     let filter;
 
-    filter = existingCategories.filter((ele: any) => ele.hierarchy === "CHILD");
+    filter = existingCategories.filter((ele: any) => ele.hierarchy === 'CHILD');
     if (filter.length == 0) {
       filter = existingCategories;
     }
 
     res.status(200).send({ status: true, data: filter });
-  }
+  },
 );
 
 router.get(
-  "/v1/categories/:id/allParentCategory",
+  '/v1/categories/:id/allParentCategory',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -90,39 +86,37 @@ router.get(
     const { businessId } = req.query;
     const existingCategories = await Category.find({
       businessId,
-      hierarchy: "PARENT",
+      hierarchy: 'PARENT',
     });
 
     res.status(200).send(existingCategories);
-  }
+  },
 );
 
 router.get(
-  "/v1/categories/All/Categories",
+  '/v1/categories/All/Categories',
 
   async (req: Request, res: Response) => {
     try {
       const { businessId } = req.query;
 
       const _categoryData = await Category.find({ businessId })
-        .select(
-          "name  visibility hierarchy parentCategoryId parentCategory id  availability visibility"
-        )
+        .select('name  visibility hierarchy parentCategoryId parentCategory id  availability visibility')
         .populate({
-          path: "dishes",
+          path: 'dishes',
           populate: {
-            path: "extras",
+            path: 'extras',
           },
         });
       return res.status(200).send({ data: { categories: _categoryData } });
     } catch (err: any) {
       return res.status(500).send(err.message);
     }
-  }
+  },
 );
 
 router.get(
-  "/v1/categories/Active/Category",
+  '/v1/categories/Active/Category',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
@@ -146,7 +140,7 @@ router.get(
     });
 
     return res.status(200).send({ active: Active, visible, available });
-  }
+  },
 );
 
 // router.get(
@@ -390,17 +384,17 @@ router.get(
 // );
 
 router.get(
-  "/v1/categories/:id/analytics",
+  '/v1/categories/:id/analytics',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
     let existingDishes = await Category.find({
       businessId,
-    }).select("name hierarchy  parentCategory  parentCategoryId ");
+    }).select('name hierarchy  parentCategory  parentCategoryId ');
 
     res.status(200).send(existingDishes);
-  }
+  },
 );
 
 export { router as readCategoriesRouter };

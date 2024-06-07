@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import axios from "@/axios";
-import { Disclosure } from "@headlessui/react";
-import { FiChevronDown } from "react-icons/fi";
-import { HiX } from "react-icons/hi";
-import DayOutPopup from "@/components/atoms/dayoutPopup";
-import { useTable } from "@/components/store/useTable";
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { toast } from "react-toastify";
-import Loader from "@/components/atoms/loader";
-import { useQuery } from "@tanstack/react-query";
-import { useLogin } from "@/components/store/useLogin";
+import axios from '@/axios';
+import DayOutPopup from '@/components/atoms/dayoutPopup';
+import Loader from '@/components/atoms/loader';
+import { useLogin } from '@/components/store/useLogin';
+import { useTable } from '@/components/store/useTable';
+import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
+import { Disclosure } from '@headlessui/react';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { FiChevronDown } from 'react-icons/fi';
+import { HiX } from 'react-icons/hi';
+import { toast } from 'react-toastify';
 
 function Switch({ setCurrentView }) {
   const router = useRouter();
@@ -22,7 +22,7 @@ function Switch({ setCurrentView }) {
   const [targetTable, setTargetTable] = useState<any>(null);
   const tableData = useTable((s) => s.tableData);
   const [businesses, setBusinesses] = useState<any>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const userDetails = useLogin((s) => s.userDetails);
 
   const handleSearchChange = (event) => {
@@ -40,32 +40,26 @@ function Switch({ setCurrentView }) {
 
   const allTables = businesses.flatMap((zone) => zone.tables);
 
-  const filteredTables = allTables.filter(
-    (table) =>
-      table.name.toLowerCase().includes(searchTerm) &&
-      table.status.toLowerCase() === "empty"
-  );
+  const filteredTables = allTables.filter((table) => table.name.toLowerCase().includes(searchTerm) && table.status.toLowerCase() === 'empty');
   const fetchZones = async () => {
     try {
-      const res = await axios.get(
-        `/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`
-      );
+      const res = await axios.get(`/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`);
       setBusinesses([res?.data]);
       return res?.data;
     } catch (error) {
-      toast.error("Error fetching tables");
+      toast.error('Error fetching tables');
     }
   };
 
   const { isLoading, error, data } = useQuery({
-    queryKey: ["tables", businessId, zoneId],
+    queryKey: ['tables', businessId, zoneId],
     queryFn: fetchZones,
     enabled: !!zoneId && !!businessId,
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <Loader />
       </div>
     );
@@ -73,10 +67,10 @@ function Switch({ setCurrentView }) {
 
   const handleTableTransfer = async (toTable) => {
     if (tableData._id === toTable._id) {
-      toast.error("You cannot switch to the same table.");
+      toast.error('You cannot switch to the same table.');
       return;
     }
-    console.log("tableData", tableData);
+    console.log('tableData', tableData);
     const body = {
       businessId: businessId,
       fromZoneId: tableData.zoneId,
@@ -89,25 +83,23 @@ function Switch({ setCurrentView }) {
     };
 
     try {
-      const res = await axios.put("/v1/kitchens/update/transferTable", body);
+      const res = await axios.put('/v1/kitchens/update/transferTable', body);
       if (res.status === 200) {
         closeModal();
-        toast.success(
-          `Table ${tableData.name} transferred to ${toTable.name} successfully`
-        );
+        toast.success(`Table ${tableData.name} transferred to ${toTable.name} successfully`);
         router.push(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
       }
     } catch (error) {
-      toast.error("Error transferring table");
-      console.error("Error transferring table:", error);
+      toast.error('Error transferring table');
+      console.error('Error transferring table:', error);
     }
   };
   return (
-    <div className="relative w-full bg-secondary min-h-screen px-6 pb-[10rem] pt-6 overflow-auto scroll-smooth">
+    <div className="bg-secondary relative min-h-screen w-full overflow-auto scroll-smooth px-6 pb-[10rem] pt-6">
       <div className="flex items-center justify-between text-xl font-medium">
         <div>Switch Table</div>
         <div>{tableData?.name}</div>
-        <div onClick={() => setCurrentView("kick")}>
+        <div onClick={() => setCurrentView('kick')}>
           <HiX />
         </div>
       </div>
@@ -117,23 +109,20 @@ function Switch({ setCurrentView }) {
           placeholder="Search Table"
           value={searchTerm}
           onChange={handleSearchChange}
-          className="w-full p-2 border border-[#cacaca] rounded-md bg-base-100"
+          className="bg-base-100 w-full rounded-md border border-[#cacaca] p-2"
         />
       </div>
 
       {searchTerm ? (
         <>
           {filteredTables.map((table) => (
-            <div
-              key={table._id}
-              className="w-full max-w-md p-4 mx-auto mt-6 border bg-base-100 rounded-2xl"
-            >
+            <div key={table._id} className="bg-base-100 mx-auto mt-6 w-full max-w-md rounded-2xl border p-4">
               <div className="flex justify-between">
                 <div>{table.name}</div>
                 <button
                   type="button"
                   onClick={() => openModal(table)}
-                  className="px-4 py-1 font-medium border text-primary border-primary rounded-2xl"
+                  className="text-primary border-primary rounded-2xl border px-4 py-1 font-medium"
                 >
                   Switch
                 </button>
@@ -144,48 +133,32 @@ function Switch({ setCurrentView }) {
       ) : (
         <>
           {businesses?.map((zone) => (
-            <div
-              id={zone.zoneId}
-              key={zone.zoneId}
-              className="w-full max-w-md border mx-auto p-4 mt-6 bg-base-100 rounded-2xl scroll-mt-[13.2rem]"
-            >
+            <div id={zone.zoneId} key={zone.zoneId} className="bg-base-100 mx-auto mt-6 w-full max-w-md scroll-mt-[13.2rem] rounded-2xl border p-4">
               <Disclosure>
                 {({ open }) => (
                   <>
                     <div>
-                      <Disclosure.Button className="flex justify-between w-full px-4 text-lg font-medium text-left rounded-2xl">
-                        <div className="w-[80%] mt-[0.125rem] -ml-4">
-                          {zone.zoneName}
-                        </div>
-                        <span className="mt-1 -mr-4">{zone.tables.length}</span>
-                        <FiChevronDown
-                          className={`${
-                            open ? "rotate-180 transform" : ""
-                          } h-5 w-5 mt-2 -mr-2`}
-                        />
+                      <Disclosure.Button className="flex w-full justify-between rounded-2xl px-4 text-left text-lg font-medium">
+                        <div className="-ml-4 mt-[0.125rem] w-[80%]">{zone.zoneName}</div>
+                        <span className="-mr-4 mt-1">{zone.tables.length}</span>
+                        <FiChevronDown className={`${open ? 'rotate-180 transform' : ''} -mr-2 mt-2 h-5 w-5`} />
                       </Disclosure.Button>
                       <div>
                         {open && (
-                          <Disclosure.Panel className="pt-4 pb-2 text-sm text-gray-500 transition-all duration-300">
-                            <div className="h-[0.125rem] bg-primary" />
+                          <Disclosure.Panel className="pb-2 pt-4 text-sm text-gray-500 transition-all duration-300">
+                            <div className="bg-primary h-[0.125rem]" />
                             <div className="mt-2 ">
                               {zone.tables
-                                .filter(
-                                  (table) =>
-                                    table.status.toLowerCase() === "empty"
-                                )
+                                .filter((table) => table.status.toLowerCase() === 'empty')
                                 .map((table) => (
                                   <div
                                     onClick={() => openModal(table)}
                                     key={table._id}
-                                    className="flex items-center justify-between py-4 mb-2 border-b border-dashed"
+                                    className="mb-2 flex items-center justify-between border-b border-dashed py-4"
                                   >
                                     <div>{table?.name}</div>
                                     <div className="on_active_bounce">
-                                      <button
-                                        type="button"
-                                        className="px-4 py-1 font-medium border text-primary border-primary rounded-2xl"
-                                      >
+                                      <button type="button" className="text-primary border-primary rounded-2xl border px-4 py-1 font-medium">
                                         Switch
                                       </button>
                                     </div>
@@ -205,21 +178,18 @@ function Switch({ setCurrentView }) {
       )}
 
       <DayOutPopup show={isModalOpen} onClose={closeModal}>
-        <div className="mt-4 ml-4 text-xl font-bold capitalize text-base-content">
-          {tableData?.name}
+        <div className="text-base-content ml-4 mt-4 text-xl font-bold capitalize">{tableData?.name}</div>
+        <div className="ml-4 mt-4 font-semibold">
+          Do you want to switch {tableData?.name} to {targetTable?.name} in zone ?
         </div>
-        <div className="mt-4 ml-4 font-semibold">
-          Do you want to switch {tableData?.name} to {targetTable?.name} in zone{" "}
-          ?
-        </div>
-        <div className="flex justify-between mx-12 mt-6 pb-9">
+        <div className="mx-12 mt-6 flex justify-between pb-9">
           <span onClick={closeModal} className="text-sm">
             Cancel
           </span>
           <button
             type="button"
             onClick={() => handleTableTransfer(targetTable)}
-            className="px-6 py-2 -mr-6 text-sm bg-primary text-base-100 rounded-3xl"
+            className="bg-primary text-base-100 -mr-6 rounded-3xl px-6 py-2 text-sm"
           >
             Switch
           </button>

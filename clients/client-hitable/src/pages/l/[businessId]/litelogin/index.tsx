@@ -1,38 +1,29 @@
-import type React from "react";
-import HiTableLite from "@/assets/img/hitableLite.png"
-import { isEmpty } from "lodash-es";
-import Image from "next/image";
-import { useLogin } from "@/components/store/useLogin";
-import axios from "@/axios";
-import { useRouter } from "next/router";
-import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
-import { toast } from "react-toastify";
-import { paths } from "@/components/utils/paths";
-import { useLoyaltyDatas } from "@/components/store/useLoyaltyDatas";
-import { memo } from "react";
+import HiTableLite from '@/assets/img/hitableLite.png';
+import axios from '@/axios';
+import { useLogin } from '@/components/store/useLogin';
+import { useLoyaltyDatas } from '@/components/store/useLoyaltyDatas';
+import { paths } from '@/components/utils/paths';
+import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
+import { isEmpty } from 'lodash-es';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+import type React from 'react';
+import { memo } from 'react';
+import { toast } from 'react-toastify';
 
 function HiTable() {
-  const {
-    phoneNumber,
-    password,
-    setPhoneNumber,
-    setPassword,
-  } = useLogin();
+  const { phoneNumber, password, setPhoneNumber, setPassword } = useLogin();
 
   const setLoyaltyId = useLogin((s) => s.setLoyaltyId);
   const setIsLogin = useLogin((s) => s.setIsLogin);
   const router = useRouter();
   const { businessId } = router.query as { businessId: string };
   const { setLoyaltyData } = useLoyaltyDatas();
-  const handlePhoneNumberChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handlePhoneNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(event.target.value);
   };
 
-  const handleBusinessNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleBusinessNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value);
   };
 
@@ -48,13 +39,13 @@ function HiTable() {
       setLoyaltyId(response?.data?.loyaltyId);
       setLoyaltyData(response?.data);
     } catch (error) {
-      console.error("Error fetching business data:", error);
+      console.error('Error fetching business data:', error);
     }
   };
   const result = async () => {
     try {
       const config = {
-        method: "POST",
+        method: 'POST',
         url: paths.postWaiterLogin(),
 
         data: {
@@ -70,11 +61,11 @@ function HiTable() {
         setUserDetails(res);
         setIsLogin(true);
       }
-      toast.success("Login successful...");
+      toast.success('Login successful...');
       router.push(`${singleRoute[PAGE_TYPES.LOYALTY](`${businessId}`)}`);
     } catch (err: any) {
       if (err?.response && err?.response?.status === 400) {
-        toast.error("Phone or Password invalid...!");
+        toast.error('Phone or Password invalid...!');
       } else {
         console.log(err);
       }
@@ -82,29 +73,22 @@ function HiTable() {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col items-center justify-center">
       <div className="max-w-[30rem]">
-        <div className="flex justify-center mt-[2rem] mx-[3.375rem]">
-          <Image
-            className="w-full h-[15rem]"
-            src={HiTableLite}
-            alt="Hi Table Logo"
-            priority
-          />
+        <div className="mx-[3.375rem] mt-[2rem] flex justify-center">
+          <Image className="h-[15rem] w-full" src={HiTableLite} alt="Hi Table Logo" priority />
         </div>
-        <div className="text-center mt-[1rem]">
-          <span className="font-semibold text-base-content text-[1rem] leading-[1.125rem]">
-            Let’s get started
-          </span>
+        <div className="mt-[1rem] text-center">
+          <span className="text-base-content text-[1rem] font-semibold leading-[1.125rem]">Let’s get started</span>
         </div>
         <form onSubmit={handleSubmit} className="px-10">
-          <div className="relative w-full mt-[1rem] mb-[5.89rem] ml-0 mr-0 space-y-6">
+          <div className="relative mb-[5.89rem] ml-0 mr-0 mt-[1rem] w-full space-y-6">
             <div className="relative">
               <input
                 onChange={handlePhoneNumberChange}
                 type="tel"
                 id="floating_outlined3"
-                className="block w-full pt-2 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-gray-800 rounded-2xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+                className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-2xl border border-gray-800 bg-transparent pb-3 pl-4 pr-4 pt-2 text-base text-gray-900 focus:outline-none dark:border-gray-600"
                 placeholder=" "
                 maxLength={10}
                 minLength={10}
@@ -112,7 +96,7 @@ function HiTable() {
               />
               <label
                 htmlFor="floating_outlined3"
-                className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+                className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
               >
                 Phone number
               </label>
@@ -122,20 +106,20 @@ function HiTable() {
                 onChange={handleBusinessNameChange}
                 type="password"
                 id="floating_outlined"
-                className="block w-full pt-2 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-gray-800 rounded-2xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+                className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-2xl border border-gray-800 bg-transparent pb-3 pl-4 pr-4 pt-2 text-base text-gray-900 focus:outline-none dark:border-gray-600"
                 placeholder=" "
                 required
               />
               <label
                 htmlFor="floating_outlined"
-                className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+                className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
               >
                 Password
               </label>
             </div>
           </div>
-          <div className="flex justify-center mb-5">
-            <button type="submit" className=" w-full on_active_bounce capitalize py-2 rounded-full text-white bg-primary rounded-full">
+          <div className="mb-5 flex justify-center">
+            <button type="submit" className=" on_active_bounce bg-primary w-full rounded-full rounded-full py-2 capitalize text-white">
               Login
             </button>
           </div>

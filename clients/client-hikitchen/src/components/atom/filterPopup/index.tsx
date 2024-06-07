@@ -1,15 +1,7 @@
-import { Fragment } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 
-export default function FilterPopup({
-  children,
-  show,
-  onClose,
-}: {
-  children: React.ReactNode;
-  show: boolean;
-  onClose: () => void;
-}) {
+export default function FilterPopup({ children, show, onClose }: { children: React.ReactNode; show: boolean; onClose: () => void }) {
   return (
     <>
       <Transition appear show={show} as={Fragment}>
@@ -24,7 +16,7 @@ export default function FilterPopup({
               leaveFrom="opacity-100 translate-x-0"
               leaveTo="opacity-0 translate-x-full"
             >
-              <Dialog.Panel className="relative w-[45vw] min-w-[40vw] max-w-[50vw] md:w-[35vw] md:min-w-[30vw] md:max-w-[40vw] lg:w-[20vw] lg:ml-[22.5vw] lg:min-w-[20vw] lg:max-w-[25vw] mx-6 bg-white shadow-md mt-[10vh] rounded-2xl">
+              <Dialog.Panel className="relative mx-6 mt-[10vh] w-[45vw] min-w-[40vw] max-w-[50vw] rounded-2xl bg-white shadow-md md:w-[35vw] md:min-w-[30vw] md:max-w-[40vw] lg:ml-[22.5vw] lg:w-[20vw] lg:min-w-[20vw] lg:max-w-[25vw]">
                 {children}
               </Dialog.Panel>
             </Transition.Child>

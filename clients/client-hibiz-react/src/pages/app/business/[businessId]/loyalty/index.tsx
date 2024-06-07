@@ -1,9 +1,7 @@
-import Loyalty from '@/components/templates/loyalty'
+import Loyalty from '@/components/templates/loyalty';
 
 const LoyaltyPage = () => {
-  return (
-    <Loyalty />
-  )
+  return <Loyalty />;
 };
 
 export default LoyaltyPage;

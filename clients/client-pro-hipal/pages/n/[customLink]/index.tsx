@@ -1,39 +1,39 @@
-import axios from '@utils/axios';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import axios from '@utils/axios'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 
 export default function Slug() {
-    const [isError, setIsError] = useState(false);
-    const router = useRouter();
-    const { customLink } = router.query;
+	const [isError, setIsError] = useState(false)
+	const router = useRouter()
+	const { customLink } = router.query
 
-    useEffect(() => {
-        if (!customLink) return;
+	useEffect(() => {
+		if (!customLink) return
 
-        const fetchData = async () => {
-            try {
-                const res = await axios.get(`/v1/businesses/n/${customLink}`);
-                const businessId = res.data.data.businessId;
-                
-                if (businessId) {
-                    router.push(`/r/${businessId}/explore`);
-                } else {
-                    setIsError(true);
-                }
-            } catch (e) {
-                console.log(e);
-                setIsError(true);
-            }
-        };
+		const fetchData = async () => {
+			try {
+				const res = await axios.get(`/v1/businesses/n/${customLink}`)
+				const businessId = res.data.data.businessId
 
-        fetchData();
-    }, [customLink, router]);
+				if (businessId) {
+					router.push(`/r/${businessId}/explore`)
+				} else {
+					setIsError(true)
+				}
+			} catch (e) {
+				console.log(e)
+				setIsError(true)
+			}
+		}
 
-    useEffect(() => {
-        if (isError) {
-            router.push('/');
-        }
-    }, [isError, router]);
+		fetchData()
+	}, [customLink, router])
 
-    return <div>Wait</div>;
+	useEffect(() => {
+		if (isError) {
+			router.push('/')
+		}
+	}, [isError, router])
+
+	return <div>Wait</div>
 }

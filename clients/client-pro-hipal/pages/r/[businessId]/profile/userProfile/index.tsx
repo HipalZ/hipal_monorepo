@@ -70,7 +70,10 @@ function Profile() {
 					<div className='flex flex-wrap justify-center space-y-4'>
 						<div className='mt-[1rem] px-4'>
 							<div onClick={comingSoon}>
-								<button type="button" className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'>
+								<button
+									type='button'
+									className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'
+								>
 									<div className='relative inline-flex mr-[10rem] mt-1 text-[#002D4B]'>
 										<div className='w-[2.5rem] mr-[1rem] h-[2.5rem] mt-1 bg-[#D9D9D9]/30 rounded-full'>
 											<BiShoppingBag className='m-auto mt-3 w-[1rem] h-[1rem]' />
@@ -84,7 +87,10 @@ function Profile() {
 						</div>
 						<div className='mt-[1.5rem] px-4'>
 							<div onClick={comingSoon}>
-								<button type="button"  className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'>
+								<button
+									type='button'
+									className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'
+								>
 									<div className='inline-flex mr-[10rem] mt-1 text-[#002D4B]'>
 										<div className='w-[2.5rem] mr-[1rem] h-[2.5rem] mt-1 bg-[#D9D9D9]/30 rounded-full'>
 											<RiStarSLine className='m-auto mt-3 w-[1rem] h-[1rem]' />
@@ -97,7 +103,10 @@ function Profile() {
 							</div>
 						</div>
 						<div onClick={comingSoon} className='mt-[1.5rem] px-4'>
-							<button type="button"  className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'>
+							<button
+								type='button'
+								className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'
+							>
 								<div className='inline-flex mr-[10rem] mt-1 text-[#002D4B]'>
 									<div className='w-[2.5rem] mr-[1rem] h-[2.5rem] mt-1 bg-[#D9D9D9]/30 rounded-full'>
 										<MdOutlineBeenhere className='m-auto mt-3 w-[1rem] h-[1rem]' />
@@ -109,7 +118,10 @@ function Profile() {
 							</button>
 						</div>
 						<div onClick={comingSoon} className='mt-[1.5rem] px-4'>
-							<button type="button"  className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'>
+							<button
+								type='button'
+								className='font-normal px-2 bg-white text-black rounded-full focus:border-l-4 focus:rounded-none focus:border-[#E96108]'
+							>
 								<div className='inline-flex mr-[10rem] mt-1 text-[#002D4B]'>
 									<div className='w-[2.5rem] mr-[1rem] h-[2.5rem] mt-1 bg-[#D9D9D9]/30 rounded-full'>
 										<MdRedeem className='m-auto mt-3 w-[1rem] h-[1rem]' />

@@ -1,12 +1,12 @@
-import mongoose, { Model } from "mongoose";
-import { CategoryType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { CategoryType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId as any;
 const categorySchema = new mongoose.Schema<CategoryType>(
   {
     businessId: {
       type: ObjectId,
       required: true,
-      ref: "Business",
+      ref: 'Business',
       index: true,
     },
     name: {
@@ -35,18 +35,18 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     },
     hierarchy: {
       type: String,
-      enum: ["PARENT", "CHILD"],
+      enum: ['PARENT', 'CHILD'],
       required: true,
     },
     parentCategory: {
       type: String,
-      default: "",
+      default: '',
       required: false,
     },
     parentCategoryId: {
       type: String,
-      default: "",
-      ref: "category",
+      default: '',
+      ref: 'category',
       required: false,
     },
     coverImage: {
@@ -60,7 +60,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     dishes: {
       type: [ObjectId],
       required: true,
-      ref: "Dish",
+      ref: 'Dish',
     },
     availability: {
       type: Boolean,
@@ -71,12 +71,9 @@ const categorySchema = new mongoose.Schema<CategoryType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Category: Model<CategoryType> = mongoose.model<CategoryType>(
-  "category",
-  categorySchema
-);
+const Category: Model<CategoryType> = mongoose.model<CategoryType>('category', categorySchema);
 
 export { Category };

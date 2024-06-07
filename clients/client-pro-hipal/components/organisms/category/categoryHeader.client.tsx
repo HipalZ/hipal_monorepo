@@ -1,4 +1,3 @@
-
 import Header from '@components/molecules/header'
 import DishesTypes from '@components/organisms/category/dishTypes'
 import { useRoutingFlow } from '@components/store/useRoutingFlow'
@@ -10,7 +9,7 @@ function CategoryHeader() {
 	const router = useRouter()
 	const [data, setData] = useState({
 		roundedHeader: false,
-	}) 
+	})
 	const {
 		ref: headerRef,
 		inView,
@@ -40,7 +39,6 @@ function CategoryHeader() {
 					</div>
 				}
 				showOtherButtons
-				
 			>
 				<DishesTypes />
 			</Header>

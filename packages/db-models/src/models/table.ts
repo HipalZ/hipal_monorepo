@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { TableTypes } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { TableTypes } from '../validators';
 
 const tableSchema = new mongoose.Schema<TableTypes>(
   {
@@ -25,16 +25,8 @@ const tableSchema = new mongoose.Schema<TableTypes>(
     },
     status: {
       type: String,
-      default: "Empty",
-      enum: [
-        "Occupied",
-        "Settled",
-        "Clean",
-        "Empty",
-        "Reserved",
-        "Need assistance",
-        "Active",
-      ],
+      default: 'Empty',
+      enum: ['Occupied', 'Settled', 'Clean', 'Empty', 'Reserved', 'Need assistance', 'Active'],
     },
     activeUser: {
       type: Number,
@@ -42,7 +34,7 @@ const tableSchema = new mongoose.Schema<TableTypes>(
     },
     time: {
       type: String,
-      default: "",
+      default: '',
     },
     totalDishQuantity: {
       type: Number,
@@ -58,7 +50,7 @@ const tableSchema = new mongoose.Schema<TableTypes>(
     },
     hiCode: {
       type: String,
-      default: "",
+      default: '',
     },
     isMerge: {
       type: Boolean,
@@ -66,15 +58,15 @@ const tableSchema = new mongoose.Schema<TableTypes>(
     },
     hierarchy: {
       type: String,
-      default: "",
+      default: '',
     },
     parentTableId: {
       type: String,
-      default: "",
+      default: '',
     },
     parentZoneId: {
       type: String,
-      default: "",
+      default: '',
     },
     mergeTables: [Object],
     mergedBy: {
@@ -86,12 +78,9 @@ const tableSchema = new mongoose.Schema<TableTypes>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Table: Model<TableTypes> = mongoose.model<TableTypes>(
-  "Table",
-  tableSchema
-);
+const Table: Model<TableTypes> = mongoose.model<TableTypes>('Table', tableSchema);
 
 export { Table };

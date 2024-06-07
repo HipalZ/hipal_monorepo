@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const CustomRole = z.object({
   businessId: z.string(),
@@ -19,10 +19,10 @@ const UserController = z
   .default({});
 
 const UserAttrs = z.object({
-  name: z.string().default(""),
-  email: z.string().default(""),
+  name: z.string().default(''),
+  email: z.string().default(''),
   phone: z.string(),
-  role: z.string().default(""),
+  role: z.string().default(''),
   DOB: z.string().optional(),
   userDiscription: z.string().optional(),
   gender: z.string().optional(),

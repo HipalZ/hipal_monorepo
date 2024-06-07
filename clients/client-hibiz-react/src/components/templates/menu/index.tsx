@@ -1,26 +1,26 @@
-import Header from "@/components/molecules/header";
-import { memo, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
+import Hi from '@/assets/svg/hi.svg';
+import Header from '@/components/molecules/header';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import { memo, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
 
 const menuOptions = [
   {
-    text: "Dine In",
+    text: 'Dine In',
   },
   {
-    text: "Take Away",
+    text: 'Take Away',
   },
   {
-    text: "Delivery",
+    text: 'Delivery',
   },
 ];
 
 function Menu() {
   const [activeIndex, setActiveIndex] = useState(0);
   const setSelectedIcon = useSelectedIcon((s) => s.setSelectedIcon);
-  const user = useOwnerLogin(s=>s.user)
+  const user = useOwnerLogin((s) => s.user);
 
   function handleOptionSelect(text: string, index: number) {
     setActiveIndex(index);
@@ -28,13 +28,20 @@ function Menu() {
   }
   return (
     <>
-      <div className="bg-[#f5f5f5] sticky z-20 top-0">
-        <Header title="Menu" onBack={()=>setSelectedIcon("")} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"} />
-        <div className="flex justify-between items-center mt-6 px-6 pb-4 border-b border-[#cacaca]">
+      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
+        <Header
+          title="Menu"
+          onBack={() => setSelectedIcon('')}
+          leftIcon={<BsChevronLeft />}
+          centerImage={Hi}
+          rightImage={Hi}
+          isIconBusinessShow={user.role !== 'RESTAURANT_MANAGER'}
+        />
+        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2">Menu</span>
           </div>
-          <button type="button" className="bg-[#2B354D] text-sm px-4 py-2 rounded-xl text-white">
+          <button type="button" className="rounded-xl bg-[#2B354D] px-4 py-2 text-sm text-white">
             + Add Menu
           </button>
         </div>
@@ -46,10 +53,9 @@ function Menu() {
               onKeyDown={() => handleOptionSelect(item.text, index)}
               onClick={() => handleOptionSelect(item.text, index)}
               key={index.toString()}
-              className={`${index === activeIndex
-                ? "bg-[#2B354D] text-white"
-                : "border border-1 text-gray-200"
-                } cursor-pointer my-4 py-5 px-4  text-xl rounded-lg`}
+              className={`${
+                index === activeIndex ? 'bg-[#2B354D] text-white' : 'border-1 border text-gray-200'
+              } my-4 cursor-pointer rounded-lg px-4  py-5 text-xl`}
             >
               {item.text}
             </h1>

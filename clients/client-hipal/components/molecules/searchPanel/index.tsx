@@ -1,98 +1,96 @@
-import HorizontalCard from "@components/atoms/card/horizontalCard";
-import { useAllBusiness } from "@components/store/useAllBusiness";
-import { useSearch } from "@components/store/useSearch";
-import { Transition } from "@headlessui/react";
-import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
-import { BiDish } from "react-icons/bi";
-import { HiSearch, HiX } from "react-icons/hi";
-import Image from "next/image";
-import { routePaths } from "@components/utils/routes";
-import { useRouter } from "next/router";
-import Link from "next/link";
-import { getRandomBlurImg } from "@components/utils/images";
-import PlaceholderImg from "@components/atoms/placeholder";
-import { useActiveClass } from "@components/store/useActiveClass";
+import HorizontalCard from "@components/atoms/card/horizontalCard"
+import { useAllBusiness } from "@components/store/useAllBusiness"
+import { useSearch } from "@components/store/useSearch"
+import { Transition } from "@headlessui/react"
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react"
+import { BiDish } from "react-icons/bi"
+import { HiSearch, HiX } from "react-icons/hi"
+import Image from "next/image"
+import { routePaths } from "@components/utils/routes"
+import { useRouter } from "next/router"
+import Link from "next/link"
+import { getRandomBlurImg } from "@components/utils/images"
+import PlaceholderImg from "@components/atoms/placeholder"
+import { useActiveClass } from "@components/store/useActiveClass"
 
 export interface ICat {
-	id: string;
-	name: string;
+	id: string
+	name: string
 }
 
 // NOTE: A `relative` tag must be added to the parent of this component
 function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
-	const panel = useRef(null);
-	const [isPanelOpen, setIsPanelOpen] = useState(false);
-	const { searchText, setSearchText } = useSearch();
-	const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
-	const [search, setSearchOpen] = useState(false);
+	const panel = useRef(null)
+	const [isPanelOpen, setIsPanelOpen] = useState(false)
+	const { searchText, setSearchText } = useSearch()
+	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
+	const [search, setSearchOpen] = useState(false)
 
-	const router = useRouter();
+	const router = useRouter()
 
-	const { businessId } = router.query as { businessId: string };
+	const { businessId } = router.query as { businessId: string }
 
 	const togglePopover = (searchText = "") => {
 		if (searchText.length > 0) {
 			if (!isPanelOpen) {
-				setIsPanelOpen(true);
+				setIsPanelOpen(true)
 			}
 		} else {
-			setIsPanelOpen(false);
+			setIsPanelOpen(false)
 		}
-	};
+	}
 
 	const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchText(e.target.value);
-		setSearchOpen(true);
-		togglePopover(e.target.value);
-	};
+		setSearchText(e.target.value)
+		setSearchOpen(true)
+		togglePopover(e.target.value)
+	}
 
-	const { data } = useAllBusiness();
+	const { data } = useAllBusiness()
 
 	const handleClearSearchText = () => {
-		setSearchText("");
-	};
+		setSearchText("")
+	}
 
 	const dishData = useMemo(() => {
 		if (!data?.dishesData) {
-			return [];
+			return []
 		}
 
 		return data.dishesData.filter((dish) => {
 			// Exclude dishes without categories
-			const hasCategory = dish.categories && dish.categories.length > 0;
+			const hasCategory = dish.categories && dish.categories.length > 0
 			if (!hasCategory) {
-				return false;
+				return false
 			}
 
-			const matchesSearchText = dish.name
-				.toLowerCase()
-				.includes(searchText.toLowerCase());
+			const matchesSearchText = dish.name.toLowerCase().includes(searchText.toLowerCase())
 			const categoryMatchesSearchText = dish.categories.some((category) =>
 				category.name.toLowerCase().includes(searchText.toLowerCase()),
-			);
+			)
 
-			return matchesSearchText || categoryMatchesSearchText;
-		});
-	}, [searchText, data]);
+			return matchesSearchText || categoryMatchesSearchText
+		})
+	}, [searchText, data])
 
 	const filterCategory = useMemo(
 		() =>
 			data?.categories?.filter((obj, index) => {
 				if (obj?.name?.toLowerCase()?.includes(searchText?.toLowerCase())) {
-					return obj;
+					return obj
 				}
 			}),
 		[data, searchText],
-	);
+	)
 
-	const present = filterCategory?.[0];
+	const present = filterCategory?.[0]
 
 	const redirectToDish = (dishId: string, category: ICat) => {
-		console.log(dishId, category);
-		setActiveCategory(category?.[0]?._id);
-		setSearchOpen(!search);
-		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId));
-	};
+		console.log(dishId, category)
+		setActiveCategory(category?.[0]?._id)
+		setSearchOpen(!search)
+		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId))
+	}
 
 	return (
 		<div className="flex flex-row w-full" ref={panel}>
@@ -146,20 +144,10 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 						{dishData.length > 0 ? (
 							present ? (
 								<div className="">
-									<Link
-										href={`${routePaths.category(businessId)}#${present?._id}`}
-										passHref
-									>
-										<div
-											onClick={() => setSearchOpen(!search)}
-											className="mt-14 "
-										>
-											<p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">
-												{present.name}
-											</p>
-											<p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">
-												Category
-											</p>
+									<Link href={`${routePaths.category(businessId)}#${present?._id}`} passHref>
+										<div onClick={() => setSearchOpen(!search)} className="mt-14 ">
+											<p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">{present.name}</p>
+											<p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">Category</p>
 										</div>
 										<div className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden ">
 											{!!present?.coverImage ? (
@@ -221,7 +209,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 				</Transition>
 			)}
 		</div>
-	);
+	)
 }
 
-export default memo(SearchPanel);
+export default memo(SearchPanel)

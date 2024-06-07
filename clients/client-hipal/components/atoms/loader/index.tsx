@@ -1,16 +1,16 @@
-import { memo } from 'react'
+import { memo } from "react"
 
-function Loader({ type, isSquare }: { type?: 'warning'; isSquare?: boolean }) {
-	let className = ''
-	if (type === 'warning') {
-		className = isSquare ? ' border-t-warning ' : 'progress-warning'
+function Loader({ type, isSquare }: { type?: "warning"; isSquare?: boolean }) {
+	let className = ""
+	if (type === "warning") {
+		className = isSquare ? " border-t-warning " : "progress-warning"
 	} else {
-		className = isSquare ? ' border-t-primary ' : 'progress-primary'
+		className = isSquare ? " border-t-primary " : "progress-primary"
 	}
 
 	if (isSquare) {
 		return (
-			<div className='flex'>
+			<div className="flex">
 				<div
 					className={`rounded-full h-8 w-8 border-4 animate-spin ${className} bg-transparent`}
 				></div>
@@ -19,7 +19,7 @@ function Loader({ type, isSquare }: { type?: 'warning'; isSquare?: boolean }) {
 	}
 
 	return (
-		<div className='flex'>
+		<div className="flex">
 			<progress className={`progress w-48 mx-auto ${className}`}>hello</progress>
 		</div>
 	)

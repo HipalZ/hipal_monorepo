@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { ExtraType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { ExtraType } from '../validators';
 
 const extraSchema = new mongoose.Schema<ExtraType>(
   {
@@ -30,8 +30,8 @@ const extraSchema = new mongoose.Schema<ExtraType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Extra: Model<ExtraType> = mongoose.model<ExtraType>("Extra", extraSchema);
+const Extra: Model<ExtraType> = mongoose.model<ExtraType>('Extra', extraSchema);
 export { Extra };

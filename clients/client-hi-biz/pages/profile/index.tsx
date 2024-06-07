@@ -1,10 +1,10 @@
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import HipeopleLogo from "../../assets/svg/hiBizlogo.svg";
-import React, { useState } from "react";
-import Header from "@/components/molecules/header";
-import { BsChevronLeft } from "react-icons/bs";
-import PopUp from "@/components/atom/popUp";
-import ChangeOwnerPassword from "@/components/atom/changeOwnerPassword";
+import ChangeOwnerPassword from '@/components/atom/changeOwnerPassword';
+import PopUp from '@/components/atom/popUp';
+import Header from '@/components/molecules/header';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import { useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
+import HipeopleLogo from '../../assets/svg/hiBizlogo.svg';
 
 function Profile() {
   const user = useOwnerLogin((s) => s.user);
@@ -20,39 +20,28 @@ function Profile() {
 
   return (
     <div className="relative">
-      <div className="bg-[#f5f5f5] border-b border-[#cacaca] pb-4">
-        <div className="sticky top-0 w-full z-10 bg-[#f5f5f5] pb-4">
-          {" "}
-          <Header
-            leftIcon={<BsChevronLeft />}
-            centerImage={HipeopleLogo}
-            rightImage={HipeopleLogo}
-            isIconBusinessShow={true}
-          />
+      <div className="border-b border-[#cacaca] bg-[#f5f5f5] pb-4">
+        <div className="sticky top-0 z-10 w-full bg-[#f5f5f5] pb-4">
+          {' '}
+          <Header leftIcon={<BsChevronLeft />} centerImage={HipeopleLogo} rightImage={HipeopleLogo} isIconBusinessShow={true} />
         </div>
-        <div className=" m-auto flex flex-col justify-center text-white items-center pt-[5rem]">
-          <div className="h-[4rem] w-[4rem] capitalize text-xl text-center pt-4 rounded-full bg-[#2B354D]">
-            {user.name.charAt(0)}
-          </div>
-          <span className="text-[#2B354D] text-2xl pt-4">{user.name}</span>
-          <span className="text-[#2B354D] font-medium text-base">
-            {user.role}
-          </span>
+        <div className=" m-auto flex flex-col items-center justify-center pt-[5rem] text-white">
+          <div className="h-[4rem] w-[4rem] rounded-full bg-[#2B354D] pt-4 text-center text-xl capitalize">{user.name.charAt(0)}</div>
+          <span className="pt-4 text-2xl text-[#2B354D]">{user.name}</span>
+          <span className="text-base font-medium text-[#2B354D]">{user.role}</span>
         </div>
       </div>
 
       <div>
         <div
           onClick={openModal}
-          className="mx-6 mt-6 on_active_bounce bg-white text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"
+          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
         >
           <div className="flex items-center px-4 py-2">
             <span>Password</span>
           </div>
           <div className="flex items-center justify-between px-4 py-2">
-            <span className="text-sm opacity-60">
-              {password ? password : user?.password}
-            </span>
+            <span className="text-sm opacity-60">{password ? password : user?.password}</span>
             <span className="text-sm font-semibold">Change</span>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface DiscountStore {
   discount: number;
@@ -22,10 +22,10 @@ interface DiscountStore {
 
 const useDiscountStore = create<DiscountStore>((set) => ({
   discount: 0,
-  selectedPaymentMethod: "",
+  selectedPaymentMethod: '',
   duesPersons: [],
   selectedPerson: null,
-  discountDescription: "",
+  discountDescription: '',
   dineInUser: 0,
   multiplePaymentMethods: [],
   tips: 0,
@@ -36,8 +36,7 @@ const useDiscountStore = create<DiscountStore>((set) => ({
   setDiscountDescription: (value) => set({ discountDescription: value }),
   setSelectedPerson: (user) => set({ selectedPerson: user }),
   setDineInUser: (value) => set({ dineInUser: value }),
-  setMultiplePaymentMethods: (methods) =>
-    set({ multiplePaymentMethods: methods }),
+  setMultiplePaymentMethods: (methods) => set({ multiplePaymentMethods: methods }),
   setTips: (value) => set({ tips: value }),
 }));
 

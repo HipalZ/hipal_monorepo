@@ -1,10 +1,10 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react'
+import { ComponentMeta, ComponentStory } from "@storybook/react"
 
-import BackButton from '.'
+import BackButton from "."
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
-	title: 'atoms/Button',
+	title: "atoms/Button",
 	component: BackButton,
 } as ComponentMeta<typeof BackButton>
 
@@ -14,5 +14,5 @@ const Template: ComponentStory<typeof BackButton> = (args) => <BackButton {...ar
 export const main = Template.bind({})
 // More on args: https://storybook.js.org/docs/react/writing-stories/args
 main.args = {
-	onBackURL: 'https://www.google.com/',
+	onBackURL: "https://www.google.com/",
 }

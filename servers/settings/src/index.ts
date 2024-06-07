@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
-import { app } from "./app";
-import { natsWrapper } from "./nats-wrapper";
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { app } from './app';
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const start = async () => {
@@ -43,7 +42,7 @@ const start = async () => {
   // process.on('SIGTERM', () => natsWrapper.client.close());
 
   await mongoose.connect(process.env.MONGO_URL as string);
-  console.log("connected to mongodb");
+  console.log('connected to mongodb');
 
   // if (process.env.NODE_ENV === 'production') {
   // implement any production recommendations
@@ -52,7 +51,7 @@ const start = async () => {
   // }
 
   app.listen(3006, () => {
-    console.log("Listening on port 3006!!");
+    console.log('Listening on port 3006!!');
   });
 };
 

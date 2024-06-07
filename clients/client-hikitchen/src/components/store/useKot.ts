@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { Data } from "../types";
+import { create } from 'zustand';
+import { Data } from '../types';
 
 type KotStore = {
   kotData: Data[];
@@ -21,8 +21,8 @@ export const useKotStore = create<KotStore>((set) => ({
   filterData: [],
   historyData: [],
   newKotCount: 0,
-  updatedFilters: "",
-  filter: "Orders",
+  updatedFilters: '',
+  filter: 'Orders',
 
   setKotData: (data: Data[]) => {
     set({ kotData: data });

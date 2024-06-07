@@ -1,23 +1,23 @@
-import { ICart, ICartDish, ICartExtra, ICartVariant } from '@components/store/useCart'
-import { IBusinessData } from '@components/types/businessData'
-import isEmpty from 'lodash-es/isEmpty'
+import { ICart, ICartDish, ICartExtra, ICartVariant } from "@components/store/useCart"
+import { IBusinessData } from "@components/types/businessData"
+import isEmpty from "lodash-es/isEmpty"
 
 export const getPrice = (price: number | string) => {
 	if (!price || price === 0) {
 		// return 'FREE'
-		return ''
+		return ""
 	}
 
 	return `₹${price}`
 }
 
 export const getTimeIn12HrFormat = (time: string) => {
-	if (!time || !time.includes(':')) return ''
+	if (!time || !time.includes(":")) return ""
 
-	const [hours, minutes] = time.split(':')
+	const [hours, minutes] = time.split(":")
 	const hour = parseInt(hours, 10)
 
-	const amPm = hour >= 12 ? 'PM' : 'AM'
+	const amPm = hour >= 12 ? "PM" : "AM"
 	const hour12 = hour % 12 || 12
 
 	return `${hour12}:${minutes} ${amPm}`

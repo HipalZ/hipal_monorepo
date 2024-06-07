@@ -1,9 +1,7 @@
-import Kitchen from "@/components/templates/kitchen";
+import Kitchen from '@/components/templates/kitchen';
 
 const KitchenPage = () => {
-  return (
-    <Kitchen/>
-  )
+  return <Kitchen />;
 };
 
 export default KitchenPage;

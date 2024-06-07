@@ -1,11 +1,11 @@
-import DiscountDishCard from '@components/molecules/discountDishCard'
-import Section from '@components/molecules/section'
-import { useAllBusiness } from '@components/store/useAllBusiness'
-import { PAGE_TYPES, routePaths } from '@components/utils/routes'
-import { Splide, SplideSlide } from '@splidejs/react-splide'
-import isEmpty from 'lodash-es/isEmpty'
-import { useRouter } from 'next/router'
-import { memo } from 'react'
+import DiscountDishCard from "@components/molecules/discountDishCard"
+import Section from "@components/molecules/section"
+import { useAllBusiness } from "@components/store/useAllBusiness"
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import { Splide, SplideSlide } from "@splidejs/react-splide"
+import isEmpty from "lodash-es/isEmpty"
+import { useRouter } from "next/router"
+import { memo } from "react"
 
 function PopularRestaurant() {
 	const router = useRouter()
@@ -28,30 +28,30 @@ function PopularRestaurant() {
 
 	return (
 		<>
-			<Section title='Uniquely Yours' tag='h3'>
-				<div className=''>
+			<Section title="Uniquely Yours" tag="h3">
+				<div className="">
 					<Splide
-						aria-labelledby='Special offers'
+						aria-labelledby="Special offers"
 						options={{
 							rewind: false,
-							width: '100%',
-							gap: '0.75rem',
-							padding: '1rem',
+							width: "100%",
+							gap: "0.75rem",
+							padding: "1rem",
 							perPage: 2,
 							perMove: 1,
 							autoWidth: true,
 							classes: {
-								pagination: 'splide__pagination hidden',
+								pagination: "splide__pagination hidden",
 							},
 						}}
 					>
-						<div className='hidden splide__arrows'>
-							<button className='splide__arrow splide__arrow--prev'>Prev</button>
-							<button className='splide__arrow splide__arrow--next'>Next</button>
+						<div className="hidden splide__arrows">
+							<button className="splide__arrow splide__arrow--prev">Prev</button>
+							<button className="splide__arrow splide__arrow--next">Next</button>
 						</div>
 
 						{FilterPopularDishes?.map((dishData, key) => (
-							<SplideSlide key={`${key}FilterPopularDishes` + (dishData?._id || '')}>
+							<SplideSlide key={`${key}FilterPopularDishes` + (dishData?._id || "")}>
 								{dishData && (
 									<DiscountDishCard
 										businessId={businessId}

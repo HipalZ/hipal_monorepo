@@ -8,7 +8,7 @@ import { RxCross2 } from 'react-icons/rx'
 import ChoosePortions from '../choosePortions'
 import AddDishToCartButton from '../bottomButton/AddDishToCartButton'
 
-function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategory }) {
+function BottomPanel({ dishData, isActiveParentCategoryName, isActiveParentCategory }) {
 	const { closeBottomPanel, isBottomPanelOpened, openBottomPanel } = useBottomPanel()
 	const validationExtras = useBottomPanel((s) => s.validationExtras)
 	const setBounceButton = useBottomPanel((s) => s.setBounceButton)
@@ -42,7 +42,7 @@ function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategor
 			openBottomPanel,
 			setCart,
 			closeBottomPanel,
-		)(cart?.[dishData?._id]?.variants?.length || 0 )
+		)(cart?.[dishData?._id]?.variants?.length || 0)
 	}
 	const closeModalNothing = (e: any) => {
 		// e.preventDefault()
@@ -95,7 +95,6 @@ function BottomPanel({ dishData,isActiveParentCategoryName,isActiveParentCategor
 												<ExtraWithDishWithSelect dishData={dishData} />
 											</div>
 										</div>
-										
 									</div>
 								</Dialog.Panel>
 							</Transition.Child>

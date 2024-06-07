@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 type Player = {
   name: string;
@@ -8,26 +8,20 @@ type Player = {
 
 export default function Home() {
   const [players, setPlayers] = useState<Player[]>([]);
-  const [newPlayer, setNewPlayer] = useState("");
+  const [newPlayer, setNewPlayer] = useState('');
   const [activePlayer, setActivePlayer] = useState<number | null>(null);
   const [currentBuyIn, setCurrentBuyIn] = useState<number>(0);
-  const [finalAmounts, setFinalAmounts] = useState<{ [key: number]: number }>(
-    {}
-  );
+  const [finalAmounts, setFinalAmounts] = useState<{ [key: number]: number }>({});
 
   const handleAddPlayer = () => {
     if (newPlayer) {
       setPlayers([...players, { name: newPlayer, buyIns: [], finalAmount: 0 }]);
-      setNewPlayer("");
+      setNewPlayer('');
     }
   };
 
   const handleAddBuyIn = (index: number) => {
-    const updatedPlayers = players.map((player, i) =>
-      i === index
-        ? { ...player, buyIns: [...player.buyIns, currentBuyIn] }
-        : player
-    );
+    const updatedPlayers = players.map((player, i) => (i === index ? { ...player, buyIns: [...player.buyIns, currentBuyIn] } : player));
     setPlayers(updatedPlayers);
     setActivePlayer(null);
     setCurrentBuyIn(0);
@@ -62,64 +56,53 @@ export default function Home() {
   };
   const { playerResults, totalBuyIns, totalFinalAmounts, discrepancy } = calculateResults();
 
-// ...
+  // ...
 
   const renderBuyIns = () => {
     return players.map((player, index) => (
       <tr key={index}>
-        <td className="p-2 border">{player.name}</td>
-        <td className="p-2 border">{player.buyIns.join(", ")}</td>
-        <td className="p-2 border">{player.buyIns.length}</td>
+        <td className="border p-2">{player.name}</td>
+        <td className="border p-2">{player.buyIns.join(', ')}</td>
+        <td className="border p-2">{player.buyIns.length}</td>
       </tr>
     ));
   };
 
   return (
-    <div className="container p-4 mx-auto">
+    <div className="container mx-auto p-4">
       <h1 className="mb-4 text-xl font-bold">Poker Game Calculator</h1>
       <div>
         <input
           type="text"
           value={newPlayer}
           onChange={(e) => setNewPlayer(e.target.value)}
-          className="p-2 mr-2 border"
+          className="mr-2 border p-2"
           placeholder="Enter player name"
         />
-        <button
-          onClick={handleAddPlayer}
-          className="p-2 text-white bg-blue-500"
-        >
+        <button onClick={handleAddPlayer} className="bg-blue-500 p-2 text-white">
           Add Player
         </button>
       </div>
 
-      <table className="w-full mt-4 border border-collapse border-black">
+      <table className="mt-4 w-full border-collapse border border-black">
         <thead>
           <tr>
-            <th className="p-2 border">Player</th>
-            <th className="p-2 border">Buy-In</th>
-            <th className="p-2 border">Final Amount</th>
+            <th className="border p-2">Player</th>
+            <th className="border p-2">Buy-In</th>
+            <th className="border p-2">Final Amount</th>
           </tr>
         </thead>
         <tbody className="text-center">
           {players.map((player, index) => (
             <tr key={index}>
-              <td className="p-2 border" onClick={() => setActivePlayer(index)}>
+              <td className="border p-2" onClick={() => setActivePlayer(index)}>
                 {player.name}
               </td>
-              <td className="p-2 border">
+              <td className="border p-2">
                 {activePlayer === index ? (
                   <>
-                    <input
-                      type="number"
-                      value={currentBuyIn}
-                      onChange={(e) => setCurrentBuyIn(Number(e.target.value))}
-                      className="p-2 border"
-                    />
-                    <button
-                      onClick={() => handleAddBuyIn(index)}
-                      className="p-2 ml-2 text-white bg-green-500"
-                    >
+                    <input type="number" value={currentBuyIn} onChange={(e) => setCurrentBuyIn(Number(e.target.value))} className="border p-2" />
+                    <button onClick={() => handleAddBuyIn(index)} className="ml-2 bg-green-500 p-2 text-white">
                       Add
                     </button>
                   </>
@@ -127,14 +110,12 @@ export default function Home() {
                   player.buyIns.reduce((a, b) => a + b, 0)
                 )}
               </td>
-              <td className="p-2 border">
+              <td className="border p-2">
                 <input
                   type="number"
                   value={finalAmounts[index] || 0}
-                  onChange={(e) =>
-                    handleFinalAmountChange(index, Number(e.target.value))
-                  }
-                  className="p-2 border"
+                  onChange={(e) => handleFinalAmountChange(index, Number(e.target.value))}
+                  className="border p-2"
                 />
               </td>
             </tr>
@@ -144,21 +125,18 @@ export default function Home() {
 
       <div className="mt-4">
         <h2 className="text-lg font-semibold">Buy-Ins Overview</h2>
-        <table className="w-full mt-2 border border-collapse">
+        <table className="mt-2 w-full border-collapse border">
           <thead>
             <tr>
-              <th className="p-2 border">Player</th>
-              <th className="p-2 border">Buy-Ins (Time-wise)</th>
-              <th className="p-2 border">Total Buy-Ins</th>
+              <th className="border p-2">Player</th>
+              <th className="border p-2">Buy-Ins (Time-wise)</th>
+              <th className="border p-2">Total Buy-Ins</th>
             </tr>
           </thead>
           <tbody>{renderBuyIns()}</tbody>
         </table>
       </div>
-      <button
-        onClick={() => console.log(calculateResults())}
-        className="p-2 mt-4 text-white bg-blue-500"
-      >
+      <button onClick={() => console.log(calculateResults())} className="mt-4 bg-blue-500 p-2 text-white">
         Calculate Results
       </button>
       <div className="mt-4">
@@ -166,21 +144,15 @@ export default function Home() {
         <ul>
           {playerResults.map((player, index) => (
             <li key={index}>
-              {player.name}: {player.result >= 0 ? "Wins " : "Loses "}
-              {Math.abs(player.result)} (Final Amount: {player.finalAmount},
-              Total Buy-Ins: {player.buyIns.reduce((a, b) => a + b, 0)})
+              {player.name}: {player.result >= 0 ? 'Wins ' : 'Loses '}
+              {Math.abs(player.result)} (Final Amount: {player.finalAmount}, Total Buy-Ins: {player.buyIns.reduce((a, b) => a + b, 0)})
             </li>
           ))}
         </ul>
         <p>Total Buy-Ins: {totalBuyIns}</p>
         <p>Total Final Amounts: {totalFinalAmounts}</p>
         <p>
-          Discrepancy: {discrepancy}{" "}
-          {discrepancy === 0
-            ? "(Balanced)"
-            : discrepancy > 0
-            ? "(Extra)"
-            : "(Shortage)"}
+          Discrepancy: {discrepancy} {discrepancy === 0 ? '(Balanced)' : discrepancy > 0 ? '(Extra)' : '(Shortage)'}
         </p>
       </div>
     </div>

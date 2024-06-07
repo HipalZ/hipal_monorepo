@@ -1,58 +1,55 @@
-import { useLogin } from "@components/store/useLogin";
-import { PAGE_TYPES, routePaths } from "@components/utils/routes";
-import axios from "@utils/axios";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import Welcome from "@assets/otp_image.png";
-import { BiArrowBack, BiEditAlt } from "react-icons/bi";
-import Sunlight from "@assets/Ellipse 1-min.png";
-import Image from "next/image";
-import confetti from "canvas-confetti";
-import Hi_Coin from "@assets/hi-coin.svg";
-import CoinsAnimation from "@components/atoms/coinAnimation";
-import NumberAnimation from "@components/atoms/coinsScroll";
-import useLoyaltyData from "@components/store/useLoyaltyData";
-import useBusinessDetails from "@components/store/useBusinessDetails";
-import HipalLogo from "@assets/hipalNewLogo.svg";
-import HipalWhiteLogo from "@assets/hipalLogoOtp.svg";
+import { useLogin } from "@components/store/useLogin"
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import axios from "@utils/axios"
+import Link from "next/link"
+import { useRouter } from "next/router"
+import { useEffect, useRef, useState } from "react"
+import Welcome from "@assets/otp_image.png"
+import { BiArrowBack, BiEditAlt } from "react-icons/bi"
+import Sunlight from "@assets/Ellipse 1-min.png"
+import Image from "next/image"
+import confetti from "canvas-confetti"
+import Hi_Coin from "@assets/hi-coin.svg"
+import CoinsAnimation from "@components/atoms/coinAnimation"
+import NumberAnimation from "@components/atoms/coinsScroll"
+import useLoyaltyData from "@components/store/useLoyaltyData"
+import useBusinessDetails from "@components/store/useBusinessDetails"
+import HipalLogo from "@assets/hipalNewLogo.svg"
+import HipalWhiteLogo from "@assets/hipalLogoOtp.svg"
 
 function OtpPage() {
-	const [otp, setOtp] = useState(["", "", "", ""]);
-	const [error, setError] = useState("");
-	const { setIsLogin, setUserDetails, userDetails } = useLogin();
-	const [coinZ, setCoinz] = useState(0);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [customerName, setCustomerName] = useState(userDetails.name);
-	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
-	const [logo, setLogo] = useState(businessLogo);
+	const [otp, setOtp] = useState(["", "", "", ""])
+	const [error, setError] = useState("")
+	const { setIsLogin, setUserDetails, userDetails } = useLogin()
+	const [coinZ, setCoinz] = useState(0)
+	const [isModalOpen, setIsModalOpen] = useState(false)
+	const [customerName, setCustomerName] = useState(userDetails.name)
+	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo)
+	const [logo, setLogo] = useState(businessLogo)
 	const inputRefs = [
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
-	];
-	const router = useRouter();
-	const { businessId } = router.query;
-	const sendOtp = useLogin((s) => s.sendOtp);
-	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-	const direction = useLogin((s) => s.direction);
+	]
+	const router = useRouter()
+	const { businessId } = router.query
+	const sendOtp = useLogin((s) => s.sendOtp)
+	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
+	const direction = useLogin((s) => s.direction)
 
-	const handleOtpChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-		index: number,
-	) => {
-		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return;
+	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
 
-		const newOtp = [...otp];
-		newOtp[index] = e.target.value;
+		const newOtp = [...otp]
+		newOtp[index] = e.target.value
 
 		if (index < inputRefs.length - 1 && e.target.value !== "") {
-			inputRefs[index + 1]?.current?.focus();
+			inputRefs[index + 1]?.current?.focus()
 		}
 
-		setOtp(newOtp);
-	};
+		setOtp(newOtp)
+	}
 
 	const paymentCustomer = async (data: any) => {
 		try {
@@ -64,14 +61,14 @@ function OtpPage() {
 					businessId: businessId,
 					name: data.name,
 				},
-			};
-			await axios(config);
+			}
+			await axios(config)
 		} catch (err) {
-			console.log(err);
+			console.log(err)
 		}
-	};
+	}
 	function randomInRange(min, max) {
-		return Math.random() * (max - min) + min;
+		return Math.random() * (max - min) + min
 	}
 
 	// Function to trigger a single blast
@@ -81,14 +78,14 @@ function OtpPage() {
 			spread: randomInRange(50, 70),
 			particleCount: randomInRange(50, 100),
 			origin: { y: 0.6 },
-		});
+		})
 	}
 
 	const verifyOtp = async () => {
-		const fullOtp = otp.join("");
+		const fullOtp = otp.join("")
 		if (fullOtp.length !== 4) {
-			setError("Please enter the complete OTP.");
-			return;
+			setError("Please enter the complete OTP.")
+			return
 		}
 
 		try {
@@ -104,74 +101,74 @@ function OtpPage() {
 					signUpBonus: signUpBonus,
 					name: customerName || userDetails.name,
 				},
-			};
-
-			const response = await axios(config);
-			if (response.status === 200) {
-				const { _id, ...otherData } = response.data;
-				setUserDetails({ id: _id, ...otherData });
-				await paymentCustomer(response.data);
-				setIsLogin(true);
-				console.log(response.data);
-				if (response.data?.reward > 0 && response.data?.count === 1) {
-					setCoinz(response.data.reward);
-					setIsModalOpen(true);
-
-					triggerConfettiBlast();
-					setTimeout(triggerConfettiBlast, 1000);
-					setTimeout(triggerConfettiBlast, 2000);
-					return;
-				}
-				goNext();
 			}
 
-			setOtp(["", "", "", ""]);
+			const response = await axios(config)
+			if (response.status === 200) {
+				const { _id, ...otherData } = response.data
+				setUserDetails({ id: _id, ...otherData })
+				await paymentCustomer(response.data)
+				setIsLogin(true)
+				console.log(response.data)
+				if (response.data?.reward > 0 && response.data?.count === 1) {
+					setCoinz(response.data.reward)
+					setIsModalOpen(true)
+
+					triggerConfettiBlast()
+					setTimeout(triggerConfettiBlast, 1000)
+					setTimeout(triggerConfettiBlast, 2000)
+					return
+				}
+				goNext()
+			}
+
+			setOtp(["", "", "", ""])
 			if (inputRefs[0].current) {
-				inputRefs[0].current.focus();
+				inputRefs[0].current.focus()
 			}
 		} catch (error) {
-			setError("Incorrect OTP. Please try again.");
-			setOtp(["", "", "", ""]);
+			setError("Incorrect OTP. Please try again.")
+			setOtp(["", "", "", ""])
 			if (inputRefs[0].current) {
-				inputRefs[0].current.focus();
+				inputRefs[0].current.focus()
 			}
 		}
-	};
+	}
 
 	const closeModal = () => {
-		setIsModalOpen(false);
-	};
+		setIsModalOpen(false)
+	}
 
 	const goNext = () => {
 		if (direction === "loyalty") {
-			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`));
+			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
 		} else {
-			router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`));
+			router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`))
 		}
-	};
+	}
 
 	const goToExplore = () => {
-		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`);
-	};
+		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`)
+	}
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		verifyOtp();
-	};
+		e.preventDefault()
+		verifyOtp()
+	}
 
 	useEffect(() => {
-		let audio;
+		let audio
 		if (isModalOpen) {
-			audio = new Audio("/sounds/Money.mp3");
-			audio.play();
+			audio = new Audio("/sounds/Money.mp3")
+			audio.play()
 		}
 		return () => {
 			if (audio) {
-				audio.pause();
-				audio.currentTime = 0;
+				audio.pause()
+				audio.currentTime = 0
 			}
-		};
-	}, [isModalOpen]);
+		}
+	}, [isModalOpen])
 
 	return (
 		<section className="relative bg-black">
@@ -225,9 +222,7 @@ function OtpPage() {
 					{userDetails.name === "" ? (
 						<>
 							{" "}
-							<div className="!-mb-4 text-sm font-semibold">
-								Whatz your name ?
-							</div>
+							<div className="!-mb-4 text-sm font-semibold">Whatz your name ?</div>
 							<input
 								onChange={(e) => setCustomerName(e.target.value)}
 								value={customerName}
@@ -241,9 +236,7 @@ function OtpPage() {
 						</>
 					) : null}
 
-					<div className="!-mb-2 text-sm font-semibold">
-						Check your phone for OTP
-					</div>
+					<div className="!-mb-2 text-sm font-semibold">Check your phone for OTP</div>
 					<section className="flex">
 						{otp.map((_, index) => (
 							<input
@@ -268,19 +261,16 @@ function OtpPage() {
 							</div>
 						</div>
 					)}
-						<Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`}>
-					<article className="flex items-center !mb-2 !mt-4">
-						<small>
-							Sent to{" "}
-							<span className="text-[#3E3CFF] underline">
-								{userDetails.phone}
-							</span>{" "}
-						</small>
+					<Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`}>
+						<article className="flex items-center !mb-2 !mt-4">
+							<small>
+								Sent to <span className="text-[#3E3CFF] underline">{userDetails.phone}</span>{" "}
+							</small>
 							<span className="cursor-pointer text-[#3E3CFF]">
 								<BiEditAlt />
 							</span>
-					</article>
-						</Link>
+						</article>
+					</Link>
 
 					<button type="submit" className="w-full bg-black rounded-full btn">
 						{userDetails.name !== "" ? "sign in" : "Sign up"}
@@ -317,22 +307,10 @@ function OtpPage() {
 					</section>
 					<section className="absolute inset-0 flex items-center justify-center">
 						<section className="absolute rotate-[-30deg] left-6 top-[12vh]">
-							<Image
-								className="zoomIn"
-								width={76}
-								height={76}
-								src={Hi_Coin}
-								alt="Hi Coin"
-							/>
+							<Image className="zoomIn" width={76} height={76} src={Hi_Coin} alt="Hi Coin" />
 						</section>
 						<section className="absolute rotate-45 right-6 top-[20vh] z-20">
-							<Image
-								className="zoomIn"
-								width={76}
-								height={76}
-								src={Hi_Coin}
-								alt="Hi Coin"
-							/>
+							<Image className="zoomIn" width={76} height={76} src={Hi_Coin} alt="Hi Coin" />
 						</section>
 					</section>
 
@@ -347,15 +325,11 @@ function OtpPage() {
 						<center className="text-xl font-bold uppercase text-[#8D0F16] mt-6">
 							Congratulations!!
 						</center>
-						<center className="text-lg font-medium uppercase text-[#8D0F16] mt-2">
-							you got
-						</center>
+						<center className="text-lg font-medium uppercase text-[#8D0F16] mt-2">you got</center>
 						<div className="loyalty_card_gradient" />
 						<div className="loyalty_card_gradient2" />
 						{coinZ > 0 && <NumberAnimation number={coinZ} />}
-						<center className="text-xl font-medium uppercase text-[#8D0F16]">
-							CoinZ
-						</center>
+						<center className="text-xl font-medium uppercase text-[#8D0F16]">CoinZ</center>
 						<button
 							className="relative z-20 w-full px-4 py-2 mt-6 text-white bg-[#015845] transition-all duration-300 rounded-full shadow-lg"
 							onClick={goNext}
@@ -366,7 +340,7 @@ function OtpPage() {
 				</section>
 			)}
 		</section>
-	);
+	)
 }
 
-export default OtpPage;
+export default OtpPage

@@ -1,16 +1,15 @@
-import AddPeopleDine from "@/components/atoms/addPeopleDineIn";
-import DayOutPopup from "@/components/atoms/dayoutPopup";
-import { useTable } from "@/components/store/useTable";
-import { PAGE_TYPES, newRoutes, routePaths } from "@/components/utils/routes";
-import axios from "@/axios";
-import { useRouter } from "next/router";
-import React from "react";
-import { useState } from "react";
-import { HiArrowLeft } from "react-icons/hi";
-import { toast } from "react-toastify";
-import AddTempDish from "@/components/molecules/addTempItem";
+import axios from '@/axios';
+import AddPeopleDine from '@/components/atoms/addPeopleDineIn';
+import DayOutPopup from '@/components/atoms/dayoutPopup';
+import AddTempDish from '@/components/molecules/addTempItem';
+import { useTable } from '@/components/store/useTable';
+import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { HiArrowLeft } from 'react-icons/hi';
+import { toast } from 'react-toastify';
 
-export default function KickUser({setCurrentView}) {
+export default function KickUser({ setCurrentView }) {
   const router = useRouter();
   const { businessId, zoneId, tableId } = router.query as {
     businessId: string;
@@ -34,9 +33,7 @@ export default function KickUser({setCurrentView}) {
     setIsModalOpen(false);
   };
   const handleKickUser = async () => {
-    const res = await axios.put(
-      `/v1/zones/${zoneId}/tables/${tableId}/KickOutTable`
-    );
+    const res = await axios.put(`/v1/zones/${zoneId}/tables/${tableId}/KickOutTable`);
     if (res.data) {
       router.push(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
     }
@@ -46,224 +43,188 @@ export default function KickUser({setCurrentView}) {
 
   const reserveUser = async () => {
     try {
-      const url = `/v1/zones/updateTableReserve/table?tableId=${tableId}${tableData?.status?.toLowerCase() === "reserved" ? "&update=true" : ""}`;
-  
+      const url = `/v1/zones/updateTableReserve/table?tableId=${tableId}${tableData?.status?.toLowerCase() === 'reserved' ? '&update=true' : ''}`;
+
       const res = await axios.put(url);
       if (res.data) {
         setTableData(res.data);
         router.push(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
       }
     } catch (error) {
-      console.error("An error occurred while reserving the table:", error);
-      toast.error("An error occurred while reserving the table");
+      console.error('An error occurred while reserving the table:', error);
+      toast.error('An error occurred while reserving the table');
     }
   };
-
-
 
   const addPeople = () => {
     setIsPeopleAdd(true);
   };
 
-  const [isUnmergeChecked, setIsUnmergeChecked] = useState(false)
+  const [isUnmergeChecked, setIsUnmergeChecked] = useState(false);
   const showPopup = () => {
-    if (tableData?.mergeTables?.length === 0) return toast.error("Table is not merged")
-    setIsMerge(true)
-  }
+    if (tableData?.mergeTables?.length === 0) return toast.error('Table is not merged');
+    setIsMerge(true);
+  };
   const closePopUp = () => {
-    setIsMerge(false)
-  }
+    setIsMerge(false);
+  };
   async function unMergeTable() {
-    if (tableData?.mergeTables?.length === 0) return toast.error("Table is not merged")
+    if (tableData?.mergeTables?.length === 0) return toast.error('Table is not merged');
     if (tableData?.status === 'empty') {
       try {
         let config = {
-          method: "put",
-          url: "/v1/zones/:zoneId/settleMergeTables",
+          method: 'put',
+          url: '/v1/zones/:zoneId/settleMergeTables',
           data: {
             mergeTables: tableData?.mergeTables,
           },
         };
         const res = await axios(config);
         if (res.status === 200) {
-          toast.success("Table Unmerged Successfully");
+          toast.success('Table Unmerged Successfully');
           setTableData({
             ...tableData,
             mergeTables: [],
             isMerge: false,
-            hierarchy: "",
-            parentTableId: "",
-            parentZoneId: "",
+            hierarchy: '',
+            parentTableId: '',
+            parentZoneId: '',
           });
           setIsMerge(false);
-          setCurrentView('pos')
+          setCurrentView('pos');
         }
-      } catch (err) { }
+      } catch (err) {}
     } else {
-      return toast.error("Table is not empty")
+      return toast.error('Table is not empty');
     }
   }
   return (
-    <div className="bg-secondary min-h-screen relative pb-[5rem]">
-      <div className="sticky z-20 top-0 bg-secondary flex items-center ml-[1.5rem] pt-[1.5rem] ">
-      
-          <HiArrowLeft onClick={()=>setCurrentView('pos')} className="mr-[1.5rem] text-2xl" />
-        
-        <div className="mr-4 text-xl font-bold capitalize text-base-content">
-          {tableData?.name}
-        </div>
+    <div className="bg-secondary relative min-h-screen pb-[5rem]">
+      <div className="bg-secondary sticky top-0 z-20 ml-[1.5rem] flex items-center pt-[1.5rem] ">
+        <HiArrowLeft onClick={() => setCurrentView('pos')} className="mr-[1.5rem] text-2xl" />
+
+        <div className="text-base-content mr-4 text-xl font-bold capitalize">{tableData?.name}</div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <div className="flex justify-between px-6 py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="font-[500] capitalize text-base-content">HICODE</div>
-          <div className="font-medium text-right capitalize text-base-content/40">
-            {tableData?.hiCode}
-          </div>
+        <div className="bg-base-100 mx-6 mt-6 flex justify-between rounded-2xl px-6 py-6">
+          <div className="text-base-content font-[500] capitalize">HICODE</div>
+          <div className="text-base-content/40 text-right font-medium capitalize">{tableData?.hiCode}</div>
         </div>
-        <div className="flex items-center justify-between py-4 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="ml-6 font-medium text-base-content">
-            Add people dining?
-          </div>
-          <div className="mt-2 mr-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" value="" className="sr-only peer" />
+        <div className="bg-base-100 mx-6 mt-6 flex items-center justify-between rounded-2xl py-4">
+          <div className="text-base-content ml-6 font-medium">Add people dining?</div>
+          <div className="mr-6 mt-2">
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" value="" className="peer sr-only" />
 
               <div
                 onClick={addPeople}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
+                className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
               ></div>
             </label>
           </div>
         </div>
-        <div
-          onClick={() => setTempDishModal(true)}
-          className="flex items-center justify-between py-4 mx-6 mt-6 bg-base-100 rounded-2xl"
-        >
-          <div className="ml-6 font-medium text-base-content">Add temp dish</div>
+        <div onClick={() => setTempDishModal(true)} className="bg-base-100 mx-6 mt-6 flex items-center justify-between rounded-2xl py-4">
+          <div className="text-base-content ml-6 font-medium">Add temp dish</div>
         </div>
 
-        <div className="flex items-center justify-between py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="ml-6 font-medium text-base-content">Switch tables?</div>
-          <div className="mt-2 mr-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" value="" className="sr-only peer" />
+        <div className="bg-base-100 mx-6 mt-6 flex items-center justify-between rounded-2xl py-6">
+          <div className="text-base-content ml-6 font-medium">Switch tables?</div>
+          <div className="mr-6 mt-2">
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" value="" className="peer sr-only" />
 
               <div
-                onClick={()=>setCurrentView('switch')}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
+                onClick={() => setCurrentView('switch')}
+                className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
               ></div>
             </label>
           </div>
         </div>
-        <div className="flex justify-between py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="ml-6 font-medium text-base-content">
+        <div className="bg-base-100 mx-6 mt-6 flex justify-between rounded-2xl py-6">
+          <div className="text-base-content ml-6 font-medium">
             Reserve the table?
-            <div className="mt-2 text-sm text-base-content/40">
-              Blocks others to use table
-            </div>
+            <div className="text-base-content/40 mt-2 text-sm">Blocks others to use table</div>
           </div>
-          <div className="mt-4 mr-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                value=""
-                className="sr-only peer"
-                checked={
-                  tableData?.status?.toLowerCase() === "reserved" ? true : false
-                }
-              />
+          <div className="mr-6 mt-4">
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" value="" className="peer sr-only" checked={tableData?.status?.toLowerCase() === 'reserved' ? true : false} />
 
               <div
                 onClick={reserveUser}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
+                className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
               ></div>
             </label>
           </div>
         </div>
-        <div className="flex justify-between px-6 py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="font-[500] capitalize text-base-content">
+        <div className="bg-base-100 mx-6 mt-6 flex justify-between rounded-2xl px-6 py-6">
+          <div className="text-base-content font-[500] capitalize">
             kick User
-            <div className="mt-2 text-sm text-base-content/40">
-              Remove the User from the table
-            </div>
+            <div className="text-base-content/40 mt-2 text-sm">Remove the User from the table</div>
           </div>
 
           <div className="mt-4">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                value=""
-                className="sr-only peer"
-                checked={userKicked}
-              />
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" value="" className="peer sr-only" checked={userKicked} />
               <div
                 onClick={openModal}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
+                className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
               ></div>
             </label>
           </div>
         </div>
-        <div className="flex items-center justify-between py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="ml-6 font-medium text-base-content">Merge Tables?</div>
-          <div className="mt-2 mr-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" disabled={tableData?.isMerge} className="sr-only peer" />
+        <div className="bg-base-100 mx-6 mt-6 flex items-center justify-between rounded-2xl py-6">
+          <div className="text-base-content ml-6 font-medium">Merge Tables?</div>
+          <div className="mr-6 mt-2">
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" disabled={tableData?.isMerge} className="peer sr-only" />
               <div
-                onClick={()=>setCurrentView('merge')}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
+                onClick={() => setCurrentView('merge')}
+                className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
               ></div>
             </label>
           </div>
         </div>
-        {tableData?.status === 'empty' && <div className="flex items-center justify-between py-6 mx-6 mt-6 bg-base-100 rounded-2xl">
-          <div className="ml-6 font-medium text-base-content">UnMerge Tables?</div>
-          <div className="mt-2 mr-6">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" disabled={!tableData?.isMerge} checked={isUnmergeChecked} onChange={() => setIsUnmergeChecked(!isUnmergeChecked)} />
-              <div
-                onClick={showPopup}
-                className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#F04B4B]"
-              ></div>
-            </label>
+        {tableData?.status === 'empty' && (
+          <div className="bg-base-100 mx-6 mt-6 flex items-center justify-between rounded-2xl py-6">
+            <div className="text-base-content ml-6 font-medium">UnMerge Tables?</div>
+            <div className="mr-6 mt-2">
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  disabled={!tableData?.isMerge}
+                  checked={isUnmergeChecked}
+                  onChange={() => setIsUnmergeChecked(!isUnmergeChecked)}
+                />
+                <div
+                  onClick={showPopup}
+                  className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#F04B4B] peer-checked:after:translate-x-full peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                ></div>
+              </label>
+            </div>
           </div>
-        </div>}
+        )}
       </div>
       <DayOutPopup show={isModalOpen} onClose={closeModal}>
-        <div className="mt-4 ml-4 text-xl font-bold capitalize text-base-content">
-          {tableData?.name}
-        </div>
-        <div className="mt-4 ml-4 font-semibold">
-          Do you want to kick the user?
-        </div>
-        <div className="flex justify-between mx-12 mt-6 pb-9">
+        <div className="text-base-content ml-4 mt-4 text-xl font-bold capitalize">{tableData?.name}</div>
+        <div className="ml-4 mt-4 font-semibold">Do you want to kick the user?</div>
+        <div className="mx-12 mt-6 flex justify-between pb-9">
           <span onClick={closeModal} className="text-sm">
             Cancel
           </span>
-          <button
-          type="button"
-            onClick={handleKickUser}
-            className="px-6 py-2 -mr-6 text-sm bg-primary text-base-100 rounded-3xl"
-          >
+          <button type="button" onClick={handleKickUser} className="bg-primary text-base-100 -mr-6 rounded-3xl px-6 py-2 text-sm">
             Kick Out
           </button>
         </div>
       </DayOutPopup>
       <DayOutPopup show={isMerge} onClose={closePopUp}>
-        <div className="mt-4 ml-4 text-xl font-bold capitalize text-base-content">
-          {tableData?.name}
-        </div>
-        <div className="mt-2 ml-4 font-semibold">
-          Do you want to Unmerge the tables?
-        </div>
-        <div className="flex justify-between pb-4 mx-4 mt-6">
-          <div onClick={closePopUp} className="w-[30%] px-6 py-2 text-sm bg-red-500 text-base-100 rounded-3xl text-center">
+        <div className="text-base-content ml-4 mt-4 text-xl font-bold capitalize">{tableData?.name}</div>
+        <div className="ml-4 mt-2 font-semibold">Do you want to Unmerge the tables?</div>
+        <div className="mx-4 mt-6 flex justify-between pb-4">
+          <div onClick={closePopUp} className="text-base-100 w-[30%] rounded-3xl bg-red-500 px-6 py-2 text-center text-sm">
             Cancel
           </div>
-          <button
-          type="button"
-            onClick={unMergeTable}
-            className="w-[50%] px-6 py-2 text-sm bg-primary text-base-100 rounded-3xl"
-          >
+          <button type="button" onClick={unMergeTable} className="bg-primary text-base-100 w-[50%] rounded-3xl px-6 py-2 text-sm">
             Un Merge
           </button>
         </div>

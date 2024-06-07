@@ -1,22 +1,12 @@
-import express, { Request, Response } from "express";
+import { Table, Zone } from '@hi/db-models';
+import express, { Request, Response } from 'express';
 const router = express.Router();
-import { Zone, Table } from "@hi/db-models";
 
 router.post(
-  "/v1/zones",
+  '/v1/zones',
 
   async (req: Request, res: Response) => {
-    const {
-      businessId,
-      zoneName,
-      zoneType,
-      startTime,
-      endTime,
-      staff,
-      tables,
-      Occupied,
-      charges,
-    } = req.body;
+    const { businessId, zoneName, zoneType, startTime, endTime, staff, tables, Occupied, charges } = req.body;
 
     const zone = await Zone.create({
       businessId,
@@ -31,11 +21,11 @@ router.post(
     });
 
     res.status(201).send(zone);
-  }
+  },
 );
 
 router.post(
-  "/v1/zones/:zoneId/tables",
+  '/v1/zones/:zoneId/tables',
 
   async (req: Request, res: Response) => {
     try {
@@ -59,10 +49,7 @@ router.post(
       } = req.body;
       const { zoneId } = req.params;
       const existingTableName = await Table.findOne({ name, zoneId });
-      if (existingTableName)
-        return res
-          .status(400)
-          .send({ status: false, message: "TableName must be unique ...!" });
+      if (existingTableName) return res.status(400).send({ status: false, message: 'TableName must be unique ...!' });
       const zone = await Zone.findById(zoneId);
 
       for (let i = 0; i < staff?.length; i++) {
@@ -100,11 +87,11 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/zones/:zoneId/bulkTables",
+  '/v1/zones/:zoneId/bulkTables',
 
   async (req: Request, res: Response) => {
     try {
@@ -116,10 +103,7 @@ router.post(
 
         let name: any = tables[i]?.name;
         const existingTableName = await Table.findOne({ name, zoneId });
-        if (existingTableName)
-          return res
-            .status(400)
-            .send({ status: false, message: "TableName must be unique ...!" });
+        if (existingTableName) return res.status(400).send({ status: false, message: 'TableName must be unique ...!' });
         const zone = await Zone.findById(zoneId);
 
         if (zone) {
@@ -142,7 +126,7 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 export { router as createZoneRouter };

@@ -1,24 +1,24 @@
-import isEmpty from "lodash-es/isEmpty";
-import { ICartDish, ICartExtra, ICart, ICartVariant } from "../store/useCart";
-import { IBusinessData, IKot, IStatus } from "../types/hiTableData";
-import axios from "@/axios";
+import axios from '@/axios';
+import isEmpty from 'lodash-es/isEmpty';
+import { ICart, ICartDish, ICartExtra, ICartVariant } from '../store/useCart';
+import { IBusinessData, IStatus } from '../types/hiTableData';
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
     // return 'FREE'
-    return "";
+    return '';
   }
 
   return `₹${price}`;
 };
 
 export const getTimeIn12HrFormat = (time: string) => {
-  if (!time || !time.includes(":")) return "";
+  if (!time || !time.includes(':')) return '';
 
-  const [hours, minutes] = time.split(":");
+  const [hours, minutes] = time.split(':');
   const hour = parseInt(hours, 10);
 
-  const amPm = hour >= 12 ? "PM" : "AM";
+  const amPm = hour >= 12 ? 'PM' : 'AM';
   const hour12 = hour % 12 || 12;
 
   return `${hour12}:${minutes} ${amPm}`;
@@ -35,10 +35,7 @@ export const getPriceOfExtra = (extra: ICartExtra) => {
   return extraPrice;
 };
 
-export function getDishPriceByVarient(
-  variant: ICartVariant,
-  cartDish: ICartDish
-) {
+export function getDishPriceByVarient(variant: ICartVariant, cartDish: ICartDish) {
   const dishPrice = cartDish?.dishData?.price;
   const { extra } = variant;
   let price = 0;
@@ -51,9 +48,7 @@ export function getDishPriceByVarient(
 
 export const getDishPrice = (cartDish: ICartDish) => {
   let dishPrice = 0;
-  cartDish.variants.map(
-    (variant) => (dishPrice += getDishPriceByVarient(variant, cartDish))
-  );
+  cartDish.variants.map((variant) => (dishPrice += getDishPriceByVarient(variant, cartDish)));
   return dishPrice;
 };
 
@@ -75,11 +70,7 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
     let dishPriceByVariants = 0;
     const cartDish = cart[dishId];
 
-    if (
-      cartDish?.variants?.length > 0 &&
-      Object.keys(cartDish?.variants?.[0]?.extra || {})?.length > 0 &&
-      cartDish?.variants?.[0]?.portion
-    ) {
+    if (cartDish?.variants?.length > 0 && Object.keys(cartDish?.variants?.[0]?.extra || {})?.length > 0 && cartDish?.variants?.[0]?.portion) {
       cart?.[dishId]?.variants?.forEach((variant) => {
         const { portion, extra } = variant;
         if (isEmpty(portion) && isEmpty(extra)) {
@@ -97,20 +88,12 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
       dishPriceByVariants = cartDish?.variants?.length || 1;
     }
 
-    total +=
-      dishPriceByVariants *
-      (data?.dishesData?.find((d) => d.id === dishId)?.price || 1);
+    total += dishPriceByVariants * (data?.dishesData?.find((d) => d.id === dishId)?.price || 1);
   });
   return total;
 }
 
-export const addInstruction = (
-  cart,
-  tableId,
-  dishId,
-  variantId,
-  instruction
-) => {
+export const addInstruction = (cart, tableId, dishId, variantId, instruction) => {
   // Check if the table exists in the cart
   if (!cart[tableId]) {
     console.warn(`Table with ID ${tableId} not found in cart`);
@@ -168,7 +151,7 @@ export const getCompletedTableApi = async (businessId: string) => {
     const res = await axios.get(url);
     return res.data;
   } catch (error) {
-    console.error("Error fetching Table report:", error);
+    console.error('Error fetching Table report:', error);
   }
 };
 
@@ -227,23 +210,23 @@ export const getUpdatedCart = (kot: IStatus, isDeleted: boolean) => {
 export function timestampToTime(timestamp) {
   const date = new Date(timestamp * 1000);
   const hours = date.getHours();
-  const minutes = "0" + date.getMinutes();
-  const seconds = "0" + date.getSeconds();
+  const minutes = '0' + date.getMinutes();
+  const seconds = '0' + date.getSeconds();
 
   // Will display time in HH:MM:SS format
-  const formattedTime = hours + ":" + minutes.substr(-2);
+  const formattedTime = hours + ':' + minutes.substr(-2);
 
   return formattedTime;
 }
 
 export const cartToKots = (
   cart,
-  businessId:string,
-  tableId:string,
-  zoneId:string,
-  tableName:string,
-  customerName:string,
-  customerPhone:string
+  businessId: string,
+  tableId: string,
+  zoneId: string,
+  tableName: string,
+  customerName: string,
+  customerPhone: string,
 ) => {
   const kotArray = [];
   for (const dish of Object.values(cart)) {
@@ -256,23 +239,22 @@ export const cartToKots = (
         kitchenId: dish?.dishData?.kitchenId,
         zoneId: zoneId,
         tableId: tableId,
-        staffId: "5",
+        staffId: '5',
         dish: {
           dishId: dish?.dishId,
           name: dish?.dishData?.name,
           price: dish?.dishData?.price,
           qty: 1,
-          comments: "spicy",
+          comments: 'spicy',
           extras,
           portions,
         },
         dishType: dish?.dishData?.dishType,
-        category:
-          dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
+        category: dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
         customerName: customerName,
         customerPhone: customerPhone,
         instructions: variant?.instruction,
-        dishStatus: "cooking",
+        dishStatus: 'cooking',
         tableName: tableName,
         avgTime: dish?.dishData?.avgTime,
         taxes: dish?.dishData?.taxes,

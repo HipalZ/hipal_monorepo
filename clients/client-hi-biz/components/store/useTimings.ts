@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 type State = {
   inTime: string;
@@ -24,16 +24,16 @@ type State = {
 };
 
 const useTimings = create<State>((set) => ({
-  inTime: "",
-  outTime: "",
+  inTime: '',
+  outTime: '',
   timeStampStart: 0,
   timeStampEnd: 0,
-  dayIn: "",
-  dayOut: "",
-  pickDate: "",
-  status: "",
-  rating: "",
-  selectedRange: "today",
+  dayIn: '',
+  dayOut: '',
+  pickDate: '',
+  status: '',
+  rating: '',
+  selectedRange: 'today',
   setSelectedRange: (selectedRange) => set({ selectedRange }),
   setInTime: (inTime) => set({ inTime }),
   setOutTime: (outTime) => set({ outTime }),

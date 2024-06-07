@@ -1,4 +1,4 @@
-import axios from '@utils/axios'
+import axios from "@utils/axios"
 
 export default function Slug({ context }) {
 	return <div>Wait</div>
@@ -6,16 +6,14 @@ export default function Slug({ context }) {
 
 export async function getServerSideProps(context) {
 	try {
-		const res = await axios.get(
-			`/v1/businesses/n/${context.query.customLink}`,
-		)
+		const res = await axios.get(`/v1/businesses/n/${context.query.customLink}`)
 		const data = await res.data
 		const businessId = await data.data.businessId
 		console.log(businessId)
 
 		return {
 			redirect: {
-				destination: `/r/${businessId || ''}/explore`,
+				destination: `/r/${businessId || ""}/explore`,
 				permanent: true,
 			},
 		}
@@ -23,7 +21,7 @@ export async function getServerSideProps(context) {
 		console.log(e)
 		return {
 			redirect: {
-				destination: '/',
+				destination: "/",
 				permanent: true,
 			},
 		}

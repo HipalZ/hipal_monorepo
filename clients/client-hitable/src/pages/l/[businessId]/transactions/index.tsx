@@ -1,22 +1,19 @@
-import Image from "next/image";
-import React, { memo, useEffect, useState } from "react";
-import { MdPerson } from "react-icons/md";
-import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
-import { HiArrowLeft } from "react-icons/hi";
-import { useRouter } from "next/router";
-import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
-import { Disclosure } from "@headlessui/react";
-import { AiFillCaretDown } from "react-icons/ai";
-import PopUp from "@/components/atoms/popUp";
-import LoyaltyCoinsUsage from "@/components/molecules/loyaltyCoinsUsage";
-import {
-  type ISingleUserHistory,
-  useUsersHistory,
-} from "@/components/store/useUsersHistory";
-import moment from "moment";
-import { BsFillCaretLeftFill, BsFillCaretRightFill } from "react-icons/bs";
-import { useLoyaltyDatas } from "@/components/store/useLoyaltyDatas";
-import Logout from "@/components/atoms/logout";
+import HiPalLogo from '@/assets/svg/hipalLogoNew.svg';
+import Logout from '@/components/atoms/logout';
+import PopUp from '@/components/atoms/popUp';
+import LoyaltyCoinsUsage from '@/components/molecules/loyaltyCoinsUsage';
+import { useLoyaltyDatas } from '@/components/store/useLoyaltyDatas';
+import { useUsersHistory, type ISingleUserHistory } from '@/components/store/useUsersHistory';
+import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
+import { Disclosure } from '@headlessui/react';
+import moment from 'moment';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+import { memo, useEffect, useState } from 'react';
+import { AiFillCaretDown } from 'react-icons/ai';
+import { BsFillCaretLeftFill, BsFillCaretRightFill } from 'react-icons/bs';
+import { HiArrowLeft } from 'react-icons/hi';
+import { MdPerson } from 'react-icons/md';
 
 const Transactions = () => {
   const router = useRouter();
@@ -42,7 +39,7 @@ const Transactions = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
-  
+
   useEffect(() => {
     if (singleUserHistory === null) {
       router.push(singleRoute[PAGE_TYPES.LOYALTY](businessId));
@@ -52,7 +49,7 @@ const Transactions = () => {
   }, []);
 
   return (
-    <div className="min-h-screen px-6 pb-20 bg-secondary/50">
+    <div className="bg-secondary/50 min-h-screen px-6 pb-20">
       <div className="flex justify-between pt-[2rem]">
         <HiArrowLeft onClick={handleTableClick} className="text-2xl" />
         <Image width={68} height={25} src={HiPalLogo} alt="Hi Table Logo" />
@@ -60,97 +57,65 @@ const Transactions = () => {
           <Logout />
         </div>
       </div>
-      <div className="flex items-start mt-6">
-        <div className="mr-6 my-[1rem] flex justify-start items-center">
-          <div className="capitalize bg-blue-800 text-base-100 text-xl flex justify-center items-center rounded-full border w-[70px] h-[70px]">
-            {singleUserHist?.userName?.split("")[0] || "U"}
+      <div className="mt-6 flex items-start">
+        <div className="my-[1rem] mr-6 flex items-center justify-start">
+          <div className="text-base-100 flex h-[70px] w-[70px] items-center justify-center rounded-full border bg-blue-800 text-xl capitalize">
+            {singleUserHist?.userName?.split('')[0] || 'U'}
           </div>
         </div>
         <div className="my-[1rem]">
-          <h1 className="capitalize text-[#2C2C2C] text-base font-semibold mt-2">
-            {singleUserHist?.userName || singleUserHist?.userPhone}
-          </h1>
-          <p className="text-[#3E5743] text-base font-[500]">
-            Coins-{singleUserHist?.totalReward}
-          </p>
+          <h1 className="mt-2 text-base font-semibold capitalize text-[#2C2C2C]">{singleUserHist?.userName || singleUserHist?.userPhone}</h1>
+          <p className="text-base font-[500] text-[#3E5743]">Coins-{singleUserHist?.totalReward}</p>
         </div>
       </div>
-      <h1 className="text-[#2C2C2C] text-base font-bold">Transactions</h1>
+      <h1 className="text-base font-bold text-[#2C2C2C]">Transactions</h1>
       <div className="w-full space-y-4">
-        {items && items?.length>0 ?
-            items?.slice(
-              (currentPage - 1) * itemsPerPage,
-              currentPage * itemsPerPage
-            )
-            .map((item) => (
+        {items && items?.length > 0
+          ? items?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => (
               <Disclosure key={item.id}>
                 {({ open }) => (
                   <>
                     <Disclosure>
                       {({ open }) => (
                         <>
-                          <div className="bg-base-100 border border-[#cacaca] rounded-xl mt-4">
+                          <div className="bg-base-100 mt-4 rounded-xl border border-[#cacaca]">
                             <Disclosure.Button
-                              className={`w-full px-4 py-2 rounded-t-xl ${
-                                item?.status === "plus"
-                                  ? "bg-[#EEF7EA] border-[#219653] text-[#3E5743]"
-                                  : ""
+                              className={`w-full rounded-t-xl px-4 py-2 ${
+                                item?.status === 'plus' ? 'border-[#219653] bg-[#EEF7EA] text-[#3E5743]' : ''
                               }`}
                             >
                               <div
                                 className={`flex justify-between  ${
-                                  item?.status === "plus"
-                                    ? "text-[#3E5743] font-semibold"
-                                    : "text-[#F2634C] font-semibold"
+                                  item?.status === 'plus' ? 'font-semibold text-[#3E5743]' : 'font-semibold text-[#F2634C]'
                                 }`}
                               >
                                 <div className="space-x-2">
                                   <span>₹ {item?.rewards}</span>
                                 </div>
-                                <div className="text-sm text-[#2B354D] opacity-60 font-normal">
-                                  {moment(item?.day, "DD-MM-YYYY").format(
-                                    "DD MMM YYYY"
-                                  )}{" "}
-                                  {item?.time}
+                                <div className="text-sm font-normal text-[#2B354D] opacity-60">
+                                  {moment(item?.day, 'DD-MM-YYYY').format('DD MMM YYYY')} {item?.time}
                                 </div>
                               </div>
 
                               <div className="flex items-center justify-between space-y-4 ">
-                                <div
-                                  className={`text-sm font-medium opacity-70 mt-2 ${
-                                    item?.status === "plus"
-                                      ? "text-[#3E5743]"
-                                      : ""
-                                  }`}
-                                >
-                                  <span className="capitalize">
-                                    {item?.userName}
-                                  </span>
-                                  <span className="">
-                                    {" "}
-                                    ( {item?.userPhone} )
-                                  </span>
+                                <div className={`mt-2 text-sm font-medium opacity-70 ${item?.status === 'plus' ? 'text-[#3E5743]' : ''}`}>
+                                  <span className="capitalize">{item?.userName}</span>
+                                  <span className=""> ( {item?.userPhone} )</span>
                                 </div>
                                 <div>
-                                  <AiFillCaretDown
-                                    className={`ml-2 h-3 w-3 ${
-                                      open ? "transform rotate-180" : ""
-                                    }`}
-                                  />
+                                  <AiFillCaretDown className={`ml-2 h-3 w-3 ${open ? 'rotate-180 transform' : ''}`} />
                                 </div>
                               </div>
                             </Disclosure.Button>
 
                             <Disclosure.Panel className="mx-4 text-sm">
-                              <div className="flex justify-between border-y opacity-70 border-[#cacaca] text-base py-4">
+                              <div className="flex justify-between border-y border-[#cacaca] py-4 text-base opacity-70">
                                 <div className="flex items-center">
                                   <MdPerson className="" />
-                                  <span className="ml-2">
-                                    {item?.waiterName}
-                                  </span>
+                                  <span className="ml-2">{item?.waiterName}</span>
                                 </div>
                               </div>
-                              <div className="pb-4 mt-4 space-y-2 text-sm font-medium">
+                              <div className="mt-4 space-y-2 pb-4 text-sm font-medium">
                                 <div className="flex justify-between font-medium">
                                   <span>Total</span>
                                   <span>₹ {item?.total}</span>
@@ -168,54 +133,43 @@ const Transactions = () => {
                   </>
                 )}
               </Disclosure>
-            )):null}
+            ))
+          : null}
         {totalPages > 0 && (
-          <div className="flex justify-between mx-[6rem] pb-2 mt-2">
+          <div className="mx-[6rem] mt-2 flex justify-between pb-2">
             <button
               type="button"
-              className={`p-2 mr-2 bg-base-100 rounded-full ${
-                currentPage === 1
-                  ? "disabled:bg-gray-200 disabled:cursor-not-allowed"
-                  : ""
-              }`}
+              className={`bg-base-100 mr-2 rounded-full p-2 ${currentPage === 1 ? 'disabled:cursor-not-allowed disabled:bg-gray-200' : ''}`}
               onClick={() => handleClick(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              <BsFillCaretLeftFill className="w-6 h-6 text-primary" />
+              <BsFillCaretLeftFill className="text-primary h-6 w-6" />
             </button>
 
-            <div className="text-primary text-[1.25rem] mt-1">
-              {currentPage}
-            </div>
+            <div className="text-primary mt-1 text-[1.25rem]">{currentPage}</div>
 
             <button
               type="button"
-              className={`p-2 ml-2 bg-base-100 rounded-full ${
-                currentPage === totalPages
-                  ? "disabled:bg-gray-200 disabled:cursor-not-allowed"
-                  : ""
-              }`}
+              className={`bg-base-100 ml-2 rounded-full p-2 ${currentPage === totalPages ? 'disabled:cursor-not-allowed disabled:bg-gray-200' : ''}`}
               onClick={() => handleClick(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
-              <BsFillCaretRightFill className="w-6 h-6 text-primary" />
+              <BsFillCaretRightFill className="text-primary h-6 w-6" />
             </button>
           </div>
         )}
       </div>
-      <div onClick={handleLoyaltyPopup} className="flex justify-center mb-5">
-        <button type="button" className="w-[90vw] on_active_bounce fixed bottom-6 z-50 bg-primary rounded-full font-[400] py-[1rem] text-base-100 text-sm leading-[1.15rem]">
+      <div onClick={handleLoyaltyPopup} className="mb-5 flex justify-center">
+        <button
+          type="button"
+          className="on_active_bounce bg-primary text-base-100 fixed bottom-6 z-50 w-[90vw] rounded-full py-[1rem] text-sm font-[400] leading-[1.15rem]"
+        >
           Redeem coinz
         </button>
       </div>
       {isModalOpen && (
         <PopUp show={isModalOpen} onClose={closeModal}>
-          <LoyaltyCoinsUsage
-            closeModal={closeModal}
-            singleUserHist={singleUserHist}
-            loyaltyId={loyaltyId}
-            userPhone={singleUserHist?.userPhone}
-          />
+          <LoyaltyCoinsUsage closeModal={closeModal} singleUserHist={singleUserHist} loyaltyId={loyaltyId} userPhone={singleUserHist?.userPhone} />
         </PopUp>
       )}
     </div>

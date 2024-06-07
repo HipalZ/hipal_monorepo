@@ -1,204 +1,174 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import axios from "axios";
+import axios from 'axios';
 
-import moment from "moment";
+import moment from 'moment';
 
-import momentTimeZone from "moment-timezone";
+import momentTimeZone from 'moment-timezone';
 
-import {
-  Alert,
-  Business,
-  Kitchen,
-  Kot,
-  Kotpassword,
-  Payment,
-  Printer,
-  Table,
-  Tempmodel,
-  Userbill,
-  Waiterkot,
-} from "@hi/db-models";
-import { KOTType } from "@hi/db-models/src/validators";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
+import { Alert, Kitchen, Kot, Kotpassword, Payment, Table, Tempmodel, Userbill, Waiterkot } from '@hi/db-models';
+import { KOTType } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 const currentTime = new Date();
 const options = {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit" as const,
-  minute: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit' as const,
+  minute: '2-digit' as const,
 };
-const formatter = new Intl.DateTimeFormat("en-US", options);
+const formatter = new Intl.DateTimeFormat('en-US', options);
 const time = formatter.format(currentTime);
 
 const optionsTimeAndSeconds = {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit" as const,
-  minute: "2-digit" as const,
-  second: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit' as const,
+  minute: '2-digit' as const,
+  second: '2-digit' as const,
 };
-const formatterTimesAndSeconds = new Intl.DateTimeFormat(
-  "en-US",
-  optionsTimeAndSeconds
-);
+const formatterTimesAndSeconds = new Intl.DateTimeFormat('en-US', optionsTimeAndSeconds);
 const timeWithSeconds = formatterTimesAndSeconds.format(currentTime);
 
 const optionsDate = {
-  timeZone: "Asia/Kolkata",
-  year: "numeric" as const,
-  month: "2-digit" as const,
-  day: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  year: 'numeric' as const,
+  month: '2-digit' as const,
+  day: '2-digit' as const,
 };
-const formatterDate = new Intl.DateTimeFormat("en-US", optionsDate);
+const formatterDate = new Intl.DateTimeFormat('en-US', optionsDate);
 const currentDateAndTime = formatterDate.format(currentTime);
 
 const router = express.Router();
 router.put(
-  "/v1/kitchens/kots",
+  '/v1/kitchens/kots',
 
   async (req: Request, res: Response) => {
     const { kots } = req.body;
-    console.log("kots", kots);
+    console.log('kots', kots);
     const created = [];
 
     for (let i = 0; i < kots.length; i++) {
       const newKOT = kots[i];
       const kot = {
-        status: "PAID",
+        status: 'PAID',
       };
       await Kot.findByIdAndUpdate(newKOT, kot);
       created.push(kot);
     }
 
     res.status(201).send(created);
-  }
+  },
 );
 
-router.put(
-  "/v1/kitchens/updateAlert/alert",
-  async (req: Request, res: Response) => {
-    try {
-      await runInTransaction(async (session: ClientSession) => {
-        const { alertId, businessId, clearAll } = req.query;
-        let alertExit = await Alert.findById(alertId, { session });
-        if (clearAll) {
-          let allAlert = await Alert.find(
-            {
-              businessId,
-              isAlertOn: true,
-            },
-            { session }
-          );
-          for (let i = 0; i < allAlert.length; i++) {
-            let single = allAlert?.[i];
-            if (single?.status == "Cooked") {
-              await Kot.findByIdAndUpdate(
-                alertExit?.kotId,
-                { dishStatus: "delivered" },
-                { session }
-              );
-            }
-          }
-          let update = await Alert.updateMany(
-            {
-              businessId,
-            },
-            { isAlertOn: false },
-            { session }
-          );
-          res.send(update);
-        }
-
-        if (!alertExit?.tableId) {
-          const alert = await Alert.findByIdAndUpdate(
-            alertId,
-            {
-              isAlertOn: false,
-            },
-            { session }
-          );
-          if (alertExit?.status == "Cooked") {
-            await Kot.findByIdAndUpdate(
-              alertExit?.kotId,
-              { dishStatus: "delivered" },
-              { session }
-            );
-          }
-
-          res.send("success");
-        }
-
-        if (alertExit?.status == "Cooked") {
-          await Kot.findByIdAndUpdate(
-            alertExit?.kotId,
-            { dishStatus: "delivered" },
-            { session }
-          );
-          const query = {
+router.put('/v1/kitchens/updateAlert/alert', async (req: Request, res: Response) => {
+  try {
+    await runInTransaction(async (session: ClientSession) => {
+      const { alertId, businessId, clearAll } = req.query;
+      let alertExit = await Alert.findById(alertId, { session });
+      if (clearAll) {
+        let allAlert = await Alert.find(
+          {
             businessId,
-            tableId: alertExit?.tableId,
-            zoneId: alertExit?.zoneId,
-            status: "UNPAID",
-          };
-
-          const existingKOTs = await Kot.find(query, { session });
-
-          let delivered = 0;
-
-          for (const existingKOT of existingKOTs) {
-            if (existingKOT?.dishStatus === "delivered") {
-              delivered++;
-            }
-          }
-
-          const config = {
-            deliverdDish: delivered,
-          };
-
-          try {
-            await Table.findByIdAndUpdate(alertExit?.tableId, config, {
-              session,
-            });
-          } catch (err: any) {
-            res.status(500).send({
-              status: false,
-              message: err,
-            });
+            isAlertOn: true,
+          },
+          { session },
+        );
+        for (let i = 0; i < allAlert.length; i++) {
+          let single = allAlert?.[i];
+          if (single?.status == 'Cooked') {
+            await Kot.findByIdAndUpdate(alertExit?.kotId, { dishStatus: 'delivered' }, { session });
           }
         }
+        let update = await Alert.updateMany(
+          {
+            businessId,
+          },
+          { isAlertOn: false },
+          { session },
+        );
+        res.send(update);
+      }
 
+      if (!alertExit?.tableId) {
         const alert = await Alert.findByIdAndUpdate(
           alertId,
           {
             isAlertOn: false,
           },
-          { session }
+          { session },
         );
-        if (alert?.staffId != "5") {
-          const config = {
-            status: alert?.staffId,
-          };
+        if (alertExit?.status == 'Cooked') {
+          await Kot.findByIdAndUpdate(alertExit?.kotId, { dishStatus: 'delivered' }, { session });
+        }
 
-          try {
-            await Table.findByIdAndUpdate(alert?.tableId, config, { session });
-          } catch (err: any) {
-            res.status(400).send({
-              status: false,
-              message: "need assitance not updated !!",
-            });
+        res.send('success');
+      }
+
+      if (alertExit?.status == 'Cooked') {
+        await Kot.findByIdAndUpdate(alertExit?.kotId, { dishStatus: 'delivered' }, { session });
+        const query = {
+          businessId,
+          tableId: alertExit?.tableId,
+          zoneId: alertExit?.zoneId,
+          status: 'UNPAID',
+        };
+
+        const existingKOTs = await Kot.find(query, { session });
+
+        let delivered = 0;
+
+        for (const existingKOT of existingKOTs) {
+          if (existingKOT?.dishStatus === 'delivered') {
+            delivered++;
           }
         }
 
-        res.status(200).send(alert);
-      });
-    } catch (err: any) {
-      res.status(500).send({ status: false, message: err.message });
-    }
+        const config = {
+          deliverdDish: delivered,
+        };
+
+        try {
+          await Table.findByIdAndUpdate(alertExit?.tableId, config, {
+            session,
+          });
+        } catch (err: any) {
+          res.status(500).send({
+            status: false,
+            message: err,
+          });
+        }
+      }
+
+      const alert = await Alert.findByIdAndUpdate(
+        alertId,
+        {
+          isAlertOn: false,
+        },
+        { session },
+      );
+      if (alert?.staffId != '5') {
+        const config = {
+          status: alert?.staffId,
+        };
+
+        try {
+          await Table.findByIdAndUpdate(alert?.tableId, config, { session });
+        } catch (err: any) {
+          res.status(400).send({
+            status: false,
+            message: 'need assitance not updated !!',
+          });
+        }
+      }
+
+      res.status(200).send(alert);
+    });
+  } catch (err: any) {
+    res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.put(
-  "/v1/kitchens/:id",
+  '/v1/kitchens/:id',
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
@@ -209,18 +179,18 @@ router.put(
     const kitchen = await Kitchen.findById(id);
 
     res.status(200).send(kitchen);
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:kitchenId/kots",
+  '/v1/kitchens/:kitchenId/kots',
 
   //TODO :REMOVE UNWANTED ROLE
   async (req: Request, res: Response) => {
     try {
       const currentTime = Date.now();
       const momentTime = moment(currentTime);
-      const indianTime = momentTime.clone().utcOffset("+05:30").format("HH:mm");
+      const indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm');
 
       const { kots } = req.body;
 
@@ -231,10 +201,10 @@ router.put(
         if (single?.priority == true) {
           await Kot.findByIdAndUpdate(newKOT, { priority: false });
         }
-        if (single?.dishStatus == "cooking") {
+        if (single?.dishStatus == 'cooking') {
           const kot = {
             cookedAt: Date.now(),
-            dishStatus: "cooked",
+            dishStatus: 'cooked',
           };
           const singleId = await Kot.findByIdAndUpdate(newKOT, kot);
           if (single?.isDeleted == false) {
@@ -244,14 +214,14 @@ router.put(
               zoneId: singleId?.zoneId,
               tableId: singleId?.tableId,
               staffId: singleId?.staffId,
-              status: "Cooked",
+              status: 'Cooked',
               time: indianTime,
               message: `${singleId?.dish.name} is cooked `,
               kotId: singleId?.id || singleId?._id,
             };
 
             const saveAlert = new Alert(obj);
-            console.log("save", saveAlert);
+            console.log('save', saveAlert);
             await saveAlert.save();
           }
           created.push(kot);
@@ -262,11 +232,11 @@ router.put(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/update/kots/dish",
+  '/v1/kitchens/update/kots/dish',
 
   async (req: Request, res: Response) => {
     try {
@@ -277,11 +247,11 @@ router.put(
         for (let i = 0; i < kots.length; i++) {
           const newKOT = kots[i];
           const kot = {
-            dishStatus: "delivered",
+            dishStatus: 'delivered',
           };
           let single = await Kot.findByIdAndUpdate(newKOT, kot, { session });
 
-          if (single?.dishStatus === "delivered") {
+          if (single?.dishStatus === 'delivered') {
             const config = {
               deliverdDish: 1,
             };
@@ -296,11 +266,11 @@ router.put(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/updateAll/kots/dishStatus",
+  '/v1/kitchens/updateAll/kots/dishStatus',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -308,206 +278,183 @@ router.put(
   // ]),
   async (req: Request, res: Response) => {
     const { tableId } = req.query || {};
-    const updatedKOTs = await Kot.updateMany(
-      { tableId },
-      { $set: { dishStatus: "delivered" } }
-    );
-    res
-      .status(201)
-      .send({ status: true, message: "Updated Successfully......!" });
-  }
+    const updatedKOTs = await Kot.updateMany({ tableId }, { $set: { dishStatus: 'delivered' } });
+    res.status(201).send({ status: true, message: 'Updated Successfully......!' });
+  },
 );
 
-router.put(
-  "/v1/kitchens/:id/settle-bill",
-  async (req: Request, res: Response) => {
-    try {
-      let {
-        kots,
-        subTotal,
-        Total,
-        SGST,
-        CGST,
-        discount,
-        mode,
-        customerName,
-        duesPersonId,
-        customerPhone,
-        claimedAmount,
-        discountDescription,
-        serviceCharge,
-        modeBreakDown,
-        waiterName,
-        tips,
-        zoneType,
-        dayAndDate,
-        indianTime,
-        hiCode,
-      } = req.body;
-      const payDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
-      if (!mode || (!Total && Total == null)) {
-        return res.status(400).send("Please enter the required fields.");
-      }
+router.put('/v1/kitchens/:id/settle-bill', async (req: Request, res: Response) => {
+  try {
+    let {
+      kots,
+      subTotal,
+      Total,
+      SGST,
+      CGST,
+      discount,
+      mode,
+      customerName,
+      duesPersonId,
+      customerPhone,
+      claimedAmount,
+      discountDescription,
+      serviceCharge,
+      modeBreakDown,
+      waiterName,
+      tips,
+      zoneType,
+      dayAndDate,
+      indianTime,
+      hiCode,
+    } = req.body;
+    const payDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
+    if (!mode || (!Total && Total == null)) {
+      return res.status(400).send('Please enter the required fields.');
+    }
 
-      if (mode === "dues" && !duesPersonId) {
-        return res
-          .status(400)
-          .send("When mode is 'dues', a dues person must be selected.");
-      }
+    if (mode === 'dues' && !duesPersonId) {
+      return res.status(400).send("When mode is 'dues', a dues person must be selected.");
+    }
 
-      await runInTransaction(async (session: ClientSession) => {
-        const created: any = [];
-        for (const kotId of kots) {
-          const updatedKOT = await Kot.findByIdAndUpdate(
-            kotId,
-            {
-              status: "PAID",
-              cookedAt: Date.now(),
-            },
-            { session }
-          );
-
-          if (updatedKOT?.isDeleted === false) {
-            created.push(updatedKOT);
-          }
-        }
-
-        const singleKot = created?.[1] || created?.[0];
-
-        const items = created.map((kot: any) => {
-          const newobj: any = {
-            name: kot.dish?.name,
-            quantity: kot.dish?.qty || kot.dish?.quantity,
-            amount: kot.dish?.price,
-            category: kot.category,
-            portions: kot.dish?.portions,
-            extras: kot.dish?.extras,
-            comments: "spicy",
-          };
-
-          let price = 0;
-          if (newobj.portions) {
-            price =
-              parseInt(newobj.portions.price) * (newobj.quantity || newobj.qty);
-          } else {
-            price = newobj.amount || 0;
-          }
-
-          let extrasPrice = 0;
-          if (newobj.extras?.length > 0) {
-            for (const extra of newobj.extras) {
-              extrasPrice +=
-                parseInt(extra.price || 0) * (extra.quantity || extra.qty);
-            }
-          }
-
-          newobj.amount = price + extrasPrice || 0;
-
-          return newobj;
-        });
-        const cName = customerName || singleKot?.customerName;
-        const cPhone = customerPhone || singleKot?.customerPhone;
-        if (mode === "complimentary") {
-          discount = subTotal;
-          SGST = 0;
-          CGST = 0;
-          Total = 0;
-        }
-
-        const paymentConfig = await Payment.create(
-          [
-            {
-              businessId: singleKot?.businessId,
-              items,
-              subTotal: Number(subTotal),
-              sgst: Number(SGST.toFixed(2)),
-              cgst: Number(CGST.toFixed(2)),
-              date: payDate,
-              total: Number(Total),
-              paymentMode: mode || "online",
-              paymentDate: dayAndDate,
-              mode: mode || "online",
-              customerName: cName,
-              customerPhone: cPhone,
-              discount: Number(discount),
-              zoneId: singleKot?.zoneId,
-              tableId: singleKot?.tableId,
-              time: indianTime,
-              tableName: singleKot?.tableName,
-              duesPersonId,
-              discountDescription,
-              claimedAmount,
-              serviceCharge,
-              modeBreakDown,
-              waiterName,
-              tips,
-              zoneType,
-            },
-          ],
-          { session }
+    await runInTransaction(async (session: ClientSession) => {
+      const created: any = [];
+      for (const kotId of kots) {
+        const updatedKOT = await Kot.findByIdAndUpdate(
+          kotId,
+          {
+            status: 'PAID',
+            cookedAt: Date.now(),
+          },
+          { session },
         );
 
-        try {
-          await Waiterkot.deleteMany(
-            { tableId: singleKot?.tableId },
-            { session }
-          );
-        } catch (err: any) {
-          console.error(err);
-          throw new Error(
-            "Failed to delete the KOTs associated with the table. Please try again."
-          );
+        if (updatedKOT?.isDeleted === false) {
+          created.push(updatedKOT);
         }
-        try {
-          await Tempmodel.deleteOne(
-            {
-              tableId: singleKot?.tableId,
-            },
-            { session }
-          );
-        } catch (err: any) {
-          console.error(err);
-        }
+      }
 
-        try {
-          await Tempmodel.findOneAndUpdate(
-            { tableId: singleKot.tableId },
-            { $set: { hiCode } },
-            { upsert: true, session }
-          );
-        } catch (err: any) {
-          console.error(err);
-        }
+      const singleKot = created?.[1] || created?.[0];
 
-        const updateConfig = {
-          status: "Empty",
-          activeUser: 0,
-          time: indianTime,
-          totalDishQuantity: 0,
-          deliveredDish: 0,
-          role: null,
-          hiCode: "",
-          mergedBy: "",
-          reservedBy: "",
+      const items = created.map((kot: any) => {
+        const newobj: any = {
+          name: kot.dish?.name,
+          quantity: kot.dish?.qty || kot.dish?.quantity,
+          amount: kot.dish?.price,
+          category: kot.category,
+          portions: kot.dish?.portions,
+          extras: kot.dish?.extras,
+          comments: 'spicy',
         };
-        try {
-          await Table.findByIdAndUpdate(singleKot?.tableId, updateConfig, {
-            session,
-          });
-        } catch (err: any) {
-          console.error(err);
-          throw new Error(
-            "Failed to update the table. Please check your update details and try again."
-          );
-        }
-      });
 
-      res.status(200).send("Settled!");
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+        let price = 0;
+        if (newobj.portions) {
+          price = parseInt(newobj.portions.price) * (newobj.quantity || newobj.qty);
+        } else {
+          price = newobj.amount || 0;
+        }
+
+        let extrasPrice = 0;
+        if (newobj.extras?.length > 0) {
+          for (const extra of newobj.extras) {
+            extrasPrice += parseInt(extra.price || 0) * (extra.quantity || extra.qty);
+          }
+        }
+
+        newobj.amount = price + extrasPrice || 0;
+
+        return newobj;
+      });
+      const cName = customerName || singleKot?.customerName;
+      const cPhone = customerPhone || singleKot?.customerPhone;
+      if (mode === 'complimentary') {
+        discount = subTotal;
+        SGST = 0;
+        CGST = 0;
+        Total = 0;
+      }
+
+      const paymentConfig = await Payment.create(
+        [
+          {
+            businessId: singleKot?.businessId,
+            items,
+            subTotal: Number(subTotal),
+            sgst: Number(SGST.toFixed(2)),
+            cgst: Number(CGST.toFixed(2)),
+            date: payDate,
+            total: Number(Total),
+            paymentMode: mode || 'online',
+            paymentDate: dayAndDate,
+            mode: mode || 'online',
+            customerName: cName,
+            customerPhone: cPhone,
+            discount: Number(discount),
+            zoneId: singleKot?.zoneId,
+            tableId: singleKot?.tableId,
+            time: indianTime,
+            tableName: singleKot?.tableName,
+            duesPersonId,
+            discountDescription,
+            claimedAmount,
+            serviceCharge,
+            modeBreakDown,
+            waiterName,
+            tips,
+            zoneType,
+          },
+        ],
+        { session },
+      );
+
+      try {
+        await Waiterkot.deleteMany({ tableId: singleKot?.tableId }, { session });
+      } catch (err: any) {
+        console.error(err);
+        throw new Error('Failed to delete the KOTs associated with the table. Please try again.');
+      }
+      try {
+        await Tempmodel.deleteOne(
+          {
+            tableId: singleKot?.tableId,
+          },
+          { session },
+        );
+      } catch (err: any) {
+        console.error(err);
+      }
+
+      try {
+        await Tempmodel.findOneAndUpdate({ tableId: singleKot.tableId }, { $set: { hiCode } }, { upsert: true, session });
+      } catch (err: any) {
+        console.error(err);
+      }
+
+      const updateConfig = {
+        status: 'Empty',
+        activeUser: 0,
+        time: indianTime,
+        totalDishQuantity: 0,
+        deliveredDish: 0,
+        role: null,
+        hiCode: '',
+        mergedBy: '',
+        reservedBy: '',
+      };
+      try {
+        await Table.findByIdAndUpdate(singleKot?.tableId, updateConfig, {
+          session,
+        });
+      } catch (err: any) {
+        console.error(err);
+        throw new Error('Failed to update the table. Please check your update details and try again.');
+      }
+    });
+
+    res.status(200).send('Settled!');
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 // router.put(
 //   "/v1/kitchens/waiterKot/update/:kotId",
@@ -609,136 +556,122 @@ router.put(
 //new accept order
 
 // TODO solve type error datta
-router.put(
-  "/v1/kitchens/:id/acceptOrder/:kotId",
-  async (req: Request, res: Response) => {
-    try {
-      const { kotId } = req.params;
-      const { waiterName, kotPrinter } = req.body;
-      if (!kotId) {
-        return res.status(400).send("kotId is required");
-      }
-
-      await runInTransaction(async (session: ClientSession) => {
-        const currentTime = new Date();
-
-        const optionsTimeAndSeconds = {
-          timeZone: "Asia/Kolkata",
-          hour: "2-digit" as const,
-          minute: "2-digit" as const,
-          second: "2-digit" as const,
-          hour12: false, // Use 24-hour time
-        };
-        const formatterTimesAndSeconds = new Intl.DateTimeFormat(
-          "en-US",
-          optionsTimeAndSeconds
-        );
-        const kotTime = formatterTimesAndSeconds.format(currentTime);
-
-        let getWaiterKot = await Waiterkot.findById(kotId, null, { session });
-
-        if (getWaiterKot?.isAccept) {
-          throw new Error("Order already accepted");
-        }
-
-        if (getWaiterKot) {
-          const startedAt = Date.now();
-          const kotsToInsert = [];
-          const kotDate = new Date()
-            .toISOString()
-            .replace("T", " ")
-            .slice(0, 19);
-          for (let i = 0; i < (getWaiterKot.items?.length ?? 0); i++) {
-            const newKOT = getWaiterKot?.items?.[i] as unknown as object;
-
-            const kot = {
-              ...(newKOT as KOTType),
-              startedAt,
-              cookedAt: -1,
-              status: "UNPAID",
-              kotTime: kotTime,
-              kotDate: kotDate,
-            };
-            kotsToInsert.push(kot);
-          }
-
-          await Kot.insertMany(kotsToInsert, { session });
-
-          let query = {
-            tableId: getWaiterKot?.tableId,
-            status: "UNPAID",
-          };
-          const existingKOTs = await Kot.find(query, null, { session }).select(
-            "dishStatus"
-          );
-
-          const totalDish = existingKOTs?.length;
-          let delivered = 0;
-          for (let i = 0; i < existingKOTs.length; i++) {
-            let obj = existingKOTs[i];
-            if (obj?.dishStatus == "delivered") {
-              delivered += 1;
-            }
-          }
-
-          const config = {
-            totalDishQuantity: totalDish,
-            deliveredDish: delivered,
-            status: "Active",
-            time: time,
-          };
-
-          await Table.findByIdAndUpdate(getWaiterKot.tableId, config, {
-            session,
-          });
-
-          await Waiterkot.findByIdAndUpdate(
-            kotId,
-            {
-              isAccept: true,
-              acceptedBy: waiterName,
-            },
-            { session }
-          );
-
-          if (getWaiterKot && kotPrinter) {
-            const ws_config = {
-              method: "POST",
-              url: "https://ws.hipal.life",
-              data: {
-                businessId: getWaiterKot?.businessId,
-                payload: {
-                  tableName: getWaiterKot?.tableName,
-                  cart: getWaiterKot?.cart,
-                  waiterName: waiterName,
-                },
-              },
-            };
-            await axios(ws_config);
-          }
-        } else {
-          throw new Error("Order not found");
-        }
-      });
-
-      return res.status(201).send({
-        status: true,
-        message: "Order Accepted...!",
-      });
-    } catch (err: any) {
-      if (
-        err.message === "Order already accepted" ||
-        err.message === "Order not found"
-      ) {
-        return res.status(400).send({ status: false, message: err.message });
-      }
-      return res.status(500).send({ status: false, message: err.message });
+router.put('/v1/kitchens/:id/acceptOrder/:kotId', async (req: Request, res: Response) => {
+  try {
+    const { kotId } = req.params;
+    const { waiterName, kotPrinter } = req.body;
+    if (!kotId) {
+      return res.status(400).send('kotId is required');
     }
+
+    await runInTransaction(async (session: ClientSession) => {
+      const currentTime = new Date();
+
+      const optionsTimeAndSeconds = {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit' as const,
+        minute: '2-digit' as const,
+        second: '2-digit' as const,
+        hour12: false, // Use 24-hour time
+      };
+      const formatterTimesAndSeconds = new Intl.DateTimeFormat('en-US', optionsTimeAndSeconds);
+      const kotTime = formatterTimesAndSeconds.format(currentTime);
+
+      let getWaiterKot = await Waiterkot.findById(kotId, null, { session });
+
+      if (getWaiterKot?.isAccept) {
+        throw new Error('Order already accepted');
+      }
+
+      if (getWaiterKot) {
+        const startedAt = Date.now();
+        const kotsToInsert = [];
+        const kotDate = new Date().toISOString().replace('T', ' ').slice(0, 19);
+        for (let i = 0; i < (getWaiterKot.items?.length ?? 0); i++) {
+          const newKOT = getWaiterKot?.items?.[i] as unknown as object;
+
+          const kot = {
+            ...(newKOT as KOTType),
+            startedAt,
+            cookedAt: -1,
+            status: 'UNPAID',
+            kotTime: kotTime,
+            kotDate: kotDate,
+          };
+          kotsToInsert.push(kot);
+        }
+
+        await Kot.insertMany(kotsToInsert, { session });
+
+        let query = {
+          tableId: getWaiterKot?.tableId,
+          status: 'UNPAID',
+        };
+        const existingKOTs = await Kot.find(query, null, { session }).select('dishStatus');
+
+        const totalDish = existingKOTs?.length;
+        let delivered = 0;
+        for (let i = 0; i < existingKOTs.length; i++) {
+          let obj = existingKOTs[i];
+          if (obj?.dishStatus == 'delivered') {
+            delivered += 1;
+          }
+        }
+
+        const config = {
+          totalDishQuantity: totalDish,
+          deliveredDish: delivered,
+          status: 'Active',
+          time: time,
+        };
+
+        await Table.findByIdAndUpdate(getWaiterKot.tableId, config, {
+          session,
+        });
+
+        await Waiterkot.findByIdAndUpdate(
+          kotId,
+          {
+            isAccept: true,
+            acceptedBy: waiterName,
+          },
+          { session },
+        );
+
+        if (getWaiterKot && kotPrinter) {
+          const ws_config = {
+            method: 'POST',
+            url: 'https://ws.hipal.life',
+            data: {
+              businessId: getWaiterKot?.businessId,
+              payload: {
+                tableName: getWaiterKot?.tableName,
+                cart: getWaiterKot?.cart,
+                waiterName: waiterName,
+              },
+            },
+          };
+          await axios(ws_config);
+        }
+      } else {
+        throw new Error('Order not found');
+      }
+    });
+
+    return res.status(201).send({
+      status: true,
+      message: 'Order Accepted...!',
+    });
+  } catch (err: any) {
+    if (err.message === 'Order already accepted' || err.message === 'Order not found') {
+      return res.status(400).send({ status: false, message: err.message });
+    }
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.put(
-  "/v1/kitchens/reject/Order/:orderId",
+  '/v1/kitchens/reject/Order/:orderId',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
@@ -750,18 +683,18 @@ router.put(
       const alert = await Waiterkot.findByIdAndUpdate(orderId, update);
 
       if (!alert) {
-        return res.send({ status: false, message: "Not Found Order" });
+        return res.send({ status: false, message: 'Not Found Order' });
       }
 
       res.status(200).send(alert);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/Edit/Order/:orderId",
+  '/v1/kitchens/Edit/Order/:orderId',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
@@ -776,181 +709,158 @@ router.put(
       const alert = await Waiterkot.findById(orderId);
 
       if (!alert) {
-        return res.send({ status: false, message: "Not Found Order" });
+        return res.send({ status: false, message: 'Not Found Order' });
       }
 
       res.status(200).send(alert);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
-router.put(
-  "/v1/kitchens/update/transferTable",
-  async (req: Request, res: Response) => {
-    try {
-      const {
-        businessId,
-        fromTableId,
-        fromZoneId,
-        fromTableName,
-        toTableId,
-        toZoneId,
-        toTableName,
-        switchedBy,
-      } = req.body;
+router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Response) => {
+  try {
+    const { businessId, fromTableId, fromZoneId, fromTableName, toTableId, toZoneId, toTableName, switchedBy } = req.body;
 
-      await runInTransaction(async (session: ClientSession) => {
-        let checkTable;
+    await runInTransaction(async (session: ClientSession) => {
+      let checkTable;
 
-        try {
-          checkTable = await Table.findById(toTableId, null, { session });
-          if (checkTable?.status != "Empty") {
-            throw new Error("Table must be Empty");
-          }
-        } catch (err: any) {
-          throw new Error("Failed to check table status");
+      try {
+        checkTable = await Table.findById(toTableId, null, { session });
+        if (checkTable?.status != 'Empty') {
+          throw new Error('Table must be Empty');
         }
+      } catch (err: any) {
+        throw new Error('Failed to check table status');
+      }
 
-        await Kot.updateMany(
-          {
-            businessId,
-            tableId: fromTableId,
-            zoneId: fromZoneId,
-            status: "UNPAID",
-          },
-          {
-            businessId,
-            tableId: toTableId,
-            zoneId: toZoneId,
-            status: "UNPAID",
-            tableName: toTableName,
-            switchedBy,
-          },
-          { session }
-        );
-
-        const config = {
-          status: "Empty",
-          activeUser: 0,
-          time: new Date().toISOString().replace("T", " ").slice(0, 19),
-          totalDishQuantity: 0,
-          deliverdDish: 0,
-          role: null,
-          hiCode: "",
-          mergedBy: "",
-          reservedBy: "",
-        };
-
-        try {
-          await Table.findByIdAndUpdate(fromTableId, config, { session });
-        } catch (err: any) {
-          throw new Error("Failed to update from table");
-        }
-
-        const query = {
+      await Kot.updateMany(
+        {
+          businessId,
+          tableId: fromTableId,
+          zoneId: fromZoneId,
+          status: 'UNPAID',
+        },
+        {
           businessId,
           tableId: toTableId,
           zoneId: toZoneId,
-          status: "UNPAID",
-        };
+          status: 'UNPAID',
+          tableName: toTableName,
+          switchedBy,
+        },
+        { session },
+      );
 
-        const existingKOTs = await Kot.find(query, null, { session }).select(
-          "dishStatus"
-        );
+      const config = {
+        status: 'Empty',
+        activeUser: 0,
+        time: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        totalDishQuantity: 0,
+        deliverdDish: 0,
+        role: null,
+        hiCode: '',
+        mergedBy: '',
+        reservedBy: '',
+      };
 
-        const totalDish = existingKOTs?.length;
-        let delivered = 0;
+      try {
+        await Table.findByIdAndUpdate(fromTableId, config, { session });
+      } catch (err: any) {
+        throw new Error('Failed to update from table');
+      }
 
-        for (const existingKOT of existingKOTs) {
-          if (existingKOT?.dishStatus === "delivered") {
-            delivered++;
-          }
+      const query = {
+        businessId,
+        tableId: toTableId,
+        zoneId: toZoneId,
+        status: 'UNPAID',
+      };
+
+      const existingKOTs = await Kot.find(query, null, { session }).select('dishStatus');
+
+      const totalDish = existingKOTs?.length;
+      let delivered = 0;
+
+      for (const existingKOT of existingKOTs) {
+        if (existingKOT?.dishStatus === 'delivered') {
+          delivered++;
         }
+      }
 
-        const con = {
-          totalDishQuantity: totalDish,
-          deliverdDish: delivered,
-          status: "Active",
-          time: new Date().toISOString().replace("T", " ").slice(0, 19),
-        };
+      const con = {
+        totalDishQuantity: totalDish,
+        deliverdDish: delivered,
+        status: 'Active',
+        time: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      };
 
-        try {
-          await Table.findByIdAndUpdate(toTableId, con, { session });
-        } catch (err: any) {
-          throw new Error("Failed to update to table");
-        }
+      try {
+        await Table.findByIdAndUpdate(toTableId, con, { session });
+      } catch (err: any) {
+        throw new Error('Failed to update to table');
+      }
 
-        await Alert.updateMany(
-          {
-            tableId: fromTableId,
-            zoneId: fromZoneId,
-            businessId: businessId,
-            isAlertOn: true,
-          },
-          {
-            tableId: toTableId,
-            zoneId: toZoneId,
-            businessId: businessId,
-            isAlertOn: true,
-            tableName: toTableName,
-          },
-          { session }
-        );
+      await Alert.updateMany(
+        {
+          tableId: fromTableId,
+          zoneId: fromZoneId,
+          businessId: businessId,
+          isAlertOn: true,
+        },
+        {
+          tableId: toTableId,
+          zoneId: toZoneId,
+          businessId: businessId,
+          isAlertOn: true,
+          tableName: toTableName,
+        },
+        { session },
+      );
 
-        await Waiterkot.updateMany(
-          {
-            zoneId: fromZoneId,
-            tableId: fromTableId,
-            isAccept: false,
-            businessId,
-          },
-          {
-            zoneId: toZoneId,
-            tableId: toTableId,
-            isAccept: false,
-            businessId,
-          },
-          { session }
-        );
-      });
+      await Waiterkot.updateMany(
+        {
+          zoneId: fromZoneId,
+          tableId: fromTableId,
+          isAccept: false,
+          businessId,
+        },
+        {
+          zoneId: toZoneId,
+          tableId: toTableId,
+          isAccept: false,
+          businessId,
+        },
+        { session },
+      );
+    });
 
-      res.status(200).send("Switched Successfully");
-    } catch (err: any) {
-      res.status(500).send({ status: false, message: err.message });
-    }
+    res.status(200).send('Switched Successfully');
+  } catch (err: any) {
+    res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.put(
-  "/v1/kitchens/:id/updateSingleKot",
+  '/v1/kitchens/:id/updateSingleKot',
 
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    let {
-      isDeleted,
-      deleteKotIds,
-      password,
-      businessId,
-      inventory,
-      reasonForDelete,
-      staffName,
-      priority,
-    } = req.body;
+    let { isDeleted, deleteKotIds, password, businessId, inventory, reasonForDelete, staffName, priority } = req.body;
     if (priority == true && isDeleted == true) {
       return res.status(400).send("You cann't priorities delete Kot");
     }
     if (isDeleted) {
       let kotPass = await Kotpassword.findOne({ businessId });
       if (!kotPass) {
-        return res.status(400).send("Before deletetion set kot password");
+        return res.status(400).send('Before deletetion set kot password');
       }
       if (password != kotPass?.password) {
-        return res.status(400).send("Wrong password");
+        return res.status(400).send('Wrong password');
       }
       let deletedKot = await Kot.updateMany(
-        { _id: { $in: deleteKotIds }, status: "UNPAID" },
+        { _id: { $in: deleteKotIds }, status: 'UNPAID' },
         {
           $set: {
             isDeleted,
@@ -959,24 +869,20 @@ router.put(
             staffName,
             priority: false,
           },
-        }
+        },
       );
 
       return res.send(deletedKot);
     }
 
-    const existingKot = await Kot.findByIdAndUpdate(
-      id,
-      { priority },
-      { new: true }
-    );
+    const existingKot = await Kot.findByIdAndUpdate(id, { priority }, { new: true });
 
     res.status(200).send(existingKot);
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/serviceCharge",
+  '/v1/kitchens/:id/serviceCharge',
 
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -984,14 +890,13 @@ router.put(
   // ]),
   async (req: Request, res: Response) => {
     try {
-      let { tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy } =
-        req.body || {};
+      let { tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy } = req.body || {};
 
       if (reapply) {
-        serviceChargeRemovedBy = "";
+        serviceChargeRemovedBy = '';
       }
       if (!reapply) {
-        serviceChargeAddedBy = "";
+        serviceChargeAddedBy = '';
       }
 
       const serviceChargeisExist = await Tempmodel.findOne({
@@ -1000,7 +905,7 @@ router.put(
       });
 
       if (serviceChargeisExist && reapply) {
-        return res.status(400).send("Service Charge is already applied");
+        return res.status(400).send('Service Charge is already applied');
       }
 
       const updateServiceCharge = await Tempmodel.findOneAndUpdate(
@@ -1012,13 +917,13 @@ router.put(
             serviceChargeAddedBy,
           },
         },
-        { upsert: true }
+        { upsert: true },
       );
       return res.send(updateServiceCharge);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 // router.put(
@@ -1212,7 +1117,7 @@ router.put(
 // );
 
 router.put(
-  "/v1/kitchens/:id/orderBySwiggy",
+  '/v1/kitchens/:id/orderBySwiggy',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -1225,25 +1130,22 @@ router.put(
       const { password } = req.body;
 
       let deleteKotPass = await Kotpassword.findOne({ password: password });
-      console.log("deleteKotPass", deleteKotPass);
+      console.log('deleteKotPass', deleteKotPass);
 
       if (password != deleteKotPass?.password) {
-        return res.status(400).send("Wrong password");
+        return res.status(400).send('Wrong password');
       }
-      let result = await Kot.updateMany(
-        { businessId, orderId, isDeleted: false },
-        { isDeleted: true }
-      );
+      let result = await Kot.updateMany({ businessId, orderId, isDeleted: false }, { isDeleted: true });
 
       res.status(200).send(result);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/kot/:kotId",
+  '/v1/kitchens/:id/kot/:kotId',
 
   async (req: Request, res: Response) => {
     const { id, kotId } = req.params;
@@ -1251,11 +1153,11 @@ router.put(
 
     let updateKot = await Kot.findByIdAndUpdate(kotId, update, { new: true });
     return res.send(updateKot);
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/tempModel",
+  '/v1/kitchens/:id/tempModel',
 
   async (req: Request, res: Response) => {
     const { tableId, remove } = req.query;
@@ -1265,36 +1167,28 @@ router.put(
     }
     if (remove) {
       await Tempmodel.deleteMany();
-      return res.send("Deleted");
+      return res.send('Deleted');
     }
     let tables = await Tempmodel.find();
 
     return res.send(tables);
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/applyDiscount",
+  '/v1/kitchens/:id/applyDiscount',
 
   async (req: Request, res: Response) => {
     try {
-      let {
-        tableId,
-        discountAmount,
-        discountDescription,
-        discountPercentage,
-        discountMode,
-        discountGivenBy,
-        discountRemovedBy,
-      } = req.body || {};
+      let { tableId, discountAmount, discountDescription, discountPercentage, discountMode, discountGivenBy, discountRemovedBy } = req.body || {};
 
       if (discountAmount == 0) {
-        discountGivenBy = "";
+        discountGivenBy = '';
         discountPercentage = 0;
       }
 
       if (!tableId) {
-        return res.status(400).send("Table Id is required");
+        return res.status(400).send('Table Id is required');
       }
       const updateDiscount = await Tempmodel.findOneAndUpdate(
         { tableId: tableId },
@@ -1308,69 +1202,65 @@ router.put(
             discountRemovedBy,
           },
         },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
       return res.send(updateDiscount);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/applyCoins",
+  '/v1/kitchens/:id/applyCoins',
 
   async (req: Request, res: Response) => {
     try {
       const { tableId, claimedAmount, coinsGivenBy } = req.body || {};
       if (!claimedAmount || claimedAmount < 0) {
-        return res
-          .status(400)
-          .send("Claimed Amount is required and should be greater than 0");
+        return res.status(400).send('Claimed Amount is required and should be greater than 0');
       }
       if (!tableId) {
-        return res.status(400).send("Table Id is required");
+        return res.status(400).send('Table Id is required');
       }
       const updateClaimedAmount = await Tempmodel.findOneAndUpdate(
         { tableId: tableId },
         { $set: { claimedAmount, coinsGivenBy } },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
       return res.send(updateClaimedAmount);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/applyTips",
+  '/v1/kitchens/:id/applyTips',
 
   async (req: Request, res: Response) => {
     try {
       const { tableId, tipsAmount, tipsGivenBy } = req.body || {};
       if (!tipsAmount || tipsAmount < 0) {
-        return res
-          .status(400)
-          .send("Tips Amount is required and should be greater than 0");
+        return res.status(400).send('Tips Amount is required and should be greater than 0');
       }
       if (!tableId) {
-        return res.status(400).send("Table Id is required");
+        return res.status(400).send('Table Id is required');
       }
       const updateTipsAmount = await Tempmodel.findOneAndUpdate(
         { tableId: tableId },
         { $set: { tipsAmount, tipsGivenBy } },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
       return res.send(updateTipsAmount);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/e-bill",
+  '/v1/kitchens/:id/e-bill',
 
   async (req: Request, res: Response) => {
     const {
@@ -1394,7 +1284,7 @@ router.put(
     let kots: any[] = [];
 
     const query = {
-      status: "UNPAID",
+      status: 'UNPAID',
       isDeleted: false,
       businessId,
       tableId,
@@ -1407,7 +1297,7 @@ router.put(
       staffId: 0,
       startedAt: 0,
       cookedAt: 0,
-      "dish.comments": 0,
+      'dish.comments': 0,
       category: 0,
       status: 0,
       dishStatus: 0,
@@ -1435,9 +1325,7 @@ router.put(
       let portionPrice = 0;
       if (obj?.dish?.extras?.length > 0) {
         obj?.dish?.extras.forEach((extra: any) => {
-          extraPrice +=
-            parseInt(extra?.price || 0) *
-            parseInt(extra?.qty || extra?.quantity);
+          extraPrice += parseInt(extra?.price || 0) * parseInt(extra?.qty || extra?.quantity);
         });
       }
 
@@ -1457,14 +1345,12 @@ router.put(
       const existing = merged.find(
         (mItem: any) =>
           mItem.dish.dishId === item.dish.dishId &&
-          JSON.stringify(mItem.dish?.extras) ===
-            JSON.stringify(item.dish?.extras) &&
-          JSON.stringify(mItem.dish?.portions) ===
-            JSON.stringify(item.dish?.portions)
+          JSON.stringify(mItem.dish?.extras) === JSON.stringify(item.dish?.extras) &&
+          JSON.stringify(mItem.dish?.portions) === JSON.stringify(item.dish?.portions),
       );
 
       if (existing) {
-        console.log("existing", existing);
+        console.log('existing', existing);
         // Merge quantities and update the price
         existing.dish.qty += item.dish.qty;
         existing.dish.price += item.dish.price;
@@ -1478,14 +1364,8 @@ router.put(
     let discount: Number = 0;
     const tableInfo = await Tempmodel.findOne({ tableId });
     if (tableInfo) {
-      if (tableInfo?.discountMode == "percent") {
-        let dis = Math.floor(
-          ((tableInfo.discountPercentage > 100
-            ? 100
-            : tableInfo.discountPercentage) *
-            subTotal) /
-            100
-        );
+      if (tableInfo?.discountMode == 'percent') {
+        let dis = Math.floor(((tableInfo.discountPercentage > 100 ? 100 : tableInfo.discountPercentage) * subTotal) / 100);
         if (dis > subTotal) {
           subTotal = dis;
         }
@@ -1504,8 +1384,7 @@ router.put(
     let claimedAmount: Number = 0;
 
     if (tableInfo) {
-      let coins =
-        tableInfo.claimedAmount > subTotal ? subTotal : tableInfo.claimedAmount;
+      let coins = tableInfo.claimedAmount > subTotal ? subTotal : tableInfo.claimedAmount;
       if (coins > subTotal) {
         subTotal = coins;
       }
@@ -1577,11 +1456,11 @@ router.put(
     };
 
     if (hasServiceCharge && !serviceChargeApply && serviceCharge > 0) {
-      obj["serviceCharge"] = Number(serviceCharge?.toFixed(2));
+      obj['serviceCharge'] = Number(serviceCharge?.toFixed(2));
     }
 
     if (totalTips > 0) {
-      obj["tips"] = totalTips;
+      obj['tips'] = totalTips;
     }
     existingKOTs.push({
       businessName,
@@ -1619,11 +1498,11 @@ router.put(
     let bill = await saveData.save();
 
     return res.send({ billId: bill?._id });
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/printBill",
+  '/v1/kitchens/:id/printBill',
 
   async (req: Request, res: Response) => {
     const {
@@ -1647,7 +1526,7 @@ router.put(
     let kots: any[] = [];
 
     const query = {
-      status: "UNPAID",
+      status: 'UNPAID',
       isDeleted: false,
       businessId,
       tableId,
@@ -1660,7 +1539,7 @@ router.put(
       staffId: 0,
       startedAt: 0,
       cookedAt: 0,
-      "dish.comments": 0,
+      'dish.comments': 0,
       category: 0,
       status: 0,
       dishStatus: 0,
@@ -1688,9 +1567,7 @@ router.put(
       let portionPrice = 0;
       if (obj?.dish?.extras?.length > 0) {
         obj?.dish?.extras.forEach((extra: any) => {
-          extraPrice +=
-            parseInt(extra?.price || 0) *
-            parseInt(extra?.qty || extra?.quantity);
+          extraPrice += parseInt(extra?.price || 0) * parseInt(extra?.qty || extra?.quantity);
         });
       }
 
@@ -1710,10 +1587,8 @@ router.put(
       const existing = merged.find(
         (mItem: any) =>
           mItem.dish.dishId === item.dish.dishId &&
-          JSON.stringify(mItem.dish?.extras) ===
-            JSON.stringify(item.dish?.extras) &&
-          JSON.stringify(mItem.dish?.portions) ===
-            JSON.stringify(item.dish?.portions)
+          JSON.stringify(mItem.dish?.extras) === JSON.stringify(item.dish?.extras) &&
+          JSON.stringify(mItem.dish?.portions) === JSON.stringify(item.dish?.portions),
       );
 
       if (existing) {
@@ -1730,14 +1605,8 @@ router.put(
     let discount: Number = 0;
     const tableInfo = await Tempmodel.findOne({ tableId });
     if (tableInfo) {
-      if (tableInfo?.discountMode == "percent") {
-        let dis = Math.floor(
-          ((tableInfo.discountPercentage > 100
-            ? 100
-            : tableInfo.discountPercentage) *
-            subTotal) /
-            100
-        );
+      if (tableInfo?.discountMode == 'percent') {
+        let dis = Math.floor(((tableInfo.discountPercentage > 100 ? 100 : tableInfo.discountPercentage) * subTotal) / 100);
         if (dis > subTotal) {
           subTotal = dis;
         }
@@ -1756,8 +1625,7 @@ router.put(
     let claimedAmount: Number = 0;
 
     if (tableInfo) {
-      let coins =
-        tableInfo.claimedAmount > subTotal ? subTotal : tableInfo.claimedAmount;
+      let coins = tableInfo.claimedAmount > subTotal ? subTotal : tableInfo.claimedAmount;
       if (coins > subTotal) {
         subTotal = coins;
       }
@@ -1830,11 +1698,11 @@ router.put(
     };
 
     if (hasServiceCharge && !serviceChargeApply && serviceCharge > 0) {
-      obj["serviceCharge"] = Number(serviceCharge?.toFixed(2));
+      obj['serviceCharge'] = Number(serviceCharge?.toFixed(2));
     }
 
     if (totalTips > 0) {
-      obj["tips"] = totalTips;
+      obj['tips'] = totalTips;
     }
     existingKOTs.push({
       businessName,
@@ -1861,11 +1729,11 @@ router.put(
 
     const currentTime = new Date();
     const options = {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit" as const,
-      minute: "2-digit" as const,
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit' as const,
+      minute: '2-digit' as const,
     };
-    const formatter = new Intl.DateTimeFormat("en-US", options);
+    const formatter = new Intl.DateTimeFormat('en-US', options);
     const time = formatter.format(currentTime);
     let billObj = {
       tableId,
@@ -1880,11 +1748,11 @@ router.put(
     let bill = await saveData.save();
 
     return res.send({ billId: bill?._id });
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/applyMode",
+  '/v1/kitchens/:id/applyMode',
 
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -1894,23 +1762,19 @@ router.put(
     try {
       const { tableId, mode } = req.body || {};
       if (!mode || !tableId) {
-        return res.status(400).send(" mode and tableId required");
+        return res.status(400).send(' mode and tableId required');
       }
 
-      const updateMode = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        { $set: { mode } },
-        { upsert: true, new: true }
-      );
+      const updateMode = await Tempmodel.findOneAndUpdate({ tableId: tableId }, { $set: { mode } }, { upsert: true, new: true });
       return res.send(updateMode);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.put(
-  "/v1/kitchens/:id/applyDues",
+  '/v1/kitchens/:id/applyDues',
 
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -1918,24 +1782,21 @@ router.put(
   // ]),
   async (req: Request, res: Response) => {
     try {
-      const { tableId, duesPersonId, customerName, customerPhone } =
-        req.body || {};
+      const { tableId, duesPersonId, customerName, customerPhone } = req.body || {};
       if (!duesPersonId || !tableId || !customerName) {
-        return res
-          .status(400)
-          .send(" tableId,duesPersonId and customerName required");
+        return res.status(400).send(' tableId,duesPersonId and customerName required');
       }
 
       const updateDues = await Tempmodel.findOneAndUpdate(
         { tableId: tableId },
         { $set: { duesPersonId, customerName, customerPhone } },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
       return res.send(updateDues);
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 export { router as updateKitchenRouter };

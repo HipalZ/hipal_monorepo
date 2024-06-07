@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface OnImgButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   /**
@@ -14,13 +14,7 @@ interface OnImgButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
 
 function HeaderButton({ children, className, ...props }: OnImgButtonProps) {
   return (
-    <button
-      className={
-        "flex px-4 text-sm py-2  border rounded-full bg-base-100" +
-        className
-      }
-      {...props}
-    >
+    <button className={'bg-base-100 flex rounded-full border  px-4 py-2 text-sm' + className} {...props}>
       {children}
     </button>
   );

@@ -1,12 +1,12 @@
-import { AlertVariant } from '@components/atoms/alertVariant'
-import { useBottomPanel } from '@components/store/useBottomPanel'
-import { useStory } from '@components/store/useStory'
-import React, { memo } from 'react'
+import { AlertVariant } from "@components/atoms/alertVariant"
+import { useBottomPanel } from "@components/store/useBottomPanel"
+import { useStory } from "@components/store/useStory"
+import React, { memo } from "react"
 
 function AddDishToCartButton({
 	children,
 	onClick,
-	appendClassNames = '',
+	appendClassNames = "",
 	...props
 }: {
 	appendClassNames?: string
@@ -22,16 +22,16 @@ function AddDishToCartButton({
 	}
 	return (
 		<>
-			<div className='fixed bottom-0 z-20 w-full py-2 rotate-180 shadow-lg bg-base-100 shadow-base-100'>
-				<div className='flex flex-col mx-auto rotate-180 justify-items-center'>
+			<div className="fixed bottom-0 z-20 w-full py-2 rotate-180 shadow-lg bg-base-100 shadow-base-100">
+				<div className="flex flex-col mx-auto rotate-180 justify-items-center">
 					{displayAlert && <AlertVariant />}
 					<button
-					type='button'
+						type="button"
 						className={
 							`${
-								validationRef || variantType === 'portion'
-									? 'btn-primary'
-									: 'btn-primary opacity-50'
+								validationRef || variantType === "portion"
+									? "btn-primary"
+									: "btn-primary opacity-50"
 							} min-h-[3rem] btn btn-md mx-auto font-semibold text-[1rem] rounded-full shadow-lg min-w-389 min-w-[95%] my-auto !py-2 ` +
 							appendClassNames
 						}

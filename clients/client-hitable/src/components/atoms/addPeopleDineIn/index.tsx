@@ -1,9 +1,9 @@
-import useDiscountStore from "@/components/store/useDiscountStore";
-import React, { useState } from "react";
-import { toast } from "react-toastify";
+import useDiscountStore from '@/components/store/useDiscountStore';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
 
-function AddPeopleDine({ setIsPeopleAdd ,setCurrentView}) {
-  const [numberOfPeople, setNumberOfPeople] = useState("");
+function AddPeopleDine({ setIsPeopleAdd, setCurrentView }) {
+  const [numberOfPeople, setNumberOfPeople] = useState('');
 
   const setDineInUser = useDiscountStore((state) => state.setDineInUser);
 
@@ -13,9 +13,9 @@ function AddPeopleDine({ setIsPeopleAdd ,setCurrentView}) {
       setDineInUser(count);
       setIsPeopleAdd(false);
       toast.success(`${count} of people added successfully`);
-      setCurrentView("pos");
+      setCurrentView('pos');
     } else {
-      toast.error("Please add count");
+      toast.error('Please add count');
     }
   };
 
@@ -25,17 +25,13 @@ function AddPeopleDine({ setIsPeopleAdd ,setCurrentView}) {
       <span className="opacity-50">Number</span>
       <input
         type="number"
-        className="w-full p-2 mt-4 border border-[#cacaca] rounded-xl focus:outline-none focus:ring-0"
+        className="mt-4 w-full rounded-xl border border-[#cacaca] p-2 focus:outline-none focus:ring-0"
         placeholder=""
         value={numberOfPeople}
         onChange={(e) => setNumberOfPeople(e.target.value)}
       />
-      <div className="flex justify-between mt-6">
-        <button
-        type="button"
-          onClick={handleSave}
-          className="w-full px-6 py-3 text-sm bg-primary text-base-100 rounded-3xl"
-        >
+      <div className="mt-6 flex justify-between">
+        <button type="button" onClick={handleSave} className="bg-primary text-base-100 w-full rounded-3xl px-6 py-3 text-sm">
           Save
         </button>
       </div>

@@ -1,4 +1,4 @@
-import React, {  useMemo } from 'react'
+import React, { useMemo } from 'react'
 import styles from './index.module.css'
 import Image from 'next/image'
 import Logo from '@assets/hipalNewLogo.svg'
@@ -8,7 +8,6 @@ import { getRandomBlurImg } from '@components/utils/images'
 import PlaceholderImg from '@components/atoms/placeholder/img'
 import { useRouter } from 'next/router'
 import { HiChevronLeft } from 'react-icons/hi'
-
 
 function TermsConditions() {
 	const { data: _data } = useAllBusiness()

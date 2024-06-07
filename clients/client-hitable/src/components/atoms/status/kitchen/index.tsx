@@ -1,49 +1,30 @@
-import React from "react";
-import { BiBowlRice } from "react-icons/bi";
-import { MdOutlineCleaningServices, MdSoupKitchen } from "react-icons/md";
+import { MdSoupKitchen } from 'react-icons/md';
 
 function Kitchen({ ...props }) {
   return (
-    <div className="bg-[#FFC318]/10 mx-6 rounded-2xl">
+    <div className="mx-6 rounded-2xl bg-[#FFC318]/10">
       <div className="flex justify-between">
-        <div className="py-4 mx-4">
-          <button
-            className={`font-normal relative text-black rounded-full bg-base-100`}
-          >
+        <div className="mx-4 py-4">
+          <button className={`bg-base-100 relative rounded-full font-normal text-black`}>
             <div className="inline-flex items-center justify-start">
-              <div
-                className={`w-[1.5rem] absolute left-1 h-[1.5rem] bg-[#FFC318] rounded-full`}
-              >
-                <MdSoupKitchen className="mt-1 ml-1 text-base-100" />
+              <div className={`absolute left-1 h-[1.5rem] w-[1.5rem] rounded-full bg-[#FFC318]`}>
+                <MdSoupKitchen className="text-base-100 ml-1 mt-1" />
               </div>
-              <div className="capitalize font-[500] text-lg text-[#FFC318]/80 pl-2 ml-6 mr-4">
-                Kitchen needs you
-              </div>
+              <div className="ml-6 mr-4 pl-2 text-lg font-[500] capitalize text-[#FFC318]/80">Kitchen needs you</div>
             </div>
           </button>
         </div>
-        <div className="font-normal text-base-content/40 text-[0.875rem] mt-6 mr-6 leading-[1rem]">
-          {props.time}
-        </div>
+        <div className="text-base-content/40 mr-6 mt-6 text-[0.875rem] font-normal leading-[1rem]">{props.time}</div>
       </div>
       <div className="flex justify-between pb-4">
         <div className="mx-6 -mt-3">
-          <div className="font-[500] mt-1 text-base-content text-[1rem] leading-[1.25rem]">
-            {props.tableName ? props.tableName : "T-01"}
-          </div>
-          <div className="capitalize font-normal mt-1 text-base-content/40 text-[0.875rem] leading-[1rem]">
-            You are needed in kitchen
-          </div>
+          <div className="text-base-content mt-1 text-[1rem] font-[500] leading-[1.25rem]">{props.tableName ? props.tableName : 'T-01'}</div>
+          <div className="text-base-content/40 mt-1 text-[0.875rem] font-normal capitalize leading-[1rem]">You are needed in kitchen</div>
         </div>
         <div>
-          <label className="relative inline-flex items-center mr-8 scale-150 cursor-pointer">
-            <input
-              type="checkbox"
-              value=""
-              className="sr-only peer"
-              defaultChecked
-            />
-            <div className="w-11 h-6 bg-gray-400 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#FFC318]"></div>
+          <label className="relative mr-8 inline-flex scale-150 cursor-pointer items-center">
+            <input type="checkbox" value="" className="peer sr-only" defaultChecked />
+            <div className="peer-checked:after:border-base-100 after:bg-base-100 peer h-6 w-11 rounded-full bg-gray-400 after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:bg-[#FFC318] peer-checked:after:translate-x-full dark:border-gray-600 dark:bg-gray-700"></div>
           </label>
         </div>
       </div>

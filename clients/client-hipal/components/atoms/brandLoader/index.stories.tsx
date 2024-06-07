@@ -1,10 +1,10 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react'
+import { ComponentMeta, ComponentStory } from "@storybook/react"
 
-import BrandLoader from '.'
+import BrandLoader from "."
 
 // More on default export: https://storybook.js.org/docs/react/writing-stories/introduction#default-export
 export default {
-	title: 'atoms/BrandLoader',
+	title: "atoms/BrandLoader",
 	component: BrandLoader,
 } as ComponentMeta<typeof BrandLoader>
 

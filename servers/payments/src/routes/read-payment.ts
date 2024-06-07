@@ -1,47 +1,34 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import {
-  Payment,
-  PaymentMode,
-  Reviews,
-  ReviewsCustomer,
-  Dues,
-} from "@hi/db-models";
-import moment from "moment";
-import momentTimeZone from "moment-timezone";
+import { Dues, Payment, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
+import moment from 'moment';
+import momentTimeZone from 'moment-timezone';
 
 const router = express.Router();
 
 // create fields array
 const fields = [
-  "paymentDate",
-  "time",
-  "tableName",
-  "customerPhone",
-  "customerName",
-  "waiterName",
-  "sgst",
-  "subTotal",
-  "total",
-  "discount",
-  "mode",
-  "tips",
-  "items",
+  'paymentDate',
+  'time',
+  'tableName',
+  'customerPhone',
+  'customerName',
+  'waiterName',
+  'sgst',
+  'subTotal',
+  'total',
+  'discount',
+  'mode',
+  'tips',
+  'items',
 ];
 
 // create reviews fields array
 
-const reviewsFields = [
-  "reviewRating",
-  "description",
-  "improvementAreas",
-  "date",
-  "reviewerName",
-  "reviewerPhone",
-];
+const reviewsFields = ['reviewRating', 'description', 'improvementAreas', 'date', 'reviewerName', 'reviewerPhone'];
 
 router.get(
-  "/v1/payments",
+  '/v1/payments',
 
   async (req: Request, res: Response) => {
     const { id, date, remove } = req.query;
@@ -49,7 +36,7 @@ router.get(
       businessId: id,
     } as any;
     if (date) {
-      query["date"] = {
+      query['date'] = {
         $regex: `^${date}`,
       };
     }
@@ -60,148 +47,139 @@ router.get(
     const existingPayment = await Payment.find(query);
 
     res.status(200).send(existingPayment);
-  }
+  },
 );
 
 router.get(
-  "/v1/payments/:id/test",
+  '/v1/payments/:id/test',
 
   async (req: Request, res: Response) => {
-    res.status(200).send("payment test");
-  }
+    res.status(200).send('payment test');
+  },
 );
 
-router.get(
-  "/v1/payments/Sales&Discount",
-  async (req: Request, res: Response) => {
-    let { date, businessId } = req.query;
-    businessId = String(businessId);
+router.get('/v1/payments/Sales&Discount', async (req: Request, res: Response) => {
+  let { date, businessId } = req.query;
+  businessId = String(businessId);
 
-    const getPaymentsModes = await PaymentMode.find({ businessId });
-    const calculateSale = (array: any) => {
-      let summary: any = {
-        totalSale: 0,
-        modes: {},
-      };
-
-      array.forEach((payment: any) => {
-        if (payment.mode) {
-          if (!summary.modes[payment.mode]) {
-            summary.modes[payment.mode] = 0;
-          }
-          summary.modes[payment.mode] += payment.total;
-        }
-      });
-
-      // Convert modes object to desired format
-
-      for (const [mode, total] of Object.entries(summary.modes) as any) {
-        // Retrieve commission percentage for the mode
-        const commissionPercent = modes[mode] || 0;
-
-        // Calculate commission amount
-        const totalCommissionSale = (commissionPercent / 100) * total;
-
-        // Adjust totalSale by subtracting commission
-        const adjustedTotalSale = total - totalCommissionSale;
-        summary.totalSale += adjustedTotalSale;
-      }
-
-      return summary?.totalSale;
+  const getPaymentsModes = await PaymentMode.find({ businessId });
+  const calculateSale = (array: any) => {
+    let summary: any = {
+      totalSale: 0,
+      modes: {},
     };
-    let modes: any = {};
-    getPaymentsModes.forEach((element: any) => {
-      if (element?.mode) {
-        if (!modes[element.mode]) {
-          modes[element.mode] = element?.commission;
+
+    array.forEach((payment: any) => {
+      if (payment.mode) {
+        if (!summary.modes[payment.mode]) {
+          summary.modes[payment.mode] = 0;
         }
+        summary.modes[payment.mode] += payment.total;
       }
     });
 
-    // Get Indian formatted date for a given date or for now
-    const getIndianFormattedDate = (dateOffset = 0, referenceDate?: string) => {
-      let dateToAdjust = referenceDate ? moment(referenceDate) : moment();
-      return dateToAdjust
-        .utcOffset("+05:30")
-        .subtract(dateOffset, "days")
-        .format("YYYY-MM-DD");
+    // Convert modes object to desired format
+
+    for (const [mode, total] of Object.entries(summary.modes) as any) {
+      // Retrieve commission percentage for the mode
+      const commissionPercent = modes[mode] || 0;
+
+      // Calculate commission amount
+      const totalCommissionSale = (commissionPercent / 100) * total;
+
+      // Adjust totalSale by subtracting commission
+      const adjustedTotalSale = total - totalCommissionSale;
+      summary.totalSale += adjustedTotalSale;
+    }
+
+    return summary?.totalSale;
+  };
+  let modes: any = {};
+  getPaymentsModes.forEach((element: any) => {
+    if (element?.mode) {
+      if (!modes[element.mode]) {
+        modes[element.mode] = element?.commission;
+      }
+    }
+  });
+
+  // Get Indian formatted date for a given date or for now
+  const getIndianFormattedDate = (dateOffset = 0, referenceDate?: string) => {
+    let dateToAdjust = referenceDate ? moment(referenceDate) : moment();
+    return dateToAdjust.utcOffset('+05:30').subtract(dateOffset, 'days').format('YYYY-MM-DD');
+  };
+
+  // Construct query based on businessId and date
+  const constructQuery = (businessId: string, targetDate: string) => {
+    return {
+      businessId,
+      date: { $regex: `^${targetDate}` },
     };
+  };
 
-    // Construct query based on businessId and date
-    const constructQuery = (businessId: string, targetDate: string) => {
-      return {
-        businessId,
-        date: { $regex: `^${targetDate}` },
-      };
-    };
+  // Calculate sales and discount metrics
+  let DiscountIssued = 0;
+  const calculateMetrics = (payments: any[]) => {
+    let totalSale = 0;
+    let totalDiscount = 0;
 
-    // Calculate sales and discount metrics
-    let DiscountIssued = 0;
-    const calculateMetrics = (payments: any[]) => {
-      let totalSale = 0;
-      let totalDiscount = 0;
-
-      payments.forEach((payment) => {
-        if (payment?.discount > 0) {
-          DiscountIssued += 1;
-        }
-        totalSale += parseInt(payment?.total || "0");
-        totalDiscount += parseInt(payment?.discount || "0");
-      });
-
-      return { totalSale, totalDiscount };
-    };
-
-    const targetDate = date
-      ? String(date).split("-").reverse().join("-")
-      : getIndianFormattedDate();
-    const previousDate = getIndianFormattedDate(1, targetDate);
-
-    const [currentPayments, previousPayments] = await Promise.all([
-      Payment.find(constructQuery(businessId, targetDate)),
-      Payment.find(constructQuery(businessId, previousDate)),
-    ]);
-
-    const { totalDiscount } = calculateMetrics(currentPayments);
-
-    let pre = calculateSale(previousPayments);
-    let curr = calculateSale(currentPayments);
-
-    res.status(200).send({
-      totalSale: curr,
-      totalDiscount,
-      preTotalSale: pre,
-      percentageChange:
-        pre !== 0 ? ((curr - pre) / pre) * 100 : curr > 0 ? 100 : 0, // Assuming 100% increase if preTotalSale is 0 and totalSale is greater than 0.
-      DiscountIssued,
+    payments.forEach((payment) => {
+      if (payment?.discount > 0) {
+        DiscountIssued += 1;
+      }
+      totalSale += parseInt(payment?.total || '0');
+      totalDiscount += parseInt(payment?.discount || '0');
     });
-  }
-);
+
+    return { totalSale, totalDiscount };
+  };
+
+  const targetDate = date ? String(date).split('-').reverse().join('-') : getIndianFormattedDate();
+  const previousDate = getIndianFormattedDate(1, targetDate);
+
+  const [currentPayments, previousPayments] = await Promise.all([
+    Payment.find(constructQuery(businessId, targetDate)),
+    Payment.find(constructQuery(businessId, previousDate)),
+  ]);
+
+  const { totalDiscount } = calculateMetrics(currentPayments);
+
+  let pre = calculateSale(previousPayments);
+  let curr = calculateSale(currentPayments);
+
+  res.status(200).send({
+    totalSale: curr,
+    totalDiscount,
+    preTotalSale: pre,
+    percentageChange: pre !== 0 ? ((curr - pre) / pre) * 100 : curr > 0 ? 100 : 0, // Assuming 100% increase if preTotalSale is 0 and totalSale is greater than 0.
+    DiscountIssued,
+  });
+});
 
 router.get(
-  "/v1/payments/:id",
+  '/v1/payments/:id',
 
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingPayment = await Payment.findById(id);
 
     res.status(200).send(existingPayment);
-  }
+  },
 );
 
 router.get(
-  "/v1/payments/Sale/Api",
+  '/v1/payments/Sale/Api',
 
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to } = req.query;
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
 
       const getPaymentsModes = await PaymentMode.find({
         businessId,
-        mode: { $ne: "split payment" },
+        mode: { $ne: 'split payment' },
       });
       const calculateSale = (array: any) => {
         let summary: any = {
@@ -219,10 +197,8 @@ router.get(
           tips += payment?.tips || 0;
 
           if (payment.mode) {
-            if (payment.mode === "multiple" && payment.modeBreakDown) {
-              for (const [mode, amount] of Object.entries(
-                payment.modeBreakDown
-              )) {
+            if (payment.mode === 'multiple' && payment.modeBreakDown) {
+              for (const [mode, amount] of Object.entries(payment.modeBreakDown)) {
                 if (!summary.modes[mode]) {
                   summary.modes[mode] = 0;
                 }
@@ -234,7 +210,7 @@ router.get(
               }
 
               // Check if the mode is "complimentary" and update accordingly
-              if (payment.mode === "complimentary") {
+              if (payment.mode === 'complimentary') {
                 summary.modes[payment.mode] += payment.subTotal;
               } else {
                 summary.modes[payment.mode] += payment.total;
@@ -253,7 +229,7 @@ router.get(
 
           // Adjust totalSale by subtracting commission
           const adjustedTotalSale = total - totalCommissionSale;
-          if (mode == "complimentary") {
+          if (mode == 'complimentary') {
             summary.totalSale += 0;
           } else {
             summary.totalSale += adjustedTotalSale;
@@ -279,25 +255,25 @@ router.get(
           }
         });
         modesArray.push({
-          mode: "discount",
+          mode: 'discount',
           totalSale: totalDiscount,
           commissionPercent: 0,
           totalCommissionSale: 0,
         });
         modesArray.push({
-          mode: "serviceCharge",
+          mode: 'serviceCharge',
           totalSale: Number(serviceCharge?.toFixed(2)),
           commissionPercent: 0,
           totalCommissionSale: 0,
         });
         modesArray.push({
-          mode: "normalTaxes",
+          mode: 'normalTaxes',
           totalSale: Number(normalTaxes?.toFixed(2)),
           commissionPercent: 0,
           totalCommissionSale: 0,
         });
         modesArray.push({
-          mode: "tips",
+          mode: 'tips',
           totalSale: tips,
           commissionPercent: 0,
           totalCommissionSale: 0,
@@ -315,9 +291,7 @@ router.get(
       });
 
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         let existingPayments = await Payment.find({
           businessId,
 
@@ -340,30 +314,28 @@ router.get(
           const existingPayments = await Payment.find({
             businessId,
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+            date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
           });
 
           let result = calculateSale(existingPayments);
 
           return res.status(200).send(result);
         }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
         fromDate.setUTCHours(0, 0, 0, 0);
 
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
 
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
 
         const filteredPayments = await Payment.find({
           businessId,
@@ -378,23 +350,23 @@ router.get(
         return res.status(200).send(result);
       }
 
-      res.status(400).send({ message: "Invalid request parameters" });
+      res.status(400).send({ message: 'Invalid request parameters' });
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 
-router.get("/v1/payments/Sale/Bill", async (req: Request, res: Response) => {
+router.get('/v1/payments/Sale/Bill', async (req: Request, res: Response) => {
   try {
     let { businessId, from, to, mode } = req.query;
 
-    const currentDate = momentTimeZone.tz("Asia/Kolkata");
+    const currentDate = momentTimeZone.tz('Asia/Kolkata');
 
-    const previousDate = currentDate.subtract(1, "days");
+    const previousDate = currentDate.subtract(1, 'days');
 
-    const preDate = previousDate.format("YYYY-MM-DD");
+    const preDate = previousDate.format('YYYY-MM-DD');
     let PAGE_SIZE = 20;
     let pageNumber: any = req?.query?.pageNumber || 1;
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
@@ -411,7 +383,7 @@ router.get("/v1/payments/Sale/Bill", async (req: Request, res: Response) => {
     });
 
     if (!from && !to) {
-      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD"); // Adjust timezone as necessary
+      const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
       let existingPayments = await Payment.find({
         businessId,
         ...query,
@@ -440,29 +412,27 @@ router.get("/v1/payments/Sale/Bill", async (req: Request, res: Response) => {
         const existingPayments = await Payment.find({
           businessId,
           ...query,
-          date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+          date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
         })
           .skip(skip)
           .limit(PAGE_SIZE);
 
         return res.status(200).send(existingPayments);
       }
-      let fromDate = new Date(String(from).split("-").reverse().join("-"));
+      let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
       fromDate.setUTCHours(0, 0, 0, 0);
 
-      let toDate = new Date(String(to).split("-").reverse().join("-"));
+      let toDate = new Date(String(to).split('-').reverse().join('-'));
 
       toDate.setUTCHours(23, 59, 59, 999);
 
       if (fromDate > toDate) {
-        return res
-          .status(400)
-          .send("From date cannot be greater than to date.");
+        return res.status(400).send('From date cannot be greater than to date.');
       }
 
-      const formattedFromDate = fromDate.toISOString().split("T")[0];
-      const formattedToDate = toDate.toISOString().split("T")[0];
+      const formattedFromDate = fromDate.toISOString().split('T')[0];
+      const formattedToDate = toDate.toISOString().split('T')[0];
 
       const filteredPayments = await Payment.find({
         businessId,
@@ -478,20 +448,20 @@ router.get("/v1/payments/Sale/Bill", async (req: Request, res: Response) => {
       return res.status(200).send(filteredPayments);
     }
 
-    res.status(400).send({ message: "Invalid request parameters" });
+    res.status(400).send({ message: 'Invalid request parameters' });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
-router.get("/v1/payments/Sale/Dues", async (req: Request, res: Response) => {
+router.get('/v1/payments/Sale/Dues', async (req: Request, res: Response) => {
   try {
     let { businessId } = req.query;
 
     const existingPayments = await Payment.find({
       businessId,
-      mode: "dues",
+      mode: 'dues',
       settle: false,
     });
     let totalDues = 0;
@@ -525,11 +495,11 @@ router.get("/v1/payments/Sale/Dues", async (req: Request, res: Response) => {
     return res.status(200).send(newObje);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
-router.get("/v1/payments/Get/Modes", async (req: Request, res: Response) => {
+router.get('/v1/payments/Get/Modes', async (req: Request, res: Response) => {
   try {
     let { businessId, remove, id } = req.query;
     if (remove) {
@@ -543,17 +513,17 @@ router.get("/v1/payments/Get/Modes", async (req: Request, res: Response) => {
       businessId,
     });
     if (!existingModes) {
-      return res.status(404).send("Modes Not Found..");
+      return res.status(404).send('Modes Not Found..');
     }
 
     return res.status(200).send(existingModes);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
-router.get("/v1/payments/Get/Dues", async (req: Request, res: Response) => {
+router.get('/v1/payments/Get/Dues', async (req: Request, res: Response) => {
   try {
     let { businessId } = req.query;
 
@@ -561,63 +531,48 @@ router.get("/v1/payments/Get/Dues", async (req: Request, res: Response) => {
       businessId,
     });
     if (!existimgDues) {
-      return res.status(404).send("Dues Not Found..");
+      return res.status(404).send('Dues Not Found..');
     }
 
     return res.status(200).send(existimgDues);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
-router.get(
-  "/v1/payments/Get/DuesByUser",
-  async (req: Request, res: Response) => {
-    try {
-      let { duesPersonId, businessId, from, to } = req.query;
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
-      const duesUser = await Payment.findOne({
+router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) => {
+  try {
+    let { duesPersonId, businessId, from, to } = req.query;
+    const currentDate = momentTimeZone.tz('Asia/Kolkata');
+    const previousDate = currentDate.subtract(1, 'days');
+    const preDate = previousDate.format('YYYY-MM-DD');
+    const duesUser = await Payment.findOne({
+      duesPersonId,
+      businessId,
+    }).select('customerName');
+    let totalDues = 0;
+    const calculateTotalDues = (array: any) => {
+      array.forEach((element: any) => {
+        if (element?.settle == false) {
+          totalDues += element?.total;
+        }
+      });
+      return totalDues;
+    };
+    if (!from && !to) {
+      const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
+      const existingPayments = await Payment.find({
         duesPersonId,
         businessId,
-      }).select("customerName");
-      let totalDues = 0;
-      const calculateTotalDues = (array: any) => {
-        array.forEach((element: any) => {
-          if (element?.settle == false) {
-            totalDues += element?.total;
-          }
-        });
-        return totalDues;
-      };
-      if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        date: { $regex: `^${dayAndDate}` },
+      });
+      if (existingPayments?.length == 0) {
         const existingPayments = await Payment.find({
           duesPersonId,
           businessId,
-          date: { $regex: `^${dayAndDate}` },
+          date: { $regex: `^${preDate}` },
         });
-        if (existingPayments?.length == 0) {
-          const existingPayments = await Payment.find({
-            duesPersonId,
-            businessId,
-            date: { $regex: `^${preDate}` },
-          });
-          totalDues = calculateTotalDues(existingPayments);
-          let newObje =
-            {
-              totalDues,
-              items: existingPayments,
-              userName: duesUser?.customerName,
-            } || {};
-
-          return res.send(newObje);
-        }
-
         totalDues = calculateTotalDues(existingPayments);
         let newObje =
           {
@@ -629,62 +584,70 @@ router.get(
         return res.send(newObje);
       }
 
-      if (from && to) {
-        if (from == to) {
-          // Adjust timezone as necessary
-          const existingPayments = await Payment.find({
-            duesPersonId,
-            businessId,
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
-          });
-          totalDues = calculateTotalDues(existingPayments);
-          let newObje =
-            {
-              totalDues,
-              items: existingPayments,
-              userName: duesUser?.customerName,
-            } || {};
+      totalDues = calculateTotalDues(existingPayments);
+      let newObje =
+        {
+          totalDues,
+          items: existingPayments,
+          userName: duesUser?.customerName,
+        } || {};
 
-          return res.send(newObje);
-        }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+      return res.send(newObje);
+    }
 
-        fromDate.setUTCHours(0, 0, 0, 0);
-
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
-
-        toDate.setUTCHours(23, 59, 59, 999);
-        if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
-        }
-        const filteredPayments = await Payment.find({
-          businessId,
+    if (from && to) {
+      if (from == to) {
+        // Adjust timezone as necessary
+        const existingPayments = await Payment.find({
           duesPersonId,
-
-          date: {
-            $gte: fromDate.toISOString(),
-            $lte: toDate.toISOString(),
-          },
+          businessId,
+          date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
         });
-
-        totalDues = calculateTotalDues(filteredPayments);
+        totalDues = calculateTotalDues(existingPayments);
         let newObje =
           {
             totalDues,
+            items: existingPayments,
             userName: duesUser?.customerName,
-            items: filteredPayments,
           } || {};
 
         return res.send(newObje);
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
+      let fromDate = new Date(String(from).split('-').reverse().join('-'));
+
+      fromDate.setUTCHours(0, 0, 0, 0);
+
+      let toDate = new Date(String(to).split('-').reverse().join('-'));
+
+      toDate.setUTCHours(23, 59, 59, 999);
+      if (fromDate > toDate) {
+        return res.status(400).send('From date cannot be greater than to date.');
+      }
+      const filteredPayments = await Payment.find({
+        businessId,
+        duesPersonId,
+
+        date: {
+          $gte: fromDate.toISOString(),
+          $lte: toDate.toISOString(),
+        },
+      });
+
+      totalDues = calculateTotalDues(filteredPayments);
+      let newObje =
+        {
+          totalDues,
+          userName: duesUser?.customerName,
+          items: filteredPayments,
+        } || {};
+
+      return res.send(newObje);
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
   }
-);
+});
 
 // router.get("/v1/payments/Get/Alert", async (req: Request, res: Response) => {
 //   try {
@@ -728,7 +691,7 @@ router.get(
 // );
 
 router.get(
-  "/v1/payments/:id/byUsers",
+  '/v1/payments/:id/byUsers',
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
@@ -741,9 +704,9 @@ router.get(
       return res.status(200).send(existingPayments);
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 const necessaryFields = {
   items: 0,
@@ -760,18 +723,18 @@ const necessaryFields = {
   logo: 0,
 };
 router.get(
-  "/v1/payments/:id/saleDashboard",
+  '/v1/payments/:id/saleDashboard',
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to } = req.query;
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
 
       const getPaymentsModes = await PaymentMode.find({
         businessId,
-        mode: { $nin: ["split payment", "complimentary"] },
+        mode: { $nin: ['split payment', 'complimentary'] },
       });
 
       let modes: any = {};
@@ -785,15 +748,13 @@ router.get(
 
       let payments;
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         payments = await Payment.find(
           {
             businessId,
             date: { $regex: `^${dayAndDate}` },
           },
-          necessaryFields
+          necessaryFields,
         );
 
         if (payments?.length == 0) {
@@ -802,22 +763,20 @@ router.get(
               businessId,
               date: { $regex: `^${preDate}` },
             },
-            necessaryFields
+            necessaryFields,
           );
         }
       } else if (from && to) {
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
         fromDate.setUTCHours(0, 0, 0, 0);
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
         toDate.setUTCHours(23, 59, 59, 999);
         if (fromDate > toDate) {
-          return res
-            .status(404)
-            .send("From date cannot be greater than to date.");
+          return res.status(404).send('From date cannot be greater than to date.');
         }
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
         payments = await Payment.find(
           {
             businessId,
@@ -826,10 +785,10 @@ router.get(
               $lte: formattedToDate,
             },
           },
-          necessaryFields
+          necessaryFields,
         );
       } else {
-        return res.status(404).send("Invalid request parameters");
+        return res.status(404).send('Invalid request parameters');
       }
 
       let result = calculateSale(payments, getPaymentsModes, modes);
@@ -837,9 +796,9 @@ router.get(
       return res.status(200).send(result);
     } catch (error) {
       console.error(error);
-      res.status(500).send("Server error");
+      res.status(500).send('Server error');
     }
-  }
+  },
 );
 
 function calculateSale(payments: any[], paymentModes: any[], modes: any) {
@@ -868,30 +827,26 @@ function calculateSale(payments: any[], paymentModes: any[], modes: any) {
   const modesArray = convertModesToArray(summary, modes);
   addMissingModes(modesArray, paymentModes);
   summary.modes = modesArray;
-  const complimentaryMode = summary?.modes?.find(
-    (mode: any) => mode.mode === "complimentary"
-  );
-  let filterModes = summary?.modes.filter(
-    (mode: any) => mode.mode != "complimentary"
-  );
+  const complimentaryMode = summary?.modes?.find((mode: any) => mode.mode === 'complimentary');
+  let filterModes = summary?.modes.filter((mode: any) => mode.mode != 'complimentary');
 
   let charges = [];
   let dis = [];
 
   charges.push({
-    mode: "serviceCharge",
+    mode: 'serviceCharge',
     totalSale: Number(serviceCharge?.toFixed(2)),
     commissionPercent: 0,
     totalCommissionSale: 0,
   });
   charges.push({
-    mode: "Taxes",
+    mode: 'Taxes',
     totalSale: Number(normalTaxes?.toFixed(2)),
     commissionPercent: 0,
     totalCommissionSale: 0,
   });
   dis.push({
-    mode: "Discount & Complimentary",
+    mode: 'Discount & Complimentary',
     totalSale: totalDiscount,
     commissionPercent: 0,
     totalCommissionSale: 0,
@@ -916,18 +871,13 @@ function calculateWaiterChips(waiterChips: any, payment: any) {
   } else {
     waiterChips[payment?.waiterName] = {
       waiterName: payment?.waiterName,
-      tips:
-        (waiterChips[payment?.waiterName]?.tips || 0) + (payment?.tips || 0),
+      tips: (waiterChips[payment?.waiterName]?.tips || 0) + (payment?.tips || 0),
     };
   }
 }
 
 function calculateDues(duesObject: any, payment: any) {
-  if (
-    payment?.settle === false &&
-    !duesObject[payment?.duesPersonId] &&
-    payment?.duesPersonId?.length > 1
-  ) {
+  if (payment?.settle === false && !duesObject[payment?.duesPersonId] && payment?.duesPersonId?.length > 1) {
     duesObject[payment?.duesPersonId] = {
       customerName: payment?.customerName,
       dues: payment?.total,
@@ -935,15 +885,14 @@ function calculateDues(duesObject: any, payment: any) {
   } else if (payment?.settle === false && payment?.duesPersonId?.length > 1) {
     duesObject[payment?.duesPersonId] = {
       customerName: payment?.customerName,
-      dues:
-        (duesObject[payment?.duesPersonId]?.dues || 0) + (payment?.total || 0),
+      dues: (duesObject[payment?.duesPersonId]?.dues || 0) + (payment?.total || 0),
     };
   }
 }
 
 function calculateModes(summary: any, payment: any) {
   if (payment.mode) {
-    if (payment.mode === "multiple" && payment.modeBreakDown) {
+    if (payment.mode === 'multiple' && payment.modeBreakDown) {
       for (const [mode, amount] of Object.entries(payment.modeBreakDown)) {
         if (!summary.modes[mode]) {
           summary.modes[mode] = 0;
@@ -955,7 +904,7 @@ function calculateModes(summary: any, payment: any) {
         summary.modes[payment.mode] = 0;
       }
 
-      if (payment.mode === "complimentary") {
+      if (payment.mode === 'complimentary') {
         summary.modes[payment.mode] += payment.subTotal;
       } else {
         summary.modes[payment.mode] += payment.total;
@@ -974,7 +923,7 @@ function convertModesToArray(summary: any, modes: any) {
 
     // Adjust totalSale by subtracting commission
     const adjustedTotalSale = total - totalCommissionSale;
-    if (mode == "complimentary") {
+    if (mode == 'complimentary') {
       summary.totalSale += 0;
     } else {
       summary.totalSale += adjustedTotalSale;
@@ -1005,30 +954,30 @@ function addMissingModes(modesArray: any[], paymentModes: any[]) {
 }
 
 router.get(
-  "/v1/payments/:id/saleReport",
+  '/v1/payments/:id/saleReport',
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to, excel } = req.query;
 
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
       let splitArray: any = [];
 
       const objectFunction = (payment: any) => {
         let obj: any = {};
 
-        obj["date"] = payment?.date;
-        obj["customerName"] = payment?.customerName;
-        obj["customerPhone"] = payment?.customerPhone;
-        obj["time"] = payment?.time;
-        obj["orderId"] = payment?.orderId || payment?.id?.slice(-5);
-        obj["tableNumber"] = payment?.tableName;
-        obj["orderType"] = payment?.zoneType;
-        obj["paymentType"] = payment?.mode;
-        obj["closedBy"] = payment?.waiterName;
+        obj['date'] = payment?.date;
+        obj['customerName'] = payment?.customerName;
+        obj['customerPhone'] = payment?.customerPhone;
+        obj['time'] = payment?.time;
+        obj['orderId'] = payment?.orderId || payment?.id?.slice(-5);
+        obj['tableNumber'] = payment?.tableName;
+        obj['orderType'] = payment?.zoneType;
+        obj['paymentType'] = payment?.mode;
+        obj['closedBy'] = payment?.waiterName;
 
         let tempObj: any = {};
 
@@ -1041,24 +990,24 @@ router.get(
             }
           }
         });
-        obj["categories"] = { ...tempObj };
+        obj['categories'] = { ...tempObj };
 
         // for (let category in tempObj) {
         //   obj[category] = tempObj[category];
         // }
-        obj["subTotal"] = payment?.subTotal;
-        obj["discount"] = payment?.discount || 0;
-        obj["discountReason"] = payment?.discountDescription;
+        obj['subTotal'] = payment?.subTotal;
+        obj['discount'] = payment?.discount || 0;
+        obj['discountReason'] = payment?.discountDescription;
 
-        obj["cgst"] = payment?.cgst || 0;
-        obj["sgst"] = payment?.sgst || 0;
-        obj["serviceCharge"] = payment?.serviceCharge || 0;
-        obj["packingCharges"] = payment?.swiggyBillObj?.packingCharges || 0;
-        obj["RxPayableGST"] = payment?.swiggyBillObj?.RxPayableGST || 0;
-        obj["swiggyPayableGST"] = payment?.swiggyBillObj?.swiggyPayableGST || 0;
-        obj["total"] = payment?.total;
-        obj["tips"] = payment?.tips || 0;
-        if (payment?.mode == "multiple") {
+        obj['cgst'] = payment?.cgst || 0;
+        obj['sgst'] = payment?.sgst || 0;
+        obj['serviceCharge'] = payment?.serviceCharge || 0;
+        obj['packingCharges'] = payment?.swiggyBillObj?.packingCharges || 0;
+        obj['RxPayableGST'] = payment?.swiggyBillObj?.RxPayableGST || 0;
+        obj['swiggyPayableGST'] = payment?.swiggyBillObj?.swiggyPayableGST || 0;
+        obj['total'] = payment?.total;
+        obj['tips'] = payment?.tips || 0;
+        if (payment?.mode == 'multiple') {
           let h: any = {};
           for (let category in tempObj) {
             h[category] = 0;
@@ -1069,7 +1018,7 @@ router.get(
           tempSplitObj = {
             ...obj,
             categories: { ...h },
-            paymentType: "split",
+            paymentType: 'split',
             subTotal: 0,
             discount: 0,
             discountReason: 0,
@@ -1081,35 +1030,19 @@ router.get(
           };
           splitArray.push(tempSplitObj);
           for (let mode in payment?.modeBreakDown) {
-            let sTotal = Math.round(
-              (obj?.subTotal * payment?.modeBreakDown[mode]) / obj?.total
-            );
+            let sTotal = Math.round((obj?.subTotal * payment?.modeBreakDown[mode]) / obj?.total);
 
-            let cgst = Math.round(
-              (obj?.cgst * payment?.modeBreakDown[mode]) / obj?.total
-            );
-            let sgst = Math.round(
-              (obj?.sgst * payment?.modeBreakDown[mode]) / obj?.total
-            );
-            let serviceCharge = Math.round(
-              (obj?.serviceCharge * payment?.modeBreakDown[mode]) / obj?.total
-            );
-            let discount = Math.round(
-              (obj?.discount * payment?.modeBreakDown[mode]) / obj?.total
-            );
-            let tips = Math.round(
-              (obj?.tips * payment?.modeBreakDown[mode]) / obj?.total
-            );
-            let total = Math.round(
-              (obj?.total * payment?.modeBreakDown[mode]) / obj?.total
-            );
+            let cgst = Math.round((obj?.cgst * payment?.modeBreakDown[mode]) / obj?.total);
+            let sgst = Math.round((obj?.sgst * payment?.modeBreakDown[mode]) / obj?.total);
+            let serviceCharge = Math.round((obj?.serviceCharge * payment?.modeBreakDown[mode]) / obj?.total);
+            let discount = Math.round((obj?.discount * payment?.modeBreakDown[mode]) / obj?.total);
+            let tips = Math.round((obj?.tips * payment?.modeBreakDown[mode]) / obj?.total);
+            let total = Math.round((obj?.total * payment?.modeBreakDown[mode]) / obj?.total);
 
             let c: any = {};
 
             for (let category in tempObj) {
-              let value = Math.round(
-                (tempObj[category] * payment?.modeBreakDown[mode]) / obj?.total
-              );
+              let value = Math.round((tempObj[category] * payment?.modeBreakDown[mode]) / obj?.total);
 
               c[category] = value;
             }
@@ -1120,14 +1053,14 @@ router.get(
 
               subTotal: sTotal,
               discount: discount,
-              discountReason: "",
+              discountReason: '',
               cgst: cgst,
               sgst: sgst,
               serviceCharge: serviceCharge,
               total: total,
               tips: tips,
             };
-            tempSplitObj["categories"] = { ...c };
+            tempSplitObj['categories'] = { ...c };
 
             splitArray.push(tempSplitObj);
           }
@@ -1137,9 +1070,7 @@ router.get(
       };
 
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         let existingPayments = await Payment.find({
           businessId,
 
@@ -1166,11 +1097,11 @@ router.get(
           });
 
           let obj: any = {};
-          obj["from"] = dayAndDate;
-          obj["to"] = dayAndDate;
+          obj['from'] = dayAndDate;
+          obj['to'] = dayAndDate;
           ans.unshift(obj);
         }
-        ans = ans.filter((pay: any) => pay.paymentType != "multiple");
+        ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
         return res.send([...ans, ...splitArray]);
       }
@@ -1180,7 +1111,7 @@ router.get(
           const existingPayments = await Payment.find({
             businessId,
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+            date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
           });
 
           let ans: any = [];
@@ -1198,31 +1129,29 @@ router.get(
             });
 
             let obj: any = {};
-            obj["from"] = from;
-            obj["to"] = from;
+            obj['from'] = from;
+            obj['to'] = from;
             ans.unshift(obj);
           }
-          ans = ans.filter((pay: any) => pay.paymentType != "multiple");
+          ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
           return res.send([...ans, ...splitArray]);
         }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
         fromDate.setUTCHours(0, 0, 0, 0);
 
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
 
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
 
         const filteredPayments = await Payment.find({
           businessId,
@@ -1246,55 +1175,51 @@ router.get(
           });
 
           let obj: any = {};
-          obj["from"] = from;
-          obj["to"] = to;
+          obj['from'] = from;
+          obj['to'] = to;
           ans.unshift(obj);
         }
-        ans = ans.filter((pay: any) => pay.paymentType != "multiple");
+        ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
         return res.send([...ans, ...splitArray]);
       }
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 
 router.get(
-  "/v1/payments/:id/discountReport",
+  '/v1/payments/:id/discountReport',
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to, excel } = req.query;
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
 
       const objectFunction = (payment: any) => {
         let obj: any = {};
 
-        obj["date"] = payment?.date;
-        obj["discountPercentage"] = Math.floor(
-          (payment?.discount / payment?.subTotal) * 100
-        );
-        obj["givenBy"] = payment?.waiterName;
-        obj["reason"] = payment?.discountDescription;
-        obj["discountAmount"] = payment?.discount || 0;
-        obj["billValue"] = payment?.total;
-        obj["time"] = payment?.time;
-        obj["orderId"] = payment?.orderId || payment?.id?.slice(-5);
+        obj['date'] = payment?.date;
+        obj['discountPercentage'] = Math.floor((payment?.discount / payment?.subTotal) * 100);
+        obj['givenBy'] = payment?.waiterName;
+        obj['reason'] = payment?.discountDescription;
+        obj['discountAmount'] = payment?.discount || 0;
+        obj['billValue'] = payment?.total;
+        obj['time'] = payment?.time;
+        obj['orderId'] = payment?.orderId || payment?.id?.slice(-5);
 
-        obj["tableNumber"] = payment?.tableName;
+        obj['tableNumber'] = payment?.tableName;
 
         return obj;
       };
 
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         let existingPayments = await Payment.find({
           businessId,
           discount: { $gt: 0 },
@@ -1324,10 +1249,10 @@ router.get(
           });
 
           let obj: any = {};
-          obj["from"] = dayAndDate;
-          obj["to"] = dayAndDate;
+          obj['from'] = dayAndDate;
+          obj['to'] = dayAndDate;
 
-          obj["discountValue"] = sumOfDis;
+          obj['discountValue'] = sumOfDis;
 
           ans.unshift(obj);
         }
@@ -1341,7 +1266,7 @@ router.get(
             businessId,
             discount: { $gt: 0 },
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+            date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
           });
 
           let ans: any = [];
@@ -1359,32 +1284,30 @@ router.get(
             });
 
             let obj: any = {};
-            obj["from"] = from;
-            obj["to"] = from;
+            obj['from'] = from;
+            obj['to'] = from;
 
-            obj["discountValue"] = sumOfDis;
+            obj['discountValue'] = sumOfDis;
             ans.unshift(obj);
           }
 
           return res.send(ans);
         }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
         fromDate.setUTCHours(0, 0, 0, 0);
 
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
 
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
 
         const filteredPayments = await Payment.find({
           businessId,
@@ -1410,9 +1333,9 @@ router.get(
           });
 
           let obj: any = {};
-          obj["from"] = from;
-          obj["to"] = to;
-          obj["discountValue"] = sumOfDis;
+          obj['from'] = from;
+          obj['to'] = to;
+          obj['discountValue'] = sumOfDis;
           ans.unshift(obj);
         }
 
@@ -1420,63 +1343,61 @@ router.get(
       }
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 
 router.get(
-  "/v1/payments/:id/duesReport",
+  '/v1/payments/:id/duesReport',
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to, excel } = req.query;
 
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
 
       const objectFunction = (payment: any) => {
         let obj: any = {};
-        obj["date"] = payment?.date;
-        obj["time"] = payment?.time;
-        obj["orderId"] = payment?.orderId || payment?.id?.slice(-5);
-        obj["subTotal"] = payment?.subTotal || 0;
-        obj["discount"] = payment?.discount || 0;
-        obj["cgst"] = payment?.cgst || 0;
-        obj["sgst"] = payment?.sgst || 0;
-        obj["serviceCharge"] = payment?.serviceCharge || 0;
-        obj["duesAmount"] = payment?.total || 0;
-        obj["remarks"] = payment?.customerName;
-        obj["paid"] = payment?.settle || "no";
+        obj['date'] = payment?.date;
+        obj['time'] = payment?.time;
+        obj['orderId'] = payment?.orderId || payment?.id?.slice(-5);
+        obj['subTotal'] = payment?.subTotal || 0;
+        obj['discount'] = payment?.discount || 0;
+        obj['cgst'] = payment?.cgst || 0;
+        obj['sgst'] = payment?.sgst || 0;
+        obj['serviceCharge'] = payment?.serviceCharge || 0;
+        obj['duesAmount'] = payment?.total || 0;
+        obj['remarks'] = payment?.customerName;
+        obj['paid'] = payment?.settle || 'no';
         if (payment?.settle) {
-          obj["paidDate"] = payment?.date || "-";
-          obj["paidBy"] = payment?.customerName || "-";
+          obj['paidDate'] = payment?.date || '-';
+          obj['paidBy'] = payment?.customerName || '-';
         } else {
-          obj["pending"] = payment?.total || "-";
-          obj["paidBy"] = "-";
-          obj["paidDate"] = "-";
+          obj['pending'] = payment?.total || '-';
+          obj['paidBy'] = '-';
+          obj['paidDate'] = '-';
         }
 
         return obj;
       };
 
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         let existingPayments = await Payment.find({
           businessId,
 
-          duesPersonId: { $exists: true, $ne: "" },
+          duesPersonId: { $exists: true, $ne: '' },
           date: { $regex: `^${dayAndDate}` },
         });
         if (existingPayments?.length == 0) {
           existingPayments = await Payment.find({
             businessId,
 
-            duesPersonId: { $exists: true, $ne: "" },
+            duesPersonId: { $exists: true, $ne: '' },
             date: { $regex: `^${preDate}` },
           });
         }
@@ -1497,11 +1418,11 @@ router.get(
         }
         if (excel) {
           let obj: any = {};
-          obj["from"] = dayAndDate;
-          obj["to"] = dayAndDate;
+          obj['from'] = dayAndDate;
+          obj['to'] = dayAndDate;
 
-          obj["duesPaid"] = paidAmount;
-          obj["duesPending"] = pending;
+          obj['duesPaid'] = paidAmount;
+          obj['duesPending'] = pending;
 
           ans.unshift(obj);
         }
@@ -1514,9 +1435,9 @@ router.get(
           const existingPayments = await Payment.find({
             businessId,
 
-            duesPersonId: { $exists: true, $ne: "" },
+            duesPersonId: { $exists: true, $ne: '' },
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+            date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
           });
 
           let ans: any = [];
@@ -1536,39 +1457,37 @@ router.get(
           }
           if (excel) {
             let obj: any = {};
-            obj["from"] = from;
-            obj["to"] = from;
+            obj['from'] = from;
+            obj['to'] = from;
 
-            obj["duesPaid"] = paidAmount;
-            obj["duesPending"] = pending;
+            obj['duesPaid'] = paidAmount;
+            obj['duesPending'] = pending;
 
             ans.unshift(obj);
           }
 
           return res.send(ans);
         }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
         fromDate.setUTCHours(0, 0, 0, 0);
 
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
 
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
 
         const filteredPayments = await Payment.find({
           businessId,
 
-          duesPersonId: { $exists: true, $ne: "" },
+          duesPersonId: { $exists: true, $ne: '' },
           date: {
             $gte: formattedFromDate,
             $lte: formattedToDate,
@@ -1591,11 +1510,11 @@ router.get(
         }
         if (excel) {
           let obj: any = {};
-          obj["from"] = from;
-          obj["to"] = to;
+          obj['from'] = from;
+          obj['to'] = to;
 
-          obj["duesPaid"] = paidAmount;
-          obj["duesPending"] = pending;
+          obj['duesPaid'] = paidAmount;
+          obj['duesPending'] = pending;
 
           ans.unshift(obj);
         }
@@ -1604,54 +1523,52 @@ router.get(
       }
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 
 router.get(
-  "/v1/payments/:id/complimentaryReport",
+  '/v1/payments/:id/complimentaryReport',
 
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     try {
       let { businessId, from, to, excel } = req.query;
 
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
+      const currentDate = momentTimeZone.tz('Asia/Kolkata');
+      const previousDate = currentDate.subtract(1, 'days');
+      const preDate = previousDate.format('YYYY-MM-DD');
 
       const objectFunction = (payment: any) => {
         let obj: any = {};
 
-        obj["date"] = payment?.date;
-        obj["complimentaryName"] = payment?.customerName;
-        obj["complimentaryRemark"] = "-";
-        obj["grossAmount"] = payment?.subTotal;
+        obj['date'] = payment?.date;
+        obj['complimentaryName'] = payment?.customerName;
+        obj['complimentaryRemark'] = '-';
+        obj['grossAmount'] = payment?.subTotal;
 
-        obj["time"] = payment?.time || 0;
-        obj["orderId"] = payment?.orderId || payment?.id?.slice(-5);
+        obj['time'] = payment?.time || 0;
+        obj['orderId'] = payment?.orderId || payment?.id?.slice(-5);
 
-        obj["orderType"] = payment?.zoneType || "";
-        obj["tableNumber"] = payment?.tableName || "";
+        obj['orderType'] = payment?.zoneType || '';
+        obj['tableNumber'] = payment?.tableName || '';
 
         return obj;
       };
 
       if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
+        const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
         let existingPayments = await Payment.find({
           businessId,
-          mode: "complimentary",
+          mode: 'complimentary',
 
           date: { $regex: `^${dayAndDate}` },
         });
         if (existingPayments?.length == 0) {
           existingPayments = await Payment.find({
             businessId,
-            mode: "complimentary",
+            mode: 'complimentary',
             date: { $regex: `^${preDate}` },
           });
         }
@@ -1666,10 +1583,10 @@ router.get(
         }
         if (excel) {
           let obj: any = {};
-          obj["from"] = dayAndDate;
-          obj["to"] = dayAndDate;
+          obj['from'] = dayAndDate;
+          obj['to'] = dayAndDate;
 
-          obj["complimentaryValue"] = complimentary;
+          obj['complimentaryValue'] = complimentary;
 
           ans.unshift(obj);
         }
@@ -1681,9 +1598,9 @@ router.get(
         if (from == to) {
           const existingPayments = await Payment.find({
             businessId,
-            mode: "complimentary",
+            mode: 'complimentary',
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+            date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
           });
 
           let ans: any = [];
@@ -1698,37 +1615,35 @@ router.get(
           }
           if (excel) {
             let obj: any = {};
-            obj["from"] = from;
-            obj["to"] = from;
+            obj['from'] = from;
+            obj['to'] = from;
 
-            obj["complimentaryValue"] = complimentary;
+            obj['complimentaryValue'] = complimentary;
 
             ans.unshift(obj);
           }
 
           return res.send(ans);
         }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
+        let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
         fromDate.setUTCHours(0, 0, 0, 0);
 
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
+        let toDate = new Date(String(to).split('-').reverse().join('-'));
 
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
+        const formattedFromDate = fromDate.toISOString().split('T')[0];
+        const formattedToDate = toDate.toISOString().split('T')[0];
 
         const filteredPayments = await Payment.find({
           businessId,
-          mode: "complimentary",
+          mode: 'complimentary',
           date: {
             $gte: formattedFromDate,
             $lte: formattedToDate,
@@ -1747,10 +1662,10 @@ router.get(
         }
         if (excel) {
           let obj: any = {};
-          obj["from"] = from;
-          obj["to"] = to;
+          obj['from'] = from;
+          obj['to'] = to;
 
-          obj["complimentaryValue"] = complimentary;
+          obj['complimentaryValue'] = complimentary;
 
           ans.unshift(obj);
         }
@@ -1759,12 +1674,12 @@ router.get(
       }
     } catch (error) {
       console.error(error);
-      res.status(500).send({ message: "Server error" });
+      res.status(500).send({ message: 'Server error' });
     }
-  }
+  },
 );
 
-router.get("/v1/payments/:id/tips", async (req: Request, res: Response) => {
+router.get('/v1/payments/:id/tips', async (req: Request, res: Response) => {
   try {
     let { businessId } = req.query;
 
@@ -1772,14 +1687,14 @@ router.get("/v1/payments/:id/tips", async (req: Request, res: Response) => {
     let existingTips = await Payment.find({
       businessId,
       tips: { $gt: 0 },
-    }).select("waiterName tips ");
+    }).select('waiterName tips ');
     const waiterChips: any = {};
     for (let i = 0; i < existingTips?.length; i++) {
       const payment = existingTips[i];
-      if (!waiterChips[payment?.waiterName || ""]) {
-        waiterChips[payment?.waiterName || ""] = payment?.tips;
+      if (!waiterChips[payment?.waiterName || '']) {
+        waiterChips[payment?.waiterName || ''] = payment?.tips;
       } else {
-        waiterChips[payment?.waiterName || ""] += payment?.tips;
+        waiterChips[payment?.waiterName || ''] += payment?.tips;
       }
     }
     let ans: any = [];
@@ -1793,133 +1708,126 @@ router.get("/v1/payments/:id/tips", async (req: Request, res: Response) => {
     return res.send(ans);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
-router.get(
-  "/v1/payments/:id/tipsByWaiterName",
-  async (req: Request, res: Response) => {
-    try {
-      let { businessId, waiterName, from, to } = req.query;
-      const currentDate = momentTimeZone.tz("Asia/Kolkata");
-      const previousDate = currentDate.subtract(1, "days");
-      const preDate = previousDate.format("YYYY-MM-DD");
-      let PAGE_SIZE = 20;
-      let pageNumber: any = req?.query?.pageNumber || 1;
-      const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
-      let totalTips = 0;
+router.get('/v1/payments/:id/tipsByWaiterName', async (req: Request, res: Response) => {
+  try {
+    let { businessId, waiterName, from, to } = req.query;
+    const currentDate = momentTimeZone.tz('Asia/Kolkata');
+    const previousDate = currentDate.subtract(1, 'days');
+    const preDate = previousDate.format('YYYY-MM-DD');
+    let PAGE_SIZE = 20;
+    let pageNumber: any = req?.query?.pageNumber || 1;
+    const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
+    let totalTips = 0;
 
-      const calculateTotalTips = (payments: any) => {
-        for (let i = 0; i < payments?.length; i++) {
-          let payment = payments[i];
-          totalTips += payment?.tips || 0;
-        }
-        return totalTips;
-      };
-      if (!from && !to) {
-        const dayAndDate = momentTimeZone
-          .tz("Asia/Kolkata")
-          .format("YYYY-MM-DD"); // Adjust timezone as necessary
-        let existingPayments = await Payment.find({
+    const calculateTotalTips = (payments: any) => {
+      for (let i = 0; i < payments?.length; i++) {
+        let payment = payments[i];
+        totalTips += payment?.tips || 0;
+      }
+      return totalTips;
+    };
+    if (!from && !to) {
+      const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
+      let existingPayments = await Payment.find({
+        businessId,
+        waiterName,
+        tips: { $gt: 0 },
+        date: { $regex: `^${dayAndDate}` },
+      })
+        .skip(skip)
+        .limit(PAGE_SIZE);
+      if (existingPayments?.length == 0) {
+        existingPayments = await Payment.find({
           businessId,
           waiterName,
           tips: { $gt: 0 },
-          date: { $regex: `^${dayAndDate}` },
+          date: { $regex: `^${preDate}` },
         })
           .skip(skip)
           .limit(PAGE_SIZE);
-        if (existingPayments?.length == 0) {
-          existingPayments = await Payment.find({
-            businessId,
-            waiterName,
-            tips: { $gt: 0 },
-            date: { $regex: `^${preDate}` },
-          })
-            .skip(skip)
-            .limit(PAGE_SIZE);
-        }
+      }
+      const totalTips = calculateTotalTips(existingPayments);
+
+      return res.send({
+        waiterName,
+        tips: totalTips,
+        data: existingPayments,
+      });
+    }
+
+    if (from && to) {
+      if (from == to) {
+        const existingPayments = await Payment.find({
+          businessId,
+          waiterName,
+          tips: { $gt: 0 },
+
+          date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
+        })
+          .skip(skip)
+          .limit(PAGE_SIZE);
+
         const totalTips = calculateTotalTips(existingPayments);
 
         return res.send({
           waiterName,
           tips: totalTips,
+
           data: existingPayments,
         });
       }
+      let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
-      if (from && to) {
-        if (from == to) {
-          const existingPayments = await Payment.find({
-            businessId,
-            waiterName,
-            tips: { $gt: 0 },
+      fromDate.setUTCHours(0, 0, 0, 0);
 
-            date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
-          })
-            .skip(skip)
-            .limit(PAGE_SIZE);
+      let toDate = new Date(String(to).split('-').reverse().join('-'));
 
-          const totalTips = calculateTotalTips(existingPayments);
+      toDate.setUTCHours(23, 59, 59, 999);
 
-          return res.send({
-            waiterName,
-            tips: totalTips,
-
-            data: existingPayments,
-          });
-        }
-        let fromDate = new Date(String(from).split("-").reverse().join("-"));
-
-        fromDate.setUTCHours(0, 0, 0, 0);
-
-        let toDate = new Date(String(to).split("-").reverse().join("-"));
-
-        toDate.setUTCHours(23, 59, 59, 999);
-
-        if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
-        }
-
-        // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-        const formattedFromDate = fromDate.toISOString().split("T")[0];
-        const formattedToDate = toDate.toISOString().split("T")[0];
-
-        const filteredPayments = await Payment.find({
-          businessId,
-          waiterName,
-          tips: { $gt: 0 },
-          date: {
-            $gte: formattedFromDate,
-            $lte: formattedToDate,
-          },
-        })
-          .skip(skip)
-          .limit(PAGE_SIZE);
-
-        const totalTips = calculateTotalTips(filteredPayments);
-
-        return res.send({
-          waiterName,
-          tips: totalTips,
-          data: filteredPayments,
-        });
+      if (fromDate > toDate) {
+        return res.status(400).send('From date cannot be greater than to date.');
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
-    }
-  }
-);
 
-router.get("/v1/payments/:id/discount", async (req: Request, res: Response) => {
+      // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
+      const formattedFromDate = fromDate.toISOString().split('T')[0];
+      const formattedToDate = toDate.toISOString().split('T')[0];
+
+      const filteredPayments = await Payment.find({
+        businessId,
+        waiterName,
+        tips: { $gt: 0 },
+        date: {
+          $gte: formattedFromDate,
+          $lte: formattedToDate,
+        },
+      })
+        .skip(skip)
+        .limit(PAGE_SIZE);
+
+      const totalTips = calculateTotalTips(filteredPayments);
+
+      return res.send({
+        waiterName,
+        tips: totalTips,
+        data: filteredPayments,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
+  }
+});
+
+router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
   try {
     let { businessId, from, to } = req.query;
-    const currentDate = momentTimeZone.tz("Asia/Kolkata");
-    const previousDate = currentDate.subtract(1, "days");
-    const preDate = previousDate.format("YYYY-MM-DD");
+    const currentDate = momentTimeZone.tz('Asia/Kolkata');
+    const previousDate = currentDate.subtract(1, 'days');
+    const preDate = previousDate.format('YYYY-MM-DD');
     let PAGE_SIZE = 20;
     let pageNumber: any = req?.query?.pageNumber || 1;
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
@@ -1935,7 +1843,7 @@ router.get("/v1/payments/:id/discount", async (req: Request, res: Response) => {
     };
 
     if (!from && !to) {
-      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD"); // Adjust timezone as necessary
+      const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD'); // Adjust timezone as necessary
       let existingPayments = await Payment.find({
         businessId,
 
@@ -1969,7 +1877,7 @@ router.get("/v1/payments/:id/discount", async (req: Request, res: Response) => {
 
           discount: { $gt: 0 },
 
-          date: { $regex: `^${String(from).split("-").reverse().join("-")}` },
+          date: { $regex: `^${String(from).split('-').reverse().join('-')}` },
         })
           .skip(skip)
           .limit(PAGE_SIZE);
@@ -1980,23 +1888,21 @@ router.get("/v1/payments/:id/discount", async (req: Request, res: Response) => {
           data: existingPayments,
         });
       }
-      let fromDate = new Date(String(from).split("-").reverse().join("-"));
+      let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
       fromDate.setUTCHours(0, 0, 0, 0);
 
-      let toDate = new Date(String(to).split("-").reverse().join("-"));
+      let toDate = new Date(String(to).split('-').reverse().join('-'));
 
       toDate.setUTCHours(23, 59, 59, 999);
 
       if (fromDate > toDate) {
-        return res
-          .status(400)
-          .send("From date cannot be greater than to date.");
+        return res.status(400).send('From date cannot be greater than to date.');
       }
 
       // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
-      const formattedFromDate = fromDate.toISOString().split("T")[0];
-      const formattedToDate = toDate.toISOString().split("T")[0];
+      const formattedFromDate = fromDate.toISOString().split('T')[0];
+      const formattedToDate = toDate.toISOString().split('T')[0];
 
       const filteredPayments = await Payment.find({
         businessId,
@@ -2017,7 +1923,7 @@ router.get("/v1/payments/:id/discount", async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Server error" });
+    res.status(500).send({ message: 'Server error' });
   }
 });
 
@@ -2030,27 +1936,24 @@ const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
 // get single review
-router.get(
-  "/v1/payments/:id/reviews/:reviewsId",
-  async (req: Request, res: Response) => {
-    try {
-      let { reviewsId } = req.params;
+router.get('/v1/payments/:id/reviews/:reviewsId', async (req: Request, res: Response) => {
+  try {
+    let { reviewsId } = req.params;
 
-      const review = await Reviews.findById(reviewsId);
-      if (!review) {
-        return res.status(404).send({ message: "Review not found" });
-      }
-
-      return res.send(review);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
+    const review = await Reviews.findById(reviewsId);
+    if (!review) {
+      return res.status(404).send({ message: 'Review not found' });
     }
+
+    return res.send(review);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
   }
-);
+});
 
 // get all reviews
-router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
+router.get('/v1/payments/:id/reviews', async (req: Request, res: Response) => {
   try {
     let businessId = req.query.businessId as string;
     let { from, to } = req.query;
@@ -2061,7 +1964,7 @@ router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
     if (!businessId) {
-      return res.status(400).send({ message: "businessId is required" });
+      return res.status(400).send({ message: 'businessId is required' });
     }
 
     if (!from && !to) {
@@ -2072,7 +1975,7 @@ router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
           $lte: endOfToday.getTime(),
         },
       })
-        .select(reviewsFields.join(" "))
+        .select(reviewsFields.join(' '))
         .skip(skip)
         .limit(PAGE_SIZE);
 
@@ -2081,9 +1984,7 @@ router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
 
     if (from && to) {
       if (fromDate > toDate) {
-        return res
-          .status(400)
-          .send("From date cannot be greater than to date.");
+        return res.status(400).send('From date cannot be greater than to date.');
       }
       const reviews = await Reviews.find({
         businessId,
@@ -2092,14 +1993,14 @@ router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
           $lte: toDate,
         },
       })
-        .select(reviewsFields.join(" "))
+        .select(reviewsFields.join(' '))
         .skip(skip)
         .limit(PAGE_SIZE);
 
       return res.send(reviews);
     }
 
-    return res.status(400).send("Invalid query parameters");
+    return res.status(400).send('Invalid query parameters');
   } catch (error: any) {
     console.error(error);
     res.status(500).send({ message: error.message });
@@ -2107,33 +2008,24 @@ router.get("/v1/payments/:id/reviews", async (req: Request, res: Response) => {
 });
 
 // get single customer
-router.get(
-  "/v1/payments/:id/customer/:customerId",
-  async (req: Request, res: Response) => {
-    try {
-      let { customerId } = req.params;
+router.get('/v1/payments/:id/customer/:customerId', async (req: Request, res: Response) => {
+  try {
+    let { customerId } = req.params;
 
-      const customer = await ReviewsCustomer.findById(customerId);
-      if (!customer) {
-        return res.status(404).send({ message: "customer not found" });
-      }
-
-      return res.send(customer);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: "Server error" });
+    const customer = await ReviewsCustomer.findById(customerId);
+    if (!customer) {
+      return res.status(404).send({ message: 'customer not found' });
     }
+
+    return res.send(customer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
   }
-);
+});
 
 // Retrieves a list of customers based on the provided filters.
-const filterCustomers = async (
-  from: number,
-  to: number,
-  businessId: string,
-  skip: number,
-  PAGE_SIZE: number
-) => {
+const filterCustomers = async (from: number, to: number, businessId: string, skip: number, PAGE_SIZE: number) => {
   const customer = await ReviewsCustomer.find({
     businessId: businessId,
     date: {
@@ -2141,7 +2033,7 @@ const filterCustomers = async (
       $lte: to,
     },
   })
-    .select("name phone businessId date")
+    .select('name phone businessId date')
     .skip(skip)
     .limit(PAGE_SIZE);
 
@@ -2149,81 +2041,66 @@ const filterCustomers = async (
 };
 
 // get all customers
-router.get(
-  "/v1/payments/:id/customers",
-  async (req: Request, res: Response) => {
-    try {
-      let businessId = req.query.businessId as string;
-      let { from, to, findUser } = req.query;
-      let fromDate = Number(from);
-      let toDate = Number(to);
-      let PAGE_SIZE = 20;
-      let pageNumber: any = req?.query?.pageNumber || 1;
-      const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
+router.get('/v1/payments/:id/customers', async (req: Request, res: Response) => {
+  try {
+    let businessId = req.query.businessId as string;
+    let { from, to, findUser } = req.query;
+    let fromDate = Number(from);
+    let toDate = Number(to);
+    let PAGE_SIZE = 20;
+    let pageNumber: any = req?.query?.pageNumber || 1;
+    const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
-      if (!businessId) {
-        return res.status(400).send({ message: "businessId is required" });
-      }
-
-      if (findUser) {
-        const customers = await ReviewsCustomer.findOne({
-          businessId,
-          phone: findUser,
-        });
-
-        if (!customers) {
-          return res.status(404).send({ message: "Customer not found" });
-        }
-
-        return res.send(customers);
-      }
-
-      if (!from && !to) {
-        const customers = await ReviewsCustomer.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        })
-          .select("name phone businessId date")
-          .skip(skip)
-          .limit(PAGE_SIZE);
-
-        return res.send(customers);
-      }
-
-      if (from && to) {
-        if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
-        }
-        const customers = await filterCustomers(
-          fromDate,
-          toDate,
-          businessId,
-          skip,
-          PAGE_SIZE
-        );
-
-        return res.send(customers);
-      }
-
-      return res.status(400).send("Invalid query parameters");
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
+    if (!businessId) {
+      return res.status(400).send({ message: 'businessId is required' });
     }
+
+    if (findUser) {
+      const customers = await ReviewsCustomer.findOne({
+        businessId,
+        phone: findUser,
+      });
+
+      if (!customers) {
+        return res.status(404).send({ message: 'Customer not found' });
+      }
+
+      return res.send(customers);
+    }
+
+    if (!from && !to) {
+      const customers = await ReviewsCustomer.find({
+        businessId,
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
+      })
+        .select('name phone businessId date')
+        .skip(skip)
+        .limit(PAGE_SIZE);
+
+      return res.send(customers);
+    }
+
+    if (from && to) {
+      if (fromDate > toDate) {
+        return res.status(400).send('From date cannot be greater than to date.');
+      }
+      const customers = await filterCustomers(fromDate, toDate, businessId, skip, PAGE_SIZE);
+
+      return res.send(customers);
+    }
+
+    return res.status(400).send('Invalid query parameters');
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).send({ message: error.message });
   }
-);
+});
 
 // Filters customers and payments based on a date range and returns statistics.
-const filterBasedOnDate = async (
-  from: number,
-  to: number,
-  businessId: string
-) => {
+const filterBasedOnDate = async (from: number, to: number, businessId: string) => {
   const totalCustomers = await ReviewsCustomer.find({ businessId }).count();
   const [customerStats] = await ReviewsCustomer.aggregate([
     {
@@ -2240,18 +2117,14 @@ const filterBasedOnDate = async (
         _id: null,
         repeatCustomers: {
           $sum: {
-            $cond: [{ $gt: ["$count", 1] }, 1, 0],
+            $cond: [{ $gt: ['$count', 1] }, 1, 0],
           },
         },
         newCustomers: {
           $sum: {
             $cond: [
               {
-                $or: [
-                  { $eq: ["$count", 1] },
-                  { $gte: ["$date", startOfToday] },
-                  { $lte: ["$date", endOfToday] },
-                ],
+                $or: [{ $eq: ['$count', 1] }, { $gte: ['$date', startOfToday] }, { $lte: ['$date', endOfToday] }],
               },
               1,
               0,
@@ -2262,10 +2135,7 @@ const filterBasedOnDate = async (
     },
   ]);
 
-  const latestCustomers = await ReviewsCustomer.find({ businessId })
-    .select("name phone businessId date")
-    .sort({ date: -1 })
-    .limit(5);
+  const latestCustomers = await ReviewsCustomer.find({ businessId }).select('name phone businessId date').sort({ date: -1 }).limit(5);
 
   const paymentStats = await Payment.aggregate([
     {
@@ -2281,16 +2151,13 @@ const filterBasedOnDate = async (
     {
       $group: {
         _id: null,
-        total: { $sum: "$total" },
+        total: { $sum: '$total' },
         count: { $sum: 1 },
       },
     },
   ]);
 
-  const avgTicketValue =
-    paymentStats.length > 0
-      ? Math.round(paymentStats[0].total / paymentStats[0].count)
-      : 0;
+  const avgTicketValue = paymentStats.length > 0 ? Math.round(paymentStats[0].total / paymentStats[0].count) : 0;
 
   const obj = {
     totalCustomers,
@@ -2306,7 +2173,7 @@ const filterBasedOnDate = async (
 
 // Retrieves payments based on the specified date range and business ID.
 router.get(
-  "/v1/payments/:id/userDashboard",
+  '/v1/payments/:id/userDashboard',
 
   async (req: Request, res: Response) => {
     try {
@@ -2316,39 +2183,33 @@ router.get(
 
       const businessId = req.query.businessId as string;
       if (!businessId) {
-        return res.status(400).send({ message: "businessId is required" });
+        return res.status(400).send({ message: 'businessId is required' });
       }
       if (!from && !to) {
-        const obj = await filterBasedOnDate(
-          startOfToday.getTime(),
-          endOfToday.getTime(),
-          businessId
-        );
+        const obj = await filterBasedOnDate(startOfToday.getTime(), endOfToday.getTime(), businessId);
 
         return res.send(obj);
       }
       if (from && to) {
         if (fromDate > toDate) {
-          return res
-            .status(400)
-            .send("From date cannot be greater than to date.");
+          return res.status(400).send('From date cannot be greater than to date.');
         }
         const obj = await filterBasedOnDate(fromDate, toDate, businessId);
 
         return res.send(obj);
       }
 
-      return res.status(400).send("Invalid query parameters");
+      return res.status(400).send('Invalid query parameters');
     } catch (error: any) {
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 // Retrieves a list of customers who visited the restaurant today.
 router.get(
-  "/v1/payments/:id/newCustomer",
+  '/v1/payments/:id/newCustomer',
 
   async (req: Request, res: Response) => {
     try {
@@ -2357,7 +2218,7 @@ router.get(
       let pageNumber: any = req?.query?.pageNumber || 1;
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
       if (!businessId) {
-        return res.status(400).send({ message: "businessId is required" });
+        return res.status(400).send({ message: 'businessId is required' });
       }
       const newCustomers = await ReviewsCustomer.find({
         businessId,
@@ -2367,7 +2228,7 @@ router.get(
         },
         count: 1,
       })
-        .select("name phone businessId date")
+        .select('name phone businessId date')
         .skip(skip)
         .limit(PAGE_SIZE);
 
@@ -2376,21 +2237,19 @@ router.get(
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 // Retrieves payment statistics for a specific business and customer phone number
 router.get(
-  "/v1/payments/:id/billsByUser",
+  '/v1/payments/:id/billsByUser',
 
   async (req: Request, res: Response) => {
     try {
       const { businessId, phone } = req.query;
 
       if (!businessId || !phone) {
-        return res
-          .status(400)
-          .send({ message: "businessId and phone is required" });
+        return res.status(400).send({ message: 'businessId and phone is required' });
       }
 
       const paymentStats = await Payment.aggregate([
@@ -2403,16 +2262,13 @@ router.get(
         {
           $group: {
             _id: null,
-            total: { $sum: "$total" },
+            total: { $sum: '$total' },
             count: { $sum: 1 },
           },
         },
       ]);
 
-      const avgTicketValue =
-        paymentStats.length > 0
-          ? Math.round(paymentStats[0].total / paymentStats[0].count)
-          : 0;
+      const avgTicketValue = paymentStats.length > 0 ? Math.round(paymentStats[0].total / paymentStats[0].count) : 0;
 
       const reviewsCount = await Reviews.countDocuments({
         businessId,
@@ -2423,7 +2279,7 @@ router.get(
         businessId,
         customerPhone: { $in: [phone, `91${phone}`] },
       })
-        .select(fields.join(" "))
+        .select(fields.join(' '))
         .sort({ payment_date: -1 })
         .limit(5);
 
@@ -2431,7 +2287,7 @@ router.get(
         businessId,
         reviewerPhone: { $in: [phone, `91${phone}`] },
       })
-        .select(reviewsFields.join(" "))
+        .select(reviewsFields.join(' '))
         .sort({ date: -1 })
         .limit(5);
 
@@ -2450,12 +2306,12 @@ router.get(
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 // Retrieves the payment bills for a specific business and customer phone number.
 router.get(
-  "/v1/payments/:id/customerBills",
+  '/v1/payments/:id/customerBills',
 
   async (req: Request, res: Response) => {
     try {
@@ -2465,16 +2321,14 @@ router.get(
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
       if (!businessId || !phone) {
-        return res
-          .status(400)
-          .send({ message: "businessId and phone is required" });
+        return res.status(400).send({ message: 'businessId and phone is required' });
       }
 
       const bills = await Payment.find({
         businessId,
         customerPhone: { $in: [phone, `91${phone}`] },
       })
-        .select(fields.join(" "))
+        .select(fields.join(' '))
         .skip(skip)
         .limit(PAGE_SIZE);
 
@@ -2483,12 +2337,12 @@ router.get(
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 // Retrieves reviews from the database based on the provided criteria.
 router.get(
-  "/v1/payments/:id/customerReviews",
+  '/v1/payments/:id/customerReviews',
 
   async (req: Request, res: Response) => {
     try {
@@ -2498,16 +2352,14 @@ router.get(
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
       if (!businessId || !phone) {
-        return res
-          .status(400)
-          .send({ message: "businessId and phone is required" });
+        return res.status(400).send({ message: 'businessId and phone is required' });
       }
 
       const reviews = await Reviews.find({
         businessId,
         reviewerPhone: { $in: [phone, `91${phone}`] },
       })
-        .select(reviewsFields.join(" "))
+        .select(reviewsFields.join(' '))
         .skip(skip)
         .limit(PAGE_SIZE);
 
@@ -2519,15 +2371,11 @@ router.get(
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 //Filters reviews by date range and calculates various statistics.
-const filterReviewsByDate = async (
-  from: number,
-  to: number,
-  businessId: string
-) => {
+const filterReviewsByDate = async (from: number, to: number, businessId: string) => {
   const reviewsState = await Reviews.aggregate([
     {
       $match: {
@@ -2541,34 +2389,29 @@ const filterReviewsByDate = async (
     {
       $group: {
         _id: null,
-        reviewRating: { $sum: "$reviewRating" },
+        reviewRating: { $sum: '$reviewRating' },
         count: { $sum: 1 },
         positiveRatingCount: {
           $sum: {
-            $cond: [{ $gt: ["$reviewRating", 2] }, 1, 0],
+            $cond: [{ $gt: ['$reviewRating', 2] }, 1, 0],
           },
         },
         negativeRatingCount: {
           $sum: {
-            $cond: [{ $lt: ["$reviewRating", 2] }, 1, 0],
+            $cond: [{ $lt: ['$reviewRating', 2] }, 1, 0],
           },
         },
       },
     },
   ]);
 
-  const avgRating =
-    reviewsState.length > 0
-      ? Math.round(reviewsState[0].reviewRating / reviewsState[0].count)
-      : 0;
+  const avgRating = reviewsState.length > 0 ? Math.round(reviewsState[0].reviewRating / reviewsState[0].count) : 0;
 
   const obj = {
     reviewCount: reviewsState.length > 0 ? reviewsState[0].count : 0,
     avgRating,
-    positiveRatingCount:
-      reviewsState.length > 0 ? reviewsState[0].positiveRatingCount : 0,
-    negativeRatingCount:
-      reviewsState.length > 0 ? reviewsState[0].negativeRatingCount : 0,
+    positiveRatingCount: reviewsState.length > 0 ? reviewsState[0].positiveRatingCount : 0,
+    negativeRatingCount: reviewsState.length > 0 ? reviewsState[0].negativeRatingCount : 0,
   };
 
   return obj;
@@ -2576,11 +2419,7 @@ const filterReviewsByDate = async (
 
 // Calculates the review statistics for a given time range and business ID.
 
-const calculateReviewStatistics = async (
-  from: number,
-  to: number,
-  businessId: string
-) => {
+const calculateReviewStatistics = async (from: number, to: number, businessId: string) => {
   const reviewsState = await Reviews.aggregate([
     {
       $match: {
@@ -2594,16 +2433,16 @@ const calculateReviewStatistics = async (
     {
       $group: {
         _id: null,
-        reviewRating: { $sum: "$reviewRating" },
+        reviewRating: { $sum: '$reviewRating' },
         count: { $sum: 1 },
         positiveRatingCount: {
           $sum: {
-            $cond: [{ $gt: ["$reviewRating", 2] }, 1, 0],
+            $cond: [{ $gt: ['$reviewRating', 2] }, 1, 0],
           },
         },
         negativeRatingCount: {
           $sum: {
-            $cond: [{ $lt: ["$reviewRating", 2] }, 1, 0],
+            $cond: [{ $lt: ['$reviewRating', 2] }, 1, 0],
           },
         },
       },
@@ -2611,23 +2450,14 @@ const calculateReviewStatistics = async (
   ]);
 
   const totalReviewsCount = reviewsState.length > 0 ? reviewsState[0].count : 0;
-  const positivePercentage =
-    totalReviewsCount > 0
-      ? (reviewsState[0].positiveRatingCount / totalReviewsCount) * 100
-      : 0;
-  const negativePercentage =
-    totalReviewsCount > 0
-      ? (reviewsState[0].negativeRatingCount / totalReviewsCount) * 100
-      : 0;
+  const positivePercentage = totalReviewsCount > 0 ? (reviewsState[0].positiveRatingCount / totalReviewsCount) * 100 : 0;
+  const negativePercentage = totalReviewsCount > 0 ? (reviewsState[0].negativeRatingCount / totalReviewsCount) * 100 : 0;
 
   const obj = {
-    totalReviewCount:
-      reviewsState.length > 0 ? reviewsState[0].reviewRating : 0,
+    totalReviewCount: reviewsState.length > 0 ? reviewsState[0].reviewRating : 0,
     count: reviewsState.length > 0 ? reviewsState[0].count : 0,
-    positiveRatingCount:
-      reviewsState.length > 0 ? reviewsState[0].positiveRatingCount : 0,
-    negativeRatingCount:
-      reviewsState.length > 0 ? reviewsState[0].negativeRatingCount : 0,
+    positiveRatingCount: reviewsState.length > 0 ? reviewsState[0].positiveRatingCount : 0,
+    negativeRatingCount: reviewsState.length > 0 ? reviewsState[0].negativeRatingCount : 0,
     positivePercentage,
     negativePercentage,
   };
@@ -2650,7 +2480,7 @@ function calculateStartAndEndOfDay(daysAgo: number, baseDate: Date) {
 
 //Retrieves the reviews filtered by the current day.
 router.get(
-  "/v1/payments/:id/reviewsDashboard",
+  '/v1/payments/:id/reviewsDashboard',
 
   async (req: Request, res: Response) => {
     try {
@@ -2660,34 +2490,26 @@ router.get(
 
       const businessId = req.query.businessId as string;
       if (!businessId) {
-        return res.status(400).send({ message: "businessId is required" });
+        return res.status(400).send({ message: 'businessId is required' });
       }
 
       const latestReviews = await Reviews.find({
         businessId,
       })
-        .select(reviewsFields.join(" "))
+        .select(reviewsFields.join(' '))
         .sort({ date: -1 })
         .limit(5);
 
       if (!from && !to) {
-        const currentDayReviews = await filterReviewsByDate(
-          startOfToday.getTime(),
-          endOfToday.getTime(),
-          businessId
-        );
+        const currentDayReviews = await filterReviewsByDate(startOfToday.getTime(), endOfToday.getTime(), businessId);
 
         const dailyReviewAnalysis: any = {};
         const currentDate = new Date(); // Use today's date as the base date
 
         for (let i = 0; i <= 6; i++) {
           const { start, end } = calculateStartAndEndOfDay(i, currentDate);
-          const dayKey = i === 0 ? "today" : `before${i}day`;
-          dailyReviewAnalysis[dayKey] = await calculateReviewStatistics(
-            start,
-            end,
-            businessId
-          );
+          const dayKey = i === 0 ? 'today' : `before${i}day`;
+          dailyReviewAnalysis[dayKey] = await calculateReviewStatistics(start, end, businessId);
         }
 
         return res.send({
@@ -2698,27 +2520,17 @@ router.get(
       }
       if (from && to) {
         if (startDate > endDate) {
-          return res
-            .status(400)
-            .send("Start date cannot be greater than end date.");
+          return res.status(400).send('Start date cannot be greater than end date.');
         }
-        const reviewStatistics = await filterReviewsByDate(
-          startDate,
-          endDate,
-          businessId
-        );
+        const reviewStatistics = await filterReviewsByDate(startDate, endDate, businessId);
 
         const dailyReviewAnalysis: any = {};
         const baseDate = new Date(endDate); // Convert timestamp to Date object
 
         for (let i = 0; i <= 6; i++) {
           const { start, end } = calculateStartAndEndOfDay(i, baseDate);
-          const dayKey = i === 0 ? "today" : `before${i}day`;
-          dailyReviewAnalysis[dayKey] = await calculateReviewStatistics(
-            start,
-            end,
-            businessId
-          );
+          const dayKey = i === 0 ? 'today' : `before${i}day`;
+          dailyReviewAnalysis[dayKey] = await calculateReviewStatistics(start, end, businessId);
         }
 
         return res.send({
@@ -2728,12 +2540,12 @@ router.get(
         });
       }
 
-      return res.status(400).send("Invalid query parameters");
+      return res.status(400).send('Invalid query parameters');
     } catch (error: any) {
       console.error(error);
       res.status(500).send({ message: error.message });
     }
-  }
+  },
 );
 
 // router.get(

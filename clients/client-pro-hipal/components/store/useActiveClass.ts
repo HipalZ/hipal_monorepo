@@ -19,7 +19,8 @@ export const useActiveClass = create(
 			isActiveDishType: '',
 			isActiveParentCategory: '',
 			isActiveParentCategoryName: '',
-			setActiveParentCategoryName: (category) => set(() => ({ isActiveParentCategoryName: category })),
+			setActiveParentCategoryName: (category) =>
+				set(() => ({ isActiveParentCategoryName: category })),
 			setActiveParentCategory: (category) => set(() => ({ isActiveParentCategory: category })),
 			setActiveCategory: (categoryId) => set(() => ({ isActiveCategory: categoryId })),
 			setActiveDishType: (dishTypeId) => set(() => ({ isActiveDishType: dishTypeId })),

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface DiscountStore {
   selectedPaymentMethod: string;
@@ -9,12 +9,11 @@ interface DiscountStore {
 }
 
 const useDiscountStore = create<DiscountStore>((set) => ({
-  selectedPaymentMethod: "",
+  selectedPaymentMethod: '',
   multiplePaymentMethods: [],
 
   setSelectedPaymentMethod: (method) => set({ selectedPaymentMethod: method }),
-  setMultiplePaymentMethods: (methods) =>
-    set({ multiplePaymentMethods: methods }),
+  setMultiplePaymentMethods: (methods) => set({ multiplePaymentMethods: methods }),
 }));
 
 export default useDiscountStore;

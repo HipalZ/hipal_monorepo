@@ -1,6 +1,6 @@
 // stores/kitchenStore.js
-import { create } from "zustand";
-import { IStaffs } from "../types/businessData";
+import { create } from 'zustand';
+import { IStaffs } from '../types/businessData';
 
 type KitchenState = {
   kitchenName: string;
@@ -14,17 +14,15 @@ type KitchenState = {
 
 const useKitchenStore = create<KitchenState>((set) => ({
   selectedStaff: [],
-  kitchenName: "",
+  kitchenName: '',
   setKitchenName: (name: string) => set({ kitchenName: name }),
-  selectStaff: (staff) =>
-    set((state) => ({ selectedStaff: [...state.selectedStaff, staff] })),
+  selectStaff: (staff) => set((state) => ({ selectedStaff: [...state.selectedStaff, staff] })),
   deselectStaff: (staffId) =>
     set((state) => ({
       selectedStaff: state.selectedStaff.filter((s) => s.id !== staffId),
     })),
-  initializeKitchen: (kitchenName, selectedStaff) =>
-    set({ kitchenName, selectedStaff }),
-  reset: () => set({ selectedStaff: [], kitchenName: "" }),
+  initializeKitchen: (kitchenName, selectedStaff) => set({ kitchenName, selectedStaff }),
+  reset: () => set({ selectedStaff: [], kitchenName: '' }),
 }));
 
 export default useKitchenStore;

@@ -5,7 +5,7 @@ import { Html5Qrcode } from 'html5-qrcode'
 import { useEffect, useRef, useState } from 'react'
 import HipalLogo from '@assets/svg/Hipal_logo.svg'
 
-export default function Scan() { 
+export default function Scan() {
 	const router = useRouter()
 	const readerRef = useRef(null)
 	const [decodedText, setDecodedText] = useState(null)
@@ -68,7 +68,7 @@ export default function Scan() {
 				</div>
 			</div>
 			<div className='px-8' style={{ textAlign: 'center' }}>
-				<div className='w-full mt-20' id='reader' ref={readerRef}/>
+				<div className='w-full mt-20' id='reader' ref={readerRef} />
 				<p className='mt-6 text-sm font-normal opacity-90'>Scan the QR to book the table</p>
 			</div>
 		</div>

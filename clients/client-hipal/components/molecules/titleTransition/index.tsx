@@ -1,9 +1,9 @@
-import * as React from 'react'
+import * as React from "react"
 
 const texts = [
-	'Restaurant Management System',
-	'Waiter Management System',
-	'Kitchen Management System',
+	"Restaurant Management System",
+	"Waiter Management System",
+	"Kitchen Management System",
 ]
 
 export default function TitleTransition() {
@@ -20,7 +20,7 @@ export default function TitleTransition() {
 	return (
 		<span
 			key={texts[index]}
-			className='text-[#F2634C] font-semibold lg:w-full text-lg lg:text-[4rem] typed text-center py-10'
+			className="text-[#F2634C] font-semibold lg:w-full text-lg lg:text-[4rem] typed text-center py-10"
 		>
 			{texts[index]}
 		</span>

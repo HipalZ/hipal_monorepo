@@ -1,94 +1,83 @@
-import Header from "@/components/molecules/header";
-import type React from "react";
-import { memo, useEffect, useRef, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import { MdDinnerDining } from "react-icons/md";
-import Switch from "react-switch";
-import PopUp from "@/components/atom/popUp";
-import type {
-  Dish,
-  ICategory,
-  IDish,
-  IKitchen,
-  Extra,
-  IPortion,
-  IData,
-} from "@/components/types/businessData";
-import { paths } from "@/components/utils/paths";
-import axios from "@/axios";
-import { useRouter } from "next/router";
-import {
-  storeImageAfterSave,
-  validPortionCheck,
-} from "@/components/utils/helper";
-import Image from "next/image";
-import AddRecommendedDishes from "@/components/atom/addRecommendedDishes";
-import { toast } from "react-toastify";
-import AddExtras from "@/components/atom/addExtras";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useQuery } from "@tanstack/react-query";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import ErrorComponent from "@/components/errorComponent";
-import { HiX } from "react-icons/hi";
-import bestseller from "@/assets/svg/bestseller.svg";
-import newImage from "@/assets/svg/new.svg";
-import occasional from "@/assets/svg/occasional.svg";
-import popular from "@/assets/svg/popular.svg";
-import spicy from "@/assets/svg/spicy.svg";
-import alcohol from "@/assets/svg/alcohol.svg";
-import ReactCropper, { cropImage } from "@/components/atom/reactCropper";
+import alcohol from '@/assets/svg/alcohol.svg';
+import bestseller from '@/assets/svg/bestseller.svg';
+import Hi from '@/assets/svg/hi.svg';
+import newImage from '@/assets/svg/new.svg';
+import occasional from '@/assets/svg/occasional.svg';
+import popular from '@/assets/svg/popular.svg';
+import spicy from '@/assets/svg/spicy.svg';
+import axios from '@/axios';
+import AddExtras from '@/components/atom/addExtras';
+import AddRecommendedDishes from '@/components/atom/addRecommendedDishes';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import PopUp from '@/components/atom/popUp';
+import ReactCropper, { cropImage } from '@/components/atom/reactCropper';
+import ErrorComponent from '@/components/errorComponent';
+import Header from '@/components/molecules/header';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import type { Dish, Extra, ICategory, IData, IDish, IKitchen, IPortion } from '@/components/types/businessData';
+import { storeImageAfterSave, validPortionCheck } from '@/components/utils/helper';
+import { paths } from '@/components/utils/paths';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+import type React from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
+import { HiX } from 'react-icons/hi';
+import { MdDinnerDining } from 'react-icons/md';
+import Switch from 'react-switch';
+import { toast } from 'react-toastify';
 
 export const dishTypes = [
   {
     id: 0,
-    type: "select a dish type".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'select a dish type'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
   {
     id: 1,
-    type: "veg".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'veg'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
   {
     id: 2,
-    type: "non-veg".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'non-veg'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
   {
     id: 3,
-    type: "vegan".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'vegan'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
   {
     id: 4,
-    type: "egg".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'egg'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
   {
     id: 5,
-    type: "mixed".replace(/[^a-zA-Z ]/, "").toLowerCase(),
+    type: 'mixed'.replace(/[^a-zA-Z ]/, '').toLowerCase(),
   },
 ];
 
 export const tags = [
   {
-    text: "Best selling",
+    text: 'Best selling',
     image: bestseller,
   },
   {
-    text: "All New",
+    text: 'All New',
     image: newImage,
   },
   {
-    text: "Recommended",
+    text: 'Recommended',
     image: occasional,
   },
   {
-    text: "Contains Alcohol",
+    text: 'Contains Alcohol',
     image: alcohol,
   },
   {
-    text: "Spicy",
+    text: 'Spicy',
     image: spicy,
   },
   {
-    text: "Contains Nuts",
+    text: 'Contains Nuts',
     image: popular,
   },
 ];
@@ -102,19 +91,18 @@ function AddDish() {
   const [availability, setAvailability] = useState(true);
   const [visibility, setVisibility] = useState(true);
   const [kitchen, setKitchen] = useState<IKitchen[]>([]);
-  const [selectedKitchenId, setSelectedKitchenId] = useState("");
+  const [selectedKitchenId, setSelectedKitchenId] = useState('');
   const [addOns, setAddOns] = useState<Extra[]>([]);
   const [category, setCategory] = useState<ICategory[] | any>([]);
   const [recommendedDishes, setRecommendedDishes] = useState<IDish[]>([]);
   const [postRecommend, setPostRecommend] = useState<IDish[]>([]);
   const [postAddOns, setPostAddOns] = useState<IDish[]>([]);
-  const [description, setDescription] = useState<string>("");
+  const [description, setDescription] = useState<string>('');
   const [portions, setPortions] = useState<IPortion[]>([]);
   const [postCategory, setPostCategory] = useState<IDish[]>([]);
-  const [swiggySelectedKitchenId, setSwiggySelectedKitchenId] =
-    useState<string>("");
-  const [swiggyDishName, setSwiggyDishName] = useState<string>("");
-  const [swiggyDishPrice, setSwiggyDishPrice] = useState<string>("");
+  const [swiggySelectedKitchenId, setSwiggySelectedKitchenId] = useState<string>('');
+  const [swiggyDishName, setSwiggyDishName] = useState<string>('');
+  const [swiggyDishPrice, setSwiggyDishPrice] = useState<string>('');
   const [swiggyPortions, setSwiggyPortions] = useState<IPortion[]>([]);
   const [swiggyCategoryPopup, setSwiggyCategoryPopup] = useState(false);
   const [swiggyAddOnPopUp, setSwiggyAddOnPopUp] = useState(false);
@@ -122,10 +110,9 @@ function AddDish() {
   const [swiggyAvailability, setSwiggyAvailability] = useState(true);
   const [swiggyVisibility, setSwiggyVisibility] = useState(true);
   const [swiggyPostCategory, setSwiggyPostCategory] = useState<IDish[]>([]);
-  const [zomatoSelectedKitchenId, setZomatoSelectedKitchenId] =
-    useState<string>("");
-  const [zomatoDishName, setZomatoDishName] = useState<string>("");
-  const [zomatoDishPrice, setZomatoDishPrice] = useState<string>("");
+  const [zomatoSelectedKitchenId, setZomatoSelectedKitchenId] = useState<string>('');
+  const [zomatoDishName, setZomatoDishName] = useState<string>('');
+  const [zomatoDishPrice, setZomatoDishPrice] = useState<string>('');
   const [zomatoPortions, setZomatoPortions] = useState<IPortion[]>([]);
   const [zomatoCategoryPopup, setZomatoCategoryPopup] = useState(false);
   const [zomatoAddOnPopUp, setZomatoAddOnPopUp] = useState(false);
@@ -137,32 +124,30 @@ function AddDish() {
   const [displayImages, setDisplayImages] = useState([]);
   const [dishTags, setDishTags] = useState<string[]>([]);
   const cropperRef = useRef(null);
-  const [croppingImage, setCroppingImage] = useState("");
-  const [croppingImageIndex, setCroppingImageIndex] = useState<number | null>(
-    null
-  );
+  const [croppingImage, setCroppingImage] = useState('');
+  const [croppingImageIndex, setCroppingImageIndex] = useState<number | null>(null);
 
   const testData = {
     businessId: businessId,
-    name: "",
+    name: '',
     price: null,
     tax: 0,
     visibility: visibility,
     discount: 0,
-    avgTime: "",
-    dishType: "",
+    avgTime: '',
+    dishType: '',
     categories: [],
     portions: [],
     extras: addOns,
     kitchenId: selectedKitchenId,
     filters: {
       dishes: [],
-      metaTags:dishTags,
+      metaTags: dishTags,
     },
-    images: [""],
-    description: "",
+    images: [''],
+    description: '',
     links: [],
-    delayTime: "",
+    delayTime: '',
     availability: availability,
     version: 0,
   };
@@ -179,32 +164,28 @@ function AddDish() {
       await getRecommendedDishes();
       setData(data);
       if (kitchens.data && kitchens?.data?.length === 0) {
-        toast.error("Please Create a kitchen first");
-        setSelectedIcon("Kitchen");
+        toast.error('Please Create a kitchen first');
+        setSelectedIcon('Kitchen');
         return router.push(`/business/${businessId}?tab=Kitchen`);
       }
       setSelectedKitchenId(kitchens?.data[0]?._id);
       setSwiggySelectedKitchenId(kitchens?.data[0]?._id);
       setZomatoSelectedKitchenId(kitchens?.data[0]?._id);
       return data;
-    } catch (err) { }
+    } catch (err) {}
   };
 
   async function getCategoryDishesApi() {
     try {
-      const category = await axios.get(
-        `/v1/categories?businessId=${businessId}&queryCategories=true`
-      );
+      const category = await axios.get(`/v1/categories?businessId=${businessId}&queryCategories=true`);
       setData((prev) => {
         return { ...prev, categories: category?.data };
       });
-    } catch (err) { }
+    } catch (err) {}
   }
   async function getRecommendedDishes() {
     try {
-      const dishes = await axios.get(
-        `/v1/dishes?businessId=${businessId}&queryDish=true`
-      );
+      const dishes = await axios.get(`/v1/dishes?businessId=${businessId}&queryDish=true`);
       setRecommendedDishes(dishes?.data);
       setData((prev) => {
         return { ...prev, dishes: dishes?.data };
@@ -219,7 +200,7 @@ function AddDish() {
       setData((prev) => {
         return { ...prev, extras: addOns?.data };
       });
-    } catch (err) { }
+    } catch (err) {}
   }
 
   const {
@@ -228,7 +209,7 @@ function AddDish() {
     data: allData,
     refetch,
   } = useQuery({
-    queryKey: ["getKitchenData", businessId],
+    queryKey: ['getKitchenData', businessId],
     queryFn: getKitchenData,
     enabled: !!businessId,
   });
@@ -243,7 +224,7 @@ function AddDish() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleTagsClick = async (tag:string) => {
+  const handleTagsClick = async (tag: string) => {
     if (dishTags.includes(tag)) {
       setDishTags(dishTags.filter((keyword) => keyword !== tag));
     } else {
@@ -253,26 +234,24 @@ function AddDish() {
 
   const dishValidations = async () => {
     const isDishValid =
-      dishData?.name !== "" &&
+      dishData?.name !== '' &&
       dishData?.price !== null &&
       dishData?.price !== undefined &&
       dishData?.price !== 0 &&
-      selectedKitchenId !== "" &&
-      dishData?.dishType !==
-      "select a dish type".replace(/[^a-zA-Z ]/, "").toLowerCase() &&
-      dishData?.dishType !== "";
+      selectedKitchenId !== '' &&
+      dishData?.dishType !== 'select a dish type'.replace(/[^a-zA-Z ]/, '').toLowerCase() &&
+      dishData?.dishType !== '';
     // Check portions validity (return true if portions array is empty)
     if (!isDishValid) {
-      toast.error("Please fill the name, price and dish type");
+      toast.error('Please fill the name, price and dish type');
       return false;
     }
     const isNameDuplicate = recommendedDishes?.some((everyDish) => {
-      const isDuplicate =
-        everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase();
+      const isDuplicate = everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase();
       return isDuplicate;
     });
     if (isNameDuplicate) {
-      toast.error("Dish name already exists.");
+      toast.error('Dish name already exists.');
       return false;
     }
 
@@ -280,7 +259,7 @@ function AddDish() {
     if (isDishValid && portions?.length > 0) {
       allPortionsValid = validPortionCheck(portions);
       if (!allPortionsValid) {
-        toast.error("Please check the portion details");
+        toast.error('Please check the portion details');
         return false;
       }
     }
@@ -290,27 +269,27 @@ function AddDish() {
     let allSwiggyPortionsValid = true;
     let isZomatoValid = true;
     let allZomatoPortionsValid = true;
-    isSwiggyValid = swiggyDishPrice !== "";
+    isSwiggyValid = swiggyDishPrice !== '';
     if (!isSwiggyValid && toggleSwiggySwitch) {
-      toast.error("Please check the swiggy price");
+      toast.error('Please check the swiggy price');
       return false;
     }
     if (toggleSwiggySwitch && swiggyPortions?.length > 0) {
       allSwiggyPortionsValid = validPortionCheck(swiggyPortions);
       if (!allSwiggyPortionsValid) {
-        toast.error("Please check the swiggy portions");
+        toast.error('Please check the swiggy portions');
         return false;
       }
     }
-    isZomatoValid = zomatoDishPrice !== "";
+    isZomatoValid = zomatoDishPrice !== '';
     if (!isZomatoValid && toggleZomatoSwitch) {
-      toast.error("Please check the zomato price");
+      toast.error('Please check the zomato price');
       return false;
     }
     if (toggleZomatoSwitch && zomatoPortions?.length > 0) {
       allZomatoPortionsValid = validPortionCheck(zomatoPortions);
       if (!allZomatoPortionsValid) {
-        toast.error("Please check the zomato portions");
+        toast.error('Please check the zomato portions');
         return false;
       }
     }
@@ -327,16 +306,16 @@ function AddDish() {
     }
     setLoading(true);
     const imageUrls = await handleSave();
-    const postAddOnsIds = postAddOns.map(item => item._id);
-    const postCategoryIds = postCategory.map(item => item._id);
-    const postRecommendIds = postRecommend.map(item => item._id);
+    const postAddOnsIds = postAddOns.map((item) => item._id);
+    const postCategoryIds = postCategory.map((item) => item._id);
+    const postRecommendIds = postRecommend.map((item) => item._id);
     try {
       const config = {
-        mode: "cors",
-        method: "POST",
+        mode: 'cors',
+        method: 'POST',
         url: paths.postDishData(),
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         data: {
           ...dishData,
@@ -348,7 +327,7 @@ function AddDish() {
           portions: portions,
           filters: {
             dishes: postRecommendIds,
-            metaTags:dishTags,
+            metaTags: dishTags,
           },
           kitchenId: selectedKitchenId,
           description: description,
@@ -357,7 +336,7 @@ function AddDish() {
       };
       const response = await axios(config);
       if (response?.status === 201 || response?.status === 200) {
-        toast.success("dish created successfully");
+        toast.success('dish created successfully');
         router.push(`/business/${businessId}?tab=items`);
       }
     } catch (err: any) {
@@ -374,7 +353,7 @@ function AddDish() {
   };
 
   const handleIncreasePortion = () => {
-    setPortions([...portions, { name: "", price: "", portionType: "" }]);
+    setPortions([...portions, { name: '', price: '', portionType: '' }]);
   };
 
   const handleRemovePortion = (index: number) => {
@@ -397,10 +376,7 @@ function AddDish() {
   };
 
   // file storing
-  const handleImageChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -431,7 +407,7 @@ function AddDish() {
       const coordinates = cropper?.getCoordinates();
       try {
         const croppedDataUrl = await cropImage(croppingImage, coordinates);
-        if (typeof croppedDataUrl === "string") {
+        if (typeof croppedDataUrl === 'string') {
           const blob = await (await fetch(croppedDataUrl)).blob();
           const originalFile = imageFiles[croppingImageIndex];
           const croppedFile = new File([blob], originalFile.name, {
@@ -468,13 +444,13 @@ function AddDish() {
           return imageUrl;
         }
         return null;
-      })
+      }),
     );
     return imageUrls;
   };
 
   const addNewImageField = () => {
-    setDisplayImages((prev) => [...prev, ""]);
+    setDisplayImages((prev) => [...prev, '']);
   };
 
   const [categoryPopup, setCategoryPopup] = useState(false);
@@ -518,28 +494,22 @@ function AddDish() {
     setAddOnPopUp(false);
   }
   function removeRecommendDish(indexToRemove: number) {
-    setPostRecommend((prev: any) =>
-      prev.filter((pre: any, index: number) => index !== indexToRemove)
-    );
+    setPostRecommend((prev: any) => prev.filter((pre: any, index: number) => index !== indexToRemove));
   }
   function removeCategoryCharges(indexToRemove: number) {
-    setPostCategory((prev: any) =>
-      prev.filter((pre: any, index: number) => index !== indexToRemove)
-    );
+    setPostCategory((prev: any) => prev.filter((pre: any, index: number) => index !== indexToRemove));
   }
   function removeAddons(indexToRemove: number) {
-    setPostAddOns((prev: any) =>
-      prev.filter((pre: any, index: number) => index !== indexToRemove)
-    );
+    setPostAddOns((prev: any) => prev.filter((pre: any, index: number) => index !== indexToRemove));
   }
   function handleNameDish(e: React.ChangeEvent<HTMLInputElement>) {
     setDishData((prevZone) => {
       return {
         ...prevZone,
         name: e.target.value
-          .replace(/^\s+/, "") // Remove leading spaces
-          .replace(/\s{3,}/g, " ") // Replace consecutive spaces with a single space
-          .replace(/[^\w\s]/g, ""), // Remove special characters except spaces
+          .replace(/^\s+/, '') // Remove leading spaces
+          .replace(/\s{3,}/g, ' ') // Replace consecutive spaces with a single space
+          .replace(/[^\w\s]/g, ''), // Remove special characters except spaces
       };
     });
   }
@@ -548,12 +518,12 @@ function AddDish() {
     setDishData((prevZone) => {
       return {
         ...prevZone,
-        dishType: e.target.value.replace(/[^a-zA-Z ]/, "").toLowerCase(),
+        dishType: e.target.value.replace(/[^a-zA-Z ]/, '').toLowerCase(),
       };
     });
   }
   function handleDishPrice(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value.replace(/[^0-9]/g, "");
+    const value = e.target.value.replace(/[^0-9]/g, '');
     setDishData((prevZone: Dish) => {
       return {
         ...prevZone,
@@ -576,9 +546,9 @@ function AddDish() {
   const addDescription = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(
       e.target.value
-        .replace(/^\s+/, "")
-        .replace(/\s{3,}/g, " ")
-        .replace(/[^\w\s.,]/g, "")
+        .replace(/^\s+/, '')
+        .replace(/\s{3,}/g, ' ')
+        .replace(/[^\w\s.,]/g, ''),
     );
   };
 
@@ -588,7 +558,7 @@ function AddDish() {
   return (
     <>
       <div className="pb-12">
-        <div className="bg-[#f5f5f5] sticky z-20 top-0">
+        <div className="sticky top-0 z-20 bg-[#f5f5f5]">
           <Header
             title="Dish"
             onBack={() => router.push(`/business/${businessId}?tab=items`)}
@@ -598,58 +568,49 @@ function AddDish() {
             isIconBusinessShow={false}
           />
 
-          <div className="flex justify-between items-center mt-6 px-6 pb-4 border-b border-[#cacaca]">
+          <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
             <div className="flex text-2xl">
               <span>Add a Dish</span>
             </div>
           </div>
         </div>
         <div>
-          <div className="mt-4 ml-6 font-medium">
+          <div className="ml-6 mt-4 font-medium">
             Name of the Dish <span className="text-red-500">*</span>
           </div>
-          <div className="relative w-full px-6 mt-4">
+          <div className="relative mt-4 w-full px-6">
             <input
               type="text"
               onChange={(e) => handleNameDish(e)}
               value={dishData?.name}
               id="floating_outlined"
-              className="block w-full pt-1 pb-2 pl-2 pr-[7rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border-gray-800 rounded-md border dark:text-white focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
               placeholder="Name"
               maxLength={50}
               required
             />
           </div>
-          <div className="mt-4 ml-6 font-medium">
+          <div className="ml-6 mt-4 font-medium">
             Dish Type <span className="text-red-500">*</span>
           </div>
-          <div className="relative w-full px-6 mt-4">
+          <div className="relative mt-4 w-full px-6">
             <select
               key={dishData?.dishType}
               onChange={(e) => handleDishType(e)}
-              value={dishData?.dishType
-                ?.replace(/[^a-zA-Z ]/, "")
-                .toLowerCase()}
-              className="w-full p-2 border rounded-md"
+              value={dishData?.dishType?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
+              className="w-full rounded-md border p-2"
             >
               {dishTypes?.map((dish: any) => (
-                <option
-                  className="!bg-white !text-[#2B354D]"
-                  key={dish?._id}
-                  value={dish?.type?.replace(/[^a-zA-Z ]/, "").toLowerCase()}
-                >
+                <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                   {dish?.type}
                 </option>
               ))}
             </select>
           </div>
-          <div className="mx-6 my-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
+          <div className="mx-6 my-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
             <div className="mt-2 space-y-4">
               <div>
-                <label
-                  className="block mb-2 font-medium text-[#2B354D]"
-                  htmlFor="dishPrice"
-                >
+                <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="dishPrice">
                   Dish Price <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -658,41 +619,27 @@ function AddDish() {
                   id="dishPrice"
                   type="text"
                   placeholder="Price"
-                  className="w-full p-2 border rounded-md"
+                  className="w-full rounded-md border p-2"
                   maxLength={4}
                 />
               </div>
               <div>
-                <label
-                  className="block mb-2 font-medium text-[#2B354D]"
-                  htmlFor="taxesCharges"
-                >
+                <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="taxesCharges">
                   Kitchen <span className="text-red-500">*</span>
                 </label>
-                <select
-                  onChange={handleKitchenChange}
-                  value={selectedKitchenId}
-                  className="w-full p-2 border rounded-md"
-                >
+                <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
                   {kitchen?.map((kitchen: IKitchen) => (
-                    <option
-                      className="!bg-white !text-[#2B354D]"
-                      key={kitchen?._id}
-                      value={kitchen?._id}
-                    >
+                    <option className="!bg-white !text-[#2B354D]" key={kitchen?._id} value={kitchen?._id}>
                       {kitchen?.kitchenName}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="border border-[#cacaca] p-2 rounded-md">
-                <div className="relative flex justify-between w-full">
+              <div className="rounded-md border border-[#cacaca] p-2">
+                <div className="relative flex w-full justify-between">
                   <h1>Category</h1>
                   <div onClick={addCategory}>
-                    <button
-                      type="button"
-                      className="px-4 py-1 border rounded-md on_active_bounce border-1"
-                    >
+                    <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1">
                       Add
                     </button>
                   </div>
@@ -700,20 +647,13 @@ function AddDish() {
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
                   {postCategory?.map((category: ICategory, index: number) => {
                     return (
-                      <div
-                        key={category?._id}
-                        className="flex flex-col p-3 my-2 border rounded-md border-1"
-                      >
+                      <div key={category?._id} className="border-1 my-2 flex flex-col rounded-md border p-3">
                         <div className="flex items-center">
                           <MdDinnerDining />
                           <h1 className="mx-2 capitalize">{category?.name}</h1>
                         </div>
-                        <div className="flex self-end mt-4">
-                          <button
-                            type="button"
-                            onClick={() => removeCategoryCharges(index)}
-                            className="text-[#2F80ED]"
-                          >
+                        <div className="mt-4 flex self-end">
+                          <button type="button" onClick={() => removeCategoryCharges(index)} className="text-[#2F80ED]">
                             Remove
                           </button>
                         </div>
@@ -722,53 +662,30 @@ function AddDish() {
                   })}
                 </div>
               </div>
-              <div className="space-y-4 p-2 border border-[#cacaca] rounded-md mt-2">
+              <div className="mt-2 space-y-4 rounded-md border border-[#cacaca] p-2">
                 <div className="flex items-center justify-between">
                   <span>Availability</span>
-                  <Switch
-                    uncheckedIcon={false}
-                    checkedIcon={false}
-                    onChange={handleToggleAvailability}
-                    checked={availability}
-                    offColor="#CACACA"
-                  />
+                  <Switch uncheckedIcon={false} checkedIcon={false} onChange={handleToggleAvailability} checked={availability} offColor="#CACACA" />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span>Visibility</span>
-                  <Switch
-                    uncheckedIcon={false}
-                    checkedIcon={false}
-                    onChange={handleToggleVisibility}
-                    checked={visibility}
-                    offColor="#CACACA"
-                  />
+                  <Switch uncheckedIcon={false} checkedIcon={false} onChange={handleToggleVisibility} checked={visibility} offColor="#CACACA" />
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="text-[#2B354D]">Portions</div>
-                  <button
-                    type="button"
-                    onClick={handleIncreasePortion}
-                    className="px-4 py-1 border rounded-md on_active_bounce border-1"
-                  >
+                  <button type="button" onClick={handleIncreasePortion} className="on_active_bounce border-1 rounded-md border px-4 py-1">
                     Add
                   </button>
                 </div>
                 {portions?.map((portion, index) => (
-                  <div
-                    key={portion?._id}
-                    className="rounded-lg border-1 border p-2 space-y-2 border-[#cacaca]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePortion(index)}
-                      className="float-right text-blue-500"
-                    >
+                  <div key={portion?._id} className="border-1 space-y-2 rounded-lg border border-[#cacaca] p-2">
+                    <button type="button" onClick={() => handleRemovePortion(index)} className="float-right text-blue-500">
                       ✖
                     </button>
-                    <div className="pb-2 mx-1 space-y-2">
+                    <div className="mx-1 space-y-2 pb-2">
                       <label>
                         Portion Name <span className="text-red-500">*</span>
                       </label>
@@ -780,12 +697,12 @@ function AddDish() {
                         onChange={(e) => {
                           const newPortions = [...portions];
                           newPortions[index].name = e.target.value
-                            ?.replace(/^\s+/, "")
-                            .replace(/\s{3,}/g, " ")
-                            .replace(/[^\w\s]/g, "");
+                            ?.replace(/^\s+/, '')
+                            .replace(/\s{3,}/g, ' ')
+                            .replace(/[^\w\s]/g, '');
                           setPortions(newPortions);
                         }}
-                        className="w-full p-2 border rounded-md"
+                        className="w-full rounded-md border p-2"
                       />
                       <label>
                         Price <span className="text-red-500">*</span>
@@ -797,32 +714,24 @@ function AddDish() {
                         maxLength={4}
                         onChange={(e) => {
                           const newPortions = [...portions];
-                          const value = e.target.value.replace(/[^0-9]/g, "");
+                          const value = e.target.value.replace(/[^0-9]/g, '');
                           newPortions[index].price = value;
                           setPortions(newPortions);
                         }}
-                        className="w-full p-2 border rounded-md"
+                        className="w-full rounded-md border p-2"
                       />
                       <label>Type</label>
                       <select
                         onChange={(e) => {
                           const newPortions = [...portions];
-                          newPortions[index].portionType = e.target.value
-                            ?.replace(/[^a-zA-Z ]/, "")
-                            .toLowerCase();
+                          newPortions[index].portionType = e.target.value?.replace(/[^a-zA-Z ]/, '').toLowerCase();
                           setPortions(newPortions);
                         }}
                         value={[...portions][index].portionType}
-                        className="w-full p-2 border rounded-md"
+                        className="w-full rounded-md border p-2"
                       >
                         {dishTypes?.map((dish: any) => (
-                          <option
-                            className="!bg-white !text-[#2B354D]"
-                            key={dish?._id}
-                            value={dish?.type
-                              ?.replace(/[^a-zA-Z ]/, "")
-                              .toLowerCase()}
-                          >
+                          <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                             {dish?.type}
                           </option>
                         ))}
@@ -832,13 +741,10 @@ function AddDish() {
                 ))}
               </div>
             </div>
-            <div className="relative flex justify-between w-full my-4 mt-4">
+            <div className="relative my-4 mt-4 flex w-full justify-between">
               <h1>Addons</h1>
               <div onClick={addOnsPopUp}>
-                <button
-                  type="button"
-                  className="px-4 py-1 border rounded-md on_active_bounce border-1 "
-                >
+                <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
                   Add
                 </button>
               </div>
@@ -846,20 +752,13 @@ function AddDish() {
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
               {postAddOns?.map((addon: any, index: number) => {
                 return (
-                  <div
-                    key={index.toString()}
-                    className="flex flex-col p-3 my-2 border rounded-md border-1"
-                  >
+                  <div key={index.toString()} className="border-1 my-2 flex flex-col rounded-md border p-3">
                     <div className="flex items-center">
                       <MdDinnerDining />
                       <h1 className="mx-2 capitalize">{addon?.name}</h1>
                     </div>
-                    <div className="flex self-end mt-4">
-                      <button
-                        type="button"
-                        onClick={() => removeAddons(index)}
-                        className="text-[#2F80ED]"
-                      >
+                    <div className="mt-4 flex self-end">
+                      <button type="button" onClick={() => removeAddons(index)} className="text-[#2F80ED]">
                         Remove
                       </button>
                     </div>
@@ -956,21 +855,18 @@ function AddDish() {
               ""
             )}
           </div> */}
-          <div className="mx-6 mt-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
-            <div className="relative flex justify-between w-full mt-4">
+          <div className="mx-6 mt-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
+            <div className="relative mt-4 flex w-full justify-between">
               <h1 className="text-xl">Display</h1>
               <div onClick={addNewImageField}>
-                <button
-                  type="button"
-                  className="px-4 py-1 border rounded-md on_active_bounce border-1 "
-                >
+                <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
                   Add
                 </button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
               {displayImages?.map((image, index) => (
-                <div key={index.toString()} className="flex mt-2">
+                <div key={index.toString()} className="mt-2 flex">
                   {image ? (
                     <div className="relative aspect-square">
                       <div>
@@ -979,23 +875,23 @@ function AddDish() {
                           alt={`image-${index}`}
                           width={250}
                           height={250}
-                          className="h-[250px] w-[250px] border border-[#cacaca] rounded-md object-contain"
+                          className="h-[250px] w-[250px] rounded-md border border-[#cacaca] object-contain"
                         />
                       </div>
                       <div>
                         <button
                           type="button"
                           onClick={() => handleRemoveImageUrl(index)}
-                          className="absolute top-2 right-2 bg-[#cacaca] text-black p-1 rounded-full"
+                          className="absolute right-2 top-2 rounded-full bg-[#cacaca] p-1 text-black"
                         >
-                          <HiX className="w-4 h-4" />
+                          <HiX className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="relative aspect-square">
                       <div
-                        className="w-[140px] h-[120px] flex justify-center items-center border border-[#cacaca] rounded-md p-6"
+                        className="flex h-[120px] w-[140px] items-center justify-center rounded-md border border-[#cacaca] p-6"
                         onClick={() => fileInputRefs.current[index].click()}
                       >
                         <span className="text-2xl">+</span>
@@ -1004,9 +900,9 @@ function AddDish() {
                         <button
                           type="button"
                           onClick={() => handleRemoveImageUrl(index)}
-                          className="absolute top-2 right-2 bg-[#cacaca] text-black p-1 rounded-full"
+                          className="absolute right-2 top-2 rounded-full bg-[#cacaca] p-1 text-black"
                         >
-                          <HiX className="w-4 h-4" />
+                          <HiX className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1014,12 +910,12 @@ function AddDish() {
                   <input
                     type="file"
                     ref={(el) => (fileInputRefs.current[index] = el)}
-                    style={{ display: "none" }}
+                    style={{ display: 'none' }}
                     accept=".png, .jpeg, .jpg, .webp"
                     onChange={(e) => handleImageChange(e, index)}
                   />
-                  <div className="mx-2 font-normal text-sm text-[#2B354D] opacity-70">
-                    {(index === 0 || "0") && <p>Cover Image</p>}
+                  <div className="mx-2 text-sm font-normal text-[#2B354D] opacity-70">
+                    {(index === 0 || '0') && <p>Cover Image</p>}
                     <p>1080 px X 1080 px</p>
                     <p>Png, Jpeg, Webp</p>
                   </div>
@@ -1031,25 +927,19 @@ function AddDish() {
               <textarea
                 value={description}
                 maxLength={600}
-                className="w-full h-24 p-2 mt-2 border rounded-md"
+                className="mt-2 h-24 w-full rounded-md border p-2"
                 placeholder="write about the dish...."
                 onChange={addDescription}
               />
             </div>
           </div>
-          <div className="mx-6 mt-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
-            <h1 className="text-2xl border-b pb-2 border-[#cacaca]">
-              Recommendation
-            </h1>
-            <div className="flex flex-col mt-4">
+          <div className="mx-6 mt-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
+            <h1 className="border-b border-[#cacaca] pb-2 text-2xl">Recommendation</h1>
+            <div className="mt-4 flex flex-col">
               <div className="flex flex-row justify-between">
                 <h1>Recommended dishes</h1>
                 <div>
-                  <button
-                    type="button"
-                    onClick={addRecommend}
-                    className="px-4 py-1  text-[#2B354D] border border-1 rounded-md on_active_bounce"
-                  >
+                  <button type="button" onClick={addRecommend} className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#2B354D]">
                     Add
                   </button>
                 </div>
@@ -1057,20 +947,13 @@ function AddDish() {
               <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
                 {postRecommend?.map((dishes: IDish, index: number) => {
                   return (
-                    <div
-                      key={dishes?._id}
-                      className="flex flex-col p-3 my-2 border rounded-md md:my-0 border-1"
-                    >
+                    <div key={dishes?._id} className="border-1 my-2 flex flex-col rounded-md border p-3 md:my-0">
                       <div className="flex items-center">
                         <MdDinnerDining />
                         <h1 className="mx-2 capitalize">{dishes?.name}</h1>
                       </div>
-                      <div className="flex self-end mt-4">
-                        <button
-                          type="button"
-                          onClick={() => removeRecommendDish(index)}
-                          className="text-[#2F80ED]"
-                        >
+                      <div className="mt-4 flex self-end">
+                        <button type="button" onClick={() => removeRecommendDish(index)} className="text-[#2F80ED]">
                           Remove
                         </button>
                       </div>
@@ -1080,21 +963,19 @@ function AddDish() {
               </div>
             </div>
           </div>
-          <div className="mx-6 mt-6 border border-[#cacaca] px-4 pb-4 pt-2 rounded-md">
+          <div className="mx-6 mt-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
             <h1>Tags:</h1>
-            <section className="overflow-x-auto flex flex-wrap gap-4 my-2 mt-4">
+            <section className="my-2 mt-4 flex flex-wrap gap-4 overflow-x-auto">
               {tags.map((tag) => {
                 return (
                   <div
-                    onClick={()=>handleTagsClick(tag?.text)}
+                    onClick={() => handleTagsClick(tag?.text)}
                     key={tag?.text}
-                    className={`${dishTags.includes(tag?.text)
-                        ? "bg-primary/50 text-base-100 font-medium"
-                        : "text-primary bg-base-200"
-                      } flex inline-block truncate overflow-hidden px-5 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full`}
+                    className={`${
+                      dishTags.includes(tag?.text) ? 'bg-primary/50 text-base-100 font-medium' : 'text-primary bg-base-200'
+                    } bg-base-100/50 inline-block flex items-center justify-center overflow-hidden truncate rounded-full border border-[#cacaca] px-5 py-1`}
                   >
-                    <Image src={tag?.image} alt="tags" width={20} height={20} />{" "}
-                    &nbsp;
+                    <Image src={tag?.image} alt="tags" width={20} height={20} /> &nbsp;
                     <span>{tag?.text}</span>
                   </div>
                 );
@@ -1103,15 +984,14 @@ function AddDish() {
           </div>
         </div>
       </div>
-      <div className="sticky mx-6 my-6 bottom-5">
+      <div className="sticky bottom-5 mx-6 my-6">
         <button
           type="button"
           disabled={isSubmitting}
           onClick={postAddDish}
-          className={`${loading ? "pointer-events-none opacity-50" : ""
-            } on_active_bounce text-white rounded-md bg-[#2B354D] py-2.5 w-full`}
+          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
         >
-          {loading ? "Loading..." : "Create"}
+          {loading ? 'Loading...' : 'Create'}
         </button>
       </div>
       <PopUp show={categoryPopup} onClose={closeCategoryPopup}>
@@ -1136,27 +1016,17 @@ function AddDish() {
       </PopUp>
       <PopUp show={addOnPopUp} onClose={closeAddOnPopUp}>
         {loading && <LoadingSpinner />}
-        <AddExtras
-          handleData={handleAddOns}
-          Data={addOns}
-          selectedData={postAddOns}
-          closeAddOnPopUp={closeAddOnPopUp}
-        />
+        <AddExtras handleData={handleAddOns} Data={addOns} selectedData={postAddOns} closeAddOnPopUp={closeAddOnPopUp} />
       </PopUp>
       <PopUp show={showCropper} onClose={handleClose}>
         <div>
           <div>
-            <ReactCropper
-              image={croppingImage}
-              ref={cropperRef}
-              width={250}
-              height={250}
-            />
+            <ReactCropper image={croppingImage} ref={cropperRef} width={250} height={250} />
           </div>
-          <div className="flex py-2 bg-white">
+          <div className="flex bg-white py-2">
             <button
               type="button"
-              className="fixed bottom-5 on_active_bounce mx-4 text-white rounded-md bg-[#2B354D] py-2.5 w-[25rem]"
+              className="on_active_bounce fixed bottom-5 mx-4 w-[25rem] rounded-md bg-[#2B354D] py-2.5 text-white"
               onClick={handleCrop}
             >
               Save & Close

@@ -74,7 +74,8 @@ const FooterSection = () => {
 				</div>
 				<div className='hidden lg:inline-flex order-0 lg:flex-row items-center my-10 lg:my-0 mx-8 mb-8 lg:mx-0 lg:place-self-end'>
 					<p className='lg:text-xl lg:font-normal my-4 lg:flex lg:items-center lg:text-right'>
-						©2001-2023 All Rights Reserved. Hipal® is a registered trademark of Paltribe solutions.
+						©2001-2023 All Rights Reserved. Hipal® is a registered trademark of Paltribe
+						solutions.
 					</p>
 				</div>
 				<br />

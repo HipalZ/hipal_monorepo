@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { IOrder } from "../types/hiTableData";
+import { create } from 'zustand';
+import { IOrder } from '../types/hiTableData';
 
 // Define the interface for alert data
 interface IAlertData {

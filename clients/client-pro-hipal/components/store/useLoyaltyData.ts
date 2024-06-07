@@ -10,7 +10,7 @@ interface ILoyaltySetting {
 	setReward: number
 	setClaimAmount: number
 	logo?: string
-	signUpBonus: number,
+	signUpBonus: number
 }
 
 export const useLoyaltyData = create(

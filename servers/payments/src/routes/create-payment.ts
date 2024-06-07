@@ -1,41 +1,33 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import {
-  Payment,
-  PaymentMode,
-  Reviews,
-  ReviewsCustomer,
-  Dues,
-} from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
-import momentTimeZone from "moment-timezone";
+import { Dues, Payment, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
+import momentTimeZone from 'moment-timezone';
 
-import axios from "axios";
+import axios from 'axios';
 
-const crypto = require("crypto");
+const crypto = require('crypto');
 const ENC_KEY = process.env.API_KEY; // set random encryption key
 const IV = process.env.API_KEY?.slice(0, 16);
 
 // set random initialisation vector
 
 const encrypt = (val: string) => {
-  let cipher = crypto.createCipheriv("aes-256-cbc", ENC_KEY, IV);
-  let encrypted = cipher.update(val, "utf8", "base64");
-  encrypted += cipher.final("base64");
+  let cipher = crypto.createCipheriv('aes-256-cbc', ENC_KEY, IV);
+  let encrypted = cipher.update(val, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
   return encrypted;
 };
 
 const decrypt = (encrypted: string) => {
-  let decipher = crypto.createDecipheriv("aes-256-cbc", ENC_KEY, IV);
-  let decrypted = decipher.update(encrypted, "base64", "utf8");
-  return decrypted + decipher.final("utf8");
+  let decipher = crypto.createDecipheriv('aes-256-cbc', ENC_KEY, IV);
+  let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+  return decrypted + decipher.final('utf8');
 };
 
 const router = express.Router();
 
 router.post(
-  "/v1/payments",
+  '/v1/payments',
 
   async (req: Request, res: Response) => {
     try {
@@ -88,9 +80,9 @@ router.post(
         tipsGivenBy,
       } = req.body;
 
-      const date = new Date().toISOString().replace("T", " ").slice(0, 19);
+      const date = new Date().toISOString().replace('T', ' ').slice(0, 19);
 
-      const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
+      const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
 
       const payment = await Payment.create({
         businessId,
@@ -144,10 +136,10 @@ router.post(
 
       res.status(201).send(payment);
     } catch (err: any) {
-      console.log("error", err);
+      console.log('error', err);
       return res.status(500).send({ status: false, mes: err });
     }
-  }
+  },
 );
 
 // router.post(
@@ -185,7 +177,7 @@ router.post(
 // );
 
 router.post(
-  "/v1/payments/Create/Mode",
+  '/v1/payments/Create/Mode',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -197,7 +189,7 @@ router.post(
     try {
       let payment = await PaymentMode.findOne({ businessId, mode });
       if (payment) {
-        return res.status(400).send("Mode already added !!");
+        return res.status(400).send('Mode already added !!');
       }
 
       payment = new PaymentMode({
@@ -209,14 +201,14 @@ router.post(
       const saveMode = await payment.save();
       return res.status(201).send(saveMode);
     } catch (error) {
-      console.error("Error while processing the mode:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the mode:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/payments/Create/Dues",
+  '/v1/payments/Create/Dues',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -227,14 +219,14 @@ router.post(
 
     try {
       if (!duesPersonNames) {
-        return res.status(400).send("Name is Required!");
+        return res.status(400).send('Name is Required!');
       }
       let dues = await Dues.findOne({
         businessId: businessId,
         duesPersonNames,
       });
       if (dues) {
-        return res.status(400).send("Name Already exit...");
+        return res.status(400).send('Name Already exit...');
       } else {
         dues = new Dues({ businessId, duesPersonNames: duesPersonNames });
       }
@@ -242,10 +234,10 @@ router.post(
       const saveDues = await dues.save();
       return res.status(201).send(saveDues);
     } catch (error) {
-      console.error("Error while processing the dues:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the dues:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 // router.post(
@@ -442,7 +434,7 @@ router.post(
 // );
 
 router.post(
-  "/v1/payments/discountAlert",
+  '/v1/payments/discountAlert',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -452,40 +444,40 @@ router.post(
     let body = req.body || {};
 
     const token =
-      "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
-    const phoneId = "104262732724546";
+      'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
+    const phoneId = '104262732724546';
     // const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
     try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
-          messaging_product: "whatsapp",
+          messaging_product: 'whatsapp',
           to: `${body?.phone}`,
-          type: "template",
+          type: 'template',
           template: {
-            name: "discount",
-            language: { code: "en" },
+            name: 'discount',
+            language: { code: 'en' },
             components: [
               {
-                type: "body",
+                type: 'body',
                 parameters: [
                   // businessName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.businessName}`,
                   },
 
                   //tableName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.tableName}`,
                   },
                   //data&time
                   {
-                    type: "date_time",
+                    type: 'date_time',
                     date_time: {
-                      fallback_value: `${"day"}`,
+                      fallback_value: `${'day'}`,
                       day_of_week: 3,
                       day_of_month: 22,
                       year: 2023,
@@ -496,46 +488,46 @@ router.post(
                   },
                   //billNumber
                   {
-                    type: "text",
-                    text: "10548",
+                    type: 'text',
+                    text: '10548',
                   },
                   //discountPercentage
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.discountPercentage}`,
                   },
                   //discountReason
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.discountReason}`,
                   },
                   //discountAmount
                   {
-                    type: "currency",
+                    type: 'currency',
                     currency: {
                       fallback_value: `${body?.discount * 1000}`,
-                      code: "INR",
+                      code: 'INR',
                       amount_1000: body?.discount * 1000,
                     },
                   },
 
                   //waiterName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.waiterName}`,
                   },
                   //numbers of bills
                   {
-                    type: "text",
-                    text: "1",
+                    type: 'text',
+                    text: '1',
                   },
 
                   // discount amount
                   {
-                    type: "currency",
+                    type: 'currency',
                     currency: {
                       fallback_value: `${body?.discount * 1000}`,
-                      code: "INR",
+                      code: 'INR',
                       amount_1000: body?.discount * 1000,
                     },
                   },
@@ -544,17 +536,17 @@ router.post(
             ],
           },
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send("response");
+      return res.status(200).send('response');
     } catch (error) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/payments/saleAlert",
+  '/v1/payments/saleAlert',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -563,99 +555,99 @@ router.post(
   async (req: Request, res: Response) => {
     let body = req.body || {};
 
-    console.log("bodys", body?.phone);
+    console.log('bodys', body?.phone);
     const token =
-      "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
-    const phoneId = "104262732724546";
+      'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
+    const phoneId = '104262732724546';
 
     try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
-          messaging_product: "whatsapp",
+          messaging_product: 'whatsapp',
           to: `${body?.phone}`,
-          type: "template",
+          type: 'template',
           template: {
-            name: "salealert",
-            language: { code: "en" },
+            name: 'salealert',
+            language: { code: 'en' },
             components: [
               {
-                type: "body",
+                type: 'body',
                 parameters: [
                   // businessName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.businessName}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.date}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.totalSale}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.serviceCharge}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.taxes}`,
                   },
 
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.dues}`,
                   },
 
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.dineInTotal}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.takeAwayTotal}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.deliveryTotal}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.pos}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.upi}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.cash}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.online}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.card}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.zomato}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.swiggy}`,
                   },
                   //discountPercentage
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.percentage}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.upOrDown}`,
                   },
                 ],
@@ -663,18 +655,18 @@ router.post(
             ],
           },
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       return res.status(200).send(response);
     } catch (error) {
-      console.error("Error while processing the dues:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the dues:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/payments/serviceChargeAlert",
+  '/v1/payments/serviceChargeAlert',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -684,56 +676,56 @@ router.post(
     let body = req.body || {};
 
     const token =
-      "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
-    const phoneId = "104262732724546";
+      'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
+    const phoneId = '104262732724546';
 
     try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
-          messaging_product: "whatsapp",
+          messaging_product: 'whatsapp',
           to: `${body?.phone}`,
-          type: "template",
+          type: 'template',
           template: {
-            name: "chargealert",
-            language: { code: "en" },
+            name: 'chargealert',
+            language: { code: 'en' },
             components: [
               {
-                type: "body",
+                type: 'body',
                 parameters: [
                   // businessName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.businessName}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.tableName}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.date}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.billNumber}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.serviceCharge}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.reason}`,
                   },
 
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.customerName}`,
                   },
 
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.waiterName}`,
                   },
                 ],
@@ -741,47 +733,45 @@ router.post(
             ],
           },
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       return res.status(200).send(response);
     } catch (error: any) {
-      console.error("Error while processing the dues:", error.message);
+      console.error('Error while processing the dues:', error.message);
       return res.status(500).send(error.message);
     }
-  }
+  },
 );
 
 // create review
 router.post(
-  "/v1/payments/reviews",
+  '/v1/payments/reviews',
 
   async (req: Request, res: Response) => {
     const { businessId, reviewerPhone, reviewRating } = req.body || {};
 
     if (!businessId || !reviewerPhone || !reviewRating) {
-      return res
-        .status(400)
-        .send("businesId, reviewerPhone, reviewRating is required");
+      return res.status(400).send('businesId, reviewerPhone, reviewRating is required');
     }
 
     try {
       const addReview = await Reviews.create(req.body);
 
       if (!addReview) {
-        return res.status(400).send("Review not  added");
+        return res.status(400).send('Review not  added');
       }
 
       return res.status(201).send({ id: addReview.id });
     } catch (error) {
-      console.error("Error while processing the dues:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the dues:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 //create customer
 router.post(
-  "/v1/payments/customer",
+  '/v1/payments/customer',
 
   // validateCustomer,
   // requireAuthorization([
@@ -793,7 +783,7 @@ router.post(
     const { businessId, phone, name } = req.body || {};
 
     if (!businessId || !phone) {
-      return res.status(400).send("businessId, phone is required");
+      return res.status(400).send('businessId, phone is required');
     }
 
     try {
@@ -806,7 +796,7 @@ router.post(
             $inc: { count: 1 },
             date: Date.now(),
           },
-          { new: true }
+          { new: true },
         );
       } else {
         customer = new ReviewsCustomer({
@@ -827,12 +817,12 @@ router.post(
         }
       }
 
-      return res.status(400).send("Customer not added");
+      return res.status(400).send('Customer not added');
     } catch (error) {
-      console.error("Error while processing the customer:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the customer:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 export { router as createPaymentRouter };

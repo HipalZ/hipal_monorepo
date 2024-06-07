@@ -1,9 +1,9 @@
-import axiosConstructor from "axios";
+import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
-	baseURL: "https://api.hipal.life",
-	withCredentials: true,
-})
+  baseURL: 'https://api.hipal.life',
+  withCredentials: true,
+});
 
 export default axios;
 

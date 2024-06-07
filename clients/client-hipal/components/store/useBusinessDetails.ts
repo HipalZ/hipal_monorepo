@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface IBusinessDetails {
 	businessName: string | any
@@ -13,14 +13,14 @@ export const useBusinessDetails = create(
 	}>(
 		(set, get) => ({
 			businessDetails: {
-				businessName: '',
-				logo: '',
+				businessName: "",
+				logo: "",
 			},
 			setBusinessDetails: (businessDetails: IBusinessDetails) =>
 				set({ businessDetails: businessDetails }),
 		}),
 		{
-			name: 'useBusinessDetails',
+			name: "useBusinessDetails",
 		},
 	),
 )

@@ -45,7 +45,7 @@ function LoginPage() {
 			}
 		}
 	}
-	
+
 	function handlePhoneNumber(e: any) {
 		setPhone(e?.target.value)
 		if (e.target.value.length > 9) {
@@ -91,7 +91,7 @@ function LoginPage() {
 								: 'pointer-events-none opacity-50'
 						} flex justify-center mb-5 on_active_bounce bg-primary rounded-full ml-10 mr-10 font-[600] py-[1rem] text-white text-[18px] leading-[1.15rem]`}
 					>
-						<button type="button">Let me in</button>
+						<button type='button'>Let me in</button>
 					</div>
 				</form>
 			</div>

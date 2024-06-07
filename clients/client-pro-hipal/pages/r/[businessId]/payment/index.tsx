@@ -457,7 +457,7 @@ export default memo(function Payment({ data }: any) {
 	const handleMode = async (mode: Mode) => {
 		setIsLoading(true)
 		if (mode === 'ONLINE') {
-			if(!businessDetails?.isPaymentIntegrated){ 
+			if (!businessDetails?.isPaymentIntegrated) {
 				return
 			}
 			const total = finalBill[finalBill.length - 1].Total
@@ -509,7 +509,9 @@ export default memo(function Payment({ data }: any) {
 						<span>UPI | Debit card | Credit Card</span>
 					</h1>
 				</article>
-				{!businessDetails?.isPaymentIntegrated ? <h6 className='mx-4 mt-2'>Payment Integration Coming soon....</h6>: null}
+				{!businessDetails?.isPaymentIntegrated ? (
+					<h6 className='mx-4 mt-2'>Payment Integration Coming soon....</h6>
+				) : null}
 				<br />
 				<article
 					onClick={() => handleMode('OFFLINE')}

@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface IUseLogin {
   phoneNumber?: string;
@@ -58,18 +58,18 @@ interface IUseLogin {
 export const useLogin = create(
   persist<IUseLogin>(
     (set, get) => ({
-      phoneNumber: "",
-      name: "",
-      businessName: "",
-      password: "",
-      time: "",
+      phoneNumber: '',
+      name: '',
+      businessName: '',
+      password: '',
+      time: '',
       userDetails: {},
       isLogin: false,
-      zoneName: "",
-      loyaltyId: "",
+      zoneName: '',
+      loyaltyId: '',
       grouped_customers: {},
       selectedZone: undefined,
-      childId: "",
+      childId: '',
       setChildId: (d: string) => set({ childId: d }),
       setSelectedZone: (zone: any) => set({ selectedZone: zone }),
       setPhoneNumber: (d: string) => set({ phoneNumber: d }),
@@ -84,7 +84,7 @@ export const useLogin = create(
       setGrouped_customers: (d: any) => set({ grouped_customers: d }),
     }),
     {
-      name: "waiterLogin",
-    }
-  )
+      name: 'waiterLogin',
+    },
+  ),
 );

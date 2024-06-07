@@ -1,8 +1,8 @@
-import MainTypes from '@components/molecules/categoryTypes/mainTypes'
-import SubTypes from '@components/molecules/categoryTypes/subTypes'
-import { _useAllBusiness } from '@components/store/useAllBusiness'
-import { useDishTypes } from '@components/store/useDishTypes'
-import { memo, useEffect, useMemo } from 'react'
+import MainTypes from "@components/molecules/categoryTypes/mainTypes"
+import SubTypes from "@components/molecules/categoryTypes/subTypes"
+import { _useAllBusiness } from "@components/store/useAllBusiness"
+import { useDishTypes } from "@components/store/useDishTypes"
+import { memo, useEffect, useMemo } from "react"
 
 function DishesTypes({
 	hideMainTypes,
@@ -23,10 +23,10 @@ function DishesTypes({
 			!activeDishTypes.activeMainType &&
 			!activeDishTypes.activeSubType &&
 			window &&
-			!window.location.href.includes('#')
+			!window.location.href.includes("#")
 		) {
 			const activeMainType = Object.keys(mainTypes || {})?.[0] || null
-			const activeSubType = Object.keys(subTypes?.[activeMainType || ''] || {})?.[0] || null
+			const activeSubType = Object.keys(subTypes?.[activeMainType || ""] || {})?.[0] || null
 
 			setActiveDishTypes({
 				activeMainType: activeMainType,

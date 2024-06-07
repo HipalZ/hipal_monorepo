@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const Themes = z.object({
   primaryColor: z.string(),

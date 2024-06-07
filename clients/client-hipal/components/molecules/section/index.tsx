@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React, { memo } from "react"
 
 function Section({
 	title,
@@ -12,11 +12,11 @@ function Section({
 	tagClassName?: string
 	children: React.ReactNode
 }) {
-	const CustomTag = tag ? (`${tag}` as React.ElementType) : ('h2' as React.ElementType)
+	const CustomTag = tag ? (`${tag}` as React.ElementType) : ("h2" as React.ElementType)
 
 	return (
-		<section className='flex flex-col my-2' {...props}>
-			<div className='px-4 prose mb-2'>
+		<section className="flex flex-col my-2" {...props}>
+			<div className="px-4 prose mb-2">
 				<CustomTag className={`!font-medium !text-2xl ${tagClassName}`}>{title}</CustomTag>
 			</div>
 

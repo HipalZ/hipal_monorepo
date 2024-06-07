@@ -1,5 +1,5 @@
-import create from "zustand";
-import { persist } from "zustand/middleware";
+import create from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface PaymentState {
   businessId: string;
@@ -24,23 +24,23 @@ interface PaymentState {
 const usePayment = create<any>(
   persist(
     (set) => ({
-      businessId: "",
-      tableName: "",
-      tableId: "",
-      status: "",
+      businessId: '',
+      tableName: '',
+      tableId: '',
+      status: '',
       time: Date.now(),
-      message: "",
+      message: '',
       isAlertOn: false,
-      zoneId: "",
-      razorpayPaymentId: "",
-      razorpayOrderId: "",
+      zoneId: '',
+      razorpayPaymentId: '',
+      razorpayOrderId: '',
       razorpayAcquirerData: {
-        rrn: "",
-        upi_transaction_id: "",
+        rrn: '',
+        upi_transaction_id: '',
       },
-      mode: "",
-      razorpayEventId: "",
-      id: "",
+      mode: '',
+      razorpayEventId: '',
+      id: '',
       setId: (id: string) => set({ id }),
       setRazorpayEventId: (razorpayEventId: string) =>
         set({
@@ -58,18 +58,15 @@ const usePayment = create<any>(
         set({
           razorpayOrderId,
         }),
-      setRazorpayAcquirerData: (razorpayAcquirerData: {
-        rrn: string;
-        upi_transaction_id: string;
-      }) =>
+      setRazorpayAcquirerData: (razorpayAcquirerData: { rrn: string; upi_transaction_id: string }) =>
         set({
           razorpayAcquirerData,
         }),
     }),
     {
-      name: "paymentData-hitable",
-    }
-  )
+      name: 'paymentData-hitable',
+    },
+  ),
 );
 
 export default usePayment;

@@ -1,11 +1,11 @@
-import axios from "@/axios";
-import type { UserProfile } from "@/components/types/businessData";
-import React, { memo, useState } from "react";
-import { toast } from "react-toastify";
-import Switch from "react-switch";
-import { useQuery } from "@tanstack/react-query";
-import ErrorComponent from "@/components/errorComponent";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
+import axios from '@/axios';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import ErrorComponent from '@/components/errorComponent';
+import type { UserProfile } from '@/components/types/businessData';
+import { useQuery } from '@tanstack/react-query';
+import React, { memo, useState } from 'react';
+import Switch from 'react-switch';
+import { toast } from 'react-toastify';
 
 interface IAddStaff {
   businessId: string;
@@ -19,15 +19,10 @@ interface IRole {
   permissions: string[];
   businessId: string;
 }
-const AddStaffPopup: React.FC<IAddStaff> = ({
-  businessId,
-  onClose,
-  staffDetails,
-  getStaff,
-}) => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails, getStaff }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [selectedRole, setSelectedRole] = useState<IRole | null>(null);
   const [errors, setErrors] = useState({
     name: false,
@@ -39,35 +34,35 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
   const [toggleHiTableSwitch, setToggleHiTableSwitch] = useState(false);
   const [hibizSubServices, setHibizSubServices] = useState({
     addAndDeleteItems: {
-      label: "Add and Delete Items",
+      label: 'Add and Delete Items',
       value: false,
     },
     addAndDeleteStaff: {
-      label: "Add & Delete Staff",
+      label: 'Add & Delete Staff',
       value: false,
     },
     LoyaltyManagement: {
-      label: "Loyalty Management",
+      label: 'Loyalty Management',
       value: false,
     },
     salesModules: {
-      label: "Sales Modules",
+      label: 'Sales Modules',
       value: false,
     },
     reports: {
-      label: "Reports",
+      label: 'Reports',
       value: false,
     },
     addAndDeleteTablesOrZones: {
-      label: "Add & Delete Tables or Zones",
+      label: 'Add & Delete Tables or Zones',
       value: false,
     },
   });
 
   const style = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   };
   const validateForm = () => {
     const newErrors = {
@@ -93,13 +88,10 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
     return Math.floor(1000 + Math.random() * 9000);
   };
   const handleSubmit = async () => {
-    const staffExists = staffDetails.some(
-      (staff) =>
-        staff.name.toLowerCase() === name.toLowerCase() || staff.phone === phone
-    );
+    const staffExists = staffDetails.some((staff) => staff.name.toLowerCase() === name.toLowerCase() || staff.phone === phone);
 
     if (staffExists) {
-      toast.error("Staff member with this name or phone number already exists");
+      toast.error('Staff member with this name or phone number already exists');
       return;
     }
     if (!validateForm()) {
@@ -111,14 +103,14 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
       email,
       phone,
       password,
-      role: "RESTAURANT_MANAGER",
+      role: 'RESTAURANT_MANAGER',
       customRole: selectedRole
         ? {
-          businessId: businessId,
-          customRoleId: selectedRole.id,
-          permissions: selectedRole.permissions,
-          roleName: selectedRole.name,
-        }
+            businessId: businessId,
+            customRoleId: selectedRole.id,
+            permissions: selectedRole.permissions,
+            roleName: selectedRole.name,
+          }
         : null,
       accessControl: {
         dish: hibizSubServices.addAndDeleteItems.value,
@@ -131,15 +123,12 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
     };
 
     try {
-        await axios.post(
-        "/v1/users?action=signup&clientRole=user",
-        payload
-      );
+      await axios.post('/v1/users?action=signup&clientRole=user', payload);
       getStaff();
       onClose();
-      toast.success("Staff added sucessfully");
+      toast.success('Staff added sucessfully');
     } catch (error) {
-      console.log("error:", error);
+      console.log('error:', error);
     }
   };
 
@@ -148,58 +137,56 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
       const roles = await axios.get(`/v1/businesses/${businessId}/roles`);
       return roles.data;
     } catch (error) {
-      console.log("error:", error);
+      console.log('error:', error);
     }
   };
 
-  const { isLoading, error, data:roles, refetch } = useQuery({
+  const {
+    isLoading,
+    error,
+    data: roles,
+    refetch,
+  } = useQuery({
     queryKey: ['roles', businessId],
     queryFn: getAllRoles,
     enabled: !!businessId,
-  })
+  });
 
-  if (error) return <ErrorComponent refetch={refetch} />
+  if (error) return <ErrorComponent refetch={refetch} />;
 
   return (
     <>
       {isLoading && <LoadingSpinner />}
-      <div className="bg-[#f1f1f1] pt-4 min-h-auto h-auto rounded-t-3xl max-h-[85vh] pb-[7rem] overflow-auto">
+      <div className="min-h-auto h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#f1f1f1] pb-[7rem] pt-4">
         <div className="px-4 text-xl font-semibold ">Add Staff</div>
         <div className="px-2 text-sm">
-          <div className="px-4 mt-2 space-y-2">
-            <span className="font-medium">
-              Name of the Staff{" "}
-              {errors.name && <span className="text-red-500">*</span>}
-            </span>
+          <div className="mt-2 space-y-2 px-4">
+            <span className="font-medium">Name of the Staff {errors.name && <span className="text-red-500">*</span>}</span>
             <input
               onChange={(e) => setName(e.target.value)}
               maxLength={24}
               value={name}
               type="text"
-              className="block w-full pt-2 pb-2 bg-white pl-4 pr-[7rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border-gray-800 rounded-md border dark:text-white focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
               placeholder="Name"
             />
           </div>
 
-          <div className="px-4 mt-4 space-y-2">
-            <span className="font-medium">
-              Email {errors.name && <span className="text-red-500">*</span>}
-            </span>
+          <div className="mt-4 space-y-2 px-4">
+            <span className="font-medium">Email {errors.name && <span className="text-red-500">*</span>}</span>
             <input
               onChange={(e) => setEmail(e.target.value)}
               maxLength={50}
               value={email}
               type="email"
-              className="block w-full pt-2 pb-2 bg-white pl-4 pr-[7rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border-gray-800 rounded-md border dark:text-white focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
               placeholder="Enter Email"
             />
           </div>
-          <div className="px-4 mt-4 space-y-2">
-            <span className="font-medium">
-              Phone {errors.name && <span className="text-red-500">*</span>}
-            </span>
+          <div className="mt-4 space-y-2 px-4">
+            <span className="font-medium">Phone {errors.name && <span className="text-red-500">*</span>}</span>
             <input
-            maxLength={10}
+              maxLength={10}
               onChange={(e) => {
                 const value = e.target.value;
                 // Allow only digits and limit to 10 digits
@@ -209,14 +196,12 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
               }}
               value={phone}
               type="tel"
-              className="block w-full pt-2 pb-2 bg-white pl-4 pr-[7rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border-gray-800 rounded-md border dark:text-white focus:outline-none focus:ring-0 focus:border-[#2B354D] dark:border-[#2B354D] peer"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
               placeholder="Enter Phone"
             />
           </div>
-          <div className="px-4 mt-4 space-y-2 rounded-md">
-            <span className="font-medium">
-              Role {errors.name && <span className="text-red-500">*</span>}
-            </span>
+          <div className="mt-4 space-y-2 rounded-md px-4">
+            <span className="font-medium">Role {errors.name && <span className="text-red-500">*</span>}</span>
             <select
               onChange={(e) => {
                 const selectedRoleId = e.target.value;
@@ -236,9 +221,9 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
           <div className="p-4">
             <div className="pb-4 text-xl font-semibold">Access to Services</div>
             <div className="space-y-4">
-              <div className="border border-[#cacaca] p-4 bg-white rounded-md">
+              <div className="rounded-md border border-[#cacaca] bg-white p-4">
                 <div style={style}>
-                  <div className="space-y-2 text-sm flex-col-1">
+                  <div className="flex-col-1 space-y-2 text-sm">
                     <div className="font-semibold">Hi-Biz</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -254,15 +239,11 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
                 </div>
                 <hr className="my-4" />
                 {toggleHiBizSwitch &&
-                  (
-                    Object.keys(hibizSubServices) as Array<
-                      keyof typeof hibizSubServices
-                    >
-                  ).map((serviceKey) => (
+                  (Object.keys(hibizSubServices) as Array<keyof typeof hibizSubServices>).map((serviceKey) => (
                     <div key={serviceKey} style={style} className="pb-4">
                       <label>{hibizSubServices[serviceKey].label}</label>
                       <input
-                        className="w-5 h-5 rounded-md outline-none focus:ring-0"
+                        className="h-5 w-5 rounded-md outline-none focus:ring-0"
                         type="checkbox"
                         checked={hibizSubServices[serviceKey].value}
                         onChange={() => {
@@ -278,9 +259,9 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
                     </div>
                   ))}
               </div>
-              <div className="border opacity-50 border-[#cacaca] p-4 bg-white rounded-md">
+              <div className="rounded-md border border-[#cacaca] bg-white p-4 opacity-50">
                 <div style={style}>
-                  <div className="space-y-2 text-sm flex-col-1">
+                  <div className="flex-col-1 space-y-2 text-sm">
                     <div className="font-semibold">Hi-Table</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -288,9 +269,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
                     <Switch
                       uncheckedIcon={false}
                       checkedIcon={false}
-                      onChange={() =>
-                        setToggleHiTableSwitch(!toggleHiTableSwitch)
-                      }
+                      onChange={() => setToggleHiTableSwitch(!toggleHiTableSwitch)}
                       checked={toggleHiTableSwitch}
                       offColor="#CACACA"
                       disabled
@@ -301,12 +280,8 @@ const AddStaffPopup: React.FC<IAddStaff> = ({
             </div>
           </div>
         </div>
-        <div className="fixed bottom-0 w-full max-w-[30rem] p-4 outline-none cursor-pointer">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="bg-[#2B354D] w-full max-w-[30rem] py-2 rounded-md text-white"
-          >
+        <div className="fixed bottom-0 w-full max-w-[30rem] cursor-pointer p-4 outline-none">
+          <button type="button" onClick={handleSubmit} className="w-full max-w-[30rem] rounded-md bg-[#2B354D] py-2 text-white">
             Add Staff
           </button>
         </div>

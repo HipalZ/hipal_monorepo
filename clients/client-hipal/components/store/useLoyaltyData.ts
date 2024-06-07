@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface ILoyaltySetting {
 	businessId: string
@@ -10,7 +10,7 @@ interface ILoyaltySetting {
 	setReward: number
 	setClaimAmount: number
 	logo?: string
-	signUpBonus: number,
+	signUpBonus: number
 }
 
 export const useLoyaltyData = create(
@@ -20,21 +20,21 @@ export const useLoyaltyData = create(
 	}>(
 		(set, get) => ({
 			loyaltySetting: {
-				businessId: '',
+				businessId: "",
 				setReward: 10,
 				setClaimAmount: 20,
-				loyaltyId: '',
-				cardPattern: '',
-				cardColor: '',
-				fontColor: '',
-				logo: '',
+				loyaltyId: "",
+				cardPattern: "",
+				cardColor: "",
+				fontColor: "",
+				logo: "",
 				signUpBonus: 0,
 			},
 			setLoyaltySetting: (loyaltySetting: ILoyaltySetting) =>
 				set({ loyaltySetting: loyaltySetting }),
 		}),
 		{
-			name: 'userLoyaltyData',
+			name: "userLoyaltyData",
 		},
 	),
 )

@@ -5,7 +5,7 @@ import { PAGE_TYPES, routePaths } from '@components/utils/routes'
 import { Splide, SplideSlide } from '@splidejs/react-splide'
 import isEmpty from 'lodash-es/isEmpty'
 import { useRouter } from 'next/router'
-import { memo,  useState } from 'react'
+import { memo, useState } from 'react'
 
 function PopularRestaurant() {
 	const router = useRouter()
@@ -17,7 +17,7 @@ function PopularRestaurant() {
 	// Click handler for recommended dishes
 	const handleRecommendedDishClick = (dish) => {
 		setSelectedRecommendedDish(dish)
-		const categoryId = dish?.categories?.[0]?._id 
+		const categoryId = dish?.categories?.[0]?._id
 		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dish._id))
 	}
 

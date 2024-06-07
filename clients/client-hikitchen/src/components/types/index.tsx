@@ -48,7 +48,7 @@ export interface Kot {
 export interface Dish {
   category: string;
   kots: Kot[];
-  items:Kot[]
+  items: Kot[];
 }
 
 export interface Data {
@@ -59,12 +59,12 @@ export interface Data {
   customerPhone: string;
   tableName: string;
   kots: Dish[];
-  items:Kot[]
+  items: Kot[];
   totalKots: number;
   cooked: number;
   uuid: string;
   deletedDishes: number;
-  cookingDishes:number;
+  cookingDishes: number;
 }
 
 export interface IKitchen {

@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 type CroppedImage = {
   croppedImage: string;
@@ -6,6 +6,6 @@ type CroppedImage = {
 };
 
 export const useCroppedImage = create<CroppedImage>((set) => ({
-  croppedImage: "",
+  croppedImage: '',
   setCroppedImage: (image) => set({ croppedImage: image }),
 }));

@@ -23,57 +23,56 @@ export interface IBusinessData {
 }
 
 export interface Category {
-    name: string;
-    id: string;
+	name: string
+	id: string
 }
 
 export interface Filter {
-    timeToConsume: string;
-    portionBestSuited: string;
-    bestWeather: string;
-    levelOfSpice: string;
-    bestOccasion: string;
-    texture: string;
-    time: string;
-    dishes: IDish[];
+	timeToConsume: string
+	portionBestSuited: string
+	bestWeather: string
+	levelOfSpice: string
+	bestOccasion: string
+	texture: string
+	time: string
+	dishes: IDish[]
 }
 
 export interface Variant {
-    id: string;
-    extra: IExtraItem;
+	id: string
+	extra: IExtraItem
 }
 
 export interface DishData {
-    businessId: string;
-    name: string;
-    price: number;
-    avgTime: number;
-    dishType: string;
-    categories: Category[];
-    portions: IPortion[];
-    extras: IExtras[];
-    kitchenId: string;
-    filters: Filter;
-    images: string[];
-    description: string;
-    tags: string[];
-    links: string[];
-    delayTime: number | null;
-    availability: boolean;
-    version: number;
-    taxes: string[];
-    visibility: boolean;
-    id: string;
+	businessId: string
+	name: string
+	price: number
+	avgTime: number
+	dishType: string
+	categories: Category[]
+	portions: IPortion[]
+	extras: IExtras[]
+	kitchenId: string
+	filters: Filter
+	images: string[]
+	description: string
+	tags: string[]
+	links: string[]
+	delayTime: number | null
+	availability: boolean
+	version: number
+	taxes: string[]
+	visibility: boolean
+	id: string
 }
 
 export interface RootObject {
-    dishData: DishData;
-    dishId: string;
-    parentCategoryId: string;
-    parentCategoryName: string;
-    variants: Variant[];
+	dishData: DishData
+	dishId: string
+	parentCategoryId: string
+	parentCategoryName: string
+	variants: Variant[]
 }
-
 
 export interface ICategories extends ICategory {
 	dishes: IDish[]
@@ -130,7 +129,7 @@ export interface ISettings {
 	id: string
 }
 export interface IDish {
-	_id:string
+	_id: string
 	businessId: string
 	availability: false
 	name: string
@@ -213,8 +212,8 @@ export interface IExtraItem {
 	name: string
 	price: string
 	maxQuantity: number
-	availability:number
-	visibility:number
+	availability: number
+	visibility: number
 }
 
 export interface IPortion {
@@ -294,49 +293,49 @@ export interface UserData {
 }
 
 export interface IBill {
-	businessId: string;
-	zoneId: string;
-	tableId: string;
-	staffId: string;
-	startedAt: number;
-	cookedAt: number;
-	status: string;
+	businessId: string
+	zoneId: string
+	tableId: string
+	staffId: string
+	startedAt: number
+	cookedAt: number
+	status: string
 	dish: {
-	  dishId: string;
-	  name: string;
-	  price: number;
-	  qty: number;
-	  comments: string;
-	  extras: {
-		name: string;
-		price: string;
-		quantity: number;
-	  }[];
-	  portions: {
-		name: string;
-		price: string;
-		discount: string;
-		default: string;
-	  };
-	};
-	customerName: string;
-	customerPhone: string;
-	dishStatus: string;
-	kotTime: string;
-	tableName: string;
-	date: string;
-	id: string;
-	_id: string;
-	subTotal: number;
-	Total: number;
-	discount: number;
-	CGST: number;
-	SGST: number;
-	businessName: string;
-	claimedAmount: number;
-	serviceCharge: string;
-	tips: string;
-	packingCharges: number;
-	RxPayableGST: number;
-	swiggyPayableGST: number;
-  }
+		dishId: string
+		name: string
+		price: number
+		qty: number
+		comments: string
+		extras: {
+			name: string
+			price: string
+			quantity: number
+		}[]
+		portions: {
+			name: string
+			price: string
+			discount: string
+			default: string
+		}
+	}
+	customerName: string
+	customerPhone: string
+	dishStatus: string
+	kotTime: string
+	tableName: string
+	date: string
+	id: string
+	_id: string
+	subTotal: number
+	Total: number
+	discount: number
+	CGST: number
+	SGST: number
+	businessName: string
+	claimedAmount: number
+	serviceCharge: string
+	tips: string
+	packingCharges: number
+	RxPayableGST: number
+	swiggyPayableGST: number
+}

@@ -1,13 +1,13 @@
-import QuantityPickerNonOutline from "@/components/atoms/quantityPicker/quantityPickerNonOutline";
-import Section from "@/components/molecules/section";
-import { useBottomPanel } from "@/components/store/useBottomPanel";
-import { useCart } from "@/components/store/useCart";
-import type { IDish, IExtraItem } from "@/components/types/hiTableData";
-import { getPrice } from "@/components/utils/helpers";
-import { camelCase, isEmpty } from "lodash-es";
-import { useRouter } from "next/router";
-import { memo, useEffect, useState } from "react";
-import { BsChevronDown, BsChevronUp } from "react-icons/bs";
+import QuantityPickerNonOutline from '@/components/atoms/quantityPicker/quantityPickerNonOutline';
+import Section from '@/components/molecules/section';
+import { useBottomPanel } from '@/components/store/useBottomPanel';
+import { useCart } from '@/components/store/useCart';
+import type { IDish, IExtraItem } from '@/components/types/hiTableData';
+import { getPrice } from '@/components/utils/helpers';
+import { camelCase, isEmpty } from 'lodash-es';
+import { useRouter } from 'next/router';
+import { memo, useEffect, useState } from 'react';
+import { BsChevronDown, BsChevronUp } from 'react-icons/bs';
 
 function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
   const setValidationRef = useBottomPanel((s) => s.setValidationRef);
@@ -25,7 +25,7 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
   const router = useRouter();
   let { tableId } = router.query as { tableId: string };
   if (!tableId) {
-    tableId = "012345";
+    tableId = '012345';
   }
   const [selectedItems, setSelectedItems] = useState<Record<string, any>>({});
 
@@ -37,11 +37,11 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
     const extra = dishData?.extras;
     const portion = dishData?.portions;
     if (extra?.length > 0 && portion?.length === 0) {
-      setVariantType("extra");
+      setVariantType('extra');
     } else if (portion?.length > 0 && extra?.length === 0) {
-      setVariantType("portion");
+      setVariantType('portion');
     } else if (extra?.length > 0 && portion?.length > 0) {
-      setVariantType("all");
+      setVariantType('all');
     }
   }, [cartItem]);
 
@@ -146,8 +146,8 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
   return (
     <>
       <div className="">
-        <Section title={"Extras"} tag="h5" tagClassName="mx-2 font-semibold text-base-content !text-xl">
-          {" "}
+        <Section title={'Extras'} tag="h5" tagClassName="mx-2 font-semibold text-base-content !text-xl">
+          {' '}
         </Section>
       </div>
 
@@ -157,13 +157,13 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
           .sort((a, b) => b.compulsory - a.compulsory)
           .map((extra, extraIndex) => (
             <div key={extraIndex} className="extra-section bg-base-300/10 mb-[2rem]">
-              <div onClick={() => handleAccordionClick(extraIndex)} className="flex justify-between py-3 mx-6 prose cursor-pointer">
-                <div className={`${bounceButton && !validationExtras[extraIndex] ? "animation-bounce" : ""}`}>
-                  <h5 className="w-[12rem] text-sm font-medium capitalize text-base-content">{extra?.name || ""}</h5>
+              <div onClick={() => handleAccordionClick(extraIndex)} className="prose mx-6 flex cursor-pointer justify-between py-3">
+                <div className={`${bounceButton && !validationExtras[extraIndex] ? 'animation-bounce' : ''}`}>
+                  <h5 className="text-base-content w-[12rem] text-sm font-medium capitalize">{extra?.name || ''}</h5>
                   {extra?.compulsory >= 0 && (
-                    <span className={`text-xs font-normal ${extra?.compulsory === 0 ? "" : "!text-primary "}`}>
-                      Select up to {extra?.maxQuantity} ({extra?.compulsory > 0 ? " " + extra?.compulsory : ""}{" "}
-                      {extra?.compulsory > 0 ? "Required " : " Optional"} )
+                    <span className={`text-xs font-normal ${extra?.compulsory === 0 ? '' : '!text-primary '}`}>
+                      Select up to {extra?.maxQuantity} ({extra?.compulsory > 0 ? ' ' + extra?.compulsory : ''}{' '}
+                      {extra?.compulsory > 0 ? 'Required ' : ' Optional'} )
                     </span>
                   )}
                 </div>
@@ -180,26 +180,26 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
               </div>
               {activeIndex === extraIndex && (
                 <div className="pb-4">
-                  <div className="max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out border opacity-100 rounded-xl border-primary">
-                    <table className="table w-full table-compact table-zebra ">
+                  <div className="border-primary mx-6 max-h-screen overflow-auto rounded-xl border opacity-100 transition-all duration-500 ease-in-out">
+                    <table className="table-compact table-zebra table w-full ">
                       <tbody>
                         {(extra?.items || []).map((item, index) => {
                           let itemId: string = item?._id || camelCase(item?.name + extraIndex);
                           const isDisabled = disableExtra(extra, item);
                           return (
                             <tr
-                              className={`flex flex-row transition-all  ${(getQuantity(itemId) === item?.maxQuantity || selectedItemsCount[extra?._id] === extra?.maxQuantity) && getQuantity(itemId) === 0 && extra?.name ? "opacity-50" : "opacity-100"}`}
+                              className={`flex flex-row transition-all  ${(getQuantity(itemId) === item?.maxQuantity || selectedItemsCount[extra?._id] === extra?.maxQuantity) && getQuantity(itemId) === 0 && extra?.name ? 'opacity-50' : 'opacity-100'}`}
                               key={index}
                             >
-                              <td className="min-h-16 max-h-20 !pl-3 !text-xs w-1/3 flex flex-col flex-wrap">
-                                <span className="w-full my-auto capitalize whitespace-pre-wrap">{item?.name || ""}</span>
+                              <td className="min-h-16 flex max-h-20 w-1/3 flex-col flex-wrap !pl-3 !text-xs">
+                                <span className="my-auto w-full whitespace-pre-wrap capitalize">{item?.name || ''}</span>
                                 <sub className="pb-2 text-[0.65rem]">Max:{item?.maxQuantity}</sub>
                               </td>
-                              <td className=" !text-xs w-1/3 text-center font-semibold flex flex-row">
+                              <td className=" flex w-1/3 flex-row text-center !text-xs font-semibold">
                                 <span className="mx-auto my-auto ">{getPrice(item?.price || 0)}</span>
                               </td>
-                              <td className=" !text-xs w-1/3 text-center font-semibold flex flex-row">
-                                <span className="pr-2 my-auto ml-auto">
+                              <td className=" flex w-1/3 flex-row text-center !text-xs font-semibold">
+                                <span className="my-auto ml-auto pr-2">
                                   <QuantityPickerNonOutline
                                     quantity={getQuantity(itemId)}
                                     setQuantity={(q) => handleQuantityChange(q, item, itemId)}

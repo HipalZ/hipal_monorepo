@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 
 interface IUseDishTypes {
 	activeDishTypes: { activeMainType: string | null; activeSubType: string | null }

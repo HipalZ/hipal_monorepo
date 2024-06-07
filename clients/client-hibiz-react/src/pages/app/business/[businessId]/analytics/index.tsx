@@ -1,9 +1,7 @@
-import Analytics from "@/components/templates/analytics";
+import Analytics from '@/components/templates/analytics';
 
 const AnalyticsPage = () => {
-    return (
-        <Analytics />
-    )
+  return <Analytics />;
 };
 
 export default AnalyticsPage;

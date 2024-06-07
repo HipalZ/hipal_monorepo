@@ -1,13 +1,12 @@
-import React, { memo, useRef, useState } from "react";
-import { IStatus } from "@/components/types/hiTableData";
-import DeleteItemComponent from "../deleteItem";
-import DeleteConfirmationModal from "../deleteItemConfirmation";
-import { useBusinessStore } from "@/components/store/useBusinessData";
-import { toast } from "react-toastify";
-import { getUpdatedCart } from "@/components/utils/helpers";
-import { useRouter } from "next/router";
-import { useLogin } from "@/components/store/useLogin";
-import axios from "@/axios";
+import axios from '@/axios';
+import { useBusinessStore } from '@/components/store/useBusinessData';
+import { useLogin } from '@/components/store/useLogin';
+import { IStatus } from '@/components/types/hiTableData';
+import { useRouter } from 'next/router';
+import React, { memo, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
+import DeleteItemComponent from '../deleteItem';
+import DeleteConfirmationModal from '../deleteItemConfirmation';
 
 interface DeleteMultipleProps {
   statusData: IStatus[][];
@@ -23,24 +22,20 @@ export interface DeleteData {
   staffResponsible: string;
 }
 
-const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
-  statusData,
-  onClose,
-  refetch,
-}) => {
+const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({ statusData, onClose, refetch }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [incorrectPassword, setIncorrectPassword] = useState<boolean>(true);
   const [step, setStep] = useState(0);
   const userDetails = useLogin((s) => s.userDetails);
   const businessData = useBusinessStore((s) => s.businessData);
   const router = useRouter();
   const [deleteData, setDeleteData] = useState<DeleteData>({
-    reasonForDelete: "",
-    staffName: "",
-    inventory: "used",
-    password: "",
-    staffResponsible: "",
+    reasonForDelete: '',
+    staffName: '',
+    inventory: 'used',
+    password: '',
+    staffResponsible: '',
   });
   const deleteDataRef = useRef(deleteData);
   const handleUpdateDeleteData = (newValues: Partial<DeleteData>) => {
@@ -55,9 +50,7 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
 
   const handleCheckboxChange = (id: string) => {
     setSelectedIds((prevSelectedIds) =>
-      prevSelectedIds.includes(id)
-        ? prevSelectedIds.filter((selectedId) => selectedId !== id)
-        : [...prevSelectedIds, id]
+      prevSelectedIds.includes(id) ? prevSelectedIds.filter((selectedId) => selectedId !== id) : [...prevSelectedIds, id],
     );
   };
 
@@ -68,10 +61,7 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
   const handleSelectAll = () => {
     const allIds = statusData
       .flat()
-      .filter(
-        (status) =>
-          !status.isDeleted && status.dishStatus.toLowerCase() !== "delivered"
-      )
+      .filter((status) => !status.isDeleted && status.dishStatus.toLowerCase() !== 'delivered')
       .map((status) => status._id);
 
     if (selectedIds.length === allIds.length) {
@@ -84,12 +74,12 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
   const handleSubmit = async () => {
     try {
       const response = await axios(`/v1/kitchens/:kotId/updateSingleKot`, {
-        method: "PUT",
+        method: 'PUT',
         data: {
           businessId: businessId,
           reasonForDelete: deleteData.reasonForDelete,
           staffName: deleteData.staffName,
-          inventory: deleteData.inventory === "used",
+          inventory: deleteData.inventory === 'used',
           password: deleteData.password,
           isDeleted: true,
           deletedBy: userDetails?.name || deleteData.staffResponsible,
@@ -100,11 +90,11 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
 
       if (response.status === 200) {
         handleUpdateDeleteData({
-          reasonForDelete: "",
-          staffName: "",
-          inventory: "used",
-          password: "",
-          staffResponsible: "",
+          reasonForDelete: '',
+          staffName: '',
+          inventory: 'used',
+          password: '',
+          staffResponsible: '',
         });
         onClose();
         refetch();
@@ -152,12 +142,12 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
         // 	console.error("Failed to send delete kot alert", error);
         // }
 
-        toast.success("Item deleted successfully");
+        toast.success('Item deleted successfully');
       }
     } catch (error) {
       setIncorrectPassword(false);
-      toast.error("The password you entered is wrong");
-      console.error("Failed to submit delete request", error);
+      toast.error('The password you entered is wrong');
+      console.error('Failed to submit delete request', error);
     }
   };
 
@@ -166,19 +156,17 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
       (status) =>
         !status.isDeleted &&
         (status.dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          status.customerName
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          status.tableName.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
+          status.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          status.tableName.toLowerCase().includes(searchQuery.toLowerCase())),
+    ),
   );
 
   const renderUi = () => {
     switch (step) {
       case 0:
         return (
-          <div className="relative pb-[3rem] px-4 rounded-t-2xl bg-secondary min-h-[20vh] max-h-[80vh] overflow-auto">
-            <section className="sticky top-0 z-20 py-4 bg-secondary">
+          <div className="bg-secondary relative max-h-[80vh] min-h-[20vh] overflow-auto rounded-t-2xl px-4 pb-[3rem]">
+            <section className="bg-secondary sticky top-0 z-20 py-4">
               <h3 className="text-xl font-medium ">Delete Multiple Dishes</h3>
               <article className="flex items-center justify-between">
                 <input
@@ -186,16 +174,10 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-[60%] px-4 py-2 mt-2 bg-white rounded-md"
+                  className="mt-2 w-[60%] rounded-md bg-white px-4 py-2"
                 />
-                <button
-                  onClick={handleSelectAll}
-                  className="h-10 px-8 mt-2 text-white bg-primary rounded-2xl "
-                >
-                  {selectedIds.length ===
-                  statusData.flat().filter((status) => !status.isDeleted).length
-                    ? "Deselect All"
-                    : "Select All"}
+                <button onClick={handleSelectAll} className="bg-primary mt-2 h-10 rounded-2xl px-8 text-white ">
+                  {selectedIds.length === statusData.flat().filter((status) => !status.isDeleted).length ? 'Deselect All' : 'Select All'}
                 </button>
               </article>
             </section>
@@ -204,39 +186,25 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
                 return null;
               }
               return (
-                <div
-                  key={tableIndex}
-                  className="p-4 mb-4 space-y-2 bg-base-100 rounded-xl"
-                >
+                <div key={tableIndex} className="bg-base-100 mb-4 space-y-2 rounded-xl p-4">
                   <article className="flex justify-between border-b">
                     <h3 className="mb-2 text-lg">Table</h3>
-                    <h3 className="mb-2 text-lg">
-                      {tableData[0]?.tableName || "Unknown"}
-                    </h3>
+                    <h3 className="mb-2 text-lg">{tableData[0]?.tableName || 'Unknown'}</h3>
                   </article>
                   {tableData
-                    .filter(
-                      (dish) => dish?.dishStatus?.toLowerCase() !== "delivered"
-                    )
+                    .filter((dish) => dish?.dishStatus?.toLowerCase() !== 'delivered')
                     .map((status: IStatus) => (
-                      <div
-                        key={status._id}
-                        className="flex items-start justify-between"
-                      >
+                      <div key={status._id} className="flex items-start justify-between">
                         <div>
                           <span>{status.dish.name}</span>
-                          <div className="mt-1 text-sm font-semibold capitalize text-base-content/40">
-                            {status?.dish?.portions?.name}
-                          </div>
-                          <div className="mt-1 mb-2 text-xs font-normal capitalize text-base-content/40">
-                            {status?.dish?.extras?.map(
-                              (extra) => extra?.name + ", "
-                            )}
+                          <div className="text-base-content/40 mt-1 text-sm font-semibold capitalize">{status?.dish?.portions?.name}</div>
+                          <div className="text-base-content/40 mb-2 mt-1 text-xs font-normal capitalize">
+                            {status?.dish?.extras?.map((extra) => extra?.name + ', ')}
                           </div>
                         </div>
                         <input
                           type="checkbox"
-                          className="w-4 h-4 mt-1"
+                          className="mt-1 h-4 w-4"
                           checked={selectedIds.includes(status._id)}
                           onChange={() => handleCheckboxChange(status._id)}
                         />
@@ -248,13 +216,7 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
           </div>
         );
       case 1:
-        return (
-          <DeleteItemComponent
-            deleteData={deleteData}
-            handleUpdateDeleteData={handleUpdateDeleteData}
-            incorrectPassword={incorrectPassword}
-          />
-        );
+        return <DeleteItemComponent deleteData={deleteData} handleUpdateDeleteData={handleUpdateDeleteData} incorrectPassword={incorrectPassword} />;
       case 2:
         return <DeleteConfirmationModal />;
       default:
@@ -264,17 +226,13 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
 
   const handleNextStep = () => {
     if (step === 1) {
-      if (deleteData.password === "") {
-        toast.error("Password is required");
+      if (deleteData.password === '') {
+        toast.error('Password is required');
         return;
       }
     }
     if (step === 2) {
-      console.log(
-        "Confirmed deletion for selected items:",
-        selectedIds,
-        deleteData
-      );
+      console.log('Confirmed deletion for selected items:', selectedIds, deleteData);
       handleSubmit();
     } else {
       setStep(step + 1);
@@ -289,19 +247,14 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
     switch (step) {
       case 0:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={onClose}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={onClose} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Cancel
             </button>
             <button
               onClick={handleNextStep}
               disabled={selectedIds.length === 0}
-              className={`w-full px-4 py-2 text-white rounded-2xl ${
-                selectedIds.length === 0 ? "bg-gray-400" : "bg-primary"
-              }`}
+              className={`w-full rounded-2xl px-4 py-2 text-white ${selectedIds.length === 0 ? 'bg-gray-400' : 'bg-primary'}`}
             >
               Next
             </button>
@@ -309,19 +262,14 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
         );
       case 1:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={handleGoBack}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={handleGoBack} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Back
             </button>
             <button
               onClick={handleNextStep}
-              className={`w-full px-4 py-2 text-white rounded-2xl ${
-                deleteData.reasonForDelete === "" ? "bg-gray-400" : "bg-primary"
-              }`}
-              disabled={deleteData.reasonForDelete === ""}
+              className={`w-full rounded-2xl px-4 py-2 text-white ${deleteData.reasonForDelete === '' ? 'bg-gray-400' : 'bg-primary'}`}
+              disabled={deleteData.reasonForDelete === ''}
             >
               Next
             </button>
@@ -329,17 +277,11 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
         );
       case 2:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={handleGoBack}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={handleGoBack} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Go Back
             </button>
-            <button
-              onClick={handleNextStep}
-              className="w-full px-4 py-2 text-white bg-primary rounded-2xl"
-            >
+            <button onClick={handleNextStep} className="bg-primary w-full rounded-2xl px-4 py-2 text-white">
               Confirm
             </button>
           </div>

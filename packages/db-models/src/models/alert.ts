@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { AlertType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { AlertType } from '../validators';
 
 const alertSchema = new mongoose.Schema<AlertType>(
   {
@@ -34,34 +34,34 @@ const alertSchema = new mongoose.Schema<AlertType>(
     },
     kotId: {
       type: String,
-      default: "",
+      default: '',
     },
     razorpayPaymentId: {
       type: String,
-      default: "",
+      default: '',
     },
     razorpayOrderId: {
       type: String,
-      default: "",
+      default: '',
     },
     razorpayAcquirerData: {
       type: Object,
-      default: "",
+      default: '',
     },
     mode: {
       type: String,
-      default: "",
+      default: '',
     },
     razorpayEventId: {
       type: String,
-      default: "",
+      default: '',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Alert: Model<AlertType> = mongoose.model<AlertType>("Alert", alertSchema);
+const Alert: Model<AlertType> = mongoose.model<AlertType>('Alert', alertSchema);
 
 export { Alert };

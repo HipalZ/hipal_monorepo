@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const Portion = z.object({
   name: z.string(),
@@ -47,10 +47,10 @@ const KOTAttrs = z.object({
   dish: Dish,
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
-  dishStatus: z.enum(["cooking", "cooked", "delivered"]),
-  kotTime: z.string().default(""),
-  tableName: z.string().default(""),
-  date: z.string().default(""),
+  dishStatus: z.enum(['cooking', 'cooked', 'delivered']),
+  kotTime: z.string().default(''),
+  tableName: z.string().default(''),
+  date: z.string().default(''),
   instructions: z.string().optional(),
   dishType: z.string(),
   category: z.string(),

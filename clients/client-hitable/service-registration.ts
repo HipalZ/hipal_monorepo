@@ -1,16 +1,13 @@
 // serviceWorkerRegistration.js
 export default function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
+  if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-      .register("/sw.js")
+      .register('/sw.js')
       .then((registration) => {
-        console.log(
-          "ServiceWorker registration successful with scope:",
-          registration.scope
-        );
+        console.log('ServiceWorker registration successful with scope:', registration.scope);
       })
       .catch((error) => {
-        console.log("ServiceWorker registration failed:", error);
+        console.log('ServiceWorker registration failed:', error);
       });
   }
 }

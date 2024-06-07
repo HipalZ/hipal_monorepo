@@ -1,77 +1,74 @@
-import { useLogin } from "@components/store/useLogin";
-import { PAGE_TYPES, routePaths } from "@components/utils/routes";
-import axios from "@utils/axios";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import Welcome from "@assets/otp_image.png";
-import { BiArrowBack, BiEditAlt } from "react-icons/bi";
-import Sunlight from "@assets/Ellipse 1-min.png";
-import Image from "next/image";
-import confetti from "canvas-confetti";
-import Hi_Coin from "@assets/hi-coin.svg";
-import CoinsAnimation from "@components/atoms/coinAnimation";
-import NumberAnimation from "@components/atoms/coinsScroll";
-import useLoyaltyData from "@components/store/useLoyaltyData";
-import useBusinessDetails from "@components/store/useBusinessDetails";
-import HipalLogo from "@assets/hipalNewLogo.svg";
-import HipalWhiteLogo from "@assets/hipalLogoOtp.svg";
+import { useLogin } from '@components/store/useLogin'
+import { PAGE_TYPES, routePaths } from '@components/utils/routes'
+import axios from '@utils/axios'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect, useRef, useState } from 'react'
+import Welcome from '@assets/otp_image.png'
+import { BiArrowBack, BiEditAlt } from 'react-icons/bi'
+import Sunlight from '@assets/Ellipse 1-min.png'
+import Image from 'next/image'
+import confetti from 'canvas-confetti'
+import Hi_Coin from '@assets/hi-coin.svg'
+import CoinsAnimation from '@components/atoms/coinAnimation'
+import NumberAnimation from '@components/atoms/coinsScroll'
+import useLoyaltyData from '@components/store/useLoyaltyData'
+import useBusinessDetails from '@components/store/useBusinessDetails'
+import HipalLogo from '@assets/hipalNewLogo.svg'
+import HipalWhiteLogo from '@assets/hipalLogoOtp.svg'
 
 function OtpPage() {
-	const [otp, setOtp] = useState(["", "", "", ""]);
-	const [error, setError] = useState("");
-	const { setIsLogin, setUserDetails, userDetails } = useLogin();
-	const [coinZ, setCoinz] = useState(0);
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [customerName, setCustomerName] = useState(userDetails.name);
-	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
-	const [logo, setLogo] = useState(businessLogo);
+	const [otp, setOtp] = useState(['', '', '', ''])
+	const [error, setError] = useState('')
+	const { setIsLogin, setUserDetails, userDetails } = useLogin()
+	const [coinZ, setCoinz] = useState(0)
+	const [isModalOpen, setIsModalOpen] = useState(false)
+	const [customerName, setCustomerName] = useState(userDetails.name)
+	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo)
+	const [logo, setLogo] = useState(businessLogo)
 	const inputRefs = [
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
-	];
-	const router = useRouter();
-	const { businessId } = router.query;
-	const sendOtp = useLogin((s) => s.sendOtp);
-	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-	const direction = useLogin((s) => s.direction);
+	]
+	const router = useRouter()
+	const { businessId } = router.query
+	const sendOtp = useLogin((s) => s.sendOtp)
+	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
+	const direction = useLogin((s) => s.direction)
 
-	const handleOtpChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-		index: number,
-	) => {
-		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return;
+	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
 
-		const newOtp = [...otp];
-		newOtp[index] = e.target.value;
+		const newOtp = [...otp]
+		newOtp[index] = e.target.value
 
-		if (index < inputRefs.length - 1 && e.target.value !== "") {
-			inputRefs[index + 1]?.current?.focus();
+		if (index < inputRefs.length - 1 && e.target.value !== '') {
+			inputRefs[index + 1]?.current?.focus()
 		}
 
-		setOtp(newOtp);
-	};
+		setOtp(newOtp)
+	}
 
 	const paymentCustomer = async (data: any) => {
 		try {
 			const config = {
-				method: "POST",
-				url: "/v1/payments/customer",
+				method: 'POST',
+				url: '/v1/payments/customer',
 				data: {
 					phone: data.phone,
 					businessId: businessId,
 					name: data.name,
 				},
-			};
-			await axios(config);
+			}
+			await axios(config)
 		} catch (err) {
-			console.log(err);
+			console.log(err)
 		}
-	};
+	}
 	function randomInRange(min, max) {
-		return Math.random() * (max - min) + min;
+		return Math.random() * (max - min) + min
 	}
 
 	// Function to trigger a single blast
@@ -81,20 +78,20 @@ function OtpPage() {
 			spread: randomInRange(50, 70),
 			particleCount: randomInRange(50, 100),
 			origin: { y: 0.6 },
-		});
+		})
 	}
 
 	const verifyOtp = async () => {
-		const fullOtp = otp.join("");
+		const fullOtp = otp.join('')
 		if (fullOtp.length !== 4) {
-			setError("Please enter the complete OTP.");
-			return;
+			setError('Please enter the complete OTP.')
+			return
 		}
 
 		try {
 			const config = {
-				method: "POST",
-				url: "/v1/users/:id/signIn",
+				method: 'POST',
+				url: '/v1/users/:id/signIn',
 				data: {
 					phone: userDetails.phone,
 					role: userDetails.role,
@@ -104,150 +101,146 @@ function OtpPage() {
 					signUpBonus: signUpBonus,
 					name: customerName || userDetails.name,
 				},
-			};
-
-			const response = await axios(config);
-			if (response.status === 200) {
-				const { _id, ...otherData } = response.data;
-				setUserDetails({ id: _id, ...otherData });
-				await paymentCustomer(response.data);
-				setIsLogin(true);
-				console.log(response.data);
-				if (response.data?.reward > 0 && response.data?.count === 1) {
-					setCoinz(response.data.reward);
-					setIsModalOpen(true);
-
-					triggerConfettiBlast();
-					setTimeout(triggerConfettiBlast, 1000);
-					setTimeout(triggerConfettiBlast, 2000);
-					return;
-				}
-				goNext();
 			}
 
-			setOtp(["", "", "", ""]);
+			const response = await axios(config)
+			if (response.status === 200) {
+				const { _id, ...otherData } = response.data
+				setUserDetails({ id: _id, ...otherData })
+				await paymentCustomer(response.data)
+				setIsLogin(true)
+				console.log(response.data)
+				if (response.data?.reward > 0 && response.data?.count === 1) {
+					setCoinz(response.data.reward)
+					setIsModalOpen(true)
+
+					triggerConfettiBlast()
+					setTimeout(triggerConfettiBlast, 1000)
+					setTimeout(triggerConfettiBlast, 2000)
+					return
+				}
+				goNext()
+			}
+
+			setOtp(['', '', '', ''])
 			if (inputRefs[0].current) {
-				inputRefs[0].current.focus();
+				inputRefs[0].current.focus()
 			}
 		} catch (error) {
-			setError("Incorrect OTP. Please try again.");
-			setOtp(["", "", "", ""]);
+			setError('Incorrect OTP. Please try again.')
+			setOtp(['', '', '', ''])
 			if (inputRefs[0].current) {
-				inputRefs[0].current.focus();
+				inputRefs[0].current.focus()
 			}
 		}
-	};
+	}
 
 	const closeModal = () => {
-		setIsModalOpen(false);
-	};
+		setIsModalOpen(false)
+	}
 
 	const goNext = () => {
-		if (direction === "loyalty") {
-			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`));
+		if (direction === 'loyalty') {
+			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
 		} else {
-			router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`));
+			router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`))
 		}
-	};
+	}
 
 	const goToExplore = () => {
-		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`);
-	};
+		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`)
+	}
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		verifyOtp();
-	};
+		e.preventDefault()
+		verifyOtp()
+	}
 
 	useEffect(() => {
-		let audio;
+		let audio
 		if (isModalOpen) {
-			audio = new Audio("/sounds/Money.mp3");
-			audio.play();
+			audio = new Audio('/sounds/Money.mp3')
+			audio.play()
 		}
 		return () => {
 			if (audio) {
-				audio.pause();
-				audio.currentTime = 0;
+				audio.pause()
+				audio.currentTime = 0
 			}
-		};
-	}, [isModalOpen]);
+		}
+	}, [isModalOpen])
 
 	return (
-		<section className="relative bg-black">
-			<section className="flex items-center justify-between">
+		<section className='relative bg-black'>
+			<section className='flex items-center justify-between'>
 				<article
 					onClick={goToExplore}
-					className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
+					className='sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl'
 				>
 					<BiArrowBack size={20} />
 				</article>
-				<article className="sticky z-20 top-4 right-4">
-					<Image src={HipalWhiteLogo} alt="logo" />
+				<article className='sticky z-20 top-4 right-4'>
+					<Image src={HipalWhiteLogo} alt='logo' />
 				</article>
 			</section>
 			<section
-				className="fixed inset-0 z-0 w-full max-w-[30rem]
-				 bg-black bg-center bg-no-repeat bg-contain  mx-auto"
+				className='fixed inset-0 z-0 w-full max-w-[30rem]
+				 bg-black bg-center bg-no-repeat bg-contain  mx-auto'
 				style={{ backgroundImage: `url(${Welcome.src})` }}
 			></section>
-			{userDetails.name === "" ? (
-				<section className="absolute text-white top-[10vh] left-9">
-					<b className="block text-2xl gradient-text">You look new !</b>
-					<b className="text-3xl capitalize gradient-text">Welcome...</b>
-					<b className="text-4xl wave-hand">👋</b>
+			{userDetails.name === '' ? (
+				<section className='absolute text-white top-[10vh] left-9'>
+					<b className='block text-2xl gradient-text'>You look new !</b>
+					<b className='text-3xl capitalize gradient-text'>Welcome...</b>
+					<b className='text-4xl wave-hand'>👋</b>
 				</section>
 			) : (
-				<section className="absolute text-white top-[10vh] left-9">
-					<h4 className="text-2xl">Hello!</h4>
-					<b className="text-3xl capitalize">{userDetails.name}</b>
-					<b className="text-4xl wave-hand">👋</b>
+				<section className='absolute text-white top-[10vh] left-9'>
+					<h4 className='text-2xl'>Hello!</h4>
+					<b className='text-3xl capitalize'>{userDetails.name}</b>
+					<b className='text-4xl wave-hand'>👋</b>
 				</section>
 			)}
 
 			<form
-				className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-xl"
+				className='fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-xl'
 				onSubmit={handleSubmit}
 			>
 				{businessLogo && (
-					<section className="bg-inherit w-[5rem] float-right h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden">
+					<section className='bg-inherit w-[5rem] float-right h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden'>
 						<Image
-							className="aspect-square w-[4.75rem] h-[4.75rem]"
+							className='aspect-square w-[4.75rem] h-[4.75rem]'
 							width={84}
 							height={84}
 							src={logo}
-							alt="business logo"
+							alt='business logo'
 							onError={() => setLogo(HipalLogo.src)}
 						/>
 					</section>
 				)}
-				<section className="space-y-4">
-					{userDetails.name === "" ? (
+				<section className='space-y-4'>
+					{userDetails.name === '' ? (
 						<>
-							{" "}
-							<div className="!-mb-4 text-sm font-semibold">
-								Whatz your name ?
-							</div>
+							{' '}
+							<div className='!-mb-4 text-sm font-semibold'>Whatz your name ?</div>
 							<input
 								onChange={(e) => setCustomerName(e.target.value)}
 								value={customerName}
-								type="text"
-								id="floating_outlined"
-								className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-								placeholder="Enter your name"
+								type='text'
+								id='floating_outlined'
+								className='w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
+								placeholder='Enter your name'
 								maxLength={18}
 								required
 							/>
 						</>
 					) : null}
 
-					<div className="!-mb-2 text-sm font-semibold">
-						Check your phone for OTP
-					</div>
-					<section className="flex">
+					<div className='!-mb-2 text-sm font-semibold'>Check your phone for OTP</div>
+					<section className='flex'>
 						{otp.map((_, index) => (
 							<input
-								type="tel"
+								type='tel'
 								key={index.toString()}
 								value={otp[index]}
 								onChange={(e) => handleOtpChange(e, index)}
@@ -255,44 +248,41 @@ function OtpPage() {
 								min={0}
 								ref={inputRefs[index]}
 								className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
-									error && "border-red-500"
+									error && 'border-red-500'
 								}`}
 								required
 							/>
 						))}
 					</section>
 					{error && (
-						<div className="mb-2 animate-pulse">
-							<div className="tracking-wider text-red-500" role="alert">
+						<div className='mb-2 animate-pulse'>
+							<div className='tracking-wider text-red-500' role='alert'>
 								{error}
 							</div>
 						</div>
 					)}
 					<Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`}>
-						<article className="flex items-center !mb-2 !mt-4">
+						<article className='flex items-center !mb-2 !mt-4'>
 							<small>
-								Sent to{" "}
-								<span className="text-[#3E3CFF] underline">
-									{userDetails.phone}
-								</span>{" "}
+								Sent to <span className='text-[#3E3CFF] underline'>{userDetails.phone}</span>{' '}
 							</small>
-							<span className="cursor-pointer text-[#3E3CFF]">
+							<span className='cursor-pointer text-[#3E3CFF]'>
 								<BiEditAlt />
 							</span>
 						</article>
 					</Link>
 
-					<button type="submit" className="w-full bg-black rounded-full btn">
-						{userDetails.name !== "" ? "sign in" : "Sign up"}
+					<button type='submit' className='w-full bg-black rounded-full btn'>
+						{userDetails.name !== '' ? 'sign in' : 'Sign up'}
 					</button>
 
-					<small className="flex justify-center mt-2">
+					<small className='flex justify-center mt-2'>
 						Didn’t receive the code? &nbsp;
 						<button
-							type="button"
+							type='button'
 							onClick={() => sendOtp()}
-							role="button"
-							className="cursor-pointer text-[#3E3CFF]"
+							role='button'
+							className='cursor-pointer text-[#3E3CFF]'
 						>
 							Resend
 						</button>
@@ -301,63 +291,47 @@ function OtpPage() {
 			</form>
 			{isModalOpen && (
 				<section
-					id="my_modal_1"
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+					id='my_modal_1'
+					className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'
 				>
-					<section className="absolute inset-0 flex items-center justify-center">
-						<center className="absolute w-[900px] animate-glow">
+					<section className='absolute inset-0 flex items-center justify-center'>
+						<center className='absolute w-[900px] animate-glow'>
 							<Image
-								className="animate-spin"
+								className='animate-spin'
 								width={1080}
 								height={1080}
 								src={Sunlight}
-								alt="Sunlight"
+								alt='Sunlight'
 							/>
 						</center>
 					</section>
-					<section className="absolute inset-0 flex items-center justify-center">
-						<section className="absolute rotate-[-30deg] left-6 top-[12vh]">
-							<Image
-								className="zoomIn"
-								width={76}
-								height={76}
-								src={Hi_Coin}
-								alt="Hi Coin"
-							/>
+					<section className='absolute inset-0 flex items-center justify-center'>
+						<section className='absolute rotate-[-30deg] left-6 top-[12vh]'>
+							<Image className='zoomIn' width={76} height={76} src={Hi_Coin} alt='Hi Coin' />
 						</section>
-						<section className="absolute rotate-45 right-6 top-[20vh] z-20">
-							<Image
-								className="zoomIn"
-								width={76}
-								height={76}
-								src={Hi_Coin}
-								alt="Hi Coin"
-							/>
+						<section className='absolute rotate-45 right-6 top-[20vh] z-20'>
+							<Image className='zoomIn' width={76} height={76} src={Hi_Coin} alt='Hi Coin' />
 						</section>
 					</section>
 
 					<section
-						id="shine-card"
-						className="relative mt-[5rem] p-6 bg-[#F8D76E] rounded-2xl shadow-lg mx-auto w-[80%] max-w-[26rem] z-10 zoomIn overflow-hidden"
+						id='shine-card'
+						className='relative mt-[5rem] p-6 bg-[#F8D76E] rounded-2xl shadow-lg mx-auto w-[80%] max-w-[26rem] z-10 zoomIn overflow-hidden'
 					>
-						<div className="shine-effect"></div>
+						<div className='shine-effect'></div>
 						<center>
 							<CoinsAnimation />
 						</center>
-						<center className="text-xl font-bold uppercase text-[#8D0F16] mt-6">
+						<center className='text-xl font-bold uppercase text-[#8D0F16] mt-6'>
 							Congratulations!!
 						</center>
-						<center className="text-lg font-medium uppercase text-[#8D0F16] mt-2">
-							you got
-						</center>
-						<div className="loyalty_card_gradient" />
-						<div className="loyalty_card_gradient2" />
+						<center className='text-lg font-medium uppercase text-[#8D0F16] mt-2'>you got</center>
+						<div className='loyalty_card_gradient' />
+						<div className='loyalty_card_gradient2' />
 						{coinZ > 0 && <NumberAnimation number={coinZ} />}
-						<center className="text-xl font-medium uppercase text-[#8D0F16]">
-							CoinZ
-						</center>
+						<center className='text-xl font-medium uppercase text-[#8D0F16]'>CoinZ</center>
 						<button
-							className="relative z-20 w-full px-4 py-2 mt-6 text-white bg-[#015845] transition-all duration-300 rounded-full shadow-lg"
+							className='relative z-20 w-full px-4 py-2 mt-6 text-white bg-[#015845] transition-all duration-300 rounded-full shadow-lg'
 							onClick={goNext}
 						>
 							Explore
@@ -366,7 +340,7 @@ function OtpPage() {
 				</section>
 			)}
 		</section>
-	);
+	)
 }
 
-export default OtpPage;
+export default OtpPage

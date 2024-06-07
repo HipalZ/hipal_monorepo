@@ -1,73 +1,56 @@
-import { memo, useEffect, useState } from "react";
-import Mixed from "@/assets/svg/Mixed.svg";
+import Mixed from '@/assets/svg/Mixed.svg';
+import { memo, useEffect, useState } from 'react';
 
-export type FOOD_TYPES = "veg" | "nonveg" | "vegan" | "egg" | "other";
+export type FOOD_TYPES = 'veg' | 'nonveg' | 'vegan' | 'egg' | 'other';
 
-function FoodType({
-  type,
-  hideText,
-}: {
-  type: FOOD_TYPES;
-  hideText?: boolean;
-}) {
-  const [_type, setType] = useState("other");
+function FoodType({ type, hideText }: { type: FOOD_TYPES; hideText?: boolean }) {
+  const [_type, setType] = useState('other');
 
   const classes = {
     veg: {
-      border: "border-green-500",
-      circle: "bg-green-500",
-      text: "text-green-500",
+      border: 'border-green-500',
+      circle: 'bg-green-500',
+      text: 'text-green-500',
     },
 
     egg: {
-      border: "border-[#D2C903]",
-      circle: "bg-[#D2C903]",
-      text: "text-[#D2C903]",
+      border: 'border-[#D2C903]',
+      circle: 'bg-[#D2C903]',
+      text: 'text-[#D2C903]',
     },
     nonveg: {
-      border: "border-red-500",
-      circle: "bg-red-500",
-      text: "text-red-500",
+      border: 'border-red-500',
+      circle: 'bg-red-500',
+      text: 'text-red-500',
     },
     vegan: {
-      border: "border-[#02614b]",
-      circle: "bg-[#02614b]",
-      text: "text-[#02614b]",
+      border: 'border-[#02614b]',
+      circle: 'bg-[#02614b]',
+      text: 'text-[#02614b]',
     },
     other: {
-      border: "border-gray-500",
-      circle: "bg-gray-500",
-      text: "text-gray-500",
+      border: 'border-gray-500',
+      circle: 'bg-gray-500',
+      text: 'text-gray-500',
     },
   };
 
   useEffect(() => {
-    type &&
-      Object.keys(classes)?.includes(type?.replace(/[^a-zA-Z ]/, "").toLowerCase()) &&
-      setType(type?.replace(/[^a-zA-Z ]/, "").toLowerCase());
+    type && Object.keys(classes)?.includes(type?.replace(/[^a-zA-Z ]/, '').toLowerCase()) && setType(type?.replace(/[^a-zA-Z ]/, '').toLowerCase());
   }, [type]);
 
-  if (type.toLowerCase() === "mixed") {
+  if (type.toLowerCase() === 'mixed') {
     return (
-      <div className="flex flex-row -mt-2 -mb-2">
-        <img src={Mixed} width={20} height={4} alt="mixed" loading="lazy"/>
+      <div className="-mb-2 -mt-2 flex flex-row">
+        <img src={Mixed} width={20} height={4} alt="mixed" loading="lazy" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-row my-auto space-x-2 shrink-0">
-      <div
-        className={
-          "flex flex-row w-5 h-5 border-2 " + classes[`${_type}`].border
-        }
-      >
-        <div
-          className={
-            "p-1 m-auto rounded-full  w-[0.676rem] h-[0.676rem] " +
-            classes[`${_type}`].circle
-          }
-        />
+    <div className="my-auto flex shrink-0 flex-row space-x-2">
+      <div className={'flex h-5 w-5 flex-row border-2 ' + classes[`${_type}`].border}>
+        <div className={'m-auto h-[0.676rem] w-[0.676rem]  rounded-full p-1 ' + classes[`${_type}`].circle} />
       </div>
     </div>
   );

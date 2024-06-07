@@ -1,5 +1,5 @@
-import { Button } from '@material-tailwind/react'
-import { memo } from 'react'
+import { Button } from "@material-tailwind/react"
+import { memo } from "react"
 
 function BtnOutlined({
 	children,
@@ -12,10 +12,10 @@ function BtnOutlined({
 	return (
 		<Button
 			className={
-				'border-secondary/80 border text-secondary normal-case shadow-none focus:border-primary-focus active:border-primary-focus ' +
+				"border-secondary/80 border text-secondary normal-case shadow-none focus:border-primary-focus active:border-primary-focus " +
 				appendClassNames
 			}
-			variant='outlined'
+			variant="outlined"
 			{...props}
 		>
 			{children}

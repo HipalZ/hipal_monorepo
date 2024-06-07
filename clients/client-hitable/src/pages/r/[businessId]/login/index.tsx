@@ -1,33 +1,27 @@
-import type React from "react";
-import { cookies } from "next/headers";
-import { useEffect } from "react";
-import HiTableLogo from "@/assets/svg/HiTableLogo.svg";
-import welcome from "@/assets/svg/welcomeLogo.svg";
-import { isEmpty } from "lodash-es";
-import Image from "next/image";
-import { useLogin } from "@/components/store/useLogin";
-import axios from "@/axios";
-import { useRouter } from "next/router";
-import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
-import { toast } from "react-toastify";
-import { useBusinessStore } from "@/components/store/useBusinessData";
-import { useLoyaltyStore } from "@/components/store/useLoyaltyData";
-import { useQuery } from "@tanstack/react-query";
-import { useUserToken } from "@/components/store/useUserToken";
+import HiTableLogo from '@/assets/svg/HiTableLogo.svg';
+import welcome from '@/assets/svg/welcomeLogo.svg';
+import axios from '@/axios';
+import { useBusinessStore } from '@/components/store/useBusinessData';
+import { useLogin } from '@/components/store/useLogin';
+import { useLoyaltyStore } from '@/components/store/useLoyaltyData';
+import { useUserToken } from '@/components/store/useUserToken';
+import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+import type React from 'react';
+import { toast } from 'react-toastify';
 
 function HiTable() {
   const { setAccessToken, setRefreshToken } = useUserToken();
-  const { phoneNumber, password, setPhoneNumber, setPassword, setIsLogin } =
-    useLogin();
+  const { phoneNumber, password, setPhoneNumber, setPassword, setIsLogin } = useLogin();
 
   const setBusinessData = useBusinessStore((s) => s.setBusinessData);
   const setLoyaltyData = useLoyaltyStore((s) => s.setLoyaltyData);
   const router = useRouter();
   const { businessId } = router.query as { businessId: string };
 
-  const handlePhoneNumberChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handlePhoneNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(event.target.value);
   };
 
@@ -40,8 +34,8 @@ function HiTable() {
   const result = async () => {
     try {
       const config = {
-        method: "POST",
-        url: "/v1/users/waiterLogin",
+        method: 'POST',
+        url: '/v1/users/waiterLogin',
         data: {
           phone: phoneNumber,
           password: password,
@@ -62,19 +56,17 @@ function HiTable() {
         router.push(`${singleRoute[PAGE_TYPES.ZONE](`${businessId}`)}`);
       }
     } catch (err) {
-      return toast.error("Phone or Password invalid...!");
+      return toast.error('Phone or Password invalid...!');
     }
   };
 
   const fetchBusinessData = async () => {
     try {
-      const response = await axios.get(
-        `/v1/businesses/get/Single/${businessId}`
-      );
+      const response = await axios.get(`/v1/businesses/get/Single/${businessId}`);
       setBusinessData(response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching business data:", error);
+      console.error('Error fetching business data:', error);
     }
   };
   const getLoyaltySetting = async (businessId: string) => {
@@ -84,12 +76,12 @@ function HiTable() {
       setLoyaltyData(data);
       return data;
     } catch (error) {
-      console.error("Error fetching loyalty data:", error);
+      console.error('Error fetching loyalty data:', error);
     }
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["businessData", businessId],
+    queryKey: ['businessData', businessId],
     queryFn: fetchBusinessData,
     enabled: !!businessId,
   });
@@ -99,33 +91,31 @@ function HiTable() {
     isLoading: loyaltyIsLoading,
     error: loyaltyError,
   } = useQuery({
-    queryKey: ["loyaltySetting", businessId],
+    queryKey: ['loyaltySetting', businessId],
     queryFn: () => getLoyaltySetting(businessId),
     enabled: !!businessId,
   });
 
   return (
     <div>
-      <div className="flex justify-center mt-[2rem]">
+      <div className="mt-[2rem] flex justify-center">
         <Image width={104} height={31} src={HiTableLogo} alt="Hi Table Logo" />
       </div>
-      <div className="flex justify-center mt-[1rem] mx-[3.375rem]">
+      <div className="mx-[3.375rem] mt-[1rem] flex justify-center">
         <Image width={283} height={223} src={welcome} alt="Hi Table Logo" />
       </div>
-      <div className="text-center mt-[2.5rem]">
-        <span className="font-[400] text-base-content text-[1rem] leading-[1.125rem]">
-          Let’s get started
-        </span>
+      <div className="mt-[2.5rem] text-center">
+        <span className="text-base-content text-[1rem] font-[400] leading-[1.125rem]">Let’s get started</span>
       </div>
 
-      <div className="relative w-full px-[3.125rem] mt-[2.5rem] mb-[5.89rem] ml-0 mr-0 space-y-4">
+      <div className="relative mb-[5.89rem] ml-0 mr-0 mt-[2.5rem] w-full space-y-4 px-[3.125rem]">
         <div className="relative">
           <input
             onChange={handlePhoneNumberChange}
             type="tel"
             value={phoneNumber}
             id="floating_outlined3"
-            className="block w-full pt-2 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-gray-800 rounded-lg dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-lg border border-gray-800 bg-transparent pb-3 pl-4 pr-4 pt-2 text-base text-gray-900 focus:outline-none dark:border-gray-600"
             placeholder=" "
             maxLength={10}
             minLength={10}
@@ -133,7 +123,7 @@ function HiTable() {
           />
           <label
             htmlFor="floating_outlined3"
-            className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Phone number
           </label>
@@ -143,7 +133,7 @@ function HiTable() {
             onChange={handlePasswordChange}
             type="password"
             id="floating_outlined4"
-            className="block w-full pt-2 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-gray-800 rounded-lg dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-lg border border-gray-800 bg-transparent pb-3 pl-4 pr-4 pt-2 text-base text-gray-900 focus:outline-none dark:border-gray-600"
             placeholder=" "
             maxLength={4}
             minLength={4}
@@ -151,18 +141,18 @@ function HiTable() {
           />
           <label
             htmlFor="floating_outlined4"
-            className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-sm text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Password
           </label>
         </div>
       </div>
 
-      <div className="flex justify-center mb-5">
+      <div className="mb-5 flex justify-center">
         <button
           onClick={result}
           type="button"
-          className="on_active_bounce fixed bottom-6 z-50 bg-primary rounded-full w-[20.5rem] font-[600] py-[0.75rem] text-base-100 text-[18px] leading-[1.15rem]"
+          className="on_active_bounce bg-primary text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem]"
         >
           Login
         </button>

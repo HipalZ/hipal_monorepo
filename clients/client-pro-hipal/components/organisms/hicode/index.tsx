@@ -38,7 +38,6 @@ function PromptHiCode({ isOpen, onModalClose }) {
 	}
 
 	const result = async (fullHiCode) => {
-	
 		const config = {
 			method: 'POST',
 			url: '/v1/kitchens/:id/user/kots',

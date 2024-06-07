@@ -1,22 +1,14 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 
-export default function MenuPopup({
-  children,
-  show,
-  onClose,
-}: {
-  children: React.ReactNode;
-  show: boolean;
-  onClose: () => void;
-}) {
+export default function MenuPopup({ children, show, onClose }: { children: React.ReactNode; show: boolean; onClose: () => void }) {
   return (
     <>
       <Transition appear show={show} as={Fragment}>
         <Dialog as="div" className="relative z-40" onClose={onClose}>
-          <div className="fixed inset-0 overflow-y-auto hide-scrollbar">
-          <div className="fixed inset-0 opacity-80 bg-black/80"></div>
-            <div className="flex items-center justify-center min-h-full p-4 text-center">
+          <div className="hide-scrollbar fixed inset-0 overflow-y-auto">
+            <div className="fixed inset-0 bg-black/80 opacity-80"></div>
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -26,7 +18,7 @@ export default function MenuPopup({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md mx-4 overflow-hidden text-left align-middle transition-all duration-300 transform bg-base-100 rounded-2xl ">
+                <Dialog.Panel className="bg-base-100 mx-4 w-full max-w-md transform overflow-hidden rounded-2xl text-left align-middle transition-all duration-300 ">
                   {children}
                 </Dialog.Panel>
               </Transition.Child>

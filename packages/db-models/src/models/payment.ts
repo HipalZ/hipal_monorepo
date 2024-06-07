@@ -1,10 +1,6 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model } from 'mongoose';
+import { PaymentItemType, PaymentSwiggyBillObjType, PaymentType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId as any;
-import {
-  PaymentType,
-  PaymentItemType,
-  PaymentSwiggyBillObjType,
-} from "../validators";
 
 const paymentItemSchema = new mongoose.Schema<PaymentItemType>(
   {
@@ -33,43 +29,42 @@ const paymentItemSchema = new mongoose.Schema<PaymentItemType>(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const paymentSwiggyBillObjSchema =
-  new mongoose.Schema<PaymentSwiggyBillObjType>(
-    {
-      totalItems: {
-        required: true,
-        type: Number,
-      },
-      subTotal: {
-        required: true,
-        type: Number,
-      },
-      packingCharges: {
-        required: true,
-        type: Number,
-      },
-      RxPayableGST: {
-        required: true,
-        type: Number,
-      },
-      swiggyPayableGST: {
-        required: true,
-        type: Number,
-      },
-      discount: {
-        required: true,
-        type: Number,
-      },
-      totalPrice: {
-        required: true,
-        type: Number,
-      },
+const paymentSwiggyBillObjSchema = new mongoose.Schema<PaymentSwiggyBillObjType>(
+  {
+    totalItems: {
+      required: true,
+      type: Number,
     },
-    { timestamps: true }
-  );
+    subTotal: {
+      required: true,
+      type: Number,
+    },
+    packingCharges: {
+      required: true,
+      type: Number,
+    },
+    RxPayableGST: {
+      required: true,
+      type: Number,
+    },
+    swiggyPayableGST: {
+      required: true,
+      type: Number,
+    },
+    discount: {
+      required: true,
+      type: Number,
+    },
+    totalPrice: {
+      required: true,
+      type: Number,
+    },
+  },
+  { timestamps: true },
+);
 
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
@@ -77,7 +72,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       type: ObjectId,
       index: true,
-      ref: "Business",
+      ref: 'Business',
     },
     businessName: {
       required: false,
@@ -268,12 +263,9 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Payment: Model<PaymentType> = mongoose.model<PaymentType>(
-  "Review",
-  paymentSchema
-);
+const Payment: Model<PaymentType> = mongoose.model<PaymentType>('Review', paymentSchema);
 
 export { Payment };

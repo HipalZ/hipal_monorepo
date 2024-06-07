@@ -1,6 +1,6 @@
 // loyaltyStore.ts
-import {create} from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 type LoyaltyState = {
   businessId: string;
@@ -20,22 +20,22 @@ type LoyaltyState = {
 export const useLoyaltyStore = create(
   persist<LoyaltyState>(
     (set) => ({
-      businessId: "",
+      businessId: '',
       setReward: 0,
       setClaimAmount: 0,
-      password: "",
-      loyaltyId: "",
+      password: '',
+      loyaltyId: '',
       origin: true,
-      cardPattern: "",
-      cardColor: "",
-      fontColor: "",
-      logo: "",
-      id: "",
+      cardPattern: '',
+      cardColor: '',
+      fontColor: '',
+      logo: '',
+      id: '',
       setLoyaltyData: (data) => set((state) => ({ ...state, ...data })),
     }),
     {
-      name: "loyalty-data", // unique name
+      name: 'loyalty-data', // unique name
       getStorage: () => localStorage, // default
-    }
-  )
+    },
+  ),
 );

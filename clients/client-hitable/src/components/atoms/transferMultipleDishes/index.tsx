@@ -1,9 +1,9 @@
-import { IStatus } from "@/components/types/hiTableData";
-import React, { useRef, useState } from "react";
-import TransferItem from "@/components/molecules/transferItem";
-import axios from "@/axios";
-import { useLogin } from "@/components/store/useLogin";
-import { toast } from "react-toastify";
+import axios from '@/axios';
+import TransferItem from '@/components/molecules/transferItem';
+import { useLogin } from '@/components/store/useLogin';
+import { IStatus } from '@/components/types/hiTableData';
+import React, { useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 
 interface TransferMultipleProps {
   statusData: IStatus[][];
@@ -15,19 +15,15 @@ export interface TransferData {
   toTableId: string;
   name: string;
 }
-const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
-  statusData,
-  onClose,
-  refetch,
-}) => {
+const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({ statusData, onClose, refetch }) => {
   const [selectedDishes, setSelectedDishes] = useState<IStatus[]>([]);
   const [step, setStep] = useState(0);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [transferData, setTransferData] = useState<TransferData>({
-    toZoneId: "",
-    toTableId: "",
-    name: "",
+    toZoneId: '',
+    toTableId: '',
+    name: '',
   });
 
   const user = useLogin((s) => s.userDetails);
@@ -44,10 +40,8 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
   const handleCheckboxChange = (dish: IStatus) => {
     setSelectedDishes((prevSelectedDishes) =>
       prevSelectedDishes.find((selectedDish) => selectedDish._id === dish._id)
-        ? prevSelectedDishes.filter(
-            (selectedDish) => selectedDish._id !== dish._id
-          )
-        : [...prevSelectedDishes, dish]
+        ? prevSelectedDishes.filter((selectedDish) => selectedDish._id !== dish._id)
+        : [...prevSelectedDishes, dish],
     );
   };
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,12 +49,7 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
   };
 
   const handleSelectAll = () => {
-    const allDishes = statusData
-      .flat()
-      .filter(
-        (status) =>
-          !status.isDeleted && status.dishStatus.toLowerCase() !== "delivered"
-      );
+    const allDishes = statusData.flat().filter((status) => !status.isDeleted && status.dishStatus.toLowerCase() !== 'delivered');
 
     if (selectedDishes.length === allDishes.length) {
       setSelectedDishes([]);
@@ -73,11 +62,9 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
       (status) =>
         !status.isDeleted &&
         (status.dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          status.customerName
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          status.tableName.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
+          status.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          status.tableName.toLowerCase().includes(searchQuery.toLowerCase())),
+    ),
   );
 
   const transferItem = async () => {
@@ -91,9 +78,9 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
         customerPhone: user?.phone,
         kotObjectArray: selectedDishes,
       };
-      const res = await axios.post("/v1/kitchens/:id/transferKot", config);
+      const res = await axios.post('/v1/kitchens/:id/transferKot', config);
       if (res.status === 200) {
-        toast.success("Dishes transferred successfully");
+        toast.success('Dishes transferred successfully');
         refetch();
         onClose();
       }
@@ -117,8 +104,8 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
     switch (step) {
       case 0:
         return (
-          <div className="relative pb-[3rem] px-4 rounded-t-2xl bg-secondary min-h-[20vh] max-h-[80vh] overflow-auto">
-            <section className="sticky top-0 z-20 py-4 bg-secondary">
+          <div className="bg-secondary relative max-h-[80vh] min-h-[20vh] overflow-auto rounded-t-2xl px-4 pb-[3rem]">
+            <section className="bg-secondary sticky top-0 z-20 py-4">
               <h3 className="text-xl font-medium ">Transfer Multiple Dishes</h3>
               <article className="flex items-center justify-between">
                 <input
@@ -126,16 +113,10 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-[60%] px-4 py-2 mt-2 bg-white rounded-md"
+                  className="mt-2 w-[60%] rounded-md bg-white px-4 py-2"
                 />
-                <button
-                  onClick={handleSelectAll}
-                  className="h-10 px-8 mt-2 text-white bg-primary rounded-2xl "
-                >
-                  {selectedDishes.length ===
-                  statusData.flat().filter((status) => !status.isDeleted).length
-                    ? "Deselect All"
-                    : "Select All"}
+                <button onClick={handleSelectAll} className="bg-primary mt-2 h-10 rounded-2xl px-8 text-white ">
+                  {selectedDishes.length === statusData.flat().filter((status) => !status.isDeleted).length ? 'Deselect All' : 'Select All'}
                 </button>
               </article>
             </section>
@@ -144,42 +125,26 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
                 return null;
               }
               return (
-                <div
-                  key={tableIndex}
-                  className="p-4 mb-4 space-y-2 bg-base-100 rounded-xl"
-                >
+                <div key={tableIndex} className="bg-base-100 mb-4 space-y-2 rounded-xl p-4">
                   <article className="flex justify-between border-b">
                     <h3 className="mb-2 text-lg">Table</h3>
-                    <h3 className="mb-2 text-lg">
-                      {tableData[0]?.tableName || "Unknown"}
-                    </h3>
+                    <h3 className="mb-2 text-lg">{tableData[0]?.tableName || 'Unknown'}</h3>
                   </article>
                   {tableData
-                    .filter(
-                      (dish) => dish?.dishStatus?.toLowerCase() !== "delivered"
-                    )
+                    .filter((dish) => dish?.dishStatus?.toLowerCase() !== 'delivered')
                     .map((status: IStatus) => (
-                      <div
-                        key={status._id}
-                        className="flex items-start justify-between"
-                      >
+                      <div key={status._id} className="flex items-start justify-between">
                         <div>
                           <span>{status.dish.name}</span>
-                          <div className="mt-1 text-sm font-semibold capitalize text-base-content/40">
-                            {status?.dish?.portions?.name}
-                          </div>
-                          <div className="mt-1 mb-2 text-xs font-normal capitalize text-base-content/40">
-                            {status?.dish?.extras?.map(
-                              (extra) => extra?.name + ", "
-                            )}
+                          <div className="text-base-content/40 mt-1 text-sm font-semibold capitalize">{status?.dish?.portions?.name}</div>
+                          <div className="text-base-content/40 mb-2 mt-1 text-xs font-normal capitalize">
+                            {status?.dish?.extras?.map((extra) => extra?.name + ', ')}
                           </div>
                         </div>
                         <input
                           type="checkbox"
-                          className="w-4 h-4 mt-1"
-                          checked={selectedDishes.some(
-                            (dish) => dish._id === status._id
-                          )}
+                          className="mt-1 h-4 w-4"
+                          checked={selectedDishes.some((dish) => dish._id === status._id)}
                           onChange={() => handleCheckboxChange(status)}
                         />
                       </div>
@@ -192,18 +157,14 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
       case 1:
         return (
           <>
-            <TransferItem
-              handleNextStep={handleNextStep}
-              handleUpdateTransferData={handleUpdateTransferData}
-            />
+            <TransferItem handleNextStep={handleNextStep} handleUpdateTransferData={handleUpdateTransferData} />
           </>
         );
       case 2:
         return (
           <section className="h-48">
             <div className="p-4">
-              Transfer Dishes from {selectedDishes[0]?.tableName} to{" "}
-              {transferData.name}
+              Transfer Dishes from {selectedDishes[0]?.tableName} to {transferData.name}
             </div>
           </section>
         );
@@ -216,19 +177,14 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
     switch (step) {
       case 0:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={onClose}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={onClose} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Cancel
             </button>
             <button
               onClick={handleNextStep}
               disabled={selectedDishes.length === 0}
-              className={`w-full px-4 py-2 text-white rounded-2xl ${
-                selectedDishes.length === 0 ? "bg-gray-400" : "bg-primary"
-              }`}
+              className={`w-full rounded-2xl px-4 py-2 text-white ${selectedDishes.length === 0 ? 'bg-gray-400' : 'bg-primary'}`}
             >
               Next
             </button>
@@ -236,28 +192,19 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
         );
       case 1:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={handleGoBack}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={handleGoBack} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Back
             </button>
           </div>
         );
       case 2:
         return (
-          <div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
-            <button
-              onClick={handleGoBack}
-              className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
-            >
+          <div className="fixed bottom-4 flex w-full max-w-[27rem] gap-4 px-4">
+            <button onClick={handleGoBack} className="text-primary border-primary bg-base-100 w-full rounded-2xl border px-4 py-2">
               Go Back
             </button>
-            <button
-              onClick={handleNextStep}
-              className="w-full px-4 py-2 text-white bg-primary rounded-2xl"
-            >
+            <button onClick={handleNextStep} className="bg-primary w-full rounded-2xl px-4 py-2 text-white">
               Confirm
             </button>
           </div>

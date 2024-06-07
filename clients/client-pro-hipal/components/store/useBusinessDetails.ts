@@ -8,7 +8,7 @@ export interface IBusinessDetails {
 	serviceChargePercentage: number
 	businessName: string
 	logo: string
-	isPaymentIntegrated:boolean
+	isPaymentIntegrated: boolean
 }
 
 export const useBusinessDetails = create(
@@ -23,7 +23,7 @@ export const useBusinessDetails = create(
 				gstPercentage: 0,
 				serviceCharge: false,
 				serviceChargePercentage: 0,
-				isPaymentIntegrated:false,
+				isPaymentIntegrated: false,
 			},
 			setBusinessDetails: (businessDetails: IBusinessDetails) =>
 				set({ businessDetails: businessDetails }),

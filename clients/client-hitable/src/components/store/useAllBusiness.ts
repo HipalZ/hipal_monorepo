@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { useCallback, useMemo } from "react";
-import { isEqual } from "lodash";
+import { isEqual } from 'lodash';
+import { useCallback, useMemo } from 'react';
+import { create } from 'zustand';
 
 interface IUseAllBusiness {
   data: any;
@@ -29,12 +29,12 @@ export function useAllBusiness() {
       });
       _setData((s: any) => ({ ...s, ...newData }));
     },
-    [_setData, data]
-  )
+    [_setData, data],
+  );
 
   return { data, setData, setState };
 }
 
-export const intializeAllBusiness=(data)=>{
+export const intializeAllBusiness = (data) => {
   _useAllBusiness().setData(data);
-}
+};

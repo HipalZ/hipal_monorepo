@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 interface IUserReward {
 	loyaltyId: string
@@ -16,16 +16,16 @@ export const useUserReward = create(
 	}>(
 		(set, get) => ({
 			userReward: {
-				loyaltyId: '',
-				userPhone: '',
-				userName: '',
+				loyaltyId: "",
+				userPhone: "",
+				userName: "",
 				rewards: 0,
 				password: 0,
 			},
 			setUserReward: (userReward: IUserReward) => set({ userReward: userReward }),
 		}),
 		{
-			name: 'userReward',
+			name: "userReward",
 		},
 	),
 )

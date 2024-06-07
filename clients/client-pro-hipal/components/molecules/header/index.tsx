@@ -150,7 +150,7 @@ function Header({
 										{typeof title === 'function'
 											? title({
 													isRounded: data.roundedHeader,
-											  })
+												})
 											: title}
 									</CustomTag>
 								)}

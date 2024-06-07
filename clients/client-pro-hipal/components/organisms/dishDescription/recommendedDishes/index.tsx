@@ -9,7 +9,7 @@ import { memo, useMemo } from 'react'
 import { ImSpoonKnife } from 'react-icons/im'
 import DishQuantityButton from '../dishQuantityButton'
 import PlaceholderImg from '@components/atoms/placeholder/img'
-import Dish2  from '@assets/crack.png'
+import Dish2 from '@assets/crack.png'
 
 function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal: (str) => void }) {
 	const { dishesData } = _useAllBusiness((s) => s.data)
@@ -43,7 +43,7 @@ function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal
 							perPage: 2,
 							perMove: 1,
 							autoWidth: true,
-							pagination:false,
+							pagination: false,
 							classes: {
 								pagination: 'splide__pagination hidden',
 							},

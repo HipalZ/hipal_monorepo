@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 type Staff = string;
 
@@ -51,7 +51,7 @@ export const useBusinessStore = create(
       setBusinessData: (data: BusinessData) => set({ businessData: data }),
     }),
     {
-      name: "business_store",
-    }
-  )
+      name: 'business_store',
+    },
+  ),
 );

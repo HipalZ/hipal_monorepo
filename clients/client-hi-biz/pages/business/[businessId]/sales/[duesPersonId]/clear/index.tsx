@@ -1,15 +1,15 @@
-import Header from "@/components/molecules/header";
-import React, { memo, useEffect, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import { useRouter } from "next/router";
-import type { IDuesData } from "@/components/types/businessData";
-import axios from "@/axios";
-import PopUp from "@/components/atom/popUp";
-import SettlePopup from "@/components/atom/settlePopup";
-import { toast } from "react-toastify";
-import DateRangePicker from "@/components/molecules/dateRangePicker";
-import useTimings from "@/components/store/useTimings";
+import Hi from '@/assets/svg/hi.svg';
+import axios from '@/axios';
+import PopUp from '@/components/atom/popUp';
+import SettlePopup from '@/components/atom/settlePopup';
+import DateRangePicker from '@/components/molecules/dateRangePicker';
+import Header from '@/components/molecules/header';
+import useTimings from '@/components/store/useTimings';
+import type { IDuesData } from '@/components/types/businessData';
+import { useRouter } from 'next/router';
+import { memo, useEffect, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
+import { toast } from 'react-toastify';
 
 interface PaymentMethod {
   businessId: string;
@@ -20,9 +20,7 @@ interface PaymentMethod {
 
 function Clear() {
   const [activeDues, setActiveDues] = useState<IDuesData | null>(null);
-  const [selectedDues, setSelectedDues] = useState<{ [id: string]: boolean }>(
-    {}
-  );
+  const [selectedDues, setSelectedDues] = useState<{ [id: string]: boolean }>({});
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 
   const router = useRouter();
@@ -47,13 +45,11 @@ function Clear() {
       const res = await axios.get(url);
       setActiveDues(res.data);
     } catch (error) {
-      console.error("Error fetching sales report:", error);
+      console.error('Error fetching sales report:', error);
     }
   };
 
-  const selectedDuesIds = Object.keys(selectedDues).filter(
-    (id) => selectedDues[id]
-  );
+  const selectedDuesIds = Object.keys(selectedDues).filter((id) => selectedDues[id]);
 
   const selectedDuesTotal = selectedDuesIds.reduce((sum, id) => {
     const due = dues.find((due) => due._id === id);
@@ -67,27 +63,20 @@ function Clear() {
     if (selectedDuesTotal > 0) {
       openModal();
     } else {
-      toast.error("Please select due first");
+      toast.error('Please select due first');
     }
   };
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await axios.get(
-        `/v1/payments/Get/Modes?businessId=${businessId}`
-      );
+      const response = await axios.get(`/v1/payments/Get/Modes?businessId=${businessId}`);
 
       // Filter out the specified modes
-      const filteredData = response.data.filter(
-        (method: any) =>
-          !["dues", "split payment", "complimentary"].includes(
-            method?.mode?.toLowerCase()
-          )
-      );
+      const filteredData = response.data.filter((method: any) => !['dues', 'split payment', 'complimentary'].includes(method?.mode?.toLowerCase()));
 
       setPaymentMethods(filteredData);
     } catch (error) {
-      console.error("Failed to fetch payment methods", error);
+      console.error('Failed to fetch payment methods', error);
     }
   };
 
@@ -101,47 +90,35 @@ function Clear() {
 
   return (
     <div className="bg-white">
-      <div className="bg-[#f5f5f5] border-b border-[#CACACA]">
-        <Header
-          leftIcon={<BsChevronLeft />}
-          centerImage={Hi}
-          rightImage={Hi}
-          isIconBusinessShow={true}
-        />
+      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
+        <Header leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
 
-        <div className="py-4 mt-4 ml-6 text-2xl font-normal">
-          Settling for{" "}
-          <span className="text-[#204D42] font-semibold capitalize">
-            {activeDues?.userName}
-          </span>
+        <div className="ml-6 mt-4 py-4 text-2xl font-normal">
+          Settling for <span className="font-semibold capitalize text-[#204D42]">{activeDues?.userName}</span>
         </div>
       </div>
-      <DateRangePicker/>
+      <DateRangePicker />
       <div className="space-y-4">
         {dues?.map((due, index) => (
           <div
-            onKeyDown={()=>toggleSelect(due._id)}
+            onKeyDown={() => toggleSelect(due._id)}
             key={due._id}
-            className={`mx-6 border mt-4 rounded-md px-4 py-2 ${
-              selectedDues[due._id] ? "bg-[#219653]/10 border-[#219653]" : ""
-            }`}
+            className={`mx-6 mt-4 rounded-md border px-4 py-2 ${selectedDues[due._id] ? 'border-[#219653] bg-[#219653]/10' : ''}`}
             onClick={() => toggleSelect(due._id)}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center justify-between">
                 <div
                   style={{
-                    display: "inline-block",
-                    width: "16px",
-                    height: "16px",
-                    background: selectedDues[due._id]
-                      ? "rgba(33, 150, 83, 0.10)"
-                      : "#ffffff",
-                    border: "1px solid #219653",
-                    borderRadius: "4px",
-                    position: "relative",
-                    boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.1)",
-                    transition: "all 0.1s ease-in-out",
+                    display: 'inline-block',
+                    width: '16px',
+                    height: '16px',
+                    background: selectedDues[due._id] ? 'rgba(33, 150, 83, 0.10)' : '#ffffff',
+                    border: '1px solid #219653',
+                    borderRadius: '4px',
+                    position: 'relative',
+                    boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.1s ease-in-out',
                   }}
                 >
                   <input
@@ -151,20 +128,20 @@ function Clear() {
                     onChange={() => toggleSelect(due._id)}
                     style={{
                       opacity: 0,
-                      width: "100%",
-                      height: "100%",
+                      width: '100%',
+                      height: '100%',
                       margin: 0,
                     }}
                   />
                   {selectedDues[due._id] && (
                     <span
                       style={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        fontSize: "12px",
-                        color: "#219653",
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: '12px',
+                        color: '#219653',
                       }}
                     >
                       ✔
@@ -176,25 +153,21 @@ function Clear() {
               <div className="text-sm opacity-60">{due?.date.slice(0, 16)}</div>
             </div>
 
-            <div className="flex items-center justify-between mt-2">
-              <div className="text-base font-medium capitalize opacity-70">
-                {due?.customerName}
-              </div>
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-base font-medium capitalize opacity-70">{due?.customerName}</div>
             </div>
           </div>
         ))}
       </div>
-      <div className="fixed w-full px-6 bottom-6">
+      <div className="fixed bottom-6 w-full px-6">
         <button
           type="button"
           onClick={openModalOrShowToast}
           className={`${
-            selectedDuesTotal === 0 ? "opacity-50" : ""
-          } w-full text-white bg-[#2B354D] border font-semibold on_active_bounce border-[#2B354D] px-4 py-2 rounded-lg mt-4`}
+            selectedDuesTotal === 0 ? 'opacity-50' : ''
+          } on_active_bounce mt-4 w-full rounded-lg border border-[#2B354D] bg-[#2B354D] px-4 py-2 font-semibold text-white`}
         >
-          <div className="flex items-center justify-center">
-            Pay ₹ {selectedDuesTotal}
-          </div>
+          <div className="flex items-center justify-center">Pay ₹ {selectedDuesTotal}</div>
         </button>
       </div>
       {isModalOpen && (

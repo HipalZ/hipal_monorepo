@@ -1,6 +1,6 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model } from 'mongoose';
 
-import { CustomerType } from "../validators";
+import { CustomerType } from '../validators';
 
 const customerSchema = new mongoose.Schema<CustomerType>(
   {
@@ -21,7 +21,7 @@ const customerSchema = new mongoose.Schema<CustomerType>(
       required: true,
       default: 0,
       type: Number,
-      min: [0, "Count must be a non-negative number"],
+      min: [0, 'Count must be a non-negative number'],
     },
     date: {
       required: true,
@@ -30,12 +30,9 @@ const customerSchema = new mongoose.Schema<CustomerType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const ReviewsCustomer: Model<CustomerType> = mongoose.model<CustomerType>(
-  "customerReview",
-  customerSchema
-);
+const ReviewsCustomer: Model<CustomerType> = mongoose.model<CustomerType>('customerReview', customerSchema);
 
 export { ReviewsCustomer };

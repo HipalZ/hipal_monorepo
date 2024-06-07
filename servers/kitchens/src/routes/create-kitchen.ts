@@ -1,65 +1,51 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import {
-  Alert,
-  Kitchen,
-  Kot,
-  Kotpassword,
-  Payment,
-  Printer,
-  Table,
-  Tempmodel,
-  Userbill,
-  Waiterkot,
-} from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
+import { Kitchen, Kot, Kotpassword, Printer, Table, Tempmodel, Waiterkot } from '@hi/db-models';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 
-import axios from "axios";
-import moment = require("moment");
+import axios from 'axios';
+import moment = require('moment');
 
-import { razorpayWrapper } from "../razorpay-wrapper";
+import { razorpayWrapper } from '../razorpay-wrapper';
 
-const { validateWebhookSignature } = require("../utils/razorpay-utils");
+const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
-import { createHmac } from "crypto";
-import { KOTType, TableTypes } from "@hi/db-models/src/validators";
+import { KOTType } from '@hi/db-models/src/validators';
+import { createHmac } from 'crypto';
 
 const router = express.Router();
 
 const currentTime = new Date();
 const options = {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit" as const,
-  minute: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit' as const,
+  minute: '2-digit' as const,
 };
-const formatter = new Intl.DateTimeFormat("en-US", options);
+const formatter = new Intl.DateTimeFormat('en-US', options);
 const time = formatter.format(currentTime);
 
 const optionsDate = {
-  timeZone: "Asia/Kolkata",
-  year: "numeric" as const,
-  month: "2-digit" as const,
-  day: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  year: 'numeric' as const,
+  month: '2-digit' as const,
+  day: '2-digit' as const,
 };
-const formatterDate = new Intl.DateTimeFormat("en-US", optionsDate);
+const formatterDate = new Intl.DateTimeFormat('en-US', optionsDate);
 const currentDateAndTime = formatterDate.format(currentTime);
 
 const optionsTimeAndSeconds = {
-  timeZone: "Asia/Kolkata",
-  hour: "2-digit" as const,
-  minute: "2-digit" as const,
-  second: "2-digit" as const,
+  timeZone: 'Asia/Kolkata',
+  hour: '2-digit' as const,
+  minute: '2-digit' as const,
+  second: '2-digit' as const,
   hour12: false, // Use 24-hour time
 };
-const formatterTimesAndSeconds = new Intl.DateTimeFormat(
-  "en-US",
-  optionsTimeAndSeconds
-);
+const formatterTimesAndSeconds = new Intl.DateTimeFormat('en-US', optionsTimeAndSeconds);
 const kotTime = formatterTimesAndSeconds.format(currentTime);
 
 router.post(
-  "/v1/kitchens/kickOut/kots",
+  '/v1/kitchens/kickOut/kots',
 
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -73,18 +59,18 @@ router.post(
         {
           zoneId,
           tableId,
-          status: "UNPAID",
+          status: 'UNPAID',
         },
         {
           $set: {
-            status: "PAID",
+            status: 'PAID',
             cookedAt: Date.now(),
           },
-        }
+        },
       );
 
       if (!update) {
-        return res.send({ status: false, message: "Not Found Order" });
+        return res.send({ status: false, message: 'Not Found Order' });
       }
       await Waiterkot.deleteMany({
         zoneId: zoneId,
@@ -96,11 +82,11 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/kitchens",
+  '/v1/kitchens',
 
   async (req: Request, res: Response) => {
     const { businessId, kitchenName, description, staff } = req.body;
@@ -113,7 +99,7 @@ router.post(
     });
 
     res.status(201).send(kitchen);
-  }
+  },
 );
 
 // router.post(
@@ -216,16 +202,13 @@ router.post(
 // );
 
 router.post(
-  "/v1/kitchens/:kitchenId/kots",
+  '/v1/kitchens/:kitchenId/kots',
 
   async (req: Request, res: Response) => {
     try {
       var currentTime = Date.now();
       var momentTime = moment(currentTime);
-      var indianTime = momentTime
-        .clone()
-        .utcOffset("+05:30")
-        .format("HH:mm:ss");
+      var indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm:ss');
 
       const { kots }: { kots: KOTType[] } = req.body;
 
@@ -237,9 +220,9 @@ router.post(
           ...newKOT,
           startedAt,
           cookedAt: -1,
-          status: "UNPAID",
+          status: 'UNPAID',
           kotTime: indianTime,
-          date: moment().format("Do MMM YY"),
+          date: moment().format('Do MMM YY'),
         });
 
         created.push(kot);
@@ -248,7 +231,7 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 const cartToKots = (
@@ -258,7 +241,7 @@ const cartToKots = (
   zoneId: string,
   tableName: string,
   customerName: string,
-  customerPhone: string
+  customerPhone: string,
 ) => {
   const kotArray: any = [];
   for (const dish of Object.values(cart) as any) {
@@ -271,23 +254,22 @@ const cartToKots = (
         kitchenId: dish?.dishData?.kitchenId,
         zoneId: zoneId,
         tableId: tableId,
-        staffId: "5",
+        staffId: '5',
         dish: {
           dishId: dish?.dishData._id,
           name: dish?.dishData?.name,
           price: dish?.dishData?.price,
           qty: 1,
-          comments: "spicy",
+          comments: 'spicy',
           extras,
           portions,
         },
         dishType: dish?.dishData?.dishType,
-        category:
-          dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
+        category: dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
         customerName: customerName,
         customerPhone: customerPhone,
         instructions: variant?.instruction,
-        dishStatus: "cooking",
+        dishStatus: 'cooking',
         tableName: tableName,
         avgTime: dish?.dishData?.avgTime,
         taxes: dish?.dishData?.taxes,
@@ -310,290 +292,225 @@ const getParentData = async (zoneId: string, tableId: string, session: any) => {
 };
 
 // new One for waiter
-router.post(
-  "/v1/kitchens/:id/user/kots",
-  async (req: Request, res: Response) => {
-    try {
-      let {
-        businessId,
-        zoneId,
-        tableId,
-        tableName,
-        cart,
-        customerName,
-        customerPhone,
-        hiCode,
-      } = req.body || {};
+router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) => {
+  try {
+    let { businessId, zoneId, tableId, tableName, cart, customerName, customerPhone, hiCode } = req.body || {};
 
-      if (!businessId || !zoneId || !tableId) {
-        res.status(404).send({
-          status: false,
-          message: "businessId ,TableId,zoneId are required...!",
-        });
+    if (!businessId || !zoneId || !tableId) {
+      res.status(404).send({
+        status: false,
+        message: 'businessId ,TableId,zoneId are required...!',
+      });
+      return;
+    }
+    await runInTransaction(async (session: ClientSession) => {
+      let tableInfo;
+
+      try {
+        tableInfo = await Table.findById(tableId, null, { session });
+        if (tableInfo?.isMerge && tableInfo?.hierarchy == 'CHILD') {
+          const parentTable = await getParentData(tableInfo?.parentZoneId, tableInfo?.parentTableId, session);
+          zoneId = parentTable?.zoneId;
+          tableId = parentTable?.id;
+          tableInfo = parentTable;
+        }
+      } catch (err: any) {
+        console.log(err);
+        res.status(400).send('something went wrong please try again!');
         return;
       }
-      await runInTransaction(async (session: ClientSession) => {
-        let tableInfo;
 
-        try {
-          tableInfo = await Table.findById(tableId, null, { session });
-          if (tableInfo?.isMerge && tableInfo?.hierarchy == "CHILD") {
-            const parentTable = await getParentData(
-              tableInfo?.parentZoneId,
-              tableInfo?.parentTableId,
-              session
-            );
-            zoneId = parentTable?.zoneId;
-            tableId = parentTable?.id;
-            tableInfo = parentTable;
-          }
-        } catch (err: any) {
-          console.log(err);
-          res.status(400).send("something went wrong please try again!");
-          return;
-        }
-
-        if (hiCode) {
-          const isTableSettled = await Tempmodel.findOne({ hiCode }, null, {
-            session,
-          });
-
-          if (
-            isTableSettled ||
-            (hiCode != tableInfo?.hiCode && tableInfo?.hiCode == "")
-          ) {
-            res
-              .status(403)
-              .send({ message: "Table are Already Setteled....!" });
-            return;
-          }
-        }
-
-        if (!tableInfo?.role) {
-          let updateTable: any;
-
-          const update = {
-            role: {
-              role: "Admin",
-              customerName,
-              customerPhone,
-            },
-            hiCode: Math.floor(Math.random() * 9000) + 1000,
-          };
-
-          try {
-            updateTable = await Table.findByIdAndUpdate(tableId, update, {
-              new: true,
-              session,
-              rawResult: true,
-            });
-          } catch (err: any) {
-            console.log(err.message);
-            res.status(400).send("something went wrong please try again!");
-            return;
-          }
-          const currentTime = new Date();
-          const options = {
-            timeZone: "Asia/Kolkata",
-            hour: "2-digit" as const,
-            minute: "2-digit" as const,
-          };
-          const formatter = new Intl.DateTimeFormat("en-US", options);
-          const time = formatter.format(currentTime);
-
-          const kotArray = cartToKots(
-            cart,
-            businessId,
-            tableId,
-            zoneId,
-            tableName,
-            customerName,
-            customerPhone
-          );
-
-          const obj = {
-            businessId,
-            tableName,
-            staffId: "5",
-            items: kotArray,
-            time: time,
-            date: currentDateAndTime,
-            tableId,
-            zoneId,
-            cart: cart,
-          };
-
-          await Waiterkot.create([obj], { session: session });
-          console.log("updateTable", updateTable);
-          res.status(201).send({
-            status: true,
-            message: "Create Successfully",
-            role: updateTable?.value?.role,
-            hiCode: updateTable?.value?.hiCode,
-          });
-          return;
-        } else {
-          if (customerPhone != tableInfo?.role?.customerPhone) {
-            if (!hiCode) {
-              let name = tableInfo?.role?.customerName;
-              if (name) {
-                name = name.charAt(0).toUpperCase() + name.slice(1) || "Friend";
-              }
-              res.status(400).send({
-                status: false,
-                message: `Enter Valid Hicode !!! ${name} is already on this table`,
-              });
-            }
-            console.log("tableInfo", tableInfo, "hiCode", hiCode);
-
-            if (tableInfo?.hiCode !== hiCode) {
-              res
-                .status(400)
-                .send({ status: false, message: "Enter Valid Hicode !!!" });
-              return;
-            }
-          }
-          const currentTime = new Date();
-          const options = {
-            timeZone: "Asia/Kolkata",
-            hour: "2-digit" as const,
-            minute: "2-digit" as const,
-          };
-          const formatter = new Intl.DateTimeFormat("en-US", options);
-          const time = formatter.format(currentTime);
-          const kotArray = cartToKots(
-            cart,
-            businessId,
-            tableId,
-            zoneId,
-            tableName,
-            customerName,
-            customerPhone
-          );
-          const obj = {
-            businessId,
-            tableName,
-            staffId: "5",
-            items: kotArray,
-            time: time,
-            date: currentDateAndTime,
-            tableId,
-            zoneId,
-            cart: cart,
-          };
-
-          await Waiterkot.create([obj], { session });
-
-          if (customerPhone == tableInfo?.role?.customerPhone) {
-            res.status(201).send({
-              status: true,
-              role: tableInfo?.role,
-              hiCode: tableInfo?.hiCode,
-            });
-          }
-          res.status(201).send("Create Successfully");
-          return;
-        }
-      });
-    } catch (err: any) {
-      res.status(500).send({ status: false, message: err.message });
-    }
-  }
-);
-
-// new One for pos  side
-router.post(
-  "/v1/kitchens/:id/waiter/kots",
-  async (req: Request, res: Response) => {
-    try {
-      const {
-        businessId,
-        zoneId,
-        tableId,
-        timeWithSeconds,
-        tableName,
-        cart,
-        waiterName,
-        waiterPhone,
-      } = req.body || {};
-      if (!businessId || !zoneId || !tableId) {
-        return res
-          .status(400)
-          .send("businessId ,TableId,zoneId ar required...!");
-      }
-      let responseMessage = "";
-      await runInTransaction(async (session: ClientSession) => {
-        const kotDate = new Date().toISOString().replace("T", " ").slice(0, 19);
-        const startedAt = Date.now();
-
-        let kotArray = cartToKots(
-          cart,
-          businessId,
-          tableId,
-          zoneId,
-          tableName,
-          waiterName,
-          waiterPhone
-        );
-        const kots = kotArray.map((newKOT: KOTType) => {
-          return {
-            ...(newKOT as KOTType),
-            startedAt,
-            cookedAt: -1,
-            status: "UNPAID",
-            kotTime: timeWithSeconds,
-            kotDate: kotDate,
-          };
+      if (hiCode) {
+        const isTableSettled = await Tempmodel.findOne({ hiCode }, null, {
+          session,
         });
 
-        await Kot.insertMany(kots, { session });
-
-        const query = {
-          tableId,
-          status: "UNPAID",
-        };
-        const existingKOTs = await Kot.find(query, null, { session }).select(
-          "dishStatus"
-        );
-
-        const totalDish = existingKOTs?.length;
-        let delivered = 0;
-
-        for (const existingKOT of existingKOTs) {
-          if (existingKOT?.dishStatus === "delivered") {
-            delivered++;
-          }
+        if (isTableSettled || (hiCode != tableInfo?.hiCode && tableInfo?.hiCode == '')) {
+          res.status(403).send({ message: 'Table are Already Setteled....!' });
+          return;
         }
+      }
+
+      if (!tableInfo?.role) {
+        let updateTable: any;
 
         const update = {
-          totalDishQuantity: totalDish,
-          deliverdDish: delivered,
-          status: "Active",
-          time: timeWithSeconds?.slice(0, 5),
+          role: {
+            role: 'Admin',
+            customerName,
+            customerPhone,
+          },
+          hiCode: Math.floor(Math.random() * 9000) + 1000,
         };
 
         try {
-          await Table.findByIdAndUpdate(tableId, update, { session });
-          responseMessage = "KOT created successfully";
+          updateTable = await Table.findByIdAndUpdate(tableId, update, {
+            new: true,
+            session,
+            rawResult: true,
+          });
         } catch (err: any) {
-          responseMessage = err.message;
-          throw err;
+          console.log(err.message);
+          res.status(400).send('something went wrong please try again!');
+          return;
         }
-      });
-      if (responseMessage == "KOT created successfully") {
-        return res
-          .status(201)
-          .send({ status: true, data: "KOT created successfully" });
-      } else {
-        return res.status(400).send(responseMessage);
-      }
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
-  }
-);
+        const currentTime = new Date();
+        const options = {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit' as const,
+          minute: '2-digit' as const,
+        };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const time = formatter.format(currentTime);
 
-router.post("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
+        const kotArray = cartToKots(cart, businessId, tableId, zoneId, tableName, customerName, customerPhone);
+
+        const obj = {
+          businessId,
+          tableName,
+          staffId: '5',
+          items: kotArray,
+          time: time,
+          date: currentDateAndTime,
+          tableId,
+          zoneId,
+          cart: cart,
+        };
+
+        await Waiterkot.create([obj], { session: session });
+        console.log('updateTable', updateTable);
+        res.status(201).send({
+          status: true,
+          message: 'Create Successfully',
+          role: updateTable?.value?.role,
+          hiCode: updateTable?.value?.hiCode,
+        });
+        return;
+      } else {
+        if (customerPhone != tableInfo?.role?.customerPhone) {
+          if (!hiCode) {
+            let name = tableInfo?.role?.customerName;
+            if (name) {
+              name = name.charAt(0).toUpperCase() + name.slice(1) || 'Friend';
+            }
+            res.status(400).send({
+              status: false,
+              message: `Enter Valid Hicode !!! ${name} is already on this table`,
+            });
+          }
+          console.log('tableInfo', tableInfo, 'hiCode', hiCode);
+
+          if (tableInfo?.hiCode !== hiCode) {
+            res.status(400).send({ status: false, message: 'Enter Valid Hicode !!!' });
+            return;
+          }
+        }
+        const currentTime = new Date();
+        const options = {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit' as const,
+          minute: '2-digit' as const,
+        };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const time = formatter.format(currentTime);
+        const kotArray = cartToKots(cart, businessId, tableId, zoneId, tableName, customerName, customerPhone);
+        const obj = {
+          businessId,
+          tableName,
+          staffId: '5',
+          items: kotArray,
+          time: time,
+          date: currentDateAndTime,
+          tableId,
+          zoneId,
+          cart: cart,
+        };
+
+        await Waiterkot.create([obj], { session });
+
+        if (customerPhone == tableInfo?.role?.customerPhone) {
+          res.status(201).send({
+            status: true,
+            role: tableInfo?.role,
+            hiCode: tableInfo?.hiCode,
+          });
+        }
+        res.status(201).send('Create Successfully');
+        return;
+      }
+    });
+  } catch (err: any) {
+    res.status(500).send({ status: false, message: err.message });
+  }
+});
+
+// new One for pos  side
+router.post('/v1/kitchens/:id/waiter/kots', async (req: Request, res: Response) => {
+  try {
+    const { businessId, zoneId, tableId, timeWithSeconds, tableName, cart, waiterName, waiterPhone } = req.body || {};
+    if (!businessId || !zoneId || !tableId) {
+      return res.status(400).send('businessId ,TableId,zoneId ar required...!');
+    }
+    let responseMessage = '';
+    await runInTransaction(async (session: ClientSession) => {
+      const kotDate = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      const startedAt = Date.now();
+
+      let kotArray = cartToKots(cart, businessId, tableId, zoneId, tableName, waiterName, waiterPhone);
+      const kots = kotArray.map((newKOT: KOTType) => {
+        return {
+          ...(newKOT as KOTType),
+          startedAt,
+          cookedAt: -1,
+          status: 'UNPAID',
+          kotTime: timeWithSeconds,
+          kotDate: kotDate,
+        };
+      });
+
+      await Kot.insertMany(kots, { session });
+
+      const query = {
+        tableId,
+        status: 'UNPAID',
+      };
+      const existingKOTs = await Kot.find(query, null, { session }).select('dishStatus');
+
+      const totalDish = existingKOTs?.length;
+      let delivered = 0;
+
+      for (const existingKOT of existingKOTs) {
+        if (existingKOT?.dishStatus === 'delivered') {
+          delivered++;
+        }
+      }
+
+      const update = {
+        totalDishQuantity: totalDish,
+        deliverdDish: delivered,
+        status: 'Active',
+        time: timeWithSeconds?.slice(0, 5),
+      };
+
+      try {
+        await Table.findByIdAndUpdate(tableId, update, { session });
+        responseMessage = 'KOT created successfully';
+      } catch (err: any) {
+        responseMessage = err.message;
+        throw err;
+      }
+    });
+    if (responseMessage == 'KOT created successfully') {
+      return res.status(201).send({ status: true, data: 'KOT created successfully' });
+    } else {
+      return res.status(400).send(responseMessage);
+    }
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
+  }
+});
+
+router.post('/v1/kitchens/Add/Printer', async (req: Request, res: Response) => {
   try {
     const { businessId, printers, billPrinter } = req.body;
 
@@ -605,7 +522,7 @@ router.post("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
         { printers, billPrinter },
         {
           new: true,
-        }
+        },
       );
 
       return res.send(updatedPrinter);
@@ -617,13 +534,11 @@ router.post("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
     }
   } catch (err) {
     console.error(err); // Log the error for debugging purposes
-    return res
-      .status(500)
-      .json({ status: false, message: "Internal Server Error" });
+    return res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
 
-router.get("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
+router.get('/v1/kitchens/Add/Printer', async (req: Request, res: Response) => {
   try {
     const { businessId } = req.query;
 
@@ -631,18 +546,16 @@ router.get("/v1/kitchens/Add/Printer", async (req: Request, res: Response) => {
     return res.send(existingPrinter);
   } catch (err) {
     console.error(err); // Log the error for debugging purposes
-    return res
-      .status(500)
-      .json({ status: false, message: "Internal Server Error" });
+    return res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
 
-router.post("/v1/kitchens/kotPassword", async (req: Request, res: Response) => {
+router.post('/v1/kitchens/kotPassword', async (req: Request, res: Response) => {
   try {
     const { businessId } = req.body;
     const exitingKotPass = await Kotpassword.findOne({ businessId });
     if (exitingKotPass) {
-      return res.status(400).send("Already Password set");
+      return res.status(400).send('Already Password set');
     }
     let newPass = Math.floor(Math.random() * 9000) + 10000;
     const savedata = new Kotpassword({ businessId, password: newPass });
@@ -650,54 +563,33 @@ router.post("/v1/kitchens/kotPassword", async (req: Request, res: Response) => {
     return res.status(201).send(saveKotPassword);
   } catch (err) {
     console.error(err); // Log the error for debugging purposes
-    return res
-      .status(500)
-      .json({ status: false, message: "Internal Server Error" });
+    return res.status(500).json({ status: false, message: 'Internal Server Error' });
   }
 });
 
 router.post(
-  "/v1/kitchens/:kitchenId/swiggy",
+  '/v1/kitchens/:kitchenId/swiggy',
   // validateKOT,
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   // validateRequest,
   async (req: Request, res: Response) => {
     try {
-      const {
-        businessId,
-        zoneId,
-        tableName,
-        cart,
-        waiterName,
-        waiterPhone,
-        orderId,
-        deletedKotId,
-      } = req.body || {};
+      const { businessId, zoneId, tableName, cart, waiterName, waiterPhone, orderId, deletedKotId } = req.body || {};
       if (deletedKotId) {
-        await Kot.findByIdAndUpdate(
-          deletedKotId,
-          { isDeleted: true },
-          { new: true }
-        );
+        await Kot.findByIdAndUpdate(deletedKotId, { isDeleted: true }, { new: true });
       }
 
       let object = cart as { cart: any };
       const currentTime = Date.now();
       const momentTime = moment(currentTime);
-      const indianTime = momentTime
-        .clone()
-        .utcOffset("+05:30")
-        .format("HH:mm:ss");
+      const indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm:ss');
       let kotArray: any[] = [];
       let DishArray = Object.values(object);
 
       for (const dish of DishArray) {
         for (const variant of dish?.variants) {
-          if (
-            variant?.portion ||
-            (variant?.extra && Object.values(variant?.extra).length > 0)
-          ) {
+          if (variant?.portion || (variant?.extra && Object.values(variant?.extra).length > 0)) {
             let extras = variant?.extra ? Object.values(variant.extra) : [];
             let portions = variant?.portion ? variant?.portion : {};
 
@@ -705,13 +597,13 @@ router.post(
               businessId,
               kitchenId: dish?.dishData?.kitchenId,
               zoneId,
-              staffId: "5",
+              staffId: '5',
               dish: {
                 dishId: dish?.dishId,
                 name: dish?.dishData?.name,
                 price: Number(dish.dishData?.price),
                 qty: 1,
-                comments: "spicy",
+                comments: 'spicy',
                 extras,
                 portions,
               },
@@ -720,7 +612,7 @@ router.post(
               customerName: waiterName,
               customerPhone: waiterPhone,
               instructions: variant?.instruction,
-              dishStatus: "cooking",
+              dishStatus: 'cooking',
               tableName,
               orderId,
             };
@@ -731,13 +623,13 @@ router.post(
               businessId,
               kitchenId: dish?.dishData?.kitchenId,
               zoneId,
-              staffId: "5",
+              staffId: '5',
               dish: {
                 dishId: dish.dishId,
                 name: dish.dishData?.name,
                 price: Number(dish.dishData?.price),
                 qty: 1,
-                comments: "spicy",
+                comments: 'spicy',
                 extras: [],
                 portions: {},
               },
@@ -745,7 +637,7 @@ router.post(
               category: dish?.dishData?.categories?.[0]?.name,
               customerName: waiterName,
               customerPhone: waiterPhone,
-              dishStatus: "cooking",
+              dishStatus: 'cooking',
               instructions: variant?.instruction,
               tableName,
               orderId,
@@ -763,10 +655,10 @@ router.post(
           ...(newKOT as KOTType),
           startedAt,
           cookedAt: -1,
-          status: "UNPAID",
+          status: 'UNPAID',
           kotTime: indianTime,
-          date: moment().format("Do MMM YY"),
-          kotDate: new Date().toISOString().replace("T", " ").slice(0, 19),
+          date: moment().format('Do MMM YY'),
+          kotDate: new Date().toISOString().replace('T', ' ').slice(0, 19),
         });
 
         created.push(kot);
@@ -776,89 +668,81 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
-router.post(
-  "/v1/kitchens/:kitchenId/openItem",
-  async (req: Request, res: Response) => {
-    try {
-      const { zoneId, tableId, dishType, kitchenId, businessId } =
-        req.body || {};
-      if (!zoneId || !tableId || !dishType || !kitchenId || !businessId) {
-        return res
-          .status(400)
-          .send("zoneId , tableId, kitchenId , businessId required");
-      }
-      if (!req.body.dish.price || typeof req.body.dish.price == "string") {
-        return res.status(400).send("Price is required");
-      }
-
-      let kot;
-      let error;
-      await runInTransaction(async (session: ClientSession) => {
-        try {
-          kot = await Kot.create(
-            {
-              ...req.body,
-              startedAt: Date.now(),
-              cookedAt: -1,
-              status: "UNPAID",
-              kotTime: kotTime,
-              kotDate: new Date().toISOString().replace("T", " ").slice(0, 19),
-            },
-            { session }
-          );
-
-          const query = {
-            businessId,
-            tableId,
-            zoneId,
-            status: "UNPAID",
-          };
-
-          const existingKOTs = await Kot.find(query, { session }).select(
-            "dishStatus"
-          );
-
-          const totalDish = existingKOTs?.length;
-          let delivered = 0;
-
-          for (const existingKOT of existingKOTs) {
-            if (existingKOT?.dishStatus === "delivered") {
-              delivered++;
-            }
-          }
-
-          const update = {
-            totalDishQuantity: totalDish,
-            deliverdDish: delivered,
-            status: "Active",
-            time: time,
-          };
-
-          await Table.findByIdAndUpdate(tableId, update, { session });
-        } catch (err: any) {
-          error = err;
-        }
-      });
-
-      if (error) {
-        return res.status(500).send({
-          status: false,
-          message: "Internal Server Error",
-        });
-      }
-
-      return res.status(201).send(kot);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+router.post('/v1/kitchens/:kitchenId/openItem', async (req: Request, res: Response) => {
+  try {
+    const { zoneId, tableId, dishType, kitchenId, businessId } = req.body || {};
+    if (!zoneId || !tableId || !dishType || !kitchenId || !businessId) {
+      return res.status(400).send('zoneId , tableId, kitchenId , businessId required');
     }
+    if (!req.body.dish.price || typeof req.body.dish.price == 'string') {
+      return res.status(400).send('Price is required');
+    }
+
+    let kot;
+    let error;
+    await runInTransaction(async (session: ClientSession) => {
+      try {
+        kot = await Kot.create(
+          {
+            ...req.body,
+            startedAt: Date.now(),
+            cookedAt: -1,
+            status: 'UNPAID',
+            kotTime: kotTime,
+            kotDate: new Date().toISOString().replace('T', ' ').slice(0, 19),
+          },
+          { session },
+        );
+
+        const query = {
+          businessId,
+          tableId,
+          zoneId,
+          status: 'UNPAID',
+        };
+
+        const existingKOTs = await Kot.find(query, { session }).select('dishStatus');
+
+        const totalDish = existingKOTs?.length;
+        let delivered = 0;
+
+        for (const existingKOT of existingKOTs) {
+          if (existingKOT?.dishStatus === 'delivered') {
+            delivered++;
+          }
+        }
+
+        const update = {
+          totalDishQuantity: totalDish,
+          deliverdDish: delivered,
+          status: 'Active',
+          time: time,
+        };
+
+        await Table.findByIdAndUpdate(tableId, update, { session });
+      } catch (err: any) {
+        error = err;
+      }
+    });
+
+    if (error) {
+      return res.status(500).send({
+        status: false,
+        message: 'Internal Server Error',
+      });
+    }
+
+    return res.status(201).send(kot);
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.post(
-  "/v1/kitchens/:kitchenId/swiggyKots",
+  '/v1/kitchens/:kitchenId/swiggyKots',
   // validateKOT,
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
@@ -867,10 +751,7 @@ router.post(
     try {
       var currentTime = Date.now();
       var momentTime = moment(currentTime);
-      var indianTime = momentTime
-        .clone()
-        .utcOffset("+05:30")
-        .format("HH:mm:ss");
+      var indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm:ss');
 
       const body = req.body;
       let kots = body?.kots;
@@ -883,9 +764,9 @@ router.post(
           ...newKOT,
           startedAt,
           cookedAt: -1,
-          status: "UNPAID",
+          status: 'UNPAID',
           kotTime: indianTime,
-          date: moment().format("Do MMM YY"),
+          date: moment().format('Do MMM YY'),
         });
 
         created.push(kot);
@@ -894,7 +775,7 @@ router.post(
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
 const getUpdatedCart = (kots: any, isDeleted: any) => {
@@ -902,7 +783,7 @@ const getUpdatedCart = (kots: any, isDeleted: any) => {
 
   for (let i = 0; i < kots.length; i++) {
     let kot = kots[i];
-    console.log("kot", kot);
+    console.log('kot', kot);
     if (kot?.match != false) {
       const dishData = {
         businessId: kot.businessId,
@@ -945,50 +826,44 @@ const getUpdatedCart = (kots: any, isDeleted: any) => {
   return cart;
 };
 
-router.post(
-  "/v1/kitchens/:kitchenId/kotPrint",
-  async (req: Request, res: Response) => {
+router.post('/v1/kitchens/:kitchenId/kotPrint', async (req: Request, res: Response) => {
+  try {
+    const { kotObject } = req.body || {};
+    const config = {
+      method: 'post',
+      url: `https://ws.hipal.life`,
+      data: kotObject,
+    };
+
     try {
-      const { kotObject } = req.body || {};
-      const config = {
-        method: "post",
-        url: `https://ws.hipal.life`,
-        data: kotObject,
-      };
-
-      try {
-        await axios(config);
-      } catch (err: any) {
-        return res.status(500).send({
-          status: false,
-          message: err.message,
-        });
-      }
-
-      res.status(200).send("succes");
+      await axios(config);
     } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+      return res.status(500).send({
+        status: false,
+        message: err.message,
+      });
     }
+
+    res.status(200).send('succes');
+  } catch (err: any) {
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.post(
-  "/v1/kitchens/:id/transferKot",
+  '/v1/kitchens/:id/transferKot',
 
   async (req: Request, res: Response) => {
     try {
-      const { toZoneId, toTableId, kotObjectArray, transferBy } =
-        req.body || {};
-      console.log("kotObjectArray", kotObjectArray);
+      const { toZoneId, toTableId, kotObjectArray, transferBy } = req.body || {};
+      console.log('kotObjectArray', kotObjectArray);
 
       await runInTransaction(async (session: ClientSession) => {
         let fromTableId = kotObjectArray?.[0]?.tableId;
         let fromZoneId = kotObjectArray?.[0]?.zoneId;
 
         if (!toZoneId || !toTableId || kotObjectArray?.length == 0) {
-          throw new Error(
-            "toZoneId , toTableId , kotObjectArray are required...!"
-          );
+          throw new Error('toZoneId , toTableId , kotObjectArray are required...!');
         }
 
         const transferKotIds: string[] = [];
@@ -1013,14 +888,14 @@ router.post(
           {
             tableId: toTableId,
             zoneId: toZoneId,
-            status: "UNPAID",
+            status: 'UNPAID',
           },
           null,
-          { session }
-        ).select("dishStatus");
+          { session },
+        ).select('dishStatus');
         let deliverdDish = 0;
         kots.forEach((kot: any) => {
-          if (kot.dishStatus == "delivered") {
+          if (kot.dishStatus == 'delivered') {
             deliverdDish++;
           }
         });
@@ -1028,111 +903,106 @@ router.post(
           {
             tableId: fromTableId,
             zoneId: fromZoneId,
-            status: "UNPAID",
+            status: 'UNPAID',
           },
           null,
-          { session }
-        ).select("dishStatus");
+          { session },
+        ).select('dishStatus');
         const config = {
-          status: "Active",
+          status: 'Active',
           totalDishQuantity: kots?.length,
           deliverdDish: deliverdDish,
         };
         await Table.findByIdAndUpdate(toTableId, config, { session });
         const con = {
-          status: existingKOT?.length > 0 ? "Active" : "Empty",
+          status: existingKOT?.length > 0 ? 'Active' : 'Empty',
           totalDishQuantity: existingKOT.length,
         };
         await Table.findByIdAndUpdate(fromTableId, con, { session });
 
-        res.status(200).send("transfered successfully");
+        res.status(200).send('transfered successfully');
       });
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
     }
-  }
+  },
 );
 
-router.post(
-  "/v1/kitchens/:id/mergeKot",
-  async (req: Request, res: Response) => {
-    try {
-      const { tables } = req.body || {};
-      let error;
-      let message;
-      await runInTransaction(async (session: ClientSession) => {
-        try {
-          let parentTable = tables?.filter(
-            (table: any) => table?.hierarchy == "PARENT"
-          );
-          let tableId = parentTable?.[0]?.tableId;
+router.post('/v1/kitchens/:id/mergeKot', async (req: Request, res: Response) => {
+  try {
+    const { tables } = req.body || {};
+    let error;
+    let message;
+    await runInTransaction(async (session: ClientSession) => {
+      try {
+        let parentTable = tables?.filter((table: any) => table?.hierarchy == 'PARENT');
+        let tableId = parentTable?.[0]?.tableId;
 
-          for (let index = 0; index < tables.length; index++) {
-            const table = tables[index];
-            if (table?.hierarchy == "CHILD") {
-              let kots = await Kot.find(
-                {
-                  tableId: table.tableId,
-                  zoneId: table.parentZoneId,
-                  status: "UNPAID",
-                  isDeleted: false,
-                },
-                { session }
-              ).lean();
-              let newArray = JSON.parse(JSON.stringify(kots));
-              for (let i = 0; i < newArray.length; i++) {
-                let newKOT: any = newArray[i];
-                let kotId = newKOT._id || newKOT.id;
-                delete newKOT.__v;
-                delete newKOT._id;
-                delete newKOT.id;
+        for (let index = 0; index < tables.length; index++) {
+          const table = tables[index];
+          if (table?.hierarchy == 'CHILD') {
+            let kots = await Kot.find(
+              {
+                tableId: table.tableId,
+                zoneId: table.parentZoneId,
+                status: 'UNPAID',
+                isDeleted: false,
+              },
+              { session },
+            ).lean();
+            let newArray = JSON.parse(JSON.stringify(kots));
+            for (let i = 0; i < newArray.length; i++) {
+              let newKOT: any = newArray[i];
+              let kotId = newKOT._id || newKOT.id;
+              delete newKOT.__v;
+              delete newKOT._id;
+              delete newKOT.id;
 
-                const kot = {
-                  ...newKOT,
-                  tableId: table.parentTableId,
-                  zoneId: table.parentZoneId,
-                };
-                let kotObj = await Kot.create(kot, { session });
+              const kot = {
+                ...newKOT,
+                tableId: table.parentTableId,
+                zoneId: table.parentZoneId,
+              };
+              let kotObj = await Kot.create(kot, { session });
 
-                await Kot.findByIdAndDelete(kotId, { session });
-              }
+              await Kot.findByIdAndDelete(kotId, { session });
             }
           }
-          let kots = await Kot.find(
-            {
-              tableId: tables?.[1].parentTableId,
-              zoneId: tables?.[1].parentZoneId,
-              status: "UNPAID",
-              isDeleted: false,
-            },
-            { session }
-          ).count();
-          const config = {
-            totalDishQuantity: kots,
-          };
-
-          await Table.findByIdAndUpdate(tableId, config, { session });
-          message = "success";
-        } catch (err: any) {
-          error = err;
         }
-      });
+        let kots = await Kot.find(
+          {
+            tableId: tables?.[1].parentTableId,
+            zoneId: tables?.[1].parentZoneId,
+            status: 'UNPAID',
+            isDeleted: false,
+          },
+          { session },
+        ).count();
+        const config = {
+          totalDishQuantity: kots,
+        };
 
-      if (error) {
-        console.log(error);
-        return res.status(500).send("something went wrong please try again!");
+        await Table.findByIdAndUpdate(tableId, config, { session });
+        message = 'success';
+      } catch (err: any) {
+        error = err;
       }
+    });
 
-      return res.status(200).send(message);
-    } catch (err: any) {
-      console.log(err);
-      return res.status(500).send({ status: false, message: err.message });
+    if (error) {
+      console.log(error);
+      return res.status(500).send('something went wrong please try again!');
     }
+
+    return res.status(200).send(message);
+  } catch (err: any) {
+    console.log(err);
+    return res.status(500).send({ status: false, message: err.message });
   }
-);
+});
 
 router.post(
-  "/v1/kitchens/:id/deleteKotAlert",
+  '/v1/kitchens/:id/deleteKotAlert',
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -1140,60 +1010,60 @@ router.post(
   // ]),
   async (req: Request, res: Response) => {
     let body = req.body || {};
-    console.log("bodys", body?.phone);
+    console.log('bodys', body?.phone);
     const token =
-      "EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn";
-    const phoneId = "104262732724546";
+      'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
+    const phoneId = '104262732724546';
     try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
-          messaging_product: "whatsapp",
+          messaging_product: 'whatsapp',
           to: `${body?.phone}`,
-          type: "template",
+          type: 'template',
           template: {
-            name: "deleteitem",
-            language: { code: "en" },
+            name: 'deleteitem',
+            language: { code: 'en' },
             components: [
               {
-                type: "body",
+                type: 'body',
                 parameters: [
                   // businessName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.businessName}`,
                   },
 
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.tableName}`,
                   },
                   //discountPercentage
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.date}`,
                   },
                   //discountReason
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.itemName}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.reasonForDelete}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.orderBy}`,
                   },
 
                   //waiterName
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.waiterName}`,
                   },
                   {
-                    type: "text",
+                    type: 'text',
                     text: `${body?.itemPrice}`,
                   },
                 ],
@@ -1201,18 +1071,18 @@ router.post(
             ],
           },
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send("response");
+      return res.status(200).send('response');
     } catch (error) {
-      console.error("Error while processing the dues:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error while processing the dues:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/kitchens/createOrder",
+  '/v1/kitchens/createOrder',
 
   // requireAuthorization([
   //   ClientRoles.HIPAL_CUSTOMER,
@@ -1226,7 +1096,7 @@ router.post(
       const response = await razorpayWrapper.client.orders.create({
         amount: total * 100,
         currency: currency,
-        receipt: "receipt#1",
+        receipt: 'receipt#1',
         notes: {
           name: name,
           phone: phone,
@@ -1236,14 +1106,14 @@ router.post(
 
       res.status(200).send(response.id);
     } catch (error: any) {
-      console.log("erro", error.error);
+      console.log('erro', error.error);
       res.status(400).send(error);
     }
-  }
+  },
 );
 
 router.post(
-  "/v1/kitchens/validPayment",
+  '/v1/kitchens/validPayment',
 
   // requireAuthorization([
   //   ClientRoles.HIPAL_CUSTOMER,
@@ -1252,15 +1122,11 @@ router.post(
 
   async (req: Request, res: Response) => {
     const { response } = req.body || {};
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-      response;
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
     try {
-      const signature = createHmac(
-        "sha256",
-        process.env.RAZORPAY_SECRET as string
-      )
-        .update(razorpay_order_id + "|" + razorpay_payment_id)
-        .digest("hex");
+      const signature = createHmac('sha256', process.env.RAZORPAY_SECRET as string)
+        .update(razorpay_order_id + '|' + razorpay_payment_id)
+        .digest('hex');
 
       if (signature === razorpay_signature) {
         res.status(200).send({ status: true });
@@ -1268,16 +1134,16 @@ router.post(
         res.status(200).send({ status: false });
       }
     } catch (error) {
-      console.log("error", error);
+      console.log('error', error);
       res.status(400).send(error);
     }
 
     try {
     } catch (error) {
-      console.log("error", error);
+      console.log('error', error);
       res.status(400).send(error);
     }
-  }
+  },
 );
 
 // router.post(

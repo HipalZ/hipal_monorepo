@@ -145,7 +145,10 @@ const MainLoyalty = ({ logo, hiCode, cardColor, fontColor }: ILoyaltyCard) => {
 			</div>
 			{!hiCode && (
 				<div onClick={handleClaimNowClick} className='w-full px-4 pt-2 pb-4'>
-					<button type='button' className='w-full py-3 rounded-full bg-primary text-primary-content'>
+					<button
+						type='button'
+						className='w-full py-3 rounded-full bg-primary text-primary-content'
+					>
 						Claim now
 					</button>
 				</div>

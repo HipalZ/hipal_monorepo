@@ -1,9 +1,9 @@
-import { useParams } from 'react-router-dom';
-import MainRouter from './routes';
+import axios from '@/axios';
+import { Howl } from 'howler';
 import { useEffect } from 'react';
-import axios from '@/axios'
+import { useParams } from 'react-router-dom';
 import { useKotStore } from './components/store/useKot';
-import { Howl } from "howler";
+import MainRouter from './routes';
 
 function App() {
   const { newKotCount, setKotData, setNewKotCount } = useKotStore();
@@ -15,13 +15,11 @@ function App() {
 
   const getAllKot = async () => {
     try {
-      const res = await axios(
-        `/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}`
-      );
+      const res = await axios(`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}`);
       setNewKotCount(res.data.length);
       if (res.data.length > newKotCount) {
         const sound = new Howl({
-          src: ["/sounds/kitchen.mp3"],
+          src: ['/sounds/kitchen.mp3'],
           autoplay: true,
           loop: true,
         });
@@ -50,16 +48,14 @@ function App() {
   }, [kitchenId, businessId, newKotCount]);
 
   useEffect(() => {
-    document.body.style.overscrollBehaviorY = "none";
+    document.body.style.overscrollBehaviorY = 'none';
 
     return () => {
-      document.body.style.overscrollBehaviorY = "";
+      document.body.style.overscrollBehaviorY = '';
     };
   }, []);
 
-  return (
-      <MainRouter />
-  )
+  return <MainRouter />;
 }
 
-export default App
+export default App;

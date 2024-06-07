@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-import { z } from "zod";
+import { z } from 'zod';
 const ObjectIdSchema = z.string().refine(
   (value) => {
     // Check if the value is a valid ObjectId
@@ -7,8 +6,8 @@ const ObjectIdSchema = z.string().refine(
   },
   {
     // Custom error message
-    message: "Invalid ObjectId",
-  }
+    message: 'Invalid ObjectId',
+  },
 );
 
 export const loyaltySchema = z.object({

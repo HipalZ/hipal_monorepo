@@ -1,12 +1,12 @@
-import Pages from 'vite-plugin-pages';
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
-import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
+import Pages from 'vite-plugin-pages';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const ReactCompilerConfig = {
-  compilationMode: "annotation",
+  compilationMode: 'annotation',
 };
 
 export default defineConfig({
@@ -14,13 +14,8 @@ export default defineConfig({
     react(),
     babel({
       babelConfig: {
-        presets: [
-          '@babel/preset-env',
-          '@babel/preset-react'
-        ],
-        plugins: [
-          ['babel-plugin-react-compiler', ReactCompilerConfig]
-        ],
+        presets: ['@babel/preset-env', '@babel/preset-react'],
+        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
       },
     }),
     Pages({

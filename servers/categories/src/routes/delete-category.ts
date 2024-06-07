@@ -1,14 +1,13 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import { natsWrapper } from "../nats-wrapper";
-import { Category, Dish } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
+import { Category, Dish } from '@hi/db-models';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 
 const router = express.Router();
 
 router.delete(
-  "/v1/categories/:id",
+  '/v1/categories/:id',
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -25,27 +24,23 @@ router.delete(
           return;
         }
 
-        await Dish.updateMany(
-          { _id: { $in: category.dishes } },
-          { $pull: { categories: id } },
-          { session: session }
-        );
+        await Dish.updateMany({ _id: { $in: category.dishes } }, { $pull: { categories: id } }, { session: session });
       });
 
       if (categoryNotFound) {
         return res.status(404).send({
-          message: "Category not found",
+          message: 'Category not found',
         });
       }
 
-      return res.status(200).send("deleted");
+      return res.status(200).send('deleted');
     } catch (error) {
       console.error(error);
       return res.status(500).send({
-        message: "An error occurred while deleting the category",
+        message: 'An error occurred while deleting the category',
       });
     }
-  }
+  },
 );
 
 export { router as deleteCategoriesRouter };

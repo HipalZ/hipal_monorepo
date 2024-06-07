@@ -1,5 +1,5 @@
-import useLoyaltyData from '@components/store/useLoyaltyData'
-import React, { useEffect, useState } from 'react'
+import useLoyaltyData from "@components/store/useLoyaltyData"
+import React, { useEffect, useState } from "react"
 import {
 	beans,
 	bowl,
@@ -8,10 +8,10 @@ import {
 	love,
 	triangleToDataurl,
 	waveToDataUrl,
-} from '../card/pathPattern'
-import Image from 'next/image'
-import TitleTransition from '../titletransition'
-import useBusinessDetails from '@components/store/useBusinessDetails'
+} from "../card/pathPattern"
+import Image from "next/image"
+import TitleTransition from "../titletransition"
+import useBusinessDetails from "@components/store/useBusinessDetails"
 
 interface ILoyaltyCard {
 	logo: string
@@ -21,10 +21,10 @@ interface ILoyaltyCard {
 }
 
 const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
-	const [image, setImage] = useState<any>('')
+	const [image, setImage] = useState<any>("")
 	const { loyaltySetting } = useLoyaltyData()
-	const [cardPattern, setCardPattern] = useState('')
-	const [logos, setLogos] = useState<any>('')
+	const [cardPattern, setCardPattern] = useState("")
+	const [logos, setLogos] = useState<any>("")
 	const businessDetails = useBusinessDetails((s) => s.businessDetails.businessName)
 
 	useEffect(() => {
@@ -33,13 +33,13 @@ const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
 	}, [loyaltySetting])
 	useEffect(() => {
 		const patterns = (cardPattern, fontColor) => {
-			const defaultColor = '#FAE8CA'
+			const defaultColor = "#FAE8CA"
 
 			fontColor = fontColor || defaultColor
 
 			const src = {
-				wave: waveToDataUrl(fontColor, 'white').wave,
-				triangle: triangleToDataurl('white').triangle,
+				wave: waveToDataUrl(fontColor, "white").wave,
+				triangle: triangleToDataurl("white").triangle,
 				beans: beans(fontColor).beans,
 				bud: bud(fontColor).bud,
 				bowl: bowl(fontColor).bowl,
@@ -53,52 +53,51 @@ const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
 	}, [loyaltySetting, cardPattern, fontColor])
 
 	return (
-		<div className='flex items-center justify-between'>
-			<div className='text-base w-[60%] font-semibold text-primary'>
+		<div className="flex items-center justify-between">
+			<div className="text-base w-[60%] font-semibold text-primary">
 				<div>Treat yourself to a</div>
-				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails} align='left' />
+				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails} align="left" />
 
 				<div>with every bill you settle!!</div>
 			</div>
-			<div className='w-[30%] -mr-4'>
+			<div className="w-[30%] -mr-4">
 				<div
-					className={`${cardColor ? cardColor:'bg-primary'} rounded-md`}
+					className={`${cardColor ? cardColor : "bg-primary"} rounded-md`}
 					style={{
-                        height:'65px',
-                        width:'80px',
+						height: "65px",
+						width: "80px",
 						backgroundImage: `url(${image})`,
-						backgroundColor: cardColor || 'primary',
+						backgroundColor: cardColor || "primary",
 						backgroundSize:
-							cardPattern === 'beans' ||
-							cardPattern === 'bowl' ||
-							cardPattern === 'love' ||
-							cardPattern === 'flower' ||
-							cardPattern === 'bud'
-								? '25px 25px'
-								: 'cover',
+							cardPattern === "beans" ||
+							cardPattern === "bowl" ||
+							cardPattern === "love" ||
+							cardPattern === "flower" ||
+							cardPattern === "bud"
+								? "25px 25px"
+								: "cover",
 						backgroundPosition:
-							cardPattern === 'beans' ||
-							cardPattern === 'bowl' ||
-							cardPattern === 'love' ||
-							cardPattern === 'flower' ||
-							cardPattern === 'bud'
-								? 'right 5% top 50%'
-								: '',
-						backgroundRepeat: 'no-repeat',
-                        transform: 'skewX(10deg) skewY(10deg) rotateZ(45deg)',
+							cardPattern === "beans" ||
+							cardPattern === "bowl" ||
+							cardPattern === "love" ||
+							cardPattern === "flower" ||
+							cardPattern === "bud"
+								? "right 5% top 50%"
+								: "",
+						backgroundRepeat: "no-repeat",
+						transform: "skewX(10deg) skewY(10deg) rotateZ(45deg)",
 					}}
 				>
 					<h1
 						style={{
-							maxWidth: 'calc(100% - 2rem)',
-							whiteSpace: 'nowrap',
+							maxWidth: "calc(100% - 2rem)",
+							whiteSpace: "nowrap",
 							color: `${fontColor}`,
 						}}
-						className='text-[0.5rem] ml-[1rem] font-semibold flex self-start'
+						className="text-[0.5rem] ml-[1rem] font-semibold flex self-start"
 					>
-						<Image src={logos || logo} alt='logo' height={20} width={20} />
+						<Image src={logos || logo} alt="logo" height={20} width={20} />
 					</h1>
-					
 				</div>
 			</div>
 		</div>

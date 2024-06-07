@@ -1,52 +1,52 @@
 import axios from '@/axios';
-import { BillsData } from "../types/businessData";
-import { v4 as uuidv4 } from "uuid";
-import https from "https";
-import * as XLSX from "xlsx";
-import QRCode from 'qrcode'
+import https from 'https';
+import QRCode from 'qrcode';
+import { v4 as uuidv4 } from 'uuid';
+import * as XLSX from 'xlsx';
+import { BillsData } from '../types/businessData';
 
 export function convertToCSV(data: BillsData) {
   if (!data || !Array.isArray(data) || data.length === 0) {
-    return "";
+    return '';
   }
 
   const headers = [
-    "businessName",
-    "customerName",
-    "customerPhone",
-    "paymentDate",
-    "discount",
-    "paymentMode",
-    "serviceCharge",
-    "sgst",
-    "cgst",
-    "subTotal",
-    "tableName",
-    "tips",
-    "total",
-    "waiterName",
+    'businessName',
+    'customerName',
+    'customerPhone',
+    'paymentDate',
+    'discount',
+    'paymentMode',
+    'serviceCharge',
+    'sgst',
+    'cgst',
+    'subTotal',
+    'tableName',
+    'tips',
+    'total',
+    'waiterName',
   ];
 
-  let csvContent = headers.join(",") + "\r\n";
+  let csvContent = headers.join(',') + '\r\n';
 
   data.forEach((bill: any) => {
     const row = headers
       .map((fieldName) => {
         let field = bill[fieldName];
         if (field === undefined || field === null) {
-          return "";
+          return '';
         }
-        if (typeof field === "object") {
+        if (typeof field === 'object') {
           return JSON.stringify(field);
         }
-        if (field.toString().includes(",")) {
+        if (field.toString().includes(',')) {
           field = `"${field}"`;
         }
         return field;
       })
-      .join(",");
+      .join(',');
 
-    csvContent += row + "\r\n";
+    csvContent += row + '\r\n';
   });
   return csvContent;
 }
@@ -55,11 +55,11 @@ export function downloadCSV(billsData: BillsData | null) {
   if (billsData) {
     const csv = convertToCSV(billsData);
     if (csv) {
-      const blob = new Blob([csv], { type: "text/csv" });
-      const link = document.createElement("a");
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
 
       link.href = URL.createObjectURL(blob);
-      link.download = "bills_data.csv";
+      link.download = 'bills_data.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -78,7 +78,7 @@ export async function storeImageFiles(image: File) {
     };
   });
   if (reader.result) {
-    const blobBin = atob(reader.result.toString().split(",")[1]);
+    const blobBin = atob(reader.result.toString().split(',')[1]);
     const array = [];
     for (let i = 0; i < blobBin.length; i++) {
       array.push(blobBin.charCodeAt(i));
@@ -87,9 +87,9 @@ export async function storeImageFiles(image: File) {
       type: image.type,
     });
     const formdata = new FormData();
-    formdata.append("fileData", file);
-    formdata.append("fileName", `${imageId}`);
-    formdata.append("bucketName", "assets");
+    formdata.append('fileData', file);
+    formdata.append('fileName', `${imageId}`);
+    formdata.append('bucketName', 'assets');
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_HOST}/v1/storage`, formdata);
       return `https://storage.hipal.life/minio/assets/${imageId}`;
@@ -110,7 +110,7 @@ export async function storeImageAfterSave(image: File) {
     };
   });
   if (reader.result) {
-    const blobBin = atob(reader.result.toString().split(",")[1]);
+    const blobBin = atob(reader.result.toString().split(',')[1]);
     const array = [];
     for (let i = 0; i < blobBin.length; i++) {
       array.push(blobBin.charCodeAt(i));
@@ -119,11 +119,11 @@ export async function storeImageAfterSave(image: File) {
       type: image.type,
     });
     const formdata = new FormData();
-    formdata.append("fileData", file);
-    formdata.append("fileName", `${imageId}`);
-    formdata.append("bucketName", "assets");
+    formdata.append('fileData', file);
+    formdata.append('fileName', `${imageId}`);
+    formdata.append('bucketName', 'assets');
     try {
-     await axios.post(`${process.env.NEXT_PUBLIC_API_HOST}/v1/storage`, formdata);
+      await axios.post(`${process.env.NEXT_PUBLIC_API_HOST}/v1/storage`, formdata);
       return `https://storage.hipal.life/minio/assets/${imageId}`;
     } catch (error) {
       console.log(error);
@@ -138,7 +138,7 @@ export const getSalesApi = async (businessId: string) => {
     const res = await axios.get(url);
     return res.data;
   } catch (error) {
-    console.error("Error fetching sales report:", error);
+    console.error('Error fetching sales report:', error);
   }
 };
 
@@ -146,11 +146,11 @@ export const agent = new https.Agent({
   rejectUnauthorized: false,
 });
 
-export function validPortionCheck(array: Array<Record<string, any>>){
+export function validPortionCheck(array: Array<Record<string, any>>) {
   if (!Array.isArray(array) || array.length === 0) {
     return false;
   }
-  return array.every(item => item?.hasOwnProperty('price') && item?.price !== '' && item?.hasOwnProperty('name') && item?.name !== '');
+  return array.every((item) => item?.hasOwnProperty('price') && item?.price !== '' && item?.hasOwnProperty('name') && item?.name !== '');
 }
 
 export const exportToExcel = (salesData: any) => {
@@ -174,8 +174,16 @@ export const exportToExcel = (salesData: any) => {
   addLabeledData('Total Sale', salesData.totalSale, ['Mode', 'Amount', 'Commission Percent', 'Total Commission Sale']);
   addLabeledData('Charges', salesData.charges, ['Mode', 'Amount', 'Commission Percent', 'Total Commission Sale']);
   addLabeledData('Discounts', salesData.discounts, ['Mode', 'Amount', 'Commission Percent', 'Total Commission Sale']);
-  addLabeledData('Tips', salesData.tips.map((tip: any) => ({ waiterName: tip.waiterName, tips: tip.tips })), ['waiterName', 'tips']);
-  addLabeledData('Dues', salesData.dues.map((due: any) => ({ customerName: due.customerName, dues: due.dues })), ['customerName', 'dues']);
+  addLabeledData(
+    'Tips',
+    salesData.tips.map((tip: any) => ({ waiterName: tip.waiterName, tips: tip.tips })),
+    ['waiterName', 'tips'],
+  );
+  addLabeledData(
+    'Dues',
+    salesData.dues.map((due: any) => ({ customerName: due.customerName, dues: due.dues })),
+    ['customerName', 'dues'],
+  );
 
   // Create the worksheet from the ws_data array
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -198,19 +206,15 @@ function s2ab(s: any) {
   const buffer = new ArrayBuffer(s.length);
   const view = new Uint8Array(buffer);
   for (let i = 0; i < s.length; i++) {
-    view[i] = s.charCodeAt(i) & 0xFF; // convert to octet
+    view[i] = s.charCodeAt(i) & 0xff; // convert to octet
   }
   return buffer;
 }
 
-
 export function isElementInView(element: any) {
   if (!element) return false;
   const rect = element.getBoundingClientRect();
-  return (
-    rect.left >= 0 &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  );
+  return rect.left >= 0 && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 }
 
 export const generateQRCode = async (link: string) => {
@@ -221,21 +225,20 @@ export const generateQRCode = async (link: string) => {
     console.error(error);
     return '';
   }
-}
+};
 
 export async function downloadURI(id: string, name: string, zoneId: string, businessId: string) {
-
-  const longUrl = `https://pro.hipal.life/r/${businessId}/explore?tableId=${id}&name=${name}&zoneId=${zoneId}`
+  const longUrl = `https://pro.hipal.life/r/${businessId}/explore?tableId=${id}&name=${name}&zoneId=${zoneId}`;
   const payload = {
     longUrl: longUrl,
   };
 
   try {
-    const response = await axios.post("https://api.hipal.life/v1/users/usrShortner", payload, {
+    const response = await axios.post('https://api.hipal.life/v1/users/usrShortner', payload, {
       withCredentials: true,
     });
     const uri = await generateQRCode(response.data.shortUrl);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.download = name;
     link.href = uri;
     document.body.appendChild(link);
@@ -249,18 +252,18 @@ export async function downloadURI(id: string, name: string, zoneId: string, busi
 export const zoneType = [
   {
     id: 0,
-    type: "select a zone type",
+    type: 'select a zone type',
   },
   {
     id: 1,
-    type: "Dine In",
+    type: 'Dine In',
   },
   {
     id: 2,
-    type: "Take Away",
+    type: 'Take Away',
   },
   {
     id: 3,
-    type: "Delivery",
+    type: 'Delivery',
   },
 ];

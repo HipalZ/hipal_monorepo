@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { IMerge } from "../types/hiTableData";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { IMerge } from '../types/hiTableData';
 
 interface ITable {
   tableData: {
@@ -24,7 +24,7 @@ interface ITable {
     parentZoneId?: string;
     mergeTables?: IMerge[];
   };
-  setTableData: (data: ITable["tableData"]) => void;
+  setTableData: (data: ITable['tableData']) => void;
 }
 
 export const useTable = create(
@@ -32,22 +32,22 @@ export const useTable = create(
     (set) => ({
       tableData: {
         activeUser: 0,
-        businessId: "",
+        businessId: '',
         capacity: 0,
         deliverDish: 0,
-        id: "",
-        name: "",
-        hiCode: "",
+        id: '',
+        name: '',
+        hiCode: '',
         staff: [],
-        status: "",
-        time: "",
+        status: '',
+        time: '',
         totalDishQuantity: 0,
-        zoneId: "",
+        zoneId: '',
         edit: false,
         isMerge: false,
-        hierarchy: "",
-        parentTableId: "",
-        parentZoneId: "",
+        hierarchy: '',
+        parentTableId: '',
+        parentZoneId: '',
         mergeTables: [],
       },
       setTableData: (data) =>
@@ -59,7 +59,7 @@ export const useTable = create(
         })),
     }),
     {
-      name: "tableDataStorage",
-    }
-  )
+      name: 'tableDataStorage',
+    },
+  ),
 );

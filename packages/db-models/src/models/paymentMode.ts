@@ -1,8 +1,6 @@
-import mongoose ,{Model} from "mongoose";
+import mongoose, { Model } from 'mongoose';
 
-
-import {PaymentModeType} from "../validators"
-
+import { PaymentModeType } from '../validators';
 
 const paymentModeSchema = new mongoose.Schema<PaymentModeType>(
   {
@@ -18,14 +16,9 @@ const paymentModeSchema = new mongoose.Schema<PaymentModeType>(
   },
   {
     timestamps: true,
-     
-  }
+  },
 );
 
-
-const PaymentMode: Model<PaymentModeType> = mongoose.model<PaymentModeType>(
-  "paymentmode",
-  paymentModeSchema
-);
+const PaymentMode: Model<PaymentModeType> = mongoose.model<PaymentModeType>('paymentmode', paymentModeSchema);
 
 export { PaymentMode };

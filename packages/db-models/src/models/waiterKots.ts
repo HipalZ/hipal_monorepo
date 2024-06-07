@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { WaiterKotType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { WaiterKotType } from '../validators';
 
 const waiterKotSchema = new mongoose.Schema<WaiterKotType>(
   {
@@ -44,25 +44,22 @@ const waiterKotSchema = new mongoose.Schema<WaiterKotType>(
     },
     rejectedBy: {
       type: String,
-      default: "",
+      default: '',
     },
     acceptedBy: {
       type: String,
-      default: "",
+      default: '',
     },
     editedBy: {
       type: String,
-      default: "",
+      default: '',
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Waiterkot: Model<WaiterKotType> = mongoose.model<WaiterKotType>(
-  "waiterKot",
-  waiterKotSchema
-);
+const Waiterkot: Model<WaiterKotType> = mongoose.model<WaiterKotType>('waiterKot', waiterKotSchema);
 
 export { Waiterkot };

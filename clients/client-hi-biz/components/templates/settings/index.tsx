@@ -1,19 +1,19 @@
-import Header from "@/components/molecules/header";
-import React, { memo, useEffect, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import HipeopleLogo from "@/assets/svg/hi.svg";
-import PopUp from "@/components/atom/popUp";
-import TimePicker from "@/components/atom/timePicker";
-import useTimings from "@/components/store/useTimings";
+import HipeopleLogo from '@/assets/svg/hi.svg';
 import axios from '@/axios';
-import { useRouter } from "next/router";
-import type { IBusinessData } from "@/components/types/businessData";
-import Image from "next/image";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import PasswordManager from "../passwordManager";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import ErrorComponent from "@/components/errorComponent";
-import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import PopUp from '@/components/atom/popUp';
+import TimePicker from '@/components/atom/timePicker';
+import ErrorComponent from '@/components/errorComponent';
+import Header from '@/components/molecules/header';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import useTimings from '@/components/store/useTimings';
+import type { IBusinessData } from '@/components/types/businessData';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+import { memo, useEffect, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
+import PasswordManager from '../passwordManager';
 
 function BusinessSettings() {
   const { setSelectedIcon } = useSelectedIcon();
@@ -35,117 +35,109 @@ function BusinessSettings() {
 
   const fetchBusinessData = async () => {
     try {
-      const response = await axios.get(
-        `/v1/businesses/get/Single/${businessId}`
-      );
+      const response = await axios.get(`/v1/businesses/get/Single/${businessId}`);
       setBusinessData(response.data);
       return response.data;
     } catch (error) {
-      console.error("Error fetching business data", error);
+      console.error('Error fetching business data', error);
     }
   };
 
   const setBusinssTime = async () => {
     try {
-      const response = await axios.get(
-        `/v1/businesses/get/Single/${businessId}?open=${dayIn}&close=${dayOut}`
-      );
+      const response = await axios.get(`/v1/businesses/get/Single/${businessId}?open=${dayIn}&close=${dayOut}`);
       setBusinessData(response.data);
       closeModal();
     } catch (error) {
-      console.error("Error fetching business data", error);
+      console.error('Error fetching business data', error);
     }
   };
   useEffect(() => {
-    if(selectedSubIcon === "passwordManager"){
-      setSelectedSubIcon("passwordManager")
+    if (selectedSubIcon === 'passwordManager') {
+      setSelectedSubIcon('passwordManager');
     }
   }, [businessId]);
   function redirectPasswords() {
-    setSelectedSubIcon("passwordManager")
+    setSelectedSubIcon('passwordManager');
   }
 
-  const {isLoading, error, data,refetch} = useQuery({
+  const { isLoading, error, data, refetch } = useQuery({
     queryKey: ['businessSettings', businessId],
     queryFn: fetchBusinessData,
-    enabled: !!businessId
-  })
+    enabled: !!businessId,
+  });
 
-  if (isLoading) return <LoadingSpinner/>
-  if (error) return <ErrorComponent refetch={refetch}/>
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorComponent refetch={refetch} />;
 
   const Settings = () => {
-    return(
-    <div>
-      <div className="bg-[#f5f5f5]">
-        <Header
-          title="Settings"
-          onBack={()=>setSelectedIcon("")}
-          isIconBusinessShow={false}
-          leftIcon={<BsChevronLeft />}
-          centerImage={HipeopleLogo}
-          rightImage={HipeopleLogo}
-        />
-        <div className="flex flex-col items-center justify-center text-center text-2xl mt-4 pb-4 border-b border-[#cacaca]">
-          <Image src={businessData?.logo} alt="Bimage" height={100} width={100} className="rounded-full" />
-          {businessData?.businessName}
-        </div>
-      </div>
-      <div
-        onClick={openModal}
-        className="mx-6 mt-6 on_active_bounce bg-white text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"
-      >
-        <div className="flex items-center px-4 py-2">
-          <span>Business timings</span>
-        </div>
-        <div className="flex items-center justify-between px-4 py-2">
-          <span className="text-sm opacity-60">
-            {businessData?.open} to {businessData?.close}
-          </span>
-          <span>Edit</span>
-        </div>
-      </div>
-      <PopUp show={isModalOpen} onClose={closeModal}>
-        <div className="mx-6">
-          <div className="flex items-center justify-between mt-2 text-sm font-medium">
-            <h3 className="text-xl mb-4 pt-2 font-medium text-[#2B354D]">
-              Business timings
-            </h3>
+    return (
+      <div>
+        <div className="bg-[#f5f5f5]">
+          <Header
+            title="Settings"
+            onBack={() => setSelectedIcon('')}
+            isIconBusinessShow={false}
+            leftIcon={<BsChevronLeft />}
+            centerImage={HipeopleLogo}
+            rightImage={HipeopleLogo}
+          />
+          <div className="mt-4 flex flex-col items-center justify-center border-b border-[#cacaca] pb-4 text-center text-2xl">
+            <Image src={businessData?.logo} alt="Bimage" height={100} width={100} className="rounded-full" />
+            {businessData?.businessName}
           </div>
-          <div>
-            <TimePicker />
+        </div>
+        <div
+          onClick={openModal}
+          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+        >
+          <div className="flex items-center px-4 py-2">
+            <span>Business timings</span>
           </div>
-          <div className="w-full py-2 rotate-180">
-            <div className="flex flex-col mx-auto rotate-180 justify-items-center">
-              <button
-                type="button"
-                onClick={setBusinssTime}
-                className="min-h-[3rem] font-semibold bg-[#2B354D] text-white text-[1rem] rounded-xl min-w-389 min-w-[95%] md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%] my-auto !py-2"
-              >
-                Save
-              </button>
+          <div className="flex items-center justify-between px-4 py-2">
+            <span className="text-sm opacity-60">
+              {businessData?.open} to {businessData?.close}
+            </span>
+            <span>Edit</span>
+          </div>
+        </div>
+        <PopUp show={isModalOpen} onClose={closeModal}>
+          <div className="mx-6">
+            <div className="mt-2 flex items-center justify-between text-sm font-medium">
+              <h3 className="mb-4 pt-2 text-xl font-medium text-[#2B354D]">Business timings</h3>
+            </div>
+            <div>
+              <TimePicker />
+            </div>
+            <div className="w-full rotate-180 py-2">
+              <div className="mx-auto flex rotate-180 flex-col justify-items-center">
+                <button
+                  type="button"
+                  onClick={setBusinssTime}
+                  className="min-w-389 my-auto min-h-[3rem] min-w-[95%] rounded-xl bg-[#2B354D] !py-2 text-[1rem] font-semibold text-white md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%]"
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </div>
+        </PopUp>
+        <div onClick={redirectPasswords} className="m-5 flex cursor-pointer justify-between rounded-lg border border-[#cacaca] p-4 text-[#2B354D]">
+          <p>Manage Passwords</p>
         </div>
-      </PopUp>
-      <div onClick={redirectPasswords} className="flex justify-between border cursor-pointer border-[#cacaca] rounded-lg p-4 text-[#2B354D] m-5">
-        <p>Manage Passwords</p>
       </div>
-    </div>
-    )
-  }
-  const renderContent=()=>{
+    );
+  };
+  const renderContent = () => {
     switch (selectedSubIcon) {
       case 'passwordManager':
-        return <PasswordManager setSettings={setSelectedSubIcon}/>    
+        return <PasswordManager setSettings={setSelectedSubIcon} />;
       default:
-        return <Settings/>
+        return <Settings />;
     }
-  }
- 
-  return (
-    <>{renderContent()}</>
-  );
+  };
+
+  return <>{renderContent()}</>;
 }
 
 export default memo(BusinessSettings);

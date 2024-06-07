@@ -1,50 +1,38 @@
-import React from "react";
-import { MdCreditCard, MdOutlineSoupKitchen } from "react-icons/md";
+import { MdOutlineSoupKitchen } from 'react-icons/md';
 
-const msg = "bxh bcbwwc  wbuiw wjcwcbw ncwikbc wjwnchwhoiww w cwc ikhwwwjw w cwc hw bchjw"
+const msg = 'bxh bcbwwc  wbuiw wjcwcbw ncwikbc wjwnchwhoiww w cwc ikhwwwjw w cwc hw bchjw';
 
-function Cooked({...props}) {
+function Cooked({ ...props }) {
   return (
-    <div className="mx-6 transition-all duration-200 bg-primary/10 rounded-2xl">
-    <div className="flex justify-between">
-      <div className="py-4 mx-4">
-        <button
-          className={`font-normal relative text-black rounded-full bg-base-100`}
-        >
-          <div className="inline-flex items-center justify-start">
-            <div
-              className={`w-[1.5rem] absolute left-1 h-[1.5rem] bg-primary rounded-full`}
-            >
-              <MdOutlineSoupKitchen className="mt-1 ml-1 text-base-100" />
+    <div className="bg-primary/10 mx-6 rounded-2xl transition-all duration-200">
+      <div className="flex justify-between">
+        <div className="mx-4 py-4">
+          <button className={`bg-base-100 relative rounded-full font-normal text-black`}>
+            <div className="inline-flex items-center justify-start">
+              <div className={`bg-primary absolute left-1 h-[1.5rem] w-[1.5rem] rounded-full`}>
+                <MdOutlineSoupKitchen className="text-base-100 ml-1 mt-1" />
+              </div>
+              <div className="text-primary/80 ml-6 mr-4 pl-2 text-lg font-[500] capitalize">cooked</div>
             </div>
-            <div className="capitalize font-[500] text-lg text-primary/80 pl-2 ml-6 mr-4">
-              cooked
-            </div>
+          </button>
+        </div>
+        <div className="text-base-content/40 mr-6 mt-6 text-[0.875rem] font-normal leading-[1rem]">{props.time}</div>
+      </div>
+      <div className="flex justify-between pb-4">
+        <div className="mx-6 -mt-3">
+          <div className="text-base-content mt-1 text-[1rem] font-[500] leading-[1.25rem]">{props.tableName ? props.tableName : 'T-01'}</div>
+          <div className="text-base-content/40 mt-1 text-[0.875rem] font-normal capitalize leading-[1rem]">
+            {props.message.length < 30 ? props.message : props.message.slice(0, 30) + '...'}
           </div>
-        </button>
-      </div>
-      <div className="font-normal text-base-content/40 text-[0.875rem] mt-6 mr-6 leading-[1rem]">
-        {props.time}
-      </div>
-    </div>
-    <div className="flex justify-between pb-4">
-      <div className="mx-6 -mt-3">
-        <div className="font-[500] mt-1 text-base-content text-[1rem] leading-[1.25rem]">
-        {props.tableName ? props.tableName: "T-01"}
-
         </div>
-        <div className="capitalize font-normal mt-1 text-base-content/40 text-[0.875rem] leading-[1rem]">
-          {props.message.length < 30 ? props.message:props.message.slice(0, 30)+"..."}
+        <div>
+          <label className="relative mr-8 inline-flex scale-150 cursor-pointer items-center">
+            <input type="checkbox" value="" className="peer sr-only" defaultChecked />
+            <div className="dark:bg-primary peer-checked:after:border-base-100 after:bg-base-100 dark:border-primary peer-checked:bg-primary peer h-6 w-11 rounded-full bg-gray-400 after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+          </label>
         </div>
       </div>
-      <div>
-        <label className="relative inline-flex items-center mr-8 scale-150 cursor-pointer">
-          <input type="checkbox" value="" className="sr-only peer" defaultChecked/>
-          <div className="w-11 h-6 bg-gray-400 rounded-full peer dark:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-base-100 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-base-100 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-primary peer-checked:bg-primary"></div>
-        </label>
-      </div>
     </div>
-  </div>
   );
 }
 

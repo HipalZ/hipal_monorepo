@@ -1,13 +1,8 @@
-import { Alert } from "@material-tailwind/react";
+import { Alert } from '@material-tailwind/react';
 
 function Icon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="w-6 h-6"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
       <path
         fillRule="evenodd"
         d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
@@ -25,7 +20,7 @@ export function AlertVariant() {
         mount: { scale: 1, y: 0 },
         unmount: { scale: 0, y: 0 },
       }}
-      className="text-sm font-medium border-l-4 rounded-none border-primary bg-base-200 text-primary"
+      className="border-primary bg-base-200 text-primary rounded-none border-l-4 text-sm font-medium"
     >
       Oops! Please deselect one option before adding another.
     </Alert>

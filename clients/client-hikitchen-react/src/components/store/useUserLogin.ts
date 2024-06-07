@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface User {
@@ -48,7 +48,7 @@ export const useUserLogin = create(
         customRole: [],
         password: '',
         id: '',
-        _id: ''
+        _id: '',
       },
       kitchenName: '',
 
@@ -57,10 +57,10 @@ export const useUserLogin = create(
       setIsLogin: (d: boolean) => set({ isLogin: d }),
       setBusinessId: (d: string) => set({ businessId: d }),
       setUser: (d: User) => set({ user: d }),
-      setKitchenName: (d: string) => set({ kitchenName: d })
+      setKitchenName: (d: string) => set({ kitchenName: d }),
     }),
     {
       name: 'kitchenLogin',
-    }
-  )
+    },
+  ),
 );

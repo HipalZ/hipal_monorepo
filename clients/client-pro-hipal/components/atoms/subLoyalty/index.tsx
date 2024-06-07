@@ -61,10 +61,10 @@ const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
 			</div>
 			<div className='w-[30%] -mr-4'>
 				<div
-					className={`${cardColor ?cardColor:'bg-primary'} rounded-md`}
+					className={`${cardColor ? cardColor : 'bg-primary'} rounded-md`}
 					style={{
-                        height:'65px',
-                        width:'80px',
+						height: '65px',
+						width: '80px',
 						backgroundImage: `url(${image})`,
 						backgroundColor: cardColor || 'primary',
 						backgroundSize:
@@ -84,7 +84,7 @@ const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
 								? 'right 5% top 50%'
 								: '',
 						backgroundRepeat: 'no-repeat',
-                        transform: 'skewX(10deg) skewY(10deg) rotateZ(45deg)',
+						transform: 'skewX(10deg) skewY(10deg) rotateZ(45deg)',
 					}}
 				>
 					<h1
@@ -97,7 +97,6 @@ const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
 					>
 						<Image src={logos || logo} alt='logo' height={20} width={20} />
 					</h1>
-
 				</div>
 			</div>
 		</div>

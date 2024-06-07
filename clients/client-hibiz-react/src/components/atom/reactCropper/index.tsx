@@ -1,35 +1,21 @@
-import { useCroppedImage } from "@/components/store/useCroppedImage";
-import { useRef, forwardRef, useImperativeHandle } from "react";
-import {
-  FixedCropper,
-  ImageRestriction,
-  FixedCropperRef,
-} from "react-advanced-cropper";
-import "react-advanced-cropper/dist/style.css";
+import { useCroppedImage } from '@/components/store/useCroppedImage';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { FixedCropper, FixedCropperRef, ImageRestriction } from 'react-advanced-cropper';
+import 'react-advanced-cropper/dist/style.css';
 
 export const cropImage = (imageSrc, coordinates) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // This enables CORS
+    img.crossOrigin = 'anonymous'; // This enables CORS
     img.src = imageSrc;
 
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       canvas.width = coordinates.width;
       canvas.height = coordinates.height;
       ctx &&
-        ctx.drawImage(
-          img,
-          coordinates.left,
-          coordinates.top,
-          coordinates.width,
-          coordinates.height,
-          0,
-          0,
-          coordinates.width,
-          coordinates.height
-        );
+        ctx.drawImage(img, coordinates.left, coordinates.top, coordinates.width, coordinates.height, 0, 0, coordinates.width, coordinates.height);
       resolve(canvas.toDataURL());
     };
     img.onerror = (err) => {
@@ -50,7 +36,7 @@ const ReactCropper = forwardRef(({ image, width, height }, ref) => {
     const coordinates = cropper.getCoordinates();
     try {
       const croppedDataUrl = await cropImage(image, coordinates);
-      if (typeof croppedDataUrl === "string") {
+      if (typeof croppedDataUrl === 'string') {
         setCroppedImage(croppedDataUrl);
       }
     } catch (err) {
@@ -76,6 +62,6 @@ const ReactCropper = forwardRef(({ image, width, height }, ref) => {
   );
 });
 
-ReactCropper.displayName = "ReactCropper";
+ReactCropper.displayName = 'ReactCropper';
 
 export default ReactCropper;

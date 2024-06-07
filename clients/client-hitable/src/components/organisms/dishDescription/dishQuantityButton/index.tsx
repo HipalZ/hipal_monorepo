@@ -1,51 +1,27 @@
-import QuantityPicker from "@/components/atoms/quantityPicker";
-import BottomPanel from "@/components/molecules/bottomPanel";
-import { useBottomPanel } from "@/components/store/useBottomPanel";
-import { ICart, useCart } from "@/components/store/useCart";
-import { IDish } from "@/components/types/hiTableData";
-import { useRouter } from "next/router";
-import { memo, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
+import QuantityPicker from '@/components/atoms/quantityPicker';
+import BottomPanel from '@/components/molecules/bottomPanel';
+import { useBottomPanel } from '@/components/store/useBottomPanel';
+import { ICart, useCart } from '@/components/store/useCart';
+import { IDish } from '@/components/types/hiTableData';
+import { useRouter } from 'next/router';
+import { memo, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
-function DishQuantityBtn({
-  dishData,
-  isDeleteAble,
-  categoryName,
-}: {
-  dishData: IDish;
-  isDeleteAble?: boolean;
-  categoryName: string;
-}) {
+function DishQuantityBtn({ dishData, isDeleteAble, categoryName }: { dishData: IDish; isDeleteAble?: boolean; categoryName: string }) {
   const { openBottomPanel, closeBottomPanel } = useBottomPanel();
   const router = useRouter();
   let tableId = router.query.tableId as string;
   if (!tableId) {
-    tableId = "012345";
+    tableId = '012345';
   }
   const cart = useCart((s) => s.cart);
   const setCart: any = useCart((s) => s.setCart);
 
   const handleQty = useCallback(
     (quantity: number) => {
-      handleDishQty(
-        tableId,
-        cart,
-        dishData,
-        categoryName,
-        openBottomPanel,
-        setCart,
-        closeBottomPanel
-      )(quantity);
+      handleDishQty(tableId, cart, dishData, categoryName, openBottomPanel, setCart, closeBottomPanel)(quantity);
     },
-    [
-      tableId,
-      cart,
-      dishData,
-      categoryName,
-      openBottomPanel,
-      setCart,
-      closeBottomPanel,
-    ]
+    [tableId, cart, dishData, categoryName, openBottomPanel, setCart, closeBottomPanel],
   );
 
   const handleDeleteItem = () => {
@@ -65,14 +41,11 @@ function DishQuantityBtn({
 
   return (
     <>
-      {(cart?.[tableId]?.[dishData._id]?.variants?.length || 0) <= 0 &&
-      !isDeleteAble ? (
+      {(cart?.[tableId]?.[dishData._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
         <button
-          className="bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
+          className="bg-base-100 btn-sm text-primary active:bg-base-100 border-primary min-h-[2.241rem] min-w-[6.044rem] rounded-full border !px-6 text-[0.969rem] font-medium normal-case"
           onClick={() => {
-            handleQty(
-              (cart[tableId]?.[dishData._id]?.variants?.length || 0) + 1
-            );
+            handleQty((cart[tableId]?.[dishData._id]?.variants?.length || 0) + 1);
           }}
         >
           Add
@@ -101,7 +74,7 @@ export function handleDishQty(
   categoryName: string,
   openBottomPanel: (panelName: string) => void,
   setCart: (tableId: string, dishId: string, data: any) => void,
-  closeBottomPanel: (panelName: string) => void
+  closeBottomPanel: (panelName: string) => void,
 ): (newQuantity: number) => void {
   return (newQuantity: number) => {
     const addedDishId = uuidv4();
@@ -111,10 +84,7 @@ export function handleDishQty(
     // Adding the dish to the cart
     if ((tableCart?.[dishData?._id]?.variants?.length || 0) < newQuantity) {
       // const thisDish = dishData as IDish;
-      if (
-        dishData?.portions?.length > 0 ||
-        (dishData?.extras?.[0]?.numSelections || 0) > 0
-      ) {
+      if (dishData?.portions?.length > 0 || (dishData?.extras?.[0]?.numSelections || 0) > 0) {
         openBottomPanel(dishData?._id);
       }
 

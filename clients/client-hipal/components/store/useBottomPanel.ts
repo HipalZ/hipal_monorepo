@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 
 interface IUseBottomPanel {
 	openedBottomPanels: object
@@ -40,7 +40,7 @@ export const useBottomPanel = create<IUseBottomPanel>((set, get) => ({
 	setValidationExtras: (extras) => set({ validationExtras: extras }),
 	bounceButton: true,
 	setBounceButton: (bounceButton) => set({ bounceButton }),
-	variantType: '',
+	variantType: "",
 	setVariantType: (variantType) => set({ variantType: variantType }),
 	displayAlert: false,
 	setDisplayAlert: (displayAlert) => set({ displayAlert: displayAlert }),

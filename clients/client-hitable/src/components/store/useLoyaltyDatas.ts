@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface IuseLoyaltyDatas {
   businessId: string;
@@ -23,7 +23,7 @@ export const useLoyaltyDatas = create(
       setLoyaltyData: (loyaltyData) => set({ loyaltyData }),
     }),
     {
-      name: "loyaltyDatas",
-    }
-  )
+      name: 'loyaltyDatas',
+    },
+  ),
 );

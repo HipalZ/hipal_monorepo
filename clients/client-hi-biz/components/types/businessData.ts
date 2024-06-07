@@ -229,7 +229,7 @@ export interface IStaffs {
   id: string;
 }
 export interface ITables {
-  _id:string
+  _id: string;
   staffs?: any;
   businessId: string;
   zoneId: string;
@@ -331,7 +331,7 @@ export type IDish = {
   name: string;
 };
 export interface IKitchen {
-  _id: string
+  _id: string;
   businessId: string;
   kitchenName: string;
   description: string;
@@ -339,12 +339,12 @@ export interface IKitchen {
   id: string;
 }
 export interface ICategory {
-  _id: string
+  _id: string;
   businessId: string;
   name: string;
   visibility: boolean;
   availability: boolean;
-  hierarchy: "PARENT" | "CHILD";
+  hierarchy: 'PARENT' | 'CHILD';
   parentCategory: string;
   parentCategoryId: string;
   dishes: Dish[];
@@ -411,10 +411,10 @@ export interface IEditZone {
   charges: ICharges[];
 }
 export interface IModes {
-  businessId: "";
-  mode: "";
+  businessId: '';
+  mode: '';
   commission: 0;
-  id: "";
+  id: '';
 }
 export type IBusinessDetails = {
   name: string;
@@ -426,24 +426,24 @@ export type IBusinessDetails = {
 };
 
 export type ChildCategory = {
-  [key in "childCategoryName" | "name"]: string;
+  [key in 'childCategoryName' | 'name']: string;
 } & {
   percentage: number;
   orders: number;
 };
 
 export type IAnalyticsItem = {
-  [key in "parentCategoryName" | "categoryName"]: string;
+  [key in 'parentCategoryName' | 'categoryName']: string;
 } & {
   percentage: number;
   orders: number;
 } & {
-  [key in "childs" | "dishes"]: ChildCategory[];
+  [key in 'childs' | 'dishes']: ChildCategory[];
 };
 
 export interface NetworkInformation extends EventTarget {
   downlink?: number;
-  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
+  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
   rtt?: number;
   saveData?: boolean;
   onchange?: EventListenerOrEventListenerObject;

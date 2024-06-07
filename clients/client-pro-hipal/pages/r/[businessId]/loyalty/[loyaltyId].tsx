@@ -61,7 +61,7 @@ const LoyaltyId = () => {
 			patterns(loyaltySetting?.cardPattern, _data?.settings?.themes?.secondaryColor.substring(1)),
 		)
 	}, [loyaltySetting, cardPattern, fontColor])
-	
+
 	return (
 		<>
 			<div className='relative flex flex-col w-full pb-16 mt-6 '>

@@ -96,97 +96,104 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
 	return total
 }
 type DishDetails = {
-	name?: string;
-	qty?: number | undefined;
-	quantity?: number | undefined;
-	price?: number;
+	name?: string
+	qty?: number | undefined
+	quantity?: number | undefined
+	price?: number
 	portions?: {
-	  price?: string;
-	};
+		price?: string
+	}
 	extras?: {
-	  name?: string;
-	  price?: string;
-	  qty?: number;
-	}[];
-  };
+		name?: string
+		price?: string
+		qty?: number
+	}[]
+}
 
-export const getItemsData = (billData) =>{
-	const items: DishDetails[] = [];
-  if (billData) {
-    const newBill = billData.slice(0, billData.length - 2);
-    for (let i = 0; i < newBill.length; i++) {
-      const newobj: DishDetails = {};
+export const getItemsData = (billData) => {
+	const items: DishDetails[] = []
+	if (billData) {
+		const newBill = billData.slice(0, billData.length - 2)
+		for (let i = 0; i < newBill.length; i++) {
+			const newobj: DishDetails = {}
 
-      const dish = newBill[i].dish;
-      if (dish) {
-        newobj.name = dish.name;
-        newobj.qty = dish.qty;
-        newobj.price = dish.price;
-        newobj.portions = dish.portions;
-        newobj.extras = dish.extras;
-        items.push(newobj);
-      }
-    }
+			const dish = newBill[i].dish
+			if (dish) {
+				newobj.name = dish.name
+				newobj.qty = dish.qty
+				newobj.price = dish.price
+				newobj.portions = dish.portions
+				newobj.extras = dish.extras
+				items.push(newobj)
+			}
+		}
 
-    for (const item of items) {
-      let price = 0;
+		for (const item of items) {
+			let price = 0
 
-      if (item?.portions?.price) {
-        price = Number(item.portions.price) * (item?.qty || 0);
-      } else {
-        price = item?.price || 0;
-      }
+			if (item?.portions?.price) {
+				price = Number(item.portions.price) * (item?.qty || 0)
+			} else {
+				price = item?.price || 0
+			}
 
-      let extrasPrice = 0;
-      if (item?.extras?.length) {
-        for (const extra of item.extras!) {
-          extrasPrice += (Number(extra.price || "0") || 0) * (extra.qty || 0);
-        }
-      }
+			let extrasPrice = 0
+			if (item?.extras?.length) {
+				for (const extra of item.extras!) {
+					extrasPrice += (Number(extra.price || '0') || 0) * (extra.qty || 0)
+				}
+			}
 
-      item.price = price + extrasPrice;
-    }
-  }
+			item.price = price + extrasPrice
+		}
+	}
 	return items
 }
 
-export const cartToKots=(cart, businessId, tableId, zoneId, tableName, customerName, customerPhone)=>{
-	const kotArray = [];
-	 for (const dish of Object.values(cart)) {
-	   for (const variant of dish?.variants) {
-		 const extras = variant?.extra ? Object.values(variant.extra) : [];
-		 const portions = variant?.portion ? variant?.portion : {};
+export const cartToKots = (
+	cart,
+	businessId,
+	tableId,
+	zoneId,
+	tableName,
+	customerName,
+	customerPhone,
+) => {
+	const kotArray = []
+	for (const dish of Object.values(cart)) {
+		for (const variant of dish?.variants) {
+			const extras = variant?.extra ? Object.values(variant.extra) : []
+			const portions = variant?.portion ? variant?.portion : {}
 
-		 const kotObject = {
-		   businessId :businessId,
-		   kitchenId: dish?.dishData?.kitchenId,
-		   zoneId :zoneId,
-		   tableId: tableId,
-		   staffId: "5",
-		   dish: {
-			 dishId: dish?.dishId,
-			 name: dish?.dishData?.name,
-			 price: dish?.dishData?.price,
-			 qty: 1,
-			 comments: "spicy",
-			 extras,
-			 portions,
-		   },
-		   dishType: dish?.dishData?.dishType,
-		   category:
-			 dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
-		   customerName: customerName,
-		   customerPhone: customerPhone,
-		   instructions: variant?.instruction,
-		   dishStatus: "cooking",
-		   tableName: tableName,
-		   avgTime: dish?.dishData?.avgTime,
-		   taxes: dish?.dishData?.taxes,
-		 };
+			const kotObject = {
+				businessId: businessId,
+				kitchenId: dish?.dishData?.kitchenId,
+				zoneId: zoneId,
+				tableId: tableId,
+				staffId: '5',
+				dish: {
+					dishId: dish?.dishId,
+					name: dish?.dishData?.name,
+					price: dish?.dishData?.price,
+					qty: 1,
+					comments: 'spicy',
+					extras,
+					portions,
+				},
+				dishType: dish?.dishData?.dishType,
+				category: dish?.parentCategoryName || dish?.dishData?.categories?.[0]?.name,
+				customerName: customerName,
+				customerPhone: customerPhone,
+				instructions: variant?.instruction,
+				dishStatus: 'cooking',
+				tableName: tableName,
+				avgTime: dish?.dishData?.avgTime,
+				taxes: dish?.dishData?.taxes,
+			}
 
-		 kotArray.push(kotObject);
-	   }
-	 }
+			kotArray.push(kotObject)
+		}
+	}
 
-	 return kotArray;
+	return kotArray
 }

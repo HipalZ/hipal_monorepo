@@ -1,19 +1,17 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import { natsWrapper } from "../nats-wrapper";
-
-import { Category, Dish } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
-import { CategoryType, categorySchema } from "@hi/db-models/src/validators";
+import { Category, Dish } from '@hi/db-models';
+import { categorySchema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 // import { validateRequest } from "../middleware/request";
-import { validateRequest, RequestValidation } from "zod-express-middleware";
-import { z } from "zod";
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 const router = express.Router();
 
 //TODO: remove v1 from the route
 router.post(
-  "/v1/categories",
+  '/v1/categories',
   validateRequest({
     params: z.object({
       urlParameter: z.string(),
@@ -67,24 +65,20 @@ router.post(
         ],
         {
           session: session,
-        }
+        },
       );
 
       if (!category) {
-        throw new Error("Category creation failed");
+        throw new Error('Category creation failed');
       }
       // throw new Error("Category creation failed");
       // @ts-ignore
       const categoryId = category[0]._id;
-      let dish = await Dish.updateMany(
-        { _id: { $in: dishes } },
-        { $push: { categories: categoryId } },
-        { session }
-      );
+      let dish = await Dish.updateMany({ _id: { $in: dishes } }, { $push: { categories: categoryId } }, { session });
     });
     //{error: ,message: data }
-    return res.status(200).send("Category created");
-  }
+    return res.status(200).send('Category created');
+  },
 );
 
 export { router as createCategoryRouter };

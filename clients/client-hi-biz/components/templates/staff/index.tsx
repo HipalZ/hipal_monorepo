@@ -1,19 +1,19 @@
-import React, { memo, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import Header from "@/components/molecules/header";
-import { MdPerson } from "react-icons/md";
-import { useRouter } from "next/router";
-import axios from "@/axios";
-import type { UserProfile } from "@/components/types/businessData";
-import { paths } from "@/components/utils/paths";
-import PopUp from "@/components/atom/popUp";
-import AddStaffPopup from "@/components/molecules/addStaffpopup";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useQuery } from "@tanstack/react-query";
-import ErrorComponent from "@/components/errorComponent";
+import Hi from '@/assets/svg/hi.svg';
+import axios from '@/axios';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import PopUp from '@/components/atom/popUp';
+import ErrorComponent from '@/components/errorComponent';
+import AddStaffPopup from '@/components/molecules/addStaffpopup';
+import Header from '@/components/molecules/header';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import type { UserProfile } from '@/components/types/businessData';
+import { paths } from '@/components/utils/paths';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { memo, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
+import { MdPerson } from 'react-icons/md';
 
 function Staff() {
   const router = useRouter();
@@ -33,18 +33,16 @@ function Staff() {
 
     try {
       const response = await axios.get(url);
-      const filteredStaff = response.data.filter(
-        (staff: UserProfile) => staff._id !== user._id
-      );
+      const filteredStaff = response.data.filter((staff: UserProfile) => staff._id !== user._id);
       setStaffDetails(filteredStaff);
       return response.data;
     } catch (error) {
-      console.error("Error fetching staff details:", error);
+      console.error('Error fetching staff details:', error);
     }
   };
 
   const { isLoading, error, data, refetch } = useQuery({
-    queryKey: ["staff", businessId],
+    queryKey: ['staff', businessId],
     queryFn: getStaff,
     enabled: !!businessId,
   });
@@ -56,39 +54,35 @@ function Staff() {
     return (
       <>
         <div className="bg-white md:px-[10vw] lg:px-[10vw]">
-          <div className="bg-[#f5f5f5] sticky top-0 z-50 w-full border-b border-[#CACACA]">
+          <div className="sticky top-0 z-50 w-full border-b border-[#CACACA] bg-[#f5f5f5]">
             <Header
               title="Staff"
               onBack={() => {
-                setSelectedIcon("");
+                setSelectedIcon('');
               }}
               leftIcon={<BsChevronLeft />}
               centerImage={Hi}
               rightImage={Hi}
-              isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+              isIconBusinessShow={user.role !== 'RESTAURANT_MANAGER'}
             />
-            <div className="mx-6 mt-6 text-2xl font-normal text-[#2B354D] pb-4 rounded-lg">
-              Dashboard
-            </div>
+            <div className="mx-6 mt-6 rounded-lg pb-4 text-2xl font-normal text-[#2B354D]">Dashboard</div>
           </div>
 
           {staffDetails && staffDetails.length > 0 ? (
-            <div className="grid grid-cols-1 pb-[5rem] md:gap-4 lg:gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 pb-[5rem] md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-4 xl:grid-cols-4">
               {staffDetails.map((staff: UserProfile) => (
                 <div
                   onKeyDown={() => handleStaffDetails(staff?._id)}
                   key={staff?._id}
                   onClick={() => handleStaffDetails(staff?._id)}
-                  className="mx-6 mt-6 on_active_bounce bg-white text-[#2B354D] rounded-lg border border-[#cacaca] font-medium capitalize"
+                  className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
                 >
                   <div className="flex items-center px-4 py-2">
                     <MdPerson className="mr-2" />
                     <span>{staff?.name}</span>
                   </div>
                   <div className="flex items-center justify-between px-4 py-2">
-                    <span className="ml-1 text-sm opacity-60">
-                      {staff?.customRole?.[0]?.roleName}
-                    </span>
+                    <span className="ml-1 text-sm opacity-60">{staff?.customRole?.[0]?.roleName}</span>
                     <span>Manage</span>
                   </div>
                 </div>
@@ -97,9 +91,7 @@ function Staff() {
           ) : (
             <div>
               {!isLoading && !staffDetails.length && (
-                <div className="fixed transform -translate-x-1/2 top-1/2 left-1/2 text-center flex flex-col">
-                  No User Found
-                </div>
+                <div className="fixed left-1/2 top-1/2 flex -translate-x-1/2 transform flex-col text-center">No User Found</div>
               )}
             </div>
           )}
@@ -107,30 +99,22 @@ function Staff() {
         <div
           onClick={addStaff}
           onKeyDown={addStaff}
-          className="fixed flex items-center justify-between w-full outline-none bottom-4 px-6 md:px-[20vw] lg:px-[40vw]"
+          className="fixed bottom-4 flex w-full items-center justify-between px-6 outline-none md:px-[20vw] lg:px-[40vw]"
         >
-          <button
-            type="button"
-            className="bg-[#2B354D] w-full on_active_bounce capitalize py-2 rounded-md text-white"
-          >
+          <button type="button" className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2 capitalize text-white">
             Add Staff
           </button>
         </div>
         {isAddStaffOpen && (
           <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
-            <AddStaffPopup
-              businessId={businessId}
-              onClose={() => setIsAddStaffOpen(false)}
-              staffDetails={staffDetails}
-              getStaff={getStaff}
-            />
+            <AddStaffPopup businessId={businessId} onClose={() => setIsAddStaffOpen(false)} staffDetails={staffDetails} getStaff={getStaff} />
           </PopUp>
         )}
         {isLoading && <LoadingSpinner />}
       </>
     );
   });
-  StaffDashboard.displayName = "StaffDashboard";
+  StaffDashboard.displayName = 'StaffDashboard';
   return (
     <>
       <StaffDashboard />

@@ -31,9 +31,9 @@ function ProfileLikePage() {
 		return result
 	}
 
-	const {isPending , error, data, refetch} = useQuery({
-		queryKey:['allbiz'],
-		queryFn:dashboardData,
+	const { isPending, error, data, refetch } = useQuery({
+		queryKey: ['allbiz'],
+		queryFn: dashboardData,
 	})
 
 	const searchRestaurants = (data || []).filter(
@@ -44,7 +44,7 @@ function ProfileLikePage() {
 
 	if (isPending) return 'Loading...'
 	if (error) return `An error has occurred: ${error.message}`
-	
+
 	return (
 		<div>
 			<ProfileHeader />
@@ -103,7 +103,7 @@ function ProfileLikePage() {
 									}
 									alt='Banner pic'
 								/>
-								<div className='absolute bottom-0 left-0 w-full rounded-b-2xl h-1/2 bg-gradient-to-t from-black to-transparent'/>
+								<div className='absolute bottom-0 left-0 w-full rounded-b-2xl h-1/2 bg-gradient-to-t from-black to-transparent' />
 							</div>
 							<div className='flex mt-[0.5rem]'>
 								<div className='bg-white w-[3rem] h-[3rem] mt-[0.5rem]'>

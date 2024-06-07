@@ -1,51 +1,51 @@
-import { motion } from "framer-motion";
-import { memo, useEffect, useState } from "react";
+import { motion } from "framer-motion"
+import { memo, useEffect, useState } from "react"
 
 const NumberAnimation = ({ number }) => {
-	const [displayNumber, setDisplayNumber] = useState(number);
+	const [displayNumber, setDisplayNumber] = useState(number)
 
 	useEffect(() => {
-		let start = 0;
-		const end = number;
-		if (start === end) return;
+		let start = 0
+		const end = number
+		if (start === end) return
 
-		const totalDuration = 2000;
-		const incrementTime = 20;
-		const fastIncrementDuration = Math.min(totalDuration, 1000);
-		const slowIncrementDuration = totalDuration - fastIncrementDuration;
+		const totalDuration = 2000
+		const incrementTime = 20
+		const fastIncrementDuration = Math.min(totalDuration, 1000)
+		const slowIncrementDuration = totalDuration - fastIncrementDuration
 
 		// Fast increment phase
-		let fastIncrementSteps = Math.floor(fastIncrementDuration / incrementTime);
-		let fastIncrementAmount = Math.floor(end / fastIncrementSteps);
+		let fastIncrementSteps = Math.floor(fastIncrementDuration / incrementTime)
+		let fastIncrementAmount = Math.floor(end / fastIncrementSteps)
 
 		let fastIncrementTimer = setInterval(() => {
-			start += fastIncrementAmount;
+			start += fastIncrementAmount
 			if (start >= end) {
-				start = end;
-				clearInterval(fastIncrementTimer);
+				start = end
+				clearInterval(fastIncrementTimer)
 			}
-			setDisplayNumber(start);
-		}, incrementTime);
+			setDisplayNumber(start)
+		}, incrementTime)
 
 		// Smooth transition phase
 		setTimeout(() => {
-			clearInterval(fastIncrementTimer);
-			const remainingSteps = slowIncrementDuration / incrementTime;
-			const remainingIncrement = (end - start) / remainingSteps;
+			clearInterval(fastIncrementTimer)
+			const remainingSteps = slowIncrementDuration / incrementTime
+			const remainingIncrement = (end - start) / remainingSteps
 			let smoothIncrementTimer = setInterval(() => {
-				start += remainingIncrement;
+				start += remainingIncrement
 				if (start >= end) {
-					start = end;
-					clearInterval(smoothIncrementTimer);
+					start = end
+					clearInterval(smoothIncrementTimer)
 				}
-				setDisplayNumber(Math.floor(start));
-			}, incrementTime);
-		}, fastIncrementDuration);
+				setDisplayNumber(Math.floor(start))
+			}, incrementTime)
+		}, fastIncrementDuration)
 
 		return () => {
-			clearInterval(fastIncrementTimer);
-		};
-	}, [number]);
+			clearInterval(fastIncrementTimer)
+		}
+	}, [number])
 
 	return (
 		<motion.div
@@ -56,7 +56,7 @@ const NumberAnimation = ({ number }) => {
 		>
 			{displayNumber}
 		</motion.div>
-	);
-};
+	)
+}
 
-export default memo(NumberAnimation);
+export default memo(NumberAnimation)

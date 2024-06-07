@@ -71,7 +71,7 @@ function ProfileEdit() {
 		}
 	}
 
-	const navigateBeforePage = () =>{
+	const navigateBeforePage = () => {
 		router.push(`/r/${businessId}/profile/userProfile`)
 	}
 	return (
@@ -86,9 +86,7 @@ function ProfileEdit() {
 					</div>
 				</div>
 				<div className='mt-[3.5rem] flex justify-center items-center'>
-					<div
-						className='text-4xl flex justify-center items-center rounded-full border w-[110px] h-[110px]  border-1 border-gray-500'
-					>
+					<div className='text-4xl flex justify-center items-center rounded-full border w-[110px] h-[110px]  border-1 border-gray-500'>
 						{userData.name?.[0]}
 					</div>
 				</div>

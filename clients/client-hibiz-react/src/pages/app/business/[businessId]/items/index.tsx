@@ -1,9 +1,7 @@
-import Items from "@/components/templates/items";
+import Items from '@/components/templates/items';
 
 const ItemsPage = () => {
-    return (
-        <Items />
-    )
+  return <Items />;
 };
 
 export default ItemsPage;

@@ -1,6 +1,6 @@
 // import useAttendanceStore from "@/components/store/useUpdateData";
-import useTimings from "@/components/store/useTimings";
-import React, { memo } from "react";
+import useTimings from '@/components/store/useTimings';
+import { memo } from 'react';
 
 const TimePicker = () => {
   const { dayIn, dayOut, setDayIn, setDayOut } = useTimings();
@@ -14,24 +14,18 @@ const TimePicker = () => {
 
   return (
     <>
-      <div className="flex flex-col mt-2 space-y-4 pb-4">
+      <div className="mt-2 flex flex-col space-y-4 pb-4">
         <div className="flex flex-col justify-start">
-          <label htmlFor="inTime" className="text-sm opacity-50 pb-4">
+          <label htmlFor="inTime" className="pb-4 text-sm opacity-50">
             Opening timings
           </label>
-          <input
-            type="time"
-            id="inTime"
-            value={dayIn}
-            onChange={handleInTimeChange}
-            className="border rounded-md focus:outline-none focus:ring-0"
-          />
+          <input type="time" id="inTime" value={dayIn} onChange={handleInTimeChange} className="rounded-md border focus:outline-none focus:ring-0" />
         </div>
 
-        <div className="hidden mx-2 md:block"> - </div>
+        <div className="mx-2 hidden md:block"> - </div>
 
         <div className="flex flex-col justify-start">
-          <label htmlFor="outTime" className="text-sm opacity-50 pb-4">
+          <label htmlFor="outTime" className="pb-4 text-sm opacity-50">
             Close timings
           </label>
           <input
@@ -39,7 +33,7 @@ const TimePicker = () => {
             id="outTime"
             value={dayOut}
             onChange={handleOutTimeChange}
-            className="border rounded-md focus:outline-none focus:ring-0"
+            className="rounded-md border focus:outline-none focus:ring-0"
           />
         </div>
       </div>

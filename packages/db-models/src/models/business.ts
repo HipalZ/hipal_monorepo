@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { BusinessType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { BusinessType } from '../validators';
 
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -41,12 +41,12 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     gstNumber: {
       type: String,
-      default: "",
+      default: '',
       required: false,
     },
     fssaiLicenseNumber: {
       type: String,
-      default: "",
+      default: '',
       required: false,
     },
     status: {
@@ -61,7 +61,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     wallpaper: {
       type: String,
       required: false,
-      default: "",
+      default: '',
     },
     tier: {
       type: String,
@@ -126,7 +126,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     takeAwayName: {
       type: String,
-      default: "",
+      default: '',
     },
     loyalty: {
       type: Boolean,
@@ -151,12 +151,9 @@ const businessSchema = new mongoose.Schema<BusinessType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Business: Model<BusinessType> = mongoose.model<BusinessType>(
-  "Business",
-  businessSchema
-);
+const Business: Model<BusinessType> = mongoose.model<BusinessType>('Business', businessSchema);
 
 export { Business };

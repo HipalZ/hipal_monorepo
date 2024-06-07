@@ -1,9 +1,7 @@
-import Reviewz from "@/components/templates/reviewz";
+import Reviewz from '@/components/templates/reviewz';
 
 const ReviewzPage = () => {
-  return (
-    <Reviewz/>
-  )
+  return <Reviewz />;
 };
 
 export default ReviewzPage;

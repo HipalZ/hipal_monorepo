@@ -1,13 +1,13 @@
-import Header from "@/components/molecules/header";
-import React, { memo, useEffect, useState } from "react";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import DateRangePicker from "@/components/molecules/dateRangePicker";
-import DueAccordion from "@/components/atom/dueAccordion";
-import { useRouter } from "next/router";
-import useTimings from "@/components/store/useTimings";
-import type { IDuesData } from "@/components/types/businessData";
+import Hi from '@/assets/svg/hi.svg';
 import axios from '@/axios';
+import DueAccordion from '@/components/atom/dueAccordion';
+import DateRangePicker from '@/components/molecules/dateRangePicker';
+import Header from '@/components/molecules/header';
+import useTimings from '@/components/store/useTimings';
+import type { IDuesData } from '@/components/types/businessData';
+import { useRouter } from 'next/router';
+import { memo, useEffect, useState } from 'react';
+import { BsChevronLeft } from 'react-icons/bs';
 
 function Dues() {
   const router = useRouter();
@@ -29,7 +29,7 @@ function Dues() {
 
       setActiveDues(res.data);
     } catch (error) {
-      console.error("Error fetching sales report:", error);
+      console.error('Error fetching sales report:', error);
     }
   };
 
@@ -39,25 +39,28 @@ function Dues() {
   useEffect(() => {
     router.push(router);
   }, []);
-  
+
   return (
     <div className="bg-white">
-      <div className="bg-[#f5f5f5] border-b border-[#CACACA]">
-        <Header onBack={()=>router.push(`/business/${businessId}?tab=Dues`)} title="Dues" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi}  isIconBusinessShow={true}/>
-        <div className="mx-6 mt-6 bg-[#204D42] text-white rounded-lg py-4">
+      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
+        <Header
+          onBack={() => router.push(`/business/${businessId}?tab=Dues`)}
+          title="Dues"
+          leftIcon={<BsChevronLeft />}
+          centerImage={Hi}
+          rightImage={Hi}
+          isIconBusinessShow={true}
+        />
+        <div className="mx-6 mt-6 rounded-lg bg-[#204D42] py-4 text-white">
           <div className="flex items-center justify-start">
-            <div className="text-xl px-4 py-2 rounded-full mx-4 font-semibold bg-white text-[#204D42]">
-              {activeDues?.userName?.[0]}
-            </div>
+            <div className="mx-4 rounded-full bg-white px-4 py-2 text-xl font-semibold text-[#204D42]">{activeDues?.userName?.[0]}</div>
             <div className="ml-2 text-xl font-normal">
               {activeDues?.userName}
-              <div className="text-lg font-normal">
-                ₹ {activeDues?.totalDues}
-              </div>
+              <div className="text-lg font-normal">₹ {activeDues?.totalDues}</div>
             </div>
           </div>
         </div>
-        <div className="py-4 ml-6 text-2xl font-normal">Dues</div>
+        <div className="ml-6 py-4 text-2xl font-normal">Dues</div>
       </div>
       <DateRangePicker />
       <DueAccordion activeDues={activeDues} />

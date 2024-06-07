@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 
 interface IUseSearch {
 	searchText: string
@@ -6,6 +6,6 @@ interface IUseSearch {
 }
 
 export const useSearch = create<IUseSearch>((set) => ({
-	searchText: '',
+	searchText: "",
 	setSearchText: (d: string) => set(() => ({ searchText: d })),
 }))

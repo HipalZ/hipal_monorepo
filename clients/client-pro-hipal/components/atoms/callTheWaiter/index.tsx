@@ -46,9 +46,12 @@ function CallWaiter() {
 		} else {
 			toast.error('u can call the waiter again after 5 minutes')
 		}
-		setTimeout(() => {
-			setIsCalling(false)
-		}, 1 * 60 * 1000)
+		setTimeout(
+			() => {
+				setIsCalling(false)
+			},
+			1 * 60 * 1000,
+		)
 	}
 	return (
 		<>

@@ -1,10 +1,10 @@
-import { memo } from 'react'
-import Card from '.'
+import { memo } from "react"
+import Card from "."
 
 function CardSM({ src, text, ...props }: { src: string; text: string }) {
 	return (
 		<>
-			<Card src={src} size={'sm'} {...props}>
+			<Card src={src} size={"sm"} {...props}>
 				{text}
 			</Card>
 		</>

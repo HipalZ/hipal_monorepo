@@ -40,8 +40,8 @@ function FoodType({ type, hideText }: { type: FOOD_TYPES; hideText?: boolean }) 
 	useEffect(() => {
 		type &&
 			Object.keys(classes)?.includes(type?.replace(/[^a-zA-Z ]/, '').toLowerCase()) &&
-			setType(type?.replace(/[^a-zA-Z ]/, '').toLowerCase());
-	}, [type]);
+			setType(type?.replace(/[^a-zA-Z ]/, '').toLowerCase())
+	}, [type])
 
 	if (type?.toLowerCase() === 'mixed') {
 		return (

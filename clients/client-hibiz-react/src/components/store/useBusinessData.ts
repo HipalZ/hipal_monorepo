@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import type { IBusinessData } from "@/components/types/businessData";
-import { persist } from "zustand/middleware";
-import { beans } from "@/components/atom/pathPattern";
+import { beans } from '@/components/atom/pathPattern';
+import type { IBusinessData } from '@/components/types/businessData';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface IExistingLoyalty {
   signUpBonus: number;
@@ -11,7 +11,7 @@ interface IExistingLoyalty {
   fontColor: string;
   cardPattern: Record<string, any>;
   password: string;
-  expiryDate: string,
+  expiryDate: string;
   setReward: number;
   setClaimAmount: number;
   logo?: string;
@@ -34,28 +34,26 @@ export const useBusinessData = create(
       themes: {},
       setThemes: (themes) => set({ themes: themes }),
       existingLoyalty: {
-        loyaltyId: "",
-        cardColor: "",
-        fontColor: "",
-        cardPattern: beans("#000000"),
+        loyaltyId: '',
+        cardColor: '',
+        fontColor: '',
+        cardPattern: beans('#000000'),
         setReward: 0,
         setClaimAmount: 0,
-        logo: "",
+        logo: '',
         password: '',
         expiryDate: '',
         rewardLimit: 0,
-        signUpBonus:0
+        signUpBonus: 0,
       },
-      setExistingLoyalty: (existingLoyalty: IExistingLoyalty) =>
-        set({ existingLoyalty: existingLoyalty }),
+      setExistingLoyalty: (existingLoyalty: IExistingLoyalty) => set({ existingLoyalty: existingLoyalty }),
       isLoyaltyExists: false,
-      setIsLoyaltyExists: (isLoyaltyExists: boolean) =>
-        set({ isLoyaltyExists: isLoyaltyExists }),
+      setIsLoyaltyExists: (isLoyaltyExists: boolean) => set({ isLoyaltyExists: isLoyaltyExists }),
     }),
     {
-      name: "data",
-    }
-  )
+      name: 'data',
+    },
+  ),
 );
 
 export default useBusinessData;

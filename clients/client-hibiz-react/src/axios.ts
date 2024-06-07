@@ -1,11 +1,11 @@
-import axiosConstructor from 'axios'
+import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
-	baseURL: import.meta.env.VITE_API_URL,
-	withCredentials: true,
-})
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
+});
 
-export default axios
+export default axios;
 
 // Add a request interceptor
 // axios.interceptors.request.use(
@@ -28,7 +28,7 @@ export default axios
 // 		return config
 // 	},
 // 	(error) => {
-		// Do something with request error
+// Do something with request error
 // 		return Promise.reject(error)
 // 	},
 // )
@@ -42,8 +42,8 @@ export default axios
 // 			return response
 // 		}
 // 		sessionStorage.removeItem(response.config.url + response.config.method)
-		// Any status code that lie within the range of 2xx cause this function to trigger
-		// Do something with response data
+// Any status code that lie within the range of 2xx cause this function to trigger
+// Do something with response data
 // 		return response
 // 	},
 // 	(error) => {
@@ -53,8 +53,8 @@ export default axios
 // 			}
 // 			sessionStorage.removeItem(error.config.url + error.config.method)
 // 		}
-		// Any status codes that falls outside the range of 2xx cause this function to trigger
-		// Do something with response error
+// Any status codes that falls outside the range of 2xx cause this function to trigger
+// Do something with response error
 // 		return Promise.reject(error)
 // 	},
 // )

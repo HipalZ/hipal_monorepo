@@ -1,4 +1,4 @@
-import type { ICart } from '@components/store/useCart'
+import type { ICart } from "@components/store/useCart"
 
 export interface IBusinessData {
 	settings?: ISettings
@@ -13,7 +13,7 @@ export interface IBusinessData {
 		address: string
 		staff: string[]
 		id: string
-		_id:string
+		_id: string
 	}
 	dishesData?: IDish[]
 	dishData?: IDish
@@ -128,7 +128,6 @@ export interface IExtras {
 	items: IExtraItem[]
 }
 
-
 export interface ICategory {
 	[x: string]: string
 	businessId: string
@@ -138,7 +137,7 @@ export interface ICategory {
 	timerStart: null
 	timerEnd: null
 	availableDays: never[]
-	hierarchy: string | 'PARENT'
+	hierarchy: string | "PARENT"
 	parentCategory: string
 	parentCategoryId?: string
 	coverImage: string

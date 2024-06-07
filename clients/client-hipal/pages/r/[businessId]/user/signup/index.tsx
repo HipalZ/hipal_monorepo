@@ -1,63 +1,63 @@
-import { PAGE_TYPES, routePaths } from "@components/utils/routes";
-import axios from "@utils/axios";
-import Image from "next/image";
-import { useRouter } from "next/router";
-import { memo, useState } from "react";
-import { toast } from "react-toastify";
-import Welcome from "@assets/login-background.png";
-import { BiArrowBack } from "react-icons/bi";
-import useBusinessDetails from "@components/store/useBusinessDetails";
-import HipalLogo from "@assets/hipalNewLogo.svg";
-import { useLogin } from "@components/store/useLogin";
-import HipalWhiteLogo from "@assets/hipalLogoOtp.svg";
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import axios from "@utils/axios"
+import Image from "next/image"
+import { useRouter } from "next/router"
+import { memo, useState } from "react"
+import { toast } from "react-toastify"
+import Welcome from "@assets/login-background.png"
+import { BiArrowBack } from "react-icons/bi"
+import useBusinessDetails from "@components/store/useBusinessDetails"
+import HipalLogo from "@assets/hipalNewLogo.svg"
+import { useLogin } from "@components/store/useLogin"
+import HipalWhiteLogo from "@assets/hipalLogoOtp.svg"
 
 function SignUp() {
-	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
-	const [logo, setLogo] = useState(businessLogo);
-	const [phone, setPhone] = useState("");
-	const { setUserDetails } = useLogin();
+	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo)
+	const [logo, setLogo] = useState(businessLogo)
+	const [phone, setPhone] = useState("")
+	const { setUserDetails } = useLogin()
 
-	const router = useRouter();
-	const { businessId } = router.query;
+	const router = useRouter()
+	const { businessId } = router.query
 
 	const handleSubmit = async (e) => {
-		e.preventDefault();
+		e.preventDefault()
 
 		if (phone.length !== 10) {
-			toast.error("Please enter a valid phone number");
-			return;
+			toast.error("Please enter a valid phone number")
+			return
 		}
 
 		const userData = {
 			phone: phone,
 			role: "HIPAL_CUSTOMER",
-		};
+		}
 
 		const config = {
 			method: "POST",
 			url: "/v1/users/:id/signUp",
 			data: userData,
-		};
+		}
 
 		try {
-			const res = await axios(config);
+			const res = await axios(config)
 			if (res.status === 201) {
-				setUserDetails(res.data);
-				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`);
+				setUserDetails(res.data)
+				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
 			}
 		} catch (error) {
 			if ((error as any).response?.status === 400) {
-				setUserDetails((error as any).response.data);
-				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`);
+				setUserDetails((error as any).response.data)
+				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
 			} else {
-				toast.error("An error occurred. Please try again later");
+				toast.error("An error occurred. Please try again later")
 			}
 		}
-	};
+	}
 
 	const goToExplore = () => {
-		router.push(`${routePaths[PAGE_TYPES.EXPLORER](`${businessId}`)}`);
-	};
+		router.push(`${routePaths[PAGE_TYPES.EXPLORER](`${businessId}`)}`)
+	}
 
 	return (
 		<section className="relative bg-black">
@@ -106,21 +106,16 @@ function SignUp() {
 						required
 					/>
 				</section>
-				<button
-					type="submit"
-					className="w-full mt-4 bg-black rounded-full on_active_bounce btn"
-				>
+				<button type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn">
 					get started
 				</button>
 				<center className="mx-12 mt-4 text-xs">
 					By continuing you are agreeing to the{" "}
-					<small className="text-[#2364E6]">
-						Terms of Service and Privacy Policy.
-					</small>
+					<small className="text-[#2364E6]">Terms of Service and Privacy Policy.</small>
 				</center>
 			</form>
 		</section>
-	);
+	)
 }
 
-export default memo(SignUp);
+export default memo(SignUp)

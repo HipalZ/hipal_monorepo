@@ -1,10 +1,10 @@
-import * as functions from 'daisyui/src/colors/functions'
-import isEmpty from 'lodash-es/isEmpty'
+import * as functions from "daisyui/src/colors/functions"
+import isEmpty from "lodash-es/isEmpty"
 
 export const updateTheme = (data) => {
 	// Changing the Theme Colors
 
-	if (typeof document === 'undefined') return null
+	if (typeof document === "undefined") return null
 
 	if (
 		!isEmpty(data?.settings?.themes?.secondaryColor) &&
@@ -12,9 +12,9 @@ export const updateTheme = (data) => {
 		!isEmpty(data?.settings?.themes?.primaryColor)
 	) {
 		const convertedColors = functions.convertToHsl({
-			primary: data?.settings?.themes?.secondaryColor || '',
-			accent: data?.settings?.themes?.accentColor || '',
-			'base-100': data?.settings?.themes?.primaryColor || '',
+			primary: data?.settings?.themes?.secondaryColor || "",
+			accent: data?.settings?.themes?.accentColor || "",
+			"base-100": data?.settings?.themes?.primaryColor || "",
 		})
 
 		Object.keys(convertedColors).forEach((key) => {

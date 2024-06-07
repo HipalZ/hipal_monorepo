@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const TableSchema = z.object({
   businessId: z.string(),
@@ -6,15 +6,7 @@ const TableSchema = z.object({
   name: z.string(),
   capacity: z.number(),
   staff: z.array(z.string()),
-  status: z.enum([
-    "Occupied",
-    "Settled",
-    "Clean",
-    "Empty",
-    "Reserved",
-    "Need assistance",
-    "Active",
-  ]),
+  status: z.enum(['Occupied', 'Settled', 'Clean', 'Empty', 'Reserved', 'Need assistance', 'Active']),
   activeUser: z.number(),
   time: z.string(),
   totalDishQuantity: z.number(),

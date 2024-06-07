@@ -1,9 +1,7 @@
-import Reports from "@/components/templates/reports";
+import Reports from '@/components/templates/reports';
 
 const ReportsPage = () => {
-  return (
-    <Reports/>
-  )
+  return <Reports />;
 };
 
 export default ReportsPage;

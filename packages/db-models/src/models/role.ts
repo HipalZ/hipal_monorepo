@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { BusinessRoleType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { BusinessRoleType } from '../validators';
 const roleSchema = new mongoose.Schema<BusinessRoleType>(
   {
     name: {
@@ -21,12 +21,9 @@ const roleSchema = new mongoose.Schema<BusinessRoleType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Role: Model<BusinessRoleType> = mongoose.model<BusinessRoleType>(
-  "Role",
-  roleSchema
-);
+const Role: Model<BusinessRoleType> = mongoose.model<BusinessRoleType>('Role', roleSchema);
 
 export { Role };

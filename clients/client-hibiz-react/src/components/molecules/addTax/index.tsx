@@ -1,6 +1,6 @@
-import type { IAddTax } from "@/components/templates/swiggy";
-import type React from "react";
-import { memo, useEffect } from "react";
+import type { IAddTax } from '@/components/templates/swiggy';
+import type React from 'react';
+import { memo, useEffect } from 'react';
 
 interface Props {
   heading: string;
@@ -39,39 +39,35 @@ const AddTax: React.FC<Props> = ({
       setCommissionType(editTax.chargeType);
       setTypeOfValue(editTax.typeOfValue);
     } else {
-      setCommissionName("");
-      setCommissionType("");
-      setTypeOfValue("percentage");
+      setCommissionName('');
+      setCommissionType('');
+      setTypeOfValue('percentage');
     }
   }, [edit, editTax, setCommissionName, setCommissionType, setTypeOfValue]);
 
-
   return (
-    <div className="bg-[#f5f5f5] rounded-t-3xl p-6">
-      <h3 className="text-xl mb-2 font-medium text-[#2B354D]">{heading}</h3>
-      <p className="text-sm">
-        Adding charges to menu adds value to the total taxable amount, which add
-        total charges before taxes.
-      </p>
+    <div className="rounded-t-3xl bg-[#f5f5f5] p-6">
+      <h3 className="mb-2 text-xl font-medium text-[#2B354D]">{heading}</h3>
+      <p className="text-sm">Adding charges to menu adds value to the total taxable amount, which add total charges before taxes.</p>
 
-      <div className="bg-white px-4 rounded-md border border-[#cacaca] mt-4 pb-4">
+      <div className="mt-4 rounded-md border border-[#cacaca] bg-white px-4 pb-4">
         <div className="mt-4">
-          <label className="block mb-2 font-medium">Charge name</label>
+          <label className="mb-2 block font-medium">Charge name</label>
           <input
             type="text"
             maxLength={20}
-            value={commissionName || ""}
+            value={commissionName || ''}
             onChange={(e) => setCommissionName(e.target.value)}
-            className="border p-2 w-full rounded-md focus:border-[#2B354D] focus:ring-0 focus:outline-none"
+            className="w-full rounded-md border p-2 focus:border-[#2B354D] focus:outline-none focus:ring-0"
             placeholder="Name"
           />
         </div>
         <div className="mt-4">
-          <label className="block mb-2">Charge type</label>
+          <label className="mb-2 block">Charge type</label>
           <select
-            value={commissionType || ""}
+            value={commissionType || ''}
             onChange={(e) => setCommissionType(e.target.value)}
-            className="border p-2 w-full rounded-md focus:border-[#2B354D] focus:ring-0 focus:outline-none"
+            className="w-full rounded-md border p-2 focus:border-[#2B354D] focus:outline-none focus:ring-0"
           >
             <option value="">Select charge type</option>
             <option value="on the dish">On the Dish</option>
@@ -80,20 +76,20 @@ const AddTax: React.FC<Props> = ({
         </div>
         <div className="mt-4">
           <div>
-            <label className="block mb-2">Value of the charge</label>
+            <label className="mb-2 block">Value of the charge</label>
             <div className="flex space-x-4">
               <input
                 type="text"
                 maxLength={6}
                 value={value?.toString() || editTax?.value}
                 onChange={handleValueChange}
-                className="border p-2 rounded-md focus:border-[#2B354D] focus:ring-0 focus:outline-none"
+                className="rounded-md border p-2 focus:border-[#2B354D] focus:outline-none focus:ring-0"
                 placeholder="Value"
               />
               <select
-                value={typeOfValue || "percentage"}
-                onChange={(e) => setTypeOfValue(e.target.value || "percentage")}
-                className="border p-2 w-full rounded-md focus:border-[#2B354D] focus:ring-0 focus:outline-none"
+                value={typeOfValue || 'percentage'}
+                onChange={(e) => setTypeOfValue(e.target.value || 'percentage')}
+                className="w-full rounded-md border p-2 focus:border-[#2B354D] focus:outline-none focus:ring-0"
               >
                 <option value="percentage">%</option>
                 <option value="rupess">₹</option>
@@ -103,18 +99,18 @@ const AddTax: React.FC<Props> = ({
         </div>
       </div>
       {edit ? (
-        <div className="flex mt-4 space-x-4">
+        <div className="mt-4 flex space-x-4">
           <button
             type="button"
-            onClick={() => handleEdit("delete", editTax?.id || "")}
-            className="min-h-[3rem] w-[40%] font-semibold text-[#2B354D] border border-[#2B354D] bg-white text-[1rem] rounded-lg  py-2"
+            onClick={() => handleEdit('delete', editTax?.id || '')}
+            className="min-h-[3rem] w-[40%] rounded-lg border border-[#2B354D] bg-white py-2 text-[1rem] font-semibold  text-[#2B354D]"
           >
             Delete
           </button>
           <button
             type="button"
-            onClick={() => handleEdit("save", editTax?.id || "")}
-            className="min-h-[3rem] font-semibold bg-[#2B354D] text-white text-[1rem] rounded-lg w-[60%] py-2"
+            onClick={() => handleEdit('save', editTax?.id || '')}
+            className="min-h-[3rem] w-[60%] rounded-lg bg-[#2B354D] py-2 text-[1rem] font-semibold text-white"
           >
             Save
           </button>
@@ -123,8 +119,8 @@ const AddTax: React.FC<Props> = ({
         <div className="mt-4">
           <button
             type="button"
-            onClick={() => handleCreate("create")}
-            className="min-h-[3rem] font-semibold bg-[#2B354D] text-white text-[1rem] rounded-lg w-full py-2"
+            onClick={() => handleCreate('create')}
+            className="min-h-[3rem] w-full rounded-lg bg-[#2B354D] py-2 text-[1rem] font-semibold text-white"
           >
             Create
           </button>

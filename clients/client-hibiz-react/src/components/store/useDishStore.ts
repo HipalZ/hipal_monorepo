@@ -1,8 +1,8 @@
 // store.ts
-import { create } from "zustand";
-import type { Dish } from "../types/businessData";
+import { create } from 'zustand';
+import type { Dish } from '../types/businessData';
 
-export type Hierarchy = "PARENT" | "CHILD" | null;
+export type Hierarchy = 'PARENT' | 'CHILD' | null;
 
 type DishSelectionStore = {
   selectedDishes: Dish[];
@@ -19,8 +19,8 @@ type DishSelectionStore = {
   setCategoryName: (categoryName: string) => void;
   removeDish: (dishId: string) => void;
   setHierarchy: (hierarchy: Hierarchy) => void;
-  setVisibility: (visibility:boolean) => void;
-  setAvailability: (availability:boolean) => void;
+  setVisibility: (visibility: boolean) => void;
+  setAvailability: (availability: boolean) => void;
   setParentCategory: (category: string) => void;
   setParentCategoryId: (id: string) => void;
   resetStore: () => void;
@@ -31,13 +31,12 @@ export const useDishSelectionStore = create<DishSelectionStore>((set) => ({
   hierarchy: null,
   visibility: true,
   availability: true,
-  categoryName: "",
-  parentCategory: "",
-  parentCategoryId: "",
-  imageUrl: "",
+  categoryName: '',
+  parentCategory: '',
+  parentCategoryId: '',
+  imageUrl: '',
   setImageUrl: (imageUrl: string) => set({ imageUrl: imageUrl }),
-  setCategoryName: (categoryName: string) =>
-    set({ categoryName: categoryName }),
+  setCategoryName: (categoryName: string) => set({ categoryName: categoryName }),
   setSelectedDishes: (dishes: Dish[]) => set({ selectedDishes: dishes }),
   addDish: (newDish) =>
     set((state) => ({
@@ -50,18 +49,17 @@ export const useDishSelectionStore = create<DishSelectionStore>((set) => ({
   setHierarchy: (hierarchy) => set({ hierarchy }),
   setVisibility: (visibility: boolean) => set({ visibility }),
   setAvailability: (availability: boolean) => set({ availability }),
-    setParentCategory: (category: string) =>
-    set({ parentCategory: category }),
-  setParentCategoryId: (id: string) =>
-    set({ parentCategoryId: id }),
-    resetStore: () => set({
+  setParentCategory: (category: string) => set({ parentCategory: category }),
+  setParentCategoryId: (id: string) => set({ parentCategoryId: id }),
+  resetStore: () =>
+    set({
       selectedDishes: [],
       hierarchy: null,
       visibility: true,
       availability: true,
-      categoryName: "",
-      parentCategory: "",
-      parentCategoryId: "",
-      imageUrl: "",
-    })
+      categoryName: '',
+      parentCategory: '',
+      parentCategoryId: '',
+      imageUrl: '',
+    }),
 }));

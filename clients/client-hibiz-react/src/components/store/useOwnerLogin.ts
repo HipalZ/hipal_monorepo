@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface User {
   name: string;
@@ -41,18 +41,18 @@ export interface IUserLogin {
 export const useOwnerLogin = create(
   persist<IUserLogin>(
     (set) => ({
-      phoneNumber: "",
-      password: "",
-      businessId: "",
+      phoneNumber: '',
+      password: '',
+      businessId: '',
       isLogin: false,
       user: {
-        name: "",
-        email: "",
-        phone: "",
-        role: "",
+        name: '',
+        email: '',
+        phone: '',
+        role: '',
         customRole: [],
-        password: "",
-        id: "",
+        password: '',
+        id: '',
         accessControl: {
           dish: false,
           staff: false,
@@ -70,7 +70,7 @@ export const useOwnerLogin = create(
       setUser: (d: User) => set({ user: d }),
     }),
     {
-      name: "ownerLogin",
-    }
-  )
+      name: 'ownerLogin',
+    },
+  ),
 );

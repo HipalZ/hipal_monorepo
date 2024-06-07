@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface IData {
   _id: string;
@@ -22,23 +22,23 @@ interface IBusinessData {
 export const useBusinessData = create(
   persist<IBusinessData>(
     (set) => ({
-        businessData: {
-        businessName: "",
-        businessType: "",
+      businessData: {
+        businessName: '',
+        businessType: '',
         gstRegistered: false,
-        customLink: "",
-        logo: "",
-        address: "",
+        customLink: '',
+        logo: '',
+        address: '',
         staff: [],
-        tier: "",
-        id: "",
-        _id:''
+        tier: '',
+        id: '',
+        _id: '',
       },
 
       setBusinessData: (businessData) => set({ businessData }),
     }),
     {
-      name: "businessData",
-    }
-  )
+      name: 'businessData',
+    },
+  ),
 );

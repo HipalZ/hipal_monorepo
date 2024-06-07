@@ -1,4 +1,4 @@
-import BackButton from "@components/atoms/backButton";
+import BackButton from "@components/atoms/backButton"
 import {
 	beans,
 	bowl,
@@ -7,65 +7,62 @@ import {
 	love,
 	triangleToDataurl,
 	waveToDataUrl,
-} from "@components/atoms/card/pathPattern";
-import {
-	_useAllBusiness,
-	initializeAllBusiness,
-} from "@components/store/useAllBusiness";
-import { useLogin } from "@components/store/useLogin";
-import useLoyaltyData from "@components/store/useLoyaltyData";
-import { useRewardHistory } from "@components/store/useRewardHistory";
-import useUserReward from "@components/store/useUserReward";
-import { paths } from "@components/utils/paths";
-import { PAGE_TYPES, routePaths } from "@components/utils/routes";
-import axios from "@utils/axios";
-import Image from "next/image";
-import { useRouter } from "next/router";
-import { memo, useEffect, useState } from "react";
-import Gift from "@assets/gift.png";
-import useBusinessDetails from "@components/store/useBusinessDetails";
-import Footer from "@components/molecules/footer";
-import Hundred from "@assets/100.png";
-import Cal from "@assets/cal.png";
-import Cracker from "@assets/crack.png";
-import MainLoyalty from "@components/atoms/mainLoyalty";
-import DishData from "@components/atoms/dishDescription";
-import { useQuery } from "@tanstack/react-query";
+} from "@components/atoms/card/pathPattern"
+import { _useAllBusiness, initializeAllBusiness } from "@components/store/useAllBusiness"
+import { useLogin } from "@components/store/useLogin"
+import useLoyaltyData from "@components/store/useLoyaltyData"
+import { useRewardHistory } from "@components/store/useRewardHistory"
+import useUserReward from "@components/store/useUserReward"
+import { paths } from "@components/utils/paths"
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import axios from "@utils/axios"
+import Image from "next/image"
+import { useRouter } from "next/router"
+import { memo, useEffect, useState } from "react"
+import Gift from "@assets/gift.png"
+import useBusinessDetails from "@components/store/useBusinessDetails"
+import Footer from "@components/molecules/footer"
+import Hundred from "@assets/100.png"
+import Cal from "@assets/cal.png"
+import Cracker from "@assets/crack.png"
+import MainLoyalty from "@components/atoms/mainLoyalty"
+import DishData from "@components/atoms/dishDescription"
+import { useQuery } from "@tanstack/react-query"
 
 function LoyaltyCardPage() {
-	const router = useRouter();
-	const { businessId } = router.query as { businessId: string };
-	const userName = useLogin((s) => s.userDetails.name);
-	const [HiCode, setHiCode] = useState();
-	const [rewards, setRewards] = useState();
+	const router = useRouter()
+	const { businessId } = router.query as { businessId: string }
+	const userName = useLogin((s) => s.userDetails.name)
+	const [HiCode, setHiCode] = useState()
+	const [rewards, setRewards] = useState()
 
-	const { data } = _useAllBusiness();
+	const { data } = _useAllBusiness()
 
 	useEffect(() => {
-		initializeAllBusiness(data);
-	}, [data]);
+		initializeAllBusiness(data)
+	}, [data])
 
-	const { loyaltySetting } = useLoyaltyData();
-	const { setRewardHistory } = useRewardHistory();
-	const { userDetails } = useLogin();
-	const setUserReward = useUserReward((s) => s.setUserReward);
-	const businessDetails = useBusinessDetails((s) => s.businessDetails);
-	const [image, setImage] = useState<string>("");
-	const [cardPattern, setCardPattern] = useState("");
-	const [cardColor, setCardColor] = useState("");
-	const [fontColor, setFontColor] = useState("#FAE8CA");
-	const [isHiCodeModalOpen, setIsHiCodeModalOpen] = useState(false);
-	const [logo, setLogo] = useState<any>("");
+	const { loyaltySetting } = useLoyaltyData()
+	const { setRewardHistory } = useRewardHistory()
+	const { userDetails } = useLogin()
+	const setUserReward = useUserReward((s) => s.setUserReward)
+	const businessDetails = useBusinessDetails((s) => s.businessDetails)
+	const [image, setImage] = useState<string>("")
+	const [cardPattern, setCardPattern] = useState("")
+	const [cardColor, setCardColor] = useState("")
+	const [fontColor, setFontColor] = useState("#FAE8CA")
+	const [isHiCodeModalOpen, setIsHiCodeModalOpen] = useState(false)
+	const [logo, setLogo] = useState<any>("")
 	useEffect(() => {
-		setLogo(loyaltySetting?.logo);
-		setCardPattern(loyaltySetting?.cardPattern);
-		setCardColor(loyaltySetting?.cardColor);
-		setFontColor(loyaltySetting?.fontColor);
-	}, [loyaltySetting]);
+		setLogo(loyaltySetting?.logo)
+		setCardPattern(loyaltySetting?.cardPattern)
+		setCardColor(loyaltySetting?.cardColor)
+		setFontColor(loyaltySetting?.fontColor)
+	}, [loyaltySetting])
 	useEffect(() => {
 		const patterns = (cardPattern, fontColor) => {
-			const defaultColor = "#FAE8CA";
-			fontColor = fontColor || defaultColor;
+			const defaultColor = "#FAE8CA"
+			fontColor = fontColor || defaultColor
 
 			const src = {
 				wave: waveToDataUrl("#000000", "white").wave,
@@ -75,17 +72,17 @@ function LoyaltyCardPage() {
 				bowl: bowl(fontColor).bowl,
 				love: love(fontColor).love,
 				flower: flower(fontColor).flower,
-			};
-			return src[cardPattern];
-		};
-		patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor);
-		setImage(patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor));
-	}, [loyaltySetting, cardPattern, fontColor]);
+			}
+			return src[cardPattern]
+		}
+		patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor)
+		setImage(patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor))
+	}, [loyaltySetting, cardPattern, fontColor])
 
 	const findPattern = (pattern: string) => {
-		const value = srcColor.find((item) => item.src.hasOwnProperty(pattern));
-		return value?.src;
-	};
+		const value = srcColor.find((item) => item.src.hasOwnProperty(pattern))
+		return value?.src
+	}
 	const srcColor = [
 		{
 			src: { wave: waveToDataUrl(loyaltySetting?.cardColor, "white").wave },
@@ -112,7 +109,7 @@ function LoyaltyCardPage() {
 		{
 			src: { flower: flower(loyaltySetting?.fontColor).flower },
 		},
-	];
+	]
 
 	const getUserReward = async () => {
 		if (
@@ -120,26 +117,23 @@ function LoyaltyCardPage() {
 			Number(userDetails.phone) === 0 ||
 			loyaltySetting?.loyaltyId === undefined
 		)
-			return;
+			return
 		const config = {
 			method: "GET",
-			url: paths.getUserReward(
-				Number(userDetails.phone),
-				loyaltySetting?.loyaltyId,
-			),
-		};
-		try {
-			const response = await axios(config);
-			if (response?.data) {
-				setHiCode(response?.data?.password);
-				setRewards(response?.data?.rewards);
-				setUserReward(response?.data);
-			}
-			return response?.data;
-		} catch (err) {
-			console.log(err);
+			url: paths.getUserReward(Number(userDetails.phone), loyaltySetting?.loyaltyId),
 		}
-	};
+		try {
+			const response = await axios(config)
+			if (response?.data) {
+				setHiCode(response?.data?.password)
+				setRewards(response?.data?.rewards)
+				setUserReward(response?.data)
+			}
+			return response?.data
+		} catch (err) {
+			console.log(err)
+		}
+	}
 
 	const getUserRewardHistory = async () => {
 		if (
@@ -147,58 +141,49 @@ function LoyaltyCardPage() {
 			Number(userDetails.phone) === 0 ||
 			loyaltySetting?.loyaltyId === undefined
 		)
-			return;
+			return
 		const config2 = {
 			method: "GET",
-			url: paths.getUserRewardHistory(
-				Number(userDetails.phone),
-				loyaltySetting?.loyaltyId,
-			),
-		};
-		try {
-			const response = await axios(config2);
-			if (response?.data) {
-				setRewardHistory(response?.data);
-			}
-			return response?.data;
-		} catch (err) {
-			console.log(err);
+			url: paths.getUserRewardHistory(Number(userDetails.phone), loyaltySetting?.loyaltyId),
 		}
-	};
+		try {
+			const response = await axios(config2)
+			if (response?.data) {
+				setRewardHistory(response?.data)
+			}
+			return response?.data
+		} catch (err) {
+			console.log(err)
+		}
+	}
 
 	const {
 		isLoading,
 		data: userData,
 		error,
 	} = useQuery({
-		queryKey: [
-			"userRewardHistory",
-			Number(userDetails.phone),
-			loyaltySetting?.loyaltyId,
-		],
+		queryKey: ["userRewardHistory", Number(userDetails.phone), loyaltySetting?.loyaltyId],
 		queryFn: getUserReward,
 		enabled: !!loyaltySetting?.loyaltyId,
-	});
+	})
 
 	const getLink = (loyaltyId: string) => {
-		getUserRewardHistory();
-		return router.push(
-			routePaths[PAGE_TYPES.LOYALTY_BY_ID](businessId, loyaltyId),
-		);
-	};
+		getUserRewardHistory()
+		return router.push(routePaths[PAGE_TYPES.LOYALTY_BY_ID](businessId, loyaltyId))
+	}
 	const gotoExplore = () => {
-		return routePaths[PAGE_TYPES.EXPLORER](businessId);
-	};
-	const [animate, setAnimate] = useState(false);
+		return routePaths[PAGE_TYPES.EXPLORER](businessId)
+	}
+	const [animate, setAnimate] = useState(false)
 
 	useEffect(() => {
-	  setAnimate(true);
-	  const timer = setTimeout(() => {
-		setAnimate(false);
-	  }, 1000);
-  
-	  return () => clearTimeout(timer);
-	}, []);
+		setAnimate(true)
+		const timer = setTimeout(() => {
+			setAnimate(false)
+		}, 1000)
+
+		return () => clearTimeout(timer)
+	}, [])
 
 	return (
 		<>
@@ -220,7 +205,7 @@ function LoyaltyCardPage() {
 								Get History
 							</button>
 						</div>
-						<br/>
+						<br />
 						{data?.businessesData?.businessName && (
 							<h3 className="flex justify-start my-0 mt-4 text-xl font-semibold capitalize text-base-content">
 								{data?.businessesData?.businessName}
@@ -232,15 +217,11 @@ function LoyaltyCardPage() {
 						</div>
 						<div className="flex items-center mt-8 space-x-6 text-center justify-evenly">
 							<div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
-								<div className="text-2xl font-bold">
-									{loyaltySetting.setClaimAmount}%
-								</div>
+								<div className="text-2xl font-bold">{loyaltySetting.setClaimAmount}%</div>
 								<div className="text-xs">Redemption on all Bills</div>
 							</div>
 							<div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
-								<div className="text-2xl font-bold">
-									{loyaltySetting.setReward}%
-								</div>
+								<div className="text-2xl font-bold">{loyaltySetting.setReward}%</div>
 								<div className="text-xs">on every payment</div>
 							</div>
 							<div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
@@ -339,9 +320,7 @@ function LoyaltyCardPage() {
 						</div>
 					</div>
 
-					<div className="pt-8 pb-4 text-xl text-center">
-						It&#39;s Reward time
-					</div>
+					<div className="pt-8 pb-4 text-xl text-center">It&#39;s Reward time</div>
 					<div className="space-y-4">
 						<div className="flex flex-row items-center justify-between p-4 mx-6 bg-base-200/70 rounded-xl">
 							<div className="w-[60%]">
@@ -349,8 +328,8 @@ function LoyaltyCardPage() {
 									{loyaltySetting?.setReward}% off Every time
 								</div>
 								<div className="text-xs text-base-content opacity-70">
-									Get {loyaltySetting?.setReward}% off on every time you pay the
-									bill and will be added in your wallet for next use
+									Get {loyaltySetting?.setReward}% off on every time you pay the bill and will be
+									added in your wallet for next use
 								</div>
 							</div>
 							<div className="w-[30%]">
@@ -363,8 +342,7 @@ function LoyaltyCardPage() {
 									{loyaltySetting?.setClaimAmount}% Redemption
 								</div>
 								<div className="text-xs text-base-content opacity-70">
-									Redeem {loyaltySetting?.setClaimAmount}% of yummy coinz
-									collected on every bill
+									Redeem {loyaltySetting?.setClaimAmount}% of yummy coinz collected on every bill
 								</div>
 							</div>
 							<div className="w-[30%]">
@@ -373,12 +351,9 @@ function LoyaltyCardPage() {
 						</div>
 						<div className="flex flex-row items-center justify-between p-4 mx-6 bg-base-200/70 rounded-xl">
 							<div className="w-[60%]">
-								<div className="pb-2 text-xl font-semibold text-accent">
-									365 Days
-								</div>
+								<div className="pb-2 text-xl font-semibold text-accent">365 Days</div>
 								<div className="text-xs text-base-content opacity-70">
-									All your redeemed coinZ are safe to use for 1 year from the
-									time of redemption
+									All your redeemed coinZ are safe to use for 1 year from the time of redemption
 								</div>
 							</div>
 							<div className="w-[30%]">
@@ -400,24 +375,18 @@ function LoyaltyCardPage() {
 				</button>
 			</div>
 			{isHiCodeModalOpen && (
-				<DishData
-					show={isHiCodeModalOpen}
-					onClose={() => setIsHiCodeModalOpen(false)}
-				>
+				<DishData show={isHiCodeModalOpen} onClose={() => setIsHiCodeModalOpen(false)}>
 					<MainLoyalty
 						hiCode={HiCode}
 						logo={businessDetails?.logo}
 						cardColor={loyaltySetting?.cardColor}
 						fontColor={loyaltySetting?.fontColor}
-						src={
-							findPattern(loyaltySetting?.cardPattern) ||
-							beans(loyaltySetting?.fontColor)
-						}
+						src={findPattern(loyaltySetting?.cardPattern) || beans(loyaltySetting?.fontColor)}
 					/>
 				</DishData>
 			)}
 		</>
-	);
+	)
 }
 
 export default LoyaltyCardPage

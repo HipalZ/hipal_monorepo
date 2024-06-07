@@ -1,9 +1,9 @@
-import QuantityPicker from '@components/atoms/buttons/quantityPicker'
-import BottomPanel from '@components/molecules/bottomPanel'
-import { useBottomPanel } from '@components/store/useBottomPanel'
-import { ICart, useCart } from '@components/store/useCart'
-import { IDish, IPortion } from '@components/types/businessData'
-import { memo, useCallback } from 'react'
+import QuantityPicker from "@components/atoms/buttons/quantityPicker"
+import BottomPanel from "@components/molecules/bottomPanel"
+import { useBottomPanel } from "@components/store/useBottomPanel"
+import { ICart, useCart } from "@components/store/useCart"
+import { IDish, IPortion } from "@components/types/businessData"
+import { memo, useCallback } from "react"
 
 function DishQuantityButton({
 	dishData,
@@ -35,12 +35,12 @@ function DishQuantityButton({
 		}
 		closeBottomPanel(dishData?.dishId)
 	}
-	if (dishData.businessId === '6548e7493f83cee25155ffc9') return null
+	if (dishData.businessId === "6548e7493f83cee25155ffc9") return null
 	return (
 		<>
 			{(cart?.[dishData?._id]?.variants?.length || 0) <= 0 && !isDeleteAble ? (
 				<button
-					className='bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case'
+					className="bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
 					onClick={() => handleQuantity((cart?.[dishData?._id]?.variants?.length || 0) + 1)}
 				>
 					Add
@@ -77,7 +77,7 @@ export function handleDishQuantity(
 			}
 			const portion = (dishData?.portions || []).find((p: IPortion) => {
 				// Check if 'default' is true when it's a boolean, or convert it to a boolean if it's a string
-				const isDefault = typeof p.default === 'boolean' ? p.default : p.default === 'true'
+				const isDefault = typeof p.default === "boolean" ? p.default : p.default === "true"
 				return isDefault
 			})
 

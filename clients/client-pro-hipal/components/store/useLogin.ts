@@ -9,9 +9,9 @@ interface IUserData {
 	phone: string
 	role: string
 	id: string
-	userDescription?: string;
-	reward?: number;
-	count?: number;
+	userDescription?: string
+	reward?: number
+	count?: number
 }
 interface IRole {
 	role: string
@@ -37,8 +37,6 @@ interface IUseLogin {
 	sendOtp: () => Promise<any>
 }
 
-
-
 export const useLogin = create(
 	persist<IUseLogin>(
 		(set, get) => ({
@@ -51,7 +49,6 @@ export const useLogin = create(
 				reward: 0,
 				role: '',
 				userDescription: '',
-
 			},
 			isLogin: false,
 			showLogin: false,
@@ -71,8 +68,7 @@ export const useLogin = create(
 			setDirection: (d: string) => set({ direction: d }),
 			setRole: (d: IRole) => set({ role: d }),
 
-			isLoginCred: () =>
-				get()?.userDetails.phone?.length === 10,
+			isLoginCred: () => get()?.userDetails.phone?.length === 10,
 
 			sendOtp: async () => {
 				toast.success('otp send successfully')

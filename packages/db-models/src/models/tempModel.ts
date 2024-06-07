@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { TempModelType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { TempModelType } from '../validators';
 
 const TempModelSchema = new mongoose.Schema<TempModelType>({
   hiCode: {
@@ -7,7 +7,7 @@ const TempModelSchema = new mongoose.Schema<TempModelType>({
   },
   tableId: {
     type: String,
-    default: "",
+    default: '',
     index: true,
   },
   discountAmount: {
@@ -39,7 +39,7 @@ const TempModelSchema = new mongoose.Schema<TempModelType>({
   },
   discountDescription: {
     type: String,
-    default: "",
+    default: '',
   },
   customerPhone: {
     type: String,
@@ -50,7 +50,7 @@ const TempModelSchema = new mongoose.Schema<TempModelType>({
   },
   discountMode: {
     type: String,
-    default: "",
+    default: '',
   },
   serviceChargeRemovedBy: {
     type: String,
@@ -72,9 +72,6 @@ const TempModelSchema = new mongoose.Schema<TempModelType>({
   },
 });
 
-const Tempmodel: Model<TempModelType> = mongoose.model<TempModelType>(
-  "TempModel",
-  TempModelSchema
-);
+const Tempmodel: Model<TempModelType> = mongoose.model<TempModelType>('TempModel', TempModelSchema);
 
 export { Tempmodel };

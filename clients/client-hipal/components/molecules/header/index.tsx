@@ -1,12 +1,12 @@
-import { useRouter } from 'next/router'
-import { memo, useEffect, useState } from 'react'
-import { FiChevronLeft, FiX } from 'react-icons/fi'
-import { HiLightBulb, HiSearch } from 'react-icons/hi'
-import { useInView } from 'react-intersection-observer'
-import SearchPanel from '../searchPanel'
-import QuickFilter from '@components/atoms/quickFilter'
-import { PAGE_TYPES, routePaths } from '@components/utils/routes'
-import Link from 'next/link'
+import { useRouter } from "next/router"
+import { memo, useEffect, useState } from "react"
+import { FiChevronLeft, FiX } from "react-icons/fi"
+import { HiLightBulb, HiSearch } from "react-icons/hi"
+import { useInView } from "react-intersection-observer"
+import SearchPanel from "../searchPanel"
+import QuickFilter from "@components/atoms/quickFilter"
+import { PAGE_TYPES, routePaths } from "@components/utils/routes"
+import Link from "next/link"
 
 function Header({
 	hideBackBtn: _hideBackBtn,
@@ -59,7 +59,7 @@ function Header({
 	}
 
 	const _onBack = () => {
-		if (typeof onBack !== 'undefined') {
+		if (typeof onBack !== "undefined") {
 			onBack()
 		} else {
 			if (backURL) {
@@ -70,7 +70,7 @@ function Header({
 		}
 	}
 
-	const CustomTag = tag ? (`${tag}` as React.ElementType) : ('h4' as React.ElementType)
+	const CustomTag = tag ? (`${tag}` as React.ElementType) : ("h4" as React.ElementType)
 
 	useEffect(() => {
 		backURL && router.prefetch(`${backURL}`)
@@ -81,9 +81,9 @@ function Header({
 		changeHeaderStyle()
 	}, [entry])
 	useEffect(() => {
-		const pathArr = router.pathname.split('/')
+		const pathArr = router.pathname.split("/")
 		const review = pathArr[pathArr.length - 1]
-		if (review === 'review') {
+		if (review === "review") {
 			setSkipReview(true)
 		}
 	}, [routePaths[PAGE_TYPES.REVIEW]])
@@ -92,20 +92,20 @@ function Header({
 			<div
 				ref={headerRef}
 				className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${
-					data.roundedHeader ? ' rounded-t-3xl  pt-6 shadow-none' : ' rounded-none pt-6 shadow-lg'
-				} ${!children && !data.roundedHeader ? ' pb-6 ' : 'pb-0'}
+					data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
+				} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
 				`}
 			>
 				{/* `relative` tag is required for search box */}
-				<div className='relative flex flex-row w-full px-6 mx-auto space-x-2 '>
+				<div className="relative flex flex-row w-full px-6 mx-auto space-x-2 ">
 					{/* Back Button */}
-					<div className={`flex w-full ${skipReview ? 'justify-between' : ''}`}>
+					<div className={`flex w-full ${skipReview ? "justify-between" : ""}`}>
 						<button
 							className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${
 								data.roundedHeader &&
 								((!state.showSearchBox && title) || !(!state.showSearchBox && title))
-									? 'hidden'
-									: ''
+									? "hidden"
+									: ""
 							}`}
 							onClick={() => {
 								if (title) {
@@ -117,15 +117,15 @@ function Header({
 						>
 							{title ? (
 								<>
-									<input type='checkbox' className='hidden' defaultChecked={!state.showSearchBox} />
+									<input type="checkbox" className="hidden" defaultChecked={!state.showSearchBox} />
 
-									<FiChevronLeft className='text-2xl swap-on text-primary' />
+									<FiChevronLeft className="text-2xl swap-on text-primary" />
 
-									<FiX className='text-2xl swap-off text-primary' />
+									<FiX className="text-2xl swap-off text-primary" />
 								</>
 							) : !data.roundedHeader ? (
 								<>
-									<FiChevronLeft className='text-2xl text-primary' />
+									<FiChevronLeft className="text-2xl text-primary" />
 								</>
 							) : (
 								<></>
@@ -133,12 +133,12 @@ function Header({
 						</button>
 
 						{!state.showSearchBox && title ? (
-							<div className='my-auto prose capitalize'>
+							<div className="my-auto prose capitalize">
 								<CustomTag>
-									{typeof title === 'function'
+									{typeof title === "function"
 										? title({
 												isRounded: data.roundedHeader,
-										  })
+											})
 										: title}
 								</CustomTag>
 							</div>
@@ -155,9 +155,9 @@ function Header({
 						{skipReview && (
 							<Link
 								href={`${routePaths[PAGE_TYPES.EXPLORER](`${businessId}`)}`}
-								className='flex justify-self-end'
+								className="flex justify-self-end"
 							>
-								<div className='text-center text-primary text-[0.875rem]'>Skip the review</div>
+								<div className="text-center text-primary text-[0.875rem]">Skip the review</div>
 							</Link>
 						)}
 					</div>
@@ -165,25 +165,25 @@ function Header({
 					{!state.showSearchBox && otherButtons && otherButtons}
 
 					{showOtherButtons && (
-						<div className='flex flex-row ml-auto '>
+						<div className="flex flex-row ml-auto ">
 							{!state.showSearchBox && (
-								<div className='flex pl-2 ml-auto'>
-									<div className='mt-1 mr-2'>
+								<div className="flex pl-2 ml-auto">
+									<div className="mt-1 mr-2">
 										<QuickFilter />
 									</div>
 									<button
-										className='btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full'
+										className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full"
 										onClick={openSearchBox}
 									>
-										<HiSearch className='text-lg text-primary' />
+										<HiSearch className="text-lg text-primary" />
 									</button>
 								</div>
 							)}
 
 							{/* Filter */}
-							<div className='hidden ml-2 '>
-								<button className='btn btn-ghost bg-primary !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full'>
-									<HiLightBulb className='text-lg text-primary-content' />
+							<div className="hidden ml-2 ">
+								<button className="btn btn-ghost bg-primary !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full">
+									<HiLightBulb className="text-lg text-primary-content" />
 								</button>
 							</div>
 						</div>

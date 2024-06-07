@@ -1,52 +1,48 @@
-import React, { useEffect, useState } from "react";
-import Header from "@/components/molecules/header";
-import { BsChevronLeft } from "react-icons/bs";
-import Hi from "@/assets/svg/hi.svg";
-import SubheaderButtonList from "@/components/atom/subHeaderBtn";
-import {
-  MdOutlineCategory,
-  MdOutlineQuickreply,
-  MdSpaceDashboard,
-} from "react-icons/md";
-import { IoFastFoodOutline } from "react-icons/io5";
-import { BiDish } from "react-icons/bi";
-import { useSelectedButtonStore } from "@/components/store/useSelectBtn";
-import { useRouter } from "next/router";
-import axios from "@/axios";
-import type { Dish, IAddOn, ICategory } from "@/components/types/businessData";
-import CategoriesContent from "@/components/organisms/items/categories";
-import DishContent from "@/components/organisms/items/dish";
-import AddOns from "@/components/organisms/items/addons";
-import SearchPanel from "@/components/atom/searchPanel";
-import { useSearch } from "@/components/store/useSearch";
-import { HiSearch } from "react-icons/hi";
-import useItemStore from "@/components/store/useItemStore";
-import DashboardContent from "@/components/organisms/items/dashboard";
-import QuickMenuContent from "@/components/molecules/quickMenu";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import { useQuery } from "@tanstack/react-query";
-import ErrorComponent from "@/components/errorComponent";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
+import Hi from '@/assets/svg/hi.svg';
+import axios from '@/axios';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import SearchPanel from '@/components/atom/searchPanel';
+import SubheaderButtonList from '@/components/atom/subHeaderBtn';
+import ErrorComponent from '@/components/errorComponent';
+import Header from '@/components/molecules/header';
+import QuickMenuContent from '@/components/molecules/quickMenu';
+import AddOns from '@/components/organisms/items/addons';
+import CategoriesContent from '@/components/organisms/items/categories';
+import DashboardContent from '@/components/organisms/items/dashboard';
+import DishContent from '@/components/organisms/items/dish';
+import useItemStore from '@/components/store/useItemStore';
+import { useSearch } from '@/components/store/useSearch';
+import { useSelectedButtonStore } from '@/components/store/useSelectBtn';
+import { useSelectedIcon } from '@/components/store/useSelectedIcon';
+import type { Dish, IAddOn, ICategory } from '@/components/types/businessData';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { BiDish } from 'react-icons/bi';
+import { BsChevronLeft } from 'react-icons/bs';
+import { HiSearch } from 'react-icons/hi';
+import { IoFastFoodOutline } from 'react-icons/io5';
+import { MdOutlineCategory, MdOutlineQuickreply, MdSpaceDashboard } from 'react-icons/md';
 
 const buttons = [
   {
-    text: "Dashboard",
+    text: 'Dashboard',
     Icon: MdSpaceDashboard,
   },
   {
-    text: "Dish",
+    text: 'Dish',
     Icon: BiDish,
   },
   {
-    text: "Categories",
+    text: 'Categories',
     Icon: MdOutlineCategory,
   },
   {
-    text: "Add Ons",
+    text: 'Add Ons',
     Icon: IoFastFoodOutline,
   },
   {
-    text: "Quick Menu",
+    text: 'Quick Menu',
     Icon: MdOutlineQuickreply,
   },
 ];
@@ -70,7 +66,7 @@ const Items = () => {
     showSearchBox: false,
   });
   useEffect(() => {
-    setSearchText("");
+    setSearchText('');
   }, []);
   const closeSearchBox = () => {
     setState({ ...state, showSearchBox: false });
@@ -82,45 +78,39 @@ const Items = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(
-        `/v1/categories?businessId=${businessId}&queryCategories=true`
-      );
+      const response = await axios.get(`/v1/categories?businessId=${businessId}&queryCategories=true`);
       setData((prevData) => ({ ...prevData, categories: response.data }));
       return response.data;
     } catch (err) {
-      console.error("Error fetching categories:", err);
+      console.error('Error fetching categories:', err);
     }
   };
 
   const fetchAddOns = async () => {
     try {
-      const response = await axios.get(
-        `/v1/dishes/:id/getExtra?businessId=${businessId}&queryExtra=true`
-      );
+      const response = await axios.get(`/v1/dishes/:id/getExtra?businessId=${businessId}&queryExtra=true`);
       setData((prevData) => ({ ...prevData, addOns: response.data }));
       return response.data;
     } catch (err) {
-      console.error("Error fetching add-ons:", err);
+      console.error('Error fetching add-ons:', err);
     }
   };
 
   const fetchAllDishes = async () => {
     try {
-      const response = await axios.get(
-        `/v1/dishes?businessId=${businessId}&queryDish=true`
-      );
+      const response = await axios.get(`/v1/dishes?businessId=${businessId}&queryDish=true`);
       setData((prevData) => ({ ...prevData, dishes: response.data }));
       return response.data;
     } catch (err) {
-      console.error("Error fetching dishes:", err);
+      console.error('Error fetching dishes:', err);
     }
   };
 
   useEffect(() => {
-    if (router.query.tab === "home") {
-      setSelectedButton("Dashboard");
+    if (router.query.tab === 'home') {
+      setSelectedButton('Dashboard');
     } else {
-      let key = router.query.tab?.toString() || "Dashboard";
+      let key = router.query.tab?.toString() || 'Dashboard';
       setSelectedButton(key);
     }
   }, [router.query.tab]);
@@ -131,11 +121,9 @@ const Items = () => {
     data: catData,
     refetch: refetchCategories,
   } = useQuery({
-    queryKey: ["category", businessId],
+    queryKey: ['category', businessId],
     queryFn: fetchCategories,
-    enabled:
-      !!businessId &&
-      (selectedButton === "Dashboard" || selectedButton === "Categories"),
+    enabled: !!businessId && (selectedButton === 'Dashboard' || selectedButton === 'Categories'),
   });
 
   const {
@@ -144,11 +132,9 @@ const Items = () => {
     data: dishData,
     refetch: refetchDishes,
   } = useQuery({
-    queryKey: ["dishes", businessId],
+    queryKey: ['dishes', businessId],
     queryFn: fetchAllDishes,
-    enabled:
-      !!businessId &&
-      (selectedButton === "Dashboard" || selectedButton === "Dish"),
+    enabled: !!businessId && (selectedButton === 'Dashboard' || selectedButton === 'Dish'),
   });
 
   const {
@@ -157,11 +143,9 @@ const Items = () => {
     data: addOnData,
     refetch: refetchAddons,
   } = useQuery({
-    queryKey: ["addOns", businessId],
+    queryKey: ['addOns', businessId],
     queryFn: fetchAddOns,
-    enabled:
-      !!businessId &&
-      (selectedButton === "Dashboard" || selectedButton === "Add Ons"),
+    enabled: !!businessId && (selectedButton === 'Dashboard' || selectedButton === 'Add Ons'),
   });
 
   const isLoading = isCatLoading || isDishPending || isAddOnPending;
@@ -172,44 +156,30 @@ const Items = () => {
 
   return (
     <div>
-      <div className="bg-[#f5f5f5] sticky z-20 top-0">
+      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
         <Header
           title="Items"
-          onBack={() => setSelectedIcon("")}
+          onBack={() => setSelectedIcon('')}
           leftIcon={<BsChevronLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={false}
         />
         <SubheaderButtonList buttons={buttons} />
-        <div className="flex justify-between items-center mt-2 pl-6 pb-2 border-b border-[#cacaca]">
+        <div className="mt-2 flex items-center justify-between border-b border-[#cacaca] pb-2 pl-6">
           <div className="text-xl"> {selectedButton}</div>
-          {selectedButton !== "Dashboard" && <div className="mr-4" onClick={openSearchBox}>
-            {!state.showSearchBox  ? (
-              <HiSearch className="w-4 h-4 mx-2 my-auto text-sm" />
-            ) : (
-              <SearchPanel closeSearchBox={closeSearchBox} />
-            )}
-          </div>}
+          {selectedButton !== 'Dashboard' && (
+            <div className="mr-4" onClick={openSearchBox}>
+              {!state.showSearchBox ? <HiSearch className="mx-2 my-auto h-4 w-4 text-sm" /> : <SearchPanel closeSearchBox={closeSearchBox} />}
+            </div>
+          )}
         </div>
       </div>
-      {selectedButton === "Dashboard" && <DashboardContent data={data} />}
-      {selectedButton === "Dish" && (
-        <DishContent dishes={data?.dishes || []} searchText={searchText} />
-      )}
-      {selectedButton === "Categories" && (
-        <CategoriesContent
-          hide={false}
-          categories={data?.categories || []}
-          searchText={searchText}
-        />
-      )}
-      {selectedButton === "Add Ons" && (
-        <AddOns addOns={data?.addOns || []} searchText={searchText || ""} />
-      )}
-      {selectedButton === "Quick Menu" && (
-        <QuickMenuContent searchText={searchText} />
-      )}
+      {selectedButton === 'Dashboard' && <DashboardContent data={data} />}
+      {selectedButton === 'Dish' && <DishContent dishes={data?.dishes || []} searchText={searchText} />}
+      {selectedButton === 'Categories' && <CategoriesContent hide={false} categories={data?.categories || []} searchText={searchText} />}
+      {selectedButton === 'Add Ons' && <AddOns addOns={data?.addOns || []} searchText={searchText || ''} />}
+      {selectedButton === 'Quick Menu' && <QuickMenuContent searchText={searchText} />}
       {isLoading && <LoadingSpinner />}
     </div>
   );
