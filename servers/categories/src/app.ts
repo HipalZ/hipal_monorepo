@@ -1,18 +1,19 @@
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 
-import { json, urlencoded } from 'body-parser';
-
 import cookieSession from 'cookie-session';
 import cors from 'cors';
-// Routes
 import { createCategoryRouter } from './routes/create-category';
 import { deleteCategoriesRouter } from './routes/delete-category';
+// Routes
 import express from 'express';
 import { idempotent } from './middleware/idempotent';
+import morgan from "morgan"
 import { readCategoriesRouter } from './routes/read-category';
 import { updateCategoriesRouter } from './routes/update-category';
 
 const app = express();
+
+app.use(morgan("dev"));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingress
 app.use(express.json());
@@ -64,6 +65,8 @@ app.use(
 );
 
 app.use(idempotent);
+
+
 
 // Register routes
 app.use(createCategoryRouter);
