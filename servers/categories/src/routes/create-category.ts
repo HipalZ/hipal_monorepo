@@ -1,26 +1,19 @@
+import { Category, Dish } from '@hi/db-models';
 import express, { Request, Response } from 'express';
 
-import { Category, Dish } from '@hi/db-models';
+import { ClientSession } from 'mongoose';
 import { categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
-import { ClientSession } from 'mongoose';
+import validate from 'express-zod-safe';
+import { validateRequest } from 'zod-express-middleware';
 // import { validateRequest } from "../middleware/request";
 import { z } from 'zod';
-import { validateRequest } from 'zod-express-middleware';
+
 const router = express.Router();
 
 //TODO: remove v1 from the route
 router.post(
   '/v1/categories',
-  validateRequest({
-    params: z.object({
-      urlParameter: z.string(),
-    }),
-    body: categorySchema,
-    query: z.object({
-      queryKey: z.string().length(64),
-    }),
-  }),
   async (req: Request, res: Response) => {
     const {
       businessId,
