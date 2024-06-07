@@ -428,17 +428,9 @@ router.post(
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
 
-    // Store it on cockies object
+    console.log("backend", accessToken, refreshToken);
 
-    res.cookie("accessToken", accessToken, {
-      // httpOnly: true,
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      // httpOnly: true,
-    });
-
-    res.status(201).send(existingUser);
+    res.status(201).send({ existingUser, accessToken, refreshToken });
   }
 );
 

@@ -447,8 +447,6 @@ router.put(
           { session }
         );
 
-        console.log("paymentConfig", paymentConfig);
-
         try {
           await Waiterkot.deleteMany(
             { tableId: singleKot?.tableId },

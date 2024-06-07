@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-
 import { natsWrapper } from "../nats-wrapper";
 import { Category, Dish, Extra } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
@@ -19,7 +18,7 @@ router.delete(
         const dish = await Dish.findByIdAndDelete(id, {
           session: session,
         });
-
+        //remove error handling
         if (!dish) {
           dishNotFound = true;
           return;

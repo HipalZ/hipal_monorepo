@@ -5,30 +5,44 @@ import { natsWrapper } from "../nats-wrapper";
 import { Category, Dish } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { ClientSession } from "mongoose";
-import { CategoryType, DishType } from "@hi/db-models/src/validators";
-
+import { CategoryType, categorySchema } from "@hi/db-models/src/validators";
+// import { validateRequest } from "../middleware/request";
+import { validateRequest, RequestValidation } from "zod-express-middleware";
+import { z } from "zod";
 const router = express.Router();
 
-router.post("/v1/categories", async (req: Request, res: Response) => {
-  const {
-    businessId,
-    name,
-    visibility,
-    timerOn,
-    timerStart,
-    timerEnd,
-    availableDays,
-    hierarchy,
-    parentCategory,
-    parentCategoryId,
-    coverImage,
-    links,
-    dishes,
-    availability,
-    charges,
-  } = req.body;
+//TODO: remove v1 from the route
+router.post(
+  "/v1/categories",
+  validateRequest({
+    params: z.object({
+      urlParameter: z.string(),
+    }),
+    body: categorySchema,
+    query: z.object({
+      queryKey: z.string().length(64),
+    }),
+  }),
+  async (req: Request, res: Response) => {
+    const {
+      businessId,
+      name,
+      visibility,
+      timerOn,
+      timerStart,
+      timerEnd,
+      availableDays,
+      hierarchy,
+      parentCategory,
+      parentCategoryId,
+      coverImage,
 
-  try {
+      links,
+      dishes,
+      availability,
+      charges,
+    } = req.body;
+
     await runInTransaction(async (session: ClientSession) => {
       const category = await Category.create(
         [
@@ -68,11 +82,9 @@ router.post("/v1/categories", async (req: Request, res: Response) => {
         { session }
       );
     });
-
-    return res.status(201).send("Category created");
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
+    //{error: ,message: data }
+    return res.status(200).send("Category created");
   }
-});
+);
 
 export { router as createCategoryRouter };

@@ -1,87 +1,76 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import dotenv from "dotenv";
+import { User } from "@hi/db-models";
+import { UserType } from "@hi/db-models/src/validators";
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
-export const authentication = async function (
-  req: Request,
+interface DecodedToken extends JwtPayload {
+  id: string;
+}
+
+interface RequestWithUser extends Request {
+  user?: UserType;
+}
+
+export const auth = async function (
+  request: RequestWithUser,
   res: Response,
   next: NextFunction
 ) {
   try {
-    const bearerToken = req.headers["authorization"];
-    if (!bearerToken) {
+    const accessToken = request.headers.authorization?.split(" ")[1];
+    const refreshToken = request.headers["x-refresh-with"] as string;
+
+    console.log("accessToken", accessToken, "refreshToken", refreshToken);
+
+    if (!accessToken && !refreshToken) {
       return res
-        .status(404)
-        .send({ status: false, msg: "Token must be present" });
+        .status(401)
+        .send({ status: false, error: true, message: "Invalid Token!" });
     }
 
-    const tokens = bearerToken.split(" ");
-    const accessToken = tokens[1];
-    const refreshToken = tokens[2];
+    let decodedToken: DecodedToken | undefined;
 
-    if (!accessToken) {
-      return res
-        .status(404)
-        .send({ status: false, msg: "Access token must be present" });
-    }
-
-    const secret = process.env.JWT_SECRET as string;
-    console.log("secret", secret);
-    if (!secret) {
-      throw new Error("JWT_SECRET environment variable is not defined");
-    }
-    console.log("accessToken", accessToken);
-    console.log("refreshToken", refreshToken);
-
-    jwt.verify(accessToken, secret, (error, decodedToken) => {
-      if (error) {
-        if (error.name === "TokenExpiredError") {
-          if (!refreshToken) {
-            return res
-              .status(404)
-              .send({ status: false, msg: "Refresh token must be present" });
-          }
-
-          jwt.verify(
+    jwt.verify(
+      accessToken || "randomtoken",
+      process.env.JWT_SECRET as string,
+      (err, decoded) => {
+        decodedToken = err ? undefined : (decoded as DecodedToken);
+        if (err && refreshToken) {
+          decodedToken = jwt.verify(
             refreshToken,
-            secret,
-            (refreshError, decodedRefreshToken) => {
-              if (refreshError) {
-                return res
-                  .status(401)
-                  .send({ status: false, msg: refreshError.message });
-              }
-
-              // Optional: Refresh the access token if needed and send it back to the client
-              const newAccessToken = jwt.sign(
-                { ...(decodedRefreshToken as object) },
-                secret,
-                { expiresIn: "3m" }
-              );
-
-              // Set the new access token as a cookie
-              res.cookie("accessToken", newAccessToken, {
-                httpOnly: true,
-              });
-
-              next();
-            }
-          );
-
-          return res.status(401).send({ status: false, msg: error.message });
-        } else {
-          return res.status(401).send({ status: false, msg: error.message });
+            process.env.JWT_SECRET as string
+          ) as DecodedToken;
         }
-      } else {
-        // @ts-ignore
-        req.user = decodedToken;
-        next();
       }
-    });
+    );
+
+    console.log("decodedToken", decodedToken);
+
+    if (!decodedToken) {
+      return res
+        .status(401)
+        .send({ status: false, error: true, message: "Invalid Token!" });
+    }
+
+    const userId = decodedToken.id;
+    const doesUserExist = await User.findOne({ _id: userId })
+      .lean({ autopopulate: true })
+      .select("-password");
+
+    if (!doesUserExist) {
+      return res
+        .status(401)
+        .send({ status: false, error: true, message: "Invalid User!" });
+    }
+
+    request.user = { ...doesUserExist };
+    next();
   } catch (error) {
-    return res
-      .status(500)
-      .send({ status: false, msg: (error as Error).message });
+    console.error(error);
+    return res.status(401).send({
+      status: false,
+      error: true,
+      message: "Please login to continue.",
+    });
   }
 };

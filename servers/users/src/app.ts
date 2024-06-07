@@ -55,6 +55,7 @@ app.use(
       "Origin",
       "Cookie",
       "h-idem-id",
+      "x-refresh-with",
     ],
   })
 );
