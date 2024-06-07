@@ -1,5 +1,5 @@
 {
-  "name": "kitchens",
+  "name": "@hi/kitchens",
   "version": "1.0.1",
   "description": "",
   "main": "index.js",
@@ -28,11 +28,11 @@
     "node-nats-streaming": "^0.3.2",
     "razorpay": "^2.9.3",
     "redis": "^4.4.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",  "@hi/db-models": "workspace:*",
+    "@hi/utils": "workspace:*"
   },
   "devDependencies": {
-    "@hi/db-models": "workspace:*",
-    "@hi/utils": "workspace:*",
+  
     "@hipal/common": "^0.0.5",
     "@types/body-parser": "^1.19.2",
     "@types/cookie-session": "^2.0.44",
