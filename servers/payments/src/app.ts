@@ -1,8 +1,8 @@
-import { json, urlencoded } from 'body-parser';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
+import morgan from 'morgan';
 
 import { idempotent } from './middleware/idempotent';
 
@@ -12,10 +12,11 @@ import { readPaymentsRouter } from './routes/read-payment';
 import { updatePaymentsRouter } from './routes/update-payment';
 
 const app = express();
+app.use(morgan('dev'));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingres
-app.use(json());
-app.use(urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [

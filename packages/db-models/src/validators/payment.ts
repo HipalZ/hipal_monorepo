@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const Item = z.object({
+export const Item = z.object({
   name: z.string(),
   quantity: z.number(),
   amount: z.number(),
@@ -9,7 +9,7 @@ const Item = z.object({
   comments: z.string(),
 });
 
-const SwiggyBillObj = z.object({
+export const SwiggyBillObj = z.object({
   totalItems: z.number(),
   subTotal: z.number(),
   packingCharges: z.number(),
@@ -19,7 +19,7 @@ const SwiggyBillObj = z.object({
   totalPrice: z.number(),
 });
 
-const PaymentAttrs = z.object({
+export const PaymentSchema = z.object({
   businessId: z.string().optional(),
   businessName: z.string().optional(),
   address: z.string().optional(),
@@ -79,6 +79,6 @@ const PaymentAttrs = z.object({
   tipsGivenBy: z.string().optional(),
 });
 
-export type PaymentType = z.infer<typeof PaymentAttrs>;
+export type PaymentType = z.infer<typeof PaymentSchema>;
 export type PaymentItemType = z.infer<typeof Item>;
 export type PaymentSwiggyBillObjType = z.infer<typeof SwiggyBillObj>;

@@ -7,7 +7,7 @@ cd servers/businesses
 echo "Starting the businesses server..."
 
 # Run the pnpm start command
-pnpm start &
+pnpm dev &
 
 # Print a message to the console
 cd ../../
@@ -17,7 +17,7 @@ cd servers/users
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
 echo "Starting the users server..."
 
@@ -30,7 +30,7 @@ cd servers/categories
 echo "Starting the categories server..."
 
 # Run the pnpm start command
-pnpm start &
+pnpm dev &
 
 cd ../../
 
@@ -44,7 +44,7 @@ echo "Starting the dishes server..."
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
 cd ../../
 
@@ -58,7 +58,7 @@ echo "Starting the kitchens server..."
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
 cd ../../
 
@@ -72,7 +72,7 @@ echo "Starting the payments server..."
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
 cd ../../
 
@@ -86,7 +86,7 @@ echo "Starting the settings server..."
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
 cd ../../
 
@@ -100,49 +100,7 @@ echo "Starting the zones server..."
 
 # Run the pnpm start command
 
-pnpm start &
+pnpm dev &
 
-
-cd ../../
-
-# Navigate to the servers/reviews directory
-
-cd client-hi-biz 
-
-# Print a message to the console
-
-echo "Starting the client-hi-biz server..."
-
-# Run the pnpm start command
-
-npm run dev &
-
-cd ../../
-
-# Navigate to the servers/reviews directory
-
-cd client-hitable
-
-# Print a message to the console
-
-echo "Starting the client-hitable server..."
-
-# Run the pnpm start command
-
-npm run dev &
-
-cd ../../
-
-# Navigate to the directory
-
-cd client-pro-hipal
-
-# Print a message to the console
-
-echo "Starting the client-pro-hipal server..."
-
-# Run the pnpm start command
-npm i &&
-npm run dev &
 
 cd ../../

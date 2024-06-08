@@ -1,14 +1,15 @@
 import express, { Request, Response } from 'express';
 
 import { Dues, Payment, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
-import momentTimeZone from 'moment-timezone';
-
+import { CustomerSchema, DuesSchema, PaymentModeSchema, PaymentSchema, ReviewsSchema } from '@hi/db-models/src/validators';
 import axios from 'axios';
+import momentTimeZone from 'moment-timezone';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 
 const crypto = require('crypto');
 const ENC_KEY = process.env.API_KEY; // set random encryption key
 const IV = process.env.API_KEY?.slice(0, 16);
-
 // set random initialisation vector
 
 const encrypt = (val: string) => {
@@ -29,7 +30,10 @@ const router = express.Router();
 router.post(
   '/v1/payments',
 
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: PaymentSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof PaymentSchema>>, res: Response) => {
     try {
       const {
         businessId,
@@ -142,48 +146,12 @@ router.post(
   },
 );
 
-// router.post(
-//   "/v1/payments/1pay",
-
-//   async (req: Request, res: Response) => {
-//     const response = JSON.parse(decrypt(req.body.respData));
-
-//     const existingPayment = await Payment.findById(response["txn_id"]);
-
-//     existingPayment.paymentMode = response["payment_mode"];
-//     existingPayment.respMsg = response["resp_message"];
-//     existingPayment.tranStatus = response["trans_status"];
-//     existingPayment.respCode = response["resp_code"];
-//     existingPayment.bankRefId = response["bank_ref_id"];
-//     existingPayment.pgRefId = response["pg_ref_id"];
-
-//     await existingPayment.save();
-
-//     // const payment = Payment.build({
-//     //   businessId,
-//     //   reviewerName,
-//     //   description,
-//     //   satisfactionRating,
-//     //   mostLiked,
-//     //   time,
-//     // });
-//     // await payment.save();
-
-//     res.redirect(
-//       process.env.redirectURL ||
-//         `https://biz.hipal.life/order/${existingPayment.id}`
-//     );
-//   }
-// );
-
 router.post(
   '/v1/payments/Create/Mode',
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: PaymentModeSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof PaymentModeSchema>>, res: Response) => {
     let { mode, businessId, commission } = req.body || {};
 
     try {
@@ -209,12 +177,10 @@ router.post(
 
 router.post(
   '/v1/payments/Create/Dues',
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: DuesSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof DuesSchema>>, res: Response) => {
     let { duesPersonNames, businessId } = req.body || {};
 
     try {
@@ -239,199 +205,6 @@ router.post(
     }
   },
 );
-
-// router.post(
-//   "/v1/payments/Create/Alert",
-//   // currentUser,
-//   // requireAuthorization([
-//   //   ClientRoles.RESTAURANT_OWNER,
-//   //   ClientRoles.RESTAURANT_MANAGER,
-//   // ]),
-//   async (req: Request, res: Response) => {
-//     let { businessId, uniqueName } = req.body || {};
-
-//     try {
-//       let alert = await PaymentAlert.findOne({
-//         businessId,
-//         uniqueName,
-//       });
-//       if (alert) {
-//         return res.status(400).send("Name Already exit...");
-//       } else {
-//         await BusinessAlert.create({ ...req.body });
-//         alert = new PaymentAlert({ ...req.body });
-//       }
-
-//       const saveAlert = await alert.save();
-//       return res.status(201).send(saveAlert);
-//     } catch (error) {
-//       console.error("Error while processing the alert:", error);
-//       return res.status(500).json({ error: "Internal server error" });
-//     }
-//   }
-// );
-
-// router.post(
-//   "/v1/payments/Generate/Alert",
-//   // currentUser,
-//   // requireAuthorization([
-//   //   ClientRoles.RESTAURANT_OWNER,
-//   //   ClientRoles.RESTAURANT_MANAGER,
-//   // ]),
-//   async (req: Request, res: Response) => {
-//     let { businessId } = req.query || {};
-
-//     try {
-//       const getPaymentAlert = await PaymentAlert.find({ businessId });
-//       const getPaymentsModes = await PaymentMode.find({ businessId });
-
-//       const calculateSale = (array: any) => {
-//         let summary: any = {
-//           totalSale: 0,
-//           modes: {},
-//         };
-
-//         array.forEach((payment: any) => {
-//           if (payment.mode) {
-//             if (!summary.modes[payment.mode]) {
-//               summary.modes[payment.mode] = 0;
-//             }
-//             summary.modes[payment.mode] += payment.total;
-//           }
-//         });
-
-//         // Convert modes object to desired format
-//         const modesArray = [];
-//         for (const [mode, total] of Object.entries(summary.modes) as any) {
-//           // Retrieve commission percentage for the mode
-//           const commissionPercent = modes[mode] || 0;
-
-//           // Calculate commission amount
-//           const totalCommissionSale = (commissionPercent / 100) * total;
-
-//           // Adjust totalSale by subtracting commission
-//           const adjustedTotalSale = total - totalCommissionSale;
-//           summary.totalSale += adjustedTotalSale;
-
-//           modesArray.push({
-//             mode: mode,
-//             totalSale: adjustedTotalSale,
-//             commissionPercent: commissionPercent,
-//             totalCommissionSale: totalCommissionSale,
-//           });
-//         }
-
-//         summary.modes = modesArray;
-//         return modesArray;
-//       };
-//       let modes: any = {};
-//       getPaymentsModes.forEach((element) => {
-//         if (element?.mode) {
-//           if (!modes[element.mode]) {
-//             modes[element.mode] = element?.commission;
-//           }
-//         }
-//       });
-//       const dayAndDate = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD"); // Adjust timezone as necessary
-//       const existingPayments = await Payment.find({
-//         businessId,
-//         date: { $regex: `^${dayAndDate}` },
-//       });
-
-//       let result = calculateSale(existingPayments);
-//       let mewObje: any = {};
-//       result.forEach((element) => {
-//         if (element?.mode) {
-//           if (!mewObje[element.mode]) {
-//             mewObje[element.mode] = element?.totalSale;
-//           }
-//         }
-//       });
-//       const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
-//       for (let i = 0; i < getPaymentAlert.length; i++) {
-//         let element = getPaymentAlert[i];
-//         if (mewObje[element?.uniqueName]) {
-//           if (element?.lower == true) {
-//             if (mewObje[element?.uniqueName] < element.amount) {
-//               let newData = new BusinessAlert({
-//                 businessId: element?.businessId,
-//                 subject: element?.subject,
-//                 uniqueName: element?.uniqueName,
-//                 amount: element?.amount,
-//                 higher: false,
-//                 date: day,
-//                 lower: true,
-//                 value: mewObje[element?.uniqueName],
-//               });
-//               await newData.save();
-//             }
-//           } else if (element?.higher == true) {
-//             console.log("higher");
-//             console.log(
-//               "predone",
-//               typeof element.amount,
-//               typeof mewObje[element?.uniqueName]
-//             );
-
-//             if (mewObje[element?.uniqueName] > element.amount) {
-//               let newData = new BusinessAlert({
-//                 businessId: element?.businessId,
-//                 subject: element?.subject,
-//                 uniqueName: element?.uniqueName,
-//                 amount: element?.amount,
-//                 higher: true,
-//                 date: day,
-//                 lower: false,
-//                 value: mewObje[element?.uniqueName],
-//               });
-//               await newData.save();
-//             }
-//           }
-//         }
-//       }
-
-//       return res.status(200).send("generate alert !");
-//     } catch (error) {
-//       console.error("Error while processing the alert:", error);
-//       return res.status(500).json({ error: "Internal server error" });
-//     }
-//   }
-// );
-
-// router.post(
-//   "/v1/payments/createLoyaltyAlert",
-//   // currentUser,
-//   // requireAuthorization([
-//   //   ClientRoles.RESTAURANT_OWNER,
-//   //   ClientRoles.RESTAURANT_MANAGER,
-//   // ]),
-//   async (req: Request, res: Response) => {
-//     let { loyaltyId, businessName, ownerName } = req.body || {};
-
-//     try {
-//       let newPass = Math.floor(Math.random() * 9000) + 10000;
-//       const exitingLoyaltyAlert = await BusinessAlert.findOne({
-//         businessId: loyaltyId,
-//         uniqueName: "loyaltyAlert",
-//       });
-//       if (exitingLoyaltyAlert) {
-//         return res.status(400).send("Alert Already Send");
-//       }
-//       let createAlert = new BusinessAlert({
-//         businessId: loyaltyId,
-//         value: newPass,
-//         subject: `${businessName} want to use your loyalty feature if yes please share your password to ${ownerName}`,
-//         uniqueName: "loyaltyAlert",
-//       });
-
-//       const saveAlert = await createAlert.save();
-//       return res.status(201).send(saveAlert);
-//     } catch (error) {
-//       console.error("Error while processing the dues:", error);
-//       return res.status(500).json({ error: "Internal server error" });
-//     }
-//   }
-// );
 
 router.post(
   '/v1/payments/discountAlert',
@@ -747,7 +520,10 @@ router.post(
 router.post(
   '/v1/payments/reviews',
 
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: ReviewsSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof ReviewsSchema>>, res: Response) => {
     const { businessId, reviewerPhone, reviewRating } = req.body || {};
 
     if (!businessId || !reviewerPhone || !reviewRating) {
@@ -773,13 +549,10 @@ router.post(
 router.post(
   '/v1/payments/customer',
 
-  // validateCustomer,
-  // requireAuthorization([
-  //   ClientRoles.HIPAL_CUSTOMER,
-  //   ClientRoles.RESTAURANT_OWNER,
-  // ]),
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: CustomerSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof CustomerSchema>>, res: Response) => {
     const { businessId, phone, name } = req.body || {};
 
     if (!businessId || !phone) {

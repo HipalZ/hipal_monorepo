@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   MONGO_URI: z.string(),
+  // JWT_SECRET: z.string(),
 });
 
 envSchema.parse(process.env);

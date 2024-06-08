@@ -1,19 +1,16 @@
-import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
-
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
 
 // Routes
+import morgan from 'morgan';
 import { createSettingsRouter } from './routes/create-settings';
 import { deleteSettingsRouter } from './routes/delete-settings';
 import { readSettingsRouter } from './routes/read-settings';
 import { updateSettingsRouter } from './routes/update-settings';
-import morgan from "morgan"
 
 const app = express();
-
-app.use(morgan("dev"));
+app.use(morgan('dev'));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingress
 app.use(express.json());

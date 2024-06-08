@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const UrlAttrs = z.object({
+export const UrlAttrs = z.object({
   longUrl: z.string(),
   shortUrl: z.string(),
   urlCode: z.string(),

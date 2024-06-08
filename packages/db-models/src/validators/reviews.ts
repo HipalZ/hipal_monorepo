@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const ReviewsAttrs = z.object({
+export const ReviewsSchema = z.object({
   businessId: z.string(),
   reviewerName: z.string().optional(),
   reviewerPhone: z.string(),
@@ -10,4 +10,4 @@ const ReviewsAttrs = z.object({
   date: z.number(),
 });
 
-export type ReviewsType = z.infer<typeof ReviewsAttrs>;
+export type ReviewsType = z.infer<typeof ReviewsSchema>;

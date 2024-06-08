@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const CustomerAttrs = z.object({
+export const CustomerSchema = z.object({
   businessId: z.string(),
   name: z.string().optional(),
   phone: z.string(),
@@ -8,4 +8,4 @@ const CustomerAttrs = z.object({
   date: z.number(),
 });
 
-export type CustomerType = z.infer<typeof CustomerAttrs>;
+export type CustomerType = z.infer<typeof CustomerSchema>;

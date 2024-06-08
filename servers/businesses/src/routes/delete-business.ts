@@ -1,8 +1,6 @@
 import { Business } from '@hi/db-models';
 import express, { Request, Response } from 'express';
-
 const router = express.Router();
-
 router.delete(
   '/v1/businesses/:businessId',
 

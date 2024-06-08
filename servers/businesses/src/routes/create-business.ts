@@ -1,8 +1,8 @@
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
-import { validateRequest } from 'zod-express-middleware';
-import {z} from 'zod';
+import { BusinessSchema, loyaltySchema, RoleSchema } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
-import { BusinessSchema, RoleSchema, loyaltySchema } from '@hi/db-models/src/validators';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.post(
   validateRequest({
     body: BusinessSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof BusinessSchema>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof BusinessSchema>>, res: Response) => {
     const {
       likes,
       wallpaper,
@@ -97,7 +97,7 @@ router.post(
   validateRequest({
     body: loyaltySchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof loyaltySchema>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof loyaltySchema>>, res: Response) => {
     try {
       const { businessId, password } = req.body;
 
@@ -126,7 +126,7 @@ router.post(
   validateRequest({
     body: RoleSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof RoleSchema>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof RoleSchema>>, res: Response) => {
     const { name, description, permissions } = req.body;
     const { id } = req.params as { id: string };
 

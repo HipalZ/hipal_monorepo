@@ -24,10 +24,10 @@ export const auth = async function (request: RequestWithUser, res: Response, nex
 
     let decodedToken: DecodedToken | undefined;
 
-    jwt.verify(accessToken || 'randomtoken', process.env.JWT_SECRET as string, (err, decoded) => {
+    jwt.verify(accessToken || 'randomtoken', 'testSecret', (err, decoded) => {
       decodedToken = err ? undefined : (decoded as DecodedToken);
       if (err && refreshToken) {
-        decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET as string) as DecodedToken;
+        decodedToken = jwt.verify(refreshToken, 'testSecret') as DecodedToken;
       }
     });
 

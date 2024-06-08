@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-const CustomRole = z.object({
+export const CustomRole = z.object({
   businessId: z.string(),
   customRoleId: z.string(),
   roleName: z.string(),
 });
 
-const UserController = z
+export const UserController = z
   .object({
     hibiz: z.boolean().optional(),
     dish: z.boolean().optional(),
@@ -18,7 +18,7 @@ const UserController = z
   })
   .default({});
 
-const UserAttrs = z.object({
+export const UserAttrs = z.object({
   name: z.string().default(''),
   email: z.string().default(''),
   phone: z.string(),

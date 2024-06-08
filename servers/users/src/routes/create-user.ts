@@ -1,4 +1,5 @@
 // import { BadRequestError, NotFoundError, validateRequest } from "@hipal/common";
+import { UrlAttrs, UserAttrs } from '@hi/db-models/src/validators';
 import axios from 'axios';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
@@ -7,6 +8,8 @@ import { redisWrapper } from '../redis-wrapper';
 import { Admin, LoyaltySettings, UrlModel, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 
 const shortid = require('shortid');
 const FCM = require('fcm-node');
@@ -24,7 +27,7 @@ const createAccessToken = (user: any) => {
       role: user.role,
       customRole: user.customRole,
     },
-    process.env.JWT_SECRET as string,
+    'testSecret',
     { expiresIn: '3m' }, // Add 7 day expiration
   );
 };
@@ -53,7 +56,7 @@ const createRefreshToken = (user: any) => {
       role: user.role,
       customRole: user.customRole,
     },
-    process.env.JWT_SECRET as string,
+    'testSecret',
     { expiresIn: '5m' }, // Add 30 day expiration
   );
 };
@@ -130,8 +133,10 @@ const addSignUpBonus = async (
 
 router.post(
   '/v1/users/:id/signUp',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: UserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
 
     try {
@@ -407,26 +412,32 @@ router.post(
   },
 );
 
-router.post('/v1/users/usrShortner', async (req: Request, res: Response) => {
-  try {
-    const { longUrl } = req.body;
-    let exit = await UrlModel.findOne({ longUrl });
-    if (!exit) {
-      let id = shortid.generate(); //hggff
-      const Data = new UrlModel({
-        longUrl: longUrl,
-        shortUrl: `${process.env.URL}/v1/users/Url/${id.toLowerCase()}`,
-        urlCode: id.toLowerCase(),
-      });
-      const result = await Data.save();
-      return res.send(result);
-    } else {
-      return res.send(exit);
+router.post(
+  '/v1/users/usrShortner',
+  validateRequest({
+    body: UrlAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UrlAttrs>>, res: Response) => {
+    try {
+      const { longUrl } = req.body;
+      let exit = await UrlModel.findOne({ longUrl });
+      if (!exit) {
+        let id = shortid.generate(); //hggff
+        const Data = new UrlModel({
+          longUrl: longUrl,
+          shortUrl: `${process.env.URL}/v1/users/Url/${id.toLowerCase()}`,
+          urlCode: id.toLowerCase(),
+        });
+        const result = await Data.save();
+        return res.send(result);
+      } else {
+        return res.send(exit);
+      }
+    } catch (e: any) {
+      return res.status(500).send({ status: false, message: e.message });
     }
-  } catch (e: any) {
-    return res.status(500).send({ status: false, message: e.message });
-  }
-});
+  },
+);
 
 router.post(
   '/v1/users/login',
