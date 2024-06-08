@@ -10,7 +10,7 @@ const Items = z.object({
   id: z.string(),
 });
 
-const ExtraAttrs = z.object({
+export const ExtraAttrs = z.object({
   businessId: z.string(),
   name: z.string(),
   numOptions: z.number(),

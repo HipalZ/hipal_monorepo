@@ -35,7 +35,7 @@ const Dish = z.object({
   portions: Portion,
 });
 
-const KOTAttrs = z.object({
+export const KOTAttrs = z.object({
   businessId: z.string(),
   kitchenId: z.string().optional(),
   zoneId: z.string().optional(),

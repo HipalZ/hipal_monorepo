@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-
+import { validateRequest } from 'zod-express-middleware';
 import { Kitchen, Kot, Kotpassword, Printer, Table, Tempmodel, Waiterkot } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
@@ -11,8 +11,9 @@ import { razorpayWrapper } from '../razorpay-wrapper';
 
 const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
-import { KOTType } from '@hi/db-models/src/validators';
+import { KOTAttrs, KOTType, KitchenAttrs } from '@hi/db-models/src/validators';
 import { createHmac } from 'crypto';
+import { z } from 'zod';
 
 const router = express.Router();
 
@@ -46,12 +47,10 @@ const kotTime = formatterTimesAndSeconds.format(currentTime);
 
 router.post(
   '/v1/kitchens/kickOut/kots',
-
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: KOTAttrs,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof KOTAttrs>>, res: Response) => {
     try {
       const { zoneId, tableId } = req.body || {};
 
@@ -87,8 +86,10 @@ router.post(
 
 router.post(
   '/v1/kitchens',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: KitchenAttrs,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof KitchenAttrs>>, res: Response) => {
     const { businessId, kitchenName, description, staff } = req.body;
 
     const kitchen = await Kitchen.create({

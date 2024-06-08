@@ -1,16 +1,18 @@
 import express, { Request, Response } from 'express';
-// import { validateDish } from "./validators/new-dish-validator";
-
+import { validateRequest } from 'zod-express-middleware';
 import { Category, Dish, Extra } from '@hi/db-models';
-import { ExtraType } from '@hi/db-models/src/validators';
+import { ExtraAttrs, ExtraType, dishSchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
+import { z } from 'zod';
 const router = express.Router();
 
 router.post(
   '/v1/dishes',
-  // validateDish,
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: dishSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof dishSchema>>, res: Response) => {
     const {
       businessId,
       name,
@@ -80,11 +82,10 @@ router.post(
 
 router.post(
   '/v1/dishes/extra',
-  // validateDish,
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  // validateRequest,
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: ExtraAttrs,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof ExtraAttrs>>, res: Response) => {
     const {
       businessId,
       name,

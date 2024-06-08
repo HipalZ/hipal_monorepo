@@ -1,9 +1,9 @@
-import { json, urlencoded } from 'body-parser';
+import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
-import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import { idempotent } from './middleware/idempotent';
+import morgan from 'morgan';
 
 // Routes
 import { createDishRouter } from './routes/create-dish';
@@ -12,10 +12,11 @@ import { readDishesRouter } from './routes/read-dish';
 import { updateDishesRouter } from './routes/update-dish';
 
 const app = express();
+app.use(morgan('dev'));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingress
-app.use(json());
-app.use(urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [
