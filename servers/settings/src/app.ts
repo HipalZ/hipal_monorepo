@@ -1,21 +1,23 @@
-import { currentUser, errorHandler } from '@hipal/common';
-import { json, urlencoded } from 'body-parser';
+import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
+
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
-import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 
 // Routes
 import { createSettingsRouter } from './routes/create-settings';
 import { deleteSettingsRouter } from './routes/delete-settings';
 import { readSettingsRouter } from './routes/read-settings';
 import { updateSettingsRouter } from './routes/update-settings';
+import morgan from "morgan"
 
 const app = express();
+
+app.use(morgan("dev"));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingress
-app.use(json());
-app.use(urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: [
@@ -31,7 +33,6 @@ app.use(
       'http://localhost:3000',
       'http://localhost:3009',
       'http://localhost:3011',
-
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -62,7 +63,6 @@ app.use(
     sameSite: 'none',
   }),
 );
-app.use(currentUser);
 
 // Register routes
 app.use(createSettingsRouter);
@@ -73,7 +73,5 @@ app.use(deleteSettingsRouter);
 app.all('*', () => {
   return 'Not Found';
 });
-
-app.use(errorHandler);
 
 export { app };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const Themes = z.object({
+export const Themes = z.object({
   primaryColor: z.string(),
   secondaryColor: z.string(),
   accentColor: z.string(),
@@ -17,7 +17,7 @@ const Themes = z.object({
   footerText: z.string(),
 });
 
-const specialOffer = z.object({
+export const specialOffer = z.object({
   wallpaper: z.string(),
   offerName: z.string(),
   redirectType: z.string(),
@@ -25,12 +25,12 @@ const specialOffer = z.object({
   redirectName: z.string(),
 });
 
-const Highlight = z.object({
+export const Highlight = z.object({
   name: z.string(),
   stories: z.array(z.string()),
 });
 
-const Explore = z.object({
+export const Explore = z.object({
   wallpaper: z.string(),
   phone: z.string(),
   countryCode: z.string(),
@@ -42,14 +42,14 @@ const Explore = z.object({
   highlights: z.array(Highlight),
 });
 
-const Navigation = z.object({
+export const Navigation = z.object({
   from: z.string(),
   to: z.string(),
   categoryCard: z.string(),
   dishCard: z.string(),
 });
 
-const settingsSchema = z.object({
+export const settingsSchema = z.object({
   businessId: z.string(),
   themes: Themes.optional(),
   explore: Explore.optional(),

@@ -1,11 +1,17 @@
 import { Table, Zone } from '@hi/db-models';
+import { TableSchema, ZoneSchema } from '@hi/db-models/src/validators';
+import { z } from 'zod';
 import express, { Request, Response } from 'express';
+import { validateRequest } from 'zod-express-middleware';
+
 const router = express.Router();
 
 router.post(
   '/v1/zones',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: ZoneSchema,
+  }),
+  async (req: Request<{}, {}, z.infer<typeof ZoneSchema>>, res: Response) => {
     const { businessId, zoneName, zoneType, startTime, endTime, staff, tables, Occupied, charges } = req.body;
 
     const zone = await Zone.create({
@@ -26,8 +32,10 @@ router.post(
 
 router.post(
   '/v1/zones/:zoneId/tables',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: TableSchema,
+  }),
+  async (req: Request<{ zoneId: string }, {}, z.infer<typeof TableSchema>>, res: Response) => {
     try {
       const {
         businessId,
@@ -90,10 +98,16 @@ router.post(
   },
 );
 
+const BulkTablesSchema = z.object({
+  tables: z.array(TableSchema),
+});
+
 router.post(
   '/v1/zones/:zoneId/bulkTables',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: BulkTablesSchema,
+  }),
+  async (req: Request<{ zoneId: string }, {}, z.infer<typeof BulkTablesSchema>>, res: Response) => {
     try {
       let { tables } = req.body;
       const { zoneId } = req.params;

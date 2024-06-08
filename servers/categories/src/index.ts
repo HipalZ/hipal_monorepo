@@ -6,9 +6,9 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 const start = async () => {
-  
+
   await connectDB()
- 
+
   app.listen(3002, () => {
     console.log('Listening on port 3002!!');
   });

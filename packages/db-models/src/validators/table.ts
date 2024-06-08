@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const TableSchema = z.object({
+export const TableSchema = z.object({
   businessId: z.string(),
   zoneId: z.string(),
   name: z.string(),
