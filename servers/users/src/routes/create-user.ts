@@ -487,7 +487,6 @@ router.post(
 
     const UserOrAdmin = clientRole === 'admin' ? Admin : User;
 
-    let user;
     if (clientRole === 'admin') {
       user = await Admin.findOne({ phone, role: 'HIPAL_ADMIN' });
     } else {
@@ -560,7 +559,10 @@ router.post(
 
     let userExit = await User.findOne({ phone, role: 'RESTAURANT_MANAGER' });
     if (!userExit) {
-      return res.status(400).send('not found');
+      return res.status(400).send({
+        status: false,
+        message: 'Phone  Invalid !! Please Try again !!!',
+      });
     }
     return res.send(userExit);
   },
@@ -633,15 +635,24 @@ router.post('/v1/users/registrationToken/Send', async (req, res) => {
     fcm.send(pushMessage, (err: any, response: any) => {
       if (err) {
         console.log('Error sending FCM message:', err);
-        return res.status(500).send('Internal Server Error');
+        return res.status(500).send({
+          status: false,
+          message: 'Internal Server Error', 
+        });
       }
 
       console.log('FCM message sent successfully:', response);
-      return res.status(200).send('Notification sent successfully');
+      return res.status(200).send({
+        status: true,
+        message: 'Notification sent successfully',
+      });
     });
   } catch (error) {
     console.log('Error parsing Firebase config file:', error);
-    return res.status(500).send('Internal Server Error');
+    return res.status(500).send({
+      status: false,
+      message: 'Internal Server Error'
+    });
   }
 });
 
@@ -808,12 +819,18 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
 
       if (!userSide) {
         if (password !== existingUser?.password) {
-          return res.status(400).send('Wrong password');
+          return res.status(400).send({
+            status: false,
+            message: 'Wrong password',
+          });
         }
       }
       if (existingUser) {
         if (existingUser?.rewards == 0 || claimedAmountNumber > existingUser?.rewards) {
-          return res.status(400).send("You cann't claimed 0 coins or claimedAmount should be less than rewards");
+          return res.status(400).send({
+            status: false,
+            message: 'You can`t claimed 0 coins or claimedAmount should be less than rewards',
+          });
         }
       }
 
@@ -995,7 +1012,10 @@ router.post('/v1/users/addBulkCoins', async (req: Request, res: Response) => {
       }
     });
 
-    return res.send('uploaded successfully');
+    return res.send({
+      status: true,
+      message: 'uploaded successfully',
+    });
   } catch (err: any) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -1087,7 +1107,10 @@ router.post(
       return res.status(400).send({ status: false, message: 'Please enter valid Otp !!' });
     }
 
-    return res.status(200).send('success');
+    return res.status(200).send({
+      status: true,
+      message: 'Login SuccessFull !!!',
+    });
   },
 );
 

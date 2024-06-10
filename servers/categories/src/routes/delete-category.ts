@@ -1,15 +1,20 @@
 import express, { Request, Response } from 'express';
-
 import { Category, Dish } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
+import { validateRequest } from 'zod-express-middleware';
+import { categorySchema } from '@hi/db-models/src/validators';
+import { z } from 'zod';
 
 const router = express.Router();
 
 router.delete(
   '/v1/categories/:id',
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
+  validateRequest({
+    body: categorySchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
+    const { id } = req.params as { id: string};
     let categoryNotFound = false;
 
     try {
@@ -32,7 +37,9 @@ router.delete(
         });
       }
 
-      return res.status(200).send('deleted');
+      return res.status(200).send({
+        message: 'Category deleted successfully',
+      });
     } catch (error) {
       console.error(error);
       return res.status(500).send({

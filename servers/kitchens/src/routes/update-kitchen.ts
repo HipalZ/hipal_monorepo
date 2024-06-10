@@ -108,7 +108,10 @@ router.put('/v1/kitchens/updateAlert/alert',
           await Kot.findByIdAndUpdate(alertExit?.kotId, { dishStatus: 'delivered' }, { session });
         }
 
-        res.send('success');
+        res.send({
+          status: true,
+          message: 'Alert Cleared',
+        });
       }
 
       if (alertExit?.status == 'Cooked') {
@@ -163,7 +166,7 @@ router.put('/v1/kitchens/updateAlert/alert',
         } catch (err: any) {
           res.status(400).send({
             status: false,
-            message: 'need assitance not updated !!',
+            message: 'need assistance not updated !!',
           });
         }
       }
@@ -289,7 +292,7 @@ router.put(
   }),
   async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
     const { tableId } = req.query || {};
-    const updatedKOTs = await Kot.updateMany({ tableId }, { $set: { dishStatus: 'delivered' } });
+    await Kot.updateMany({ tableId }, { $set: { dishStatus: 'delivered' } });
     res.status(201).send({ status: true, message: 'Updated Successfully......!' });
   },
 );
@@ -386,7 +389,7 @@ router.put('/v1/kitchens/:id/settle-bill',
         Total = 0;
       }
 
-      const paymentConfig = await Payment.create(
+      await Payment.create(
         [
           {
             businessId: singleKot?.businessId,
@@ -463,7 +466,10 @@ router.put('/v1/kitchens/:id/settle-bill',
       }
     });
 
-    res.status(200).send('Settled!');
+    res.status(200).send({
+      status: true,
+      message: 'Bill settled successfully',
+    });
   } catch (err: any) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -851,7 +857,10 @@ router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Respon
       );
     });
 
-    res.status(200).send('Switched Successfully');
+    res.status(200).send({
+      status: true,
+      message: 'Table switched successfully',
+    });
   } catch (err: any) {
     res.status(500).send({ status: false, message: err.message });
   }
@@ -1148,7 +1157,10 @@ router.put(
       console.log('deleteKotPass', deleteKotPass);
 
       if (password != deleteKotPass?.password) {
-        return res.status(400).send('Wrong password');
+        return res.status(400).send({
+          status: false,
+          message: 'Password is incorrect',
+        });
       }
       let result = await Kot.updateMany({ businessId, orderId, isDeleted: false }, { isDeleted: true });
 
@@ -1163,7 +1175,7 @@ router.put(
   '/v1/kitchens/:id/kot/:kotId',
 
   async (req: Request, res: Response) => {
-    const { id, kotId } = req.params;
+    const { kotId } = req.params;
     let update = { ...req.body };
 
     let updateKot = await Kot.findByIdAndUpdate(kotId, update, { new: true });
@@ -1173,7 +1185,6 @@ router.put(
 
 router.put(
   '/v1/kitchens/:id/tempModel',
-
   async (req: Request, res: Response) => {
     const { tableId, remove } = req.query;
     if (tableId) {
@@ -1182,7 +1193,12 @@ router.put(
     }
     if (remove) {
       await Tempmodel.deleteMany();
-      return res.send('Deleted');
+      // TODO: check the message and status
+      return res.send({
+        status: true,
+        message: 'Deleted Successfully',
+    
+      });
     }
     let tables = await Tempmodel.find();
 
@@ -1438,7 +1454,6 @@ router.put(
     if (subTotal < 0) {
       flag = true;
     }
-    let copy = subTotal;
     let Total: number = 0;
     let newSubTotal = 0;
     if (flag) {
@@ -1680,7 +1695,6 @@ router.put(
       flag = true;
     }
 
-    let copy = subTotal;
     let Total: number = 0;
     let newSubTotal = 0;
     if (flag) {

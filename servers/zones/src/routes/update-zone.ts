@@ -339,7 +339,10 @@ router.put(
 router.put('/v1/zones/:zoneId/mergeTables', async (req: Request, res: Response) => {
   const { businessId, tables, mergedBy } = req.body;
   if (!businessId || tables?.length == 1) {
-    return res.status(400).send('Cannot merge a single table');
+    return res.status(400).send({
+      status: false,
+      message: 'Cannot merge a single table',
+    });
   }
 
   try {
@@ -450,7 +453,10 @@ router.put('/v1/zones/:zoneId/mergeTables', async (req: Request, res: Response) 
       );
     });
 
-    res.status(200).send('Merge success');
+    res.status(200).send({
+      status: true,
+      message: 'Table merged successfully',
+    });
   } catch (err: any) {
     res.status(500).send({ status: false, message: err.message });
   }
@@ -488,7 +494,10 @@ router.put('/v1/zones/:zoneId/settleMergeTables', async (req: Request, res: Resp
     );
   }
 
-  res.status(200).send('settle success');
+  res.status(200).send({
+    status: true,
+    message: 'Table settled successfully',
+  });
 });
 
 export { router as updateZonesRouter };

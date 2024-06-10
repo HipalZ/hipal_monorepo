@@ -60,7 +60,9 @@ router.put('/v1/payments/Settle/Dues',
     );
   }
 
-  res.status(200).send('Settle SuccessFully');
+  res.status(200).send({
+    message: 'Dues settled successfully',
+  });
 });
 
 router.put('/v1/payments/:id/deleteDues/:duesId', 

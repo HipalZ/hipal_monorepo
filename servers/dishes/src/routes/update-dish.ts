@@ -172,7 +172,9 @@ router.put(
       await Dish.findByIdAndUpdate(id, { $set: update }, { new: true });
     }
 
-    res.status(200).send('updated successFully');
+    res.status(200).send({
+      message: 'Dishes updated successfully',
+    });
   },
 );
 

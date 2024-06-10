@@ -57,7 +57,9 @@ router.get(
 
   async (req: Request, res: Response) => {
     try {
-      return res.send('Test');
+      return res.send({
+        message: 'Testing',
+      });
     } catch (error: any) {
       return res.status(500).send({ status: false, message: error.message });
     }
@@ -91,7 +93,6 @@ router.get('/v1/users/resend/OTP', async (req: Request, res: Response) => {
   };
 
   const response = await axios(options);
-  console.log('dddd', response);
   if (response) {
     return res.send(response.data);
   } else {
@@ -134,12 +135,16 @@ router.get('/v1/users/staff/Single', async (req: Request, res: Response) => {
     }
     if (remove) {
       user = await User.findByIdAndDelete(staffId);
-      return res.send('Deleted');
+      return res.send({
+        message: 'Staff deleted successfully',
+      });
     }
 
     user = await User.findById(staffId);
     if (!user) {
-      return res.status(400).send('Not Found');
+      return res.status(400).send({
+        message: 'User not found',
+      });
     }
 
     res.status(200).send(user);
@@ -153,14 +158,18 @@ router.get('/v1/users/:businessId/getUserReward', async (req: Request, res: Resp
     const { userPhone, loyaltyId } = req.query;
 
     if (!loyaltyId) {
-      return res.status(400).send('loyaltyId Required');
+      return res.status(400).send({
+        message: 'Loyalty Id is required',
+      });
     }
     const userExist = await User.findOne({
       phone: userPhone,
       role: 'HIPAL_CUSTOMER',
     });
     if (!userExist) {
-      return res.status(404).send('Not found');
+      return res.status(404).send({
+        message: 'User not found',
+      });
     }
 
     const userRewards = await UserReward.findOne({ userPhone, loyaltyId });
@@ -190,7 +199,6 @@ router.get('/v1/users/:businessId/getUserRewardHistory', async (req: Request, re
     var fields = '';
     var arr = [];
     if (req.query.fieldMasks) {
-      console.log('fieldMasks', req.query.fieldMasks);
       const fieldMasks = req?.query?.fieldMasks as string;
       let validJson = fieldMasks.replace(/'/g, '"');
       arr = JSON.parse(validJson);
@@ -297,7 +305,10 @@ router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Resp
         userPhone: findUser,
       });
       if (!userReward) {
-        return res.status(404).send('Not Found');
+        return res.status(404).send({
+          message: 'User not found',
+        
+        });
       }
 
       return res.send(userReward);
@@ -501,14 +512,18 @@ router.get(
       }
       if (from && to) {
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            message: 'From date cannot be greater than to date',
+          });
         }
         const obj = await filterBasedOnDate(fromDate, toDate, businessId);
 
         return res.send(obj);
       }
 
-      return res.status(400).send('Invalid query parameters');
+      return res.status(400).send({
+        message:'Invalid query parameters'
+      });
     } catch (error: any) {
       console.error(error);
       res.status(500).send({ message: error.message });

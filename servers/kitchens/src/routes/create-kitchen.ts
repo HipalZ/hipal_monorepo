@@ -317,7 +317,10 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
         }
       } catch (err: any) {
         console.log(err);
-        res.status(400).send('something went wrong please try again!');
+        res.status(400).send({
+          status: false,
+          message: 'something went wrong please try again!',
+        });
         return;
       }
 
@@ -379,10 +382,10 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
         };
 
         await Waiterkot.create([obj], { session: session });
-        console.log('updateTable', updateTable);
+        //TODO: message be specific
         res.status(201).send({
           status: true,
-          message: 'Create Successfully',
+          message: 'Created Successfully',
           role: updateTable?.value?.role,
           hiCode: updateTable?.value?.hiCode,
         });
@@ -399,7 +402,6 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
               message: `Enter Valid Hicode !!! ${name} is already on this table`,
             });
           }
-          console.log('tableInfo', tableInfo, 'hiCode', hiCode);
 
           if (tableInfo?.hiCode !== hiCode) {
             res.status(400).send({ status: false, message: 'Enter Valid Hicode !!!' });
@@ -436,7 +438,10 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
             hiCode: tableInfo?.hiCode,
           });
         }
-        res.status(201).send('Create Successfully');
+        res.status(201).send({
+          status: true,
+          message: 'Create Successfully',
+        });
         return;
       }
     });
@@ -676,10 +681,16 @@ router.post('/v1/kitchens/:kitchenId/openItem', async (req: Request, res: Respon
   try {
     const { zoneId, tableId, dishType, kitchenId, businessId } = req.body || {};
     if (!zoneId || !tableId || !dishType || !kitchenId || !businessId) {
-      return res.status(400).send('zoneId , tableId, kitchenId , businessId required');
+      return res.status(400).send({
+        status: false,
+        message: 'zoneId, tableId, dishType, kitchenId, businessId is required',
+      });
     }
     if (!req.body.dish.price || typeof req.body.dish.price == 'string') {
-      return res.status(400).send('Price is required');
+      return res.status(400).send({
+        status: false,
+        message: 'Price is required',
+      });
     }
 
     let kot;
@@ -845,7 +856,10 @@ router.post('/v1/kitchens/:kitchenId/kotPrint', async (req: Request, res: Respon
       });
     }
 
-    res.status(200).send('succes');
+    res.status(200).send({
+      status: true,
+      message: 'KOT Successful Print',
+    });
   } catch (err: any) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -921,7 +935,10 @@ router.post(
         };
         await Table.findByIdAndUpdate(fromTableId, con, { session });
 
-        res.status(200).send('transfered successfully');
+        res.status(200).send({
+          status: true,
+          message: 'KOT Transferred Successfully',
+        });
       });
     } catch (err: any) {
       return res.status(500).send({ status: false, message: err.message });
@@ -964,7 +981,7 @@ router.post('/v1/kitchens/:id/mergeKot', async (req: Request, res: Response) => 
                 tableId: table.parentTableId,
                 zoneId: table.parentZoneId,
               };
-              let kotObj = await Kot.create(kot, { session });
+              await Kot.create(kot, { session });
 
               await Kot.findByIdAndDelete(kotId, { session });
             }
@@ -992,7 +1009,10 @@ router.post('/v1/kitchens/:id/mergeKot', async (req: Request, res: Response) => 
 
     if (error) {
       console.log(error);
-      return res.status(500).send('something went wrong please try again!');
+      return res.status(500).send({
+        status: false,
+        message: 'something went wrong please try again!',
+      });
     }
 
     return res.status(200).send(message);
@@ -1011,7 +1031,6 @@ router.post(
   // ]),
   async (req: Request, res: Response) => {
     let body = req.body || {};
-    console.log('bodys', body?.phone);
     const token =
       'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
     const phoneId = '104262732724546';
@@ -1136,13 +1155,19 @@ router.post(
       }
     } catch (error) {
       console.log('error', error);
-      res.status(400).send(error);
+      res.status(400).send({
+        status: false,
+        message: 'Invalid Signature',
+      });
     }
 
     try {
     } catch (error) {
       console.log('error', error);
-      res.status(400).send(error);
+      res.status(400).send({
+        status: false,
+        message: 'Invalid Signature',
+      });
     }
   },
 );

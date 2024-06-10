@@ -13,8 +13,10 @@ router.delete(
       return res.status(400).send("You cann't delete active zone ,zone must be empty");
     }
 
-    const existingZone = await Zone.findByIdAndDelete(id);
-    res.status(200).send({});
+    await Zone.findByIdAndDelete(id);
+    res.status(200).send({
+      message: 'Zone deleted successfully',
+    });
   },
 );
 
@@ -34,7 +36,9 @@ router.delete(
       await existingZone.save();
     }
 
-    res.status(200).send({});
+    res.status(200).send({
+      message: 'Table deleted successfully',
+    });
   },
 );
 

@@ -110,7 +110,10 @@ router.get(
         });
       return res.status(200).send({ data: { categories: _categoryData } });
     } catch (err: any) {
-      return res.status(500).send(err.message);
+      return res.status(500).send({
+        status: false,
+        message: err.message,
+      });
     }
   },
 );

@@ -73,9 +73,14 @@ router.post(
         );
       });
 
-      res.status(201).send('Dish created successfully');
+      res.status(201).send({
+        message: 'Dish created successfully',
+      });
     } catch (e) {
-      // handle error
+      console.error(e);
+      res.status(500).send({
+        message: 'An error occurred while creating the dish',
+      });
     }
   },
 );

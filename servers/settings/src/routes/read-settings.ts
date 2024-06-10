@@ -20,7 +20,9 @@ router.get('/v1/settings/:id', async (req: Request, res: Response) => {
 });
 
 router.get('/v1/settings/:id/testing', async (req: Request, res: Response) => {
-  res.status(200).send('Setting is working');
+  res.status(200).send({
+    message: 'Testing',
+  });
 });
 
 router.get(

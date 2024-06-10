@@ -54,7 +54,9 @@ router.get(
     // }));
     const ans = 'testing';
 
-    res.status(200).send(ans);
+    res.status(200).send({
+      message: ans,
+    });
   },
 );
 
@@ -101,7 +103,7 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const { zoneId } = req.params;
-      const { businessId, staffId } = req.query;
+      const { businessId } = req.query;
       let existingTables;
       if (zoneId === 'all') {
         existingTables = await Table.find({ businessId });

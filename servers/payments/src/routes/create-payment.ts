@@ -29,7 +29,6 @@ const router = express.Router();
 
 router.post(
   '/v1/payments',
-
   validateRequest({
     body: PaymentSchema,
   }),
@@ -222,7 +221,7 @@ router.post(
     // const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
     try {
-      let response = await axios.post(
+      await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
           messaging_product: 'whatsapp',
@@ -511,7 +510,9 @@ router.post(
       return res.status(200).send(response);
     } catch (error: any) {
       console.error('Error while processing the dues:', error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send({
+        message: 'Internal server error',
+      });
     }
   },
 );
@@ -556,7 +557,9 @@ router.post(
     const { businessId, phone, name } = req.body || {};
 
     if (!businessId || !phone) {
-      return res.status(400).send('businessId, phone is required');
+      return res.status(400).send({
+        message: 'businessId, phone is required',
+      });
     }
 
     try {
@@ -590,7 +593,9 @@ router.post(
         }
       }
 
-      return res.status(400).send('Customer not added');
+      return res.status(400).send({
+        message: 'Customer not added',
+      });
     } catch (error) {
       console.error('Error while processing the customer:', error);
       return res.status(500).json({ error: 'Internal server error' });
