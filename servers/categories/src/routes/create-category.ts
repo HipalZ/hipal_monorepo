@@ -1,15 +1,12 @@
 import { Category, Dish } from '@hi/db-models';
 import express, { Request, Response } from 'express';
-
 import { ClientSession } from 'mongoose';
 import { categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { validateRequest } from 'zod-express-middleware';
-// import { validateRequest } from "../middleware/request";
 import { z } from 'zod';
 
 const router = express.Router();
-
 
 //TODO: remove v1 from the route
 router.post(
@@ -30,7 +27,6 @@ router.post(
       parentCategory,
       parentCategoryId,
       coverImage,
-
       links,
       dishes,
       availability,
@@ -70,10 +66,13 @@ router.post(
       // throw new Error("Category creation failed");
       // @ts-ignore
       const categoryId = category[0]._id;
-      let dish = await Dish.updateMany({ _id: { $in: dishes } }, { $push: { categories: categoryId } }, { session });
+      await Dish.updateMany({ _id: { $in: dishes } }, { $push: { categories: categoryId } }, { session });
     });
     //{error: ,message: data }
-    return res.status(200).send('Category created');
+    return res.status(201).send({
+      message: 'Category created successfully',
+      status: true
+    });
   },
 );
 

@@ -7,9 +7,11 @@ import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
 
 import { Alert, Kitchen, Kot, Kotpassword, Payment, Table, Tempmodel, Userbill, Waiterkot } from '@hi/db-models';
-import { KOTType } from '@hi/db-models/src/validators';
+import { KOTAttrs, KOTType, KitchenAttrs } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
 const currentTime = new Date();
 const options = {
   timeZone: 'Asia/Kolkata',
@@ -36,14 +38,16 @@ const optionsDate = {
 };
 const formatterDate = new Intl.DateTimeFormat('en-US', optionsDate);
 const currentDateAndTime = formatterDate.format(currentTime);
-
+const updatedKOTAttrsSchema = KOTAttrs.partial();
+const updatedKitchenSchema = KitchenAttrs.partial();
 const router = express.Router();
 router.put(
   '/v1/kitchens/kots',
-
-  async (req: Request, res: Response) => {
-    const { kots } = req.body;
-    console.log('kots', kots);
+  validateRequest({
+    body: updatedKOTAttrsSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
+    const { kots } = req.body as { kots: string[] };
     const created = [];
 
     for (let i = 0; i < kots.length; i++) {
@@ -59,7 +63,11 @@ router.put(
   },
 );
 
-router.put('/v1/kitchens/updateAlert/alert', async (req: Request, res: Response) => {
+router.put('/v1/kitchens/updateAlert/alert', 
+  validateRequest({
+    body: updatedKitchenSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
   try {
     await runInTransaction(async (session: ClientSession) => {
       const { alertId, businessId, clearAll } = req.query;
@@ -169,10 +177,11 @@ router.put('/v1/kitchens/updateAlert/alert', async (req: Request, res: Response)
 
 router.put(
   '/v1/kitchens/:id',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
+  validateRequest({
+    body: updatedKitchenSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
+    const { id } = req.params as { id: string };
     const update = { ...req.body };
     await Kitchen.findByIdAndUpdate(id, update);
 
@@ -184,15 +193,17 @@ router.put(
 
 router.put(
   '/v1/kitchens/:kitchenId/kots',
-
+  validateRequest({
+    body: updatedKOTAttrsSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
   //TODO :REMOVE UNWANTED ROLE
-  async (req: Request, res: Response) => {
     try {
       const currentTime = Date.now();
       const momentTime = moment(currentTime);
       const indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm');
 
-      const { kots } = req.body;
+      const { kots } = req.body as { kots: KOTType[] };
 
       let created: any = [];
       //TODO : USE UPDATEMANY INSTEAD OF LOOP
@@ -237,10 +248,12 @@ router.put(
 
 router.put(
   '/v1/kitchens/update/kots/dish',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: updatedKOTAttrsSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
     try {
-      const { kots } = req.body;
+      const { kots } = req.body as { kots: string[] };
       return runInTransaction(async (session: ClientSession) => {
         const created = [];
 
@@ -271,19 +284,19 @@ router.put(
 
 router.put(
   '/v1/kitchens/updateAll/kots/dishStatus',
-  // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: updatedKOTAttrsSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
     const { tableId } = req.query || {};
     const updatedKOTs = await Kot.updateMany({ tableId }, { $set: { dishStatus: 'delivered' } });
     res.status(201).send({ status: true, message: 'Updated Successfully......!' });
   },
 );
 
-router.put('/v1/kitchens/:id/settle-bill', async (req: Request, res: Response) => {
+//TODO: datta apply the validation request for this kitchen
+router.put('/v1/kitchens/:id/settle-bill', 
+  async (req: Request, res: Response) => {
   try {
     let {
       kots,
@@ -555,8 +568,10 @@ router.put('/v1/kitchens/:id/settle-bill', async (req: Request, res: Response) =
 
 //new accept order
 
-// TODO solve type error datta
-router.put('/v1/kitchens/:id/acceptOrder/:kotId', async (req: Request, res: Response) => {
+// TODO solve type error datta 
+//TODO datta add the appropriate zod schema
+router.put('/v1/kitchens/:id/acceptOrder/:kotId', 
+  async (req: Request, res: Response) => {
   try {
     const { kotId } = req.params;
     const { waiterName, kotPrinter } = req.body;

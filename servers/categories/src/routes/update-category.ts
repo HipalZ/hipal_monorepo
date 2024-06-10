@@ -1,13 +1,19 @@
 import express, { Request, Response } from 'express';
-
 import { Category, Dish } from '@hi/db-models';
-import { CategoryType } from '@hi/db-models/src/validators';
+import { CategoryType, categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
 const router = express.Router();
 
-router.put('/v1/categories/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+const updatedCategorySchema = categorySchema.partial()
+router.put('/v1/categories/:id', 
+  validateRequest({
+    body: updatedCategorySchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedCategorySchema>>, res: Response) => {
+  const { id } = req.params as { id: string };
   const update = { ...req.body };
   let updatedCategory: CategoryType | null = null;
 

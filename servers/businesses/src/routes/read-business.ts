@@ -1,9 +1,15 @@
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
+import { BusinessSchema, RoleSchema, loyaltySchema } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
+import { validateRequest } from 'zod-express-middleware';
 
 const router = express.Router();
 
-router.get('/v1/businesses', async (req: Request, res: Response) => {
+router.get('/v1/businesses', 
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   const { clientRole, id } = req.query;
   if (clientRole === 'admin') {
     const existingBusinesses = await Business.find({});
@@ -18,7 +24,11 @@ router.get('/v1/businesses', async (req: Request, res: Response) => {
   res.status(200).send(existingBusinesses);
 });
 
-router.get('/v1/businesses/:id', async (req: Request, res: Response) => {
+router.get('/v1/businesses/:id',
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   const { id } = req.params;
   const { customLink } = req.query;
   if (customLink) {
@@ -35,7 +45,9 @@ router.get('/v1/businesses/:id', async (req: Request, res: Response) => {
 
 router.get(
   '/v1/businesses/get/Single/:businessId',
-
+  validateRequest({
+    body: BusinessSchema,
+  }),
   async (req: Request, res: Response) => {
     const { businessId } = req.params;
     const query = req.query;
@@ -59,7 +71,11 @@ router.get(
   },
 );
 
-router.get('/v1/businesses/get/allbusiness', async (req: Request, res: Response) => {
+router.get('/v1/businesses/get/allbusiness',
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   try {
     const existingBusinesses = await Business.find({
       isHasSetting: true,
@@ -68,19 +84,27 @@ router.get('/v1/businesses/get/allbusiness', async (req: Request, res: Response)
 
     res.status(200).send(existingBusinesses);
   } catch (err: any) {
-    console.log('err', err);
+    return res.status(500).send({ status: false, message: err.message });
   }
 });
-router.get('/v1/businesses/:id/testing', async (req: Request, res: Response) => {
+router.get('/v1/businesses/:id/testing', 
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   try {
     const message = 'Test Successfully...!';
     res.status(200).send(message);
   } catch (err: any) {
-    console.log('err', err);
+    return res.status(500).send({ status: false, message: err.message });
   }
 });
 
-router.get('/v1/businesses/:businessId/passwordManager', async (req: Request, res: Response) => {
+router.get('/v1/businesses/:businessId/passwordManager', 
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   try {
     const { businessId } = req.params;
     const business = await Business.findById(businessId).lean();
@@ -97,7 +121,11 @@ router.get('/v1/businesses/:businessId/passwordManager', async (req: Request, re
   }
 });
 
-router.get('/v1/businesses/getsingle/data', async (req: Request, res: Response) => {
+router.get('/v1/businesses/getsingle/data', 
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   try {
     return res.status(200).send({ status: true, message: 'Test Successfully...!' });
   } catch (err: any) {
@@ -105,7 +133,11 @@ router.get('/v1/businesses/getsingle/data', async (req: Request, res: Response) 
   }
 });
 
-router.get('/v1/businesses/n/:customLink', async (req: Request, res: Response) => {
+router.get('/v1/businesses/n/:customLink',
+  validateRequest({
+    body: BusinessSchema,
+  }),
+  async (req: Request, res: Response) => {
   let { customLink } = req.params || {};
 
   customLink = customLink.trim();
@@ -121,7 +153,9 @@ router.get('/v1/businesses/n/:customLink', async (req: Request, res: Response) =
 
 router.get(
   '/v1/businesses/:id/loyalty',
-
+  validateRequest({
+    body: loyaltySchema,
+  }),
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -142,28 +176,32 @@ router.get(
 
       return res.status(200).send(exitingSettings);
     } catch (err: any) {
-      console.log('err', err);
+      return res.status(500).send({ status: false, message: err.message });
     }
   },
 );
 
 router.get(
   '/v1/businesses/:id/getAllLoyaltyBusinesses',
-
+  validateRequest({
+    body: loyaltySchema,
+  }),
   async (req: Request, res: Response) => {
     try {
       let exitingSettings = (await LoyaltySettings.find({})) || [];
 
       return res.status(200).send(exitingSettings);
     } catch (err: any) {
-      console.log('err', err);
+      return res.status(500).send({ status: false, message: err.message });
     }
   },
 );
 
 router.get(
   '/v1/businesses/:id/deleteLoyalty',
-
+  validateRequest({
+    body: loyaltySchema,
+  }),
   async (req: Request, res: Response) => {
     try {
       let { businessId } = req.query;
@@ -171,30 +209,41 @@ router.get(
 
       return res.status(200).send(exitingSettings);
     } catch (err: any) {
-      console.log('err', err);
+      return res.status(500).send({ status: false, message: err.message });
     }
   },
 );
 
-router.get('/v1/businesses/roles/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const existingRoles = await Role.findById(id);
-
-  res.status(200).send(existingRoles);
+router.get('/v1/businesses/roles/:id', 
+  validateRequest({
+    body: RoleSchema,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existingRoles = await Role.findById(id);
+      res.status(200).send(existingRoles);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
 });
 
 router.get(
   '/v1/businesses/:id/roles',
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  validateRequest({
+    body: RoleSchema,
+  }),
   async (req: Request, res: Response) => {
-    console.log('aaaaa');
-    const { id } = req.params;
-    const existingRoles = await Role.find({
-      businessId: id,
-    });
+    try {
+      const { id } = req.params;
+      const existingRoles = await Role.find({
+        businessId: id,
+      });
 
-    res.status(200).send(existingRoles);
+      res.status(200).send(existingRoles);
+    } catch (err: any) {
+      return res.status(500).send({ status: false, message: err.message });
+    }
   },
 );
 

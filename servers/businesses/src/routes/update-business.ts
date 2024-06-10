@@ -2,15 +2,27 @@ import { Business, LoyaltySettings, Tempmodel } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 import express, { Request, Response } from 'express';
 import { ClientSession } from 'mongoose';
+import { validateRequest } from 'zod-express-middleware';
+import { BusinessSchema, loyaltySchema } from '@hi/db-models/src/validators';
+import { z } from 'zod';
 const router = express.Router();
 
+const updateLoyaltySchema = loyaltySchema.partial();
+const updateBusinessSchema = BusinessSchema.partial().extend({
+  password: z.string(),
+  tableId: z.string(),
+  reapply: z.boolean(),
+  serviceChargeRemovedBy: z.string(),
+  serviceChargeAddedBy: z.string(),
+});
 router.put(
   '/v1/businesses/:id',
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const update = { ...req.body };
+  validateRequest({ 
+    body: updateBusinessSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updateBusinessSchema>>, res: Response) => {
+    const { id } = req.params as { id: string };
+    const update = req.body
     const existingBusiness = await Business.findByIdAndUpdate(id, update, {
       new: true,
     });
@@ -19,8 +31,12 @@ router.put(
   },
 );
 
-router.put('/v1/businesses/:id/updateLoyalty', async (req: Request, res: Response) => {
-  const { id } = req.params;
+router.put('/v1/businesses/:id/updateLoyalty', 
+  validateRequest({
+    body: updateLoyaltySchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updateLoyaltySchema>>, res: Response) => {
+  const { id } = req.params as { id: string };
   const { setReward, setClaimAmount, password, origin, cardPattern, cardColor, fontColor, logo, expiryDate, rewardLimit, signUpBonus } = req.body;
   const existingLoyalty = await LoyaltySettings.findOneAndUpdate(
     { businessId: id },
@@ -44,7 +60,11 @@ router.put('/v1/businesses/:id/updateLoyalty', async (req: Request, res: Respons
   res.status(200).send(existingLoyalty);
 });
 
-router.put('/v1/businesses/update/Business', async (req: Request, res: Response) => {
+router.put('/v1/businesses/update/Business', 
+  validateRequest({
+    body: updateBusinessSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updateBusinessSchema>>, res: Response) => {
   const { isHasDishData, isHasSetting, id } = req.query;
   let existingBusiness;
   if (isHasDishData) {
@@ -70,9 +90,11 @@ router.put('/v1/businesses/update/Business', async (req: Request, res: Response)
 
 router.put(
   '/v1/businesses/:id/removalServiceCharge',
-
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
+  validateRequest({
+    body: updateBusinessSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updateBusinessSchema>>, res: Response) => {
+    const { id } = req.params as { id: string };
     let { password, tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy } = req.body;
     try {
       await runInTransaction(async (session: ClientSession) => {
@@ -112,7 +134,10 @@ router.put(
         );
       });
 
-      res.status(200).send(`Service charge ${reapply ? 'Added' : 'removed'} successfully`);
+      res.status(200).send({
+        message: `Service charge ${reapply ? 'Added' : 'removed'} successfully`,
+        status: true,
+      });
     } catch (error: any) {
       res.status(400).send(error.message);
     }

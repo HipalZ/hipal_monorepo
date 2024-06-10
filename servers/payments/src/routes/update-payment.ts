@@ -3,14 +3,24 @@ import express, { Request, Response } from 'express';
 import moment from 'moment';
 
 import { Dues, Payment } from '@hi/db-models';
+import { PaymentSchema } from '@hi/db-models/src/validators';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
 const router = express.Router();
+
+const updatedPaymentSchema = PaymentSchema.partial().extend({
+  paymentIds: z.array(z.string()),
+})
+
+const updatedDuesSchema = PaymentSchema.partial()
 
 router.put(
   '/v1/payments/:id',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
+  validateRequest({
+    body: updatedPaymentSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedPaymentSchema>>, res: Response) => {
+    const { id } = req.params as { id: string };
     const { remove } = req.query;
     const update = { ...req.body };
     if (remove) {
@@ -25,8 +35,12 @@ router.put(
   },
 );
 
-router.put('/v1/payments/Settle/Dues', async (req: Request, res: Response) => {
-  const { paymentIds, mode } = req.body;
+router.put('/v1/payments/Settle/Dues', 
+  validateRequest({
+    body: updatedPaymentSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedPaymentSchema>>, res: Response) => {
+  const { paymentIds, mode } = req.body ;
   let currentTime = Date.now();
   let momentTime = moment(currentTime);
 
@@ -49,9 +63,13 @@ router.put('/v1/payments/Settle/Dues', async (req: Request, res: Response) => {
   res.status(200).send('Settle SuccessFully');
 });
 
-router.put('/v1/payments/:id/deleteDues/:duesId', async (req: Request, res: Response) => {
+router.put('/v1/payments/:id/deleteDues/:duesId', 
+  validateRequest({
+    body: updatedDuesSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedDuesSchema>>, res: Response) => {
   try {
-    let { duesId } = req.params;
+    let { duesId } = req.params as { duesId: string };
 
     const existingDues = await Dues.findByIdAndDelete(duesId);
     if (!existingDues) {

@@ -8,8 +8,8 @@ dotenv.config();
 const start = async () => {
   await connectDB();
 
-  app.listen(3004, () => {
-    console.log('Listening on port 3004!!');
+  app.listen(process.env.PORT, () => {
+    console.log(`Listening on port ${process.env.PORT}`);
   });
 };
 

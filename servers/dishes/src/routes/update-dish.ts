@@ -3,14 +3,20 @@ import express, { Request, Response } from 'express';
 import { Category, Dish, Extra } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 
-import { DishType } from '@hi/db-models/src/validators';
+import { DishType, dishSchema } from '@hi/db-models/src/validators';
 import { ClientSession } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
 
 const router = express.Router();
-
-router.put('/v1/dishes/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+const updatedDishSchema = dishSchema.partial();
+router.put('/v1/dishes/:id', 
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
+  const { id } = req.params as { id: string };
   const update = { ...req.body } as DishType;
 
   let updatedDish: DishType | null = null;
@@ -61,9 +67,11 @@ router.put('/v1/dishes/:id', async (req: Request, res: Response) => {
 
 router.put(
   '/v1/dishes/:id/extra/:extraId',
-
-  async (req: Request, res: Response) => {
-    const { extraId } = req.params;
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
+    const { extraId } = req.params as { extraId: string };
     const update = { ...req.body };
     let updateExtra = await Extra.findByIdAndUpdate(extraId, { $set: update }, { new: true });
     const dishes = await Dish.find({
@@ -151,8 +159,10 @@ router.put(
 
 router.put(
   '/v1/dishes/:id/updateAll',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     const update = { ...req.body };
     const dishes = await Dish.find({ businessId });
@@ -168,8 +178,10 @@ router.put(
 
 router.put(
   '/v1/dishes/:id/extrasLogicUpdate',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     let allDishes = await Dish.find({ businessId }).lean();
     const filteredDishesWithExtras = allDishes?.filter((dish: any) => dish?.extras?.length > 0);

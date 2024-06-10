@@ -47,7 +47,7 @@ router.post(
       withPopCorn,
     } = req.body;
 
-    let currentObject: any = { ...req?.currentUser };
+    let currentObject: any = req?.currentUser;
 
     const business = await Business.create({
       likes,
@@ -106,7 +106,10 @@ router.post(
       });
 
       if (ExitSetting) {
-        return res.status(400).send('already exist');
+        return res.status(400).send({
+          message:'Loyalty already exists',
+          status: false,
+        });
       }
       let newPass = Math.floor(Math.random() * 9000) + 10000;
       let data = new LoyaltySettings({

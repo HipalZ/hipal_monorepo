@@ -1,16 +1,15 @@
-import "@hi/utils/src/env"
+import '@hi/utils/src/env';
 
-import { app } from './app';
 import { connectDB } from '@hi/utils';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import { app } from './app';
+dotenv.config();
 
 const start = async () => {
+  await connectDB();
 
-  await connectDB()
-
-  app.listen(3002, () => {
-    console.log('Listening on port 3002!!');
+  app.listen(process.env.PORT, () => {
+    console.log(`Listening on port ${process.env.PORT}`);
   });
 };
 

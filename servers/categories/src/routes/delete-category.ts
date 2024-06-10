@@ -8,7 +8,6 @@ const router = express.Router();
 
 router.delete(
   '/v1/categories/:id',
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     let categoryNotFound = false;

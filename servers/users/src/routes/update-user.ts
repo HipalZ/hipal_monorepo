@@ -1,9 +1,16 @@
 import { User } from '@hi/db-models';
+import { UserAttrs } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 
 const router = express.Router();
-
-router.put('/v1/users', (req: Request, res: Response) => {
+const UpdatedUserAttrs = UserAttrs.partial() 
+router.put('/v1/users', 
+  validateRequest({
+    body: UpdatedUserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
   const { action } = req.query;
 
   if (action === 'logout') {
@@ -12,9 +19,13 @@ router.put('/v1/users', (req: Request, res: Response) => {
   }
 });
 
-router.put('/v1/users/:userId/updateUser', async (req: Request, res: Response) => {
+router.put('/v1/users/:userId/updateUser', 
+  validateRequest({
+    body: UpdatedUserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
   try {
-    const { userId } = req.params || {};
+    const { userId } = req.params as { userId: string };
     const data = req.body || {};
     const userObject = await User.findById(userId);
     // return res.send(userObject);
