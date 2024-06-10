@@ -111,8 +111,8 @@ const EditCategory: React.FC = memo(() => {
   };
 
   const toggleDishSelection = (dish: Dish) => {
-    if (selectedDishes.some((selectedDish) => selectedDish.id === dish.id)) {
-      removeDish(dish.id);
+    if (selectedDishes.some((selectedDish) => selectedDish._id === dish._id)) {
+      removeDish(dish._id);
     } else {
       addDish(dish);
     }
@@ -169,7 +169,7 @@ const EditCategory: React.FC = memo(() => {
     };
 
     try {
-      await axios.put(`/v1/categories/${data?.category?.id}`, payload);
+      await axios.put(`/v1/categories/${data?.category?._id}`, payload);
       toast.success('Category updated successfully');
       startTransition(() => {
         navigate(`/app/business/${businessId}/items?tab=items`);
@@ -184,7 +184,7 @@ const EditCategory: React.FC = memo(() => {
     try {
       const config = {
         method: 'DELETE',
-        url: `/v1/categories/${data?.category?.id}`,
+        url: `/v1/categories/${data?.category?._id}`,
       };
       await axios(config);
       toast.success('Category deleted successfully');
@@ -331,7 +331,7 @@ const EditCategory: React.FC = memo(() => {
 
         <div className="grid-col-1 mt-4 grid gap-4 pb-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {selectedDishes?.map((dish) => (
-            <div key={dish?.id} className="relative flex items-center rounded-md border border-[#cacaca]">
+            <div key={dish?._id} className="relative flex items-center rounded-md border border-[#cacaca]">
               <div className="ml-2 mt-2 flex items-center rounded-md pb-8">
                 <MdDinnerDining className="mr-2" />
                 {dish?.name}
@@ -339,7 +339,7 @@ const EditCategory: React.FC = memo(() => {
               <button
                 type="button"
                 className="on_active_bounce absolute bottom-2 right-4 rounded-md text-blue-500"
-                onClick={() => removeDish(dish?.id)}
+                onClick={() => removeDish(dish?._id)}
               >
                 Remove
               </button>

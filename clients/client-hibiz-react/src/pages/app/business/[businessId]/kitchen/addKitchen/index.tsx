@@ -43,7 +43,7 @@ const AddKitchen = memo(() => {
       setIsNameError(true);
       return;
     }
-    const staffIds = selectedStaff.map((staff) => staff.id);
+    const staffIds = selectedStaff.map((staff) => staff._id);
     const config = {
       businessId: businessId,
       kitchenName: kitchenName,
@@ -119,7 +119,7 @@ const AddKitchen = memo(() => {
                 </div>
                 <div className="mt-4 flex justify-between">
                   <p className="text-sm text-[#2B354D]/30">{staff?.customRole?.[0].roleName}</p>
-                  <button type="button" onClick={() => deselectStaff(staff.id)} className="on_active_bounce text-[#2F80ED]">
+                  <button type="button" onClick={() => deselectStaff(staff._id)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
                 </div>

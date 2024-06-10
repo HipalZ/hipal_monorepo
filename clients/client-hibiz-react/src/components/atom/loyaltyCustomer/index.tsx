@@ -46,7 +46,7 @@ const LoyaltyCustomer = () => {
         navigate({ search: params.toString() }, { replace: true });
       });
     }
-  }, [location, navigate]);
+  }, [location]);
 
   const {
     isLoading,
@@ -69,7 +69,7 @@ const LoyaltyCustomer = () => {
         ) : loyalCustomers && loyalCustomers.length > 0 ? (
           loyalCustomers?.map((customer) => (
             <div
-              key={customer.id}
+              key={customer._id}
               onKeyDown={() => handleClick(customer)}
               onClick={() => handleClick(customer)}
               className="masonry-item cursor-pointer rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D] hover:bg-[#2B354D]/10"

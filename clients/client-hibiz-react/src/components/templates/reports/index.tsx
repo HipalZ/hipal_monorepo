@@ -59,8 +59,8 @@ const Reports = memo(() => {
 
   const handleCheckboxChange = (item: any) => {
     setSelectReportName(item.name);
-    setSelectedReport(item.id);
-    fetchReportData(item.id);
+    setSelectedReport(item._id);
+    fetchReportData(item._id);
   };
 
   const downloadSelectedReportExcel = () => {
@@ -182,7 +182,7 @@ const Reports = memo(() => {
         {reportObject.map((item) => (
           <div
             onClick={() => handleCheckboxChange(item)}
-            key={item.id}
+            key={item._id}
             className="flex items-center rounded-md border border-[#cacaca] px-6 py-4 focus:outline-none"
           >
             <input
@@ -191,7 +191,7 @@ const Reports = memo(() => {
                 event.stopPropagation();
                 handleCheckboxChange(item);
               }}
-              checked={selectedReport === item.id}
+              checked={selectedReport === item._id}
               className="mr-2"
             />
             {item.name}

@@ -7,8 +7,8 @@ const AddStaff = memo(({ staffs, closeModal }: { staffs: IStaffs[]; closeModal: 
   const { selectedStaff, selectStaff, deselectStaff } = useKitchenStore();
 
   const handleStaffSelection = (staff: IStaffs) => {
-    if (selectedStaff.some((s) => s.id === staff.id)) {
-      deselectStaff(staff.id);
+    if (selectedStaff.some((s) => s._id === staff._id)) {
+      deselectStaff(staff._id);
     } else {
       selectStaff(staff);
     }
@@ -19,11 +19,11 @@ const AddStaff = memo(({ staffs, closeModal }: { staffs: IStaffs[]; closeModal: 
       <div className="max-h-[85vh] overflow-y-auto px-6 py-5">
         <h1 className="text-2xl text-[#2B354D]">Add staff to the zone</h1>
         {staffs?.map((staff) => {
-          const isSelected = selectedStaff.some((selected) => selected.id === staff.id);
+          const isSelected = selectedStaff.some((selected) => selected._id === staff._id);
 
           return (
             <div
-              key={staff.id}
+              key={staff._id}
               onClick={() => handleStaffSelection(staff)}
               className={`${isSelected ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'} my-5 rounded-md border bg-white p-3`}
             >

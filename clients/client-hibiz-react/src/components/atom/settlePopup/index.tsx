@@ -79,7 +79,7 @@ const SettlePopup: React.FC<SettlePopupProps> = ({ closeModal, selectedDuesIds, 
         {paymentMethods.map((method) => (
           <button
             type="button"
-            key={method.id} // <-- Use the method's id for the key
+            key={method._id} // <-- Use the method's id for the key
             onClick={() => handleSuggestionClick(method.mode)}
             className={`on_active_bounce rounded-lg px-3 py-2 text-sm font-medium capitalize ${
               paymentMode === method.mode ? 'bg-[#2B354D] text-white' : 'bg-white text-[#2B354D]'

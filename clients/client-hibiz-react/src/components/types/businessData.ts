@@ -160,9 +160,11 @@ export type Customer = {
   rewards: number;
   password: number;
   id: string;
+  _id: string;
 };
 
 export interface IZones {
+  _id: string;
   businessId: string;
   zoneName: string;
   zoneType: string;
@@ -176,6 +178,7 @@ export interface IZones {
 }
 
 export interface ICharges {
+  _id: string;
   businessId: string;
   chargeName: string;
   chargeType: string;
@@ -213,6 +216,7 @@ interface ICustomRole {
   roleName: string;
 }
 export interface IStaffs {
+  _id: any;
   name: string;
   email: string;
   phone: string;
@@ -222,6 +226,8 @@ export interface IStaffs {
   id: string;
 }
 export interface ITables {
+  _id: any;
+  _id: any;
   staffs?: any;
   businessId: string;
   zoneId: string;
@@ -253,6 +259,7 @@ export interface IDineIn {
   categories?: ICategory[];
 }
 export type Category = {
+  _id: any;
   id: string;
   name: string;
 };
@@ -270,6 +277,8 @@ type ExtraItem = {
 };
 
 export type Extra = {
+  _id: any;
+  _id: any;
   id: string;
   name: string;
   numOptions: number;
@@ -316,6 +325,7 @@ export type Dish = {
 };
 
 export type IDish = {
+  _id: any;
   id: string;
   name: string;
 };
@@ -327,6 +337,7 @@ export interface IKitchen {
   id: string;
 }
 export interface ICategory {
+  _id:string
   businessId: string;
   name: string;
   visibility: boolean;
@@ -365,6 +376,7 @@ export interface AddOnItem {
 }
 
 export interface IAddOn {
+  _id: Key | null | undefined;
   businessId: string;
   name: string;
   addOnType: string;
@@ -441,6 +453,7 @@ export interface NavigatorWithNetworkInformation extends Navigator {
 }
 
 export interface ICustomer {
+  _id: Key | null | undefined;
   name: string;
   id: string;
   phone: string;

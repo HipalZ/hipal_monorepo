@@ -86,7 +86,7 @@ const Zones = memo(() => {
       <div className="mb-[10rem]">
         {zones?.map((zone) => {
           return (
-            <div key={zone?.id}>
+            <div key={zone?._id}>
               <div className="border-1 mx-6 mt-6 rounded-lg border border-gray-200 p-3">
                 <div className="flex items-center justify-between pb-3">
                   <h1 className="text-base font-semibold capitalize text-[#2B354D]">{zone.zoneName}</h1>
@@ -108,8 +108,8 @@ const Zones = memo(() => {
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
                   {tables?.map(
                     (table) =>
-                      table?.zoneId === zone?.id && (
-                        <div key={table?.id} className="my-1">
+                      table?.zoneId === zone?._id && (
+                        <div key={table?._id} className="my-1">
                           <div className="flex w-full items-center rounded-lg border border-[#CACACA] p-2">
                             <div className="flex justify-between">
                               <MdOutlineTableBar className={` ${classCard.font} ${classCard.bg} rounded-full px-2`} />
@@ -118,7 +118,7 @@ const Zones = memo(() => {
                             <div
                               onClick={async () => {
                                 setIsLoading(true);
-                                await downloadURI(table?.id, table?.name, table?.zoneId, businessId || '');
+                                await downloadURI(table?._id, table?.name, table?.zoneId, businessId || '');
                                 setIsLoading(false);
                               }}
                               className="on_active_bounce ml-auto flex items-center justify-self-end rounded-md border border-[#2B354D] px-2 py-1"

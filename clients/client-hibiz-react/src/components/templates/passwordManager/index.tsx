@@ -200,7 +200,7 @@ const PasswordManager = memo(({ setSettings }: IPassword) => {
       {passwordArr.map((eachPassword) => {
         return (
           <div
-            key={eachPassword?.id}
+            key={eachPassword?._id}
             onClick={() => updatePasswordApi(eachPassword?.key)}
             className={`${
               eachPassword?.key === 'deleteKotPassword' ? 'pointer-events-none opacity-50' : ''

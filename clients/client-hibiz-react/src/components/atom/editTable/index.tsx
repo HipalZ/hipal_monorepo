@@ -83,14 +83,14 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
             {staffs?.map((staff: IStaffs) => {
               return (
                 <div
-                  key={staff?.id}
-                  onClick={() => handleActiveClick(staff?.id)}
+                  key={staff?._id}
+                  onClick={() => handleActiveClick(staff?._id)}
                   className={`${
-                    activeClick.includes(staff?.id) ? 'border-2  border-[#2B354D]' : ' border-1 border-[#CACACA]'
+                    activeClick.includes(staff?._id) ? 'border-2  border-[#2B354D]' : ' border-1 border-[#CACACA]'
                   } my-5 rounded-md border bg-white p-3`}
                 >
                   <div className="flex items-center">
-                    <input type="checkbox" checked={activeClick.includes(staff?.id)} className="mr-2 rounded-sm" readOnly />
+                    <input type="checkbox" checked={activeClick.includes(staff?._id)} className="mr-2 rounded-sm" readOnly />
                     <BsFillPersonFill />
                     <h1 className="mx-2 text-base">{staff?.name}</h1>
                   </div>

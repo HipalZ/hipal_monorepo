@@ -153,7 +153,7 @@ const AddBusiness = memo(() => {
       };
       const response = await axios(config);
       if (response?.status === 201 || response?.status === 200) {
-        await postSettings(response?.data?.id);
+        await postSettings(response?.data?._id);
         toast.success('Business created successfully');
         startTransition(() => {
           navigate(routePaths[PAGE_TYPES.BUSINESS]());

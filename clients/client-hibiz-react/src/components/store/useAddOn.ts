@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export interface Variant {
+  _id: string;
   id: string;
   name: string;
   ExtraType: string;
@@ -86,12 +87,12 @@ const useAddOnStore = create<FormState & FormActions>((set) => ({
 
   editVariant: (id, updatedVariant) =>
     set((state) => ({
-      variants: state.variants.map((v) => (v.id === id ? updatedVariant : v)),
+      variants: state.variants.map((v) => (v._id === id ? updatedVariant : v)),
     })),
 
   deleteVariant: (id) =>
     set((state) => ({
-      variants: state.variants.filter((v) => v.id !== id),
+      variants: state.variants.filter((v) => v._id !== id),
     })),
 }));
 

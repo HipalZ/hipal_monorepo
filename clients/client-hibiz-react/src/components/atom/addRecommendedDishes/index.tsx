@@ -30,11 +30,11 @@ const AddRecommendedDishes = <T extends DataArray>({
   const dishData = useMemo(() => (Data || []).filter((dish) => dish?.name?.toLowerCase()?.includes(searchText?.toLowerCase())), [Data, searchText]);
   function handleActiveClick(selectedData: IDish | Category) {
     setRecommendDish((prev) => {
-      const index = prev.findIndex((item) => item.id === selectedData.id);
+      const index = prev.findIndex((item) => item._id === selectedData._id);
       if (index !== -1) {
-        return prev.filter((item) => item.id !== selectedData.id);
+        return prev.filter((item) => item._id !== selectedData._id);
       }
-      return [...prev, { id: selectedData.id, name: selectedData.name }];
+      return [...prev, { id: selectedData._id, name: selectedData.name }];
     });
   }
 
@@ -46,28 +46,28 @@ const AddRecommendedDishes = <T extends DataArray>({
         {searchText === ''
           ? Data?.map((eachData) => (
               <div
-                key={eachData.id}
+                key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  recommendDish.some((item) => item.id === eachData.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  recommendDish.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
-                  <input type="checkbox" checked={recommendDish?.some((item) => item.id === eachData.id)} className="mr-2 rounded-sm" />
+                  <input type="checkbox" checked={recommendDish?.some((item) => item._id === eachData._id)} className="mr-2 rounded-sm" />
                   <h1 className="mx-2 text-base">{eachData.name}</h1>
                 </div>
               </div>
             ))
           : dishData?.map((eachData) => (
               <div
-                key={eachData?.id}
+                key={eachData?._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  recommendDish?.some((item) => item.id === eachData.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  recommendDish?.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
-                  <input type="checkbox" checked={recommendDish?.some((item) => item.id === eachData.id)} className="mr-2 rounded-sm" />
+                  <input type="checkbox" checked={recommendDish?.some((item) => item._id === eachData._id)} className="mr-2 rounded-sm" />
                   <h1 className="mx-2 text-base">{eachData.name}</h1>
                 </div>
               </div>

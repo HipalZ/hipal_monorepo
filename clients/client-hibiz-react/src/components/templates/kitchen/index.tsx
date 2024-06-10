@@ -119,12 +119,12 @@ const KitchenDashboard = memo(({ kitchens, addKitchen, businessId, loading }: IP
         ) : (
           kitchens?.map((kitchen) => (
             <div
-              key={kitchen.id}
+              key={kitchen._id}
               className="masonry-item relative flex items-center justify-between rounded-md border border-[#cacaca] px-4 pb-6 pt-2"
             >
               <div className="">
                 <div className="ml-2 pb-4">{kitchen.kitchenName}</div>
-                <div onClick={() => handleEdit(kitchen.id)} className="absolute bottom-2 right-4 text-[#2F80ED]">
+                <div onClick={() => handleEdit(kitchen._id)} className="absolute bottom-2 right-4 text-[#2F80ED]">
                   Edit
                 </div>
               </div>

@@ -102,14 +102,14 @@ const AddTax: React.FC<Props> = ({
         <div className="mt-4 flex space-x-4">
           <button
             type="button"
-            onClick={() => handleEdit('delete', editTax?.id || '')}
+            onClick={() => handleEdit('delete', editTax?._id || '')}
             className="min-h-[3rem] w-[40%] rounded-lg border border-[#2B354D] bg-white py-2 text-[1rem] font-semibold  text-[#2B354D]"
           >
             Delete
           </button>
           <button
             type="button"
-            onClick={() => handleEdit('save', editTax?.id || '')}
+            onClick={() => handleEdit('save', editTax?._id || '')}
             className="min-h-[3rem] w-[60%] rounded-lg bg-[#2B354D] py-2 text-[1rem] font-semibold text-white"
           >
             Save

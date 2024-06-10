@@ -14,6 +14,7 @@ interface IAddStaff {
   getStaff: () => void;
 }
 interface IRole {
+  _id: string;
   id: string;
   name: string;
   permissions: string[];
@@ -107,7 +108,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
       customRole: selectedRole
         ? {
             businessId: businessId,
-            customRoleId: selectedRole.id,
+            customRoleId: selectedRole._id,
             permissions: selectedRole.permissions,
             roleName: selectedRole.name,
           }
@@ -205,14 +206,14 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
             <select
               onChange={(e) => {
                 const selectedRoleId = e.target.value;
-                const role = roles.find((r: IRole) => r.id === selectedRoleId);
+                const role = roles.find((r: IRole) => r._id === selectedRoleId);
                 setSelectedRole(role ?? null);
               }}
               className="block w-full rounded-md"
             >
               <option value="">Select Role</option>
               {roles?.map((role: IRole) => (
-                <option key={role?.id} value={role?.id}>
+                <option key={role?._id} value={role?._id}>
                   {role?.name}
                 </option>
               ))}

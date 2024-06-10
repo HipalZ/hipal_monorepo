@@ -53,7 +53,7 @@ const EditAddOn = memo(() => {
   const handleDeleteVariant = (variant: Variant) => {
     setDeletePopup(true);
     setStoreDeleteVariant((prev) => {
-      return { ...prev, id: variant?.id, name: variant?.name };
+      return { ...prev, id: variant?._id, name: variant?.name };
     });
   };
   const handleEditVariant = (variant: Variant) => {
@@ -152,7 +152,7 @@ const EditAddOn = memo(() => {
     enabled: !!addOnId,
   });
   function deleteItem() {
-    deleteVariant(storeDeleteVariant?.id);
+    deleteVariant(storeDeleteVariant?._id);
     setDeletePopup(false);
   }
 
@@ -239,7 +239,7 @@ const EditAddOn = memo(() => {
         </div>
         <div className={`${variants.length === 0 ? '' : 'border border-[#2B354D]'}  mx-4 mt-4 space-y-2 rounded-md p-4`}>
           {variants.map((variant) => (
-            <div key={variant.id} className="rounded-md border border-[#cacaca] p-2">
+            <div key={variant._id} className="rounded-md border border-[#cacaca] p-2">
               <div className="w-48 truncate">{variant?.name}</div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm opacity-80">

@@ -20,9 +20,9 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
 
   function handleActiveClick(selectedData: any) {
     setActiveClick((prev: any) => {
-      const index = prev.findIndex((item: any) => item.id === selectedData.id);
+      const index = prev.findIndex((item: any) => item._id === selectedData._id);
       if (index !== -1) {
-        return prev.filter((item: any) => item.id !== selectedData.id);
+        return prev.filter((item: any) => item._id !== selectedData._id);
       }
       return [...prev, selectedData];
     });
@@ -36,16 +36,16 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
         {searchText === ''
           ? Data?.map((eachData: IStaffs) => (
               <div
-                key={eachData.id}
+                key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  activeClick?.some((item) => item.id === eachData.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={activeClick?.some((item) => item.id === eachData.id)}
+                    checked={activeClick?.some((item) => item._id === eachData._id)}
                     onChange={() => {}}
                     className="mr-2 rounded-sm"
                   />
@@ -59,14 +59,14 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
             ))
           : staffData?.map((eachData) => (
               <div
-                key={eachData.id}
+                key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  activeClick?.some((item) => item.id === eachData.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
-                  <input type="checkbox" checked={activeClick?.some((item) => item.id === eachData.id)} className="mr-2 rounded-sm" />
+                  <input type="checkbox" checked={activeClick?.some((item) => item._id === eachData._id)} className="mr-2 rounded-sm" />
                   <BsFillPersonFill />
                   <h1 className="mx-2 text-base">{eachData?.name}</h1>
                 </div>

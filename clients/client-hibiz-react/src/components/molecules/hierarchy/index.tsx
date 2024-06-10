@@ -27,7 +27,7 @@ const HierarchyComponent: React.FC<ICategoryComponent> = memo(({ allCategories, 
 
   const getParent = (category: ICategory) => {
     setSelectedCategory(category);
-    setParentCategoryId(category.id);
+    setParentCategoryId(category._id);
     setParentCategory(category.name);
   };
 
@@ -81,10 +81,10 @@ const HierarchyComponent: React.FC<ICategoryComponent> = memo(({ allCategories, 
                   .filter((ele) => ele.name !== categoryName)
                   .map((parent) => (
                     <div
-                      key={parent?.id}
+                      key={parent?._id}
                       onClick={() => getParent(parent)}
                       className={`rounded-md border border-[#cacaca] p-4 ${
-                        selectedCategory?.id === parent?.id ? 'bg-[#2B354D]/90 text-white' : 'bg-white text-[#2B354D]'
+                        selectedCategory?._id === parent?._id ? 'bg-[#2B354D]/90 text-white' : 'bg-white text-[#2B354D]'
                       }`}
                     >
                       <div className={`flex items-center justify-between`}>

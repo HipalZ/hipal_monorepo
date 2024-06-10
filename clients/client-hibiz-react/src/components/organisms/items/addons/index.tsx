@@ -42,11 +42,11 @@ const AddOns = memo(({ addOns, searchText }: { addOns: IAddOn[]; searchText: str
           addOnData.length > 0 ? (
             <div className="masonry-layout mt-6 px-6">
               {addOnData.map((addOn) => (
-                <div key={addOn?.id} className="masonry-item space-y-2 rounded-md border border-[#cacaca] px-4 py-2">
+                <div key={addOn?._id} className="masonry-item space-y-2 rounded-md border border-[#cacaca] px-4 py-2">
                   <h6 className="w-48 truncate font-semibold">{addOn?.name}</h6>
                   <div className="flex justify-between">
                     <span>{addOn?.items?.length} variations</span>
-                    <button type="button" onClick={() => EditAddOn(addOn?.id)} className="text-[#2F80ED]">
+                    <button type="button" onClick={() => EditAddOn(addOn?._id)} className="text-[#2F80ED]">
                       Edit
                     </button>
                   </div>
@@ -59,11 +59,11 @@ const AddOns = memo(({ addOns, searchText }: { addOns: IAddOn[]; searchText: str
         ) : addOnSearch.length > 0 ? (
           <div className="masonry-layout mt-6 px-6">
             {addOnSearch.map((addOn) => (
-              <div key={addOn?.id} className="masonry-item mt-6 space-y-2 rounded-md border border-[#cacaca] px-4 py-2">
+              <div key={addOn?._id} className="masonry-item mt-6 space-y-2 rounded-md border border-[#cacaca] px-4 py-2">
                 <h6 className="w-48 truncate font-semibold">{addOn?.name}</h6>
                 <div className="flex justify-between">
                   <span>{addOn?.items?.length} variations</span>
-                  <button type="button" onClick={() => EditAddOn(addOn?.id)} className="text-[#2F80ED]">
+                  <button type="button" onClick={() => EditAddOn(addOn?._id)} className="text-[#2F80ED]">
                     Edit
                   </button>
                 </div>

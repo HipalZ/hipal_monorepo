@@ -105,7 +105,7 @@ const CustomerBillsReviews = memo(() => {
         <section className="masonry-layout relative mt-2 w-full space-y-4 overflow-auto scroll-smooth px-6">
           {billsData?.latestBills && billsData.latestBills.length > 0 ? (
             billsData.latestBills.map((bill: customerzBills) => (
-              <div key={bill.id}>
+              <div key={bill._id}>
                 <Disclosure>
                   {({ open }) => (
                     <>
@@ -183,7 +183,7 @@ const CustomerBillsReviews = memo(() => {
             const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
 
             return (
-              <article key={review.id} className="bg-base-100 masonry-item rounded-xl border border-[#cacaca] bg-[#fbfbfb] p-4 ">
+              <article key={review._id} className="bg-base-100 masonry-item rounded-xl border border-[#cacaca] bg-[#fbfbfb] p-4 ">
                 <h1>{formattedDate}</h1>
                 <div
                   className="Stars"

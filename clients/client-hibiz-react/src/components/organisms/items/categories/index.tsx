@@ -29,7 +29,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
   const [draggedParentId, setDraggedParentId] = useState<string | null>(null);
 
   useEffect(() => {
-    const ids = categories.map((category) => category.id);
+    const ids = categories.map((category) => category._id);
     setCategoryIDs(ids);
   }, [categories]);
 
@@ -51,13 +51,13 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
 
     for (let index = 0; index < orderedCategories?.length; index++) {
       const categoryId = orderedCategories[index];
-      const category = categories.find((cat) => cat.id === categoryId);
+      const category = categories.find((cat) => cat._id === categoryId);
 
       if (category.hierarchy === 'PARENT') {
-        if (!obj[category.id]) {
-          obj[category.id] = {
+        if (!obj[category._id]) {
+          obj[category._id] = {
             parentName: category.name,
-            id: category.id,
+            _id: category._id,
             child: [],
           };
         }
@@ -66,7 +66,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
         if (obj[category.parentCategoryId]) {
           obj[category.parentCategoryId].child.push({
             name: category.name,
-            id: category.id,
+            _id: category._id,
           });
         }
       }
@@ -74,14 +74,14 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
 
     for (let index = 0; index < categories?.length; index++) {
       const category = categories[index];
-      if (orderedCategories.includes(category.id)) {
+      if (orderedCategories.includes(category._id)) {
         continue;
       }
       if (category.hierarchy === 'PARENT') {
-        if (!obj[category.id]) {
-          obj[category.id] = {
+        if (!obj[category._id]) {
+          obj[category._id] = {
             parentName: category.name,
-            id: category.id,
+            _id: category._id,
             child: [],
           };
         }
@@ -90,7 +90,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
         if (obj[category.parentCategoryId]) {
           obj[category.parentCategoryId].child.push({
             name: category.name,
-            id: category.id,
+            _id: category._id,
           });
         }
       }
@@ -141,7 +141,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
       setCategoryOrder((prevCategoryOrder) => {
         // Ensure all categories, including new ones, are present in the categoryOrder
         const updatedCategories = [...prevCategoryOrder];
-        const allCategoryIds = categories.map((cat) => cat.id);
+        const allCategoryIds = categories.map((cat) => cat._id);
 
         allCategoryIds.forEach((id) => {
           if (!updatedCategories.includes(id)) {
@@ -155,10 +155,10 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
         if (draggedIndex !== -1 && targetIndex !== -1) {
           if (draggedParentId && targetParentId && draggedParentId === targetParentId) {
             // Handle reordering within the same parent category
-            const parentCategory = categories.find((cat) => cat.id === draggedParentId);
+            const parentCategory = categories.find((cat) => cat._id === draggedParentId);
             if (parentCategory) {
               const parentChildIds = updatedCategories.filter((id) => {
-                const cat = categories.find((cat) => cat.id === id);
+                const cat = categories.find((cat) => cat._id === id);
                 return cat && cat.parentCategoryId === draggedParentId;
               });
               // const start = updatedCategories.indexOf(parentChildIds[0]);
@@ -172,7 +172,6 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
             updatedCategories.splice(targetIndex, 0, removed);
           }
         }
-        console.log('up', updatedCategories);
         return updatedCategories;
       });
 
@@ -210,7 +209,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
       const response = await axios.get(`/v1/settings?businessId=${businessId}`);
       setSettings(response.data);
       setCategoryOrder(response.data[0].categoryOrder || []);
-      return response.data[0].id;
+      return response.data[0]._id;
     } catch (err) {
       console.log(err);
     }
@@ -218,14 +217,10 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
 
   const saveCategoryOrder = async () => {
     setIsEditingSequence(false);
-    await handleCategoryOrder(settings[0]?.id);
+    await handleCategoryOrder(settings[0]?._id);
   };
 
-  const {
-    isLoading,
-    error,
-    data: catOrderedData,
-  } = useQuery({
+  useQuery({
     queryKey: ['settings', businessId],
     queryFn: settingsData,
     enabled: !!businessId,
@@ -245,7 +240,7 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
                   isEditingSequence
                     ? (e) => {
                         e.stopPropagation();
-                        handleDragStart(parent.id, null);
+                        handleDragStart(parent._id, null);
                       }
                     : undefined
                 }
@@ -254,31 +249,31 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
                   isEditingSequence
                     ? (e) => {
                         e.stopPropagation();
-                        handleDrop(parent.id, null);
+                        handleDrop(parent._id, null);
                       }
                     : undefined
                 }
                 onDragEnd={isEditingSequence ? handleDragEnd : undefined}
-                data-id={parent.id}
+                data-id={parent._id}
               >
                 <div className={`${parent?.child.length > 0 ? 'flex items-center justify-between pb-4' : 'flex items-center justify-between'}`}>
                   <div className="font-medium">
                     {index + 1}&#41;&nbsp;{parent?.parentName}
                   </div>
-                  <div onClick={() => editCategory(parent?.id)} className="cursor-pointer text-sm text-[#2F80ED]">
+                  <div onClick={() => editCategory(parent?._id)} className="cursor-pointer text-sm text-[#2F80ED]">
                     View
                   </div>
                 </div>
                 {parent?.child.map((child) => (
                   <div
-                    key={child.id}
+                    key={child._id}
                     className="rounded-md p-2"
                     draggable={isEditingSequence}
                     onDragStart={
                       isEditingSequence
                         ? (e) => {
                             e.stopPropagation();
-                            handleDragStart(child.id, parent.id);
+                            handleDragStart(child._id, parent._id);
                           }
                         : undefined
                     }
@@ -287,12 +282,12 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
                       isEditingSequence
                         ? (e) => {
                             e.stopPropagation();
-                            handleDrop(child.id, parent.id);
+                            handleDrop(child._id, parent._id);
                           }
                         : undefined
                     }
                     onDragEnd={isEditingSequence ? handleDragEnd : undefined}
-                    data-id={child.id}
+                    data-id={child._id}
                   >
                     <CategoryCard category={child} onAddCategory={editCategory} />
                   </div>
@@ -304,10 +299,10 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
           )
         ) : filterCategory.length > 0 ? (
           filterCategory.map((parent) => (
-            <div key={parent?.id} className="mx-6 rounded-md border border-[#cacaca] p-4">
+            <div key={parent?._id} className="mx-6 rounded-md border border-[#cacaca] p-4">
               <div className="flex items-center justify-between">
                 <div className="font-medium">{parent?.name}</div>
-                <div onClick={() => editCategory(parent.id)} className="cursor-pointer text-sm text-[#2F80ED]">
+                <div onClick={() => editCategory(parent._id)} className="cursor-pointer text-sm text-[#2F80ED]">
                   View
                 </div>
               </div>
@@ -341,9 +336,9 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
 
 const CategoryCard = memo(({ category, onAddCategory }: { category: ICategory; onAddCategory: (str: string) => void }) => {
   return (
-    <div key={category.id} className="relative rounded-md border border-[#CACACA] p-4">
+    <div key={category._id} className="relative rounded-md border border-[#CACACA] p-4">
       <div className="w-72 truncate font-medium opacity-70">{category.name}</div>
-      <div onClick={() => onAddCategory(category.id)} className="absolute bottom-4 right-4 cursor-pointer text-sm text-[#2F80ED]">
+      <div onClick={() => onAddCategory(category._id)} className="absolute bottom-4 right-4 cursor-pointer text-sm text-[#2F80ED]">
         View
       </div>
     </div>

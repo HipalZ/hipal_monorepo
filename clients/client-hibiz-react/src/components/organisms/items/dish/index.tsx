@@ -45,7 +45,7 @@ const DishContent = memo(({ dishes, searchText }: { dishes: IDish[]; searchText:
       {searchText === '' ? (
         dishesData && dishesData.length > 0 ? (
           dishesData.map((dish: IDish) => (
-            <div key={dish.id} className="m-4 mx-6 my-3 flex justify-between rounded-md border border-[#cacaca] p-4 px-4 py-4">
+            <div key={dish._id} className="m-4 mx-6 my-3 flex justify-between rounded-md border border-[#cacaca] p-4 px-4 py-4">
               <h1 className="w-72 truncate">{dish?.name}</h1>
               <button type="button" className="text-[#2F80ED]" onClick={() => handleEditButton(dish)}>
                 Edit
@@ -57,7 +57,7 @@ const DishContent = memo(({ dishes, searchText }: { dishes: IDish[]; searchText:
         )
       ) : dishData && dishesData.length > 0 ? (
         dishData.map((dish: IDish) => (
-          <div key={dish.id} className="m-4 mx-6 my-3 flex justify-between rounded-md border border-[#cacaca] p-4 px-4 py-4">
+          <div key={dish._id} className="m-4 mx-6 my-3 flex justify-between rounded-md border border-[#cacaca] p-4 px-4 py-4">
             <h1 className="w-72 truncate">{dish?.name}</h1>
             <button type="button" className="text-[#2F80ED]" onClick={() => handleEditButton(dish)}>
               Edit

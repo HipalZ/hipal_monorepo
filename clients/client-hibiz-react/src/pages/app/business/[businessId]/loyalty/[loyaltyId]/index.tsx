@@ -89,9 +89,9 @@ function LoyaltyId() {
   };
 
   const { isLoading, error, data, refetch } = useQuery({
-    queryKey: ['loyalty', selectedCustomer?.id, pageNumber, outTime, inTime, businessId],
+    queryKey: ['loyalty', selectedCustomer?._id, pageNumber, outTime, inTime, businessId],
     queryFn: getParticularUsersLoyalty,
-    enabled: !!selectedCustomer?.id && !!businessId && !!pageNumber && !!inTime && !!outTime,
+    enabled: !!selectedCustomer?._id && !!businessId && !!pageNumber && !!inTime && !!outTime,
   });
 
   if (error) return <ErrorComponent refetch={refetch} />;

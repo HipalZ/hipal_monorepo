@@ -78,8 +78,8 @@ const SalesDues = memo(({ initialData, isLoadingDues }: { initialData: SaleDuesR
         {duesPersons
           ? duesPersons.map((due) => (
               <div
-                key={due?.id}
-                onClick={() => handleClick(due?.id)}
+                key={due?._id}
+                onClick={() => handleClick(due?._id)}
                 className=" on_active_bounce masonry-item rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
               >
                 <div className="flex items-center px-4 py-2">

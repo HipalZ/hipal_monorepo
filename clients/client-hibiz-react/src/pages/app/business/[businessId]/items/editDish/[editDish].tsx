@@ -269,7 +269,7 @@ function EditDish() {
     }
 
     const isNameDuplicate = recommendedDishes?.some((everyDish) => {
-      const isDuplicate = everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase() && everyDish.id !== editDish;
+      const isDuplicate = everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase() && everyDish._id !== editDish;
       console.log(everyDish?.name?.toLowerCase() === dishData?.name?.toLowerCase());
       return isDuplicate;
     });
@@ -672,7 +672,7 @@ function EditDish() {
               className="w-full rounded-md border p-2"
             >
               {dishTypes?.map((dish: any) => (
-                <option className="!bg-white !text-[#2B354D]" key={dish?.id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                   {dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
                 </option>
               ))}
@@ -703,7 +703,7 @@ function EditDish() {
                 </label>
                 <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
                   {kitchen?.map((kitchen: IKitchen) => (
-                    <option className="!bg-white !text-[#2B354D]" key={kitchen?.id} value={kitchen?.id}>
+                    <option className="!bg-white !text-[#2B354D]" key={kitchen?._id} value={kitchen?._id}>
                       {kitchen?.kitchenName}
                     </option>
                   ))}
@@ -721,7 +721,7 @@ function EditDish() {
                 <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
                   {postCategory?.map((category: ICategory, index: number) => {
                     return (
-                      <div key={category?.id} className="border-1 mt-2 flex flex-col rounded-md border p-3">
+                      <div key={category?._id} className="border-1 mt-2 flex flex-col rounded-md border p-3">
                         <div className="flex items-center">
                           <MdDinnerDining />
                           <h1 className="mx-2 capitalize">{category?.name}</h1>
@@ -759,7 +759,7 @@ function EditDish() {
                   </button>
                 </div>
                 {portions?.map((portion, index) => (
-                  <div key={portion?.id} className="border-1 space-y-2 rounded-lg border border-[#cacaca] p-2">
+                  <div key={portion?._id} className="border-1 space-y-2 rounded-lg border border-[#cacaca] p-2">
                     <button type="button" onClick={() => handleRemovePortion(index)} className="float-right text-blue-500">
                       ✖
                     </button>
@@ -808,7 +808,7 @@ function EditDish() {
                         className="w-full rounded-md border p-2"
                       >
                         {dishTypes?.map((dish: any) => (
-                          <option className="!bg-white !text-[#2B354D]" key={dish?.id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                          <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                             {dish?.type}
                           </option>
                         ))}
@@ -829,7 +829,7 @@ function EditDish() {
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
               {postAddOns?.map((addon: Extra, index: number) => {
                 return (
-                  <div key={addon?.id} className="border-1 my-2 flex flex-col rounded-md border p-3">
+                  <div key={addon?._id} className="border-1 my-2 flex flex-col rounded-md border p-3">
                     <div className="flex items-center">
                       <MdDinnerDining />
                       <h1 className="mx-2 capitalize">{addon?.name}</h1>
@@ -1013,7 +1013,7 @@ function EditDish() {
               <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
                 {postRecommend?.map((dishes: IDish, index: number) => {
                   return (
-                    <div key={dishes?.id} className="border-1 my-2 flex flex-col rounded-md border p-3">
+                    <div key={dishes?._id} className="border-1 my-2 flex flex-col rounded-md border p-3">
                       <div className="flex items-center">
                         <MdDinnerDining />
                         <h1 className="mx-2 capitalize">{dishes?.name}</h1>

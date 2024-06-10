@@ -80,7 +80,7 @@ function CustomerzBills() {
       <section className="masonry-layout relative mt-2 w-full space-y-4 overflow-auto scroll-smooth px-6">
         {billsData && billsData.length > 0 ? (
           billsData.map((bill) => (
-            <div key={bill.id}>
+            <div key={bill._id}>
               <Disclosure>
                 {({ open }) => (
                   <>

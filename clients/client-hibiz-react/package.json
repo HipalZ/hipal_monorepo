@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 vite --host",
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 vite --host --Port 7000",
+    "bundle:development": "dotenv -e .env pnpm run bundle",
+    "bundle": "vite build",
     "build": "vite build",
     "serve": "vite preview",
     "lint": "eslint . --ext .ts,.tsx"
@@ -47,6 +49,7 @@
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
+    "@vitejs/plugin-react": "^4.3.0",
     "@vitejs/plugin-react-swc": "^3.7.0",
     "autoprefixer": "^10.4.19",
     "babel-plugin-react-compiler": "0.0.0-experimental-938cd9a-20240601",

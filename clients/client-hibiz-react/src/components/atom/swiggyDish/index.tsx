@@ -136,8 +136,8 @@ const SwiggyDish = ({
     try {
       const category = await axios.get(paths.getCategoryApi(businessId));
       const allDishes = category?.data?.reduce((acc: any[], category: ICategory) => {
-        const seenIds = new Set(acc.map((dish) => dish.id));
-        const uniqueDishes = category.dishes.filter((dish) => !seenIds.has(dish.id));
+        const seenIds = new Set(acc.map((dish) => dish._id));
+        const uniqueDishes = category.dishes.filter((dish) => !seenIds.has(dish._id));
         return acc.concat(uniqueDishes);
       }, []);
       setCategory(category?.data);
@@ -198,7 +198,7 @@ const SwiggyDish = ({
             </label>
             <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
               {kitchen?.map((kitchen: any) => (
-                <option className="!bg-white !text-[#2B354D]" key={kitchen?.id} value={kitchen?.id}>
+                <option className="!bg-white !text-[#2B354D]" key={kitchen?._id} value={kitchen?._id}>
                   {kitchen?.kitchenName}
                 </option>
               ))}
@@ -216,7 +216,7 @@ const SwiggyDish = ({
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
               {postCategory?.map((category: ICategory, index: number) => {
                 return (
-                  <div key={category?.id} className="border-1 mt-2 flex flex-col rounded-md border p-3">
+                  <div key={category?._id} className="border-1 mt-2 flex flex-col rounded-md border p-3">
                     <div className="flex items-center">
                       <MdDinnerDining />
                       <h1 className="mx-2 capitalize">{category?.name}</h1>
@@ -300,7 +300,7 @@ const SwiggyDish = ({
                     className="w-full rounded-md border p-2"
                   >
                     {dishTypes?.map((dish: any) => (
-                      <option className="!bg-white !text-[#2B354D]" key={dish?.id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                      <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                         {dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
                       </option>
                     ))}

@@ -14,12 +14,12 @@ const AddTables = memo(({ postZones, zoneId, staffs, closeModal, postStaffs, set
 
   const addTables = [
     {
-      id: 1,
+      _id: 1,
       text: 'Create new tables',
       description: 'Create a new table',
     },
     {
-      id: 2,
+      _id: 2,
       text: 'Add bulk tables',
       description: 'Add many tables at once',
     },
@@ -37,10 +37,10 @@ const AddTables = memo(({ postZones, zoneId, staffs, closeModal, postStaffs, set
         {addTables.map((addTable, index) => {
           return (
             <div
-              key={addTable?.id}
+              key={addTable?._id}
               onClick={() => handleActiveClick(index)}
               onKeyUp={() => handleActiveClick(index)}
-              className={`${addTable?.id === 2 ? 'pointer-events-none opacity-50' : ''} ${
+              className={`${addTable?._id === 2 ? 'pointer-events-none opacity-50' : ''} ${
                 activeClick === index ? 'border-2 border-[#2B354D]' : ' border-1 border-[#CACACA]'
               } my-5 rounded-md border bg-white p-3`}
             >

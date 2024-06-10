@@ -59,7 +59,7 @@ const EditKitchen = memo(() => {
       setIsNameError(true);
       return;
     }
-    const staffIds = selectedStaff.map((staff) => staff.id);
+    const staffIds = selectedStaff.map((staff) => staff._id);
     const config = {
       businessId: businessId,
       kitchenName: kitchenName,
@@ -68,7 +68,7 @@ const EditKitchen = memo(() => {
     };
 
     try {
-      await axios.put(`/v1/kitchens/${data.kitchen.id}`, config);
+      await axios.put(`/v1/kitchens/${data.kitchen._id}`, config);
       toast.success(`${kitchenName} has been edited`);
       startTransition(() => {
         navigate(`/app/business/${businessId}/kitchen?tab=Kitchen`);
@@ -79,7 +79,7 @@ const EditKitchen = memo(() => {
   };
 
   useEffect(() => {
-    const staffMembers = data.staffs.filter((staff) => data.kitchen.staff.includes(staff.id));
+    const staffMembers = data.staffs.filter((staff) => data.kitchen.staff.includes(staff._id));
 
     initializeKitchen(data.kitchen.kitchenName, staffMembers);
   }, [data.kitchen, data.staffs, initializeKitchen]);
@@ -140,14 +140,14 @@ const EditKitchen = memo(() => {
         {selectedStaff.length > 0 &&
           selectedStaff?.map((staff: IStaffs) => {
             return (
-              <div key={staff?.id} className="border-1 my-4 rounded-md border p-3">
+              <div key={staff?._id} className="border-1 my-4 rounded-md border p-3">
                 <div className="flex items-center">
                   <BsFillPersonFill />
                   <h1 className="mx-2 text-base">{staff?.name}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
                   <p className="text-sm text-[#2B354D]/30">{staff?.customRole?.[0].roleName}</p>
-                  <button type="button" onClick={() => deselectStaff(staff.id)} className="on_active_bounce text-[#2F80ED]">
+                  <button type="button" onClick={() => deselectStaff(staff._id)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
                 </div>
@@ -161,10 +161,10 @@ const EditKitchen = memo(() => {
         </div>
         <div>
           {data.dishes
-            ?.filter((ele: Dish) => ele.kitchenId === data.kitchen.id)
+            ?.filter((ele: Dish) => ele.kitchenId === data.kitchen._id)
             .map((dish: Dish) => {
               return (
-                <div key={dish?.id} className="my-5 flex justify-between rounded-md border border-[#cacaca] p-4">
+                <div key={dish?._id} className="my-5 flex justify-between rounded-md border border-[#cacaca] p-4">
                   <div className="flex space-x-4">
                     <FoodType type={dish?.dishType as FOOD_TYPES} />
                     <span className="ml-4">{dish?.name}</span>

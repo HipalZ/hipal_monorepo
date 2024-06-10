@@ -98,7 +98,7 @@ const Tables = memo(() => {
     setIsLoading(true);
     try {
       const config = {
-        url: paths.updateTableApi(data?.id),
+        url: paths.updateTableApi(data?._id),
         method: 'PUT',
         mode: 'cors',
         headers: {
@@ -121,14 +121,15 @@ const Tables = memo(() => {
     setIsLoading(false);
   };
 
-  if (isTableDataPending || isStaffDataPending) return <LoadingSpinner />;
+  if (isTableDataPending) return <LoadingSpinner />;
+  if (isStaffDataPending) return <LoadingSpinner />;
   if (TableErrorData) return <ErrorComponent refetch={refetchTableData} />;
   if (StaffErrorData) return <ErrorComponent refetch={refetchStaffData} />;
   return (
     <>
       <div className="relative mb-20 space-y-4 p-4">
         {createdTable?.map((table) => {
-          const zone = postZones?.find((zone) => table?.zoneId === zone?.id);
+          const zone = postZones?.find((zone) => table?.zoneId === zone?._id);
           const countStaffs = table?.staff?.length;
           return (
             <div key={table?.name} className="flex w-full flex-col space-y-4 rounded-lg border border-[#CACACA] p-2">
@@ -141,7 +142,7 @@ const Tables = memo(() => {
                   <div
                     onClick={async () => {
                       setIsLoading(true);
-                      await downloadURI(table?.id, table?.name, table?.zoneId, businessId || '');
+                      await downloadURI(table?._id, table?.name, table?.zoneId, businessId || '');
                       setIsLoading(false);
                     }}
                     className="on_active_bounce flex items-center space-x-2 rounded-md border border-[#2B354D] px-2 py-1"

@@ -118,7 +118,7 @@ const AddZone = () => {
     setTableModal(false);
   }
   function handleAddStaff(activeClick: IStaffs[]) {
-    const staffIds = activeClick.map((staff: IStaffs) => staff.id);
+    const staffIds = activeClick.map((staff: IStaffs) => staff._id);
     setPostStaffs(activeClick);
     setZoneData((prevZone) => {
       return {
@@ -183,7 +183,7 @@ const AddZone = () => {
             <div className="relative w-full">
               <select onChange={(e) => handleAddType(e)} value={zoneData?.zoneType} className="my-2 w-full rounded-md border p-2">
                 {zoneType?.map((zone: any) => (
-                  <option className="!bg-white !text-[#2B354D]" key={zone?.id} value={zone?.type}>
+                  <option className="!bg-white !text-[#2B354D]" key={zone?._id} value={zone?.type}>
                     {zone?.type}
                   </option>
                 ))}
@@ -202,7 +202,7 @@ const AddZone = () => {
           </div>
           {postStaffs?.map((staff: IStaffs, index: number) => {
             return (
-              <div key={staff?.id} className="border-1 my-4 rounded-md border p-3">
+              <div key={staff?._id} className="border-1 my-4 rounded-md border p-3">
                 <div className="flex items-center">
                   <BsFillPersonFill />
                   <h1 className="mx-2 text-base">{staff?.name}</h1>
@@ -228,7 +228,7 @@ const AddZone = () => {
           </div>
           {postCharges?.map((acChar: ICharges, index: number) => {
             return (
-              <div key={acChar?.id} className="border-1 my-4 rounded-md border p-3">
+              <div key={acChar?._id} className="border-1 my-4 rounded-md border p-3">
                 <div className="flex items-center">
                   <RiExchangeDollarLine />
                   <h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
@@ -261,7 +261,7 @@ const AddZone = () => {
         {tableModal && (
           <PopUp show={tableModal} onClose={closeTableModal}>
             <AddTables
-              zoneId={zoneData?.id}
+              zoneId={zoneData?._id}
               closeModal={closeTableModal}
               postStaffs={postStaffs}
               setTableModal={setTableModal}

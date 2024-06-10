@@ -68,8 +68,8 @@ const AddCategory: React.FC = memo(() => {
   const handleToggleVisibility = () => setVisibility(!visibility);
 
   const toggleDishSelection = (dish: Dish) => {
-    if (selectedDishes.some((selectedDish) => selectedDish.id === dish.id)) {
-      removeDish(dish.id);
+    if (selectedDishes.some((selectedDish) => selectedDish._id === dish._id)) {
+      removeDish(dish._id);
     } else {
       addDish(dish);
     }
@@ -266,7 +266,7 @@ const AddCategory: React.FC = memo(() => {
         )}
         <div className="grid-col-1 mt-4 grid gap-4 pb-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {selectedDishes.map((dish) => (
-            <div key={dish?.id} className="relative flex items-center rounded-md border border-[#cacaca]">
+            <div key={dish?._id} className="relative flex items-center rounded-md border border-[#cacaca]">
               <div className="ml-2 mt-2 flex items-center rounded-md pb-8">
                 <MdDinnerDining className="mr-2" />
                 {dish?.name}
@@ -274,7 +274,7 @@ const AddCategory: React.FC = memo(() => {
               <button
                 type="button"
                 className="on_active_bounce absolute bottom-2 right-4 rounded-md text-blue-500"
-                onClick={() => removeDish(dish?.id)}
+                onClick={() => removeDish(dish?._id)}
               >
                 Remove
               </button>

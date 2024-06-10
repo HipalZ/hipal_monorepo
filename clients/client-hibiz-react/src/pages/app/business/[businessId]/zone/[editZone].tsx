@@ -87,20 +87,20 @@ const EditZone = () => {
 
   useEffect(() => {
     setZoneData(data?.zone);
-    const filteredTables = data?.tables?.filter((table: ITables) => table.zoneId === data?.zone?.id && data?.zone?.tables?.includes(table.id));
+    const filteredTables = data?.tables?.filter((table: ITables) => table.zoneId === data?.zone?._id && data?.zone?.tables?.includes(table._id));
     setExistingTable(filteredTables);
     setStaffs(data?.staff);
     setAcCharge(data?.charges);
-    const filteredStaffs = data?.staff?.filter((filStaff: IStaffs) => data?.zone?.staff?.includes(filStaff.id));
+    const filteredStaffs = data?.staff?.filter((filStaff: IStaffs) => data?.zone?.staff?.includes(filStaff._id));
     setPostStaffs(filteredStaffs);
     const filteredCharges = data?.charges?.filter((charge: ICharges) =>
-      data?.zone?.charges?.some((zoneCharge: ICharges) => zoneCharge.id === charge.id),
+      data?.zone?.charges?.some((zoneCharge: ICharges) => zoneCharge._id === charge._id),
     );
     setPostCharges(filteredCharges);
   }, [data]);
   function handleAddStaff(activeClick: IStaffs[]) {
     setPostStaffs(activeClick);
-    const staffIds = activeClick.map((staff: IStaffs) => staff.id);
+    const staffIds = activeClick.map((staff: IStaffs) => staff._id);
     setZoneData((prevZone) => {
       return {
         ...prevZone,
@@ -137,11 +137,11 @@ const EditZone = () => {
     });
   }
   function removeACCharges(idToRemove: string) {
-    setPostCharges((prev: any) => prev.filter((charge: any) => charge.id !== idToRemove));
+    setPostCharges((prev: any) => prev.filter((charge: any) => charge._id !== idToRemove));
   }
 
   function removeStaff(idToRemove: string) {
-    setPostStaffs((prev: any) => prev.filter((staff: any) => staff.id !== idToRemove));
+    setPostStaffs((prev: any) => prev.filter((staff: any) => staff._id !== idToRemove));
   }
 
   const closeACModal = () => {
@@ -187,8 +187,8 @@ const EditZone = () => {
         data: {
           ...zoneData,
           charges: postCharges,
-          staff: postStaffs.map((staff) => staff.id),
-          tables: existingTable.map((table) => table?.id),
+          staff: postStaffs.map((staff) => staff._id),
+          tables: existingTable.map((table) => table?._id),
         },
       };
 
@@ -214,7 +214,7 @@ const EditZone = () => {
 
   function removeTable() {
     if (selectedTableForDeletion) {
-      setExistingTable((existingTable) => existingTable?.filter((table) => table?.id !== selectedTableForDeletion?.id));
+      setExistingTable((existingTable) => existingTable?.filter((table) => table?._id !== selectedTableForDeletion?._id));
       setSelectedTableForDeletion({});
       setRemovePopup(false);
     }
@@ -250,7 +250,7 @@ const EditZone = () => {
             <div className="relative w-full">
               <select onChange={(e) => handleAddType(e)} value={zoneData?.zoneType} className="my-2 w-full rounded-md border p-2">
                 {zoneType?.map((zone: any) => (
-                  <option className="!bg-white !text-[#2B354D]" key={zone?.id} value={zone?.type}>
+                  <option className="!bg-white !text-[#2B354D]" key={zone?._id} value={zone?.type}>
                     {zone?.type}
                   </option>
                 ))}
@@ -269,14 +269,14 @@ const EditZone = () => {
           </div>
           {postStaffs?.map((staff: IStaffs) => {
             return (
-              <div key={staff?.id} className="border-1 my-4 rounded-md border p-3">
+              <div key={staff?._id} className="border-1 my-4 rounded-md border p-3">
                 <div className="flex items-center">
                   <BsFillPersonFill />
                   <h1 className="mx-2 text-base">{staff.name}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
                   <p className="text-sm text-[#2B354D]/70">{staff?.customRole[0]?.roleName}</p>
-                  <button type="button" onClick={() => removeStaff(staff?.id)} className="on_active_bounce text-[#2F80ED]">
+                  <button type="button" onClick={() => removeStaff(staff?._id)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
                 </div>
@@ -295,14 +295,14 @@ const EditZone = () => {
           </div>
           {postCharges?.map((acChar: ICharges) => {
             return (
-              <div key={acChar?.id} className="border-1 my-4 rounded-md border p-3">
+              <div key={acChar?._id} className="border-1 my-4 rounded-md border p-3">
                 <div className="flex items-center">
                   <RiExchangeDollarLine />
                   <h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
                   <p className="text-sm text-[#2B354D]/70">{acChar?.value}% on billing</p>
-                  <button type="button" onClick={() => removeACCharges(acChar?.id || '')} className="text-[#2F80ED]">
+                  <button type="button" onClick={() => removeACCharges(acChar?._id || '')} className="text-[#2F80ED]">
                     Remove
                   </button>
                 </div>
@@ -315,7 +315,7 @@ const EditZone = () => {
           <div className="mt-3 space-y-3">
             {existingTable?.map((table) => {
               return (
-                <div key={table?.id}>
+                <div key={table?._id}>
                   <div className="on_active_bounce flex w-full items-center justify-between rounded-lg border border-[#CACACA] p-2">
                     <div className="on_active_bounce flex items-center space-x-1">
                       <MdOutlineTableBar className={`${classCard.font} ${classCard.bg} rounded-full px-2`} />
@@ -338,7 +338,7 @@ const EditZone = () => {
           <div className="mt-3 grid grid-cols-2 gap-4">
             {createdTable?.map((table) => {
               return (
-                <div key={table?.id} className="on_active_bounce space-y-6 rounded-lg border border-[#CACACA] p-2">
+                <div key={table?._id} className="on_active_bounce space-y-6 rounded-lg border border-[#CACACA] p-2">
                   <div className="on_active_bounce">
                     <MdOutlineTableBar className={` ${classCard.font} ${classCard.bg} rounded-full px-2`} />
                   </div>

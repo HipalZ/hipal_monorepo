@@ -202,7 +202,7 @@ const AddAddOn = memo(() => {
       </div>
       <div className={`${variants.length === 0 ? '' : 'border border-[#2B354D]'}  mx-4 mt-4 space-y-2 rounded-md p-4`}>
         {variants.map((variant) => (
-          <div key={variant.id} className="rounded-md border border-[#cacaca] p-2">
+          <div key={variant._id} className="rounded-md border border-[#cacaca] p-2">
             <div className="w-48 truncate">{variant?.name}</div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-sm opacity-80">
@@ -213,7 +213,7 @@ const AddAddOn = memo(() => {
                 <button type="button" onClick={() => handleEditVariant(variant)}>
                   Edit
                 </button>
-                <button type="button" className="text-[#2F80ED]" onClick={() => handleDeleteVariant(variant.id)}>
+                <button type="button" className="text-[#2F80ED]" onClick={() => handleDeleteVariant(variant._id)}>
                   Delete
                 </button>
               </div>

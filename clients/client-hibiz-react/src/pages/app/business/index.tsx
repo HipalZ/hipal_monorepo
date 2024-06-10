@@ -34,7 +34,7 @@ const Business = memo(() => {
   const user = useOwnerLogin((s) => s.user);
   const navigate = useNavigate();
   const filteredBusinesses = businesses?.filter(
-    (business: IBusinessData) => business?.staff?.includes(user.id) || business.id === user?.customRole?.[0]?.businessId,
+    (business: IBusinessData) => business?.staff?.includes(user._id) || business._id === user?.customRole?.[0]?.businessId,
   );
 
   const handleRoute = async (businessId: string) => {
@@ -92,7 +92,7 @@ const Business = memo(() => {
         setBusinesses([response.data]);
         return;
       }
-      const response = await axios.get(`/v1/businesses?id=${user.id}`);
+      const response = await axios.get(`/v1/businesses?id=${user._id}`);
       if (response.data === undefined || response.data.length === 0) {
         localStorage.removeItem('ownerLogin');
         toast.error('connection refused please login');
@@ -118,9 +118,9 @@ const Business = memo(() => {
     error,
     data: allBizData,
   } = useQuery({
-    queryKey: ['getBiz', user.id],
+    queryKey: ['getBiz', user._id],
     queryFn: getBusiness,
-    enabled: !!user.id,
+    enabled: !!user._id,
   });
 
   return (
@@ -158,8 +158,8 @@ const Business = memo(() => {
         <div className="mx-6 mt-4 grid grid-cols-2 gap-4 pb-[5rem] font-normal text-[#2B354D]">
           {filteredBusinesses?.map((ele: any) => (
             <div
-              onClick={() => handleRoute(ele.id)}
-              key={ele.id}
+              onClick={() => handleRoute(ele._id)}
+              key={ele._id}
               className={`${ele?.status ? 'pointer-events-auto' : 'pointer-events-none opacity-75'} on_active_bounce rounded-xl border bg-white p-4`}
             >
               <div className="pb-6">{ele?.logo && <img src={ele?.logo} width={50} height={50} alt="" loading="lazy" />}</div>

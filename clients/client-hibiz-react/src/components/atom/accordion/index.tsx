@@ -181,7 +181,7 @@ const Bills = memo(
         {billsData && billsData.length > 0 ? (
           <div className="masonry-layout relative mt-6 w-full space-y-4 overflow-auto scroll-smooth px-6 pb-[10rem]">
             {billsData.map((bill, index) => (
-              <div key={index.toString()}>
+              <div key={bill.id+index}>
                 <Disclosure>
                   {({ open }) => {
                     let formattedEntries: any;
@@ -250,13 +250,13 @@ const Bills = memo(
                                 await fetchPaymentMethods();
                                 setLoadingPopup(false);
                                 openModal('settle');
-                                setEditBillId(bill?.id);
+                                setEditBillId(bill?._id);
                               }}
                               className="mb-4 rounded-md border border-[#cacaca] py-1 text-center font-semibold"
                             >
                               Edit Payment Mode
                             </div>
-                            {isModalOpen && editBillId === bill.id && (
+                            {isModalOpen && editBillId === bill._id && (
                               <PopUp show={isModalOpen} onClose={closeModal}>
                                 {footButton.toLowerCase() === 'settle' && (
                                   <div className="relative min-h-[70vh]">
@@ -274,7 +274,7 @@ const Bills = memo(
                                           .filter((method) => method?.mode !== 'dues')
                                           .map((method) => {
                                             return (
-                                              <div key={method.id}>
+                                              <div key={method._id}>
                                                 <div
                                                   className={`${
                                                     bill?.mode === method?.mode ? 'pointer-events-none opacity-50' : ''
@@ -282,7 +282,7 @@ const Bills = memo(
                                                   onClick={() => handlePaymentMethodSelection(method?.mode)}
                                                 >
                                                   <input
-                                                    id={`method-${method.id}`}
+                                                    id={`method-${method._id}`}
                                                     type="checkbox"
                                                     value={selectedPaymentMethod}
                                                     checked={selectedPaymentMethod === method?.mode}
@@ -334,14 +334,14 @@ const Bills = memo(
                                         )
                                         .map((method) => (
                                           <div
-                                            key={method.id}
+                                            key={method._id}
                                             className={`flex items-center rounded-xl border px-4 py-2 ${
                                               multiplePaymentMethods.includes(method?.mode) ? 'border-[#2b354d]' : ''
                                             }`}
                                             onClick={() => handleMultiplePaymentMethodSelection(method?.mode)}
                                           >
                                             <input
-                                              id={`method-${method.id}`}
+                                              id={`method-${method._id}`}
                                               type="checkbox"
                                               checked={multiplePaymentMethods.includes(method?.mode)}
                                             />

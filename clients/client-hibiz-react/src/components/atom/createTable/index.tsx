@@ -60,9 +60,9 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
     });
   }
   const handleZonesData = (id: string) => {
-    const selectedZone = postZones.find((zone: IZones) => zone.id === id);
+    const selectedZone = postZones.find((zone: IZones) => zone._id === id);
 
-    const newStaffs = postStaffs.filter((eachStaff: IStaffs) => (selectedZone ? selectedZone.staff.includes(eachStaff.id) : ''));
+    const newStaffs = postStaffs.filter((eachStaff: IStaffs) => (selectedZone ? selectedZone.staff.includes(eachStaff._id) : ''));
 
     setStaffs(newStaffs);
     setEachZoneId(id);
@@ -132,13 +132,13 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
             {postZones?.map((zone: IZones) => {
               return (
                 <div
-                  key={zone?.id}
-                  onClick={() => handleZonesData(zone?.id || '')}
-                  onKeyUp={() => handleZonesData(zone?.id || '')}
+                  key={zone?._id}
+                  onClick={() => handleZonesData(zone?._id || '')}
+                  onKeyUp={() => handleZonesData(zone?._id || '')}
                   className="border-1 my-5 rounded-md border border-[#CACACA] bg-white p-3"
                 >
                   <div className="flex items-center">
-                    <input type="checkbox" checked={tableData?.zoneId === zone.id} onChange={() => {}} className="mr-2 rounded-sm" />
+                    <input type="checkbox" checked={tableData?.zoneId === zone._id} onChange={() => {}} className="mr-2 rounded-sm" />
                     <h1 className="mx-2 text-base">{zone.zoneName}</h1>
                   </div>
                 </div>
@@ -150,15 +150,15 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
             {staffs?.map((staff: IStaffs) => {
               return (
                 <div
-                  key={staff?.id}
-                  onClick={() => handleActiveClick(staff.id)}
-                  onKeyUp={() => handleActiveClick(staff.id)}
+                  key={staff?._id}
+                  onClick={() => handleActiveClick(staff._id)}
+                  onKeyUp={() => handleActiveClick(staff._id)}
                   className={`${
-                    activeClick.includes(staff.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                    activeClick.includes(staff._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
                   } my-5 rounded-md border bg-white p-3`}
                 >
                   <div className="flex items-center">
-                    <input type="checkbox" checked={tableData?.staff?.includes(staff?.id)} onChange={() => {}} className="mr-2 rounded-sm" />
+                    <input type="checkbox" checked={tableData?.staff?.includes(staff?._id)} onChange={() => {}} className="mr-2 rounded-sm" />
                     <BsFillPersonFill />
                     <h1 className="mx-2 text-base">{staff.name}</h1>
                   </div>

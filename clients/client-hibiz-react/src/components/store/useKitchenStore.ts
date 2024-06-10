@@ -19,7 +19,7 @@ const useKitchenStore = create<KitchenState>((set) => ({
   selectStaff: (staff) => set((state) => ({ selectedStaff: [...state.selectedStaff, staff] })),
   deselectStaff: (staffId) =>
     set((state) => ({
-      selectedStaff: state.selectedStaff.filter((s) => s.id !== staffId),
+      selectedStaff: state.selectedStaff.filter((s) => s._id !== staffId),
     })),
   initializeKitchen: (kitchenName, selectedStaff) => set({ kitchenName, selectedStaff }),
   reset: () => set({ selectedStaff: [], kitchenName: '' }),

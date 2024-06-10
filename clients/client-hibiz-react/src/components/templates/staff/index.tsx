@@ -35,7 +35,7 @@ const Staff = memo(() => {
 
     try {
       const response = await axios.get(url);
-      const filteredStaff = response.data.filter((staff: UserProfile) => staff.id !== user.id);
+      const filteredStaff = response.data.filter((staff: UserProfile) => staff._id !== user._id);
       setStaffDetails(filteredStaff);
       return response.data;
     } catch (error) {
@@ -77,9 +77,9 @@ const Staff = memo(() => {
             <div className="grid grid-cols-1 pb-[5rem] md:grid-cols-2 md:gap-4 lg:grid-cols-3 lg:gap-4 xl:grid-cols-4">
               {staffDetails.map((staff: UserProfile) => (
                 <div
-                  onKeyDown={() => handleStaffDetails(staff?.id)}
-                  key={staff.id}
-                  onClick={() => handleStaffDetails(staff?.id)}
+                  onKeyDown={() => handleStaffDetails(staff?._id)}
+                  key={staff._id}
+                  onClick={() => handleStaffDetails(staff?._id)}
                   className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
                 >
                   <div className="flex items-center px-4 py-2">

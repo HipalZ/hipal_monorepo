@@ -12,9 +12,9 @@ const ACCharges = memo(
 
     function handleActiveClick(selectedData: ICharges[]) {
       setActiveClick((prev) => {
-        const index = prev.findIndex((item) => item.id === selectedData?.id);
+        const index = prev.findIndex((item) => item._id === selectedData?._id);
         if (index !== -1) {
-          return prev.filter((item) => item.id !== selectedData?.id);
+          return prev.filter((item) => item._id !== selectedData?._id);
         }
         {
           return [...prev, selectedData];
@@ -28,14 +28,14 @@ const ACCharges = memo(
           <h1 className="text-2xl text-[#2B354D]">Add Charges to the zone</h1>
           {acCharges?.map((charge: ICharges) => (
             <div
-              key={charge.id}
+              key={charge._id}
               onClick={() => handleActiveClick(charge)}
               className={`${
-                activeClick?.some((item) => item.id === charge.id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                activeClick?.some((item) => item._id === charge._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
               } my-5 rounded-md border bg-white p-3`}
             >
               <div className="flex items-center">
-                <input type="checkbox" checked={activeClick?.some((item) => item.id === charge.id)} className="mr-2 rounded-sm" />
+                <input type="checkbox" checked={activeClick?.some((item) => item._id === charge._id)} className="mr-2 rounded-sm" />
                 <RiExchangeDollarLine />
                 <h1 className="mx-2 text-base">{charge?.chargeName}</h1>
               </div>
