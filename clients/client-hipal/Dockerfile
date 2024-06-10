@@ -1,12 +1,27 @@
 FROM node:18.14.2-alpine3.17
 
-# RUN apk add g++ make py3-pip
+# Install pnpm globally
+RUN npm install -g pnpm
 
 WORKDIR /app
+
+# Copy package.json and pnpm-lock.yaml (if present)
 COPY package.json .
 
-RUN npm install
-COPY . .
-# RUN npm run build
+# Install dependencies
+RUN pnpm install
 
-CMD ["npm", "run", "dev"]
+# Copy the rest of the application code
+COPY . .
+
+# Check the contents of the node_modules and build directories
+RUN ls -al /app/node_modules
+
+# Run the build script
+# RUN pnpm run build
+
+# Expose the port your app runs on
+EXPOSE 3000
+
+# Run the application
+CMD ["pnpm", "run", "dev"]
