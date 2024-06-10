@@ -1,14 +1,25 @@
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import babel from 'vite-plugin-babel';
 import Pages from 'vite-plugin-pages';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const ReactCompilerConfig = {
+  compilationMode: 'annotation',
+};
 
 export default defineConfig({
   plugins: [
     react(),
     Pages({
       importMode: 'async', // This setting will dynamically import pages
+    }),
+    babel({
+      babelConfig: {
+        presets: ['@babel/preset-env', '@babel/preset-react'],
+        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
+      },
     }),
     VitePWA({
       registerType: 'autoUpdate',
