@@ -1,0 +1,152 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-ubuntu: 'Ubuntu', sans-serif;
+}
+
+
+body {
+  -webkit-user-select: none; 
+  user-select: none;
+  font-family: var(--font-ubuntu);
+  -webkit-touch-callout: none; 
+}
+
+@media (prefers-color-scheme: dark) {
+    .dark\:bg-black {
+      background-color: white; 
+    }
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .on_active_bounce {
+    @apply transition-all scale-100 active:scale-90;
+  }
+  .animation-bounce {
+    animation: bounce 1.5s linear;
+  }
+   
+  @keyframes bounce {
+    0%,
+    33.33%,
+    66.66%,
+    100% {
+      transform: translate3d(0%, 0, 0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    16.66%,
+    50%,
+    83.33% {
+      transform: translate3d(10%, 0, 0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+
+  .fab-transition {
+    transition-property: transform, opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+.custom-select {
+  /* Your existing styles */
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #2C62F0;
+  border: 1px solid #2C62F0;
+  color: white;
+  padding: 3px 16px;
+  font-size: 16px;
+
+  /* Add padding to make room for the arrow */
+  padding-right: 30px; /* Adjust as needed */
+
+  /* Style for the arrow */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px; /* Adjust as needed */
+}
+
+.masonry-layout {
+  column-count: 1; 
+  column-gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .masonry-layout {
+    column-count: 2; 
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-layout {
+    column-count: 3; 
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-layout {
+    column-count: 4; 
+  }
+}
+
+.masonry-item {
+  break-inside: avoid-column;
+  margin-bottom: 24px;
+}
+
+.masonry-item:after {
+  content: '';
+  display: block;
+}
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.loader {
+  border: 5px solid #f3f3f3; 
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translate3d(100%, 0, 0);
+    visibility: visible;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.slideInRight {
+  animation-name: slideInRight;
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+  animation-fill-mode: backwards;
+}
+
+.custom-toast-body {
+  border-radius: 10px 100px / 120px !important; 
+}
