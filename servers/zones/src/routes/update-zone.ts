@@ -2,7 +2,6 @@ import { Kot, Table, Waiterkot, Zone } from '@hi/db-models';
 import { TableSchema, ZoneSchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import express, { Request, Response } from 'express';
-import moment from 'moment';
 import { ClientSession } from 'mongoose';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';

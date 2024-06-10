@@ -441,8 +441,10 @@ router.post(
 
 router.post(
   '/v1/users/login',
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: UserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     try {
       const { email, role } = req.body || {};
       const existingUser = await User.findOne({
@@ -475,9 +477,10 @@ router.post(
 
 router.post(
   '/v1/users/otp',
-
-  // validateRequest,
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: UserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     const { phone } = req.body;
     const { clientRole } = req.query;
 
@@ -512,6 +515,7 @@ router.post(
   },
 );
 
+//TODO: validation service request for otp
 router.post(
   '/v1/users/Bill/generateBill',
 
@@ -552,9 +556,10 @@ router.post(
 
 router.post(
   '/v1/users/loginWithPhone',
-  // validateUser,
-  // validateRequest,
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: UserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     const { phone } = req.body;
 
     let userExit = await User.findOne({ phone, role: 'RESTAURANT_MANAGER' });
