@@ -6,14 +6,14 @@ import { createCategoryRouter } from './routes/create-category';
 import { deleteCategoriesRouter } from './routes/delete-category';
 // Routes
 import express from 'express';
+import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
-import morgan from "morgan"
 import { readCategoriesRouter } from './routes/read-category';
 import { updateCategoriesRouter } from './routes/update-category';
 
 const app = express();
 
-app.use(morgan("dev"));
+app.use(morgan('dev'));
 app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingress
 app.use(express.json());
@@ -33,6 +33,9 @@ app.use(
       'http://localhost:3000',
       'http://localhost:3009',
       'http://localhost:3011',
+      'http://localhost:3002',
+      'http://localhost:3005',
+
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -65,8 +68,6 @@ app.use(
 );
 
 app.use(idempotent);
-
-
 
 // Register routes
 app.use(createCategoryRouter);

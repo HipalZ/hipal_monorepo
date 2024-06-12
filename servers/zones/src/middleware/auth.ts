@@ -16,22 +16,19 @@ export const auth = async function (request: RequestWithUser, res: Response, nex
     const accessToken = request.headers.authorization?.split(' ')[1];
     const refreshToken = request.headers['x-refresh-with'] as string;
 
-    console.log('accessToken', accessToken, 'refreshToken', refreshToken);
-
     if (!accessToken && !refreshToken) {
       return res.status(401).send({ status: false, error: true, message: 'Invalid Token!' });
     }
 
     let decodedToken: DecodedToken | undefined;
 
-    jwt.verify(accessToken || 'randomtoken', 'testSecret', (err, decoded) => {
+    jwt.verify(accessToken || 'randomtoken', process.env.JWT_SECRET as string, (err, decoded) => {
+      console.log('err', err, 'decoded', decoded);
       decodedToken = err ? undefined : (decoded as DecodedToken);
       if (err && refreshToken) {
-        decodedToken = jwt.verify(refreshToken, 'testSecret') as DecodedToken;
+        decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET as string) as DecodedToken;
       }
     });
-
-    console.log('decodedToken', decodedToken);
 
     if (!decodedToken) {
       return res.status(401).send({ status: false, error: true, message: 'Invalid Token!' });

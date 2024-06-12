@@ -29,9 +29,12 @@ app.use(
       'https://dev.hipal.life',
       'https://hipal.life',
       'https://www.hipal.life',
+      'http://localhost:3002',
       'http://localhost:3000',
       'http://localhost:3009',
       'http://localhost:3011',
+      'http://localhost:3005',
+
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',

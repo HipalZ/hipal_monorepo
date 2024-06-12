@@ -1,8 +1,8 @@
-import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import { errorHandler } from '@hipal/common';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
+import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
 import { createKitchenRouter } from './routes/create-kitchen';
@@ -29,6 +29,9 @@ app.use(
       'http://localhost:3000',
       'http://localhost:3009',
       'http://localhost:3011',
+      'http://localhost:3002',
+      'http://localhost:3005',
+
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',

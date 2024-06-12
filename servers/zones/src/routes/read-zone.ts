@@ -67,6 +67,7 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const { businessId, waiterId } = req.query;
+      throw new Error('Not Implemented');
       const filteredZones = await Zone.find({
         businessId,
         staff: waiterId,

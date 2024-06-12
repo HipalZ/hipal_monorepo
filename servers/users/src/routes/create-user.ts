@@ -27,8 +27,8 @@ const createAccessToken = (user: any) => {
       role: user.role,
       customRole: user.customRole,
     },
-    'testSecret',
-    { expiresIn: '3m' }, // Add 7 day expiration
+    process.env.JWT_SECRET as string,
+    { expiresIn: '20m' }, // Add 7 day expiration
   );
 };
 
@@ -56,8 +56,8 @@ const createRefreshToken = (user: any) => {
       role: user.role,
       customRole: user.customRole,
     },
-    'testSecret',
-    { expiresIn: '5m' }, // Add 30 day expiration
+    process.env.JWT_SECRET as string,
+    { expiresIn: '30m' }, // Add 30 day expiration
   );
 };
 
@@ -406,8 +406,6 @@ router.post(
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
 
-    console.log('backend', accessToken, refreshToken);
-
     res.status(201).send({ existingUser, accessToken, refreshToken });
   },
 );
@@ -487,6 +485,7 @@ router.post(
     // if (!clientRole) {
     //   throw new BadRequestError("clientRole required");
     // }
+    let user;
 
     const UserOrAdmin = clientRole === 'admin' ? Admin : User;
 
@@ -642,7 +641,7 @@ router.post('/v1/users/registrationToken/Send', async (req, res) => {
         console.log('Error sending FCM message:', err);
         return res.status(500).send({
           status: false,
-          message: 'Internal Server Error', 
+          message: 'Internal Server Error',
         });
       }
 
@@ -656,7 +655,7 @@ router.post('/v1/users/registrationToken/Send', async (req, res) => {
     console.log('Error parsing Firebase config file:', error);
     return res.status(500).send({
       status: false,
-      message: 'Internal Server Error'
+      message: 'Internal Server Error',
     });
   }
 });

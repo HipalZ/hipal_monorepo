@@ -5,6 +5,7 @@ import 'express-async-errors'; // Do not remove, it deals with async errors in e
 
 import morgan from 'morgan';
 // Routes
+import { errorHandler } from '@hipal/common';
 import { createZoneRouter } from './routes/create-zone';
 import { deleteZonesRouter } from './routes/delete-zone';
 import { readZonesRouter } from './routes/read-zone';
@@ -31,6 +32,9 @@ app.use(
       'http://localhost:3000',
       'http://localhost:3009',
       'http://localhost:3011',
+      'http://localhost:3002',
+      'http://localhost:3005',
+
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -72,6 +76,6 @@ app.all('*', () => {
   throw 'Route not found';
 });
 
-// app.use(errorHandler);
+app.use(errorHandler);
 
 export { app };

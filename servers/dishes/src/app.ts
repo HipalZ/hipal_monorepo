@@ -1,9 +1,9 @@
-import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
-import { idempotent } from './middleware/idempotent';
+import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
+import { idempotent } from './middleware/idempotent';
 
 // Routes
 import { createDishRouter } from './routes/create-dish';
@@ -29,8 +29,11 @@ app.use(
       'https://dev.hipal.life',
       'https://hipal.life',
       'https://www.hipal.life',
+      'http://localhost:3002',
       'http://localhost:3000',
       'http://localhost:3009',
+      'http://localhost:3005',
+
       'http://localhost:3011',
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
