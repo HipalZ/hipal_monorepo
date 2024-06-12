@@ -41,17 +41,19 @@ export const dishSchema = z.object({
   portions: z.array(portionSchema).optional(),
   extras: z.array(z.string()).optional(),
   kitchenId: z.string(),
-  filters: filtersSchema.default({
-    timeToConsume: 0,
-    portionBestSuited: '',
-    bestWeather: '',
-    levelOfSpice: '',
-    bestOccasion: '',
-    texture: '',
-    time: 0,
-    dishes: [],
-    metaTags: [], // added this line
-  }),
+  filters: filtersSchema
+    .default({
+      timeToConsume: 0,
+      portionBestSuited: '',
+      bestWeather: '',
+      levelOfSpice: '',
+      bestOccasion: '',
+      texture: '',
+      time: 0,
+      dishes: [],
+      metaTags: [], // added this line
+    })
+    .optional(),
   images: z.array(z.string()).optional(),
   description: z.string().optional(),
   tags: z.array(tagSchema).optional(),

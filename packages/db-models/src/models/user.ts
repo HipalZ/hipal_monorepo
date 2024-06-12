@@ -89,7 +89,8 @@ const userSchema = new mongoose.Schema<UserType>(
       default: {},
     },
     role: {
-      type: String,
+      type: [String],
+      default: [],
     },
     withScaner: {
       type: Boolean,

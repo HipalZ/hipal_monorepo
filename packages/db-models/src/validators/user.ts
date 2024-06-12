@@ -22,7 +22,7 @@ export const UserAttrs = z.object({
   name: z.string().default(''),
   email: z.string().default(''),
   phone: z.string(),
-  role: z.string().default(''),
+  role: z.array(z.string()).default([]),
   DOB: z.string().optional(),
   userDiscription: z.string().optional(),
   gender: z.string().optional(),

@@ -18,7 +18,7 @@ const tagsSchema = new mongoose.Schema<TagType>(
     },
     fontColor: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   {

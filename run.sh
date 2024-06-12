@@ -107,40 +107,7 @@ cd ../../
 
 # Navigate to the servers/reviews directory
 
-cd clients/client-hi-biz/
 
-pnpm run dev
 
-# Print a message to the console
 
-echo "Starting the client-hi-biz server..."
 
-cd ../../
-
-# Navigate to the servers/reviews directory
-
-cd clients/client-hitable
-
-# Print a message to the console
-
-echo "Starting the client-hitable server..."
-
-# Run the pnpm start command
-
-pnpm run dev &
-
-cd ../../
-
-# Navigate to the directory
-
-cd clients/client-pro-hipal
-
-# Print a message to the console
-
-echo "Starting the client-pro-hipal server..."
-
-# Run the pnpm start command
-pnpm i &&
-pnpm run dev &
-
-cd ../../
