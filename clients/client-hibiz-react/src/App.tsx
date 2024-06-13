@@ -30,6 +30,7 @@ function App() {
   const location = useLocation();
   const isLoggedIn = useOwnerLogin((s) => s.isLogin);
   const user = useOwnerLogin((s) => s.user);
+
   // useEffect(() => {
   //   const result = async () => {
   //     try {

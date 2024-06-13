@@ -1,60 +1,40 @@
-import axiosConstructor from 'axios';
+import axiosConstructor from "axios";
+
+// Function to determine the base URL based on the environment
+function getBaseURL(url: string): string {
+  const mode = "development";
+  let port;
+  if (url.startsWith("/v1/businesses")) port = "8001";
+  else if (url.startsWith("/v1/categories")) port = "8002";
+  else if (url.startsWith("/v1/dishes")) port = "8003";
+  else if (url.startsWith("/v1/kitchens")) port = "8004";
+  else if (url.startsWith("/v1/payments")) port = "8005";
+  else if (url.startsWith("/v1/settings")) port = "8006";
+  else if (url.startsWith("/v1/users")) port = "8007";
+  else if (url.startsWith("/v1/zones")) port = "8008";
+  console.log("URL", mode, port);
+
+  if (mode === "development" && port) {
+    return `http://localhost:${port}`;
+  } else {
+    return "https://api.hipal.life";
+  }
+}
 
 const axios = axiosConstructor.create({
-  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
+axios.interceptors.request.use(
+  (config: any) => {
+    if (config.url) {
+      config.baseURL = getBaseURL(config.url);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+//TODO: Implement response error handling
+
 export default axios;
-
-// Add a request interceptor
-// axios.interceptors.request.use(
-// 	(config) => {
-// 		if (!config.url) {
-// 			return config
-// 		}
-// 		if (!process.browser) {
-// 			return config
-// 		}
-// 		const idemKey = sessionStorage.getItem(config.url + config.method)
-// 		if (idemKey) {
-// 			config.headers['h-idem-id'] = idemKey
-// 		} else {
-// 			const newIdemKey = crypto.randomUUID()
-// 			sessionStorage.setItem(config.url + config.method, newIdemKey)
-// 			console.log('newIdemKey', newIdemKey)
-// 			config.headers['h-idem-id'] = newIdemKey
-// 		}
-// 		return config
-// 	},
-// 	(error) => {
-// Do something with request error
-// 		return Promise.reject(error)
-// 	},
-// )
-
-// axios.interceptors.response.use(
-// 	(response) => {
-// 		if (!response.config.url) {
-// 			return response
-// 		}
-// 		if (!process.browser) {
-// 			return response
-// 		}
-// 		sessionStorage.removeItem(response.config.url + response.config.method)
-// Any status code that lie within the range of 2xx cause this function to trigger
-// Do something with response data
-// 		return response
-// 	},
-// 	(error) => {
-// 		if (isAxiosError(error)) {
-// 			if (!error.config?.url) {
-// 				return Promise.reject(error)
-// 			}
-// 			sessionStorage.removeItem(error.config.url + error.config.method)
-// 		}
-// Any status codes that falls outside the range of 2xx cause this function to trigger
-// Do something with response error
-// 		return Promise.reject(error)
-// 	},
-// )
