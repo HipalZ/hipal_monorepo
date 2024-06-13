@@ -1,0 +1,484 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap');
+
+/* Or create a specific class to use the font */
+.plus-jakarta-font {
+	font-family: Plus Jakarta Sans, sans-serif;
+}
+
+.syne-font {
+	font-family: 'Syne', sans-serif;
+  }
+  
+  .syne-font-semibold {
+	font-family: 'Syne', sans-serif;
+	font-weight: 500; 
+  }
+  .syne-font-bold {
+	font-family: 'Syne', sans-serif;
+	font-weight: 600; 
+  }
+  
+  .syne-font-black {
+	font-family: 'Syne', sans-serif;
+	font-weight: 800; 
+  }
+
+@keyframes marquee {
+	0% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(-50%);
+	} 
+}
+.marquee {
+	animation: marquee 15s linear infinite;
+	white-space: nowrap;
+	width: 200%;
+	display: flex;
+	overflow: hidden;
+}
+@keyframes marquee1 {
+	0% {
+		transform: translateX(100%);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
+}
+
+.marquee1 {
+	animation: marquee1 15s linear infinite;
+	white-space: nowrap;
+	width: 200%;
+	display: flex;
+	overflow: hidden;
+}
+.typed {
+	overflow: hidden;
+	white-space: nowrap;
+	width: 0;
+	height: auto;
+	animation: typing 1.5s steps(30, end) forwards, 2s stay 1.5s forwards;
+}
+.animation-bounce {
+	animation: bounce 1.5s linear;
+}
+
+@keyframes bounce {
+	0%,
+	33.33%,
+	66.66%,
+	100% {
+		transform: translate3d(0%, 0, 0);
+		animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+	}
+	16.66%,
+	50%,
+	83.33% {
+		transform: translate3d(10%, 0, 0);
+		animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+	}
+}
+
+@keyframes typing {
+	from {
+		width: 0%;
+	}
+	to {
+		width: 100%;
+	}
+}
+
+@keyframes stay {
+	from {
+		width: 100%;
+	}
+	to {
+		width: 100%;
+	}
+}
+body::-webkit-scrollbar {
+	display: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.smooth-scroll {
+	scroll-behavior: smooth;
+}
+
+.on_active_bounce {
+    transition: all;
+    transform: scale(100%);
+}
+.on_active_bounce:active {
+    transform: scale(95%);
+}
+
+.splide__pagination .is-active {
+    background-color: var(--primary-focus); /* Replace with the actual color value or variable for bg-primary-focus */
+}
+
+#specialOffers .splide__slide ~ .is-active {
+    transition: all;
+    transform: scale(100%);
+}
+#specialOffers .splide__slide {
+    transition: all;
+    transform: scale(90%);
+}
+
+/*Applying the flex for splide*/
+.splide ul {
+	display: flex;
+}
+
+html, body {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: auto;
+    letter-spacing: .05em; /* Adjust based on tracking-wide value */
+    -webkit-overflow-scrolling: touch; /* scroll-smooth equivalent for mobile devices */
+}
+
+* {
+    font-weight: 500; /* Assuming font-medium maps to 500 */
+    letter-spacing: .05em; /* Adjust based on tracking-wide value */
+    /* font-family: 'Inter', sans-serif; Uncomment and adjust as needed */
+    /* font-family: 'Montserrat', sans-serif; Uncomment and adjust as needed */
+}
+
+input[type='password'] {
+    font-size: large;
+    font-family: Verdana, sans-serif;
+    letter-spacing: 1px;
+}
+
+.btn-ghost:hover {
+    background-color: transparent !important; /* Ensure !important is necessary before using */
+}
+
+
+/* This will make website look more like mobile app */
+* {
+	-webkit-touch-callout: none; /* prevent call out to copy image, etc when tap to hold */
+	-webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* prevent tap highlight color / shadow */
+	-webkit-user-select: none; /* prevent copy paste, to allow, change 'none' to 'text' */
+}
+
+ 
+  .tilted-card:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .tilted-card:before {
+	content: '';
+	position: absolute;
+	top: 0; right: 0; bottom: 0; left: 0;
+	background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+	border-radius: inherit;
+  }
+  @keyframes slideUp {
+	from { transform: translateY(20px); opacity: 0; }
+	to { transform: translateY(0); opacity: 1; }
+  }
+  .tilted-card {
+	animation: slideUp 0.5s ease-out;
+  }
+  .tilted-card h1 {
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .tilted-card button {
+	background-color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.5em 1em;
+	transition: background-color 0.3s;
+  }
+  .tilted-card button:hover {
+	background-color: #f0f0f0;
+  }
+
+  .tilted-card button {
+	padding: 10px 15px; /* Larger padding for easy tapping */
+  }
+  .tilted-card button {
+	background-color: #fff;
+	border: none;
+	border-radius: 4px;
+	padding: 0.5em 1em;
+	transition: background-color 0.3s;
+  }
+  .tilted-card button:hover {
+	background-color: #f0f0f0;
+  }
+  
+  .tilted-card:active {
+	transform: rotateZ(5deg); 
+  }
+
+  @media screen and (min-width: 480px) {
+	body{
+		background-color: #fff;
+		border: 1px solid hsl(var(--p) / var(--tw-border-opacity));
+	}
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+}
+
+@keyframes glow {
+    0% {
+        transform: scale(0.75);
+    }
+    50% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(0.75);
+    }
+}
+
+.animate-spin {
+    animation: 
+	spin 5.5s linear infinite;
+    -webkit-animation: 
+	spin 5.5s linear infinite;
+    -moz-animation: 
+	spin 5.5s linear infinite;
+    transform-origin: center;
+}
+  
+.animate-glow {
+    animation: 
+	glow 1.5s linear infinite;
+    -webkit-animation: 
+	glow 1.5s linear infinite;
+    -moz-animation: 
+	glow 1.5s linear infinite;
+}
+
+@keyframes horizontal_spin {
+	0% {
+		transform: rotateY(0deg);
+	}
+	100% {
+		transform: rotateY(360deg);
+	}
+}
+
+.spin_horizontal {
+	animation: horizontal_spin 2s linear infinite;
+	-moz-animation: horizontal_spin 2s linear infinite;
+	-webkit-animation: horizontal_spin 2s linear infinite;
+}
+ 
+
+  @keyframes bounce {
+	from,
+	20%,
+	40%,
+	60%,
+	80%,
+	to {
+	  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+	}
+  
+	0% {
+	  opacity: 0;
+	  transform: scale3d(0.3, 0.3, 0.3);
+	}
+  
+	20% {
+	  transform: scale3d(1.1, 1.1, 1.1);
+	}
+  
+	40% {
+	  transform: scale3d(0.9, 0.9, 0.9);
+	}
+  
+	60% {
+	  opacity: 1;
+	  transform: scale3d(1.03, 1.03, 1.03);
+	}
+  
+	80% {
+	  transform: scale3d(0.97, 0.97, 0.97);
+	}
+  
+	to {
+	  opacity: 1;
+	  transform: scale3d(1, 1, 1);
+	}
+  }
+  
+  .animated {
+	animation: bounce 1s linear;
+	-webkit-animation:  bounce 1s linear;
+	-moz-animation:  bounce 1s linear;
+  }
+  
+  @keyframes zoomIn {
+	from {
+	  opacity: 0;
+	  transform: scale3d(0.3, 0.3, 0.3);
+	}
+  
+	50% {
+	  opacity: 1;
+	}
+  }
+  
+  .zoomIn {
+	-webkit-animation: zoomIn 0.2s linear;
+	animation: zoomIn 0.2s linear;
+	-moz-animation: zoomIn 0.2s linear;
+  }
+
+  .coin-container{
+	position: relative;
+	z-index: 2;
+  }
+
+  .loyalty_card_gradient {
+    background: linear-gradient(to bottom, #F8D76E, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22.5rem;
+    height: 22.5rem;
+    z-index: -10;
+    border-radius: 50%;
+    opacity: 0.375;
+    overflow: hidden;
+    transform: translate(-50%, 8%) rotate(180deg);
+}
+
+.loyalty_card_gradient2 {
+    background: linear-gradient(to bottom, #F8D76E, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10.5rem;
+    height: 10.5rem;
+    z-index: -10;
+    border-radius: 50%;
+    opacity: 0.375;
+    overflow: hidden;
+	transform: translate(29%, -159%) rotate(45deg);
+}
+
+.gradient-text {
+	background: linear-gradient(to right,#E2B8BD, #BE95EB, #FCA7A9,#F3764A);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+  }
+
+  @keyframes wave-animation {
+	0% { transform: rotate(0deg); }
+	25% { transform: rotate(14deg); }
+	50% { transform: rotate(-14deg); }
+	75% { transform: rotate(0deg); }
+	100% { transform: rotate(0deg); }
+  }
+  
+  .wave-hand {
+	animation: wave-animation 1s infinite linear;
+	display: inline-block;
+  }
+
+  
+  @keyframes backInUp {
+	0% {
+	  transform: translateY(-1200px) scale(0.7);
+	  opacity: 0.7;
+	}
+  
+	80% {
+	  transform: translateY(0px) scale(0.7);
+	  opacity: 0.7;
+	}
+  
+	100% {
+	  transform: scale(1);
+	  opacity: 1;
+	}
+  }
+  
+  .backInUp {
+	animation: backInUp 1s ease-out forwards;
+  }
+  
+  @keyframes tada {
+	from {
+	  transform: scale3d(1, 1, 1);
+	}
+  
+	10%, 20% {
+	  transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg);
+	}
+  
+	30%, 50%, 70%, 90% {
+	  transform: scale3d(1.25, 1.25, 1.25) rotate3d(0, 0, 1, 3deg);
+	}
+  
+	40%, 60%, 80% {
+	  transform: scale3d(1.25, 1.25, 1.25) rotate3d(0, 0, 1, -3deg);
+	}
+  
+	to {
+	  transform: scale3d(1, 1, 1);
+	}
+  }
+  
+  .tada {
+	animation: tada 2s linear;
+  }
+  
+  @keyframes shine {
+	0% {
+	  background-position: -200% 0;
+	}
+	100% {
+	  background-position: 200% 0;
+	}
+  }
+  
+  .shine-effect {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width:130%;
+	height: 100%;
+	background: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 70%);
+	background-size: 200% 100%;
+	animation: shine 2s 2;
+	pointer-events: none;
+  }
