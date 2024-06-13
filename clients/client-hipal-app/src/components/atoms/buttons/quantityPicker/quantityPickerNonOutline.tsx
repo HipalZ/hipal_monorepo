@@ -44,7 +44,6 @@ function QuantityPickerNonOutline({
 				return
 			}
 		}
-		console.log("isChecked", isChecked)
 		setQuantity(isChecked ? 1 : 0)
 	}
 	return (

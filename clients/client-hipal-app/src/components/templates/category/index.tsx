@@ -1,6 +1,5 @@
 "use client"
 import type { IBusinessData } from "@/components/types/businessData"
-import { memo  } from "react"
 import CategoryHeader from '@/components/organisms/category/categoryHeader.client';
 import PageName from '@/components/molecules/pageName';
 import Footer from '@/components/molecules/footer';
@@ -10,7 +9,7 @@ import CategoryPageBtn from "@/components/molecules/bottomButton/categoryPageBtn
 import TopBackground from "@/components/molecules/topBackground";
 import { useRoutingFlow } from "@/components/store/useRoutingFlow";
 
-export default memo(function Category({ data }: { data: IBusinessData }) {
+export default function Category({ data }: { data: IBusinessData }) {
 	const { getPreviousPath } = useRoutingFlow()
 	const businessId = data?.business?._id
 	return (
@@ -23,8 +22,8 @@ export default memo(function Category({ data }: { data: IBusinessData }) {
 
 			<div>
 				<div className="!mt-0 !scroll-smooth ">
-					<DishesList 
-					allCategoriesTypes={data?.allCategoriesTypes}
+					<DishesList
+						allCategoriesTypes={data?.allCategoriesTypes}
 						categories={data?.categories}
 					/>
 				</div>
@@ -36,4 +35,4 @@ export default memo(function Category({ data }: { data: IBusinessData }) {
 			{businessId !== BUSINESS_ID.KOI_AND_CO && <CategoryPageBtn />}
 		</div>
 	)
-})
+}

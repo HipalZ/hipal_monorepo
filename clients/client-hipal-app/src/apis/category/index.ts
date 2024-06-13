@@ -1,33 +1,27 @@
 import axios from "@/utils/axios";
-import { initializeAllBusiness } from "@/components/store/useAllBusiness";
 import { paths } from "@/components/utils/paths";
-import { getTimeIn12HrFormat } from "@/components/utils/helpers";
-import { isEmpty, set } from "lodash-es";
-import { ICategory } from "@/components/types/businessData";
+import { isEmpty } from "lodash-es";
 
 async function fetchCategoryPageData(businessId: string) {
-    const settings = (await axios(paths.settings(businessId))) || {};
-    const businessData = await axios(paths.businessData(businessId));
-    const loyalty = await axios(paths.getLoyaltySettings(businessId)) || {};
-    const dishesData = (await axios(paths.dishesData(businessId))) || {};
-    const _categoryData = (await axios(paths.categoryByBusiness(businessId))) || {};
-    
+    const settingsResponse = (await axios(paths.settings(businessId))) || {};
+    const businessResponse = await axios(paths.businessData(businessId));
+    const loyaltyResponse = await axios(paths.getLoyaltySettings(businessId)) || {};
+    const dishesResponse = (await axios(paths.dishesData(businessId))) || {};
+    const categoriesResponse = (await axios(paths.categoryByBusiness(businessId))) || {};
     const data = {
-        settings: settings?.data?.[0] || {},
-        business: businessData?.data || {},
-        loyalty: loyalty?.data || {},
-        dishesData: dishesData?.data || {},
-        categories: [],
+        settings: settingsResponse?.data?.[0] || {},
+        business: businessResponse?.data || {},
+        loyalty: loyaltyResponse?.data || {},
+        dishesData: dishesResponse?.data || {},
+        categories: categoriesResponse?.data || [],
         allCategoriesTypes: {}
     };
-console.log('a', _categoryData?.data)
     // Process categories and dishes
     const sortCategories = () => {
         const hashedCategories = new Map();
-        _categoryData?.data.forEach((category:any) => {
+        categoriesResponse?.data.forEach((category:any) => {
             hashedCategories.set(category?._id, category);
         });
-
         const categoryOrder = data.settings?.categoryOrder || [];
         const sortedCategories = new Map();
         for (let categoryId of categoryOrder) {
@@ -39,7 +33,6 @@ console.log('a', _categoryData?.data)
     };
     
     const categoryData = sortCategories();
-
     const allCategoriesTypes = () => {
         const mainType = {};
         const subTypes = {};
@@ -66,7 +59,6 @@ console.log('a', _categoryData?.data)
             sub: subTypes,
         };
     };
-
     data.allCategoriesTypes = allCategoriesTypes();
 
     const categories = () => {
@@ -75,7 +67,7 @@ console.log('a', _categoryData?.data)
             const newCategory = JSON.parse(JSON.stringify(category));
             newCategory.dishes = [];
             for (let dishId of category.dishes) {
-                const newDish = dishesData?.find((d) => d._id === dishId);
+                const newDish = dishesResponse?.find((d) => d._id === dishId);
                 if (newDish) newCategory.dishes.push(newDish);
             }
             if (!isEmpty(newCategory?.dishes)) result.push(newCategory);
@@ -83,10 +75,6 @@ console.log('a', _categoryData?.data)
         return result;
     };
     data.categories = categories();
-
-    set(data, "settings.explore.openFrom", getTimeIn12HrFormat(data?.settings?.explore?.openFrom));
-    set(data, "settings.explore.openTill", getTimeIn12HrFormat(data?.settings?.explore?.openTill));
-
     return data;
 }
 

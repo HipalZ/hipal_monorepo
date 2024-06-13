@@ -12,7 +12,7 @@ import {
 } from "../card/pathPattern"
 import Image from "next/image"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
-import { useRouter } from "next/router"
+import { useRouter, useSearchParams } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 
@@ -33,7 +33,8 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 	const isLogin = useLogin((s) => s.isLogin)
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
-	const { businessId } = router.query as { businessId: string }
+	const searchParams = useSearchParams()
+	const businessId = searchParams?.get("businessId")
 	const businessDetails = useBusinessDetails((s) => s.businessDetails.businessName)
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {

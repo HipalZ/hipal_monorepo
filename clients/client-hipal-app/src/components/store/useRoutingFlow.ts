@@ -1,13 +1,12 @@
 import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { isEmpty } from "lodash-es";
 import { useCallback, useMemo } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { _useAllBusiness } from "./useAllBusiness";
 
 function useRoutingFlow() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const businessId = useMemo(() => searchParams?.get("businessId") as string, [searchParams]);
+  const {businessId, dishId} = useParams<{ businessId: string, dishId: string }>();
   const businessData = _useAllBusiness((s) => s.data);
 
   /**
@@ -29,7 +28,6 @@ function useRoutingFlow() {
    * @returns {string} path key
    */
   const pathKey = useMemo(() => {
-    const dishId = (searchParams?.get("dishId") || "") as string;
     const currentPath = pathname;
 
     for (const key in routePaths) {
@@ -37,7 +35,7 @@ function useRoutingFlow() {
     }
 
     return PAGE_TYPES.EXPLORER;
-  }, [businessId, pathname, searchParams]);
+  }, [businessId, pathname, dishId]);
 
   const getNextPath = useCallback(
     (dishIdOrCategoryId?: string) =>

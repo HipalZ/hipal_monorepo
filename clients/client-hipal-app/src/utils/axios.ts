@@ -12,7 +12,6 @@ function getBaseURL(url: string): string {
   else if (url.startsWith("/v1/settings")) port = "8006";
   else if (url.startsWith("/v1/users")) port = "8007";
   else if (url.startsWith("/v1/zones")) port = "8008";
-  console.log("URL", mode, port);
 
   if (mode === "development" && port) {
     return `http://localhost:${port}`;

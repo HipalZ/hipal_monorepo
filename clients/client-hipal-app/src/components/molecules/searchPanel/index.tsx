@@ -86,7 +86,6 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 	const present = filterCategory?.[0]
 
 	const redirectToDish = (dishId: string, category: ICat) => {
-		console.log(dishId, category)
 		setActiveCategory(category?.[0]?._id)
 		setSearchOpen(!search)
 		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId))
