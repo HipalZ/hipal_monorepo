@@ -3,29 +3,29 @@ import { z } from 'zod';
 const portionSchema = z.object({
   name: z.string(),
   price: z.number(),
-  discount: z.number(),
+  discount: z.number().optional(),
   default: z.boolean(),
-  portionType: z.string(),
+  portionType: z.string().optional(),
   id: z.string(),
 });
 
 const filtersSchema = z.object({
-  dishes: z.array(z.string()),
-  timeToConsume: z.number(),
-  portionBestSuited: z.string(),
-  bestWeather: z.string(),
-  levelOfSpice: z.string(),
-  bestOccasion: z.string(),
-  texture: z.string(),
-  time: z.number(),
-  metaTags: z.array(z.string()),
+  dishes: z.array(z.string()).optional(),
+  timeToConsume: z.number().optional(),
+  portionBestSuited: z.string().optional(),
+  bestWeather: z.string().optional(),
+  levelOfSpice: z.string().optional(),
+  bestOccasion: z.string().optional(),
+  texture: z.string().optional(),
+  time: z.number().optional(),
+  metaTags: z.array(z.string()).optional(),
 });
 
 const tagSchema = z.object({
-  name: z.string(),
-  color: z.string(),
-  icon: z.string(),
-  fontColor: z.string(),
+  name: z.string().optional(),
+  color: z.string().optional(),
+  icon: z.string().optional(),
+  fontColor: z.string().optional(),
 });
 
 export const dishSchema = z.object({

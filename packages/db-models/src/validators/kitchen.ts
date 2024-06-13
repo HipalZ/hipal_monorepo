@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const KitchenAttrs = z.object({
   businessId: z.string(),
   kitchenName: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   staff: z.array(z.string()).optional(),
 });
 

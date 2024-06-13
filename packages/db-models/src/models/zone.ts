@@ -17,19 +17,19 @@ const zoneSchema = new mongoose.Schema<Zone>(
     },
     startTime: {
       type: String,
-      required: true,
+      required: false,
     },
     endTime: {
       type: String,
-      required: true,
+      required: false,
     },
     staff: {
       type: [String],
-      required: true,
+      required: false,
     },
     tables: {
       type: [String],
-      required: true,
+      required: false,
     },
     Occupied: {
       type: Number,

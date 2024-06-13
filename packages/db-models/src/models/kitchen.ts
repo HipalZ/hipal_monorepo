@@ -12,7 +12,7 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
       type: String,
     },
     description: {
-      required: true,
+      required: false,
       type: String,
     },
     staff: {

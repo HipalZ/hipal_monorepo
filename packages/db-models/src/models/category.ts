@@ -59,7 +59,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     },
     dishes: {
       type: [ObjectId],
-      required: true,
+      required: false,
       ref: 'Dish',
     },
     availability: {

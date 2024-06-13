@@ -6,11 +6,11 @@ const kotExtraSchema = new mongoose.Schema<KotExtraType>(
   {
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     price: {
       type: Number,
-      required: false,
+      required: true,
     },
     qty: {
       type: Number,
@@ -27,11 +27,11 @@ const kotPortionSchema = new mongoose.Schema<KotPortionType>(
   {
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     price: {
       type: Number,
-      required: false,
+      required: true,
     },
     discount: {
       type: Number,
@@ -128,15 +128,15 @@ const KOTSchema = new mongoose.Schema<KOTType>(
     },
     kitchenId: {
       type: String,
-      required: false,
+      required: true,
     },
     zoneId: {
       type: String,
-      required: false,
+      required: true,
     },
     tableId: {
       type: String,
-      required: false,
+      required: true,
     },
     staffId: {
       type: String,

@@ -29,15 +29,15 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     logo: {
       type: String,
-      required: false,
+      required: true,
     },
     address: {
       type: String,
-      required: true,
+      required: false,
     },
     staff: {
       type: [String],
-      required: true,
+      required: false,
     },
     gstNumber: {
       type: String,
@@ -51,7 +51,8 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     status: {
       type: Boolean,
-      required: true,
+      required: false,
+      default: false,
     },
     likes: {
       type: [String],

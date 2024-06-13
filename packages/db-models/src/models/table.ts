@@ -21,7 +21,7 @@ const tableSchema = new mongoose.Schema<TableTypes>(
     },
     staff: {
       type: [String],
-      required: true,
+      required: false,
     },
     status: {
       type: String,
