@@ -40,7 +40,7 @@ import type {
 	User,
 } from "./type";
 import { useQuery } from "@tanstack/react-query";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 const DiscountComponent = lazy(() => import("../discount"));
@@ -64,7 +64,7 @@ interface POSProps {
 	activeButton: string;
 }
 
-const Settle: React.FC<POSProps> = ({ activeButton }) => {
+const Settle = ({ activeButton }: POSProps): JSX.Element => {
 	const { billData, setBillData } = useBillStore();
 	const [updatedBillData, setUpdatedBillData] = useState<IFinalBill>({
 		subTotal: 0,
@@ -128,8 +128,12 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 	const grouped_customers = useLogin((s) => s.grouped_customers);
 	const tableData = useTable((s) => s.tableData);
 	const setTableData = useTable((s) => s.setTableData);
-	const params = useParams<{ businessId: string; zoneId: string,tableId:string }>();
-	const { businessId, zoneId,tableId } = params;
+	const params = useParams<{
+		businessId: string;
+		zoneId: string;
+		tableId: string;
+	}>();
+	const { businessId, zoneId, tableId } = params;
 	const clearCartForTable = useCart((s) => s.clearCartForTable);
 	const [newPhoneNumber, setNewPhoneNumber] = useState<string>("");
 	const [selectedPhoneNumbers, setSelectedPhoneNumbers] = useState<any>([]);
@@ -145,8 +149,11 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 	const [enteredAmount, setEnteredAmount] = useState(0);
 	const [isFabOpen, setIsFabOpen] = useState(false);
 	const fabRef = useRef<null | HTMLDivElement>(null);
-	const handleAmountChange = (event:Event) => {
-		const enteredValue = Number.parseInt((event.target as HTMLInputElement).value, 10);
+	const handleAmountChange = (event: Event) => {
+		const enteredValue = Number.parseInt(
+			(event.target as HTMLInputElement).value,
+			10,
+		);
 		setEnteredAmount(enteredValue);
 	};
 	const handleUpdateBillData = (newValues: Partial<IFinalBill>) => {
@@ -207,8 +214,11 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 	};
 
 	useEffect(() => {
-		const handleClickOutside = (event:Event) => {
-			if (fabRef.current && !fabRef?.current?.contains(event.target as HTMLInputElement)) {
+		const handleClickOutside = (event: Event) => {
+			if (
+				fabRef.current &&
+				!fabRef?.current?.contains(event.target as HTMLInputElement)
+			) {
 				setIsFabOpen(false);
 			}
 		};
@@ -225,7 +235,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 			const serviceChargePercentage = businessData?.serviceChargePercentage;
 			const gstPercentage = businessData?.gstPercentage;
 
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/kitchens/:id/temp-bill?tableId=${tableId}&hasServiceCharge=${hasServiceCharge}&serviceChargePercentage=${serviceChargePercentage}&gstPercentage=${gstPercentage}`,
 			);
 			setUpdatedBillData(response.data[response.data.length - 1]);
@@ -236,22 +246,22 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		}
 	};
 
-	const handlePhoneNumberChange = async (event:Event) => {
+	const handlePhoneNumberChange = async (event: Event) => {
 		const phoneNumber = (event.target as HTMLInputElement).value;
-
+		console.log("phoneNumber", phoneNumber);
 		if (phoneNumber.length === 10) {
 			try {
-				const staffResponse = await axiosInstance.get(`/v1/users/${businessId}`);
+				const staffResponse = await axios.get(`/v1/users/${businessId}`);
 				const staffMembers = staffResponse.data;
 
 				const isStaffMember = staffMembers.some(
-					(staff:any) => staff.phone === phoneNumber,
+					(staff: any) => staff.phone === phoneNumber,
 				);
 				if (isStaffMember) {
 					toast.error("Can't give hi-coinz to staff");
 				} else {
-					const url = paths.getUserReward(phoneNumber, loyaltyId);
-					const response = await axiosInstance.get(url);
+					const url = paths.getUserReward(Number(userData.phone), loyaltyId);
+					const response = await axios.get(url);
 
 					if (response.data.exists === false) {
 						toast.error("User not exist");
@@ -268,14 +278,14 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		}
 	};
 
-	const handlePhoneNumberChange2 = async (number) => {
-		let processedNumber = number;
-		if (number > 10) {
-			processedNumber = number.substring(2);
+	const handlePhoneNumberChange2 = async (number: string) => {
+		let processedNumber = Number(number);
+		if (number.length > 10) {
+			processedNumber = Number(number.substring(2));
 		}
 		try {
 			const url = paths.getUserReward(processedNumber, loyaltyId);
-			const response = await axiosInstance.get(url);
+			const response = await axios.get(url);
 			if (response.data.exists === false) {
 			} else {
 				setUserDetails(response.data);
@@ -292,7 +302,10 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 	const activeUsers = async (show) => {
 		try {
 			const url = paths.getActiveUser(tableId, zoneId, businessId);
-			const response = await axiosInstance.get(url);
+			console.log(url);
+
+			const response = await axios.get(url);
+			console.log(response.data);
 			const user = response.data.filter((ele) => ele.customerPhone.length > 10);
 			console.log(user.length);
 			if (user.length > 0) {
@@ -408,7 +421,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		setLoading(true);
 		try {
 			const discount = 0;
-			await axiosInstance.put("/v1/kitchens/:id/applyDiscount", {
+			await axios.put("/v1/kitchens/:id/applyDiscount", {
 				discountAmount: discount,
 				tableId,
 				discountDescription: "removed discount",
@@ -455,7 +468,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 			updatedBillData.claimedAmount,
 		);
 		try {
-			const response = await axiosInstance.put("/v1/kitchens/:id/applyDiscount", {
+			const response = await axios.put("/v1/kitchens/:id/applyDiscount", {
 				discountAmount: totalDiscount,
 				discountDescription,
 				tableId,
@@ -478,7 +491,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		}
 		setLoading(true);
 		try {
-			const response = await axiosInstance.put("/v1/kitchens/:id/applyTips", {
+			const response = await axios.put("/v1/kitchens/:id/applyTips", {
 				tableId: tableId,
 				tipsAmount: tip,
 				tipsGivenBy: userData?.name,
@@ -498,7 +511,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		if (paymentMode === "DUES") {
 			try {
 				const url = paths.getDues(businessId);
-				const response = await axiosInstance.get(url);
+				const response = await axios.get(url);
 
 				if (response.data.length === 0) {
 					toast.error("No due person added");
@@ -545,7 +558,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 				discount: discount,
 				waiterName: userData?.name,
 			};
-			const res = await axiosInstance.post("/v1/payments/discountAlert", config);
+			const res = await axios.post("/v1/payments/discountAlert", config);
 		} catch (error) {
 			console.log(error);
 		}
@@ -559,7 +572,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 			customerPhone: userData.phoneNumber || userData.phone,
 		});
 	};
-	const formatPhoneNumber = (phone:string) => {
+	const formatPhoneNumber = (phone: string) => {
 		if (phone.length <= 8) return phone;
 		const start = phone.substring(2, 4);
 		const end = phone.substring(phone.length - 3);
@@ -575,7 +588,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 					mergeTables: tableData?.mergeTables,
 				},
 			};
-			const res = await axiosInstance(config);
+			const res = await axios(config);
 			if (res.status === 200) {
 				setTableData({
 					...tableData,
@@ -596,7 +609,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		setLoading(true);
 		try {
 			const url = "/v1/kitchens/:id/printBill";
-			const res = await axiosInstance.put(url, {
+			const res = await axios.put(url, {
 				tableId: tableId,
 				discountAmount: updatedBillData.discount,
 				businessId: businessId,
@@ -614,7 +627,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 				url: `/v1/kitchens/Get/UserBill/${billId}`,
 			};
 			if (res.status === 200) {
-				const response = await axiosInstance(config);
+				const response = await axios(config);
 				if (businessData?.kotPrinter) {
 					const config2 = {
 						method: "POST",
@@ -667,7 +680,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		try {
 			const url = "/v1/kitchens/:id/e-bill";
 
-			const res = await axiosInstance.put(url, {
+			const res = await axios.put(url, {
 				tableId: tableId,
 				discountAmount: updatedBillData.discount,
 				businessId: businessId,
@@ -691,7 +704,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 				},
 			};
 			if (res.status === 200) {
-				await axiosInstance(config);
+				await axios(config);
 				setSelectedPhoneNumbers([]);
 				closeModal();
 				toast.success("Bill send sucessfully");
@@ -753,14 +766,14 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 
 		const sendAlert = async () => {
 			try {
-				const res = await axiosInstance.post("/v1/payments/serviceChargeAlert", config);
+				const res = await axios.post("/v1/payments/serviceChargeAlert", config);
 			} catch (error) {
 				console.error("Error sending alert:", error);
 			}
 		};
 
 		try {
-			const response = await axiosInstance.put(
+			const response = await axios.put(
 				`/v1/businesses/${businessId}/removalServiceCharge`,
 				{ password, tableId, [actionKey]: userData.name, reapply: !action },
 			);
@@ -808,7 +821,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 				return;
 			}
 
-			const response = await axiosInstance.put("/v1/kitchens/:id/applyCoins", {
+			const response = await axios.put("/v1/kitchens/:id/applyCoins", {
 				tableId: tableId,
 				claimedAmount: coinsToRedeem,
 			});
@@ -838,7 +851,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 		}
 
 		try {
-			const response = await axiosInstance.post(
+			const response = await axios.post(
 				`/v1/users/Reward?claim=${redeemCoins}&settle=true`,
 				{
 					userPhone: userDetails?.userPhone || userDetails?.customerPhone,
@@ -881,7 +894,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 			return;
 		}
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/payments/Get/Modes?businessId=${businessId}`,
 			);
 			setPaymentMethods(response.data);
@@ -927,7 +940,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 					hiCode: tableData?.hiCode || "",
 				},
 			};
-			const res = await axiosInstance(config);
+			const res = await axios(config);
 			if (discountDescription) {
 				sendWatsAppAlert();
 			}
@@ -1001,7 +1014,7 @@ const Settle: React.FC<POSProps> = ({ activeButton }) => {
 				},
 			};
 
-			const res = await axiosInstance(config);
+			const res = await axios(config);
 
 			if (res.status) {
 				if (discountDescription) {

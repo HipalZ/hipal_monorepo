@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import Loader from "@/components/atoms/loader";
 import {  useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface IData {
   categories: ICategory[];
@@ -27,7 +27,6 @@ const AddTempDish = ({
   const [kitchen, setKitchen] = useState("");
   const [price, setPrice] = useState("");
   const userDetails = useLogin((s) => s.userDetails);
-  const phone = useLogin((s) => s.phoneNumber);
   const tableName = useTable((s) => s.tableData.name);
   const businessData = useBusinessStore((s) => s.businessData);
   const [data, setData] = useState<IData | null>(null);
@@ -106,12 +105,12 @@ const AddTempDish = ({
       dishType: dishType,
       category: categoryType,
       customerName: userDetails.name,
-      customerPhone: phone,
+      customerPhone: userDetails.phone,
       tableName: tableName,
       isGst: isGst,
     };
     try {
-      await axiosInstance.post(
+      await axios.post(
         "/v1/kitchens/:kitchenId/openItem",
         requestBody
       );
@@ -128,7 +127,7 @@ const AddTempDish = ({
             },
           },
         };
-        axiosInstance(config);
+        axios(config);
       }
       toast.success("Quick Dish added successfully.");
       setDishName("");
@@ -145,13 +144,13 @@ const AddTempDish = ({
 
   const getKitchenAndCategory = async () => {
     try {
-      const categories = await axiosInstance.get(
+      const categories = await axios.get(
         `/v1/categories?businessId=${businessId}`
       );
       const filterCategory = categories.data.filter(
         (ele:ICategory) => ele.hierarchy === "PARENT"
       );
-      const kitchens = await axiosInstance.get(`/v1/kitchens?businessId=${businessId}`);
+      const kitchens = await axios.get(`/v1/kitchens?businessId=${businessId}`);
       const data = {
         categories: filterCategory,
         kitchens: kitchens.data,

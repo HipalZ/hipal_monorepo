@@ -1,9 +1,9 @@
-import { useState, FC, memo } from "react";
+import { useState, memo } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useQuery } from "@tanstack/react-query";
 import { DeleteData } from "../deleteMultipleDishes";
 import { useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface DeleteItemComponentProps {
 	deleteData: DeleteData;
@@ -13,15 +13,15 @@ interface DeleteItemComponentProps {
 interface User {
 	_id: string;
 	name: string;
-  }
+}
 
-const DeleteItemComponent: FC<DeleteItemComponentProps> = ({
+const DeleteItemComponent = ({
 	deleteData,
 	handleUpdateDeleteData,
 	incorrectPassword,
-}) => {
+}: DeleteItemComponentProps): JSX.Element => {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
-	const {businessId} = useParams<{
+	const { businessId } = useParams<{
 		businessId: string;
 	}>();
 
@@ -44,7 +44,7 @@ const DeleteItemComponent: FC<DeleteItemComponentProps> = ({
 
 	const fetchUsers = async () => {
 		try {
-			const response = await axiosInstance(`/v1/users/${businessId}`);
+			const response = await axios(`/v1/users/${businessId}`);
 			const data = await response.data;
 			if (deleteData.staffResponsible === "") {
 				handleUpdateDeleteData({ staffResponsible: data[0].name });
@@ -133,7 +133,7 @@ const DeleteItemComponent: FC<DeleteItemComponentProps> = ({
 					className="w-full py-2 pl-4 pr-10 mb-0 ml-0 mr-0 bg-base-100 text-base text-gray-900 bg-transparent border-gray-800 rounded-2xl border dark:text-base-100 focus:outline-none focus:border-[#4071F1] dark:border-gray-600"
 				>
 					{data &&
-						data.map((user:User) => (
+						data.map((user: User) => (
 							<option value={user.name} key={user._id}>
 								{user.name}
 							</option>

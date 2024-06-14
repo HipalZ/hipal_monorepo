@@ -4,10 +4,11 @@ import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
 import Pages from 'vite-plugin-pages';
 import { VitePWA } from 'vite-plugin-pwa';
+
 const ReactCompilerConfig = {
   compilationMode: 'annotation',
 };
-// https://vitejs.dev/config/
+
 export default defineConfig({
   plugins: [
     react(),

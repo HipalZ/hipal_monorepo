@@ -13,13 +13,15 @@ interface OnImgButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
 }
 
 function HeaderButton({ children, className, ...props }: OnImgButtonProps) {
+  // Destructure contentEditable from props to avoid passing it to the button
+  const { contentEditable, ...buttonProps } = props;
+
   return (
     <button
       className={
-        "flex px-4 text-sm py-2  border rounded-full bg-base-100" +
-        className
+        "flex px-4 text-sm py-2  border rounded-full bg-base-100 " + (className || "")
       }
-      {...props}
+      {...buttonProps} // Spread the remaining props excluding contentEditable
     >
       {children}
     </button>

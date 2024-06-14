@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import HiTableLogo from "@/assets/svg/HiTableLogo.svg";
 import welcome from "@/assets/svg/welcomeLogo.svg";
 import { useLogin } from "@/components/store/useLogin";
@@ -8,14 +8,17 @@ import { toast } from "react-toastify";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { useLoyaltyStore } from "@/components/store/useLoyaltyData";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
+import { useUserToken } from "@/components/store/useUserToken";
 
 function HiTable() {
-	const { phoneNumber, password, setPhoneNumber, setPassword, setIsLogin } =
-		useLogin();
-
+	const { password, setPassword, setIsLogin, userDetails } = useLogin();
+	const [phoneNumber, setPhoneNumber] = useState<string>(
+		userDetails.phone || "",
+	);
 	const setBusinessData = useBusinessStore((s) => s.setBusinessData);
 	const setLoyaltyData = useLoyaltyStore((s) => s.setLoyaltyData);
+	const {setAccessToken,setRefreshToken} = useUserToken();
 	const navigate = useNavigate();
 	const params = useParams();
 	const businessId = params.businessId as string;
@@ -43,10 +46,12 @@ function HiTable() {
 				},
 			};
 
-			const response = await axiosInstance(config);
-
+			const response = await axios(config);
+			console.log(response);
 			if (response.status === 201) {
-				setUserDetails(response.data);
+				setUserDetails(response.data.existingUser);
+				setAccessToken(response.data.accessToken);
+				setRefreshToken(response.data.refreshToken);
 				setIsLogin(true);
 				navigate(`${singleRoute[PAGE_TYPES.ZONE](businessId)}`);
 			}
@@ -57,7 +62,7 @@ function HiTable() {
 
 	const fetchBusinessData = async () => {
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/businesses/get/Single/${businessId}`,
 			);
 			setBusinessData(response.data);
@@ -67,9 +72,7 @@ function HiTable() {
 	};
 	const getLoyaltySetting = async (businessId: string) => {
 		try {
-			const response = await axiosInstance.get(
-				`/v1/businesses/${businessId}/loyalty`,
-			);
+			const response = await axios.get(`/v1/businesses/${businessId}/loyalty`);
 			const data = response.data;
 			setLoyaltyData(data);
 		} catch (error) {
@@ -84,9 +87,13 @@ function HiTable() {
 		}
 	}, [businessId]);
 
+	const goToMainLogin = () => {
+		navigate("/");
+	};
+
 	return (
 		<div>
-			<div className="flex justify-center mt-[2rem]">
+			<div onClick={goToMainLogin} className="flex justify-center mt-[2rem]">
 				<img width={104} height={31} src={HiTableLogo} alt="Hi Table Logo" />
 			</div>
 			<div className="flex justify-center mt-[1rem] mx-[3.375rem]">

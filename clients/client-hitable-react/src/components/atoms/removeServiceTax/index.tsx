@@ -6,10 +6,10 @@ type RemoveServiceTaxProps = {
 	updatedBillData: IFinalBill;
 };
 
-const RemoveServiceTax: React.FC<RemoveServiceTaxProps> = ({
+const RemoveServiceTax = ({
 	removeServiceTax,
 	updatedBillData,
-}) => {
+}: RemoveServiceTaxProps) => {
 	const [password, setPassword] = useState("");
 
 	return (

@@ -6,13 +6,14 @@ import { toast } from "react-toastify";
 import { useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 function HiTable() {
 	const userDetail = useLogin((s) => s.userDetails);
 	const navigate = useNavigate();
 	const businessId = userDetail.customRole?.[0]?.businessId;
 	const [phoneNumber, setPhoneNumber] = useState<string>("");
+	const setUserDetails = useLogin((s) => s.setUserDetails);
 
 	const handlePhoneNumberChange = (
 		event: React.ChangeEvent<HTMLInputElement>,
@@ -23,9 +24,6 @@ function HiTable() {
 	useEffect(() => {
 		if (businessId === undefined) {
 			navigate("/");
-		}
-		if (businessId !== undefined && businessId !== "64b630b09f464445c1fbd169") {
-			navigate(`/r/${businessId}/zone`);
 		}
 	}, []);
 
@@ -39,9 +37,10 @@ function HiTable() {
 				},
 			};
 
-			const user = await axiosInstance(config);
+			const user = await axios(config);
 
 			if (user.status === 200) {
+				setUserDetails(user.data);
 				navigate(
 					`${singleRoute[PAGE_TYPES.LOGIN](
 						`${user?.data?.customRole?.[0].businessId}`,

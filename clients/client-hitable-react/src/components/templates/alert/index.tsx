@@ -19,7 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import Loader from "@/components/atoms/loader";
 import { useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import { IAlertData } from "@/components/types/hiTableData";
 
 const filterButtons = [
@@ -72,7 +72,7 @@ function Alert() {
 
 	const handleItemClick = async (alertId: string) => {
 		try {
-			await axiosInstance.put(
+			await axios.put(
 				`/v1/kitchens/updateAlert/alert?alertId=${alertId}&businessId=${businessId}`,
 			);
 			onAlertData();
@@ -83,7 +83,7 @@ function Alert() {
 
 	async function onAlertData() {
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/kitchens/get/AllAlertByWaiter?staffId=${userDetail?.id}&businessId=${businessId}&isAlertOn=true&zoneId=${zoneId}`,
 			);
 			const data = await response.data;
@@ -140,7 +140,7 @@ function Alert() {
 
 	async function clearAllAlerts() {
 		try {
-			const response = await axiosInstance.put(
+			const response = await axios.put(
 				`/v1/kitchens/updateAlert/alert?businessId=${businessId}&clearAll=true`,
 			);
 			if (response?.status === 200 || response?.status === 201) {

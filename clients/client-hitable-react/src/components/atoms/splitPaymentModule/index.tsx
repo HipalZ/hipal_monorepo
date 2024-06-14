@@ -11,11 +11,11 @@ interface PaymentBreakdown {
   [method: string]: number;
 }
 
-const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({
+const SplitPaymentModal = ({
   billAmount,
   selectedMethods,
   splitFinalClick,
-}) => {
+}:SplitPaymentModalProps):JSX.Element => {
   const [paymentBreakdown, setPaymentBreakdown] = useState<PaymentBreakdown>(
     {}
   );

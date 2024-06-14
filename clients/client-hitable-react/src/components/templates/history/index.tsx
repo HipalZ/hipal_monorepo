@@ -3,7 +3,7 @@ import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { MdOutlineNoFood } from "react-icons/md";
 import { BiEdit, BiLeftArrowAlt } from "react-icons/bi";
 import { useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 export const headerButtons = [
 	{ label: "Accepted", value: "isAccept", Icon: MdOutlineNoFood },
@@ -60,7 +60,7 @@ const History = ({ setCurrentView }: IProps) => {
 			if (selectedButton) {
 				url += `&${selectedButton}=true`;
 			}
-			const response = await axiosInstance.get(url);
+			const response = await axios.get(url);
 			setOrderHistoryData(response.data);
 		} catch (error) {
 			console.log(error);

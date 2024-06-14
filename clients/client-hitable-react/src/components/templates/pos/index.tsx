@@ -6,7 +6,7 @@ import { useCategoryStore } from "@/components/store/useCategoryData";
 import Loader from "@/components/atoms/loader";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 const TableHeader = lazy(() => import("@/components/molecules/tableHeader"));
 const HeaderButtonGroup = lazy(() => import("@/components/molecules/headerButtonGroup"));
@@ -53,7 +53,7 @@ function TablePos({ setCurrentView }: IProps) {
 	};
 	const category = async () => {
 		try {
-			const response = await axiosInstance(
+			const response = await axios(
 				`/v1/categories/All/Categories?businessId=${businessId}`,
 			);
 			const { allCategoriesTypes, categories } = response.data.data;

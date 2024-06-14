@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { paths } from "@/components/utils/paths";
 import { useLoyaltyDatas } from "@/components/store/useLoyaltyDatas";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 function HiTable() {
   const {
@@ -40,7 +40,7 @@ function HiTable() {
   const setUserDetails = useLogin((s) => s.setUserDetails);
   const fetchLoyaltyData = async () => {
     try {
-      const response = await axiosInstance(paths.getLoyaltySettings(businessId || loyaltyData.businessId));
+      const response = await axios(paths.getLoyaltySettings(businessId || loyaltyData.businessId));
       setLoyaltyId(response?.data?.loyaltyId);
       setLoyaltyData(response?.data);
     } catch (error) {
@@ -59,7 +59,7 @@ function HiTable() {
         },
       };
 
-      const user = await axiosInstance(config);
+      const user = await axios(config);
       const res = user.data;
       await fetchLoyaltyData();
       if (user.status === 200) {

@@ -1,9 +1,7 @@
 import type React from "react";
-import { memo, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
-interface DeleteConfirmationProps {}
-
-const DeleteConfirmationModal: React.FC<DeleteConfirmationProps> = ({}) => {
+const DeleteConfirmationModal = () => {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -31,4 +29,4 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationProps> = ({}) => {
 	);
 };
 
-export default memo(DeleteConfirmationModal);
+export default DeleteConfirmationModal;

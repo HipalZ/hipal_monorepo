@@ -9,7 +9,7 @@ interface IFooterProps {
 	currentView: string;
 }
 
-const Footer: React.FC<IFooterProps> = ({ setCurrentView, currentView }) => {
+const Footer = ({ setCurrentView, currentView }:IFooterProps):JSX.Element => {
 	return (
 		<div className="fixed bottom-0 z-20 w-full bg-primary">
 			<div className="flex items-center py-2 justify-evenly">

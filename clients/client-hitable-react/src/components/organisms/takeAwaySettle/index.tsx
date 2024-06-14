@@ -22,7 +22,7 @@ const BillItem = ({ title, value }:BillItemProps) => (
   </div>
 );
 
-const TakeAwaySettle: React.FC<POSProps> = ({ activeButton }) => {
+const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
   const { billData, setBillData } = useBillStore();
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

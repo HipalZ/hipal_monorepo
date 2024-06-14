@@ -1,5 +1,5 @@
 import HeaderButton from "@/components/atoms/buttons/headerButton";
-import  { memo, useState } from "react";
+import { memo, useState } from "react";
 import {
 	MdAlarm,
 	MdDelete,
@@ -18,8 +18,8 @@ import Priority from "@/components/atoms/makePriority";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import Loader from "@/components/atoms/loader";
-import {  useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import { useParams } from "react-router-dom";
+import axios from "@/components/utils/axios";
 
 const headerButton = [
 	{
@@ -50,17 +50,17 @@ function Status() {
 	const userDetails = useLogin((state) => state.userDetails);
 	const params = useParams<{ businessId: string; zoneId: string }>();
 	const { businessId, zoneId } = params;
-	
+
 	const [isPriorityPopupOpen, setIsPriorityPopupOpen] = useState(false);
-	
+
 	const makePriority = () => {
+		setIsModalOpen(false);
 		setIsPriorityPopupOpen(true);
 	};
-	const handleConfirm = (data:string) => {
+	const handleConfirm = (data: string) => {
 		if (data === "Priority") {
 			setIsModalOpen(false);
 		}
-		getAllStatusData();
 	};
 
 	const openModal = (kot: IStatus) => {
@@ -88,7 +88,7 @@ function Status() {
 		getAllStatusData();
 	};
 
-	const handleOnClick = (buttonText:string) => {
+	const handleOnClick = (buttonText: string) => {
 		const newActiveButton = activeButton === buttonText ? "" : buttonText;
 		setActiveButton(newActiveButton);
 
@@ -112,7 +112,7 @@ function Status() {
 					kots: [kotId],
 				},
 			};
-			 await axiosInstance(config);
+			await axios(config);
 			getAllStatusData();
 			closeModal();
 		} catch (error) {
@@ -122,7 +122,7 @@ function Status() {
 
 	async function getAllStatusData() {
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/kitchens/getAllKotByWaiter/all?businessId=${businessId}&zoneId=${zoneId}&staffId=${userDetails?._id}`,
 			);
 			const data = response.data;
@@ -310,14 +310,13 @@ function Status() {
 					/>
 				</DayOutPopup>
 			)}
-		
 		</div>
 	);
 }
 
 export default memo(Status);
 
-function OrderHeader({ kot }:{kot:IStatus}) {
+function OrderHeader({ kot }: { kot: IStatus }) {
 	return (
 		<div className="flex justify-between pt-4 mx-4">
 			<div className="flex flex-col">
@@ -350,7 +349,10 @@ function OrderHeader({ kot }:{kot:IStatus}) {
 	);
 }
 
-function DishDetail({ kot, openModal }: { kot: IStatus, openModal: (kot: IStatus) => void }) {
+function DishDetail({
+	kot,
+	openModal,
+}: { kot: IStatus; openModal: (kot: IStatus) => void }) {
 	return (
 		<div className="flex justify-between mx-4 mt-4">
 			<div className="w-[10%] font-[500]">{kot?.dish?.qty} x</div>
@@ -380,8 +382,10 @@ function DishDetail({ kot, openModal }: { kot: IStatus, openModal: (kot: IStatus
 	);
 }
 
-function StatusButton({ kot }:{kot:IStatus}) {
-	const statusDetails: { [key: string]: { className: string; iconColor: string } } = {
+function StatusButton({ kot }: { kot: IStatus }) {
+	const statusDetails: {
+		[key: string]: { className: string; iconColor: string };
+	} = {
 		delivered: {
 			className: "bg-[#DBFFE2] text-[#00BA34]",
 			iconColor: "bg-[#00BA34]",
@@ -462,7 +466,10 @@ function StatusButton({ kot }:{kot:IStatus}) {
 	);
 }
 
-function Orders({ data, openModal }:{data:IStatus[][] , openModal:(kot:IStatus) => void}) {
+function Orders({
+	data,
+	openModal,
+}: { data: IStatus[][]; openModal: (kot: IStatus) => void }) {
 	return data.map((ele, i) => {
 		const kot = ele[0];
 		if (!kot) return null;
@@ -470,7 +477,7 @@ function Orders({ data, openModal }:{data:IStatus[][] , openModal:(kot:IStatus) 
 			<div key={i} className="mb-6 bg-base-100 masonry-item rounded-2xl">
 				<OrderHeader kot={kot} />
 				<div className="mx-4 mt-4 border-2 rounded-full border-gray-400/30"></div>
-				{ele.map((kot:IStatus) => (
+				{ele.map((kot: IStatus) => (
 					<div key={kot._id}>
 						<DishDetail kot={kot} openModal={openModal} />
 						<div className="pt-4">

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { toast } from "react-toastify";
 import { TransferData } from "@/components/atoms/transferMultipleDishes";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface TransferItemProps {
 	handleNextStep: () => void;
@@ -27,7 +27,7 @@ const TransferItem: FC<TransferItemProps> = ({
 
 	const fetchZones = async () => {
 		try {
-			const res = await axiosInstance.get(
+			const res = await axios.get(
 				`/v1/zones/WithTables/Zones?businessId=${businessId}`,
 			);
 			return res.data;

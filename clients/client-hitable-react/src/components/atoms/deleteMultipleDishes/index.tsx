@@ -6,7 +6,7 @@ import { useBusinessStore } from "@/components/store/useBusinessData";
 import { toast } from "react-toastify";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface DeleteMultipleProps {
 	statusData: IStatus[][];
@@ -22,11 +22,11 @@ export interface DeleteData {
 	staffResponsible: string;
 }
 
-const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
+const DeleteMultipleDishes = ({
 	statusData,
 	onClose,
 	refetch,
-}) => {
+}:DeleteMultipleProps):JSX.Element => {
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 	const [searchQuery, setSearchQuery] = useState<string>("");
 	const [incorrectPassword, setIncorrectPassword] = useState<boolean>(true);
@@ -84,7 +84,7 @@ const DeleteMultipleDishes: React.FC<DeleteMultipleProps> = ({
 
 	const handleSubmit = async () => {
 		try {
-			const response = await axiosInstance(`/v1/kitchens/:kotId/updateSingleKot`, {
+			const response = await axios(`/v1/kitchens/:kotId/updateSingleKot`, {
 				method: "PUT",
 				data: {
 					businessId: businessId,

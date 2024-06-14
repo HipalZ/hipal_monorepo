@@ -10,11 +10,10 @@ import { useZoneStore } from "@/components/store/useZone";
 import { useQuery } from "@tanstack/react-query";
 import { IZoneData } from "@/components/types/hiTableData";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import { ICurrentView } from "@/pages/r/[businessId]/zone";
 import { AxiosError } from "axios";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-
 interface IZoneProps {
 	setCurrentView: (view: ICurrentView) => void;
 }
@@ -53,10 +52,18 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 		setZoneName(zone.zoneName);
 
 		if (zone.zoneType === "Dine In") {
-			navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zone?._id));
+			navigate(
+				routePaths[PAGE_TYPES.TABLES](businessId || zone.businessId, zone?._id),
+			);
 		} else {
 			setZone(zone);
-			navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId || '', zone?._id));
+			navigate(
+				routePaths[PAGE_TYPES.TAKE_AWAY](
+					businessId || zone.businessId,
+					zone?._id,
+				),
+			);
+			console.log("zone.zoneName", zone.zoneName);
 			updateTheme(zone.zoneName);
 		}
 	};
@@ -66,12 +73,12 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 
 	const result = async () => {
 		try {
-			const response = await axiosInstance.get(
-				`/v1/zones/getAllZoneByWaiter?businessId=${businessId}&waiterId=${userDetails?._id}`
+			const response = await axios.get(
+				`/v1/zones/getAllZoneByWaiter?businessId=${businessId}&waiterId=${userDetails?._id}`,
 			);
 			const zones = response.data.data;
 			const orderedZones = zones.sort((a: IZoneData) =>
-				isTakeawayZone(a.zoneType) ? 1 : -1
+				isTakeawayZone(a.zoneType) ? 1 : -1,
 			);
 
 			updateTheme("normal");
@@ -83,7 +90,12 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 		}
 	};
 
-	const { isLoading: zoneLoading, error, data: zones, refetch } = useQuery({
+	const {
+		isLoading: zoneLoading,
+		error,
+		data: zones,
+		refetch,
+	} = useQuery({
 		queryKey: ["zones", businessId],
 		queryFn: result,
 		enabled: !!businessId && !!isLogin && !!userDetails?._id,
@@ -104,7 +116,7 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 
 	const handleRoute = () => {
 		navigate(`/r/${businessId}/login`);
-	}
+	};
 
 	if (error) {
 		return (
@@ -147,7 +159,10 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 						</span>
 					</div>
 					{isModalOpen && (
-						<DayOutPopup show={isModalOpen} onClose={() => setIsModalOpen(false)}>
+						<DayOutPopup
+							show={isModalOpen}
+							onClose={() => setIsModalOpen(false)}
+						>
 							<div className="pt-4 mt-6 ml-4 font-semibold">
 								Are you sure, you want to Day-Out?
 							</div>
@@ -169,23 +184,27 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 						<div className="flex items-center mx-[1rem] my-2 rounded-xl border border-primary/50">
 							<button
 								type="button"
-								className={`relative capitalize flex w-full h-8 rounded-full transition-colors duration-300 ease-in-out ${isLogin ? "" : ""
-									}`}
+								className={`relative capitalize flex w-full h-8 rounded-full transition-colors duration-300 ease-in-out ${
+									isLogin ? "" : ""
+								}`}
 								onClick={handleToggle}
 							>
 								<span
-									className={`absolute top-0.5 left-[0.125rem] bottom-0.5 w-[49.5%] h-7 transform transition-transform duration-300 ease-in-out rounded-xl ${isLogin ? "translate-x-full bg-green-500" : "bg-gray-300"
-										}`}
+									className={`absolute top-0.5 left-[0.125rem] bottom-0.5 w-[49.5%] h-7 transform transition-transform duration-300 ease-in-out rounded-xl ${
+										isLogin ? "translate-x-full bg-green-500" : "bg-gray-300"
+									}`}
 								/>
 								<div
-									className={`absolute z-50 left-12 top-2 font-[400] text-[0.875rem] leading-[1rem] ${isLogin ? "text-primary" : "text-base-100"
-										}`}
+									className={`absolute z-50 left-12 top-2 font-[400] text-[0.875rem] leading-[1rem] ${
+										isLogin ? "text-primary" : "text-base-100"
+									}`}
 								>
 									day out
 								</div>
 								<div
-									className={`absolute z-50 right-14 top-2 font-[400] text-[0.875rem] leading-[1rem] ${isLogin ? "text-base-100" : "text-primary"
-										}`}
+									className={`absolute z-50 right-14 top-2 font-[400] text-[0.875rem] leading-[1rem] ${
+										isLogin ? "text-base-100" : "text-primary"
+									}`}
 								>
 									day in
 								</div>
@@ -200,14 +219,18 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 					<div
 						key={ele._id}
 						onClick={() => handleOnClick(ele)}
-						className={`flex justify-between items-center py-6 border border-base-300 rounded-xl ${isLogin ? "bg-base-100" : "bg-gray-200"
-							}`}
+						className={`flex justify-between items-center py-6 border border-base-300 rounded-xl ${
+							isLogin ? "bg-base-100" : "bg-gray-200"
+						}`}
 					>
 						<div
-							className={`truncate pl-6 w-[70%] ${isLogin ? "font-[500]" : "font-[500] text-gray-400"
-								}`}
+							className={`truncate pl-6 w-[70%] ${
+								isLogin ? "font-[500]" : "font-[500] text-gray-400"
+							}`}
 						>
-							<span>{ele.zoneName === "zomato" ? "Pick Up" : ele.zoneName}</span>
+							<span>
+								{ele.zoneName === "zomato" ? "Pick Up" : ele.zoneName}
+							</span>
 							<span className="ml-2 text-xs opacity-60">{ele.zoneType}</span>
 						</div>
 					</div>

@@ -25,7 +25,7 @@ import NewDishMenu from "@/components/molecules/newDishMenu";
 import { useSearch } from "@/components/store/useSearch";
 import LoaderComponent from "@/components/atoms/coolLoader";
 import { useNavigate,useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface POSProps {
 	activeButton: string;
@@ -33,7 +33,7 @@ interface POSProps {
 	search: string;
 }
 
-const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
+const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [menuModal, setMenuMOdal] = useState<boolean>(false);
 	const cart = useCart((s) => s.cart);
@@ -41,7 +41,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 	const clearCartForTable = useCart((s) => s.clearCartForTable);
 	const deleteItem = useCart((s) => s.deleteItem);
 	const tableData = useTable((s) => s.tableData);
-	const { userDetails, phoneNumber } = useLogin();
+	const { userDetails } = useLogin();
 	const [menu, setMenu] = useState("");
 	const [instruction, setInstruction] = useState("");
 	const [activeInputId, setActiveInputId] = useState<string>('');
@@ -173,12 +173,12 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 					tableId: tableId,
 					tableName: tableData?.name,
 					waiterName: userDetails?.name,
-					waiterPhone: phoneNumber,
+					waiterPhone: userDetails.phoneNumber,
 					timeWithSeconds: time,
 					cart: cart[tableId],
 				},
 			};
-			const res = await axiosInstance(config);
+			const res = await axios(config);
 			if (businessData?.kotPrinter) {
 				const config = {
 					method: "POST",
@@ -192,7 +192,7 @@ const POSComponent: React.FC<POSProps> = ({ activeButton, data, search }) => {
 						},
 					},
 				};
-				axiosInstance(config);
+				axios(config);
 			}
 
 			if (res.data.status) {

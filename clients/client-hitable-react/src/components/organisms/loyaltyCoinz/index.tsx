@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { BiShoppingBag } from "react-icons/bi"; // Make sure 'react-icons' is installed
 
 interface LoyaltyCoinzUsageProps {
@@ -120,4 +120,4 @@ function LoyaltyCoinzUsage({
 	);
 }
 
-export default (LoyaltyCoinzUsage);
+export default memo(LoyaltyCoinzUsage);

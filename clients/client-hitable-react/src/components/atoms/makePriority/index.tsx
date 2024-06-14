@@ -1,6 +1,8 @@
+import { IUserLogin, useLogin } from "@/components/store/useLogin";
 import type { IStatus } from "@/components/types/hiTableData";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import React from "react";
+import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 interface DeleteConfirmationProps {
@@ -11,18 +13,18 @@ interface DeleteConfirmationProps {
 	onConfirm: (str: string) => void;
 }
 
-const Priority: React.FC<DeleteConfirmationProps> = ({
+const Priority = ({
 	closeModal,
 	selectedDishStatus,
 	kotId,
 	getAllStatusData,
 	onConfirm,
-}) => {
-	const businessId = selectedDishStatus?.businessId;
-
+}: DeleteConfirmationProps): JSX.Element => {
+	const userDetails = useLogin((s) => s.userDetails) as IUserLogin;
+	const { businessId } = useParams() as { businessId: string };
 	const updatePriority = async (kotId: string, businessId: string) => {
 		try {
-			const response = await axiosInstance.put(
+			const response = await axios.put(
 				`/v1/kitchens/${kotId}/updateSingleKot`,
 				{
 					businessId: businessId,
@@ -45,12 +47,14 @@ const Priority: React.FC<DeleteConfirmationProps> = ({
 	};
 
 	const handleCookFast = async () => {
-		console.log("kotId", kotId, "businessId", businessId);
-		if (!kotId || !businessId) {
+		if (!kotId || !businessId || !userDetails.customRole[0].businessId) {
 			toast.error("Missing kotId or businessId");
 			return;
 		}
-		const success = await updatePriority(kotId, businessId);
+		const success = await updatePriority(
+			kotId,
+			businessId || userDetails.customRole[0].businessId,
+		);
 		if (success) {
 			closeModal();
 			getAllStatusData();
@@ -81,7 +85,6 @@ const Priority: React.FC<DeleteConfirmationProps> = ({
 				<button
 					type="button"
 					onClick={() => {
-						console.log("Cook Fast button clicked");
 						handleCookFast();
 					}}
 					className="w-full px-4 py-2 bg-primary text-base-100 rounded-3xl on_active_bounce"

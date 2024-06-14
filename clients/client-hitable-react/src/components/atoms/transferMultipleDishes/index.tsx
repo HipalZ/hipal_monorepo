@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react";
 import TransferItem from "@/components/molecules/transferItem";
 import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface TransferMultipleProps {
 	statusData: IStatus[][];
@@ -15,11 +15,11 @@ export interface TransferData {
 	toTableId: string;
 	name: string;
 }
-const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
+const TransferMultipleDishes = ({
 	statusData,
 	onClose,
 	refetch,
-}) => {
+}:TransferMultipleProps):JSX.Element => {
 	const [selectedDishes, setSelectedDishes] = useState<IStatus[]>([]);
 	const [step, setStep] = useState(0);
 	const [searchQuery, setSearchQuery] = useState<string>("");
@@ -91,7 +91,7 @@ const TransferMultipleDishes: React.FC<TransferMultipleProps> = ({
 				customerPhone: user?.phone,
 				kotObjectArray: selectedDishes,
 			};
-			const res = await axiosInstance.post("/v1/kitchens/:id/transferKot", config);
+			const res = await axios.post("/v1/kitchens/:id/transferKot", config);
 			if (res.status === 200) {
 				toast.success("Dishes transferred successfully");
 				refetch();

@@ -7,6 +7,7 @@ const zoneColorMapping: { [key: string]: string } = {
 };
 
 export const updateTheme = (zoneName: string) => {
+  console.log('zoneName', zoneName);
   if (typeof document === 'undefined') return null;
 
   if (zoneName && zoneName.trim() !== '') {
@@ -18,7 +19,7 @@ export const updateTheme = (zoneName: string) => {
     });
 
     Object.keys(convertedColors).forEach((key) => {
-      document.documentElement.style.setProperty(`--${key}`, convertedColors[key]);
+      document.documentElement.style.setProperty(`--${key}-color`, convertedColors[key]);
     });
   }
 };

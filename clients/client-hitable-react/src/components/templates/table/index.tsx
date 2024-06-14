@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import Loader from "@/components/atoms/loader";
 import { AxiosError } from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import { PAGE_TYPES, newRoutes } from "@/components/utils/routes";
 
 const filterButtons = [
@@ -106,7 +106,6 @@ const Table = () => {
 	const [search, setSearch] = useState("");
 	const [activeButton, setActiveButton] = useState("");
 	const {
-		phoneNumber,
 		password,
 		setIsLogin,
 		userDetails,
@@ -136,10 +135,10 @@ const Table = () => {
 			const config = {
 				method: "POST",
 				url: "/v1/users/waiterLogin",
-				data: { phone: phoneNumber, password: password },
+				data: { phone: userDetails.phone, password: password },
 			};
 
-			const response = await axiosInstance(config);
+			const response = await axios(config);
 
 			if (response.status === 201) {
 				setUserDetails(response.data);
@@ -155,11 +154,11 @@ const Table = () => {
 				}
 			}
 		}
-	}, [phoneNumber, password, setUserDetails, setIsLogin]);
+	}, [userDetails.phone, password, setUserDetails, setIsLogin]);
 
 	const result = useCallback(async () => {
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/zones/${zoneId}/tables/ByWaiter?businessId=${businessId}&staffId=${userDetails?._id}`,
 			);
 			const res = response.data;
@@ -167,6 +166,7 @@ const Table = () => {
 				map[table._id] = table.capacity;
 				return map;
 			}, {});
+			console.log(res);
 
 			const processedData = res
 				.map((table:ITable) => {
@@ -302,15 +302,14 @@ const Table = () => {
 					{search.length === 0 ? (
 						<>
 							{data?.map((ele:ITable, index:number) => (
-								<Link
-									key={`${ele._id + zoneId}search${index}`}
-									to={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
-										businessId || ele.businessId,
-										zoneId || ele.zoneId,
-										ele?._id,
-									)}`}
-									
-								>
+							<Link
+							key={`${ele._id + zoneId}search${index}`}
+							to={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
+							  businessId || ele.businessId,
+							  zoneId || ele.zoneId,
+							  ele?._id,
+							)}`}
+						  >
 									<div
 										onClick={() => handleTableClick(ele)}
 										className={`${

@@ -43,10 +43,10 @@ interface SalesComponentProps {
 	runCost: number;
 }
 
-const SalesComponent: React.FC<SalesComponentProps> = ({
+const SalesComponent = ({
 	salesData,
 	runCost,
-}) => {
+}:SalesComponentProps):JSX.Element => {
 	return (
 		<div className="relative pb-[5rem]">
 			{salesData?.grossSale !== 0 ? (

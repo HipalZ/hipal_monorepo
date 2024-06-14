@@ -1,6 +1,6 @@
 import { ICartDish, ICartExtra, ICart, ICartVariant } from "../store/useCart";
 import { IBusinessData, IStatus } from "../types/hiTableData";
-import axiosInstance from "./axios";
+import axios from "./axios";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -170,7 +170,7 @@ export const getCompletedTableApi = async (businessId: string) => {
   let url = `/v1/payments?id=${businessId}`;
 
   try {
-    const res = await axiosInstance.get(url);
+    const res = await axios.get(url);
     return res.data;
   } catch (error) {
     console.error("Error fetching Table report:", error);

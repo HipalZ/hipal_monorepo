@@ -1,5 +1,6 @@
 import Loader from "@/components/atoms/loader";
 import { IFinalBill } from "../settle/type";
+import { memo } from "react";
 
 interface PaymentModeSelectorProps {
 	billData: IFinalBill;
@@ -110,4 +111,4 @@ const PaymentModeSelector = ({
 	);
 };
 
-export default PaymentModeSelector;
+export default memo(PaymentModeSelector);

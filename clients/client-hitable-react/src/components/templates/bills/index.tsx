@@ -18,7 +18,7 @@ import {
 	import { ICurrentView } from "@/pages/r/[businessId]/zone";
 	import { useParams } from "react-router-dom";
 	import "react-datepicker/dist/react-datepicker.css";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface IBillProps {
 	setCurrentView: (view: ICurrentView) => void;
@@ -90,7 +90,7 @@ function Bill({ setCurrentView }:IBillProps) {
 		}
 
 		try {
-			const res = await axiosInstance.get(url);
+			const res = await axios.get(url);
 			return res.data;
 		} catch (error) {
 			console.error("Error fetching sales report:", error);

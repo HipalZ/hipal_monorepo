@@ -1,6 +1,5 @@
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { paths } from "@/components/utils/paths";
-import { updateTheme } from "@/components/utils/themes";
 import axios from "@/utils/axios";
 import { set } from "lodash-es";
 
@@ -27,9 +26,6 @@ async function fetchBusinessData(businessId: string) {
 
 export const businessApis = {
 	all: fetchBusinessData,
-	// one:fetchBusinessById,
-	// delete:deleteBusinessById,
-	// update:updateBusinessById,
 }
 
 export async function fetchAllBusinessIds() {

@@ -16,7 +16,7 @@ import { useBusinessStore } from "@/components/store/useBusinessData";
 import Loader from "@/components/atoms/loader";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 import { useParams } from "react-router-dom";
 import { ICurrentView } from "@/pages/r/[businessId]/zone";
 interface ISalesProps {
@@ -81,7 +81,7 @@ function SalesReport({ setCurrentView }: ISalesProps) {
 			url += `&from=${formattedStartDate}&to=${formattedEndDate}`;
 		}
 		try {
-			const res = await axiosInstance.get(url);
+			const res = await axios.get(url);
 			return res.data;
 		} catch (error) {
 			console.error("Error fetching sales report:", error);
@@ -91,7 +91,7 @@ function SalesReport({ setCurrentView }: ISalesProps) {
 
 	const getRunningTableCost = async () => {
 		try {
-			const response = await axiosInstance(
+			const response = await axios(
 				`/v1/kitchens/:id/runningTablesCost?businessId=${businessId}`,
 			);
 			return response.data;

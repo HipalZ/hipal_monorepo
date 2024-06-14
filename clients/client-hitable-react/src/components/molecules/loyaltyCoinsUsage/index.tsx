@@ -8,7 +8,7 @@ import { paths } from "@/components/utils/paths";
 import { toast } from "react-toastify";
 import Loader from "@/components/atoms/loader";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 export function playSound() {
 	const audio = new Audio("/sounds/redeem.mp3");
@@ -61,7 +61,7 @@ const LoyaltyCoinsUsage = ({
 					password: Number.parseInt(cvv),
 				},
 			};
-			const response = await axiosInstance(config);
+			const response = await axios(config);
 			if (response.status === 200) {
 				toast.success("Amount claimed successfull");
 				playSound();

@@ -7,7 +7,7 @@ import { HiArrowLeft } from "react-icons/hi";
 import { toast } from "react-toastify";
 import AddTempDish from "@/components/molecules/addTempItem";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface KickUserProps {
   setCurrentView: (view: string) => void;
@@ -38,7 +38,7 @@ export default function KickUser({setCurrentView}: KickUserProps) {
     setIsModalOpen(false);
   };
   const handleKickUser = async () => {
-    const res = await axiosInstance.put(
+    const res = await axios.put(
       `/v1/zones/${zoneId}/tables/${tableId}/KickOutTable`
     );
     if (res.data) {
@@ -52,7 +52,7 @@ export default function KickUser({setCurrentView}: KickUserProps) {
     try {
       const url = `/v1/zones/updateTableReserve/table?tableId=${tableId}${tableData?.status?.toLowerCase() === "reserved" ? "&update=true" : ""}`;
   
-      const res = await axiosInstance.put(url);
+      const res = await axios.put(url);
       if (res.data) {
         setTableData(res.data);
         navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
@@ -88,7 +88,7 @@ export default function KickUser({setCurrentView}: KickUserProps) {
             mergeTables: tableData?.mergeTables,
           },
         };
-        const res = await axiosInstance(config);
+        const res = await axios(config);
         if (res.status === 200) {
           toast.success("Table Unmerged Successfully");
           setTableData({

@@ -32,15 +32,15 @@ interface POSProps {
 	selectDishId?: string;
 }
 
-const TakeAwayPos: React.FC<POSProps> = ({
+const TakeAwayPos = ({
 	activeButton,
 	data,
 	selectDishId,
-}) => {
+}:POSProps):JSX.Element => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const cart = useCart((s) => s.cart);
 	const setCart = useCart((s) => s.setCart);
-	const { userDetails, phoneNumber } = useLogin();
+	const { userDetails } = useLogin();
 	const [menu, setMenu] = useState("");
 	const [instruction, setInstruction] = useState("");
 	const [activeInputId, setActiveInputId] = useState('');
@@ -164,7 +164,7 @@ const TakeAwayPos: React.FC<POSProps> = ({
 					orderId: orderId,
 					tableName: zoneName,
 					waiterName: userDetails?.name,
-					waiterPhone: phoneNumber,
+					waiterPhone: userDetails?.phone,
 					cart: cart[tableId],
 					...(selectDishId && { deletedKotId: selectDishId }),
 				},

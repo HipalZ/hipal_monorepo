@@ -15,7 +15,7 @@ import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 const Loyalty = () => {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +51,7 @@ const Loyalty = () => {
 		loyaltyId: string,
 	) => {
 		try {
-			const userHistory = await axiosInstance(
+			const userHistory = await axios(
 				`/v1/users/${businessId}/RewardHistory?loyaltyId=${loyaltyId}&findUser=${value}`,
 			);
 			if (userHistory.data) {
@@ -67,7 +67,7 @@ const Loyalty = () => {
 		const fieldMasks =
 			'[ "userName", "rewards", "status", "time", "loyaltyId", "id", "userPhone" ]';
 		try {
-			const userHistory = await axiosInstance(
+			const userHistory = await axios(
 				paths.getUsersHistory(pageNumber, businessId || '', loyaltyId, fieldMasks),
 			);
 			if (usersHistoryZ && userHistory.data) {
@@ -93,7 +93,7 @@ const Loyalty = () => {
 			const fieldMasks =
 				'[ "userName", "rewards", "status", "time", "loyaltyId", "id","waiterName","userPhone","waiterName","day","total" ]';
 
-			const response = await axiosInstance(
+			const response = await axios(
 				paths.getSingleUserHistory(
 					Number(searchQuery || user?.userPhone),
 					loyaltyId,

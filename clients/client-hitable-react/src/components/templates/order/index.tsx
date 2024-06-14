@@ -10,7 +10,7 @@ import { BiStopwatch } from "react-icons/bi";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "@/components/atoms/loader";
 import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 interface IProps {
 	setCurrentView: (view: string) => void;
@@ -34,7 +34,7 @@ function Orders({ setCurrentView }: IProps) {
 				method: "GET",
 				url: `/v1/kitchens/all/WaiterOrder?businessId=${businessId}&zoneId=${zoneId}&staffId=${userDetail?._id}`,
 			};
-			const response = await axiosInstance(config);
+			const response = await axios(config);
 			const data = response.data;
 			setOrderData(data);
 			setNewOrderCount(data.length);
@@ -61,7 +61,7 @@ function Orders({ setCurrentView }: IProps) {
 	const acceptOrder = async (id: string) => {
 		addOrderAcceptedId(id);
 		try {
-			await axiosInstance.put(`/v1/kitchens/:id/acceptOrder/${id}`, {
+			await axios.put(`/v1/kitchens/:id/acceptOrder/${id}`, {
 				waiterName: userDetail?.name,
 				kotPrinter: businessData?.kotPrinter,
 			});
@@ -73,7 +73,7 @@ function Orders({ setCurrentView }: IProps) {
 	const rejectOrder = async (id: string) => {
 		addOrderAcceptedId(id);
 		try {
-			await axiosInstance.put(`/v1/kitchens/reject/Order/${id}`, {
+			await axios.put(`/v1/kitchens/reject/Order/${id}`, {
 				waiterName: userDetail?.name,
 			});
 		} catch (error) {
@@ -84,7 +84,7 @@ function Orders({ setCurrentView }: IProps) {
 	const editOrder = async (id: string) => {
 		addOrderAcceptedId(id);
 		try {
-			const res = await axiosInstance.put(`/v1/kitchens/Edit/Order/${id}`, {
+			const res = await axios.put(`/v1/kitchens/Edit/Order/${id}`, {
 				waiterName: userDetail?.name,
 			});
 			toast.info("Please edit the order");

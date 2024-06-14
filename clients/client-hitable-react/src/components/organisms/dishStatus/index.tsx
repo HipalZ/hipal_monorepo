@@ -12,7 +12,7 @@ import DeleteMultipleDishes from "@/components/atoms/deleteMultipleDishes";
 import { TbTransferIn } from "react-icons/tb";
 import TransferMultipleDishes from "@/components/atoms/transferMultipleDishes";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "@/components/utils/axios";
+import axios from "@/components/utils/axios";
 
 const DishStatusComponent = lazy(() => import("@/components/atoms/dishStatus"));
 
@@ -20,9 +20,7 @@ const Priority = lazy(() => import("@/components/atoms/makePriority"));
 
 const DayOutPopup = lazy(() => import("@/components/atoms/dayoutPopup"));
 
-const DishStatus: React.FC<{
-	activeButton: string;
-}> = ({ activeButton }) => {
+const DishStatus = ({ activeButton }:{activeButton:string}):JSX.Element => {
 	const params = useParams<{
 		businessId: string;
 		zoneId: string;
@@ -56,7 +54,7 @@ const DishStatus: React.FC<{
 	const closeModal = () => {
 		setIsModalOpen(false);
 	};
-	const grouped_customers = statusData.flat().reduce((acc, customer) => {
+	const groupedCustomers = statusData.flat().reduce((acc, customer) => {
 		const { customerPhone, customerName } = customer;
 		const existingCustomer = acc[customerPhone];
 
@@ -75,7 +73,7 @@ const DishStatus: React.FC<{
 
 	const getAllKotSpecificTable = async () => {
 		try {
-			const response = await axiosInstance.get(
+			const response = await axios.get(
 				`/v1/kitchens/kots/allKot?businessId=${businessId}&tableId=${tableId}&zoneId=${zoneId}`,
 			);
 			const kotData = response.data;
@@ -104,7 +102,7 @@ const DishStatus: React.FC<{
 					kots: [kotId],
 				},
 			};
-			const res = await axiosInstance(config);
+			const res = await axios(config);
 			refetch();
 			closeModal();
 		} catch (error) {
