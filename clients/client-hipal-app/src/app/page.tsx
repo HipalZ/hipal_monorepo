@@ -13,7 +13,7 @@ export default function Home() {
     <main >
       <div className="bg-[#fef7f5] !w-screen !h-screen overflow-x-hidden relative">
         <LogoNavBar />
-        {/* <TopSection /> */}
+        <TopSection />
         <MiddleSection />
         <CardSection />
         <BusinessThrive />

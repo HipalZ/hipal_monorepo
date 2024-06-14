@@ -1,17 +1,16 @@
 import DishTag from "@/components/atoms/dishTag"
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
-import type { IDish } from "@/components/types/businessData"
+import type { ICategory, IDish } from "@/components/types/businessData"
 import { getPrice } from "@/components/utils/helpers"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { memo, useEffect, useState } from "react"
+import { memo, useState } from "react"
 import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai"
 import FoodType, { type FOOD_TYPES } from "../foodType"
 import DishData from "../dishDescription"
 import DishPopup from "../dishPopup"
 import NotAvailable from "../notAvailable"
 import { useCart } from "@/components/store/useCart"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
 import RecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 import PlaceholderImg from "../placeholder"
 
@@ -26,7 +25,7 @@ function HorizontalCard({
 	noAddBtn?: boolean
 	noDescription?: boolean
 	isTopScrollWithSubTypes?: boolean
-	redirection?: (id: string, categories: ICat) => void
+	redirection?: (id: string, categories: ICategory[]) => void
 }) {
 	const coverImage = dishData?.images?.[0]
 	const isAvailable = dishData?.availability
@@ -43,7 +42,6 @@ function HorizontalCard({
 		setSelectedDish(null)
 		setIsModalOpen(false)
 	}
-	useEffect(() => {}, [cart])
 
 	return (
 		<section
@@ -61,9 +59,6 @@ function HorizontalCard({
 								<FoodType type={dishData.dishType as FOOD_TYPES} />
 							</div>
 						)}
-						{/* {dishData ?   <div>
-							<span></span>
-						</div> : null} */}
 						{!isAvailable && (
 							<>
 								<span>
@@ -85,7 +80,7 @@ function HorizontalCard({
 
 					<div onClick={() => openModal(dishData)} className="flex mt-2 space-x-1 text-primary">
 						<div className="underline on_active_bounce !text-sm">Know more</div>
-						<div className="">
+						<div>
 							<AiOutlineRight size={17} className="py-[0.125rem] mt-0.5 text-xl" />
 						</div>
 					</div>
@@ -122,7 +117,7 @@ function HorizontalCard({
 								<NotAvailable className="w-32 h-32 overflow-hidden rounded-xl" />
 							</div>
 						) : noDescription ? (
-							<div onClick={() => redirection(dishData._id, dishData.categories)} className="">
+							<div onClick={() => redirection(dishData._id, dishData.categories)}>
 								<PlaceholderImg className="w-32 h-32 overflow-hidden rounded-xl" />
 							</div>
 						) : (
@@ -131,7 +126,6 @@ function HorizontalCard({
 					</div>
 
 					{!noAddBtn && (
-						<>
 							<div
 								className={
 									"z-20 flex flex-col  items-center w-full mx-auto " +
@@ -149,7 +143,6 @@ function HorizontalCard({
 									</div>
 								)}
 							</div>
-						</>
 					)}
 					{isModalOpen && (
 						<DishData show={isModalOpen} onClose={closeModal}>

@@ -15,6 +15,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { useRouter, useSearchParams } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
+import PlaceholderImg from "../placeholder"
 
 interface ILoyaltyCard {
 	logo: string
@@ -28,7 +29,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 	const [image, setImage] = useState<any>("")
 	const { loyaltySetting } = useLoyaltyData()
 	const [cardPattern, setCardPattern] = useState("")
-	const [logos, setLogos] = useState<any>("")
+	const [logos, setLogos] = useState<string>("")
 	const userName = useLogin((s) => s.userDetails.name)
 	const isLogin = useLogin((s) => s.isLogin)
 	const setDirection = useLogin((s) => s.setDirection)
@@ -54,6 +55,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 		setLogos(loyaltySetting?.logo)
 		setCardPattern(loyaltySetting?.cardPattern)
 	}, [loyaltySetting])
+
 	useEffect(() => {
 		const patterns = (cardPattern, fontColor) => {
 			const defaultColor = "#FAE8CA"
@@ -91,18 +93,18 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 						backgroundColor: cardColor,
 						backgroundSize:
 							cardPattern === "beans" ||
-							cardPattern === "bowl" ||
-							cardPattern === "love" ||
-							cardPattern === "flower" ||
-							cardPattern === "bud"
+								cardPattern === "bowl" ||
+								cardPattern === "love" ||
+								cardPattern === "flower" ||
+								cardPattern === "bud"
 								? "125px 125px"
 								: "cover",
 						backgroundPosition:
 							cardPattern === "beans" ||
-							cardPattern === "bowl" ||
-							cardPattern === "love" ||
-							cardPattern === "flower" ||
-							cardPattern === "bud"
+								cardPattern === "bowl" ||
+								cardPattern === "love" ||
+								cardPattern === "flower" ||
+								cardPattern === "bud"
 								? "right 5% top 50%"
 								: "",
 						backgroundRepeat: "no-repeat",
@@ -116,7 +118,11 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 						}}
 						className="absolute top-4 text-[0.5rem] ml-[1rem] font-semibold flex self-start"
 					>
-						<Image src={logo || logos} alt="logo" height={50} width={50} />
+						{logo ? (
+							<Image src={logo} alt="logo" height={50} width={50} />
+						) : (
+							<PlaceholderImg />
+						)}
 					</h1>
 					{hiCode && (
 						<div className="absolute text-2xl transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">

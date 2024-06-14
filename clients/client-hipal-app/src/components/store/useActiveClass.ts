@@ -16,7 +16,8 @@ export const useActiveClass = create(
 	persist<IUseSettings>(
 		(set) => ({
 			isActiveCategory: "",
-			isActiveDishType: "",
+			// by default set the isActiveDish type all to visible all dishes
+			isActiveDishType: "all",
 			isActiveParentCategory: "",
 			isActiveParentCategoryName: "",
 			setActiveParentCategoryName: (category) =>

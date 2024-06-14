@@ -1,6 +1,5 @@
 import Explore from "@/components/templates/explore";
 import { businessApis, fetchAllBusinessIds } from "@/apis/explore";
-import { updateTheme } from "@/components/utils/themes";
 
 export async function generateStaticParams() {
   const businessIds = await fetchAllBusinessIds();

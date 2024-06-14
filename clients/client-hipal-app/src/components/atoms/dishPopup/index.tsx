@@ -2,8 +2,9 @@ import FoodDescription from "@/components/organisms/dishDescription/foodDiscript
 import WallpaperCarousel from "@/components/atoms/backgroundCarousel"
 import { isEmpty } from "lodash-es"
 import NotAvailable from "../notAvailable"
+import PlaceholderImg from "../placeholder"
 
-export default function DishPopup({ dishData, isRounded = true }) {
+export default function DishPopup({ dishData }) {
 	const isAvailable = dishData?.availability
 	const handleInsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		e.stopPropagation()
@@ -20,7 +21,7 @@ export default function DishPopup({ dishData, isRounded = true }) {
 					<NotAvailable className="w-full h-32 overflow-hidden rounded-xl" />
 				</div>
 			) : (
-				<>{/* <PlaceholderImg className='aspect-square' /> */}</>
+				<PlaceholderImg className='aspect-square' />
 			)}
 
 			<FoodDescription dishData={dishData} />

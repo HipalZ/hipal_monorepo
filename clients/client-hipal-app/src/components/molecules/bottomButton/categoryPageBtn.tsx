@@ -1,3 +1,4 @@
+"use client"
 import { useCart } from "@/components/store/useCart"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"
 import { getGrandTotalPrice } from "@/components/utils/helpers"

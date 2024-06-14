@@ -1,3 +1,4 @@
+"use client"
 import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { isEmpty } from "lodash-es";
 import { useCallback, useMemo } from "react";

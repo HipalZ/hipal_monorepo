@@ -1,24 +1,28 @@
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import { useDishTypes } from "@/components/store/useDishTypes"
 import { ICategory } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import Link from "next/link"
 import { memo, useEffect, useMemo, useRef } from "react"
 
-function SubTypes() {
+interface ISubTypes{
+	allCategoriesTypes: {
+		sub: any
+	},
+	categories: ICategory[]
+}
+function SubTypes(props:ISubTypes) {
+	const { allCategoriesTypes,categories } = props
 	const subTypeContainerRef = useRef(null)
 	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
 	const isActiveCategory = useActiveClass((s) => s.isActiveCategory)
 	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory)
-	const data = _useAllBusiness((s) => s.data)
-	const allCategoriesTypes = useMemo(() => data?.allCategoriesTypes, [data?.allCategoriesTypes])
 	const parentCategory = useMemo(
 		() =>
-			data?.categories?.filter((ele: any) => ele?._id === isActiveCategory)?.[0]?.parentCategoryId,
-		[isActiveCategory, data?.categories],
+			categories?.filter((ele: any) => ele?._id === isActiveCategory)?.[0]?.parentCategoryId,
+		[isActiveCategory, categories],
 	)
 
 	const subTypes = useMemo(() => {
@@ -85,9 +89,7 @@ function SubTypes() {
 												blurDataURL={getRandomBlurImg(50, 50)}
 											/>
 										) : (
-											<>
 												<PlaceholderImg className="w-12 h-12" />
-											</>
 										)}
 									</div>
 

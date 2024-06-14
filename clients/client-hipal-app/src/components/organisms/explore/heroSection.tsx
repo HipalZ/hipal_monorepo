@@ -1,58 +1,30 @@
 import ReadMore from "@/components/atoms/readMore"
 import { getRandomBlurImg } from "@/components/utils/images"
-import isEmpty from "lodash-es/isEmpty"
 import Image from "next/legacy/image"
-import { memo } from "react"
+import { memo, useEffect } from "react"
 import PlaceholderImg from "@/components/atoms/placeholder"
+import { updateTheme } from "@/components/utils/themes"
 
 interface IHeroSection {
 	businessId: string,
 	logo: string,
 	businessName: string,
 	description: string,
-	tags: string[]
+	tags: string[],
+	themes:any,
 }
 export default memo(function HeroSection(props: IHeroSection) {
-	const { logo, businessName, businessId, description, tags } = props
-
-	// const description = useMemo(() => {
-	// 	switch (businessId?.toLowerCase()) {
-	// 		case BUSINESS_ID.COFFEE_CUP.toLowerCase():
-	// 			return "Partially open-air, rustic-chic spot for typical cafe fare & coffee, with art & books."
-	// 		case BUSINESS_ID.OTC.toLowerCase():
-	// 			return "The ambience of a childhood home, the company of a furry friend and the comfort of delicious food."
-	// 		case BUSINESS_ID.UPDATE_COFFEE_CUP.toLowerCase():
-	// 			return "Partially open-air, rustic-chic spot for typical cafe fare & coffee, with art & books."
-	// 		case BUSINESS_ID.NEW_COFFEE_CUP.toLowerCase():
-	// 			return "Partially open-air, rustic-chic spot for typical cafe fare & coffee, with art & books."
-	// 		case BUSINESS_ID.FLUKE_CURRY.toLowerCase():
-	// 			return "Tukkae se “fluke curry” ka Khanna is amazing."
-	// 		case BUSINESS_ID.NAAN_KING.toLowerCase():
-	// 			return "Serving great portions since 1957, Nanking Chinese Restaurant celebrates a legacy of authentic flavors and timeless traditions."
-	// 		case BUSINESS_ID.KOI_AND_CO.toLowerCase():
-	// 			return "Indulge in exquisite flavors beneath the tranquil gaze of our koi companions."
-	// 		case BUSINESS_ID.TALES_OF_TELGU.toLowerCase():
-	// 			return "Tales of Telugu unites the rich culture of Andhra and Telangana, their people, and age-old traditions in a culinary journey bound by the love for culinary experiences."
-	// 		case BUSINESS_ID.PRIYANKA_AELAY.toLowerCase():
-	// 			return "Hyderabad-born artist, I am known for my work in contemporary Indian miniature art , with a doctorate and Masters in Painting. My style art captures intricately blends of flora, fauna, and minimalist elegance, reflecting nature`s joyous essence."
-	// 		case BUSINESS_ID.BOHIEMENA_BEANS.toLowerCase():
-	// 			return "Bohiemena Beans: The Alchemy of Art and Caffeine"
-	// 		case BUSINESS_ID.WHITE_MANGO.toLowerCase():
-	// 			return "White Mango is a culinary oasis where fresh, farm-sourced ingredients meet heartfelt hospitality"
-	// 		case BUSINESS_ID.CHACHA_CHINESE.toLowerCase():
-	// 			return "Chacha Chinese Wale, an authentic Chinese restaurant, is now located in our neighborhood."
-	// 		case BUSINESS_ID.CAFE_MULTIVERSE.toLowerCase():
-	// 			return "Hyderabad's First Multi Theme Cafe located in Sainikpuri for the fans of Marvel, F.R.I.E.N.D.S and KGF offering delicious Continental, Asian cuisines and Beverages."
-	// 		default:
-	// 			return ""
-	// 	}
-	// }, [businessId])
+	const { logo, businessName, description, tags, themes } = props
+	useEffect(()=>{
+        updateTheme(themes)
+    },[themes])
+	
 	return (
 		<div className="flex flex-col px-4">
 			<div className="flex flex-row pt-6 pb-2 space-x-4 min-h-max">
-				{!isEmpty(logo) ? (
+				{logo && logo.length >0 ? (
 					<Image
-						src={`${logo}`}
+						src={logo}
 						height={100}
 						width={100}
 						quality={75}

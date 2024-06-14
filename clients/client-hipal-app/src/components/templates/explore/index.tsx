@@ -28,9 +28,8 @@ import PopularRestaurant from "@/components/organisms/explore/popularRestaurant"
 import SubLoyalty from "@/components/atoms/subLoyalty";
 import PageName from "@/components/molecules/pageName";
 import Footer from "@/components/molecules/footer"
-import { updateTheme } from "@/components/utils/themes"
 
-function Explore({ data }: {data:IBusinessData}) {
+function Explore({ data }: { data: IBusinessData }) {
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const router = useRouter()
@@ -77,7 +76,7 @@ function Explore({ data }: {data:IBusinessData}) {
         },
     ]
 
-     const goToLoyalty = (str: string) => {
+    const goToLoyalty = (str: string) => {
         if (!isLogin) {
             setDirection(str)
             return routePaths[PAGE_TYPES.SIGN_UP](data?.business?._id)
@@ -88,39 +87,37 @@ function Explore({ data }: {data:IBusinessData}) {
     }
 
     useEffect(() => {
-        if(data?.loyalty?._id){
+        if (data?.loyalty?._id) {
             openModal()
             setLoyaltySetting(data?.loyalty)
             findPattern(data?.loyalty?.cardPattern)
         }
     }, [])
 
-    useEffect(()=>{
-	updateTheme(data)
-    },[data])
-
     const redirectToMenu = () => {
         router.push(routePaths[PAGE_TYPES.CATEGORY](data?.business?._id))
     }
+
     return (
         <div className="relative flex flex-col w-full pb-16 ">
-            <MainBackground explore={data?.settings?.explore}  />
+            <MainBackground explore={data?.settings?.explore} />
 
             <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
-                <HeroSection 
-                    logo={data?.business?.logo} 
-                    businessName={data?.business?.businessName} 
+                <HeroSection
+                    logo={data?.business?.logo}
+                    businessName={data?.business?.businessName}
                     businessId={data?.business?._id}
                     tags={data?.business?.tags}
                     description={data?.business?.description}
+                    themes={data?.settings?.themes}
                 />
                 <div className="-my-2">
-                    <StoriesComponent highlights={data?.settings?.explore?.highlights}/>
+                    <StoriesComponent highlights={data?.settings?.explore?.highlights} />
                 </div>
 
-                <SpecialOffers specialOffers={data?.settings?.explore?.specialOffers}/>
+                <SpecialOffers specialOffers={data?.settings?.explore?.specialOffers} />
 
-                <PopularRestaurant popular={data?.settings?.explore?.popular}/>
+                <PopularRestaurant popular={data?.settings?.explore?.popular} />
 
                 {loyaltySetting?.loyaltyId && (
                     <Link href={`${goToLoyalty("loyalty")}`} passHref>
@@ -137,7 +134,7 @@ function Explore({ data }: {data:IBusinessData}) {
                     </Link>
                 )}
 
-                <PageName endBanner={data?.settings?.themes?.endBanner}/>
+                <PageName endBanner={data?.settings?.themes?.endBanner} />
                 <Footer footerText={data?.settings?.themes?.footerText}
                     instagramLink={data?.settings?.themes?.instagramLink}
                     facebookLink={data?.settings?.themes?.facebookLink}

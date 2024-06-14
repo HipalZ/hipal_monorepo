@@ -145,11 +145,6 @@ function Header({
 							</div>
 						) : (
 							<>
-								{/* <div className='border-primary bg-base-100 focus-within:border-primary-focus focus-within:shadow focus-within:shadow-primary-focus/25 max-w-screen flex flex-row w-full min-w-full px-2 py-1 !-mr-2 space-x-2 overflow-hidden transition-all border rounded-full'>
-								<HiSearch className='mx-2 my-auto text-sm text-primary' onClick={closeSearchBox} />
-								<input type='text' placeholder='Search' className='text-sm focus:outline-none' />
-							</div> */}
-
 								<SearchPanel closeSearchBox={closeSearchBox} />
 							</>
 						)}
@@ -169,6 +164,9 @@ function Header({
 						<div className="flex flex-row ml-auto ">
 							{!state.showSearchBox && (
 								<div className="flex pl-2 ml-auto">
+									<div>
+										
+									</div>	
 									<div className="mt-1 mr-2">
 										<QuickFilter />
 									</div>

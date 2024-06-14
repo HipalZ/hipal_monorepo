@@ -13,7 +13,6 @@ function DishQuantityButton({
 	isDeleteAble?: boolean
 }) {
 	const { openBottomPanel, closeBottomPanel } = useBottomPanel()
-
 	const cart = useCart((s) => s.cart)
 	const setCart = useCart((s) => s.setCart)
 

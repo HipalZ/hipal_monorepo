@@ -1,3 +1,4 @@
+"use client"
 import Header from "@/components/molecules/header"
 import DishesTypes from "@/components/organisms/category/dishTypes"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"

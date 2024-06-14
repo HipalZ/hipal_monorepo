@@ -1,15 +1,26 @@
+"use client"
 import BackButton from "@/components/atoms/backButton"
 import PlaceholderImg from "@/components/atoms/placeholder"
+import { useRoutingFlow } from "@/components/store/useRoutingFlow"
+import { IThemes } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
+import { updateTheme } from "@/components/utils/themes"
 import Image from "next/image"
-import { memo } from "react"
+import { memo, useEffect } from "react"
 
-function TopBackground({ onBackURL,miniBanner }: { onBackURL: string,miniBanner:string }) {
+function TopBackground({ themes }: { themes:IThemes }) {
+	const { getPreviousPath } = useRoutingFlow()
+	const onBackURL = `${getPreviousPath()}`
+
+	useEffect(()=>{
+		updateTheme(themes)
+	},[themes])
+
 	return (
 		<div className="relative h-[20vh] w-full overflow-hidden ">
-			{miniBanner ? (
+			{themes?.miniBanner ? (
 				<Image
-					src={miniBanner || ""}
+					src={themes?.miniBanner || ""}
 					width={700}
 					height={300}
 					quality={75}

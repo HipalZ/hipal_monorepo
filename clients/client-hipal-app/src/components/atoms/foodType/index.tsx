@@ -4,7 +4,7 @@ import Mixed from "@/assets/svg/Mixed.svg"
 
 export type FOOD_TYPES = "veg" | "nonveg" | "vegan" | "egg" | "other"
 
-function FoodType({ type, hideText }: { type: FOOD_TYPES; hideText?: boolean }) {
+function FoodType({ type }: { type: FOOD_TYPES }) {
 	const [_type, setType] = useState("other")
 
 	const classes = {
@@ -59,16 +59,6 @@ function FoodType({ type, hideText }: { type: FOOD_TYPES; hideText?: boolean }) 
 					}
 				></div>
 			</div>
-
-			{/* {!hideText && (
-				<span
-					className={
-						' my-auto text-[0.813rem] leading-3 font-medium capitalize  ' + classes[`${_type}`].text
-					}
-				>
-					{lowerCase(_type)}
-				</span>
-			)} */}
 		</div>
 	)
 }

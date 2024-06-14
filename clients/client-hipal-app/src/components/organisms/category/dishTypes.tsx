@@ -1,21 +1,23 @@
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes"
 import SubTypes from "@/components/molecules/categoryTypes/subTypes"
 import { useDishTypes } from "@/components/store/useDishTypes"
+import { ICategory } from "@/components/types/businessData"
 import { memo, useEffect, useMemo } from "react"
 
 function DishesTypes({
-	allCategoriesTypes: allCategories,
+	allCategoriesTypes,
+	categories,
 }: {
 	allCategoriesTypes: {
 		main: any
 		sub: any
-	}
+	},
+	categories: ICategory[]
 }) {
 	const setActiveDishTypes = useDishTypes((s) => s.setActiveDishTypes)
 	const activeDishTypes = useDishTypes((s) => s.activeDishTypes)
-	const allCategoriesTypes = useMemo(() => allCategories, [allCategories])
-	const mainTypes = useMemo(() => allCategories?.main, [allCategories?.main])
-	const subTypes = useMemo(() => allCategories?.sub, [allCategories?.sub])
+	const mainTypes = useMemo(() => allCategoriesTypes?.main, [allCategoriesTypes?.main])
+	const subTypes = useMemo(() => allCategoriesTypes?.sub, [allCategoriesTypes?.sub])
 
 	useEffect(() => {
 		if (
@@ -32,12 +34,12 @@ function DishesTypes({
 				activeSubType: activeSubType,
 			})
 		}
-	}, [allCategories])
+	}, [allCategoriesTypes])
 
 	return (
 		<div className="flex flex-col w-full">
-			<MainTypes />
-			<SubTypes />
+			<MainTypes allCategoriesTypes={allCategoriesTypes}/>
+			<SubTypes allCategoriesTypes={allCategoriesTypes} categories={categories} />
 		</div>
 	)
 }

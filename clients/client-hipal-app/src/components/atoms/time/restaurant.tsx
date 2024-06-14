@@ -9,11 +9,10 @@ interface IProps {
 function RestaurantTime(props: IProps) {
 	const { openFrom, openTill } = props
 	return (
-		<div>
-			{" "}
-			{openFrom && openTill && (
+		<>
+			{openFrom && openTill ? (
 				<div>
-					<OnImgButton {...props}>
+					<OnImgButton>
 						<div className="flex flex-row space-x-2">
 							<FiClock className="my-auto " />
 							<div className="my-auto">
@@ -24,8 +23,8 @@ function RestaurantTime(props: IProps) {
 						</div>
 					</OnImgButton>
 				</div>
-			)}
-		</div>
+			):null}
+		</>
 	)
 }
 

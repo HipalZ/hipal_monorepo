@@ -147,6 +147,9 @@ body::-webkit-scrollbar {
 .splide ul {
 	display: flex;
 }
+li {
+	list-style-type: none;
+}
 
 html, body {
     position: fixed;

@@ -1,3 +1,4 @@
+"use client"
 import { memo } from "react"
 import { IoLogoLinkedin, IoLogoYoutube } from "react-icons/io"
 import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5"
@@ -9,7 +10,7 @@ interface IFooter{
 	youtubeLink:string;
 	linkedinLink:string;
 }
-const Footer=memo((props:IFooter) =>{
+const Footer=(props:IFooter) =>{
 	const { footerText, instagramLink, facebookLink, linkedinLink, youtubeLink } = props;
 	return (
 			<div className="flex flex-col space-y-4 ">
@@ -67,6 +68,6 @@ const Footer=memo((props:IFooter) =>{
 				</div>
 			</div>
 	)
-})
+}
 
-export default Footer
+export default memo(Footer)

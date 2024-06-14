@@ -7,15 +7,21 @@ import { SplideSlide } from "@splidejs/react-splide"
 import Image from "next/image"
 import { CSSProperties, memo, useEffect, useMemo, useRef } from "react"
 
-function MainTypes() {
+interface IMainTypes{
+	allCategoriesTypes: {
+		main: any
+		sub: any
+	}
+}
+function MainTypes(props:IMainTypes) {
+	const { allCategoriesTypes } = props
 	const activeDishTypes = useDishTypes((s) => s.activeDishTypes)
 	const setActiveDishTypes = useDishTypes((s) => s.setActiveDishTypes)
-	const data = _useAllBusiness((s) => s.data)
 	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
 	const isActiveParentCategory = useActiveClass((s) => s.isActiveParentCategory)
 	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory)
 	const setActiveParentCategoryName = useActiveClass((s) => s.setActiveParentCategoryName)
-	const mainTypes = useMemo(() => data?.allCategoriesTypes?.main, [data?.allCategoriesTypes?.main])
+	const mainTypes = useMemo(() => allCategoriesTypes?.main, [allCategoriesTypes?.main])
 
 	const mainContainerRef = useRef<HTMLDivElement | null>(null)
 	useEffect(() => {
@@ -60,7 +66,7 @@ function MainTypes() {
 					.filter((item) => item?.visibility)
 					.map((item: ICategory, index: number) => {
 						const activeSubType =
-							Object.keys(data?.allCategoriesTypes?.sub?.[item._id || ""] || {})?.[0] || null
+							Object.keys(allCategoriesTypes?.sub?.[item._id || ""] || {})?.[0] || null
 						return (
 							<SplideSlideWrapper key={index + (item?.name || "")}>
 								<div id={item?._id} className="relative" key={item.name + index}>

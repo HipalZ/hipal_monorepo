@@ -21,7 +21,6 @@ function ContactRestaurant(props: IProps) {
 				<OnImgButton
 					appendClassNames="btn-circle"
 					aria-label="Contact Restaurant"
-					{...props}
 					{...OnImgButtonProps}
 				>
 					<FiPhone className="my-auto" />

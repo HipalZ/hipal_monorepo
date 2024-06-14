@@ -7,6 +7,8 @@ interface IBiz{
 	businessType: string
 	gstRegistered: boolean
 	multipleOutlets: boolean
+	description:string
+	tags: string[]
 	customLink: string
 	logo: string
 	address: string
@@ -57,24 +59,25 @@ export interface IExplore {
 		stories: string[]
 	}[]
 }
+export interface IThemes{
+	primaryColor: string
+	secondaryColor: string
+	accentColor: string
+	fontFamily: string
+	fontURL: string
+	buttonStyle: string
+	miniBanner: string
+	specialBanner: string
+	endBanner: string
+	instagramLink: string
+	facebookLink: string
+	youtubeLink: string
+	linkedinLink: string
+	footerText: string
+}
 export interface ISettings {
 	businessId: string
-	themes: {
-		primaryColor: string
-		secondaryColor: string
-		accentColor: string
-		fontFamily: string
-		fontURL: string
-		buttonStyle: string
-		miniBanner: string
-		specialBanner: string
-		endBanner: string
-		instagramLink: string
-		facebookLink: string
-		youtubeLink: string
-		linkedinLink: string
-		footerText: string
-	}
+	themes: IThemes
 	categoryOrder: string[]
 	explore: IExplore,
 	navigation: {
