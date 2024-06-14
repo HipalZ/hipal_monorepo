@@ -5,7 +5,7 @@ COPY . /app
 WORKDIR /app
 RUN pnpm install
 
-FROM base AS dish-server
+FROM base AS dishes-server
 WORKDIR /app/servers/dishes
 CMD ["pnpm", "run", "start:development"]
 
