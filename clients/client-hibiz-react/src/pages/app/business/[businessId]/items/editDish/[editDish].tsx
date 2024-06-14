@@ -346,10 +346,10 @@ function EditDish() {
           portions: portions,
           filters: {
             dishes: postRecommend,
+            metaTags:dishTags,
           },
           kitchenId: selectedKitchenId,
           description: description,
-          tags: dishTags,
           images: imageUrls,
           delivery: {
             name: swiggyDishName,
