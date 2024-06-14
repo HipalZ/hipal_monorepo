@@ -25,8 +25,7 @@ const Zones = memo(() => {
   const [isLoading, setIsLoading] = useState(false);
   const { businessId } = useParams<{ businessId: string }>();
   const { setSelectedSubIcon, selectedSubIcon } = useSelectedIcon();
-  const handleEditButton = (zone: IZones) => {
-    const { id } = zone;
+  const handleEditButton = (id: string) => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/zone/${id}`);
     });
@@ -90,7 +89,7 @@ const Zones = memo(() => {
               <div className="border-1 mx-6 mt-6 rounded-lg border border-gray-200 p-3">
                 <div className="flex items-center justify-between pb-3">
                   <h1 className="text-base font-semibold capitalize text-[#2B354D]">{zone.zoneName}</h1>
-                  <div onClick={() => handleEditButton(zone)}>
+                  <div onClick={() => handleEditButton(zone?._id)}>
                     <button type="button" className="text-[#2F80ED] hover:underline">
                       Edit
                     </button>

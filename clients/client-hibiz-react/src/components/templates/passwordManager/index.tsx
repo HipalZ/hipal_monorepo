@@ -18,7 +18,7 @@ const PasswordManager = memo(({ setSettings }: IPassword) => {
   const { businessId } = useParams<{ businessId: string }>();
   const getPasswords = async () => {
     try {
-      const response = await axios.get(`v1/businesses/${businessId}/passwordManager`);
+      const response = await axios.get(`/v1/businesses/${businessId}/passwordManager`);
       const kotResponse = await axios.get(`/v1/kitchens/:id/passwordManager/${businessId}`);
       const result = { ...response?.data, ...kotResponse?.data };
       const responseData = result;

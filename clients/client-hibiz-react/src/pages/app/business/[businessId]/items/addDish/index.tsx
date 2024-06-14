@@ -143,10 +143,10 @@ const AddDish = memo(() => {
     kitchenId: selectedKitchenId,
     filters: {
       dishes: [],
+      metaTags:dishTags,
     },
     images: [''],
     description: '',
-    tags: dishTags,
     links: [],
     delayTime: '',
     availability: availability,
@@ -171,7 +171,6 @@ const AddDish = memo(() => {
       portions: [],
     },
     version: 0,
-    id: '',
   };
 
   const [data, setData] = useState<Dish>(testData);
@@ -254,14 +253,13 @@ const AddDish = memo(() => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleTagsClick = async (event: Event) => {
-    const value = (event.target as HTMLElement).innerText;
-    if (dishTags.includes(value)) {
-      setDishTags(dishTags.filter((keyword) => keyword !== value));
-    } else {
-      setDishTags([...dishTags, value]);
-    }
-  };
+	const handleTagsClick = async (text:string) => {
+		if (dishTags.includes(text)) {
+			setDishTags(dishTags.filter((keyword) => keyword !== text))
+		} else {
+			setDishTags([...dishTags, text])
+		}
+	}
 
   const dishValidations = async () => {
     const isDishValid =
@@ -353,9 +351,9 @@ const AddDish = memo(() => {
           categories: postCategory,
           extras: postAddOns,
           portions: portions,
-          tags: dishTags,
           filters: {
             dishes: postRecommend,
+            metaTags:dishTags,
           },
           kitchenId: selectedKitchenId,
           description: description,
@@ -1004,8 +1002,7 @@ const AddDish = memo(() => {
               {tags.map((tag) => {
                 return (
                   <div
-                    onKeyDown={handleTagsClick}
-                    onClick={handleTagsClick}
+                  onClick={()=>handleTagsClick(tag?.text)}
                     key={tag?.text}
                     className={`${
                       dishTags.includes(tag?.text) ? 'bg-primary/50 text-base-100 font-medium' : 'text-primary bg-base-200'

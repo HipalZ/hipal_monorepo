@@ -85,10 +85,10 @@ function EditDish() {
     kitchenId: selectedKitchenId,
     filters: {
       dishes: [],
+      metaTags: dishTags,
     },
     images: [],
     description: '',
-    tags: dishTags,
     links: [],
     taxes: [],
     delayTime: '',
@@ -117,14 +117,13 @@ function EditDish() {
   const [dishData, setDishData] = useState<Dish>(testData);
   const [data, setData] = useState<Dish>(testData);
   const [loadingData, setLoadingData] = useState(false);
-  const handleTagsClick = async (event: Event) => {
-    const value = event.target.innerText;
-    if (dishTags.includes(value)) {
-      setDishTags(dishTags.filter((keyword) => keyword !== value));
-    } else {
-      setDishTags([...dishTags, value]);
-    }
-  };
+	const handleTagsClick = async (text:string) => {
+		if (dishTags.includes(text)) {
+			setDishTags(dishTags.filter((keyword) => keyword !== text))
+		} else {
+			setDishTags([...dishTags, text])
+		}
+	}
   const getAllData = async () => {
     setLoadingData(true);
     try {
@@ -146,7 +145,7 @@ function EditDish() {
       setAvailability(data?.dish?.availability);
       setVisibility(data?.dish?.visibility);
       setDisplayImages(data?.dish?.images);
-      setDishTags(data?.dish?.tags || []);
+      setDishTags(data?.dish?.filters?.metaTags || []);
       if (data?.dish?.delivery) {
         if (data?.dish?.delivery?.dishPrice !== '') {
           setToggleSwiggySwitch(true);
@@ -1035,8 +1034,7 @@ function EditDish() {
               {tags.map((tag) => {
                 return (
                   <div
-                    onKeyDown={handleTagsClick}
-                    onClick={handleTagsClick}
+                  onClick={()=>handleTagsClick(tag?.text)}
                     key={tag?.text}
                     className={`${
                       dishTags?.includes(tag?.text) ? 'bg-primary/50 text-base-100 font-medium' : 'text-primary bg-base-200'

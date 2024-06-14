@@ -34,7 +34,7 @@ const AddRecommendedDishes = <T extends DataArray>({
       if (index !== -1) {
         return prev.filter((item) => item._id !== selectedData._id);
       }
-      return [...prev, { id: selectedData._id, name: selectedData.name }];
+      return [...prev, { _id: selectedData._id, name: selectedData.name }];
     });
   }
 

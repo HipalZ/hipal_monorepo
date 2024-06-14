@@ -15,8 +15,7 @@ const DishContent = memo(({ dishes, searchText }: { dishes: IDish[]; searchText:
     setDishesData(dishes);
   }, [dishes]);
   const { businessId } = useParams<{ businessId: string }>();
-  const handleEditButton = (zone: any) => {
-    const { id } = zone;
+  const handleEditButton = (id:string) => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/items/editDish/${id}`);
     });
@@ -47,7 +46,7 @@ const DishContent = memo(({ dishes, searchText }: { dishes: IDish[]; searchText:
           dishesData.map((dish: IDish) => (
             <div key={dish._id} className="m-4 mx-6 my-3 flex justify-between rounded-md border border-[#cacaca] p-4 px-4 py-4">
               <h1 className="w-72 truncate">{dish?.name}</h1>
-              <button type="button" className="text-[#2F80ED]" onClick={() => handleEditButton(dish)}>
+              <button type="button" className="text-[#2F80ED]" onClick={() => handleEditButton(dish?._id)}>
                 Edit
               </button>
             </div>

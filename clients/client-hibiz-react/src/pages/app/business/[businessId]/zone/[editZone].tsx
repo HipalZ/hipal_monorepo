@@ -56,18 +56,18 @@ const EditZone = () => {
       const zone = await axios.get(paths.getZoneById(editZone || ''));
       const staff = await axios.get(paths.getStaffApi(businessId || ''));
       const tables = await axios.get(paths.getTablesApi(businessId || ''));
-      const charges = await axios.get(paths.getChargesApi(businessId || ''));
+      // const charges = await axios.get(paths.getChargesApi(businessId || ''));
       setData({
         zone: zone.data,
         staff: staff.data,
         tables: tables.data,
-        charges: charges.data,
+        // charges: charges.data,
       });
       return {
         zone: zone.data,
         staff: staff.data,
         tables: tables.data,
-        charges: charges.data,
+        // charges: charges.data,
       };
     } catch (error) {
       console.error('Error fetching data:', error);
