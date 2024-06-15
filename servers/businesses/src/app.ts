@@ -1,10 +1,10 @@
-import { currentUser, errorHandler } from '@hipal/common';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createUserRouter } from './routes/create-business';
 import { deleteBusinessesRouter } from './routes/delete-business';
 import { readBusinessRouter } from './routes/read-business';
@@ -64,7 +64,8 @@ app.use(
     sameSite: 'none',
   }),
 );
-app.use(currentUser);
+app.use(authTokenValidator);
+// app.use(currentUser);
 
 // Register routes
 app.use(createUserRouter);

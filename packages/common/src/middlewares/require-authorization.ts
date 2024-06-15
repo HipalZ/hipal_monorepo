@@ -1,27 +1,28 @@
 import { NextFunction, Request, Response } from 'express';
 import { NotAuthorizedError } from '../errors/notAuthorizedError';
-import { ClientRoles } from '../types';
-export interface ClientRoles {
-  OPERATOR: string;
-  HIPAL_ADMIN: string;
-  HIPAL_CUSTOMER: string;
-  RESTAURANT_OWNER: string;
-  RESTAURANT_MANAGER: string;
-  RESTAURANT_FLOOR_MANAGER: string;
+
+export enum ClientRoles {
+  OPERATOR = 'OPERATOR',
+  HIPAL_ADMIN = 'HIPAL_ADMIN',
+  HIPAL_CUSTOMER = 'HIPAL_CUSTOMER',
+  RESTAURANT_OWNER = 'RESTAURANT_OWNER',
+  RESTAURANT_MANAGER = 'RESTAURANT_MANAGER',
+  RESTAURANT_FLOOR_MANAGER = 'RESTAURANT_FLOOR_MANAGER',
 }
 // ! Assumes we are going to call current Client before this middleware
 export const requireAuthorization = (roles: ClientRoles[]) => {
   const checkAuthorization = (req: Request, res: Response, next: NextFunction) => {
-    if (req.hostname === 'hipal.life' && req.method === 'GET') {
-      next();
+    //TODO: ADD A CHECK FOR LOCALHOST
+    if (req.hostname !== 'localhost') {
+      return res.status(401).send({ message: 'Invalid Domain' });
     }
     if (!req.currentUser) {
       throw new NotAuthorizedError();
     }
 
-    const exists = roles.includes(req.current_User?.role as ClientRoles);
+    const exists = roles.includes(req.currentUser?.role as ClientRoles);
     if (!exists) {
-      throw new NotAuthorizedError();
+      return res.status(401).send({ message: 'Access Denied !' });
     }
 
     next();

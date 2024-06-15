@@ -1,14 +1,14 @@
-import { errorHandler } from '@hipal/common';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
+import { idempotent } from './middlewares/idempotent';
 import { createKitchenRouter } from './routes/create-kitchen';
 import { readKitchenRouter } from './routes/read-kitchen';
 import { updateKitchenRouter } from './routes/update-kitchen';
-
 const app = express();
 app.use(morgan('dev'));
 app.disable('x-powered-by');
@@ -64,7 +64,9 @@ app.use(
   }),
 );
 
-// app.use(idempotent);
+app.use(idempotent);
+app.use(errorHandler);
+app.use(authTokenValidator);
 // Register routes
 app.use(createKitchenRouter);
 app.use(readKitchenRouter);

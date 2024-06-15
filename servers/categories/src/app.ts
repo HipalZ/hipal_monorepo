@@ -1,10 +1,12 @@
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 
 import cookieSession from 'cookie-session';
+
 import cors from 'cors';
 import { createCategoryRouter } from './routes/create-category';
 import { deleteCategoriesRouter } from './routes/delete-category';
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
 import express from 'express';
 import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
@@ -68,7 +70,8 @@ app.use(
 );
 
 app.use(idempotent);
-
+app.use(authTokenValidator);
+app.use(errorHandler);
 // Register routes
 app.use(createCategoryRouter);
 app.use(readCategoriesRouter);

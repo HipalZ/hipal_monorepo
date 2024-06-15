@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
 import morgan from 'morgan';
 import { createSettingsRouter } from './routes/create-settings';
 import { deleteSettingsRouter } from './routes/delete-settings';
@@ -64,12 +65,14 @@ app.use(
   }),
 );
 
+app.use(authTokenValidator);
+
 // Register routes
 app.use(createSettingsRouter);
 app.use(readSettingsRouter);
 app.use(updateSettingsRouter);
 app.use(deleteSettingsRouter);
-
+app.use(errorHandler);
 app.all('*', () => {
   return 'Not Found';
 });

@@ -1,9 +1,11 @@
 import cookieSession from 'cookie-session';
 import cors from 'cors';
-import express from 'express';
+import express, { NextFunction } from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
+import { Request, Response } from 'express';
 import morgan from 'morgan';
 import { createUserRouter } from './routes/create-user';
 import { readUserRouter } from './routes/read-user';
@@ -64,11 +66,23 @@ app.use(
   }),
 );
 
+// Define a list of routes to exclude from authTokenValidator
+const excludedPaths = ['/v1/users/waiterLogin', '/v1/users/chef/Login', '/v1/users/Owner/Login']; // Add more paths as needed
+
+// Conditional middleware to exclude authTokenValidator on certain routes
+const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+  if (!excludedPaths.includes(req.path)) {
+    return authTokenValidator(req, res, next);
+  }
+  next();
+};
+
+app.use(conditionalAuthTokenValidator);
 // Register routes
 app.use(createUserRouter);
 app.use(readUserRouter);
 app.use(updateUserRouter);
-
+app.use(errorHandler);
 app.all('*', () => {
   return 'Not Found';
 });

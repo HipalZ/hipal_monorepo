@@ -1,3 +1,5 @@
+export * from './accessLevelGuard';
+export * from './authTokenValidator';
 export * from './current-user';
 export { ClientRoles } from './current-user';
 export * from './error-handler';

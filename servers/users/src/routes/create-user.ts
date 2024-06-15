@@ -24,11 +24,11 @@ const createAccessToken = (user: any) => {
       email: user.email,
       name: user.name,
       phone: user.phone,
-      role: user.role,
+      role: user.role[0],
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '20m' }, // Add 7 day expiration
+    { expiresIn: '5m' }, // Add 7 day expiration
   );
 };
 
@@ -53,11 +53,11 @@ const createRefreshToken = (user: any) => {
       email: user.email,
       name: user.name,
       phone: user.phone,
-      role: user.role,
+      role: user.role[0],
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '30m' }, // Add 30 day expiration
+    { expiresIn: '10m' }, // Add 30 day expiration
   );
 };
 
@@ -397,6 +397,7 @@ router.post(
         return res.status(400).send({ status: false, message: 'staff not belong to business...!' });
       }
     }
+    console.log('existingUser', existingUser);
 
     if (!existingUser) {
       return res.status(400).send({ status: false, message: 'Phone or Password invalid...!' });

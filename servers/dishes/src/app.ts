@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
 
 // Routes
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createDishRouter } from './routes/create-dish';
 import { deleteDishesRouter } from './routes/delete-dish';
 import { readDishesRouter } from './routes/read-dish';
@@ -67,6 +68,8 @@ app.use(
 );
 
 app.use(idempotent);
+app.use(errorHandler);
+app.use(authTokenValidator);
 
 // Register routes
 app.use(createDishRouter);
