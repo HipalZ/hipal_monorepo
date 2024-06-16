@@ -36,6 +36,7 @@ function Explore({ data }: { data: IBusinessData }) {
     const isLogin = useLogin((s) => s.isLogin)
     const setDirection = useLogin((s) => s.setDirection)
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
+    const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
 
     const openModal = () => {
         setTimeout(() => setIsModalOpen(true), 5000)
@@ -91,6 +92,7 @@ function Explore({ data }: { data: IBusinessData }) {
             openModal()
             setLoyaltySetting(data?.loyalty)
             findPattern(data?.loyalty?.cardPattern)
+            setBusinessDetails(data?.business)
         }
     }, [])
 
@@ -119,7 +121,7 @@ function Explore({ data }: { data: IBusinessData }) {
 
                 <PopularRestaurant popular={data?.settings?.explore?.popular} />
 
-                {loyaltySetting?.loyaltyId && (
+                {loyaltySetting?._id && (
                     <Link href={`${goToLoyalty("loyalty")}`} passHref>
                         <div className="relative p-4 mx-4 overflow-hidden border rounded-xl border-accent bg-base-200/50">
                             <div className="absolute right-[2rem] -bottom-[1.1rem] bg-white w-[64px] h-[64px]" />

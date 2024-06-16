@@ -64,10 +64,10 @@ function QuickFilter() {
 	)
 
 	return (
-		<div className="">
+		<div>
 			<div
 				onClick={openModal}
-				className="text-primary text-xs ml-8 mt-auto font-semibold no-underline border border-primary px-3 rounded-[15px]"
+				className="text-primary text-xs ml-2 mt-auto font-semibold no-underline border border-primary px-3 rounded-[15px]"
 			>
 				{activeIcon}
 			</div>

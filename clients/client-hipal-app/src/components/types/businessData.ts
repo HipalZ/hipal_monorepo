@@ -19,8 +19,7 @@ interface IBiz{
 export interface IBusinessData {
 	_id: string
 	settings?: ISettings
-	businessesData?: IBiz
-	business?:IBiz
+	business?: IBiz
 	dishesData?: IDish[]
 	dishData?: IDish
 	categoryData?: ICategory[]

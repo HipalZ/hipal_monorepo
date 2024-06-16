@@ -8,17 +8,14 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: { params: { businessId: string } }) {
-  const businessId = params.businessId;
-  const data = await businessApis.all(businessId);
+export async function generateMetadata() {
   return {
-    title: `Explore ${data.business?.businessName}`,
-    description: data.settings?.description || "Explore page for businesses",
+    title: "Explore",
+    description: "Explore page for businesses",
   };
 }
 
 export default async function Page({ params }: { params: { businessId: string } }) {
-  
   const data = await businessApis.all(params.businessId);
   return <Explore data={data} />;
 }

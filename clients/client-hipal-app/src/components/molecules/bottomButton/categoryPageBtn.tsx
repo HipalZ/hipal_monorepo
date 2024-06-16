@@ -1,23 +1,29 @@
 "use client"
 import { useCart } from "@/components/store/useCart"
-import { useRoutingFlow } from "@/components/store/useRoutingFlow"
 import { getGrandTotalPrice } from "@/components/utils/helpers"
 import Link from "next/link"
 import { memo } from "react"
 import BottomButton from "."
+import { useParams } from "next/navigation"
+import { useLogin } from "@/components/store/useLogin"
 
 function CategoryPageBtn() {
 	const cart = useCart((s) => s.cart)
-	const { getNextPath } = useRoutingFlow()
+	const {isLogin} = useLogin();
+	const params = useParams();
+	const businessId = params?.businessId;
+	const proceedToPayment = () =>{
+		if(!isLogin) return `/r/${businessId}/user/signup/`
+		return `/r/${businessId}/payment`
+	}
 
 	return (
-		<Link href={`${getNextPath()}`} passHref>
+		<Link href={`${proceedToPayment()}`} passHref>
 			<BottomButton>
 				<div className="flex flex-row capitalize space-x-36">
 					<div className="flex flex-row">
-						<span className="my-auto">Final cart</span>
+						<span className="my-auto">Proceed to Pay</span>
 					</div>
-
 					{Object.keys(cart).length > 0 && (
 						<div className="flex-col">
 							<div>{Object.keys(cart).length && Object.keys(cart).length} items </div>

@@ -5,6 +5,7 @@ export const paths = {
 	sendOtp: () => `/v1/users/otp`,
 	verifyOtp: () => `/v1/users?action=login`,
 	businessData: (businessId: string) => `/v1/businesses/${businessId}`,
+	businessNameLogo : (businessId: string, nameLogo:string) => `/v1/businesses/${businessId}?nameLogo=${nameLogo}`,
 	categoryByBusiness: (businessId: string) => `/v1/categories?businessId=${businessId}`,
 	dishesData: (businessId: string) => `/v1/dishes?businessId=${businessId}`,
 	settings: (businessId: string) => `/v1/settings?businessId=${businessId}`,

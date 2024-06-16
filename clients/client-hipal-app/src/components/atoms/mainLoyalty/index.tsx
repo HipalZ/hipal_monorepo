@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import PlaceholderImg from "../placeholder"
+import { useParams } from "next/navigation"
 
 interface ILoyaltyCard {
 	logo: string
@@ -34,8 +35,9 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 	const isLogin = useLogin((s) => s.isLogin)
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
-	const searchParams = useSearchParams()
-	const businessId = searchParams?.get("businessId")
+	const params = useParams()
+	const businessId = params?.businessId
+
 	const businessDetails = useBusinessDetails((s) => s.businessDetails.businessName)
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {

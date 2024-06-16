@@ -7,6 +7,7 @@ import FooterSection from "@/components/molecules/footerSection"
 import LogoNavBar from "@/components/molecules/logoNavBar"
 import MiddleSection from "@/components/molecules/middleSection"
 import StartTrail from "@/components/molecules/startTrail"
+import TopSection from "@/components/molecules/topSection"
 
 export default function Home() {
   return (

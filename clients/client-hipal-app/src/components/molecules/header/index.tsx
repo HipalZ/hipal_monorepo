@@ -1,5 +1,5 @@
 import { useRouter, useSearchParams } from "next/navigation"
-import { memo, useEffect, useState } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import { FiChevronLeft, FiX } from "react-icons/fi"
 import { HiLightBulb, HiSearch } from "react-icons/hi"
 import { useInView } from "react-intersection-observer"
@@ -7,6 +7,9 @@ import SearchPanel from "../searchPanel"
 import QuickFilter from "@/components/atoms/quickFilter"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import Link from "next/link"
+import { useCart } from "@/components/store/useCart"
+import bookmark from "@/assets/svg/bookmark.svg";
+import Image from "next/image"
 
 function Header({
 	hideBackBtn: _hideBackBtn,
@@ -27,7 +30,9 @@ function Header({
 	otherButtons?: JSX.Element
 	children?: JSX.Element
 }) {
+	//TODO : add the bookmark
 	const router = useRouter()
+	const cart = useCart((s) => s.cart)
 	const [state, setState] = useState({
 		showSearchBox: title ? false : true,
 	})
@@ -92,9 +97,8 @@ function Header({
 		<>
 			<div
 				ref={headerRef}
-				className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${
-					data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
-				} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
+				className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
+					} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
 				`}
 			>
 				{/* `relative` tag is required for search box */}
@@ -102,12 +106,11 @@ function Header({
 					{/* Back Button */}
 					<div className={`flex w-full ${skipReview ? "justify-between" : ""}`}>
 						<button
-							className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${
-								data.roundedHeader &&
+							className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${data.roundedHeader &&
 								((!state.showSearchBox && title) || !(!state.showSearchBox && title))
-									? "hidden"
-									: ""
-							}`}
+								? "hidden"
+								: ""
+								}`}
 							onClick={() => {
 								if (title) {
 									state.showSearchBox ? closeSearchBox() : _onBack()
@@ -138,15 +141,13 @@ function Header({
 								<CustomTag>
 									{typeof title === "function"
 										? title({
-												isRounded: data.roundedHeader,
-											})
+											isRounded: data.roundedHeader,
+										})
 										: title}
 								</CustomTag>
 							</div>
 						) : (
-							<>
-								<SearchPanel closeSearchBox={closeSearchBox} />
-							</>
+							<SearchPanel closeSearchBox={closeSearchBox} />
 						)}
 						{skipReview && (
 							<Link
@@ -159,14 +160,16 @@ function Header({
 					</div>
 
 					{!state.showSearchBox && otherButtons && otherButtons}
-
+					{/* <Image alt="bookmark" className="border-primary border rounded-[15px] text-primary" src={bookmark} width={50} height={30} />
+					{Object.keys(cart).length > 0 && (
+						<span >
+							{Object.keys(cart).length && Object.keys(cart).length}
+						</span>
+					)} */}
 					{showOtherButtons && (
 						<div className="flex flex-row ml-auto ">
 							{!state.showSearchBox && (
-								<div className="flex pl-2 ml-auto">
-									<div>
-										
-									</div>	
+								<div className="flex justify-around items-center pl-2 ml-auto">
 									<div className="mt-1 mr-2">
 										<QuickFilter />
 									</div>
@@ -174,7 +177,7 @@ function Header({
 										className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full"
 										onClick={openSearchBox}
 									>
-										<HiSearch className="text-lg text-primary" />
+										<HiSearch size={30} className="text-lg text-primary" />
 									</button>
 								</div>
 							)}

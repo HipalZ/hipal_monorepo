@@ -2,7 +2,7 @@ import axiosConstructor from "axios";
 
 // Function to determine the base URL based on the environment
 function getBaseURL(url: string): string {
-  const mode = process.env.ENV_MODE;
+  const mode = "development";
   let port;
   if (url.startsWith("/v1/businesses")) port = "8001";
   else if (url.startsWith("/v1/categories")) port = "8002";
@@ -16,7 +16,7 @@ function getBaseURL(url: string): string {
   if (mode === "development" && port) {
     return `http://localhost:${port}`;
   } else {
-    return "https://api.hipal.life";
+    return "https://dev.api.hipal.life";
   }
 }
 
