@@ -149,6 +149,14 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: Boolean,
       default: false,
     },
+    tags:{
+      type: [String],
+      default: [],
+    },
+    description: {
+      type: String,
+      default: '',
+    }
   },
   {
     timestamps: true,

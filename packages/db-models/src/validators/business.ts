@@ -37,6 +37,8 @@ export const BusinessSchema = z.object({
   gstPercentage: z.number().optional(),
   isPaymentIntegrated: z.boolean().optional(),
   withPopCorn: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+  description: z.string().optional(),
 });
 
 export type BusinessType = z.infer<typeof BusinessSchema>;
