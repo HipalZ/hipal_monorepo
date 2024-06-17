@@ -45,6 +45,8 @@ router.post(
       gstPercentage,
       isPaymentIntegrated,
       withPopCorn,
+      tags,
+      description
     } = req.body;
 
     let currentObject: any = req?.currentUser;
@@ -85,6 +87,8 @@ router.post(
       gstPercentage,
       isPaymentIntegrated,
       withPopCorn,
+      tags,
+      description
     });
     await business.save();
 
