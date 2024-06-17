@@ -100,12 +100,12 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         if (
             userDetails.phone === "NaN" ||
             Number(userDetails.phone) === 0 ||
-            data?.loyalty?._id === undefined
+            data?.loyalty?.loyaltyId === undefined
         )
             return
         const config = {
             method: "GET",
-            url: paths.getUserReward(Number(userDetails.phone), data?.loyalty?._id),
+            url: paths.getUserReward(Number(userDetails.phone), data?.loyalty?.loyaltyId),
         }
         try {
             const response = await axios(config)
@@ -124,12 +124,12 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         if (
             userDetails.phone === "NaN" ||
             Number(userDetails.phone) === 0 ||
-            data?.loyalty?._id === undefined
+            data?.loyalty?.loyaltyId === undefined
         )
             return
         const config2 = {
             method: "GET",
-            url: paths.getUserRewardHistory(Number(userDetails.phone), data?.loyalty?._id),
+            url: paths.getUserRewardHistory(Number(userDetails.phone), data?.loyalty?.loyaltyId),
         }
         try {
             const response = await axios(config2)
@@ -143,9 +143,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     }
 
     useQuery({
-        queryKey: ["userRewardHistory", Number(userDetails.phone), data?.loyalty?._id],
+        queryKey: ["userRewardHistory", Number(userDetails.phone), data?.loyalty?.loyaltyId],
         queryFn: getUserReward,
-        enabled: !!data?.loyalty?._id,
+        enabled: !!data?.loyalty?.loyaltyId,
     })
 
     const getLink = (loyaltyId: string) => {
@@ -179,7 +179,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             <BackButton onBackURL={gotoExplore()} />
                             <button
                                 type="button"
-                                onClick={() => getLink(data?.loyalty?._id)}
+                                onClick={() => getLink(data?.loyalty?.loyaltyId)}
                                 className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-2xl"
                             >
                                 Get History

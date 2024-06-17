@@ -3,7 +3,7 @@ import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
 import axios from '@/utils/axios'
 import Image from 'next/legacy/image'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
@@ -12,8 +12,11 @@ import dummy from '@/assets/img/OTC.png'
 import ReviewCoinz from '@/assets/img/review-coinz.png'
 import RewardTick from '@/assets/img/Rewarded-tick.png'
 import { useQuery } from '@tanstack/react-query'
+import { IBusinessData } from '@/components/types/businessData'
+import { updateTheme } from '@/components/utils/themes'
+import { toast } from 'react-toastify'
 
-export default memo(function Review({ data }: any) {
+export default memo(function Review({ data }: {data:IBusinessData}) {
 	const [improvements, setImprovements] = useState<string[]>([])
 	const [rating, setRating] = useState(null)
 	const [description, setDescription] = useState<string | ''>('')
@@ -23,7 +26,10 @@ export default memo(function Review({ data }: any) {
 	const router = useRouter()
 	const params = useParams();
 	const businessId = params?.businessId
-	// const { claim, total } = router.query
+	const searchParams = useSearchParams()
+ 
+  	const claim = searchParams?.get('claim')
+  	const orderId = searchParams?.get('orderId')
 
 	const userDetails = useLogin((s) => s.userDetails)
 
@@ -66,19 +72,23 @@ export default memo(function Review({ data }: any) {
 					businessId: businessId,
 					reviewerName: userDetails?.name,
 					reviewerPhone: `91${userDetails?.phone}`,
-					reviewRating: rating,
+					reviewRating: Number(rating),
 					description: description,
 					improvementAreas: improvements,
 					date: Date.now(),
+					order_id:orderId?.toString()
 				},
 			}
 
 			const res = await axios(config)
 			if (res.status === 201) {
+				toast.success('Thank You for Your Feedback')
 				router.push(`/r/${businessId}/explore`)
 			}
 		} catch (error) {
 			console.log(error)
+			toast.error('Review Already Submitted')
+			router.push(`/r/${businessId}/explore`)
 		}
 	}
 
@@ -130,6 +140,11 @@ export default memo(function Review({ data }: any) {
 			setShowSuggestions(false)
 		}
 	}
+
+	useEffect(()=>{
+		updateTheme(data?.settings?.themes)
+	},[data?.settings?.themes])
+
 	return (
 		<>
 			<div className='p-4 mb-[5rem] animate-fade-up animate-once '>
@@ -173,7 +188,7 @@ export default memo(function Review({ data }: any) {
 							</div>
 						</div>
 					</div>
-					{/* {Number(claim) > 0 && (
+					{Number(claim) > 0 && (
 						<section className='bg-[#fdf5d7] mt-[5rem] h-[7rem] rounded-3xl flex justify-between'>
 							<article className='space-y-4 px-6 py-4'>
 								<h6 className='inline-flex text-[#183d2e] text-lg'>
@@ -186,7 +201,7 @@ export default memo(function Review({ data }: any) {
 							<br />
 							<Image src={ReviewCoinz} alt='ReviewCoinz' />
 						</section>
-					)} */}
+					)}
 					<br />
 					<br />
 					<h1 className='flex justify-center items-center'>
@@ -239,7 +254,7 @@ export default memo(function Review({ data }: any) {
 											improvements.includes(suggestion)
 												? 'bg-primary text-base-100 font-medium'
 												: 'text-primary bg-base-200'
-										} inline-block truncate overflow-hidden px-5 py-2 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full`}
+										} inline-block truncate overflow-hidden px-3 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full text-base`}
 									>
 										<span>{suggestion}</span>
 									</div>
@@ -257,7 +272,7 @@ export default memo(function Review({ data }: any) {
 								value={description}
 								style={{ resize: 'none', position: 'relative', zIndex: 1 }}
 								id='floating_outlined'
-								className='h-36 block w-full pt-2 pb-3 pl-4 pr-[7rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border-gray-800 rounded-lg border dark:text-white focus:outline-none focus:ring-0 focus:border-[#EF522F] dark:border-gray-600 peer'
+								className='h-36 block w-full pt-2 pb-3 pl-4 pr-[7rem] mb-0 ml-0 mr-0 !text-primary bg-transparent border-gray-800 rounded-lg border dark:text-white focus:outline-none focus:ring-0 peer'
 								placeholder='Write a Review and @Tag the Staff Members here'
 								maxLength={600}
 							/>
@@ -267,12 +282,12 @@ export default memo(function Review({ data }: any) {
 									style={{ zIndex: 2 }}
 								>
 									{filteredStaff?.map((staff, index) => (
-										<>
+										<div key={staff?.name+index}>
 											{isPending && <div>Loading staff...</div>}
 											{error && <div>Error loading staff!</div>}
 											<li
 												key={staff?.name}
-												className={`p-2 cursor-pointer ${
+												className={`p-2 cursor-pointer text-blue-500 ${
 													cursor === index ? 'bg-gray-200' : 'bg-white'
 												}`}
 												onClick={() => {
@@ -283,7 +298,7 @@ export default memo(function Review({ data }: any) {
 											>
 												{staff?.name}
 											</li>
-										</>
+										</div>
 									))}
 								</ul>
 							)}

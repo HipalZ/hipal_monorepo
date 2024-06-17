@@ -6,7 +6,7 @@ import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
 import { MdCurrencyRupee, MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
 import { IBusinessData } from "@/components/types/businessData";
 import { useRouter } from "next/navigation";
@@ -14,31 +14,202 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/utils/axios";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import MiddlePopUp from "@/components/atoms/middlePopUp";
 import { SlCreditCard } from 'react-icons/sl'
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
+import usePayment from "@/components/store/usePayment";
+import Coinz from '@/assets/img/coinz.png'
+import { BsPatchPlusFill } from "react-icons/bs";
 
 type PageStates = 'INVOICE' | 'MODE'
 
 const Payment = ({ data }: { data: IBusinessData }) => {
-    const [claimedCoinz, setClaimedCoinz] = useState<number>(data?.loyalty?.setClaimAmount)
+
+    const [isTipActive, setIsTipActive] = useState<boolean>(false)
+    const [claimedCoinz, setClaimedCoinz] = useState<number>(0)
     const [tips, setTips] = useState(0);
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
     const [customTip, setCustomTip] = useState('');
     const [selectedMode, setSelectedMode] = useState<PageStates>('INVOICE')
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [openPopUp, setOpenPopUp] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
     const [userCoinz, setUserCoinz] = useState(0)
     const [amount, setAmount] = useState(0);
     const { userDetails } = useLogin()
     const router = useRouter()
+    const { setRazorPayPaymentId, razorPayOrderId, setRazorPayOrderId, setRazorPaySignature } =
+    usePayment()
 
-    // useEffect(() => {
-    //     setClaimedCoinz(data?.loyalty?.setClaimAmount || 0)
-    // }, [data?.loyalty?.setClaimAmount])
+	const creatingRazorPayOptions = async (total: number, orderId: string) => {
+		if (!orderId) {
+			return
+		}
+		const script = document.createElement('script')
+		script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+		script.async = true
+		document.body.appendChild(script)
+		const date = new Date()
+		const day = String(date.getDate()).padStart(2, '0')
+		const month = String(date.getMonth() + 1).padStart(2, '0')
+		const year = date.getFullYear()
+		const dayAndDate = `${day}-${month}-${year}`
+		const time = new Date().toLocaleTimeString('it-IT')
+		script.onload = () => {
+			const options = {
+				key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+				amount: total,
+				currency: 'INR',
+				name: 'PALTRIBE',
+				description: 'Test Transaction',
+				image: 'https://example.com/your_logo',
+				order_id: orderId,
+				handler: (response) => {
+					sendPaymentResponse(response)
+					setRazorPaySignature(response.razorpay_signature)
+					setRazorPayOrderId(response.razorpay_order_id)
+					setRazorPayPaymentId(response.razorpay_payment_id)
+				},
+				prefill: {
+					name: userDetails.name,
+					email: userDetails.email,
+					contact: userDetails.phone,
+				},
+				modal: {
+					subscription_card_change: true,
+					remember_customer: true,
+					ondismiss: () => {
+						setRazorPaySignature('')
+						setRazorPayOrderId('')
+						setRazorPayPaymentId('')
+						toast.error('Payment failed')
+					},
+				},
+				notes: {
+					address: 'Paltribe solutions',
+					businessId: data?.business?._id,
+					total: amount - claimedCoinz + tips,
+					claimedAmount: claimedCoinz,
+					tips: tips,
+					dayAndDate: dayAndDate,
+					indianTime: time.slice(0, 5),
+				},
+				theme: {
+					color: '#3399cc',
+				},
+			}
+			const rzp1 = new (window as any).Razorpay(options)
+			rzp1.open()
+			rzp1.on(
+				'payment.failed',
+				(response) => {
+					setRazorPayOrderId(response.error.metadata.order_id)
+				},
+				(error) => {
+					console.error(error)
+				},
+			)
+		}
+	}
 
+	// verification signature and user reward api
+	const sendPaymentResponse = async (response: any) => {
+		setIsLoading(true)
+		try {
+			const res = await axios.post('/v1/kitchens/validPayment', {
+				response,
+			})
+            console.log('validate pay res',res)
+            console.log('payment success',res.status)
+			if (res.status===200) {
+				await handleUserReward()
+                router.push(`/r/${data?.business?._id}/review?orderId=${res?.data?.data}`)
+				setRazorPaySignature('')
+				setRazorPayOrderId('')
+				setRazorPayPaymentId('')
+				toast.success('Payment successful')
+                //TODO: clear in pro hipal
+                    // setHiCode('')
+                    // setTableId('')
+                    // setTableName('')
+                    // setIsModalOpen(true)
+                    // setStatusCode(error.response.status)
+			} else {
+				toast.error('Payment failed')
+			}
+		} catch (error) {
+			console.log(error)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+    const handleUserReward = async () => {
+		try {
+			const isClaimed = claimedCoinz > 0 ? 'true' : 'false'
+			const rewardAmount =
+				(amount -
+					claimedCoinz + tips) *
+				(data?.loyalty?.setReward / 100)
+			const response = await axios.post(
+				`/v1/users/Reward?claim=${isClaimed}&settle=true&userSide=true`,
+				{
+					loyaltyId: data?.loyalty?.loyaltyId,
+					userPhone: userDetails?.phone,
+					userName: userDetails?.name,
+					claimedAmount: claimedCoinz,
+					rewards: rewardAmount,
+					total: amount - claimedCoinz + tips,
+					subTotal: amount,
+				},
+			)
+            console.log('reward response',response.data)
+			if (response.status === 200) {
+				toast.success('Reward claimed successfully')
+			}
+		} catch (err) {
+			console.log(err)
+		}
+	}
+
+    const clearTheTip = () =>{
+        setTips(0)
+        setSelectedTip('')
+        setCustomTip('')
+        setShowInput(false)
+        setIsTipActive(false)
+    }
+
+	const handleCreateOrder = async (total: number) => {
+		setIsLoading(true)
+		if (razorPayOrderId?.length) {
+			await creatingRazorPayOptions(total, razorPayOrderId)
+		} else {
+			try {
+				const config = {
+					method: 'POST',
+					url: '/v1/kitchens/createOrder',
+					data: {
+						businessId: data?.business?._id,
+						amount: total,
+						currency: 'INR',
+						name: userDetails.name,
+						phone: userDetails.phone,
+					},
+				}
+				const response = await axios(config)
+                console.log('cretae ordr response', response.data.data)
+				setRazorPayOrderId(response.data.data)
+				await creatingRazorPayOptions(total, response.data.data)
+			} catch (err) {
+				console.log('err', err)
+				alert('Something is wrong!! please try after sometime')
+				setRazorPayPaymentId('')
+				setRazorPaySignature('')
+			}
+		}
+		setIsLoading(false)
+	}
 
     const handleTipSelect = (tip) => {
         if (tip === 'Other') {
@@ -65,8 +236,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
 
-    const handleMode = (mode) => {
-        setSelectedMode(mode);
+    const handleMode = (mode:string) => {
+        setSelectedMode("MODE");
     };
     const handleUserCoinz = async () => {
         try {
@@ -114,6 +285,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleBack = () => {
+        if(selectedMode === 'MODE'){
+            return setSelectedMode('INVOICE')
+        }
         router.push(`${routePaths[PAGE_TYPES.CATEGORY](data?.business?._id || '')}`)
     }
 
@@ -127,10 +301,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 origin: { y: 0.6 },
             })
         }
-    }
-
-    const handlePayment = () =>{
-        console.log('trigger payment')
     }
 
     const renderPopUpContent = () => {
@@ -176,6 +346,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 <center className='absolute mt-2 ml-8 text-xl font-semibold left-1/3'>You Pay</center>
                 <br />
                 <br />
+            </section>
+            {selectedMode === "INVOICE" ?
+            <>
                 <article className='relative h-[10rem] flex flex-col items-center justify-center mx-4 mt-10 space-y-2 text-xl rounded-3xl bg-primary text-base-100'>
                     <div
                         style={{
@@ -206,9 +379,17 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         )}
                     </div>
                     <br />
-                    {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {amount - claimedCoinz}</h4> : null}
-                    <h4 className='line-through'>₹ {amount}</h4>
+                    {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {amount - claimedCoinz + tips}</h4> : null}
+                    <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {amount}</h4>
                 </article>
+                <div className='my-2'>
+                    <h6 className='flex px-4 py-1 m-auto text-sm rounded-lg w-fit bg-base-100 text-base-content'>
+                        <span className='text-[2rem]'>
+                            <Image src={celebration} alt='celebration' height={25} width={25} />
+                        </span>{' '}
+                        &nbsp;&nbsp;Special discount for Special members !!!
+                    </h6>
+                </div>
                 <center className="text-2xl">
                     Enter the Amount
                 </center>
@@ -218,19 +399,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     value={amount || ''}
                     placeholder='Enter amount'
                     maxLength={6}
-                    className='w-[95%] border border-[#000] pl-4 min-h-[3rem] font-semibold text-[1rem] rounded-[1rem] my-auto !py-2 mx-4 mt-4'
+                    className='w-[90%] border border-[#000] pl-4 min-h-[3rem] font-semibold text-[1rem] rounded-[1rem] my-auto !py-2 mx-4 mt-4'
                 />
-                <div className='my-2'>
-                    <h6 className='flex px-4 py-1 m-auto text-sm rounded-lg w-fit bg-base-100 text-base-content'>
-                        <span className='text-[2rem]'>
-                            <Image src={celebration} alt='celebration' height={25} width={25} />
-                        </span>{' '}
-                        &nbsp;&nbsp;Special discount for Special members !!!
-                    </h6>
-                </div>
                 <article
                     onClick={openModal}
-                    className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6'
+                    className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'
                 >
                     <div className='flex items-center'>
                         <IoMdCard size={30} className='-rotate-45 ' />
@@ -247,9 +420,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         <MdKeyboardArrowRight size={30} />
                     </div>
                 </article>
-            </section>
             <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
-                <h6 className="text-base mx-6 mt-4 mb-2">Bill Summary</h6>
+                <h6 className="text-base mx-6 mt-4">Bill Summary</h6>
                 <div className='relative mx-6 text-[1.25rem] text-base-content border border-primary py-4 rounded-2xl'>
                     <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-content leading-[1.25rem]'>
                         <h1>Total bill amount</h1>
@@ -267,14 +439,18 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     )}
                     <div className='mx-2 mt-2'>
                         <div className='flex justify-between m-2 text-sm capitalize text-base-content'>
-                            <h1 className='text-[1rem]'>Tips</h1>
+                            <div className="flex items-center">
+                                <span onClick={()=>setIsTipActive(true)}><BsPatchPlusFill size={22}/></span>
+                                <h1 className='text-[1rem] mx-2'>Tips </h1>
+                                {isTipActive ? <span onClick={clearTheTip} className="underline">(Clear Tip)</span> : null}
+                            </div>
                             <div className='flex'>
                                 <span className='text-base'>
                                     ₹ {tips || 0}
                                 </span>
                             </div>
                         </div>
-                        <div className='flex space-x-2 mx-2'>
+                        {isTipActive ? <div className='flex space-x-2 mx-2'>
                             {['10', '20', '50', 'Other'].map((tip, index) => (
                                 <button
                                     key={index}
@@ -284,7 +460,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                     {tip}
                                 </button>
                             ))}
-                        </div>
+                        </div> : null}
                         {selectedTip === 'Other' && showInput && (
                             <div className='relative mt-4'>
                                 <input
@@ -305,24 +481,33 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     </div>
                 </div>
             </div>
-            {/* <section className='mx-[1.5rem] mb-[1.5rem]'>
-                <h1 className='text-base font-semibold text-base-content'>Payment Modes</h1>
-                <br />
+            <BottomButton onClick={handleMode} themes={data?.settings?.themes}>
+                <div className={`${amount >0 ? '' : 'opacity-20 pointer-events-none'}`} >
+                    <span>Select Mode</span>
+                </div>
+            </BottomButton>
+            </>  : 
+            <>
+            <center>
+                <Image src={Coinz} alt="Coinz" width={200} height={200}/>
+            </center>
+            <section className='mx-[1.5rem] mb-[1.5rem]'>
+                <center className='text-lg font-semibold text-base-content'>Payment Modes</center>
+                <br/>
                 <article
                     onClick={() => handleMode('ONLINE')}
-                    className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} flex items-center justify-start py-4 space-x-6 border-2 hover:border-primary rounded-2xl`}
+                    className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} flex items-center justify-center py-4 space-x-2 border-2 hover:border-primary rounded-2xl`}
                 >
                     <input
                         type="radio"
                         name="paymentMode"
                         value="ONLINE"
-                        checked={selectedMode === 'ONLINE'}
                         onChange={() => handleMode('ONLINE')}
                         className='mx-4'
                         disabled={!data?.business?.isPaymentIntegrated}
                     />
                     <span className='rounded-full bg-base-200'>
-                        <SlCreditCard size={20} />
+                        <SlCreditCard size={30} />
                     </span>
                     <h1>
                         <span className='text-base font-semibold'>Pay Online</span>
@@ -333,13 +518,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 <br />
                 <article
                     onClick={() => handleMode('OFFLINE')}
-                    className='flex items-center justify-start py-4 space-x-6 border-2 hover:border-primary rounded-2xl'
+                    className='flex items-center justify-start py-4 space-x-6 rounded-2xl opacity-50 pointer-evens-none'
                 >
                     <input
                         type="radio"
                         name="paymentMode"
                         value="OFFLINE"
-                        checked={selectedMode === 'OFFLINE'}
+                        disabled={true}
                         onChange={() => handleMode('OFFLINE')}
                         className='mx-4'
                     />
@@ -352,17 +537,19 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         <span>Cash</span>
                     </h1>
                 </article>
-            </section> */}
-            <BottomButton themes={data?.settings?.themes}>
-                <div onClick={handlePayment} className='flex flex-row capitalize space-x-36'>
+            </section>
+            <BottomButton onClick={()=>handleCreateOrder(amount)}  themes={data?.settings?.themes}>
+                <div className='flex flex-row capitalize space-x-36'>
                     <div className='flex-col'>
-                        <div>₹ Total</div>
+                        <div>₹ {amount-claimedCoinz+tips} Total</div>
                     </div>
                     <div className='flex flex-row'>
-                        <span className='my-auto'>Proceed To Pay</span>
+                        <span className='my-auto'>Pay</span>
                     </div>
                 </div>
             </BottomButton>
+            </>
+            }
             {renderPopUpContent()}
             <footer
                 onKeyDown={navigateTermsAgreement}

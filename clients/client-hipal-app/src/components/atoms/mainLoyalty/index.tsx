@@ -24,11 +24,11 @@ interface ILoyaltyCard {
 	cardColor: string
 	fontColor: string
 	hiCode?: string
+	loyaltySetting: any
 }
 
-const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
+const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILoyaltyCard) => {
 	const [image, setImage] = useState<any>("")
-	const { loyaltySetting } = useLoyaltyData()
 	const [cardPattern, setCardPattern] = useState("")
 	const [logos, setLogos] = useState<string>("")
 	const userName = useLogin((s) => s.userDetails.name)
@@ -151,7 +151,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode }: ILoyaltyCard) => {
 				</div>
 			</div>
 			<div className="py-4 mx-6 text-sm text-center text-primary">
-				Get 5% cash back every time you Pay bill! It&#39;s our way of saying thanks for choosing us.
+				Get {loyaltySetting?.setReward}% cash back every time you Pay bill! It&#39;s our way of saying thanks for choosing us.
 				Simple savings, just for you!
 			</div>
 			{!hiCode && (

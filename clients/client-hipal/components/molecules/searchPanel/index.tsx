@@ -57,7 +57,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 			return []
 		}
 
-		return data.dishesData.filter((dish) => {
+		return data?.dishesData.filter((dish) => {
 			// Exclude dishes without categories
 			const hasCategory = dish.categories && dish.categories.length > 0
 			if (!hasCategory) {
@@ -148,6 +148,7 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 										<div onClick={() => setSearchOpen(!search)} className="mt-14 ">
 											<p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">{present.name}</p>
 											<p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">Category</p>
+											<p className="underline">View</p>
 										</div>
 										<div className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden ">
 											{!!present?.coverImage ? (
@@ -168,7 +169,6 @@ function SearchPanel({ closeSearchBox }: { closeSearchBox: () => void }) {
 											)}
 										</div>
 									</Link>
-
 									<hr className="mt-[5rem] opacity-25" />
 									<div className="">
 										{dishData?.map((dish, index) => (

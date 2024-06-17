@@ -35,7 +35,7 @@ export default function DishData({
 						<Dialog.Panel className="relative w-full max-w-md shadow-md bg-base-100 rounded-t-2xl">
 							<div
 								onClick={() => onClose()}
-								className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2"
+								className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-10 left-1/2"
 							>
 								<HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer " />
 							</div>

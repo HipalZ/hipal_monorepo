@@ -8,15 +8,15 @@ import { getRandomBlurImg } from "@/components/utils/images"
 import { routePaths } from "@/components/utils/routes"
 import Image from "next/legacy/image"
 import Link from "next/link"
-import { useRouter } from "next/router"
+import { useParams, useRouter } from "next/navigation"
 import { memo, useEffect, useMemo, useState } from "react"
 import PlaceholderImg from "../placeholder"
 
 function CartCard({ cartDish, showStatus }: { cartDish: ICartDish; showStatus?: boolean }) {
 	const { data } = useAllBusiness()
-	const router = useRouter()
 	const cart = useCart((s) => s.cart)
-	const { businessId } = router.query as { businessId: string }
+	const params = useParams();
+	const businessId = params?.businessId;
 	const [showAll, setShowAll] = useState(false)
 	const [datas, setDatas] = useState<any>([])
 	const dishData = useMemo(() => {

@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useCart } from "@/components/store/useCart"
 import bookmark from "@/assets/svg/bookmark.svg";
 import Image from "next/image"
+import { ICategory } from "@/components/types/businessData"
 
 function Header({
 	hideBackBtn: _hideBackBtn,
@@ -20,6 +21,8 @@ function Header({
 	showOtherButtons,
 	otherButtons,
 	children,
+	categories,
+	primaryColor,
 }: {
 	hideBackBtn?: boolean
 	onBack?: () => void
@@ -29,6 +32,8 @@ function Header({
 	showOtherButtons?: boolean
 	otherButtons?: JSX.Element
 	children?: JSX.Element
+	categories?:ICategory[]
+	primaryColor?: string
 }) {
 	//TODO : add the bookmark
 	const router = useRouter()
@@ -86,6 +91,7 @@ function Header({
 	useEffect(() => {
 		changeHeaderStyle()
 	}, [entry])
+	
 	useEffect(() => {
 		const pathArr = location.pathname.split("/")
 		const review = pathArr[pathArr.length - 1]
@@ -147,7 +153,7 @@ function Header({
 								</CustomTag>
 							</div>
 						) : (
-							<SearchPanel closeSearchBox={closeSearchBox} />
+							<SearchPanel closeSearchBox={closeSearchBox} categories={categories} primaryColor={primaryColor}/>
 						)}
 						{skipReview && (
 							<Link

@@ -29,7 +29,7 @@ const LoyaltyId = ({data}:{data:IBusinessData}) => {
 	}, [items, loyaltyId])
 
 	useEffect(() => {
-		if (data?.loyalty?._id) {
+		if (data?.loyalty?.loyaltyId) {
 			const patterns = (cardPattern, fontColor) => {
 				fontColor = fontColor
 				const src = {

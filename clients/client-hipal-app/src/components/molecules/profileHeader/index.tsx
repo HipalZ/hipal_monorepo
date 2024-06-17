@@ -1,11 +1,11 @@
 import Image from "next/image"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import HipalLogo from "@/assets/svg/Hipal_logo.svg"
 import { IoIosArrowBack } from "react-icons/io"
 
 function ProfileHeader() {
 	const router = useRouter()
-	const isBackAvailable = router.pathname !== "/"
+	const isBackAvailable = location.pathname !== "/"
 
 	const onBackClick = () => {
 		router.back()

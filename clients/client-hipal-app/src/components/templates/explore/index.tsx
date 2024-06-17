@@ -88,7 +88,7 @@ function Explore({ data }: { data: IBusinessData }) {
     }
 
     useEffect(() => {
-        if (data?.loyalty?._id) {
+        if (data?.loyalty?.loyaltyId) {
             openModal()
             setLoyaltySetting(data?.loyalty)
             findPattern(data?.loyalty?.cardPattern)
@@ -155,6 +155,7 @@ function Explore({ data }: { data: IBusinessData }) {
                         cardColor={loyaltySetting?.cardColor}
                         fontColor={loyaltySetting?.fontColor}
                         src={findPattern(loyaltySetting?.cardPattern) || beans(loyaltySetting?.fontColor)}
+                        loyaltySetting={data?.loyalty}
                     />
                 </DishData>
             )}

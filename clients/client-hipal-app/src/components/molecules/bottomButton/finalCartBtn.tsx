@@ -1,12 +1,12 @@
 import BottomButton from "@/components/molecules/bottomButton"
-import { useRouter } from "next/router"
 import { memo } from "react"
 import Link from "next/link"
 import { routePaths } from "@/components/utils/routes"
+import { useParams } from "next/navigation"
 
 function FinalCartBtn() {
-	const router = useRouter()
-	const { businessId } = router.query as { businessId: string }
+	const params = useParams()
+	const { businessId } = params as { businessId: string }
 	return (
 		<div>
 			<Link href={`${routePaths.category(businessId)}`} passHref>

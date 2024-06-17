@@ -20,7 +20,7 @@ function CategoryPageBtn() {
 	return (
 		<Link href={`${proceedToPayment()}`} passHref>
 			<BottomButton>
-				<div className="flex flex-row capitalize space-x-36">
+				<div className="flex flex-row capitalize space-x-28">
 					<div className="flex flex-row">
 						<span className="my-auto">Proceed to Pay</span>
 					</div>
