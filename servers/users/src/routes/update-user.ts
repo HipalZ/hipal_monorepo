@@ -1,4 +1,4 @@
-import { User } from '@hi/db-models';
+import { User, UserReward } from '@hi/db-models';
 import { UserAttrs } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
@@ -20,6 +20,39 @@ router.put(
     }
   },
 );
+
+router.put('/v1/users/:id/updateReward', async (req: Request, res: Response) => {
+  const { loyaltyId, user } = req.query;
+
+  if (!loyaltyId) {
+    return res.status(400).send({ message: 'Loyalty ID is required.' });
+  }
+
+  try {
+    // Find users with the specified loyaltyId
+    const users = await UserReward.find({ loyaltyId: loyaltyId });
+
+    if (user) {
+      return res.status(200).send(users);
+    }
+
+    // Update each user's phone number if it's 12 digits long
+    const updates = users.map(async (user) => {
+      if (user.userPhone.length === 12) {
+        user.userPhone = user.userPhone.substring(2); // Remove the first two digits
+        await user.save(); // Save the updated user
+      }
+    });
+
+    // Wait for all updates to complete
+    await Promise.all(updates);
+
+    res.status(200).send({ message: 'Users updated successfully.' });
+  } catch (error) {
+    console.error('Error updating users:', error);
+    res.status(500).send({ message: 'Internal server error.' });
+  }
+});
 
 router.put('/v1/users/:id/updateRole', async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
   // Conceptual script to illustrate the intended operation

@@ -7,9 +7,8 @@ router.get('/v1/settings', async (req: Request, res: Response) => {
   const { businessId } = req.query;
   const existingSettings = await Settings.find({
     businessId,
-  });
-
-  res.status(200).send(existingSettings);
+  }).populate('explore.popular');
+  return res.status(200).send(existingSettings);
 });
 
 router.get('/v1/settings/:id', async (req: Request, res: Response) => {

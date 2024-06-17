@@ -525,20 +525,26 @@ router.post(
     body: ReviewsSchema,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof ReviewsSchema>>, res: Response) => {
-    const { businessId, reviewerPhone, reviewRating } = req.body || {};
+    const { businessId, reviewerPhone, reviewRating, order_id } = req.body || {};
 
-    if (!businessId || !reviewerPhone || !reviewRating) {
-      return res.status(400).send('businesId, reviewerPhone, reviewRating is required');
+    if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
+      return res.status(400).send('businesId, reviewerPhone, reviewRating, order_id is required');
     }
 
     try {
+      const review = await Reviews.findOne({ order_id: order_id });
+
+      if (review) {
+        return res.status(400).send('Review already added');
+      }
+
       const addReview = await Reviews.create(req.body);
 
       if (!addReview) {
         return res.status(400).send('Review not  added');
       }
 
-      return res.status(201).send({ id: addReview.id });
+      return res.status(201).send({ id: addReview._id });
     } catch (error) {
       console.error('Error while processing the dues:', error);
       return res.status(500).json({ error: 'Internal server error' });

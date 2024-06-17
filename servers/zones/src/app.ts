@@ -5,7 +5,7 @@ import 'express-async-errors'; // Do not remove, it deals with async errors in e
 
 import morgan from 'morgan';
 // Routes
-import { authTokenValidator, errorHandler } from '@hi/common';
+import { errorHandler } from '@hi/common';
 import { createZoneRouter } from './routes/create-zone';
 import { deleteZonesRouter } from './routes/delete-zone';
 import { readZonesRouter } from './routes/read-zone';
@@ -65,7 +65,7 @@ app.use(
     sameSite: 'none',
   }),
 );
-app.use(authTokenValidator);
+// app.use(authTokenValidator);
 
 // Register routes
 app.use(createZoneRouter);

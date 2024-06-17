@@ -40,7 +40,7 @@ const exploreSchema = new mongoose.Schema<ExploreType>({
   openFrom: { type: String },
   openTill: { type: String },
   specialOffers: { type: [specialOfferSchema] },
-  popular: { type: [ObjectId], ref: 'dish' },
+  popular: { type: [ObjectId], ref: 'Dish' },
   highlights: { type: [highlightSchema] },
 });
 

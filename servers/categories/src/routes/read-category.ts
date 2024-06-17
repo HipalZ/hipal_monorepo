@@ -10,21 +10,16 @@ router.get(
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId, queryCategories } = req.query;
-    const query = { businessId, queryCategories };
-    let existingCategories;
+    const query = { businessId };
 
-    if (queryCategories) {
-      existingCategories = await Category.find(query)
-        .select('name hierarchy  parentCategory parentCategoryId businessId id availability visibility')
-        .populate('dishes');
-      return res.status(200).send(existingCategories);
-    }
-
-    existingCategories = await Category.find({
-      businessId,
+    const existingCategories = await Category.find(query).populate({
+      path: 'dishes', // Populate dishes
+      populate: {
+        path: 'extras', // Within each dish, populate extras
+      },
     });
 
-    res.status(200).send(existingCategories);
+    return res.status(200).send(existingCategories);
   },
 );
 

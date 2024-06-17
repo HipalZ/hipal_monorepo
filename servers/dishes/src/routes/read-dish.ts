@@ -13,7 +13,7 @@ router.get(
     const query = { businessId, queryDish };
     let existingDishes: any;
     if (queryDish) {
-      existingDishes = await Dish.find(query).select('businessId name id availability visibility dishType kitchenId').populate('categories');
+      existingDishes = await Dish.find(query).select('businessId name id availability visibility dishType kitchenId').populate('categories extras');
       return res.status(200).send(existingDishes);
     }
     existingDishes = await Dish.find({

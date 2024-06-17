@@ -24,6 +24,10 @@ const paymentItemSchema = new mongoose.Schema<PaymentItemType>(
       required: false,
       type: Object,
     },
+    category: {
+      required: false,
+      type: String,
+    },
     comments: {
       required: false,
       type: String,

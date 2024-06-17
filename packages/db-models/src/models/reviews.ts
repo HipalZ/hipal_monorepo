@@ -31,6 +31,10 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     date: {
       required: true,
       type: Number,
+      default: Date.now(),
+    },
+    order_id: {
+      type: String,
     },
   },
   {

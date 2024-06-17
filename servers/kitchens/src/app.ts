@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
-import { authTokenValidator, errorHandler } from '@hi/common';
+import { errorHandler } from '@hi/common';
 import { idempotent } from './middlewares/idempotent';
 import { createKitchenRouter } from './routes/create-kitchen';
 import { readKitchenRouter } from './routes/read-kitchen';
@@ -66,7 +66,7 @@ app.use(
 
 app.use(idempotent);
 app.use(errorHandler);
-app.use(authTokenValidator);
+// app.use(authTokenValidator);
 // Register routes
 app.use(createKitchenRouter);
 app.use(readKitchenRouter);

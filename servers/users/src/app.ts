@@ -77,7 +77,7 @@ const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFu
   next();
 };
 
-app.use(conditionalAuthTokenValidator);
+// app.use(conditionalAuthTokenValidator);
 // Register routes
 app.use(createUserRouter);
 app.use(readUserRouter);

@@ -133,9 +133,9 @@ const addSignUpBonus = async (
 
 router.post(
   '/v1/users/:id/signUp',
-  validateRequest({
-    body: UserAttrs,
-  }),
+  // validateRequest({
+  //   body: UserAttrs,
+  // }),
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
 
@@ -159,7 +159,7 @@ router.post(
       // }
 
       if (existingUser) {
-        return res.status(400).send(existingUser);
+        return res.status(409).send(existingUser);
       }
       const user = await User.create(req.body);
 

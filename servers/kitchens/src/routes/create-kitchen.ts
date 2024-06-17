@@ -1,8 +1,8 @@
-import express, { Request, Response } from 'express';
-import { validateRequest } from 'zod-express-middleware';
-import { Kitchen, Kot, Kotpassword, Printer, Table, Tempmodel, Waiterkot } from '@hi/db-models';
+import { Alert, Kitchen, Kot, Kotpassword, Payment, Printer, Table, Tempmodel, Waiterkot } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
+import express, { Request, Response } from 'express';
 import { ClientSession } from 'mongoose';
+import { validateRequest } from 'zod-express-middleware';
 
 import axios from 'axios';
 import moment = require('moment');
@@ -11,12 +11,21 @@ import { razorpayWrapper } from '../razorpay-wrapper';
 
 const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
-import { KOTAttrs, KOTType, KitchenAttrs } from '@hi/db-models/src/validators';
+import {
+  KOTAttrs,
+  KOTType,
+  KitchenAttrs,
+  PaymentItemType,
+  RazorpayWebhookBodySchema,
+  RazorpayWebhookHeadersSchema,
+  orderSchema,
+  validatePaymentSchema,
+} from '@hi/db-models/src/validators';
 import { createHmac } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
 const router = express.Router();
-
 const currentTime = new Date();
 const options = {
   timeZone: 'Asia/Kolkata',
@@ -50,7 +59,7 @@ router.post(
   validateRequest({
     body: KOTAttrs,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof KOTAttrs>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof KOTAttrs>>, res: Response) => {
     try {
       const { zoneId, tableId } = req.body || {};
 
@@ -89,7 +98,7 @@ router.post(
   validateRequest({
     body: KitchenAttrs,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof KitchenAttrs>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof KitchenAttrs>>, res: Response) => {
     const { businessId, kitchenName, description, staff } = req.body;
 
     const kitchen = await Kitchen.create({
@@ -1103,273 +1112,204 @@ router.post(
 
 router.post(
   '/v1/kitchens/createOrder',
+  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+  validateRequest({
+    body: orderSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof orderSchema>>, res: Response) => {
+    const { amount, currency } = req.body || {};
 
-  // requireAuthorization([
-  //   ClientRoles.HIPAL_CUSTOMER,
-  //   ClientRoles.RESTAURANT_OWNER,
-  // ]),
+    const uniqueOrderId = uuidv4();
+    const response = await razorpayWrapper.client.orders.create({
+      amount: amount * 100,
+      currency: currency,
+      receipt: uniqueOrderId,
+    });
 
-  async (req: Request, res: Response) => {
-    const { total, currency, name, phone, businessId } = req.body || {};
-
-    try {
-      const response = await razorpayWrapper.client.orders.create({
-        amount: total * 100,
-        currency: currency,
-        receipt: 'receipt#1',
-        notes: {
-          name: name,
-          phone: phone,
-          businessId: businessId,
-        },
-      });
-
-      res.status(200).send(response.id);
-    } catch (error: any) {
-      console.log('erro', error.error);
-      res.status(400).send(error);
-    }
+    res.status(200).send({ err: false, message: 'Order created successfully', data: response.id });
   },
 );
 
 router.post(
   '/v1/kitchens/validPayment',
+  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
 
-  // requireAuthorization([
-  //   ClientRoles.HIPAL_CUSTOMER,
-  //   ClientRoles.RESTAURANT_OWNER,
-  // ]),
-
-  async (req: Request, res: Response) => {
+  validateRequest({
+    body: validatePaymentSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof validatePaymentSchema>>, res: Response) => {
     const { response } = req.body || {};
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
-    try {
-      const signature = createHmac('sha256', process.env.RAZORPAY_SECRET as string)
-        .update(razorpay_order_id + '|' + razorpay_payment_id)
-        .digest('hex');
 
-      if (signature === razorpay_signature) {
-        res.status(200).send({ status: true });
-      } else {
-        res.status(200).send({ status: false });
-      }
-    } catch (error) {
-      console.log('error', error);
-      res.status(400).send({
-        status: false,
-        message: 'Invalid Signature',
-      });
-    }
+    const signature = createHmac('sha256', process.env.RAZORPAY_SECRET as string)
+      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .digest('hex');
 
-    try {
-    } catch (error) {
-      console.log('error', error);
-      res.status(400).send({
-        status: false,
-        message: 'Invalid Signature',
-      });
+    if (signature === razorpay_signature) {
+      return res.status(200).send({ err: false, message: 'Payment is valid', data: razorpay_order_id });
+    } else {
+      return res.status(400).send({ err: true, message: 'Payment is not valid' });
     }
   },
 );
 
-// router.post(
-//   "/v1/kitchens/razorpay-webhook",
-//   async (req: Request, res: Response) => {
-//     const { event, payload } = req.body;
-//     try {
-//       return runInTransaction(async (session: ClientSession) => {
-//         const razorpaySignature = req.headers["x-razorpay-signature"];
-//         const razorpayEventId = req.headers["x-razorpay-event-id"];
+router.post('/v1/kitchens/razorpay-webhook', async (req: Request, res: Response) => {
+  await runInTransaction(async (session: ClientSession) => {
+    const headersResult = RazorpayWebhookHeadersSchema.safeParse(req.headers);
+    if (!headersResult.success) {
+      throw new Error('Invalid headers');
+    }
+    const { 'x-razorpay-signature': razorpaySignature, 'x-razorpay-event-id': razorpayEventId } = headersResult.data;
 
-//         const isSignatureValid = validateWebhookSignature(
-//           JSON.stringify(req.body),
-//           razorpaySignature,
-//           process.env.RAZORPAY_WEBHOOK_SECRET as string
-//         );
+    const isSignatureValid = validateWebhookSignature(JSON.stringify(req.body), razorpaySignature, process.env.RAZORPAY_WEBHOOK_SECRET as string);
+    if (!isSignatureValid) {
+      console.log('Invalid signature');
+      throw new Error('Invalid signature');
+    }
 
-//         if (isSignatureValid) {
-//           if (event === "payment.captured") {
-//             //create alert for payment captured
-//             const saveAlert = new Alert({
-//               businessId: payload.payment.entity.notes.businessId,
-//               tableName: payload.payment.entity.notes.tableName,
-//               tableId: payload.payment.entity.notes.tableId,
-//               zoneId: payload.payment.entity.notes.zoneId,
-//               staffId: payload.payment.entity.notes.staffId,
-//               status: "PAID_BY_ONLINE",
-//               time: payload.payment.entity.created_at,
-//               message: `Paid ${payload.payment.entity.notes.total}`,
-//               razorpayPaymentId: payload.payment.entity.id,
-//               razorpayOrderId: payload.payment.entity.order_id,
-//               razorpayAcquirerData: payload.payment.entity.acquirer_data,
-//               mode: payload.payment.entity.method,
-//               razorpayEventId: razorpayEventId,
-//             });
-//             await saveAlert.save();
-//             const tableId = payload.payment.entity.notes.tableId;
+    const bodyResult = RazorpayWebhookBodySchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      throw new Error('Invalid body');
+    }
+    const { event, payload } = bodyResult.data;
 
-//             const created: any = [];
-//             // update all the KOTs to PAID
-//             const kots = await Kot.find(
-//               {
-//                 tableId,
-//                 status: "UNPAID",
-//               },
-//               { session }
-//             );
-//             for (const kotId of kots) {
-//               const updatedKOT = await Kot.findByIdAndUpdate(
-//                 kotId,
-//                 { status: "PAID", cookedAt: Date.now() },
-//                 { session }
-//               );
-//               if (updatedKOT?.isDeleted === false) {
-//                 created.push(updatedKOT);
-//               }
-//             }
+    if (event === 'payment.captured') {
+      // create alert for payment captured
+      await Alert.create(
+        {
+          businessId: payload.payment.entity.notes.businessId,
+          tableName: payload.payment.entity.notes.tableName,
+          tableId: payload.payment.entity.notes.tableId,
+          zoneId: payload.payment.entity.notes.zoneId,
+          staffId: payload.payment.entity.notes.staffId,
+          status: 'PAID_BY_ONLINE',
+          time: payload.payment.entity.created_at,
+          message: `Paid ${payload.payment.entity.notes.total}`,
+          razorpayPaymentId: payload.payment.entity.id,
+          razorpayOrderId: payload.payment.entity.order_id,
+          razorpayAcquirerData: payload.payment.entity.acquirer_data,
+          mode: payload.payment.entity.method,
+          razorpayEventId: razorpayEventId,
+        },
+        { session },
+      );
 
-//             /**
-//              * Represents an array of transformed kitchen items.
-//              * Each item contains information about the dish, quantity, amount, category, portions, extras, and comments.
-//              */
-//             const items = created.map((kot: any) => {
-//               const newobj: any = {
-//                 name: kot.dish?.name,
-//                 quantity: kot.dish?.qty || kot.dish?.quantity,
-//                 amount: kot.dish?.price,
-//                 category: kot.category,
-//                 portions: kot.dish?.portions,
-//                 extras: kot.dish?.extras,
-//                 comments: "spicy",
-//               };
+      const tableId = payload.payment.entity.notes.tableId;
 
-//               let price = 0;
-//               if (newobj.portions) {
-//                 price =
-//                   parseInt(newobj.portions.price) *
-//                   (newobj.quantity || newobj.qty);
-//               } else {
-//                 price = newobj.amount || 0;
-//               }
+      await Kot.updateMany({ tableId, status: 'UNPAID' }, { status: 'PAID', cookedAt: Date.now() }, { session });
 
-//               let extrasPrice = 0;
-//               if (newobj.extras?.length > 0) {
-//                 for (const extra of newobj.extras) {
-//                   extrasPrice +=
-//                     parseInt(extra.price || 0) * (extra.quantity || extra.qty);
-//                 }
-//               }
+      const updatedKOTs = await Kot.find({ tableId, status: 'PAID', isDeleted: false }, null, { session });
 
-//               newobj.amount = price + extrasPrice || 0;
+      const created: KOTType[] = updatedKOTs.map((kot) => kot.toObject());
 
-//               return newobj;
-//             });
-//             // delete hicode,claimedAmount, tips, discount from PaidKot (temp model)
-//             await Tempmodel.deleteMany(
-//               {
-//                 $or: [
-//                   { hiCode: payload.payment.entity.notes.hiCode },
-//                   { tableId: tableId },
-//                   { claimedTableId: tableId },
-//                   { tipsTableId: tableId },
-//                   { discountTableId: tableId },
-//                 ],
-//               },
-//               { session }
-//             );
-//             // save current tableId hiCode for validate place order from userSide
-//             await Tempmodel.create(
-//               {
-//                 hiCode: payload.payment.entity.notes.hiCode,
-//               },
-//               { session }
-//             );
+      const items = created.map((kot: any) => {
+        const newobj: PaymentItemType = {
+          name: kot.dish?.name,
+          quantity: kot.dish?.qty || kot.dish?.quantity,
+          amount: kot.dish?.price,
+          category: kot.category,
+          portions: kot.dish?.portions,
+          extras: kot.dish?.extras,
+          comments: 'spicy',
+        };
 
-//             // save payment Object in payment collection
-//             const paymentConfig = await Payment.create(
-//               {
-//                 businessId: payload.payment.entity.notes.businessId,
-//                 items: items,
-//                 subTotal: Number(payload.payment.entity.notes.subTotal),
-//                 sgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
-//                 cgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
-//                 total: payload.payment.entity.notes.total,
-//                 paymentMode: payload.payment.entity.method,
-//                 paymentDate: payload.payment.entity.notes.dayAndDate,
-//                 mode: payload.payment.entity.method,
-//                 customerName: payload.payment.entity.notes.name,
-//                 customerPhone: payload.payment.entity.notes.phone,
-//                 discount: payload.payment.entity.notes.discount,
-//                 zoneId: payload.payment.entity.notes.zoneId,
-//                 tableId: payload.payment.entity.notes.tableId,
-//                 time: payload.payment.entity.notes.indianTime,
-//                 tableName: payload.payment.entity.notes.tableName,
-//                 claimedAmount: payload.payment.entity.notes.claimedAmount,
-//                 serviceCharge: payload.payment.entity.notes.serviceCharge,
-//                 tips: payload.payment.entity.notes.tips,
-//                 zoneType: "Dine In",
-//                 razorpayPaymentId: payload.payment.entity.id,
-//                 razorpayOrderId: payload.payment.entity.order_id,
-//                 razorpayAcquirerData: payload.payment.entity.acquirer_data,
-//                 razorpayEventId: razorpayEventId,
-//               },
-//               { session }
-//             );
+        let price = 0;
+        if (newobj.portions) {
+          price = parseInt(newobj.portions.price) * (newobj.quantity || 1);
+        } else {
+          price = newobj.amount || 0;
+        }
 
-//             const updateConfig = {
-//               status: "Empty",
-//               activeUser: 0,
-//               time: "",
-//               totalDishQuantity: 0,
-//               deliverdDish: 0,
-//               role: null,
-//               hiCode: "",
-//               mergedBy: "",
-//               reservedBy: "",
-//             };
-//             await Table.findByIdAndUpdate(
-//               payload.payment.entity.notes.tableId,
-//               updateConfig,
-//               { session }
-//             );
+        let extrasPrice = 0;
+        if (newobj.extras?.length > 0) {
+          for (const extra of newobj.extras) {
+            extrasPrice += parseInt(extra.price || 0) * (extra.quantity || extra.qty);
+          }
+        }
 
-//             return res.status(200).send({ status: true, data: "payment " });
-//           }
-//           if (event === "payment.failed") {
-//             // create alert for payment failed
-//             const saveAlert = new Alert(
-//               {
-//                 businessId: payload.payment.entity.notes.businessId,
-//                 tableName: payload.payment.entity.notes.tableName,
-//                 tableId: payload.payment.entity.notes.tableId,
-//                 zoneId: payload.payment.entity.notes.zoneId,
-//                 staffId: payload.payment.entity.notes.staffId,
-//                 status: "FAIL",
-//                 time: payload.payment.entity.created_at,
-//                 message: `FAIL ${payload.payment.entity.notes.total}`,
-//                 razorpayPaymentId: payload.payment.entity.id || "",
-//                 razorpayOrderId: payload.payment.entity.order_id || "",
-//                 razorpayAcquirerData:
-//                   payload.payment.entity.acquirer_data || "",
-//                 mode: payload.payment.entity.method,
-//                 razorpayEventId: razorpayEventId || "",
-//               },
-//               { session }
-//             );
-//             await saveAlert.save();
+        newobj.amount = price + extrasPrice || 0;
 
-//             return res.status(200).send({ status: false, data: payload });
-//           }
-//         } else {
-//           console.log("Invalid signature");
-//           return res.status(200).send("Invalid signature");
-//         }
-//       });
-//     } catch (error) {
-//       console.log("error", error);
-//       res.status(500).send(error);
-//     }
-//   }
-// );
+        return newobj;
+      });
+
+      await Tempmodel.deleteOne(
+        {
+          tableId: tableId,
+        },
+        { session },
+      );
+
+      await Tempmodel.findOneAndUpdate({ tableId }, { $set: { hiCode: payload.payment.entity.notes.hiCode } }, { upsert: true, session });
+
+      // save payment Object in payment collection
+      await Payment.create(
+        {
+          businessId: payload.payment.entity.notes.businessId,
+          items: items,
+          subTotal: Number(payload.payment.entity.notes.subTotal),
+          sgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
+          cgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2),
+          total: payload.payment.entity.notes.total,
+          paymentMode: payload.payment.entity.method,
+          paymentDate: payload.payment.entity.notes.dayAndDate,
+          mode: payload.payment.entity.method,
+          customerName: payload.payment.entity.notes.name,
+          customerPhone: payload.payment.entity.notes.phone,
+          discount: payload.payment.entity.notes.discount,
+          zoneId: payload.payment.entity.notes.zoneId,
+          tableId: payload.payment.entity.notes.tableId,
+          time: payload.payment.entity.notes.indianTime,
+          tableName: payload.payment.entity.notes.tableName,
+          claimedAmount: payload.payment.entity.notes.claimedAmount,
+          serviceCharge: payload.payment.entity.notes.serviceCharge,
+          tips: payload.payment.entity.notes.tips,
+          zoneType: 'Dine In',
+          razorpayPaymentId: payload.payment.entity.id,
+          razorpayOrderId: payload.payment.entity.order_id,
+          razorpayAcquirerData: payload.payment.entity.acquirer_data,
+          razorpayEventId: razorpayEventId,
+        },
+        { session },
+      );
+
+      const updateConfig = {
+        status: 'Empty',
+        activeUser: 0,
+        time: '',
+        totalDishQuantity: 0,
+        deliveredDish: 0,
+        role: null,
+        hiCode: '',
+        mergedBy: '',
+        reservedBy: '',
+      };
+      await Table.findByIdAndUpdate(tableId, updateConfig, { session });
+    }
+
+    if (event === 'payment.failed') {
+      // create alert for payment failed
+      await Alert.create(
+        {
+          businessId: payload.payment.entity.notes.businessId,
+          tableName: payload.payment.entity.notes.tableName,
+          tableId: payload.payment.entity.notes.tableId,
+          zoneId: payload.payment.entity.notes.zoneId,
+          staffId: payload.payment.entity.notes.staffId,
+          status: 'FAIL',
+          time: payload.payment.entity.created_at,
+          message: `FAIL ${payload.payment.entity.notes.total}`,
+          razorpayPaymentId: payload.payment.entity.id || '',
+          razorpayOrderId: payload.payment.entity.order_id || '',
+          razorpayAcquirerData: payload.payment.entity.acquirer_data || '',
+          mode: payload.payment.entity.method,
+          razorpayEventId: razorpayEventId || '',
+        },
+        { session },
+      );
+    }
+  });
+
+  return res.status(200).send({ err: false, message: 'Webhook processed successfully', data: 'Webhook processed successfully' });
+});
 
 export { router as createKitchenRouter };

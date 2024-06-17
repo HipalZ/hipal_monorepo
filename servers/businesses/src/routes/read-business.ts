@@ -24,27 +24,28 @@ router.get(
   },
 );
 
-router.get(
-  '/v1/businesses/:id',
-  // validateRequest({
-  //   body: BusinessSchema,
-  // }),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { customLink } = req.query;
-    if (customLink) {
-      const existingBusiness = await Business.findOne({ customLink: id });
-      res.send({
-        exists: !!existingBusiness,
-      });
-      return;
-    }
-    const existingBusiness = await Business.findById(id);
+router.get('/v1/businesses/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { customLink, nameLogo } = req.query;
 
-    res.status(200).send(existingBusiness);
-  },
-);
+  if (customLink) {
+    const existingBusiness = await Business.findOne({ customLink: id });
+    res.send({
+      exists: !!existingBusiness,
+    });
+    return;
+  }
 
+  let existingBusiness;
+
+  if (nameLogo) {
+    existingBusiness = await Business.findById(id).select('logo businessName');
+  } else {
+    existingBusiness = await Business.findById(id);
+  }
+
+  res.status(200).send(existingBusiness);
+});
 router.get(
   '/v1/businesses/get/Single/:businessId',
   // validateRequest({

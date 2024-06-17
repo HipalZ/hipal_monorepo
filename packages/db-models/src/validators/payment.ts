@@ -7,6 +7,7 @@ export const Item = z.object({
   portions: z.any(),
   extras: z.any(),
   comments: z.string(),
+  category: z.string(),
 });
 
 export const SwiggyBillObj = z.object({
