@@ -40,7 +40,7 @@ const AddExtras = ({
   return (
     <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
       <div className="max-h-[85vh] overflow-y-auto px-6 py-5">
-        <h1 className="mb-2 text-2xl text-[#2B354D]">Add Addons</h1>
+        <h1 className="mb-2 text-2xl text-[#000000]">Add Addons</h1>
         <SearchPanel />
         {searchText === ''
           ? Data?.map((eachData) => (
@@ -48,7 +48,7 @@ const AddExtras = ({
                 key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  extras.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  extras.some((item) => item._id === eachData._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
@@ -62,7 +62,7 @@ const AddExtras = ({
                 key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  extras.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  extras.some((item) => item._id === eachData._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
@@ -75,14 +75,14 @@ const AddExtras = ({
           <button
             type="button"
             onClick={closeAddOnPopUp}
-            className="border-1 on_active_bounce mr-2 w-full rounded-md border border-[#2B354D] bg-white py-2.5 text-[#2B354D]"
+            className="border-1 on_active_bounce mr-2 w-full rounded-md border border-[#000000] bg-white py-2.5 text-[#000000]"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={() => handleData(extras)}
-            className={`${extras?.length > 0 ? '' : 'pointer-events-none opacity-50'} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+            className={`${extras?.length > 0 ? '' : 'pointer-events-none opacity-50'} on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white`}
           >
             Add
           </button>

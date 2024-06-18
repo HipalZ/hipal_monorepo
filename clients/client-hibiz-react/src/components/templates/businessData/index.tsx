@@ -1,354 +1,127 @@
-import Carousal from '@/assets/svg/carousalImage.svg';
-import HipeopleLogo from '@/assets/svg/hiBizlogo.svg';
-import Carousel from '@/components/atom/carousel';
-import Header from '@/components/molecules/header';
-import useBusinessData from '@/components/store/useBusinessData';
-import { useOwnerLogin, type User } from '@/components/store/useOwnerLogin';
-import { useSelectedIcon } from '@/components/store/useSelectedIcon';
-import type React from 'react';
-import { memo, startTransition, useEffect } from 'react';
-import { AiFillHeart } from 'react-icons/ai';
-import { BsChevronLeft, BsCurrencyRupee, BsFillPersonFill } from 'react-icons/bs';
-import { FaUser } from 'react-icons/fa';
-import { GiCampCookingPot } from 'react-icons/gi';
-import { GoGraph } from 'react-icons/go';
-import { IoReceiptOutline } from 'react-icons/io5';
-import { LuConciergeBell, LuSettings } from 'react-icons/lu';
-import { MdCardMembership, MdReviews } from 'react-icons/md';
-import { PiBookOpenText } from 'react-icons/pi';
-import { SiSwiggy, SiZomato } from 'react-icons/si';
-import { TbReportAnalytics } from 'react-icons/tb';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-
-const images = [Carousal, Carousal];
-
-interface ICardButton {
-  Icon: React.ElementType;
-  text: string;
-  class: {
-    background: string;
-    text: string;
-    font: string;
-    bg: string;
-    color: string;
-    opacity?: string;
-  };
-  visible: boolean;
-}
-
-const cardButtons: ICardButton[] = [
-  {
-    Icon: BsCurrencyRupee,
-    text: 'Sales',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2F80ED]/10',
-      color: 'text-[#2F80ED]',
-    },
-    visible: true,
-  },
-  {
-    Icon: AiFillHeart,
-    text: 'Loyalty',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: IoReceiptOutline,
-    text: 'Items',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: BsFillPersonFill,
-    text: 'Staff',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#7879F1]/10',
-      color: 'text-[#7879F1]',
-    },
-    visible: true,
-  },
-  {
-    Icon: GoGraph,
-    text: 'Analytics',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#7879F1]/10',
-      color: 'text-[#7879F1]',
-    },
-    visible: true,
-  },
-  {
-    Icon: TbReportAnalytics,
-    text: 'Reports',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: MdCardMembership,
-    text: 'Taxes and charges',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#FEA844]/10',
-      color: 'text-[#FEA844]',
-    },
-    visible: true,
-  },
-
-  {
-    Icon: LuSettings,
-    text: 'Settings',
-    class: {
-      text: 'text-xl',
-
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: SiSwiggy,
-    text: 'Swiggy',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#fc8019]/10',
-      color: 'text-[#fc8019]',
-    },
-    visible: false,
-  },
-  {
-    Icon: SiZomato,
-    text: 'Zomato',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-5xl',
-      bg: 'bg-[#cb202d]/10',
-      color: 'text-[#cb202d]',
-    },
-    visible: false,
-  },
-  {
-    Icon: LuConciergeBell,
-    text: 'Dine-In',
-    class: {
-      text: 'text-xl',
-      background: 'bg-zinc-300',
-      font: 'text-4xl',
-      bg: 'bg-[#F2994A]/10',
-      color: 'text-[#F2994A]',
-      opacity: 'opacity-50',
-    },
-    visible: false,
-  },
-  {
-    Icon: GiCampCookingPot,
-    text: 'Kitchen',
-    class: {
-      text: 'text-xl',
-      background: 'bg-zinc-300',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-      opacity: 'opacity-50',
-    },
-    visible: false,
-  },
-  {
-    Icon: PiBookOpenText,
-    text: 'Zones And Tables',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: TbReportAnalytics,
-    text: 'Kitchen',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: FaUser,
-    text: 'Customerz',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#F2994A]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-  {
-    Icon: MdReviews,
-    text: 'Reviewz',
-    class: {
-      text: 'text-xl',
-      background: 'bg-white',
-      font: 'text-4xl',
-      bg: 'bg-[#2B354D]/10',
-      color: 'text-[#2B354D]',
-    },
-    visible: true,
-  },
-];
-interface AccessControlMapping {
-  [key: string]: string;
-}
+import HipeopleLogo from "@/assets/hibizNewLogo.png";
+import Header from "@/components/molecules/header";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useOwnerLogin } from "@/components/store/useOwnerLogin";
+import { useSelectedIcon } from "@/components/store/useSelectedIcon";
+import {
+	cardButtons,
+	getUpdatedCardButtons,
+} from "@/components/types/businessId";
+import { memo, startTransition, useCallback, useEffect, useMemo } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import Stairs from "@/assets/Stairs.png";
 
 const BusinessData = memo(() => {
-  const { setSelectedIcon } = useSelectedIcon();
-  const location = useLocation();
-  const user = useOwnerLogin((s) => s.user);
-  const navigate = useNavigate();
-  const { businessId } = useParams<{ businessId: string }>();
-  const businessData = useBusinessData((s) => s.businessData);
-  const accessControlMapping: AccessControlMapping = {
-    dish: 'Items',
-    staff: 'Staff',
-    loyalty: 'Loyalty',
-    sale: 'Sales',
-    reports: 'Reports',
-    zones_tables: 'Zones And Tables',
-  };
+	const { setSelectedIcon } = useSelectedIcon();
+	const location = useLocation();
+	const user = useOwnerLogin((s) => s.user);
+	const navigate = useNavigate();
+	const { businessId } = useParams<{ businessId: string }>();
+	const businessData = useBusinessData((s) => s.businessData);
 
-  const getUpdatedCardButtons = (cards: ICardButton[], user: User) => {
-    if (user.role !== 'RESTAURANT_MANAGER') {
-      return cards.map((card: ICardButton) => ({ ...card }));
-    }
-    if (user.accessControl === undefined || Object.keys(user.accessControl).length === 0) {
-      toast.error('You do not have access to this business');
-      localStorage.removeItem('ownerLogin');
-      startTransition(() => {
-        navigate('/');
-      });
-    }
-    return cards.map((card: ICardButton) => {
-      const hasAccess =
-        user.accessControl &&
-        Object?.entries(user.accessControl).some(([key, value]) => {
-          const permissionName = accessControlMapping?.[key];
-          return permissionName === card.text && value;
-        });
-      return {
-        ...card,
-        visible: hasAccess,
-      };
-    });
-  };
+	const handleNoAccess = useCallback(() => {
+		startTransition(() => {
+			navigate("/");
+		});
+	}, [navigate]);
+	const updatedCardButtons = useMemo(
+		() => getUpdatedCardButtons(cardButtons, user, handleNoAccess),
+		[cardButtons, user, handleNoAccess],
+	);
 
-  const updatedCardButtons = getUpdatedCardButtons(cardButtons, user);
+	const handleClick = useCallback(
+		(text: string) => {
+			setSelectedIcon(text);
+			const urlFriendlyText = text.toLowerCase().replace(/ /g, "");
+			startTransition(() => {
+				navigate(`/app/business/${businessId}/${urlFriendlyText}`, {
+					replace: true,
+				});
+			});
+		},
+		[businessId, navigate],
+	);
 
-  const handleClick = async (text: string) => {
-    setSelectedIcon(text);
-    const urlFriendlyText = text.toLowerCase().replace(/ /g, '');
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/${urlFriendlyText}`, { replace: true });
-    });
-  };
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		if (params.get("tab") !== "home") {
+			params.set("tab", "home");
+			startTransition(() => {
+				navigate({ search: params.toString() }, { replace: true });
+			});
+		}
+	}, [location, navigate]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('tab') !== 'home') {
-      params.set('tab', 'home');
-      startTransition(() => {
-        navigate({ search: params.toString() }, { replace: true });
-      });
-    }
-  }, [location, navigate]);
+	const handleBack = useCallback(() => {
+		startTransition(() => {
+			navigate(`/app/business/`);
+		});
+	}, [navigate]);
 
-  const handleBack = () => {
-    startTransition(() => {
-      navigate(`/app/business/`);
-    });
-  };
+	const goToBusinessControl = useCallback(() => {
+		startTransition(() => {
+			navigate(`/app/business/${businessId}/businessControl`);
+		});
+	}, [navigate]);
 
-  return (
-    <div className="relative min-h-screen bg-[#f5f5f5] px-0 md:px-[10vw] lg:px-[10vw]">
-      <div className="sticky top-0 z-10 w-full bg-[#f5f5f5] px-0 pb-0 lg:pb-0">
-        <Header
-          onBack={handleBack}
-          leftIcon={<BsChevronLeft />}
-          centerImage={HipeopleLogo}
-          rightImage={HipeopleLogo}
-          isIconBusinessShow={user.role !== 'RESTAURANT_MANAGER'}
-        />
-        <div className="pt-6">
-          <Carousel images={images} />
-        </div>
-        <div className="ml-6 mt-4 text-2xl md:mt-6 lg:mt-16 xl:mt-24">{businessData?.businessName}</div>
-      </div>
-      <div className="mx-6 mt-5 grid grid-cols-2 gap-4 pb-12 md:grid-cols-3 lg:grid-cols-4 lg:pb-4 xl:grid-cols-5">
-        {updatedCardButtons
-          .filter((ele) => ele?.visible === true)
-          .map((item, index) => (
-            <div
-              onClick={() => handleClick(item?.text)}
-              key={index}
-              className={`${item?.class?.background} ${item?.class?.opacity} on_active_bounce h-[9rem] space-y-6 rounded-xl border border-[#CACACA] p-4`}
-            >
-              <div className={'on_active_bounce'}>
-                {item?.text === 'Swiggy' ? (
-                  <div className={`${item?.class?.color} ${item?.class?.bg} flex h-10 w-10 items-center justify-center rounded-full p-2 text-xl`}>
-                    S
-                  </div>
-                ) : item?.text === 'Zomato' ? (
-                  <div className={`${item?.class?.color} ${item?.class?.bg} flex h-10 w-10 items-center justify-center rounded-full p-2 text-xl`}>
-                    Z
-                  </div>
-                ) : (
-                  <item.Icon className={`${item?.class?.color} ${item?.class?.font} ${item?.class?.bg} rounded-full px-2`} />
-                )}
-              </div>
-              <div className={`${item?.class?.text} font-medium`}>{item?.text}</div>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
+	return (
+		<section className="relative">
+			<section className="linear_gradient_background">
+				<Header
+					onBack={handleBack}
+					leftIcon={<FaArrowLeft />}
+					rightImage={HipeopleLogo}
+					isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+				/>
+				<center className="pb-4 -mt-8 space-y-2">
+					<figure className="w-[4rem] h-[4rem] overflow-hidden rounded-full">
+						<img
+							width={64}
+							height={64}
+							src={businessData?.logo}
+							alt="Business_Logo"
+						/>
+					</figure>
+					<figcaption className="text-xl font-bold capitalize">
+						{businessData?.businessName}
+					</figcaption>
+				</center>
+			</section>
+			<section onClick={goToBusinessControl} className="business_Control">
+				<article className="business_Control_article">
+					<h3 className="text-lg font-semibold">Business Control</h3>
+					<p>All Controls in one panel</p>
+					<button className="px-6 py-2 mt-4 text-white bg-black rounded-3xl">
+						Settings
+					</button>
+				</article>
+				<figure className="business_Control_figure">
+					<img className="stair_img" src={Stairs} alt="Stairs" />
+				</figure>
+			</section>
+			<div className="business_system_cards">
+				{updatedCardButtons
+					.filter((ele) => ele?.visible === true)
+					.map((item, index) => (
+						<div
+							onClick={() => handleClick(item?.text)}
+							key={index}
+							className={`${item?.class?.background} ${item?.class?.opacity} on_active_bounce h-[9rem] space-y-6 rounded-xl border border-[#CACACA] p-4`}
+						>
+							<div className={"on_active_bounce"}>
+								<item.Icon
+									className={`${item?.class?.color} ${item?.class?.font} ${item?.class?.bg} rounded-full px-2`}
+								/>
+							</div>
+							<div className={`${item?.class?.text} font-medium`}>
+								{item?.text}
+							</div>
+						</div>
+					))}
+			</div>
+		</section>
+	);
 });
 
 export default BusinessData;

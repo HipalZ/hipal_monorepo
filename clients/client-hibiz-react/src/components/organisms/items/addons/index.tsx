@@ -74,7 +74,7 @@ const AddOns = memo(({ addOns, searchText }: { addOns: IAddOn[]; searchText: str
           <div className="fixed left-1/2 top-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">No Addons found</div>
         )}
         <div onKeyUp={handleAddOnClick} onClick={handleAddOnClick} className="fixed bottom-0 w-full cursor-pointer bg-white p-4 outline-none">
-          <button type="button" className="w-full rounded-md bg-[#2B354D] py-2 text-white">
+          <button type="button" className="w-full rounded-md bg-[#000000] py-2 text-white">
             Add
           </button>
         </div>

@@ -64,7 +64,7 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
                           <div>{bill?.tableName}</div>
                         </div>
                         {/* Here you can add code to display items and their amounts */}
-                        <div className="border-b border-[#cacaca] pb-4">
+                        <div className=" pb-4">
                           <div className="mt-4 font-medium">
                             <div className="flex justify-between font-medium">
                               <span>items</span>
@@ -92,7 +92,7 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
           ))
         ) : (
           <div>
-            <div className="mt-4 text-center text-xl font-medium text-[#2B354D] opacity-60">
+            <div className="mt-4 text-center text-xl font-medium text-[#000000] opacity-60">
               No Dues Found {activeDues?.userName}
               <div className="text-base">({inTime && outTime ? `${inTime} to ${outTime} ` : ''} )</div>
             </div>
@@ -104,7 +104,7 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
               type="button"
               onClick={() => handleClick(currentPage > 1 ? currentPage - 1 : 1)}
               disabled={currentPage === 1}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
             >
               <BiChevronsLeft />
             </button>
@@ -117,8 +117,8 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
               disabled={currentPage === idx + 1}
               className={`flex h-10 w-10 items-center justify-center ${
                 currentPage === idx + 1
-                  ? 'rounded-full border border-[#2B354D] bg-[#2B354D] text-white'
-                  : 'rounded-full border border-[#2B354D] bg-white text-black'
+                  ? 'rounded-full border border-[#000000] bg-[#000000] text-white'
+                  : 'rounded-full border border-[#000000] bg-white text-black'
               }`}
               style={{
                 display: idx >= currentPage - 1 && idx <= currentPage + 1 ? 'inline-flex' : 'none',
@@ -131,7 +131,7 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
             <button
               type="button"
               onClick={() => handleClick(currentPage < totalPages ? currentPage + 1 : totalPages)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
               disabled={currentPage === totalPages}
             >
               <BiChevronsRight />
@@ -142,7 +142,7 @@ const DueAccordion = memo(({ activeDues }: { activeDues: IDuesData | null }) => 
       <div onClick={settleDues} className="fixed bottom-6 w-full px-6">
         <button
           type="button"
-          className="on_active_bounce mt-4 w-full rounded-lg border border-[#2B354D] bg-[#2B354D] px-4 py-2 font-semibold text-white"
+          className="bottom_btn"
         >
           <div className="flex items-center justify-center">Settle</div>
         </button>

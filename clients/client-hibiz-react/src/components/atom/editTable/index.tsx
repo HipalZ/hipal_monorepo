@@ -62,7 +62,7 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
   return (
     <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
       <div className="max-h-[85vh] overflow-y-auto">
-        <h1 className="px-6 pt-6 text-2xl text-[#2B354D]">Edit Tables</h1>
+        <h1 className="px-6 pt-6 text-2xl text-[#000000]">Edit Tables</h1>
         <div className="border-1 mx-6 my-5 rounded-lg border border-[#CACACA] bg-white px-4">
           <div className="my-4">
             <h1 className="my-4 text-base">Name of the Table</h1>
@@ -86,7 +86,7 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
                   key={staff?._id}
                   onClick={() => handleActiveClick(staff?._id)}
                   className={`${
-                    activeClick.includes(staff?._id) ? 'border-2  border-[#2B354D]' : ' border-1 border-[#CACACA]'
+                    activeClick.includes(staff?._id) ? 'border-2  border-[#000000]' : ' border-1 border-[#CACACA]'
                   } my-5 rounded-md border bg-white p-3`}
                 >
                   <div className="flex items-center">
@@ -95,7 +95,7 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
                     <h1 className="mx-2 text-base">{staff?.name}</h1>
                   </div>
                   <div className="mt-2 flex justify-between">
-                    <p className="text-sm text-[#2B354D]/70">{staff?.role}</p>
+                    <p className="text-sm text-[#000000]/70">{staff?.role}</p>
                   </div>
                 </div>
               );
@@ -103,7 +103,7 @@ const EditTables = ({ postZones, setPostZones, table, closeModal, closePopUpModa
           </div>
         </div>
         <div className="sticky bottom-5 mx-6 my-6">
-          <button type="button" onClick={EditTable} className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white">
+          <button type="button" onClick={EditTable} className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white">
             Save
           </button>
         </div>

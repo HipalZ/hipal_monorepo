@@ -15,6 +15,7 @@ import { LuSettings } from 'react-icons/lu';
 import { MdSpaceDashboard } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import LoyaltyCSV from './csv';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const buttons = [
   {
@@ -60,10 +61,10 @@ const Loyalty = memo(() => {
 
   const TabsContent = () => {
     return (
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header title="Loyalty" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header title="Loyalty" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
         <SubheaderButtonList buttons={buttons} />
-        <div className="mt-2 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="flex items-center justify-between px-6 pb-4 mt-2">
           <div className="flex text-2xl">
             <span className="ml-2"> {selectedButton}</span>
           </div>

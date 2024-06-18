@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { memo, useState } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { MdPerson } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
 
@@ -56,11 +56,11 @@ function CustomerzBills() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
+      <div className=" linear_gradient_background">
         <Header
           title="Bills"
           onBack={() => setSelectedSubIcon('')}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
@@ -73,7 +73,7 @@ function CustomerzBills() {
         </div>
         <section className="mx-6 my-4">
           <article className="flex items-center justify-between">
-            <h1 className="text-xl text-[#2B354D]">Bills</h1>
+            <h1 className="text-xl text-[#000000]">Bills</h1>
           </article>
         </section>
       </div>
@@ -110,7 +110,7 @@ function CustomerzBills() {
                           <div>{bill?.mode}</div>
                         </div>
                         {/* Here you can add code to display items and their amounts */}
-                        <div className="border-b border-[#cacaca] pb-4">
+                        <div className=" pb-4">
                           <div className="mt-4 font-medium">
                             <div className="flex justify-between font-medium">
                               <span>items</span>
@@ -144,17 +144,17 @@ function CustomerzBills() {
             type="button"
             onClick={() => handleClick(pageNumber - 1)}
             disabled={pageNumber === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsLeft />
           </button>
         )}
-        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{pageNumber}</p>
+        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{pageNumber}</p>
         {billsData && billsData.length > 0 && (
           <button
             type="button"
             onClick={() => handleClick(pageNumber + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsRight />
           </button>

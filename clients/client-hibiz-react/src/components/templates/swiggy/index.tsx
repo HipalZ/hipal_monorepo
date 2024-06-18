@@ -7,7 +7,7 @@ import EditPasswordForDeleteDish from '@/components/molecules/editPasswordForDel
 import Header from '@/components/molecules/header';
 import { useSelectedIcon } from '@/components/store/useSelectedIcon';
 import React, { memo, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { MdCurrencyExchange } from 'react-icons/md';
 import { useParams } from 'react-router-dom';
 import Switch from 'react-switch';
@@ -171,16 +171,16 @@ function Swiggy() {
   return (
     <>
       {' '}
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
+      <div className="sticky top-0 z-20 linear_gradient_background">
         <Header
           title="Swiggy"
           onBack={() => setSelectedIcon('')}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="">Swiggy</span>
           </div>
@@ -203,7 +203,7 @@ function Swiggy() {
           <button
             type="button"
             onClick={() => setPasswordIsModalOpen(true)}
-            className="on_active_bounce rounded-md border border-[#2B354D] px-4 py-1"
+            className="on_active_bounce rounded-md border border-[#000000] px-4 py-1"
           >
             Edit
           </button>
@@ -224,7 +224,7 @@ function Swiggy() {
           <button
             type="button"
             onClick={() => setExtraChargesIsModalOpen(true)}
-            className="on_active_bounce rounded-md border border-[#2B354D] px-4 py-1"
+            className="on_active_bounce rounded-md border border-[#000000] px-4 py-1"
           >
             Add
           </button>

@@ -12,7 +12,7 @@ import useTimings from '@/components/store/useTimings';
 import { paths } from '@/components/utils/paths';
 import { useQuery } from '@tanstack/react-query';
 import { memo, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 
 export interface Item {
@@ -98,8 +98,8 @@ function LoyaltyId() {
 
   return (
     <div className="relative bg-white pb-12">
-      <div className="sticky  top-0 z-20 border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header title="Rewards" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+      <div className="sticky  top-0 z-20  linear_gradient_background">
+        <Header title="Rewards" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
         <div className="mx-6 mt-6 rounded-lg bg-[#2F80ED] py-4 text-white">
           <div className="flex items-center justify-start">
             <div className="mx-4 rounded-full bg-white px-4 py-2 text-xl font-semibold text-[#2F80ED]">{selectedCustomer?.userName?.[0]}</div>
@@ -117,7 +117,7 @@ function LoyaltyId() {
         <button
           type="button"
           onClick={openModal}
-          className="on_active_bounce w-full rounded-lg border border-[#2B354D] bg-[#2B354D] px-4 py-2 font-normal text-white"
+          className="on_active_bounce w-full rounded-lg border border-[#000000] bg-[#000000] px-4 py-2 font-normal text-white"
         >
           <div className="flex items-center justify-center text-white">Add a coins</div>
         </button>

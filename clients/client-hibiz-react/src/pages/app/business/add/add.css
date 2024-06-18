@@ -1,0 +1,9 @@
+.add_business_type_cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+    gap:1.5rem;
+    padding: 1rem;
+    width: 100%;
+    max-width: 69rem;
+    margin: 0 auto;
+}

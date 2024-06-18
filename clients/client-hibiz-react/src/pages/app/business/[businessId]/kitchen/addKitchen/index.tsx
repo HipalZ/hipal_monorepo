@@ -78,9 +78,9 @@ const AddKitchen = memo(() => {
 
   return (
     <div className="relative pb-[5rem]">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2">Add a Kitchen</span>
           </div>
@@ -88,7 +88,7 @@ const AddKitchen = memo(() => {
       </div>
       <div className="border-1 mx-6 my-6 rounded-lg border border-[#CACACA] px-4">
         <div className="my-4">
-          <h1 className="my-4 text-base font-semibold text-[#2B354D]">
+          <h1 className="my-4 text-base font-semibold text-[#000000]">
             Name of the Kitchen {isNameError && <span className="text-red-500">*</span>}
           </h1>
           <input
@@ -102,7 +102,7 @@ const AddKitchen = memo(() => {
       </div>
       <div className="border-1 mx-6 my-6 rounded-lg border border-[#CACACA] px-4">
         <div className="my-4 flex items-center justify-between">
-          <h1 className="font-semibold text-[#2B354D]">Staff in the kitchen</h1>
+          <h1 className="font-semibold text-[#000000]">Staff in the kitchen</h1>
           <div onKeyDown={() => addStaff()} onClick={() => addStaff()}>
             <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
               Add
@@ -118,7 +118,7 @@ const AddKitchen = memo(() => {
                   <h1 className="mx-2 text-base">{staff?.name}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/30">{staff?.customRole?.[0].roleName}</p>
+                  <p className="text-sm text-[#000000]/30">{staff?.customRole?.[0].roleName}</p>
                   <button type="button" onClick={() => deselectStaff(staff._id)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
@@ -129,7 +129,7 @@ const AddKitchen = memo(() => {
       </div>
 
       <div className="fixed bottom-5 w-full px-6">
-        <button type="button" onClick={handleSubmit} className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white">
+        <button type="button" onClick={handleSubmit} className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white">
           Create
         </button>
       </div>

@@ -7,7 +7,7 @@ import useAddOnStore, { type Variant } from '@/components/store/useAddOn';
 import { routeToItems } from '@/components/utils/routes';
 import type React from 'react';
 import { memo, startTransition, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -129,9 +129,9 @@ const AddAddOn = memo(() => {
 
   return (
     <div className="pb-[7rem]">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header title="AddOn" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header title="AddOn" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="">Add a Add On</span>
           </div>
@@ -147,7 +147,7 @@ const AddAddOn = memo(() => {
           value={addOnName || ''}
           type="text"
           id="floating_outlined"
-          className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+          className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
           placeholder="Name"
         />
       </div>
@@ -158,7 +158,7 @@ const AddAddOn = memo(() => {
         <select
           value={addOnType}
           onChange={(e) => setAddOnType(e.target.value)}
-          className="w-full rounded-md border border-[#2B354D] px-4 py-2 focus:border-[#2B354D] focus:outline-none focus:ring-0"
+          className="w-full rounded-md border border-[#000000] px-4 py-2 focus:border-[#000000] focus:outline-none focus:ring-0"
         >
           <option value="">Select Type</option>
           <option value="single">Single selection</option>
@@ -174,7 +174,7 @@ const AddAddOn = memo(() => {
             type="tel"
             maxLength={3}
             id="floating_outlined"
-            className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+            className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
             placeholder="0"
           />
           {errorMaxQty ? <small className="text-red-500">*Max quantity cannot be more than selections and less than compulsory</small> : null}
@@ -187,7 +187,7 @@ const AddAddOn = memo(() => {
             maxLength={3}
             type="tel"
             id="floating_outlined"
-            className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+            className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
             placeholder="0"
           />
           {errorCompulsory ? <small className="text-red-500">* Compulsory quantity cannot be more than max quantity and selections</small> : null}
@@ -196,11 +196,11 @@ const AddAddOn = memo(() => {
       <hr className="h-0.25 mx-4 mt-4 bg-[#000]" />
       <div className="mt-4 flex justify-between px-4">
         <span className="font-medium">Variant</span>
-        <button type="button" onClick={openModal} className="on_active_bounce rounded-md border border-[#2B354D] px-4 py-1">
+        <button type="button" onClick={openModal} className="on_active_bounce rounded-md border border-[#000000] px-4 py-1">
           Add
         </button>
       </div>
-      <div className={`${variants.length === 0 ? '' : 'border border-[#2B354D]'}  mx-4 mt-4 space-y-2 rounded-md p-4`}>
+      <div className={`${variants.length === 0 ? '' : 'border border-[#000000]'}  mx-4 mt-4 space-y-2 rounded-md p-4`}>
         {variants.map((variant) => (
           <div key={variant._id} className="rounded-md border border-[#cacaca] p-2">
             <div className="w-48 truncate">{variant?.name}</div>
@@ -236,7 +236,7 @@ const AddAddOn = memo(() => {
         onClick={saveAddOn}
         className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce fixed bottom-0 w-full cursor-pointer p-4 outline-none`}
       >
-        <button type="button" className="w-full rounded-md bg-[#2B354D] py-2 text-white">
+        <button type="button" className="w-full rounded-md bg-[#000000] py-2 text-white">
           {loading ? 'Loading...' : 'Save'}
         </button>
       </div>

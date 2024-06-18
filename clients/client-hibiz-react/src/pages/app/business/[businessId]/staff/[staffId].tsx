@@ -8,7 +8,7 @@ import Header from '@/components/molecules/header';
 import type { UserProfile } from '@/components/types/businessData';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import Switch from 'react-switch';
 import { toast } from 'react-toastify';
@@ -172,15 +172,15 @@ function StaffDetails() {
 
   return (
     <div className="bg-white">
-      <div className="sticky top-0 z-50 w-full border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header title="Staff" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+      <div className="sticky top-0 z-50 w-full linear_gradient_background">
+        <Header title="Staff" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
         <div className="mx-6 mt-6 flex items-center justify-start rounded-lg bg-[#204D42] py-4 text-white">
           <div className="mx-4 rounded-full bg-white px-4 py-2 text-xl font-semibold text-[#204D42]">{userProfile?.name[0]}</div>
           <div className="ml-2 text-xl font-normal">{userProfile?.name}</div>
         </div>
-        <div className="mx-6 mt-6 rounded-lg pb-4 text-2xl font-normal text-[#2B354D]">Staff Info</div>
+        <div className="mx-6 mt-6 rounded-lg pb-4 text-2xl font-normal text-[#000000]">Staff Info</div>
       </div>
-      <div className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]">
+      <div className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]">
         <div className="flex items-center px-4 py-2">
           <span>Mobile Number</span>
         </div>
@@ -191,7 +191,7 @@ function StaffDetails() {
       <div
         onKeyDown={openModal}
         onClick={openModal}
-        className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+        className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
       >
         <div className="flex items-center px-4 py-2">
           <span>Password</span>
@@ -204,15 +204,15 @@ function StaffDetails() {
       <div
         onKeyDown={() => setManage(true)}
         onClick={() => setManage(true)}
-        className="m-6 rounded-lg border border-[#cacaca] bg-white p-4 text-[#2B354D]"
+        className="m-6 rounded-lg border border-[#cacaca] bg-white p-4 text-[#000000]"
       >
         Manage Access
       </div>
-      <div className="fixed bottom-6 flex w-full items-center justify-center px-6">
+      <div className="fixed flex items-center justify-center w-full px-6 bottom-6">
         <button
           type="button"
           onClick={() => setIsDeleteModalOpen(true)}
-          className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white"
+          className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#000000] px-4 py-2 text-white"
         >
           Delete
         </button>
@@ -229,7 +229,7 @@ function StaffDetails() {
             <div className="space-y-4">
               <div className="rounded-md border border-[#cacaca] bg-white p-4">
                 <div style={style}>
-                  <div className="flex-col-1 space-y-2 text-sm">
+                  <div className="space-y-2 text-sm flex-col-1">
                     <div className="font-semibold">Hi-Biz</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -249,7 +249,7 @@ function StaffDetails() {
                     <div key={serviceKey} style={style} className="pb-4">
                       <label>{hibizSubServices[serviceKey].label}</label>
                       <input
-                        className="h-5 w-5 rounded-md outline-none focus:ring-0"
+                        className="w-5 h-5 rounded-md outline-none focus:ring-0"
                         type="checkbox"
                         checked={hibizSubServices[serviceKey].value}
                         onChange={() => {
@@ -267,7 +267,7 @@ function StaffDetails() {
               </div>
               <div className="rounded-md border border-[#cacaca] bg-white p-4 opacity-50">
                 <div style={style}>
-                  <div className="flex-col-1 space-y-2 text-sm">
+                  <div className="space-y-2 text-sm flex-col-1">
                     <div className="font-semibold">Hi-Table</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -285,8 +285,8 @@ function StaffDetails() {
               </div>
             </div>
           </div>
-          <div className="fixed bottom-4 flex w-full items-center justify-center px-4">
-            <button type="button" onClick={updateAccessControl} className="on_active_bounce mt-6  w-full rounded-lg bg-[#2B354D] py-2 text-white">
+          <div className="fixed flex items-center justify-center w-full px-4 bottom-4">
+            <button type="button" onClick={updateAccessControl} className="on_active_bounce mt-6  w-full rounded-lg bg-[#000000] py-2 text-white">
               Save
             </button>
           </div>

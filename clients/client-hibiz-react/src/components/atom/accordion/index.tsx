@@ -182,7 +182,7 @@ const Bills = memo(
           <div className="masonry-layout relative mt-6 w-full space-y-4 overflow-auto scroll-smooth px-6 pb-[10rem]">
             {billsData.map((bill, index) => (
               <div key={bill.id+index}>
-                <Disclosure>
+                <Disclosure >
                   {({ open }) => {
                     let formattedEntries: any;
                     if (bill?.mode?.toLowerCase() === 'multiple') {
@@ -226,7 +226,7 @@ const Bills = memo(
                               </div>
                             </div>
                             {/* Here you can add code to display items and their amounts */}
-                            <div className="border-b border-[#cacaca] pb-4">
+                            <div className="pb-4 ">
                               <div className="mt-4 font-medium">
                                 <div className="flex justify-between font-medium">
                                   <span>Items</span>
@@ -260,7 +260,7 @@ const Bills = memo(
                               <PopUp show={isModalOpen} onClose={closeModal}>
                                 {footButton.toLowerCase() === 'settle' && (
                                   <div className="relative min-h-[70vh]">
-                                    <div className="mt-4 flex justify-between">
+                                    <div className="flex justify-between mt-4">
                                       <div className="ml-6 text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">Payment Mode</div>
                                       <div className="mr-[1.5rem] text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">
                                         ₹ {bill?.total}
@@ -287,7 +287,7 @@ const Bills = memo(
                                                     value={selectedPaymentMethod}
                                                     checked={selectedPaymentMethod === method?.mode}
                                                   />
-                                                  <div className="ml-4 line-clamp-1 font-medium capitalize">{method?.mode}</div>
+                                                  <div className="ml-4 font-medium capitalize line-clamp-1">{method?.mode}</div>
                                                 </div>
                                               </div>
                                             );
@@ -297,17 +297,17 @@ const Bills = memo(
                                       <div className="text-center">No payment modes found</div>
                                     )}
 
-                                    <div className="shadow-base-100 fixed bottom-0 z-20 h-[4rem] w-full max-w-[28rem] bg-[#2b354d] py-2 shadow-lg">
+                                    <div className="shadow-base-100 fixed bottom-0 z-20 h-[4rem] w-full max-w-[28rem] bg-[#000000] py-2 shadow-lg">
                                       <button
                                         type="button"
-                                        className="absolute bottom-3 left-2 rounded-full bg-[#2b354d]  px-4 py-2 text-base font-[500] text-white"
+                                        className="absolute bottom-3 left-2 rounded-full bg-[#000000]  px-4 py-2 text-base font-[500] text-white"
                                       >
                                         ₹ Payment Modes
                                       </button>
                                       <button
                                         type="button"
                                         onClick={finalClick}
-                                        className={`absolute bottom-3 right-6 z-50 mr-2 rounded-full border border-white bg-white px-4 py-2 text-sm font-[500] text-[#2b354d] ${
+                                        className={`absolute bottom-3 right-6 z-50 mr-2 rounded-full border border-white bg-white px-4 py-2 text-sm font-[500] text-[#000000] ${
                                           loading ? 'cursor-not-allowed opacity-50' : ''
                                         }`}
                                         disabled={loading}
@@ -319,7 +319,7 @@ const Bills = memo(
                                 )}
                                 {footButton.toLowerCase() === 'split payment' && (
                                   <div className="relative min-h-[80vh]">
-                                    <div className="mt-4 flex justify-between">
+                                    <div className="flex justify-between mt-4">
                                       <div className="ml-6 text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">
                                         select payment methods
                                       </div>
@@ -336,7 +336,7 @@ const Bills = memo(
                                           <div
                                             key={method._id}
                                             className={`flex items-center rounded-xl border px-4 py-2 ${
-                                              multiplePaymentMethods.includes(method?.mode) ? 'border-[#2b354d]' : ''
+                                              multiplePaymentMethods.includes(method?.mode) ? 'border-[#000000]' : ''
                                             }`}
                                             onClick={() => handleMultiplePaymentMethodSelection(method?.mode)}
                                           >
@@ -345,12 +345,12 @@ const Bills = memo(
                                               type="checkbox"
                                               checked={multiplePaymentMethods.includes(method?.mode)}
                                             />
-                                            <div className="ml-4 line-clamp-1 font-medium capitalize">{method?.mode}</div>
+                                            <div className="ml-4 font-medium capitalize line-clamp-1">{method?.mode}</div>
                                           </div>
                                         ))}
                                     </div>
 
-                                    <div className="shadow-base-100 fixed bottom-0 z-20 h-[4rem] w-full bg-[#2b354d] py-2 shadow-lg">
+                                    <div className="shadow-base-100 fixed bottom-0 z-20 h-[4rem] w-full bg-[#000000] py-2 shadow-lg">
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -361,7 +361,7 @@ const Bills = memo(
                                             toast.error('select atleast 2 payment methods');
                                           }
                                         }}
-                                        className={`absolute bottom-3 right-6 z-50 mr-2 rounded-full border border-white bg-white px-4 py-2 text-sm font-[500] text-[#2b354d] ${
+                                        className={`absolute bottom-3 right-6 z-50 mr-2 rounded-full border border-white bg-white px-4 py-2 text-sm font-[500] text-[#000000] ${
                                           loading ? 'cursor-not-allowed opacity-50' : ''
                                         }`}
                                         disabled={loading}
@@ -390,7 +390,7 @@ const Bills = memo(
             ))}
           </div>
         ) : (
-          <div className="fixed left-1/2 top-1/2 flex -translate-x-1/2 transform flex-col text-center">
+          <div className="fixed flex flex-col text-center transform -translate-x-1/2 left-1/2 top-1/2">
             <p>No Bills Found</p>
             <span>
               {inTime && outTime && (
@@ -407,17 +407,17 @@ const Bills = memo(
               type="button"
               onClick={() => handleClick(currentPage - 1)}
               disabled={currentPage === 1}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
             >
               <BiChevronsLeft />
             </button>
           )}
-          <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{currentPage}</p>
+          <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{currentPage}</p>
           {billsData && billsData.length > 0 && (
             <button
               type="button"
               onClick={() => handleClick(currentPage + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
             >
               <BiChevronsRight />
             </button>

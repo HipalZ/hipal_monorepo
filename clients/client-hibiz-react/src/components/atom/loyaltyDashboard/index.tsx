@@ -102,7 +102,7 @@ const LoyaltyDashboard = memo(() => {
           <button
             type="button"
             onClick={() => setup('Set up')}
-            className="flex items-center justify-center rounded-lg border border-[#cacaca]/50 px-4 py-2 focus:bg-[#2B354D] focus:text-white"
+            className="flex items-center justify-center rounded-lg border border-[#cacaca]/50 px-4 py-2 focus:bg-[#000000] focus:text-white"
           >
             <LuSettings />
             <span className="ml-2 text-sm">Set up</span>

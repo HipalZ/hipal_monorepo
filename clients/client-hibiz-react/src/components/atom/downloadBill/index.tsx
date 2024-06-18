@@ -12,13 +12,13 @@ interface DownloadBillsProps {
 const DownloadBills: React.FC<DownloadBillsProps> = ({ inTime, outTime, closeModal, billsData }) => {
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6 ">
-      <h3 className="mb-2 text-xl font-medium text-[#2B354D]">Do you want to download the bills?</h3>
-      <p className="mb-4 pb-12 text-sm text-[#2B354D] opacity-80">
+      <h3 className="mb-2 text-xl font-medium text-[#000000]">Do you want to download the bills?</h3>
+      <p className="mb-4 pb-12 text-sm text-[#000000] opacity-80">
         from {inTime} to {outTime}
       </p>
 
       <div className="flex justify-between space-x-6">
-        <button type="button" onClick={closeModal} className="rounded-lg  border border-[#2B354D] bg-white px-6 py-2 text-[#2B354D]">
+        <button type="button" onClick={closeModal} className="rounded-lg  border border-[#000000] bg-white px-6 py-2 text-[#000000]">
           Cancel
         </button>
         <button
@@ -27,7 +27,7 @@ const DownloadBills: React.FC<DownloadBillsProps> = ({ inTime, outTime, closeMod
             closeModal();
             downloadCSV(billsData);
           }}
-          className="w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white"
+          className="w-full rounded-lg bg-[#000000] px-4 py-2 text-white"
         >
           Download
         </button>

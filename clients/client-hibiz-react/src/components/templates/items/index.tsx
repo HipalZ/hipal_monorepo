@@ -18,7 +18,7 @@ import { routeToDashboard } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition, useEffect, useState } from 'react';
 import { BiDish } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { HiSearch } from 'react-icons/hi';
 import { IoFastFoodOutline } from 'react-icons/io5';
 import { MdOutlineCategory, MdOutlineQuickreply, MdSpaceDashboard } from 'react-icons/md';
@@ -166,10 +166,10 @@ const Items = memo(() => {
 
   return (
     <div>
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header title="Items" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header title="Items" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
         <SubheaderButtonList buttons={buttons} />
-        <div className="mt-2 flex items-center justify-between border-b border-[#cacaca] pb-2 pl-6">
+        <div className="mt-2 flex items-center justify-between  pb-2 pl-6">
           <div className="text-xl"> {selectedButton}</div>
           {selectedButton !== 'Dashboard' && (
             <div className="mr-4" onClick={openSearchBox}>

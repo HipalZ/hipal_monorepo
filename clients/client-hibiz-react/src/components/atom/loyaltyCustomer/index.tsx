@@ -72,7 +72,7 @@ const LoyaltyCustomer = () => {
               key={customer._id}
               onKeyDown={() => handleClick(customer)}
               onClick={() => handleClick(customer)}
-              className="masonry-item cursor-pointer rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D] hover:bg-[#2B354D]/10"
+              className="masonry-item cursor-pointer rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000] hover:bg-[#000000]/10"
             >
               <div className="flex items-center justify-between px-4 py-2">
                 <div className="flex items-center">
@@ -83,7 +83,7 @@ const LoyaltyCustomer = () => {
               </div>
               <div className="flex items-center justify-between px-4 py-2">
                 <span className="text-sm opacity-60">Rewards given so far ₹ {customer?.rewards}</span>
-                <span className="font-semibold text-[#2B354D]">view</span>
+                <span className="font-semibold text-[#000000]">view</span>
               </div>
             </div>
           ))
@@ -99,17 +99,17 @@ const LoyaltyCustomer = () => {
             type="button"
             onClick={() => onClickPagination(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsLeft />
           </button>
         )}
-        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{currentPage}</p>
+        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{currentPage}</p>
         {loyalCustomers && loyalCustomers.length > 0 && (
           <button
             type="button"
             onClick={() => onClickPagination(currentPage + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsRight />
           </button>

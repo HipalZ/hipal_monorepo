@@ -150,7 +150,7 @@ const LoyalityCardPopup = () => {
           <div className="flex bg-white py-2">
             <button
               type="button"
-              className="on_active_bounce fixed bottom-5 mx-4 w-full max-w-[25rem] rounded-md bg-[#2B354D] py-2.5 text-white"
+              className="on_active_bounce fixed bottom-5 mx-4 w-full max-w-[25rem] rounded-md bg-[#000000] py-2.5 text-white"
               onClick={handleClose}
             >
               Save & Close
@@ -160,10 +160,10 @@ const LoyalityCardPopup = () => {
       ) : (
         <div style={{ height: 'calc(85vh)' }} className="relative overflow-y-auto rounded-t-3xl bg-[#F5F5F5]">
           <div className="sticky top-0 pt-4">
-            <h1 className="mx-7 text-2xl text-[#2B354D]">Loyalty card set up</h1>
+            <h1 className="mx-7 text-2xl text-[#000000]">Loyalty card set up</h1>
             <div className="my-3.5 flex h-16 items-center justify-start border-y-[0.065rem] border-[#CACACA] bg-white px-7">
               <GoAlert color="#F2634C" />
-              <p className="mx-2 text-sm text-[#2B354D]">Please create a card in harmony with themes.</p>
+              <p className="mx-2 text-sm text-[#000000]">Please create a card in harmony with themes.</p>
             </div>
           </div>
           {/* change to theme color */}
@@ -171,7 +171,7 @@ const LoyalityCardPopup = () => {
             style={{ backgroundColor: `${themes?.primaryColor}` }}
             className="sticky top-0 flex flex-col items-center justify-center bg-white pb-4"
           >
-            <h1 className="mr-auto px-7 py-4 text-base font-semibold text-[#2B354D]">Card Preview</h1>
+            <h1 className="mr-auto px-7 py-4 text-base font-semibold text-[#000000]">Card Preview</h1>
             <LoyalityCard
               logo={logo || businessData?.logo}
               croppedImage={croppedImage}
@@ -183,14 +183,14 @@ const LoyalityCardPopup = () => {
           </div>
           <div className="h-3 border-[#CACACA]" />
           <div className="bg-white p-6">
-            <h1 className="pb-4 text-base font-semibold text-[#2B354D]">Cards</h1>
+            <h1 className="pb-4 text-base font-semibold text-[#000000]">Cards</h1>
             <div className="flex flex-nowrap overflow-x-auto">{mapCards()}</div>
           </div>
           {/* card and font color */}
           <div className="bg-white px-6">
-            <h1 className="font-semibold text-[#2B354D]">Colors</h1>
+            <h1 className="font-semibold text-[#000000]">Colors</h1>
             <div className="my-4 flex items-center">
-              <p className="mr-2 font-semibold text-[#2B354D]">Card color:</p>
+              <p className="mr-2 font-semibold text-[#000000]">Card color:</p>
               <input
                 ref={colorRef}
                 type="color"
@@ -208,7 +208,7 @@ const LoyalityCardPopup = () => {
               placeholder="Color picker or hex code"
             />
             <div className="my-4 flex items-center">
-              <p className="mr-2 font-semibold text-[#2B354D]">Font color:</p>
+              <p className="mr-2 font-semibold text-[#000000]">Font color:</p>
               <input ref={fontRef} type="color" value={fontColor} onChange={onChangeFontColorPicker} className="w-32 rounded-2xl" />
             </div>
             <input
@@ -221,14 +221,14 @@ const LoyalityCardPopup = () => {
           </div>
 
           <div className="bg-white px-6 py-4 pb-20">
-            <h1 className="mb-4 font-semibold text-[#2B354D]">Logo for the card</h1>
+            <h1 className="mb-4 font-semibold text-[#000000]">Logo for the card</h1>
             <div
-              className="border-1 flex w-full items-center justify-center rounded-md border border-[#2B354D]"
+              className="border-1 flex w-full items-center justify-center rounded-md border border-[#000000]"
               onClick={() => document.getElementById('img')?.click()}
             >
               <input type="file" id="img" name="image" accept=".jpg,.jpeg,.png," onChange={handleImageChange} style={{ display: 'none' }} />
               <BsUpload />
-              <p className="mx-2 py-3 font-semibold text-[#2B354D]">Upload Logo</p>
+              <p className="mx-2 py-3 font-semibold text-[#000000]">Upload Logo</p>
             </div>
           </div>
         </div>

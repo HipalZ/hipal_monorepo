@@ -60,28 +60,28 @@ const DateRangePicker: React.FC = memo(() => {
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
             type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'today' ? 'bg-[#2B354D] text-white' : 'bg-white'}`}
+            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'today' ? 'bg-[#000000] text-white' : 'bg-white'}`}
             onClick={handleTodayClick}
           >
             Today
           </button>
           <button
             type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'yesterday' ? 'bg-[#2B354D] text-white' : 'bg-white'}`}
+            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'yesterday' ? 'bg-[#000000] text-white' : 'bg-white'}`}
             onClick={handleYesterdayClick}
           >
             Yesterday
           </button>
           <button
             type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'thisMonth' ? 'bg-[#2B354D] text-white' : 'bg-white'}`}
+            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'thisMonth' ? 'bg-[#000000] text-white' : 'bg-white'}`}
             onClick={handleThisMonthClick}
           >
             This Month
           </button>
           <button
             type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'custom' ? 'bg-[#2B354D] text-white' : 'bg-white'}`}
+            className={`rounded-md border px-2 py-1 text-xs ${selectedRange === 'custom' ? 'bg-[#000000] text-white' : 'bg-white'}`}
             onClick={handleCustomDatesClick}
           >
             Custom dates

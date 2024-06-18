@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
 import { memo, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 
 function CustomerzReviews() {
@@ -48,11 +48,11 @@ function CustomerzReviews() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
+      <div className=" linear_gradient_background">
         <Header
           title="Reviews"
           onBack={() => setSelectedSubIcon('')}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
@@ -67,7 +67,7 @@ function CustomerzReviews() {
         </div>
         <section className="mx-6 my-4">
           <article className="flex items-center justify-between">
-            <h1 className="text-xl text-[#2B354D]">Reviews</h1>
+            <h1 className="text-xl text-[#000000]">Reviews</h1>
           </article>
         </section>
       </div>
@@ -114,17 +114,17 @@ function CustomerzReviews() {
             type="button"
             onClick={() => handleClick(pageNumber - 1)}
             disabled={pageNumber === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsLeft />
           </button>
         )}
-        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{pageNumber}</p>
+        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{pageNumber}</p>
         {reviewsData && reviewsData.length > 0 && (
           <button
             type="button"
             onClick={() => handleClick(pageNumber + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsRight />
           </button>

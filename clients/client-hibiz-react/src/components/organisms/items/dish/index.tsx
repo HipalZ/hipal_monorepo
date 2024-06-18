@@ -68,7 +68,7 @@ const DishContent = memo(({ dishes, searchText }: { dishes: IDish[]; searchText:
       )}
 
       <div className="fixed bottom-5 w-full px-6">
-        <button type="button" onClick={addDish} className="on_active_bounce w-full  rounded-md bg-[#2B354D]  py-2.5 text-white">
+        <button type="button" onClick={addDish} className="on_active_bounce w-full  rounded-md bg-[#000000]  py-2.5 text-white">
           {isLoading ? 'Loading...' : 'Add Dish'}
         </button>
       </div>

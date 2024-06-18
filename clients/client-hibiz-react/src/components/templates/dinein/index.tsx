@@ -14,7 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 const classCard = {
   text: 'text-xl',
-  background: 'bg-[#2B354D]',
+  background: 'bg-[#000000]',
   font: 'text-4xl',
   bg: 'bg-[#2F80ED]/10',
   color: 'text-white',
@@ -77,10 +77,10 @@ const DineIn = memo(() => {
   return (
     <>
       {selectedSubIcon !== 'addZones' && (
-        <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-          <Header title="Dine In" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+        <div className="sticky top-0 z-20 linear_gradient_background">
+          <Header title="Dine In" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
           <SubheaderButtonList buttons={buttons} />
-          <div className="mt-2 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+          <div className="mt-2 flex items-center justify-between  px-6 pb-4">
             <span className="flex text-2xl">{selectedButton}</span>
           </div>
         </div>

@@ -33,7 +33,7 @@ const AddTables = memo(({ postZones, zoneId, staffs, closeModal, postStaffs, set
   return (
     <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
       <div className="px-6 py-5">
-        <h1 className="text-2xl text-[#2B354D]">Add Tables</h1>
+        <h1 className="text-2xl text-[#000000]">Add Tables</h1>
         {addTables.map((addTable, index) => {
           return (
             <div
@@ -41,15 +41,15 @@ const AddTables = memo(({ postZones, zoneId, staffs, closeModal, postStaffs, set
               onClick={() => handleActiveClick(index)}
               onKeyUp={() => handleActiveClick(index)}
               className={`${addTable?._id === 2 ? 'pointer-events-none opacity-50' : ''} ${
-                activeClick === index ? 'border-2 border-[#2B354D]' : ' border-1 border-[#CACACA]'
+                activeClick === index ? 'border-2 border-[#000000]' : ' border-1 border-[#CACACA]'
               } my-5 rounded-md border bg-white p-3`}
             >
               <div className="flex items-center">
                 <input type="radio" name="table" className="mr-1" />
-                <h1 className="mx-1 text-base text-[#2B354D]">{addTable.text}</h1>
+                <h1 className="mx-1 text-base text-[#000000]">{addTable.text}</h1>
               </div>
               <div className="mt-3 flex justify-between">
-                <p className="text-sm text-[#2B354D]/70">{addTable.description}</p>
+                <p className="text-sm text-[#000000]/70">{addTable.description}</p>
               </div>
             </div>
           );

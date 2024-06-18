@@ -38,7 +38,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
       {data?.categories?.map((category: ICategory) => (
         <div key={category._id} className="masonry-item rounded-md border border-[#cacaca] p-4">
           <div className="mb-4">
-            <div className="mb-4 flex items-center justify-start space-x-2 rounded-md bg-[#2B354D] py-2 pl-4 pr-8">
+            <div className="mb-4 flex items-center justify-start space-x-2 rounded-md bg-[#000000] py-2 pl-4 pr-8">
               <MdOutlineCategory className="text-xl text-white" />
               <h2 className="font-medium text-white">{category.name}</h2>
             </div>
@@ -50,7 +50,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                 onChange={() => handleToggle(category._id, 'visibility', category.visibility, 'category')}
                 className="sr-only"
               />
-              {category.visibility ? <IoIosCheckbox className="text-2xl text-[#2B354D] " /> : <MdOutlineCheckBoxOutlineBlank className="text-2xl" />}
+              {category.visibility ? <IoIosCheckbox className="text-2xl text-[#000000] " /> : <MdOutlineCheckBoxOutlineBlank className="text-2xl" />}
             </label>
             <label className="mb-2 flex cursor-pointer items-center justify-between">
               Availability
@@ -61,7 +61,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                 className="sr-only"
               />
               {category.availability ? (
-                <IoIosCheckbox className="text-2xl text-[#2B354D] " />
+                <IoIosCheckbox className="text-2xl text-[#000000] " />
               ) : (
                 <MdOutlineCheckBoxOutlineBlank className="text-2xl" />
               )}
@@ -88,7 +88,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                         />
                         <div className="">
                           {dish?.visibility ? (
-                            <IoIosCheckbox className="text-2xl text-[#2B354D] " />
+                            <IoIosCheckbox className="text-2xl text-[#000000] " />
                           ) : (
                             <MdOutlineCheckBoxOutlineBlank className="text-2xl" />
                           )}
@@ -104,7 +104,7 @@ const QuickMenuContent = ({ searchText }: { searchText: string }) => {
                         />
                         <div className="">
                           {dish?.availability ? (
-                            <IoIosCheckbox className="text-2xl text-[#2B354D] " />
+                            <IoIosCheckbox className="text-2xl text-[#000000] " />
                           ) : (
                             <MdOutlineCheckBoxOutlineBlank className="text-2xl" />
                           )}

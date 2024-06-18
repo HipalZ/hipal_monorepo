@@ -8,7 +8,7 @@ export interface User {
   role: string;
   customRole: CustomRole[];
   password: string;
-  id: string;
+  _id: string;
   accessControl: {
     dish: boolean;
     staff: boolean;
@@ -52,7 +52,7 @@ export const useOwnerLogin = create(
         role: '',
         customRole: [],
         password: '',
-        id: '',
+        _id: '',
         accessControl: {
           dish: false,
           staff: false,

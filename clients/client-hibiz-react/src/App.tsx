@@ -23,7 +23,6 @@ const routeToPermissionMap: { [key: string]: keyof AccessControl } = {
 };
 
 function App() {
-  const { phoneNumber, password, setIsLogin, setUser } = useOwnerLogin();
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const navigate = useNavigate();
@@ -122,7 +121,7 @@ function App() {
   }, []);
   return (
     <div className="App">
-      {!isOnline && <div className="bg-red-500 text-center text-white">Please check your internet connection</div>}
+      {!isOnline && <div className="text-center text-white bg-red-500">Please check your internet connection</div>}
       {isOnline && isSlow && <div className="bg-[#ef9b0f] text-center text-white">⚠ Your connection is too slow</div>}
       <MainRouter />
     </div>

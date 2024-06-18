@@ -6,7 +6,7 @@ import Header from '@/components/molecules/header';
 import useTimings from '@/components/store/useTimings';
 import type { IDuesData } from '@/components/types/businessData';
 import { memo, startTransition, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const Dues = memo(() => {
@@ -42,8 +42,8 @@ const Dues = memo(() => {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header onBack={handleBack} title="Dues" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+      <div className=" linear_gradient_background">
+        <Header onBack={handleBack} title="Dues" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
         <div className="mx-6 mt-6 rounded-lg bg-[#204D42] py-4 text-white">
           <div className="flex items-center justify-start">
             <div className="mx-4 rounded-full bg-white px-4 py-2 text-xl font-semibold text-[#204D42]">{activeDues?.userName?.[0]}</div>

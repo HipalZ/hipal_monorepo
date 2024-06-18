@@ -59,7 +59,7 @@ function Login() {
         </div>
       </div>
 
-      <div className="mx-6 flex flex-col text-start text-3xl font-medium text-[#2B354D]">
+      <div className="mx-6 flex flex-col text-start text-3xl font-medium text-[#000000]">
         <span className="mt-6">Hey,</span>
         <span className="">Welcome Back!</span>
       </div>

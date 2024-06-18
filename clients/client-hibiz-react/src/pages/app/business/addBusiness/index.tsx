@@ -6,7 +6,7 @@ import { storeImageFiles } from '@/components/utils/helper';
 import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
 import type React from 'react';
 import { memo, startTransition, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -166,9 +166,9 @@ const AddBusiness = memo(() => {
   return (
     <div>
       <div className="pb-[2rem]">
-        <div className="sticky top-0 z-20 bg-[#f5f5f5] lg:mx-[30rem]">
-          <Header title="Business" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-          <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="sticky top-0 z-20 linear_gradient_background lg:mx-[30rem]">
+          <Header title="Business" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+          <div className="mt-6 flex items-center justify-between  px-6 pb-4">
             <div className="flex text-2xl">
               <span>Add Business</span>
             </div>
@@ -184,7 +184,7 @@ const AddBusiness = memo(() => {
               onChange={(e) => handleBusinessName(e)}
               value={businessDetails?.name}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Name"
               required
             />
@@ -198,7 +198,7 @@ const AddBusiness = memo(() => {
               onChange={(e) => handleRegisterName(e)}
               value={businessDetails?.registerName}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Register Name"
               required
             />
@@ -210,7 +210,7 @@ const AddBusiness = memo(() => {
             <select
               value={businessDetails?.businessType}
               onChange={handleBusinessType}
-              className="peer mb-0 ml-0 mr-0 mt-4 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 mt-4 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
             >
               <option value="">Select a Business Type</option>
               <option value="Qsr">Qsr</option>
@@ -230,7 +230,7 @@ const AddBusiness = memo(() => {
               maxLength={400}
               value={businessDetails?.address}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block h-[7rem] w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block h-[7rem] w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Address"
               required
             />
@@ -240,7 +240,7 @@ const AddBusiness = memo(() => {
           <h1 className="ml-4 mt-4 font-medium">
             Customized Link <span className="text-red-500">*</span>
           </h1>
-          <label className="ml-4 mt-4 font-semibold text-[#2B354D]">https://hipal.life/{uniqueUrl}</label>
+          <label className="ml-4 mt-4 font-semibold text-[#000000]">https://hipal.life/{uniqueUrl}</label>
           <div className="mx-4 mt-4 font-medium">
             <input
               type="text"
@@ -255,7 +255,7 @@ const AddBusiness = memo(() => {
               }
               onBlurCapture={getCustomUrl}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="URL"
               required
             />
@@ -316,7 +316,7 @@ const AddBusiness = memo(() => {
                 ''
               )}
             </div>
-            <div className="ml-4 text-sm font-normal text-[#2B354D] opacity-70">
+            <div className="ml-4 text-sm font-normal text-[#000000] opacity-70">
               <p>Cover Image</p>
               <p>1080 px X 1080 px</p>
               <p>Png, Jpeg, Webp</p>
@@ -325,7 +325,7 @@ const AddBusiness = memo(() => {
         </div>
       </div>
       <div className="sticky bottom-5 mx-6 my-6 lg:mx-[30rem]">
-        <button onClick={handleCreateBusiness} type="button" className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white">
+        <button onClick={handleCreateBusiness} type="button" className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white">
           Create
         </button>
       </div>

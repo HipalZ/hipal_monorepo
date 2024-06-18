@@ -13,7 +13,7 @@ import { Disclosure } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { MdPerson } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -61,16 +61,16 @@ const CustomerBillsReviews = memo(() => {
   const CustomerzBillsReviews = () => {
     return (
       <div className="relative">
-        <div className="border-b border-[#cacaca] bg-[#f5f5f5] pb-4">
+        <div className=" linear_gradient_background" pb-4">
           <div className="sticky top-0 z-10 w-full bg-[#f5f5f5] pb-4">
-            <Header title="Customerz" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} onBack={handleBack} />
+            <Header title="Customerz" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} onBack={handleBack} />
           </div>
           <div className="m-auto flex flex-col items-center justify-center text-white">
-            <div className="flex h-[5rem] w-[5rem] items-center justify-center rounded-full bg-[#2B354D] text-center text-xl capitalize">
+            <div className="flex h-[5rem] w-[5rem] items-center justify-center rounded-full bg-[#000000] text-center text-xl capitalize">
               {customerzName ? customerzName?.charAt(0) : null}
             </div>
-            <span className="pt-4 text-2xl text-[#2B354D]">{customerzName}</span>
-            <span className="text-base font-medium text-[#2B354D]">{customerzPhone}</span>
+            <span className="pt-4 text-2xl text-[#000000]">{customerzName}</span>
+            <span className="text-base font-medium text-[#000000]">{customerzPhone}</span>
           </div>
         </div>
         <section className="mx-6 my-4 flex items-center justify-between">
@@ -90,12 +90,12 @@ const CustomerBillsReviews = memo(() => {
         <hr className="mx-6 bg-[#CACACA]" />
         <section className="mx-6 my-4">
           <article className="flex items-center justify-between">
-            <h1 className="text-xl text-[#2B354D]">Bills</h1>
+            <h1 className="text-xl text-[#000000]">Bills</h1>
             {billsData?.latestBills && billsData.latestBills.length > 0 ? (
               <button
                 type="button"
                 onClick={viewAllBills}
-                className="on_active_bounce rounded-xl border border-[#2B354D] px-4 py-2 text-base font-medium focus:outline-none"
+                className="on_active_bounce rounded-xl border border-[#000000] px-4 py-2 text-base font-medium focus:outline-none"
               >
                 View All
               </button>
@@ -135,7 +135,7 @@ const CustomerBillsReviews = memo(() => {
                             <div>{bill?.mode}</div>
                           </div>
                           {/* Here you can add code to display items and their amounts */}
-                          <div className="border-b border-[#cacaca] pb-4">
+                          <div className=" pb-4">
                             <div className="mt-4 font-medium">
                               <div className="flex justify-between font-medium">
                                 <span>items</span>
@@ -165,12 +165,12 @@ const CustomerBillsReviews = memo(() => {
         </section>
         <section className="mx-6">
           <article className="flex items-center justify-between">
-            <h1 className="text-xl text-[#2B354D]">Reviewz</h1>
+            <h1 className="text-xl text-[#000000]">Reviewz</h1>
             {billsData?.latestReviews && billsData?.latestReviews?.length > 0 ? (
               <button
                 type="button"
                 onClick={viewAllReviewz}
-                className="on_active_bounce rounded-xl border border-[#2B354D] px-4 py-2 text-base font-medium focus:outline-none"
+                className="on_active_bounce rounded-xl border border-[#000000] px-4 py-2 text-base font-medium focus:outline-none"
               >
                 View All
               </button>

@@ -7,7 +7,7 @@ import Header from '@/components/molecules/header';
 import useTimings from '@/components/store/useTimings';
 import type { IDuesData } from '@/components/types/businessData';
 import { memo, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -86,10 +86,10 @@ function Clear() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+      <div className=" linear_gradient_background">
+        <Header leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
 
-        <div className="ml-6 mt-4 py-4 text-2xl font-normal">
+        <div className="py-4 mt-4 ml-6 text-2xl font-normal">
           Settling for <span className="font-semibold capitalize text-[#204D42]">{activeDues?.userName}</span>
         </div>
       </div>
@@ -149,19 +149,19 @@ function Clear() {
               <div className="text-sm opacity-60">{due?.date.slice(0, 16)}</div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center justify-between mt-2">
               <div className="text-base font-medium capitalize opacity-70">{due?.customerName}</div>
             </div>
           </div>
         ))}
       </div>
-      <div className="fixed bottom-6 w-full px-6">
+      <div className="fixed w-full px-6 bottom-6">
         <button
           type="button"
           onClick={openModalOrShowToast}
           className={`${
             selectedDuesTotal === 0 ? 'opacity-50' : ''
-          } on_active_bounce mt-4 w-full rounded-lg border border-[#2B354D] bg-[#2B354D] px-4 py-2 font-semibold text-white`}
+          } bottom_btn`}
         >
           <div className="flex items-center justify-center">Pay ₹ {selectedDuesTotal}</div>
         </button>

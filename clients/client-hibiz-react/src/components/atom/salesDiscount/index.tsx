@@ -102,7 +102,7 @@ function SalesDiscount() {
                             </div>
                             <div>{bill?.tableName}</div>
                           </div>
-                          <div className="border-b border-[#cacaca] pb-4">
+                          <div className=" pb-4">
                             <div className="mt-4 font-medium">
                               <div className="flex justify-between font-medium">
                                 <span>items</span>
@@ -147,17 +147,17 @@ function SalesDiscount() {
             type="button"
             onClick={() => handleClick(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsLeft />
           </button>
         )}
-        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{currentPage}</p>
+        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{currentPage}</p>
         {salesData && salesData.data.length > 0 && (
           <button
             type="button"
             onClick={() => handleClick(currentPage + 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
           >
             <BiChevronsRight />
           </button>

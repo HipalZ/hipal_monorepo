@@ -79,7 +79,7 @@ const SplitPaymentModal: React.FC<SplitPaymentModalProps> = ({ billAmount, selec
       </div>
       <div className="z-50 space-y-4 pb-6">{inputFields}</div>
       <div className="flex items-end justify-end">
-        <button type="button" className="w-[40%] rounded-full bg-[#2b354d] py-2 text-white" onClick={() => splitFinalClick(paymentBreakdown)}>
+        <button type="button" className="w-[40%] rounded-full bg-[#000000] py-2 text-white" onClick={() => splitFinalClick(paymentBreakdown)}>
           Submit
         </button>
       </div>

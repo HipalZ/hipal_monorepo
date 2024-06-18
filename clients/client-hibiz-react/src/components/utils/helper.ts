@@ -2,6 +2,8 @@ import axios from '@/axios';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
 import { BillsData } from '../types/businessData';
+import { ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function convertToCSV(data: BillsData) {
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -262,3 +264,9 @@ export const zoneType = [
     type: 'Delivery',
   },
 ];
+
+
+//apply cn
+export const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs));
+};

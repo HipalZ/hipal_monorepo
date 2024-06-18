@@ -80,7 +80,7 @@ const SalesDues = memo(({ initialData, isLoadingDues }: { initialData: SaleDuesR
               <div
                 key={due?._id}
                 onClick={() => handleClick(due?._id)}
-                className=" on_active_bounce masonry-item rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+                className=" on_active_bounce masonry-item rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
               >
                 <div className="flex items-center px-4 py-2">
                   <MdPerson className="mr-2" />
@@ -96,7 +96,7 @@ const SalesDues = memo(({ initialData, isLoadingDues }: { initialData: SaleDuesR
       <div onClick={openModal} className="fixed bottom-6 flex w-full items-center justify-center px-6">
         <button
           type="button"
-          className="on_active_bounce mt-4 w-full rounded-lg border border-[#2B354D] bg-white px-4 py-2 font-semibold text-[#2B354D]"
+          className="on_active_bounce mt-4 w-full rounded-lg border border-[#000000] bg-white px-4 py-2 font-semibold text-[#000000]"
         >
           <div className="flex items-center justify-center">
             <MdAdd className="mr-2" />

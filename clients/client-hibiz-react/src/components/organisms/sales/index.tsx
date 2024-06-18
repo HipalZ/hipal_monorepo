@@ -118,7 +118,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
                   .map((ele, index, array) => (
                     <div
                       key={index.toString()}
-                      className={`${index < array.length - 1 ? 'border-b border-[#cacaca]' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
+                      className={`${index < array.length - 1 ? '' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
                     >
                       {ele.totalSale > 0 && (
                         <>
@@ -147,7 +147,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
                   .map((ele, index, array) => (
                     <div
                       key={index.toString()}
-                      className={`${index < array.length - 1 ? 'border-b border-[#cacaca]' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
+                      className={`${index < array.length - 1 ? '' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
                     >
                       {ele?.totalSale > 0 && (
                         <>
@@ -167,7 +167,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
                   .map((ele, index, array) => (
                     <div
                       key={index.toString()}
-                      className={`${index < array.length - 1 ? 'border-b border-[#cacaca]' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
+                      className={`${index < array.length - 1 ? '' : ''} mx-4 flex items-center justify-between py-4 text-sm`}
                     >
                       {ele?.totalSale > 0 && (
                         <>
@@ -186,7 +186,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
               </div>
               <div className="mx-6 mt-4 rounded-md border border-[#cacaca]">
                 {salesData?.dues.map((ele, index) => (
-                  <div key={index.toString()} className="mx-4 flex items-center justify-between border-b border-[#cacaca] py-4 text-sm">
+                  <div key={index.toString()} className="mx-4 flex items-center justify-between  py-4 text-sm">
                     <span>{ele?.customerName}</span>
                     <span>₹ {ele?.dues}</span>
                   </div>
@@ -202,7 +202,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
                 {salesData?.tips
                   .filter((ele) => ele?.tips > 0)
                   .map((ele, index) => (
-                    <div key={index.toString()} className="mx-4 flex items-center justify-between border-b border-[#cacaca] py-4 text-sm">
+                    <div key={index.toString()} className="mx-4 flex items-center justify-between  py-4 text-sm">
                       <span>{ele?.waiterName}</span>
                       <span>₹ {ele?.tips}</span>
                     </div>
@@ -225,7 +225,7 @@ const SalesComponent: React.FC<SalesComponentProps> = memo(({ salesData, isLoadi
         <button
           type="button"
           onClick={openModal}
-          className=" on_active_bounce rounded-lg border border-[#2B354D] bg-[#2B354D] px-4 py-2 font-normal text-white"
+          className=" on_active_bounce rounded-lg border border-[#000000] bg-[#000000] px-4 py-2 font-normal text-white"
         >
           <div className="flex items-center justify-center text-white">
             <MdAdd className="mr-2" />

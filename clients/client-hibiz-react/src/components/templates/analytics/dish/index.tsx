@@ -13,7 +13,7 @@ import ExcelJS from 'exceljs';
 import { memo, useState } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
 import { BiChevronsLeft, BiChevronsRight, BiDownload } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { IoFastFoodOutline } from 'react-icons/io5';
 import { useParams } from 'react-router-dom';
 
@@ -114,16 +114,16 @@ function AnalyticsDish() {
   if (error) return <ErrorComponent refetch={refetch} />;
   return (
     <div className="relative">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
+      <div className="sticky top-0 z-20 linear_gradient_background">
         <Header
           title="Analytics"
           onBack={() => setSelectedSubIcon('')}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-2">
+        <div className="mt-6 flex items-center justify-between  px-6 pb-2">
           <div className="ml-2 text-xl"> Dish</div>
           <div
             onKeyDown={exportToExcel}
@@ -191,7 +191,7 @@ function AnalyticsDish() {
                   type="button"
                   onClick={() => handleClick(currentPage > 1 ? currentPage - 1 : 1)}
                   disabled={currentPage === 1}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
                 >
                   <BiChevronsLeft />
                 </button>
@@ -205,8 +205,8 @@ function AnalyticsDish() {
                   disabled={currentPage === idx + 1}
                   className={`flex h-10 w-10 items-center justify-center ${
                     currentPage === idx + 1
-                      ? 'rounded-full border border-[#2B354D] bg-[#2B354D] text-white'
-                      : 'rounded-full border border-[#2B354D] bg-white text-black'
+                      ? 'rounded-full border border-[#000000] bg-[#000000] text-white'
+                      : 'rounded-full border border-[#000000] bg-white text-black'
                   }`}
                   style={{
                     display: idx >= currentPage - 1 && idx <= currentPage + 1 ? 'inline-flex' : 'none',
@@ -220,7 +220,7 @@ function AnalyticsDish() {
                 <button
                   type="button"
                   onClick={() => handleClick(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
                   disabled={currentPage === totalPages}
                 >
                   <BiChevronsRight />

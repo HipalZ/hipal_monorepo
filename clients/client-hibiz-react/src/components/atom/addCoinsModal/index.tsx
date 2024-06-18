@@ -63,13 +63,13 @@ const AddCoinsModal: React.FC<AddCoinsProps> = ({ closeModal, selectedCustomer, 
 
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6">
-      <h3 className="mb-4 text-xl font-medium text-[#2B354D]">Add Coins</h3>
+      <h3 className="mb-4 text-xl font-medium text-[#000000]">Add Coins</h3>
       <input
         type="number"
         value={coins}
         maxLength={6}
         onChange={(e) => setCoins(e.target.value)}
-        className="mb-2 w-full rounded border px-3 py-2 focus:border focus:border-[#2B354D] focus:outline-none"
+        className="mb-2 w-full rounded border px-3 py-2 focus:border focus:border-[#000000] focus:outline-none"
         placeholder="Enter Coins"
       />
       <div className="relative mt-4 pb-4">
@@ -91,7 +91,7 @@ const AddCoinsModal: React.FC<AddCoinsProps> = ({ closeModal, selectedCustomer, 
         </button>
       </div>
 
-      <button type="button" onClick={addCoins} className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white">
+      <button type="button" onClick={addCoins} className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#000000] px-4 py-2 text-white">
         Add Coins
       </button>
     </div>

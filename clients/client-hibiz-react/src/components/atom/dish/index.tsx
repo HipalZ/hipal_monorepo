@@ -18,7 +18,7 @@ const DishComponent: React.FC<DishComponentProps> = ({ dishes, selectedDishes, t
   return (
     <>
       <div className="relative max-h-[80vh] overflow-y-auto rounded-2xl bg-[#f5f5f5] px-4 pb-[8rem] shadow">
-        <section className="sticky top-0 z-20 bg-[#f5f5f5] pb-2 pt-4">
+        <section className="sticky top-0 z-20 linear_gradient_background pb-2 pt-4">
           <h3 className="pb-2 text-lg font-bold">Add Dishes</h3>
           <input
             type="search"
@@ -50,7 +50,7 @@ const DishComponent: React.FC<DishComponentProps> = ({ dishes, selectedDishes, t
         <button
           type="button"
           onClick={resetAndCloseDishModal}
-          className="on_active_bounce border-1 mr-2 w-full rounded-md border border-[#2B354D] bg-white py-2.5 text-[#2B354D]"
+          className="on_active_bounce border-1 mr-2 w-full rounded-md border border-[#000000] bg-white py-2.5 text-[#000000]"
         >
           Cancel
         </button>
@@ -60,7 +60,7 @@ const DishComponent: React.FC<DishComponentProps> = ({ dishes, selectedDishes, t
             onClose();
             toast.success('Dishes added sucessfully');
           }}
-          className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white"
+          className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white"
         >
           Save
         </button>

@@ -9,7 +9,7 @@ import useTimings from '@/components/store/useTimings';
 import type { Bill } from '@/components/types/businessData';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 
 interface IProps extends Bill {
@@ -66,8 +66,8 @@ const Tips = memo(() => {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header title="Tips" leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} onBack={handleBack} />
+      <div className=" linear_gradient_background">
+        <Header title="Tips" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} onBack={handleBack} />
         <div className="mx-6 mt-6 rounded-lg bg-[#204D42] py-4 text-white">
           <div className="flex items-center justify-start">
             <div className="mx-4 rounded-full bg-white px-4 py-2 text-xl font-semibold text-[#204D42]">{selectedWaiter?.[0]}</div>

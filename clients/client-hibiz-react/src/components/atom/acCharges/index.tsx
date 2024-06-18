@@ -25,13 +25,13 @@ const ACCharges = memo(
     return (
       <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
         <div className="max-h-[85vh] overflow-y-auto px-6 py-5">
-          <h1 className="text-2xl text-[#2B354D]">Add Charges to the zone</h1>
+          <h1 className="text-2xl text-[#000000]">Add Charges to the zone</h1>
           {acCharges?.map((charge: ICharges) => (
             <div
               key={charge._id}
               onClick={() => handleActiveClick(charge)}
               className={`${
-                activeClick?.some((item) => item._id === charge._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                activeClick?.some((item) => item._id === charge._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
               } my-5 rounded-md border bg-white p-3`}
             >
               <div className="flex items-center">
@@ -40,7 +40,7 @@ const ACCharges = memo(
                 <h1 className="mx-2 text-base">{charge?.chargeName}</h1>
               </div>
               <div className="mt-4 flex justify-between">
-                <p className="text-sm text-[#2B354D]/70">{charge?.value}% billing</p>
+                <p className="text-sm text-[#000000]/70">{charge?.value}% billing</p>
               </div>
             </div>
           ))}
@@ -48,7 +48,7 @@ const ACCharges = memo(
             <button
               type="button"
               onClick={() => handleACCharges(activeClick)}
-              className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white"
+              className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white"
             >
               Add
             </button>

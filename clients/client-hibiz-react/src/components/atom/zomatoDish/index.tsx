@@ -169,7 +169,7 @@ const ZomatoDish = ({
       <div className="rounded-md px-4 pb-4 pt-2">
         <div className="mt-2 space-y-4">
           <div>
-            <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="dishName">
+            <label className="mb-2 block font-medium text-[#000000]" htmlFor="dishName">
               Dish Name
             </label>
             <input
@@ -183,7 +183,7 @@ const ZomatoDish = ({
             />
           </div>
           <div>
-            <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="dishPrice">
+            <label className="mb-2 block font-medium text-[#000000]" htmlFor="dishPrice">
               Dish Price <span className="text-red-500">*</span>
             </label>
             <input
@@ -197,12 +197,12 @@ const ZomatoDish = ({
             />
           </div>
           <div>
-            <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="taxesCharges">
+            <label className="mb-2 block font-medium text-[#000000]" htmlFor="taxesCharges">
               Kitchen <span className="text-red-500">*</span>
             </label>
             <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
               {kitchen?.map((kitchen: any) => (
-                <option className="!bg-white !text-[#2B354D]" key={kitchen?._id} value={kitchen?._id}>
+                <option className="!bg-white !text-[#000000]" key={kitchen?._id} value={kitchen?._id}>
                   {kitchen?.kitchenName}
                 </option>
               ))}
@@ -248,8 +248,8 @@ const ZomatoDish = ({
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-[#2B354D]">Portions</div>
-              <button type="button" onClick={handleIncreasePortion} className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#2B354D]">
+              <div className="text-[#000000]">Portions</div>
+              <button type="button" onClick={handleIncreasePortion} className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#000000]">
                 Add
               </button>
             </div>
@@ -304,7 +304,7 @@ const ZomatoDish = ({
                     className="w-full rounded-md border p-2"
                   >
                     {dishTypes?.map((dish: any) => (
-                      <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                      <option className="!bg-white !text-[#000000]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                         {dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
                       </option>
                     ))}

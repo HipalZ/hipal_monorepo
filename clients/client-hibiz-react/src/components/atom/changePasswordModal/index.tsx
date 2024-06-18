@@ -47,7 +47,7 @@ const ChangePasswordModal = ({ closeModal, onPasswordChange }: { closeModal: () 
 
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6">
-      <h3 className="mb-4 text-xl font-medium text-[#2B354D]">Edit Password</h3>
+      <h3 className="mb-4 text-xl font-medium text-[#000000]">Edit Password</h3>
       <div className="relative pb-4">
         <input
           ref={inputRef}
@@ -75,7 +75,7 @@ const ChangePasswordModal = ({ closeModal, onPasswordChange }: { closeModal: () 
             type="button"
             onClick={changePassword}
             className={
-              'min-w-389 my-auto min-h-[3rem] min-w-[95%] rounded-full bg-[#2B354D] !py-2 text-[1rem] font-semibold text-white md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%]'
+              'min-w-389 my-auto min-h-[3rem] min-w-[95%] rounded-full bg-[#000000] !py-2 text-[1rem] font-semibold text-white md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%]'
             }
           >
             Change Password

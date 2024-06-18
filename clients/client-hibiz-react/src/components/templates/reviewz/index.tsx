@@ -12,7 +12,7 @@ import { routeToDashboard } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import React, { memo, startTransition, useEffect, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { MdOutlineArticle, MdSpaceDashboard } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReviewBarChart from './reviewChart';
@@ -130,13 +130,13 @@ const Reviewz = () => {
         <br />
         <section>
           <article className="flex items-center justify-between">
-            <h1 className="text-xl text-[#2B354D]">Latest Reviewz</h1>
+            <h1 className="text-xl text-[#000000]">Latest Reviewz</h1>
             <button
               type="button"
               onClick={() => {
                 setSelectedButton('Reviewz');
               }}
-              className="on_active_bounce rounded-xl border border-[#2B354D] px-4 py-2 text-base font-medium focus:outline-none"
+              className="on_active_bounce rounded-xl border border-[#000000] px-4 py-2 text-base font-medium focus:outline-none"
             >
               View All
             </button>
@@ -227,17 +227,17 @@ const Reviewz = () => {
               type="button"
               onClick={() => handleClick(pageNumber - 1)}
               disabled={pageNumber === 1}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
             >
               <BiChevronsLeft />
             </button>
           )}
-          <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">{pageNumber}</p>
+          <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-black">{pageNumber}</p>
           {reviewsData && reviewsData.length > 0 && (
             <button
               type="button"
               onClick={() => handleClick(pageNumber + 1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-base text-black"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#000000] bg-white text-base text-black"
             >
               <BiChevronsRight />
             </button>
@@ -265,10 +265,10 @@ const Reviewz = () => {
   };
   return (
     <>
-      <div className="bg-[#f5f5f5]">
-        <Header title="Reviewz" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+     <div className="linear_gradient_background">
+        <Header title="Reviewz" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
         <SubheaderButtonList buttons={buttons} />
-        <div className="mt-4 flex items-center justify-between border-b border-[#cacaca] pb-4">
+        <div className="mt-4 flex items-center justify-between  pb-4">
           <div className="flex text-2xl">
             <span className="ml-6"> Reviewz</span>
           </div>

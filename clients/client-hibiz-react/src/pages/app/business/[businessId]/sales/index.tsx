@@ -22,6 +22,7 @@ import { memo, startTransition, useEffect, useState } from 'react';
 import { AiOutlinePercentage } from 'react-icons/ai';
 import { BiDownload, BiSolidReceipt } from 'react-icons/bi';
 import { BsChevronLeft, BsPostcardHeart } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { GiReceiveMoney } from 'react-icons/gi';
 import { LuSettings } from 'react-icons/lu';
 import { MdSpaceDashboard } from 'react-icons/md';
@@ -255,10 +256,10 @@ const Sales = memo(() => {
 
   return (
     <div className="bg-white">
-      <div className="sticky top-0 z-50 bg-[#f5f5f5]">
-        <Header title="Sales" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+      <div className="sticky top-0 z-50 linear_gradient_background">
+        <Header title="Sales" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
         <SubheaderButtonList buttons={buttons} />
-        <div className="mt-2 flex justify-between border-b border-[#CACACA] px-6 pb-4">
+        <div className="flex justify-between px-6 pb-4 mt-2">
           <div className="text-2xl font-medium">{selectedButton}</div>
           {selectedButton === 'Bills' && (
             <div className="flex space-x-4">
@@ -320,7 +321,7 @@ const Sales = memo(() => {
       ) : selectedButton === 'Discount' ? (
         <SalesDiscount />
       ) : (
-        <div className="fixed left-1/2 top-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">
+        <div className="fixed z-20 flex items-center justify-center space-x-4 transform -translate-x-1/2 left-1/2 top-1/2">
           Something is wrong Please Go Back
         </div>
       )}

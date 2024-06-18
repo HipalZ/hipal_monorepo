@@ -13,7 +13,7 @@ import { storeImageAfterSave } from '@/components/utils/helper';
 import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
 import { memo, startTransition, useRef, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
 import { MdDinnerDining } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -186,9 +186,9 @@ const AddCategory: React.FC = memo(() => {
 
   return (
     <div className="pb-[7rem]">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header title="Category" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header title="Category" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="">Create a Category</span>
           </div>
@@ -203,7 +203,7 @@ const AddCategory: React.FC = memo(() => {
           type="text"
           id="floating_outlined"
           maxLength={24}
-          className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+          className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
           placeholder="Name"
           required
         />
@@ -214,7 +214,7 @@ const AddCategory: React.FC = memo(() => {
           <button
             type="button"
             onClick={() => setIsHierarchyModalOpen(true)}
-            className="on_active_bounce rounded-md border border-[#2B354D] px-3 py-1 text-sm capitalize"
+            className="on_active_bounce rounded-md border border-[#000000] px-3 py-1 text-sm capitalize"
           >
             Edit
           </button>
@@ -248,7 +248,7 @@ const AddCategory: React.FC = memo(() => {
           <button
             type="button"
             onClick={() => setIsDishModalOpen(true)}
-            className="on_active_bounce rounded-md border border-[#2B354D] px-3 py-1 text-sm capitalize"
+            className="on_active_bounce rounded-md border border-[#000000] px-3 py-1 text-sm capitalize"
           >
             Add
           </button>
@@ -314,7 +314,7 @@ const AddCategory: React.FC = memo(() => {
       <div onClick={createCategory} className="fixed bottom-0 flex w-full items-center justify-between bg-white p-4 outline-none">
         <button
           type="button"
-          className={`${loading ? 'pointer-events-none' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2 capitalize text-white`}
+          className={`${loading ? 'pointer-events-none' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2 capitalize text-white`}
         >
           {loading ? 'Loading...' : 'Create'}
         </button>
@@ -332,7 +332,7 @@ const AddCategory: React.FC = memo(() => {
           <div className="flex bg-white py-2">
             <button
               type="button"
-              className="on_active_bounce fixed bottom-5 mx-4 w-[25rem] rounded-md bg-[#2B354D] py-2.5 text-white"
+              className="on_active_bounce fixed bottom-5 mx-4 w-[25rem] rounded-md bg-[#000000] py-2.5 text-white"
               onClick={handleCrop}
             >
               Save & Close

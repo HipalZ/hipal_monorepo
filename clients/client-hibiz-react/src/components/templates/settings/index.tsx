@@ -11,7 +11,7 @@ import type { IBusinessData } from '@/components/types/businessData';
 import { routeToDashboard } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition, useEffect, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import PasswordManager from '../passwordManager';
 
@@ -80,23 +80,23 @@ const BusinessSettings = memo(() => {
   const Settings = () => {
     return (
       <div>
-        <div className="bg-[#f5f5f5]">
+       <div className="linear_gradient_background">
           <Header
             title="Settings"
             onBack={handleBack}
             isIconBusinessShow={false}
-            leftIcon={<BsChevronLeft />}
+            leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
           />
-          <div className="mt-4 flex flex-col items-center justify-center border-b border-[#cacaca] pb-4 text-center text-2xl">
+          <div className="mt-4 flex flex-col items-center justify-center  pb-4 text-center text-2xl">
             <img src={businessData?.logo} alt="Bimage" height={100} width={100} className="rounded-full" loading="lazy" />
             {businessData?.businessName}
           </div>
         </div>
         <div
           onClick={openModal}
-          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
         >
           <div className="flex items-center px-4 py-2">
             <span>Business timings</span>
@@ -111,7 +111,7 @@ const BusinessSettings = memo(() => {
         <PopUp show={isModalOpen} onClose={closeModal}>
           <div className="mx-6">
             <div className="mt-2 flex items-center justify-between text-sm font-medium">
-              <h3 className="mb-4 pt-2 text-xl font-medium text-[#2B354D]">Business timings</h3>
+              <h3 className="mb-4 pt-2 text-xl font-medium text-[#000000]">Business timings</h3>
             </div>
             <div>
               <TimePicker />
@@ -121,7 +121,7 @@ const BusinessSettings = memo(() => {
                 <button
                   type="button"
                   onClick={setBusinssTime}
-                  className="min-w-389 my-auto min-h-[3rem] min-w-[95%] rounded-xl bg-[#2B354D] !py-2 text-[1rem] font-semibold text-white md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%]"
+                  className="min-w-389 my-auto min-h-[3rem] min-w-[95%] rounded-xl bg-[#000000] !py-2 text-[1rem] font-semibold text-white md:min-w-[75%] lg:min-w-[55%] xl:min-w-[55%]"
                 >
                   Save
                 </button>
@@ -129,7 +129,7 @@ const BusinessSettings = memo(() => {
             </div>
           </div>
         </PopUp>
-        <div onClick={redirectPasswords} className="m-5 flex cursor-pointer justify-between rounded-lg border border-[#cacaca] p-4 text-[#2B354D]">
+        <div onClick={redirectPasswords} className="m-5 flex cursor-pointer justify-between rounded-lg border border-[#cacaca] p-4 text-[#000000]">
           <p>Manage Passwords</p>
         </div>
       </div>

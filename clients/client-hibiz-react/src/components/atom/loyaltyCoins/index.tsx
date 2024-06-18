@@ -63,7 +63,7 @@ const LoyaltyCoins = () => {
       <div className="pb-12">
         <LoyaltyHistoryAccordion isLoading={isLoading} itemsData={itemsData || []} pageNumber={pageNumber} pageNumberFunction={pageNumberFunction} />
         <div onKeyDown={uploadCsvPage} onClick={uploadCsvPage} className="fixed bottom-6 flex w-full items-center justify-center px-6">
-          <button type="button" className="on_active_bounce mt-4 w-full rounded-lg border bg-[#2B354D] px-4 py-2 font-semibold text-white">
+          <button type="button" className="on_active_bounce mt-4 w-full rounded-lg border bg-[#000000] px-4 py-2 font-semibold text-white">
             <div className="flex items-center justify-center">
               <MdAdd className="mr-2" />
               Add credits

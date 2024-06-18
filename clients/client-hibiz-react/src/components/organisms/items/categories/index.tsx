@@ -315,15 +315,15 @@ const CategoriesContent = memo(({ categories, hide, searchText }: { categories: 
       {!hide && (
         <div className="flex">
           <div onClick={handleAddCategoryClick} className="fixed bottom-0 w-1/2 cursor-pointer bg-white p-4 outline-none">
-            <button className="w-full rounded-md bg-[#2B354D] py-2 text-white">Add Category</button>
+            <button className="w-full rounded-md bg-[#000000] py-2 text-white">Add Category</button>
           </div>
           <div className="fixed bottom-0 right-0 w-1/2 cursor-pointer bg-white p-4 outline-none">
             {isEditingSequence ? (
-              <button className="mt-2 w-full rounded-md bg-[#2B354D] py-2 text-white" onClick={saveCategoryOrder}>
+              <button className="mt-2 w-full rounded-md bg-[#000000] py-2 text-white" onClick={saveCategoryOrder}>
                 Save Order
               </button>
             ) : (
-              <button className="w-full rounded-md bg-[#2B354D] py-2 text-white" onClick={() => setIsEditingSequence(!isEditingSequence)}>
+              <button className="w-full rounded-md bg-[#000000] py-2 text-white" onClick={() => setIsEditingSequence(!isEditingSequence)}>
                 Edit Sequence
               </button>
             )}

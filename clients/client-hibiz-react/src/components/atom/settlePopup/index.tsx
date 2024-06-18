@@ -63,14 +63,14 @@ const SettlePopup: React.FC<SettlePopupProps> = ({ closeModal, selectedDuesIds, 
 
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6">
-      <h3 className="mb-2 text-xl font-medium text-[#2B354D]">Confirm payment of ₹ {selectedDuesTotal}</h3>
+      <h3 className="mb-2 text-xl font-medium text-[#000000]">Confirm payment of ₹ {selectedDuesTotal}</h3>
 
       <input
         ref={inputRef}
         type="text"
         value={paymentMode}
         onChange={(e) => setPaymentMode(e.target.value.toLowerCase())}
-        className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#2B354D] focus:outline-none"
+        className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#000000] focus:outline-none"
         placeholder="Enter Mode"
       />
 
@@ -82,14 +82,14 @@ const SettlePopup: React.FC<SettlePopupProps> = ({ closeModal, selectedDuesIds, 
             key={method._id} // <-- Use the method's id for the key
             onClick={() => handleSuggestionClick(method.mode)}
             className={`on_active_bounce rounded-lg px-3 py-2 text-sm font-medium capitalize ${
-              paymentMode === method.mode ? 'bg-[#2B354D] text-white' : 'bg-white text-[#2B354D]'
+              paymentMode === method.mode ? 'bg-[#000000] text-white' : 'bg-white text-[#000000]'
             }`}
           >
             {method.mode}
           </button>
         ))}
       </div>
-      <button type="button" onClick={settleDues} className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white">
+      <button type="button" onClick={settleDues} className="on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#000000] px-4 py-2 text-white">
         Pay ₹ {selectedDuesTotal}
       </button>
     </div>

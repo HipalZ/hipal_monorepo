@@ -7,7 +7,7 @@ import { useSelectedIcon } from '@/components/store/useSelectedIcon';
 import { PAGE_TYPES, routePathsWithIds, routeToDashboard } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition, useEffect } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import AddKitchen from './addKitchen';
 
@@ -105,9 +105,9 @@ const KitchenDashboard = memo(({ kitchens, addKitchen, businessId, loading }: IP
 
   return (
     <div className="relative">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header title="Kitchens" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header title="Kitchens" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2">Kitchens</span>
           </div>
@@ -136,7 +136,7 @@ const KitchenDashboard = memo(({ kitchens, addKitchen, businessId, loading }: IP
       <div onClick={addKitchen} className="fixed bottom-0 w-full cursor-pointer bg-white p-4 outline-none">
         <button
           type="button"
-          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2 text-white`}
+          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2 text-white`}
         >
           Add
         </button>

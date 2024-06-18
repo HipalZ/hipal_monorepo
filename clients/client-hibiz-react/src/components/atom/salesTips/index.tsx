@@ -51,7 +51,7 @@ function SalesTips() {
           <div
             key={i}
             onClick={() => handleClick(tips.waiterName)}
-            className="masonry-item on_active_bounce rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+            className="masonry-item on_active_bounce rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
           >
             <div className="flex items-center px-4 py-2">
               <MdPerson className="mr-2" />

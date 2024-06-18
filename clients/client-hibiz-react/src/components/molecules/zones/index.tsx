@@ -86,10 +86,10 @@ const Zones = memo(() => {
         {zones?.map((zone) => {
           return (
             <div key={zone?._id}>
-              <div className="border-1 mx-6 mt-6 rounded-lg border border-gray-200 p-3">
+              <div className="p-3 mx-6 mt-6 border border-gray-200 rounded-lg border-1">
                 <div className="flex items-center justify-between pb-3">
-                  <h1 className="text-base font-semibold capitalize text-[#2B354D]">{zone.zoneName}</h1>
-                  <div onClick={() => handleEditButton(zone?._id)}>
+                  <h1 className="text-base font-semibold capitalize text-[#000000]">{zone.zoneName}</h1>
+                  <div onClick={() => handleEditButton(zone)}>
                     <button type="button" className="text-[#2F80ED] hover:underline">
                       Edit
                     </button>
@@ -98,8 +98,8 @@ const Zones = memo(() => {
                 {zone?.tables && zone?.tables?.length > 0 ? (
                   <>
                     <hr className="h-0.5 bg-[#cacaca]" />
-                    <div className="border-b-1 mb-2 flex items-center justify-between border-b border-[#cacaca] pb-3">
-                      <h1 className="mt-3 text-[#2B354D]/70">Tables in this zone</h1>
+                    <div className="flex items-center justify-between pb-3 mb-2 border-b-1">
+                      <h1 className="mt-3 text-[#000000]/70">Tables in this zone</h1>
                       <p>{zone?.tables?.length}</p>
                     </div>
                   </>
@@ -120,7 +120,7 @@ const Zones = memo(() => {
                                 await downloadURI(table?._id, table?.name, table?.zoneId, businessId || '');
                                 setIsLoading(false);
                               }}
-                              className="on_active_bounce ml-auto flex items-center justify-self-end rounded-md border border-[#2B354D] px-2 py-1"
+                              className="on_active_bounce ml-auto flex items-center justify-self-end rounded-md border border-[#000000] px-2 py-1"
                             >
                               <GoDownload />
                               <span>Qr</span>
@@ -134,8 +134,8 @@ const Zones = memo(() => {
             </div>
           );
         })}
-        <div className="fixed bottom-5 w-full px-6">
-          <button type="button" onClick={handleAddZone} className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white">
+        <div className="fixed w-full px-6 bottom-5">
+          <button type="button" onClick={handleAddZone} className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white">
             Add Zone
           </button>
         </div>

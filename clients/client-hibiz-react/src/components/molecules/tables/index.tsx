@@ -145,7 +145,7 @@ const Tables = memo(() => {
                       await downloadURI(table?._id, table?.name, table?.zoneId, businessId || '');
                       setIsLoading(false);
                     }}
-                    className="on_active_bounce flex items-center space-x-2 rounded-md border border-[#2B354D] px-2 py-1"
+                    className="on_active_bounce flex items-center space-x-2 rounded-md border border-[#000000] px-2 py-1"
                   >
                     <GoDownload />
                     <span>Qr</span>
@@ -198,7 +198,7 @@ const Tables = memo(() => {
           onClick={() => {
             setTableModal(true);
           }}
-          className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white"
+          className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white"
         >
           Add
         </button>

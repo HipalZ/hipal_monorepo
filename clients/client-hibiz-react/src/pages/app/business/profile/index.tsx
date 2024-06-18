@@ -4,7 +4,7 @@ import PopUp from '@/components/atom/popUp';
 import Header from '@/components/molecules/header';
 import { useOwnerLogin } from '@/components/store/useOwnerLogin';
 import { memo, startTransition, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = memo(() => {
@@ -28,22 +28,22 @@ const Profile = memo(() => {
 
   return (
     <div className="relative">
-      <div className="border-b border-[#cacaca] bg-[#f5f5f5] pb-4">
+      <div className=" linear_gradient_background" pb-4">
         <div className="sticky top-0 z-10 w-full bg-[#f5f5f5] pb-4">
           {' '}
-          <Header leftIcon={<BsChevronLeft />} onBack={handleBack} centerImage={HipeopleLogo} rightImage={HipeopleLogo} isIconBusinessShow={true} />
+          <Header leftIcon={<FaArrowLeft />} onBack={handleBack} centerImage={HipeopleLogo} rightImage={HipeopleLogo} isIconBusinessShow={true} />
         </div>
         <div className=" m-auto flex flex-col items-center justify-center pt-[5rem] text-white">
-          <div className="h-[4rem] w-[4rem] rounded-full bg-[#2B354D] pt-4 text-center text-xl capitalize">{user.name.charAt(0)}</div>
-          <span className="pt-4 text-2xl text-[#2B354D]">{user.name}</span>
-          <span className="text-base font-medium text-[#2B354D]">{user.role}</span>
+          <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">{user.name.charAt(0)}</div>
+          <span className="pt-4 text-2xl text-[#000000]">{user.name}</span>
+          <span className="text-base font-medium text-[#000000]">{user.role}</span>
         </div>
       </div>
 
       <div>
         <div
           onClick={openModal}
-          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#2B354D]"
+          className="on_active_bounce mx-6 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
         >
           <div className="flex items-center px-4 py-2">
             <span>Password</span>

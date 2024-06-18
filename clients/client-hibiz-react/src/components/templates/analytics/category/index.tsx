@@ -10,7 +10,7 @@ import type { IAnalyticsItem } from '@/components/types/businessData';
 import { Disclosure } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import { memo, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { IoFastFoodOutline } from 'react-icons/io5';
 import { useParams } from 'react-router-dom';
 
@@ -46,16 +46,16 @@ const AnalyticsCategory = memo(() => {
 
   return (
     <>
-      <div className="bg-[#f5f5f5]">
+     <div className="linear_gradient_background">
         <Header
           title="Analytics"
           onBack={() => setSelectedSubIcon('')}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2"> Category</span>
           </div>

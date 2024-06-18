@@ -25,7 +25,7 @@ export const BeforeMemoCustomerzList = (data: { customerData: ICustomer[] }) => 
         customerData.map((data) => (
           <div
             key={data?._id}
-            className="on_active_bounce masonry-item rounded-lg border border-[#cacaca] bg-white px-4 font-medium capitalize text-[#2B354D]"
+            className="on_active_bounce masonry-item rounded-lg border border-[#cacaca] bg-white px-4 font-medium capitalize text-[#000000]"
           >
             <div className="flex items-center py-2">
               <MdPerson className="mr-2" />

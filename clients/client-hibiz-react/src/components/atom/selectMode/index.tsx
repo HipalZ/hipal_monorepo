@@ -60,24 +60,24 @@ const CollectionModeComponent: React.FC<AddPersonInDueProps> = memo(({ closeModa
 
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6">
-      <h3 className="mb-4 text-xl font-medium text-[#2B354D]">Add a new collection mode</h3>
+      <h3 className="mb-4 text-xl font-medium text-[#000000]">Add a new collection mode</h3>
       <input
         ref={inputRef}
         maxLength={50}
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value.toLowerCase())}
-        className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#2B354D] focus:outline-none"
+        className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#000000] focus:outline-none"
         placeholder="Enter mode..."
         required
       />
-      <h3 className="text-md mb-2 font-medium text-[#2B354D]">If Commission rate available:</h3>
+      <h3 className="text-md mb-2 font-medium text-[#000000]">If Commission rate available:</h3>
       <div className="relative">
         <input
           type="number"
           value={commission !== null && commission !== 0 ? commission.toString() : ''}
           onChange={(e) => setCommission(Math.min(Number(e.target.value), 100))}
-          className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#2B354D] focus:outline-none"
+          className="mb-4 w-full rounded border px-3 py-2 focus:border focus:border-[#000000] focus:outline-none"
           placeholder="Enter commission..."
           max={100}
         />
@@ -101,7 +101,7 @@ const CollectionModeComponent: React.FC<AddPersonInDueProps> = memo(({ closeModa
         onClick={addMode}
         className={`${
           isLoading ? 'pointer-events-none opacity-50' : ''
-        } on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white`}
+        } on_active_bounce mx-auto mt-6 w-full rounded-lg bg-[#000000] px-4 py-2 text-white`}
       >
         {isLoading ? 'Loading...' : 'Add'}
       </button>

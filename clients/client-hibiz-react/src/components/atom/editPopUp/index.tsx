@@ -35,7 +35,7 @@ const ChangePassword = ({ closeModal, updatePassword }: { closeModal: () => void
 
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6">
-      <h3 className="mb-4 text-xl font-medium text-[#2B354D]">Edit Password</h3>
+      <h3 className="mb-4 text-xl font-medium text-[#000000]">Edit Password</h3>
       <div className="relative pb-4">
         <input
           ref={inputRef}
@@ -59,7 +59,7 @@ const ChangePassword = ({ closeModal, updatePassword }: { closeModal: () => void
 
       <div className="w-full rotate-180 py-2">
         <div className="mx-auto flex rotate-180 flex-col justify-items-center">
-          <button type="button" onClick={changePassword} className={'on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white'}>
+          <button type="button" onClick={changePassword} className={'on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white'}>
             Change Password
           </button>
         </div>

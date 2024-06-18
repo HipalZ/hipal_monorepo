@@ -111,6 +111,7 @@ export interface UserProfile {
   customRole: CustomRole[];
   password: string;
   id: string;
+  _id: string;
 }
 export interface IBusinessData {
   businessName: string;
@@ -136,7 +137,7 @@ export interface IBusinessData {
   hitable: boolean;
   hipeople: boolean;
   hibiz: boolean;
-  id: string;
+  _id: string;
   serviceCharge: boolean;
   serviceChargePercentage: number;
   serviceChargeRemovalPass: number;
@@ -227,7 +228,6 @@ export interface IStaffs {
 }
 export interface ITables {
   _id: any;
-  _id: any;
   staffs?: any;
   businessId: string;
   zoneId: string;
@@ -277,7 +277,6 @@ type ExtraItem = {
 };
 
 export type Extra = {
-  _id: any;
   _id: any;
   id: string;
   name: string;

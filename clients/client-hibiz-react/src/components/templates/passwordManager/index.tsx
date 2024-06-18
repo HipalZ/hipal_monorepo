@@ -7,7 +7,7 @@ import ErrorComponent from '@/components/errorComponent';
 import Header from '@/components/molecules/header';
 import { useQuery } from '@tanstack/react-query';
 import { memo, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -184,16 +184,16 @@ const PasswordManager = memo(({ setSettings }: IPassword) => {
 
   return (
     <div className="relative">
-      <div className="bg-[#f5f5f5]">
+     <div className="linear_gradient_background">
         <Header
           title="Manager"
           onBack={() => setSettings('')}
           isIconBusinessShow={false}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={HipeopleLogo}
           rightImage={HipeopleLogo}
         />
-        <div className="mt-4 border-b border-[#cacaca] px-6 pb-4 text-left text-2xl">
+        <div className="mt-4  px-6 pb-4 text-left text-2xl">
           <h1>Password Manager</h1>
         </div>
       </div>
@@ -204,7 +204,7 @@ const PasswordManager = memo(({ setSettings }: IPassword) => {
             onClick={() => updatePasswordApi(eachPassword?.key)}
             className={`${
               eachPassword?.key === 'deleteKotPassword' ? 'pointer-events-none opacity-50' : ''
-            } on_active_bounce mx-5 my-5 rounded-lg border border-[#cacaca] px-4 py-2 text-[#2B354D]`}
+            } on_active_bounce mx-5 my-5 rounded-lg border border-[#cacaca] px-4 py-2 text-[#000000]`}
           >
             <div>
               <h1>{eachPassword?.text}</h1>

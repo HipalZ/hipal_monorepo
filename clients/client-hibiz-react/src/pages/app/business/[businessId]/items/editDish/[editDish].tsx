@@ -16,7 +16,7 @@ import { paths } from '@/components/utils/paths';
 import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
 import { memo, startTransition, useEffect, useRef, useState } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
 import { MdDinnerDining } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -636,10 +636,10 @@ function EditDish() {
     <>
       {loadingData ? <LoadingSpinner /> : null}
       <div className="pb-12">
-        <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-          <Header title="Dish" onBack={handleBack} isIconBusinessShow={false} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} />
+        <div className="sticky top-0 z-20 linear_gradient_background">
+          <Header title="Dish" onBack={handleBack} isIconBusinessShow={false} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} />
 
-          <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+          <div className="mt-6 flex items-center justify-between  px-6 pb-4">
             <div className="flex text-2xl">
               <span>Edit</span>
             </div>
@@ -656,7 +656,7 @@ function EditDish() {
               maxLength={50}
               value={dishData?.name}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-2 pr-[7rem] pt-1 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Name"
               required
             />
@@ -671,19 +671,19 @@ function EditDish() {
               className="w-full rounded-md border p-2"
             >
               {dishTypes?.map((dish: any) => (
-                <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                <option className="!bg-white !text-[#000000]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                   {dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
                 </option>
               ))}
             </select>
           </div>
           <div className="mx-6 my-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
-            <div className="border-b border-[#cacaca] pb-2">
+            <div className=" pb-2">
               <h1 className="text-2xl">Basic - Dine In</h1>
             </div>
             <div className="mt-2 space-y-4">
               <div>
-                <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="dishPrice">
+                <label className="mb-2 block font-medium text-[#000000]" htmlFor="dishPrice">
                   Dish Price <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -697,12 +697,12 @@ function EditDish() {
                 />
               </div>
               <div>
-                <label className="mb-2 block font-medium text-[#2B354D]" htmlFor="taxesCharges">
+                <label className="mb-2 block font-medium text-[#000000]" htmlFor="taxesCharges">
                   Kitchen <span className="text-red-500">*</span>
                 </label>
                 <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
                   {kitchen?.map((kitchen: IKitchen) => (
-                    <option className="!bg-white !text-[#2B354D]" key={kitchen?._id} value={kitchen?._id}>
+                    <option className="!bg-white !text-[#000000]" key={kitchen?._id} value={kitchen?._id}>
                       {kitchen?.kitchenName}
                     </option>
                   ))}
@@ -748,11 +748,11 @@ function EditDish() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="text-[#2B354D]">Portions</div>
+                  <div className="text-[#000000]">Portions</div>
                   <button
                     type="button"
                     onClick={handleIncreasePortion}
-                    className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#2B354D]"
+                    className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#000000]"
                   >
                     Add
                   </button>
@@ -807,7 +807,7 @@ function EditDish() {
                         className="w-full rounded-md border p-2"
                       >
                         {dishTypes?.map((dish: any) => (
-                          <option className="!bg-white !text-[#2B354D]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
+                          <option className="!bg-white !text-[#000000]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
                             {dish?.type}
                           </option>
                         ))}
@@ -971,7 +971,7 @@ function EditDish() {
                     accept=".png, .jpeg, .jpg, .webp"
                     onChange={(e) => handleImageChange(e, index)}
                   />
-                  <div className="mx-2 text-sm font-normal text-[#2B354D] opacity-70">
+                  <div className="mx-2 text-sm font-normal text-[#000000] opacity-70">
                     {(index === 0 || '0') && <p>Cover Image</p>}
                     <p>1080 px X 1080 px</p>
                     <p>Png, Jpeg, Webp</p>
@@ -999,12 +999,12 @@ function EditDish() {
             </div>
           </div>
           <div className="mx-6 mt-6 rounded-md border border-[#cacaca] px-4 pb-4 pt-2">
-            <h1 className="border-b border-[#cacaca] pb-2 text-2xl">Recommendation</h1>
+            <h1 className=" pb-2 text-2xl">Recommendation</h1>
             <div className="mt-4 flex flex-col">
               <div className="flex flex-row justify-between">
                 <h1>Recommended dishes</h1>
                 <div>
-                  <button type="button" onClick={addRecommend} className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#2B354D]">
+                  <button type="button" onClick={addRecommend} className="border-1 on_active_bounce  rounded-md border px-4 py-1 text-[#000000]">
                     Add
                   </button>
                 </div>
@@ -1053,7 +1053,7 @@ function EditDish() {
         <button
           type="button"
           onClick={() => setRemovePopup(true)}
-          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce border-1 mr-2 w-full rounded-md border border-[#2B354D] bg-white py-2.5 text-[#2B354D]`}
+          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce border-1 mr-2 w-full rounded-md border border-[#000000] bg-white py-2.5 text-[#000000]`}
         >
           {loading ? 'Loading...' : 'Delete'}
         </button>
@@ -1061,7 +1061,7 @@ function EditDish() {
           type="button"
           disabled={isSubmitting}
           onClick={updateEditDish}
-          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white`}
         >
           {loading ? 'Loading...' : 'Save'}
         </button>
@@ -1105,7 +1105,7 @@ function EditDish() {
           <div className="flex bg-white py-2">
             <button
               type="button"
-              className="on_active_bounce fixed bottom-5 mx-4 w-[25rem] rounded-md bg-[#2B354D] py-2.5 text-white"
+              className="on_active_bounce fixed bottom-5 mx-4 w-[25rem] rounded-md bg-[#000000] py-2.5 text-white"
               onClick={handleCrop}
             >
               Save & Close

@@ -131,7 +131,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose, compulsory
               maxLength={24}
               type="text"
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Name"
             />
           </div>
@@ -141,7 +141,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose, compulsory
               onChange={(e) => setVariantType(e.target.value)}
               value={variantType || ''}
               id="variantType"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
             >
               <option value="">Select a variant</option>
               <option value="veg">Veg</option>
@@ -162,7 +162,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose, compulsory
               maxLength={4}
               type="tel"
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Enter the Price"
             />
           </div>
@@ -179,7 +179,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose, compulsory
               type="tel"
               maxLength={3}
               id="floating_outlined"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Enter max quantity"
             />
           </div>
@@ -203,7 +203,7 @@ const VariantComponent: React.FC<VariantComponentProps> = ({ onClose, compulsory
           </div>
         </div>
         <div onClick={handleSaveVariant} className="fixed bottom-0 w-full max-w-[27rem] cursor-pointer p-4 outline-none">
-          <button type="button" className="w-full rounded-md bg-[#2B354D] py-2 text-white">
+          <button type="button" className="w-full rounded-md bg-[#000000] py-2 text-white">
             Save
           </button>
         </div>

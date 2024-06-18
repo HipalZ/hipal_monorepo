@@ -9,7 +9,7 @@ import useTimings from '@/components/store/useTimings';
 import { routeToDashboard } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import { memo, startTransition } from 'react';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import AnalyticsCategory from './category';
 import AnalyticsDish from './dish';
@@ -71,9 +71,9 @@ function Analytics() {
       default:
         return (
           <>
-            <div className="bg-[#f5f5f5]">
-              <Header title="Analytics" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-              <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+           <div className="linear_gradient_background">
+              <Header title="Analytics" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+              <div className="flex items-center justify-between px-6 pb-4 mt-6">
                 <div className="flex text-2xl">
                   <span className="ml-2"> Analytics</span>
                 </div>
@@ -86,14 +86,14 @@ function Analytics() {
                 {analytics &&
                   Object.keys(analytics).map((key) => (
                     <div key={key} className="rounded-md border border-[#cacaca] bg-white p-4">
-                      <h3 className="mb-4 text-sm font-medium text-[#2B354D] opacity-60">{key}</h3>
-                      <p className="text-lg font-medium text-[#2B354D]">{analytics[key]}</p>
+                      <h3 className="mb-4 text-sm font-medium text-[#000000] opacity-60">{key}</h3>
+                      <p className="text-lg font-medium text-[#000000]">{analytics[key]}</p>
                     </div>
                   ))}
               </div>
             )}
             {analytics && (
-              <div className="mx-6 grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 gap-6 mx-6">
                 {analytics &&
                   Object.keys(analytics).map((key) => (
                     <div
@@ -102,7 +102,7 @@ function Analytics() {
                       onClick={() => goAnalytics(key)}
                       className="on_active_bounce flex items-center justify-between rounded-md border border-[#cacaca] bg-white p-4 capitalize"
                     >
-                      <h3 className="font-medium text-[#2B354D]">{key}</h3>
+                      <h3 className="font-medium text-[#000000]">{key}</h3>
                       <p className="text-sm text-[#2F80ED]">View</p>
                     </div>
                   ))}

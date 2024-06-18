@@ -47,7 +47,7 @@ const SubheaderButtonList: React.FC<Props> = ({ buttons }) => {
             setSelectedButton(button.text);
           }}
           className={`on_active_bounce flex items-center space-x-2 rounded-xl px-4 py-2 text-base font-medium transition-colors duration-500 focus:outline-none 
-          ${selectedButton === button.text ? 'scale-105 bg-[#2B354D] text-white' : 'bg-white text-[#2B354D]'}`}
+          ${selectedButton === button.text ? 'scale-105 bg-[#000000] text-white' : 'bg-white text-[#000000]'}`}
         >
           <span>
             <button.Icon />

@@ -31,7 +31,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
   return (
     <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
       <div className="max-h-[85vh] overflow-y-auto px-6 py-5">
-        <h1 className="text-2xl text-[#2B354D]">Add staff to the zone</h1>
+        <h1 className="text-2xl text-[#000000]">Add staff to the zone</h1>
         <SearchPanel closeSearchBox={closeSearchBox} />
         {searchText === ''
           ? Data?.map((eachData: IStaffs) => (
@@ -39,7 +39,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
                 key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
@@ -53,7 +53,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
                   <h1 className="mx-2 text-base">{eachData?.name}</h1>
                 </div>
                 <div className="mt-2 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{eachData?.customRole?.[0]?.roleName}</p>
+                  <p className="text-sm text-[#000000]/70">{eachData?.customRole?.[0]?.roleName}</p>
                 </div>
               </div>
             ))
@@ -62,7 +62,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
                 key={eachData._id}
                 onClick={() => handleActiveClick(eachData)}
                 className={`${
-                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                  activeClick?.some((item) => item._id === eachData._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
                 } my-5 rounded-md border bg-white p-3`}
               >
                 <div className="flex items-center">
@@ -71,7 +71,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
                   <h1 className="mx-2 text-base">{eachData?.name}</h1>
                 </div>
                 <div className="mt-2 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{eachData?.customRole?.[0]?.roleName}</p>
+                  <p className="text-sm text-[#000000]/70">{eachData?.customRole?.[0]?.roleName}</p>
                 </div>
               </div>
             ))}
@@ -81,7 +81,7 @@ const AddZoneStaffs = memo(({ handleData, Data, selectedData }: { handleData: an
             onClick={() => {
               handleData(activeClick);
             }}
-            className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white"
+            className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white"
           >
             Add
           </button>

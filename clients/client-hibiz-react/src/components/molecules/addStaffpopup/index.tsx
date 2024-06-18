@@ -168,7 +168,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               maxLength={24}
               value={name}
               type="text"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Name"
             />
           </div>
@@ -180,7 +180,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               maxLength={50}
               value={email}
               type="email"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Enter Email"
             />
           </div>
@@ -197,7 +197,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               }}
               value={phone}
               type="tel"
-              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#2B354D] focus:outline-none focus:ring-0 dark:border-[#2B354D] dark:text-white"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent bg-white pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
               placeholder="Enter Phone"
             />
           </div>
@@ -282,7 +282,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
           </div>
         </div>
         <div className="fixed bottom-0 w-full max-w-[30rem] cursor-pointer p-4 outline-none">
-          <button type="button" onClick={handleSubmit} className="w-full max-w-[30rem] rounded-md bg-[#2B354D] py-2 text-white">
+          <button type="button" onClick={handleSubmit} className="w-full max-w-[30rem] rounded-md bg-[#000000] py-2 text-white">
             Add Staff
           </button>
         </div>

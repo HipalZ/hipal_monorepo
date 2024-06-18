@@ -19,7 +19,7 @@ import { toast } from 'react-toastify';
 
 export const classCard = {
   text: 'text-xl',
-  background: 'bg-[#2B354D]',
+  background: 'bg-[#000000]',
   font: 'text-4xl',
   bg: 'bg-[#2F80ED]/10',
   color: 'text-white',
@@ -176,18 +176,18 @@ const AddZone = memo(({ refetchZoneData }: any) => {
   }
   return (
     <>
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
+      <div className="sticky top-0 z-20 linear_gradient_background">
         <Header
           title="Zone"
           onBack={() => {
             setSelectedSubIcon('');
           }}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2">Add a Zone</span>
           </div>
@@ -206,7 +206,7 @@ const AddZone = memo(({ refetchZoneData }: any) => {
             <div className="relative w-full">
               <select onChange={(e) => handleAddType(e)} value={zoneData?.zoneType} className="my-2 w-full rounded-md border p-2">
                 {zoneType?.map((zone: any) => (
-                  <option className="!bg-white !text-[#2B354D]" key={zone?._id} value={zone?.type}>
+                  <option className="!bg-white !text-[#000000]" key={zone?._id} value={zone?.type}>
                     {zone?.type}
                   </option>
                 ))}
@@ -231,7 +231,7 @@ const AddZone = memo(({ refetchZoneData }: any) => {
                   <h1 className="mx-2 text-base">{staff?.name}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{staff?.customRole?.[0]?.roleName}</p>
+                  <p className="text-sm text-[#000000]/70">{staff?.customRole?.[0]?.roleName}</p>
                   <button type="button" onClick={() => removeStaff(index)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
@@ -242,7 +242,7 @@ const AddZone = memo(({ refetchZoneData }: any) => {
         </div>
         <div className="border-1 mx-6 my-6 rounded-lg border border-[#CACACA] px-4">
           <div className="my-4 flex justify-between">
-            <h1 className="text-base text-[#2B354D]">Add Charges</h1>
+            <h1 className="text-base text-[#000000]">Add Charges</h1>
             <div>
               <button type="button" onClick={addACCharges} className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
                 Add
@@ -257,7 +257,7 @@ const AddZone = memo(({ refetchZoneData }: any) => {
                   <h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{acChar?.value}% on billing</p>
+                  <p className="text-sm text-[#000000]/70">{acChar?.value}% on billing</p>
                   <button type="button" onClick={() => removeACCharges(index)} className="text-[#2F80ED]">
                     Remove
                   </button>
@@ -270,7 +270,7 @@ const AddZone = memo(({ refetchZoneData }: any) => {
           <button
             type="button"
             onClick={createZone}
-            className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+            className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white`}
           >
             {loading ? 'Loading...' : 'Save'}
           </button>

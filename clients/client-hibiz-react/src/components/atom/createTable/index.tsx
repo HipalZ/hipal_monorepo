@@ -110,7 +110,7 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
   return (
     <div className="rounded-t-[1.5rem] bg-[#F5F5F5]">
       <div className="max-h-[85vh] overflow-y-auto">
-        <h1 className="px-6 pt-6 text-2xl text-[#2B354D]">Add Tables</h1>
+        <h1 className="px-6 pt-6 text-2xl text-[#000000]">Add Tables</h1>
         <div className="border-1 mx-6 my-5 rounded-lg border border-[#CACACA] bg-white px-4">
           <div className="my-4">
             <h1 className="my-4 text-base">Name of the Table</h1>
@@ -154,7 +154,7 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
                   onClick={() => handleActiveClick(staff._id)}
                   onKeyUp={() => handleActiveClick(staff._id)}
                   className={`${
-                    activeClick.includes(staff._id) ? 'border-2 border-[#2B354D]' : 'border-1 border-[#CACACA]'
+                    activeClick.includes(staff._id) ? 'border-2 border-[#000000]' : 'border-1 border-[#CACACA]'
                   } my-5 rounded-md border bg-white p-3`}
                 >
                   <div className="flex items-center">
@@ -163,7 +163,7 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
                     <h1 className="mx-2 text-base">{staff.name}</h1>
                   </div>
                   <div className="mt-2 flex justify-between">
-                    <p className="text-sm text-[#2B354D]/70">{staff.customRole[0]?.roleName}</p>
+                    <p className="text-sm text-[#000000]/70">{staff.customRole[0]?.roleName}</p>
                   </div>
                 </div>
               );
@@ -174,7 +174,7 @@ const CreateTables = memo(({ postZones, zoneId, closeModal, closePopUpModal, pos
           <button
             type="button"
             onClick={createTable}
-            className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+            className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white`}
           >
             {loading ? 'Loading...' : 'Create'}
           </button>

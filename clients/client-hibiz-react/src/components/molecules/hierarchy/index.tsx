@@ -84,7 +84,7 @@ const HierarchyComponent: React.FC<ICategoryComponent> = memo(({ allCategories, 
                       key={parent?._id}
                       onClick={() => getParent(parent)}
                       className={`rounded-md border border-[#cacaca] p-4 ${
-                        selectedCategory?._id === parent?._id ? 'bg-[#2B354D]/90 text-white' : 'bg-white text-[#2B354D]'
+                        selectedCategory?._id === parent?._id ? 'bg-[#000000]/90 text-white' : 'bg-white text-[#000000]'
                       }`}
                     >
                       <div className={`flex items-center justify-between`}>
@@ -102,7 +102,7 @@ const HierarchyComponent: React.FC<ICategoryComponent> = memo(({ allCategories, 
                   }}
                   className="fixed bottom-4 z-20 w-full px-6"
                 >
-                  <button type="button" className="on_active_bounce w-full max-w-[25rem] rounded-md bg-[#2B354D] py-2 text-white">
+                  <button type="button" className="on_active_bounce w-full max-w-[25rem] rounded-md bg-[#000000] py-2 text-white">
                     Save
                   </button>
                 </div>

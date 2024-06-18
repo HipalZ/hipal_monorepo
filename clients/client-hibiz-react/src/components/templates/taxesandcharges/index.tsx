@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
 import { memo, startTransition, useState } from 'react';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { MdCardMembership } from 'react-icons/md';
 import { useNavigate, useParams } from 'react-router-dom';
 import Switch from 'react-switch';
@@ -92,14 +92,14 @@ const TaxAndCharges = memo(() => {
 
   return (
     <div className="relative bg-white">
-      <div className="sticky top-0 z-50 w-full border-b border-[#CACACA] bg-[#f5f5f5]">
-        <Header title="Charges" onBack={handleBack} leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-        <div className="mx-6 mt-6 flex items-center space-x-2 rounded-lg pb-4 text-2xl font-normal text-[#2B354D]">
+      <div className="sticky top-0 z-50 w-full  linear_gradient_background">
+        <Header title="Charges" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+        <div className="mx-6 mt-6 flex items-center space-x-2 rounded-lg pb-4 text-2xl font-normal text-[#000000]">
           <MdCardMembership /> <span>Charges</span>
         </div>
       </div>
       <div className="mx-6 mt-6 rounded-md border border-[#CACACA] px-4 py-4">
-        <div className={`flex items-center justify-between ${toggleSwitch ? 'border-b border-[#CACACA] pb-4' : ''} `}>
+        <div className={`flex items-center justify-between ${toggleSwitch ? ' pb-4' : ''} `}>
           <h1 className="text-base font-semibold">Service charges</h1>
           <div className="flex items-center ">
             <Switch uncheckedIcon={false} checkedIcon={false} onChange={toggleLoyality} checked={toggleSwitch} offColor="#CACACA" />
@@ -143,7 +143,7 @@ const TaxAndCharges = memo(() => {
           type="button"
           disabled={!isModified}
           onClick={handleSave}
-          className={`${!isModified ? 'opacity-50' : ''} w-full rounded-md bg-[#2B354D] py-2 text-white`}
+          className={`${!isModified ? 'opacity-50' : ''} w-full rounded-md bg-[#000000] py-2 text-white`}
         >
           Save
         </button>

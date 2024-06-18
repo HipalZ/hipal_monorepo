@@ -8,7 +8,7 @@ import { useSelectedIcon } from '@/components/store/useSelectedIcon';
 import ExcelJS from 'exceljs';
 import React, { ChangeEvent, memo, useRef, useState } from 'react';
 import { BiDownload, BiUpload } from 'react-icons/bi';
-import { BsChevronLeft } from 'react-icons/bs';
+import { FaArrowLeft } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 type user = {
@@ -113,19 +113,19 @@ const LoyaltyCSV: React.FC = () => {
 
   return (
     <div className="pb-12">
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
+      <div className="sticky top-0 z-20 linear_gradient_background">
         <Header
           title="Loyalty"
           onBack={() => {
             console.log('icon');
             setSelectedSubIcon('');
           }}
-          leftIcon={<BsChevronLeft />}
+          leftIcon={<FaArrowLeft />}
           centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />
-        <div className="mt-2 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+        <div className="mt-2 flex items-center justify-between  px-6 pb-4">
           <div className="mt-4 flex text-2xl">
             <span className="ml-2">Coins</span>
           </div>
@@ -136,7 +136,7 @@ const LoyaltyCSV: React.FC = () => {
           <a
             href="/hipalFormate.csv"
             download
-            className="on_active_bounce mt-4 w-full rounded-lg border border-[#2B354D] bg-white px-4 py-2 font-semibold text-[#2B354D]"
+            className="on_active_bounce mt-4 w-full rounded-lg border border-[#000000] bg-white px-4 py-2 font-semibold text-[#000000]"
           >
             <div className="flex items-center justify-center">
               <BiDownload className="mr-2" />
@@ -164,7 +164,7 @@ const LoyaltyCSV: React.FC = () => {
         <div className="fixed bottom-6 flex w-full items-center justify-center px-6">
           <button
             type="button"
-            className="on_active_bounce mt-4 w-full rounded-lg bg-[#2B354D] px-4 py-2 font-semibold text-white"
+            className="on_active_bounce mt-4 w-full rounded-lg bg-[#000000] px-4 py-2 font-semibold text-white"
             onClick={openModal}
           >
             Add Credit
@@ -175,7 +175,7 @@ const LoyaltyCSV: React.FC = () => {
           <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".xlsx" style={{ display: 'none' }} />
           <button
             type="button"
-            className="on_active_bounce mt-4 w-full rounded-lg bg-[#2B354D] px-4 py-2 font-semibold text-white"
+            className="on_active_bounce mt-4 w-full rounded-lg bg-[#000000] px-4 py-2 font-semibold text-white"
             onClick={handleFileUpload}
           >
             <div className="flex items-center justify-center">
@@ -216,7 +216,7 @@ interface PasswordModalProps {
 const PasswordModal: React.FC<PasswordModalProps> = ({ password, isLoading, setPassword, closeModal, onConfirm }) => {
   return (
     <div className="rounded-t-[1.5rem] bg-[#f5f5f5] p-6 ">
-      <h3 className="mb-2 text-xl font-medium text-[#2B354D]">Enter your password to confirm</h3>
+      <h3 className="mb-2 text-xl font-medium text-[#000000]">Enter your password to confirm</h3>
       <input
         type="password"
         value={password}
@@ -225,7 +225,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ password, isLoading, setP
         placeholder="Enter password..."
       />
       <div className="flex justify-between space-x-6">
-        <button type="button" onClick={closeModal} className="rounded-lg border border-[#2B354D] bg-white px-6 py-2 text-[#2B354D]">
+        <button type="button" onClick={closeModal} className="rounded-lg border border-[#000000] bg-white px-6 py-2 text-[#000000]">
           Cancel
         </button>
         <button
@@ -234,7 +234,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ password, isLoading, setP
             onConfirm();
             closeModal();
           }}
-          className={`${isLoading ? 'pointer-events-none opacity-50' : ''} w-full rounded-lg bg-[#2B354D] px-4 py-2 text-white`}
+          className={`${isLoading ? 'pointer-events-none opacity-50' : ''} w-full rounded-lg bg-[#000000] px-4 py-2 text-white`}
         >
           {isLoading ? 'Loading...' : 'Confirm'}
         </button>

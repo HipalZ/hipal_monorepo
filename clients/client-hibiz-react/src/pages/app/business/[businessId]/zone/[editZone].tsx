@@ -229,9 +229,9 @@ const EditZone = () => {
   if (isLoading) return <LoadingSpinner />;
   return (
     <>
-      <div className="sticky top-0 z-20 bg-[#f5f5f5]">
-        <Header leftIcon={<BsChevronLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
-        <div className="mt-6 flex items-center justify-between border-b border-[#cacaca] px-6 pb-4">
+      <div className="sticky top-0 z-20 linear_gradient_background">
+        <Header leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={true} />
+        <div className="mt-6 flex items-center justify-between  px-6 pb-4">
           <div className="flex text-2xl">
             <span className="ml-2">Edit Zone</span>
           </div>
@@ -250,7 +250,7 @@ const EditZone = () => {
             <div className="relative w-full">
               <select onChange={(e) => handleAddType(e)} value={zoneData?.zoneType} className="my-2 w-full rounded-md border p-2">
                 {zoneType?.map((zone: any) => (
-                  <option className="!bg-white !text-[#2B354D]" key={zone?._id} value={zone?.type}>
+                  <option className="!bg-white !text-[#000000]" key={zone?._id} value={zone?.type}>
                     {zone?.type}
                   </option>
                 ))}
@@ -275,7 +275,7 @@ const EditZone = () => {
                   <h1 className="mx-2 text-base">{staff.name}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{staff?.customRole[0]?.roleName}</p>
+                  <p className="text-sm text-[#000000]/70">{staff?.customRole[0]?.roleName}</p>
                   <button type="button" onClick={() => removeStaff(staff?._id)} className="on_active_bounce text-[#2F80ED]">
                     Remove
                   </button>
@@ -286,7 +286,7 @@ const EditZone = () => {
         </div>
         <div className="border-1 mx-6 my-6 rounded-lg border border-[#CACACA] px-4">
           <div className="my-4 flex justify-between">
-            <h1 className="text-base text-[#2B354D]">Edit Charges</h1>
+            <h1 className="text-base text-[#000000]">Edit Charges</h1>
             <div>
               <button type="button" onClick={addACCharges} className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
                 Edit
@@ -301,7 +301,7 @@ const EditZone = () => {
                   <h1 className="mx-2 capitalize">{acChar?.chargeName}</h1>
                 </div>
                 <div className="mt-4 flex justify-between">
-                  <p className="text-sm text-[#2B354D]/70">{acChar?.value}% on billing</p>
+                  <p className="text-sm text-[#000000]/70">{acChar?.value}% on billing</p>
                   <button type="button" onClick={() => removeACCharges(acChar?._id || '')} className="text-[#2F80ED]">
                     Remove
                   </button>
@@ -311,7 +311,7 @@ const EditZone = () => {
           })}
         </div>
         <div className="border-1 mx-6 mt-6 rounded-lg border border-gray-200 p-4 ">
-          <h1 className="text-base font-semibold text-[#2B354D]">Tables</h1>
+          <h1 className="text-base font-semibold text-[#000000]">Tables</h1>
           <div className="mt-3 space-y-3">
             {existingTable?.map((table) => {
               return (
@@ -350,7 +350,7 @@ const EditZone = () => {
         </div>
       </div>
       <div className="sticky bottom-5 mx-6 my-6">
-        <button type="button" onClick={saveZone} className="on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white">
+        <button type="button" onClick={saveZone} className="on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white">
           Save
         </button>
       </div>

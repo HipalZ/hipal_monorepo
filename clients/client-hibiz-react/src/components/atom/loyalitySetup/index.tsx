@@ -416,7 +416,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
   };
   return (
     <>
-      <div className="m-6 text-[#2B354D]">
+      <div className="m-6 text-[#000000]">
         <div className="border-1 flex h-20 items-center rounded-md border border-[#CACACA] px-4">
           <h1 className="text-base font-semibold">Start loyality for your business</h1>
           <div className="ml-9 flex items-center">
@@ -432,8 +432,8 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                   <button
                     type="button"
                     className={`${
-                      loyaltyId === 'existing' ? 'bg-[#2B354D] text-white' : 'bg-white text-[#2B354D]'
-                    } on_active_bounce border-1 rounded-md border border-[#2B354D] px-2.5 py-1.5 text-sm`}
+                      loyaltyId === 'existing' ? 'bg-[#000000] text-white' : 'bg-white text-[#000000]'
+                    } on_active_bounce border-1 rounded-md border border-[#000000] px-2.5 py-1.5 text-sm`}
                   >
                     Use an Existing ID
                   </button>
@@ -442,8 +442,8 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                   <button
                     type="button"
                     className={`${
-                      loyaltyId === 'new' ? 'bg-[#2B354D] text-white' : 'bg-white text-[#2B354D]'
-                    } on_active_bounce border-1 rounded-md border border-[#2B354D] px-2.5 py-1.5 text-sm`}
+                      loyaltyId === 'new' ? 'bg-[#000000] text-white' : 'bg-white text-[#000000]'
+                    } on_active_bounce border-1 rounded-md border border-[#000000] px-2.5 py-1.5 text-sm`}
                   >
                     Create a New ID
                   </button>
@@ -451,7 +451,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
               </div>
               {loyaltyId === 'new' ? (
                 <>
-                  <h6 className="mt-3.5 text-sm text-[#2B354D] opacity-50">Your Loyality ID</h6>
+                  <h6 className="mt-3.5 text-sm text-[#000000] opacity-50">Your Loyality ID</h6>
                   <div className="mt-3.5">
                     <p className="w-full rounded-md opacity-50">{businessId}</p>
                   </div>
@@ -459,7 +459,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
               ) : (
                 loyaltyId === 'existing' && (
                   <>
-                    <h6 className="mt-3.5 text-sm text-[#2B354D] opacity-50">Enter the Existing loyalty ID</h6>
+                    <h6 className="mt-3.5 text-sm text-[#000000] opacity-50">Enter the Existing loyalty ID</h6>
                     <div className="mt-3.5">
                       <input
                         maxLength={24}
@@ -477,7 +477,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
               <>
                 <div className="border-1 my-5 h-[9rem] rounded-md border border-[#CACACA] px-4">
                   <h1 className="mb-1.5 mt-2.5 text-base font-semibold">Set the sign up Bonus (optional)</h1>
-                  <h6 className="mb-3.5 text-sm text-[#2B354D] opacity-50">Customer&apos;s first signups will only get the bonus</h6>
+                  <h6 className="mb-3.5 text-sm text-[#000000] opacity-50">Customer&apos;s first signups will only get the bonus</h6>
                   <div className="relative">
                     <input
                       type="text"
@@ -494,7 +494,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                 </div>
                 <div className="border-1 my-5 h-[9rem] rounded-md border border-[#CACACA] px-4">
                   <h1 className="mb-1.5 mt-2.5 text-base font-semibold">Set the coinz</h1>
-                  <h6 className="mb-3.5 text-sm text-[#2B354D] opacity-50">Percentage of cashback in every bill</h6>
+                  <h6 className="mb-3.5 text-sm text-[#000000] opacity-50">Percentage of cashback in every bill</h6>
                   <div className="relative">
                     <input
                       type="text"
@@ -515,7 +515,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                 </div>
                 <div className="border-1 my-5 h-[9rem] rounded-md border border-[#CACACA] px-4">
                   <h1 className="mb-1.5 mt-2.5 text-sm font-semibold">Set the maximum claim amount of the bill</h1>
-                  <h6 className="mb-3.5 text-sm text-[#2B354D] opacity-50">Maximum cash back amount to redeem</h6>
+                  <h6 className="mb-3.5 text-sm text-[#000000] opacity-50">Maximum cash back amount to redeem</h6>
                   <div className="relative">
                     <input
                       type="text"
@@ -621,7 +621,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                   <button
                     type="button"
                     onClick={isLoyaltyExists ? (e) => handleUpdateLoyalty(e, businessId) : (e) => saveLoyalityData(e, businessId)}
-                    className="w-full rounded-md bg-[#2B354D] py-2.5 text-white"
+                    className="w-full rounded-md bg-[#000000] py-2.5 text-white"
                   >
                     {`${!existsLoyality ? 'Save' : 'Update'}`}
                   </button>
@@ -634,7 +634,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                   type="button"
                   className={`${
                     loyaltyValue.length === 24 ? 'on_active_bounce pointer-events-auto opacity-100 ' : 'pointer-events-none opacity-50'
-                  } w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+                  } w-full rounded-md bg-[#000000] py-2.5 text-white`}
                 >
                   Send an Alert
                 </button>
@@ -643,7 +643,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
             {loyaltyId === 'existing' && openOtp && (
               <div className="border-1 my-5 h-[9.5rem] rounded-md border border-[#CACACA] px-4">
                 <h1 className="mb-1.5 mt-2.5 text-base font-semibold">OTP</h1>
-                <h6 className="mb-3.5 text-sm text-[#2B354D] opacity-50">
+                <h6 className="mb-3.5 text-sm text-[#000000] opacity-50">
                   Please enter the OTP send to the owner of exisitng loyalty Business (valid till 3 days)
                 </h6>
                 <div>
@@ -663,7 +663,7 @@ const LoyaltySetup = memo(({ existsLoyality }: ILoyalitySetUpProps) => {
                 <button
                   type="button"
                   onClick={handleExistingData}
-                  className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#2B354D] py-2.5 text-white`}
+                  className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce w-full rounded-md bg-[#000000] py-2.5 text-white`}
                 >
                   {loading ? 'Loading...' : 'Verify and Save'}
                 </button>
