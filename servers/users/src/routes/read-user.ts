@@ -19,21 +19,18 @@ router.get(
   cache('1 day'),
 
   async (req: Request, res: Response) => {
-    try {
       const { urlCode } = req.params;
       let result = await UrlModel.findOne({ urlCode: urlCode });
-      if (!result) return res.status(404).send({ status: false, message: 'Given urlcode not found !!' });
+      if (!result) return res.status(404).send({ err:true,data:{}, status: false, message: 'Given urlcode not found !!' });
 
-      return res.status(302).redirect(result.longUrl);
-    } catch (error: any) {
-      return res.status(500).send({ status: false, message: error.message });
-    }
+      res.status(302).redirect(result.longUrl);
+      return res.status(500).send({ err:true,data:{},status: false, message: 'Something is wrong' });
+
   },
 );
 
 router.get(
   '/v1/users',
-
   async (req: Request, res: Response) => {
     const { clientRole } = req.query;
     if (clientRole === 'user') {
@@ -54,15 +51,13 @@ router.get(
 
 router.get(
   '/v1/users/:id/test',
-
   async (req: Request, res: Response) => {
-    try {
-      return res.send({
+      res.send({
+        data:{},
+        err:false,
+        status: true,
         message: 'Testing',
       });
-    } catch (error: any) {
-      return res.status(500).send({ status: false, message: error.message });
-    }
   },
 );
 
@@ -77,10 +72,20 @@ router.get(
       let success = await User.deleteMany({
         phone: { $in: ['9588413799', '9000006420'] },
       });
-      return res.send(success);
+      return res.send({
+        message: 'Users deleted successfully',
+        data:success,
+        status: true,
+        err: false,
+      });
     }
 
-    return res.send(existingUser);
+    return res.send({
+      data: existingUser,
+      status: true,
+      message: 'User fetched successfully',
+      err: false,
+    });
   },
 );
 
@@ -94,9 +99,19 @@ router.get('/v1/users/resend/OTP', async (req: Request, res: Response) => {
 
   const response = await axios(options);
   if (response) {
-    return res.send(response.data);
+    return res.send({
+      message: 'OTP resent successfully',
+      data:response.data,
+      status: true,
+      err: false,
+    });
   } else {
-    return res.send(response);
+    return res.send({
+      message: 'Failed to resend OTP',
+      status: false,
+      err: true,
+      data:response
+    });
   }
 });
 
@@ -110,7 +125,12 @@ router.get(
       'customRole.businessId': businessId,
     });
 
-    res.status(200).send(existingUser);
+    res.status(200).send({
+      data: existingUser,
+      status: true,
+      message: 'User fetched successfully',
+      err: false,
+    });
   },
 );
 
@@ -122,12 +142,16 @@ router.get(
       role: 'RESTAURANT_OWNER',
     });
 
-    res.status(200).send(existingUser);
+    res.status(200).send({
+      data: existingUser,
+      status: true,
+      message: 'User fetched successfully',
+      err: false,
+    });
   },
 );
 
 router.get('/v1/users/staff/Single', async (req: Request, res: Response) => {
-  try {
     const { staffId, password, remove } = req.query;
     let user;
     if (password) {
@@ -147,14 +171,15 @@ router.get('/v1/users/staff/Single', async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).send(user);
-  } catch (error: any) {
-    console.log('err', error);
-  }
+    res.status(200).send({
+      data: user,
+      status: true,
+      message: 'User fetched successfully',
+      err: false,
+    });
 });
 
 router.get('/v1/users/:businessId/getUserReward', async (req: Request, res: Response) => {
-  try {
     const { userPhone, loyaltyId } = req.query;
 
     if (!loyaltyId) {
@@ -187,14 +212,15 @@ router.get('/v1/users/:businessId/getUserReward', async (req: Request, res: Resp
       return res.send(user);
     }
 
-    return res.send(userRewards);
-  } catch (error: any) {
-    console.log('err', error);
-  }
+    return res.send({
+      data: userRewards,
+      status: true,
+      message: 'User reward fetched successfully',
+      err: false,
+    });
 });
 
 router.get('/v1/users/:businessId/getUserRewardHistory', async (req: Request, res: Response) => {
-  try {
     const { userPhone, loyaltyId, from, to } = req.query;
     var fields = '';
     var arr = [];
@@ -232,7 +258,12 @@ router.get('/v1/users/:businessId/getUserRewardHistory', async (req: Request, re
           items: userRewards,
         } || {};
 
-      return res.send(newObje);
+      return res.send({
+        data:newObje,
+        status: true,
+        message: 'User reward fetched successfully',
+        err: false,
+      });
     }
     if (from && to) {
       if (from == to) {
@@ -257,7 +288,12 @@ router.get('/v1/users/:businessId/getUserRewardHistory', async (req: Request, re
       let fromDate = new Date(String(from).split('-').reverse().join('-'));
       let toDate = new Date(String(to).split('-').reverse().join('-') + ' 23:59:59');
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date');
+        return res.status(400).send({
+          message: 'From date cannot be greater than to date',
+          err:true,
+          data:{},
+          status: false,
+        });
       }
       const filteredRewards = await UserRewardHistory.find({
         userPhone,
@@ -278,15 +314,16 @@ router.get('/v1/users/:businessId/getUserRewardHistory', async (req: Request, re
           userPhone,
           items: filteredRewards,
         } || {};
-      return res.send(newObje);
+      return res.send({
+        data: newObje,
+        status: true,
+        message: 'User reward fetched successfully',
+        err: false,
+      });
     }
-  } catch (error: any) {
-    console.log('err', error);
-  }
 });
 
 router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Response) => {
-  try {
     const { from, to, loyaltyId, findUser } = req.query;
     var fields = '';
     var arr = [];
@@ -306,12 +343,20 @@ router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Resp
       });
       if (!userReward) {
         return res.status(404).send({
+          data:{},
+          status: false,
+          err:true,
           message: 'User not found',
         
         });
       }
 
-      return res.send(userReward);
+      return res.send({
+        status: true,
+        message: 'User reward fetched successfully',
+        err: false,
+        data:userReward
+      });
     }
 
     if (!from && !to) {
@@ -323,7 +368,12 @@ router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Resp
         .limit(PAGE_SIZE)
         .select(arr?.length > 0 ? fields : '');
 
-      return res.send(userRewards);
+      return res.send({
+        data:userRewards,
+        status: true,
+        message: 'User reward fetched successfully',
+        err: false,
+      });
     }
     if (from && to) {
       if (from == to) {
@@ -335,12 +385,22 @@ router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Resp
           .limit(PAGE_SIZE)
           .select(arr?.length > 0 ? fields : '');
 
-        return res.send(userRewards);
+        return res.send({
+          data:userRewards,
+          status: true,
+          message: 'User reward fetched successfully',
+          err: false,
+        });
       }
       let fromDate = new Date(String(from).split('-').reverse().join('-'));
       let toDate = new Date(String(to).split('-').reverse().join('-') + ' 23:59:59');
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date .');
+        return res.status(400).send({
+          message: 'From date cannot be greater than to date',
+          err:true,
+          data:{},
+          status: false,
+        });
       }
       const filteredPayments = await UserRewardHistory.find({
         loyaltyId,
@@ -354,15 +414,16 @@ router.get('/v1/users/:businessId/RewardHistory', async (req: Request, res: Resp
         .limit(PAGE_SIZE)
         .select(arr?.length > 0 ? fields : '');
 
-      return res.send(filteredPayments);
+      return res.send({
+        data:filteredPayments,
+        status: true,
+        message: 'User reward fetched successfully',
+        err: false,
+      });
     }
-  } catch (error: any) {
-    console.log('err', error);
-  }
 });
 
 router.get('/v1/users/:businessId/getAllLoyaltyUsers', async (req: Request, res: Response) => {
-  try {
     const { loyaltyId } = req.query;
     let PAGE_SIZE = 20;
     let pageNumber: any = req?.query?.pageNumber || 1;
@@ -377,14 +438,16 @@ router.get('/v1/users/:businessId/getAllLoyaltyUsers', async (req: Request, res:
       .limit(PAGE_SIZE)
       .select('userPhone userName rewards id loyaltyId');
 
-    return res.send(allUsers);
-  } catch (error: any) {
-    console.log('err', error);
-  }
+    return res.send({
+      data: allUsers,
+      status: true,
+      message: 'User reward fetched successfully',
+      err: false,
+    });
+
 });
 
 router.get('/v1/users/:businessId/loyaltyDashboard', async (req: Request, res: Response) => {
-  try {
     const { loyaltyId, from, to } = req.query;
 
     // Get all reward history at once and process in memory
@@ -445,6 +508,19 @@ router.get('/v1/users/:businessId/loyaltyDashboard', async (req: Request, res: R
       }
     }
     return res.send({
+      message: 'Loyalty dashboard fetched successfully',
+      err:false,
+      status: true,
+      data:{
+        allUsers,
+        coinsIssued,
+        coinsUsed,
+        repeatUsed,
+        usagePercentage,
+        coinsGivenOut,
+        coinsGivenUsed,
+        newCustomer,
+      },
       allUsers,
       coinsIssued,
       coinsUsed,
@@ -454,10 +530,6 @@ router.get('/v1/users/:businessId/loyaltyDashboard', async (req: Request, res: R
       coinsGivenUsed,
       newCustomer,
     });
-  } catch (error: any) {
-    console.error('Error:', error);
-    return res.status(500).send({ error: 'An error occurred while processing your request.' });
-  }
 });
 
 const filterBasedOnDate = async (from: number, to: number, businessId: string) => {
@@ -494,40 +566,50 @@ const filterBasedOnDate = async (from: number, to: number, businessId: string) =
 // Retrieves payments based on the specified date range and business ID.
 router.get(
   '/v1/users/:id/userDashboard',
-
   async (req: Request, res: Response) => {
-    try {
       let { from, to } = req.query;
       let fromDate = Number(from);
       let toDate = Number(to);
 
       const businessId = req.query.businessId as string;
       if (!businessId) {
-        return res.status(400).send({ message: 'businessId is required' });
+        return res.status(400).send({err:true, status:false, data:{}, message: 'businessId is required' });
       }
       if (!from && !to) {
         const obj = await filterBasedOnDate(startOfToday.getTime(), endOfToday.getTime(), businessId);
 
-        return res.send(obj);
+        return res.send({
+          data: obj,
+          status: true,
+          message: 'User dashboard fetched successfully',
+          err: false,
+        });
       }
       if (from && to) {
         if (fromDate > toDate) {
           return res.status(400).send({
+            data:{},
+            status:false,
+            err:true,
             message: 'From date cannot be greater than to date',
           });
         }
         const obj = await filterBasedOnDate(fromDate, toDate, businessId);
 
-        return res.send(obj);
+        return res.send({
+          data: obj,
+          status: true,
+          message: 'User dashboard fetched successfully',
+          err: false,
+        });
       }
 
       return res.status(400).send({
+        err:true,
+        data:{},
+        status:false,
         message:'Invalid query parameters'
       });
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
   },
 );
 

@@ -5,6 +5,7 @@ import { categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { validateRequest } from 'zod-express-middleware';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.post(
   validateRequest({
     body: categorySchema,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
     const {
       businessId,
@@ -32,7 +34,6 @@ router.post(
       availability,
       charges,
     } = req.body;
-
     await runInTransaction(async (session: ClientSession) => {
       const category = await Category.create(
         [
@@ -71,7 +72,8 @@ router.post(
     //{error: ,message: data }
     return res.status(201).send({
       message: 'Category created successfully',
-      status: true
+      status: true,
+      data:{}
     });
   },
 );

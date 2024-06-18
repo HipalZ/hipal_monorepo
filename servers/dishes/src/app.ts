@@ -6,7 +6,7 @@ import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
 
 // Routes
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createDishRouter } from './routes/create-dish';
 import { deleteDishesRouter } from './routes/delete-dish';
 import { readDishesRouter } from './routes/read-dish';
@@ -32,9 +32,10 @@ app.use(
       'https://www.hipal.life',
       'http://localhost:3002',
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:3009',
       'http://localhost:3005',
-
+      'http://localhost:3006',
       'http://localhost:3011',
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
@@ -69,7 +70,7 @@ app.use(
 
 app.use(idempotent);
 app.use(errorHandler);
-// app.use(authTokenValidator);
+app.use(authTokenValidator);
 
 // Register routes
 app.use(createDishRouter);

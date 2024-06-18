@@ -1,5 +1,6 @@
-import { Business } from '@hi/db-models';
-import { BusinessSchema } from '@hi/db-models/src/validators';
+import { ClientRoles, requireAuthorization } from '@hi/common';
+import { Business, LoyaltySettings } from '@hi/db-models';
+import { BusinessSchema, loyaltySchema } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
 import { validateRequest } from 'zod-express-middleware';
 
@@ -10,6 +11,7 @@ router.delete(
   validateRequest({
     body: BusinessSchema,
   }),
+  requireAuthorization([ClientRoles.HIPAL_ADMIN]),
   async (req: Request<{ businessId: string }>, res: Response) => {
     const { businessId } = req.params;
     const deletedBusiness = await Business.findByIdAndDelete(businessId);
@@ -24,8 +26,28 @@ router.delete(
       {
         message: 'Business deleted successfully',
         status: true,
+        data:deletedBusiness._id
       }
     );
+  },
+);
+
+//TODO : datta verify the data object in response
+router.delete(
+  '/v1/businesses/:id/deleteLoyalty',
+  validateRequest({
+    body: loyaltySchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER]),
+  async (req: Request, res: Response) => {
+    let { businessId } = req.query;
+    let exitingSettings = await LoyaltySettings.deleteOne({ businessId });
+
+    return res.status(200).send({
+      err: false,
+      message: 'Loyalty deleted successfully',
+      data: exitingSettings._id
+    });
   },
 );
 

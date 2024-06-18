@@ -6,6 +6,7 @@ import axios from 'axios';
 import momentTimeZone from 'moment-timezone';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const crypto = require('crypto');
 const ENC_KEY = process.env.API_KEY; // set random encryption key
@@ -32,6 +33,7 @@ router.post(
   validateRequest({
     body: PaymentSchema,
   }),
+  requireAuthorization([ClientRoles.HIPAL_CUSTOMER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
   async <T, K>(req: Request<T, K, z.infer<typeof PaymentSchema>>, res: Response) => {
     try {
       const {
@@ -83,7 +85,7 @@ router.post(
         tipsGivenBy,
       } = req.body;
 
-      const date = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      new Date().toISOString().replace('T', ' ').slice(0, 19);
 
       const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
 
@@ -137,26 +139,34 @@ router.post(
         tipsGivenBy,
       });
 
-      res.status(201).send(payment);
+      res.status(201).send({
+        err:false,
+        message:'',
+        data:payment
+      });
     } catch (err: any) {
       console.log('error', err);
-      return res.status(500).send({ status: false, mes: err });
+      return res.status(500).send({ status: false, mes: err, data: {}, err:true });
     }
   },
 );
 
 router.post(
   '/v1/payments/Create/Mode',
+  requireAuthorization([ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: PaymentModeSchema,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof PaymentModeSchema>>, res: Response) => {
     let { mode, businessId, commission } = req.body || {};
 
-    try {
       let payment = await PaymentMode.findOne({ businessId, mode });
       if (payment) {
-        return res.status(400).send('Mode already added !!');
+        return res.status(400).send({
+          err:true,
+          message:'Mode Already exists...',
+          data:{}
+        });
       }
 
       payment = new PaymentMode({
@@ -166,52 +176,62 @@ router.post(
       });
 
       const saveMode = await payment.save();
-      return res.status(201).send(saveMode);
-    } catch (error) {
-      console.error('Error while processing the mode:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(201).send({
+        err:false,
+        message:'mode created successfully',
+        data:saveMode
+      });
   },
 );
 
 router.post(
   '/v1/payments/Create/Dues',
+  requireAuthorization([ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: DuesSchema,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof DuesSchema>>, res: Response) => {
     let { duesPersonNames, businessId } = req.body || {};
 
-    try {
       if (!duesPersonNames) {
-        return res.status(400).send('Name is Required!');
+        return res.status(400).send({
+          err:true,
+          message:'Name is required',
+          data:{}
+        });
       }
       let dues = await Dues.findOne({
         businessId: businessId,
         duesPersonNames,
       });
       if (dues) {
-        return res.status(400).send('Name Already exit...');
+        return res.status(400).send({
+          err:true,
+          message:'Name Already exists...',
+          data:{}
+        });
       } else {
         dues = new Dues({ businessId, duesPersonNames: duesPersonNames });
       }
 
       const saveDues = await dues.save();
-      return res.status(201).send(saveDues);
-    } catch (error) {
-      console.error('Error while processing the dues:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(201).send({
+        err:true,
+        message:'Dues created successfully',
+        data:saveDues
+      });
   },
 );
 
 router.post(
   '/v1/payments/discountAlert',
   // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+
   async (req: Request, res: Response) => {
     let body = req.body || {};
 
@@ -220,7 +240,6 @@ router.post(
     const phoneId = '104262732724546';
     // const day = momentTimeZone.tz("Asia/Kolkata").format("YYYY-MM-DD");
 
-    try {
       await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
@@ -310,29 +329,28 @@ router.post(
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send('response');
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(200).send({
+        err:false,
+        message:'discountAlert sent successfully',
+        data:{}
+      });
   },
 );
 
 router.post(
   '/v1/payments/saleAlert',
   // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
     let body = req.body || {};
-
-    console.log('bodys', body?.phone);
     const token =
       'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
     const phoneId = '104262732724546';
 
-    try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
@@ -429,21 +447,23 @@ router.post(
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send(response);
-    } catch (error) {
-      console.error('Error while processing the dues:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(200).send({
+        err:false,
+        message:'saleAlert sent successfully',
+        data:response
+      });
+
   },
 );
 
 router.post(
   '/v1/payments/serviceChargeAlert',
   // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
     let body = req.body || {};
 
@@ -451,7 +471,6 @@ router.post(
       'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
     const phoneId = '104262732724546';
 
-    try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
@@ -507,20 +526,20 @@ router.post(
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send(response);
-    } catch (error: any) {
-      console.error('Error while processing the dues:', error.message);
-      return res.status(500).send({
-        message: 'Internal server error',
+      return res.status(200).send({
+        err:false,
+        message:'serviceChargeAlert sent successfully',
+        data:response
       });
-    }
   },
 );
 
 // create review
 router.post(
   '/v1/payments/reviews',
-
+  requireAuthorization([
+    ClientRoles.HIPAL_CUSTOMER
+  ]),
   validateRequest({
     body: ReviewsSchema,
   }),
@@ -528,34 +547,43 @@ router.post(
     const { businessId, reviewerPhone, reviewRating, order_id } = req.body || {};
 
     if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
-      return res.status(400).send('businesId, reviewerPhone, reviewRating, order_id is required');
+      return res.status(400).send({
+        err:true,
+        data:{},
+        message: 'businessId, reviewerPhone, reviewRating, order_id is required'
+      });
     }
 
-    try {
       const review = await Reviews.findOne({ order_id: order_id });
 
       if (review) {
-        return res.status(400).send('Review already added');
+        return res.status(400).send({
+          err:true,
+          message:'Review already added',
+          data:{}
+        });
       }
 
       const addReview = await Reviews.create(req.body);
 
       if (!addReview) {
-        return res.status(400).send('Review not  added');
+        return res.status(400).send({
+          err:true,
+          message:'Review not added',
+          data:{}
+        });
       }
 
-      return res.status(201).send({ id: addReview._id });
-    } catch (error) {
-      console.error('Error while processing the dues:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(201).send({ err:false, message:'', data:addReview._id,id: addReview._id });
   },
 );
 
 //create customer
 router.post(
   '/v1/payments/customer',
-
+  requireAuthorization([
+    ClientRoles.HIPAL_CUSTOMER
+  ]),
   validateRequest({
     body: CustomerSchema,
   }),
@@ -564,11 +592,12 @@ router.post(
 
     if (!businessId || !phone) {
       return res.status(400).send({
+        err:true,
+        data:{},
         message: 'businessId, phone is required',
       });
     }
 
-    try {
       let customer = await ReviewsCustomer.findOne({ businessId, phone });
 
       if (customer) {
@@ -593,19 +622,17 @@ router.post(
 
       if (customer) {
         if (customer.count === 1) {
-          return res.status(201).send({ id: customer.id });
+          return res.status(201).send({ err:false, message:'Review added successfully', data:customer._id ,id: customer._id });
         } else {
-          return res.status(200).send({ id: customer.id });
+          return res.status(200).send({ err:true, message: 'You have already submitted', data:customer._id,id: customer.id });
         }
       }
 
       return res.status(400).send({
+        err:true,
+        data:{},
         message: 'Customer not added',
       });
-    } catch (error) {
-      console.error('Error while processing the customer:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
   },
 );
 

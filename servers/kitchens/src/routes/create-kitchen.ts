@@ -24,6 +24,7 @@ import {
 import { createHmac } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 const currentTime = new Date();
@@ -54,42 +55,44 @@ const optionsTimeAndSeconds = {
 const formatterTimesAndSeconds = new Intl.DateTimeFormat('en-US', optionsTimeAndSeconds);
 const kotTime = formatterTimesAndSeconds.format(currentTime);
 
+// TODO: data check the response data
 router.post(
   '/v1/kitchens/kickOut/kots',
   validateRequest({
     body: KOTAttrs,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async <T, K>(req: Request<T, K, z.infer<typeof KOTAttrs>>, res: Response) => {
-    try {
-      const { zoneId, tableId } = req.body || {};
+    const { zoneId, tableId } = req.body || {};
 
-      const update = await Kot.updateMany(
-        {
-          zoneId,
-          tableId,
-          status: 'UNPAID',
+    const update = await Kot.updateMany(
+      {
+        zoneId,
+        tableId,
+        status: 'UNPAID',
+      },
+      {
+        $set: {
+          status: 'PAID',
+          cookedAt: Date.now(),
         },
-        {
-          $set: {
-            status: 'PAID',
-            cookedAt: Date.now(),
-          },
-        },
-      );
+      },
+    );
 
-      if (!update) {
-        return res.send({ status: false, message: 'Not Found Order' });
-      }
-      await Waiterkot.deleteMany({
-        zoneId: zoneId,
-        tableId: tableId,
-        isAccept: false,
-      });
-
-      res.status(200).send(update);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (!update) {
+      return res.send({ status: false, message: 'Not Found Order' });
     }
+    await Waiterkot.deleteMany({
+      zoneId: zoneId,
+      tableId: tableId,
+      isAccept: false,
+    });
+
+    res.status(200).send({
+      err:false,
+      message: 'KOTs updated successfully',
+      data:update
+    });
   },
 );
 
@@ -98,6 +101,7 @@ router.post(
   validateRequest({
     body: KitchenAttrs,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async <T, K>(req: Request<T, K, z.infer<typeof KitchenAttrs>>, res: Response) => {
     const { businessId, kitchenName, description, staff } = req.body;
 
@@ -108,7 +112,11 @@ router.post(
       staff,
     });
 
-    res.status(201).send(kitchen);
+    res.status(201).send({
+      err:false,
+      message: 'Kitchen created successfully',
+      data:kitchen._id
+    });
   },
 );
 
@@ -213,16 +221,15 @@ router.post(
 
 router.post(
   '/v1/kitchens/:kitchenId/kots',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
       var currentTime = Date.now();
       var momentTime = moment(currentTime);
       var indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm:ss');
 
       const { kots }: { kots: KOTType[] } = req.body;
 
-      const created = [];
+      const createKots = [];
       const startedAt = Date.now();
       for (let i = 0; i < kots.length; i++) {
         const newKOT = kots[i];
@@ -235,12 +242,13 @@ router.post(
           date: moment().format('Do MMM YY'),
         });
 
-        created.push(kot);
+        createKots.push(kot);
       }
-      res.status(201).send(created);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(201).send({
+        err:false,
+        message: 'KOTs created successfully',
+        data:createKots
+      });
   },
 );
 
@@ -293,30 +301,27 @@ const cartToKots = (
 };
 
 const getParentData = async (zoneId: string, tableId: string, session: any) => {
-  try {
     const parentTable = await Table.findById(tableId, null, { session });
     return parentTable;
-  } catch (error) {
-    console.log(error);
-  }
 };
 
 // new One for waiter
-router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/:id/user/kots', 
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     let { businessId, zoneId, tableId, tableName, cart, customerName, customerPhone, hiCode } = req.body || {};
 
     if (!businessId || !zoneId || !tableId) {
       res.status(404).send({
         status: false,
         message: 'businessId ,TableId,zoneId are required...!',
+        data:{}
       });
       return;
     }
     await runInTransaction(async (session: ClientSession) => {
       let tableInfo;
 
-      try {
         tableInfo = await Table.findById(tableId, null, { session });
         if (tableInfo?.isMerge && tableInfo?.hierarchy == 'CHILD') {
           const parentTable = await getParentData(tableInfo?.parentZoneId, tableInfo?.parentTableId, session);
@@ -324,22 +329,13 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
           tableId = parentTable?.id;
           tableInfo = parentTable;
         }
-      } catch (err: any) {
-        console.log(err);
-        res.status(400).send({
-          status: false,
-          message: 'something went wrong please try again!',
-        });
-        return;
-      }
-
       if (hiCode) {
         const isTableSettled = await Tempmodel.findOne({ hiCode }, null, {
           session,
         });
 
         if (isTableSettled || (hiCode != tableInfo?.hiCode && tableInfo?.hiCode == '')) {
-          res.status(403).send({ message: 'Table are Already Setteled....!' });
+          res.status(403).send({ message: 'Table are Already Setteled....!', data:{} });
           return;
         }
       }
@@ -356,17 +352,11 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
           hiCode: Math.floor(Math.random() * 9000) + 1000,
         };
 
-        try {
           updateTable = await Table.findByIdAndUpdate(tableId, update, {
             new: true,
             session,
             rawResult: true,
           });
-        } catch (err: any) {
-          console.log(err.message);
-          res.status(400).send('something went wrong please try again!');
-          return;
-        }
         const currentTime = new Date();
         const options = {
           timeZone: 'Asia/Kolkata',
@@ -397,6 +387,7 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
           message: 'Created Successfully',
           role: updateTable?.value?.role,
           hiCode: updateTable?.value?.hiCode,
+          data:{}
         });
         return;
       } else {
@@ -409,11 +400,12 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
             res.status(400).send({
               status: false,
               message: `Enter Valid Hicode !!! ${name} is already on this table`,
+              data:{}
             });
           }
 
           if (tableInfo?.hiCode !== hiCode) {
-            res.status(400).send({ status: false, message: 'Enter Valid Hicode !!!' });
+            res.status(400).send({ status: false, message: 'Enter Valid Hicode !!!',data:{} });
             return;
           }
         }
@@ -445,23 +437,22 @@ router.post('/v1/kitchens/:id/user/kots', async (req: Request, res: Response) =>
             status: true,
             role: tableInfo?.role,
             hiCode: tableInfo?.hiCode,
+            data:{}
           });
         }
-        res.status(201).send({
+        return res.status(201).send({
           status: true,
           message: 'Create Successfully',
+          data:{}
         });
-        return;
       }
     });
-  } catch (err: any) {
-    res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 // new One for pos  side
-router.post('/v1/kitchens/:id/waiter/kots', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/:id/waiter/kots', 
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { businessId, zoneId, tableId, timeWithSeconds, tableName, cart, waiterName, waiterPhone } = req.body || {};
     if (!businessId || !zoneId || !tableId) {
       return res.status(400).send('businessId ,TableId,zoneId ar required...!');
@@ -507,26 +498,17 @@ router.post('/v1/kitchens/:id/waiter/kots', async (req: Request, res: Response) 
         time: timeWithSeconds?.slice(0, 5),
       };
 
-      try {
         await Table.findByIdAndUpdate(tableId, update, { session });
         responseMessage = 'KOT created successfully';
-      } catch (err: any) {
-        responseMessage = err.message;
-        throw err;
-      }
     });
     if (responseMessage == 'KOT created successfully') {
-      return res.status(201).send({ status: true, data: 'KOT created successfully' });
-    } else {
-      return res.status(400).send(responseMessage);
+      return res.status(201).send({ data:{}, status: true, message: 'KOT created successfully' });
     }
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
-router.post('/v1/kitchens/Add/Printer', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/Add/Printer', 
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { businessId, printers, billPrinter } = req.body;
 
     const existingPrinter = await Printer.findOne({ businessId });
@@ -540,33 +522,40 @@ router.post('/v1/kitchens/Add/Printer', async (req: Request, res: Response) => {
         },
       );
 
-      return res.send(updatedPrinter);
+      return res.send({
+        err:false,
+        message:'Printer updated successfully',
+        data:updatedPrinter
+      });
     } else {
       const newPrinter = new Printer(req.body);
       const savedPrinter = await newPrinter.save();
 
-      return res.send(savedPrinter);
+      return res.send({
+        err:false,
+        message:'Printer created successfully',
+        data:savedPrinter
+      });
     }
-  } catch (err) {
-    console.error(err); // Log the error for debugging purposes
-    return res.status(500).json({ status: false, message: 'Internal Server Error' });
-  }
 });
 
-router.get('/v1/kitchens/Add/Printer', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/kitchens/Add/Printer',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
+
     const { businessId } = req.query;
 
     const existingPrinter = await Printer.findOne({ businessId });
-    return res.send(existingPrinter);
-  } catch (err) {
-    console.error(err); // Log the error for debugging purposes
-    return res.status(500).json({ status: false, message: 'Internal Server Error' });
-  }
+    return res.send({
+      err:false,
+      message: 'Printer data',
+      data:existingPrinter
+    });
 });
 
-router.post('/v1/kitchens/kotPassword', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/kotPassword' ,
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { businessId } = req.body;
     const exitingKotPass = await Kotpassword.findOne({ businessId });
     if (exitingKotPass) {
@@ -575,21 +564,20 @@ router.post('/v1/kitchens/kotPassword', async (req: Request, res: Response) => {
     let newPass = Math.floor(Math.random() * 9000) + 10000;
     const savedata = new Kotpassword({ businessId, password: newPass });
     const saveKotPassword = await savedata.save();
-    return res.status(201).send(saveKotPassword);
-  } catch (err) {
-    console.error(err); // Log the error for debugging purposes
-    return res.status(500).json({ status: false, message: 'Internal Server Error' });
-  }
+    return res.status(201).send({
+      err:false,
+      message: 'Password created successfully',
+      data:saveKotPassword
+    });
 });
 
 router.post(
   '/v1/kitchens/:kitchenId/swiggy',
   // validateKOT,
   // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // validateRequest,
   async (req: Request, res: Response) => {
-    try {
       const { businessId, zoneId, tableName, cart, waiterName, waiterPhone, orderId, deletedKotId } = req.body || {};
       if (deletedKotId) {
         await Kot.findByIdAndUpdate(deletedKotId, { isDeleted: true }, { new: true });
@@ -678,27 +666,30 @@ router.post(
 
         created.push(kot);
       }
-
-      return res.status(201).send(created);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(201).send({
+        err:false,
+        message: 'KOTs created successfully',
+        data:created
+      });
   },
 );
 
-router.post('/v1/kitchens/:kitchenId/openItem', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/:kitchenId/openItem',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+   async (req: Request, res: Response) => {
     const { zoneId, tableId, dishType, kitchenId, businessId } = req.body || {};
     if (!zoneId || !tableId || !dishType || !kitchenId || !businessId) {
       return res.status(400).send({
         status: false,
         message: 'zoneId, tableId, dishType, kitchenId, businessId is required',
+        data:{}
       });
     }
     if (!req.body.dish.price || typeof req.body.dish.price == 'string') {
       return res.status(400).send({
         status: false,
         message: 'Price is required',
+        data:{}
       });
     }
 
@@ -753,13 +744,15 @@ router.post('/v1/kitchens/:kitchenId/openItem', async (req: Request, res: Respon
       return res.status(500).send({
         status: false,
         message: 'Internal Server Error',
+        data:{}
       });
     }
 
-    return res.status(201).send(kot);
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
+    return res.status(201).send({
+      err:false,
+      data:kot,
+      message: 'KOT created successfully',
+    });
 });
 
 router.post(
@@ -768,8 +761,8 @@ router.post(
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   // validateRequest,
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
       var currentTime = Date.now();
       var momentTime = moment(currentTime);
       var indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm:ss');
@@ -792,10 +785,11 @@ router.post(
 
         created.push(kot);
       }
-      res.status(201).send(created);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(201).send({
+        err:false,
+        message: 'KOTs created successfully',
+        data:created
+      });
   },
 );
 
@@ -847,40 +841,28 @@ const getUpdatedCart = (kots: any, isDeleted: any) => {
   return cart;
 };
 
-router.post('/v1/kitchens/:kitchenId/kotPrint', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/:kitchenId/kotPrint', 
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { kotObject } = req.body || {};
     const config = {
       method: 'post',
       url: `https://ws.hipal.life`,
       data: kotObject,
     };
-
-    try {
-      await axios(config);
-    } catch (err: any) {
-      return res.status(500).send({
-        status: false,
-        message: err.message,
-      });
-    }
-
+    const response = await axios(config);
     res.status(200).send({
       status: true,
       message: 'KOT Successful Print',
+      data:response
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.post(
   '/v1/kitchens/:id/transferKot',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
       const { toZoneId, toTableId, kotObjectArray, transferBy } = req.body || {};
-      console.log('kotObjectArray', kotObjectArray);
 
       await runInTransaction(async (session: ClientSession) => {
         let fromTableId = kotObjectArray?.[0]?.tableId;
@@ -947,21 +929,19 @@ router.post(
         res.status(200).send({
           status: true,
           message: 'KOT Transferred Successfully',
+          data:{}
         });
       });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
   },
 );
 
-router.post('/v1/kitchens/:id/mergeKot', async (req: Request, res: Response) => {
-  try {
+router.post('/v1/kitchens/:id/mergeKot', 
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { tables } = req.body || {};
     let error;
     let message;
     await runInTransaction(async (session: ClientSession) => {
-      try {
         let parentTable = tables?.filter((table: any) => table?.hierarchy == 'PARENT');
         let tableId = parentTable?.[0]?.tableId;
 
@@ -1011,39 +991,24 @@ router.post('/v1/kitchens/:id/mergeKot', async (req: Request, res: Response) => 
 
         await Table.findByIdAndUpdate(tableId, config, { session });
         message = 'success';
-      } catch (err: any) {
-        error = err;
-      }
     });
 
-    if (error) {
-      console.log(error);
-      return res.status(500).send({
-        status: false,
-        message: 'something went wrong please try again!',
-      });
-    }
-
-    return res.status(200).send(message);
-  } catch (err: any) {
-    console.log(err);
-    return res.status(500).send({ status: false, message: err.message });
-  }
+    return res.status(200).send({
+      err:false,
+      message: 'KOTs merged successfully',
+      data:{}
+    });
 });
 
 router.post(
   '/v1/kitchens/:id/deleteKotAlert',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // currentUser,
-  // requireAuthorization([
-  //   ClientRoles.RESTAURANT_OWNER,
-  //   ClientRoles.RESTAURANT_MANAGER,
-  // ]),
   async (req: Request, res: Response) => {
     let body = req.body || {};
     const token =
       'EAATwS76f2vQBOZCKcsKjOKz8KtAdo7sI2bnXgFqcsSKRR4uuhPZCGZBr2rrJg3lBCiQW6fCxVhOC6GtmOFe00ERIALt2xDUZCAEZCKtbk96IMXSrX3IYeVOaBx3PLodGcEd9xbUZCddjbis5ABhgHq6WBWZAoAhmvTMVJPohZCdwr8RbqlV5dGBKyFq7VtiCyLKn';
     const phoneId = '104262732724546';
-    try {
       let response = await axios.post(
         `https://graph.facebook.com/v17.0/${phoneId}/messages`,
         {
@@ -1102,17 +1067,17 @@ router.post(
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      return res.status(200).send('response');
-    } catch (error) {
-      console.error('Error while processing the dues:', error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
+      return res.status(200).send({
+        err:false,
+        message: 'Alert sent successfully',
+        data:response
+      });
   },
 );
 
 router.post(
   '/v1/kitchens/createOrder',
-  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+  requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
   validateRequest({
     body: orderSchema,
   }),
@@ -1126,14 +1091,13 @@ router.post(
       receipt: uniqueOrderId,
     });
 
-    res.status(200).send({ err: false, message: 'Order created successfully', data: response.id });
+    res.status(200).send({ err: false, message: 'Order created successfully', data: response?._id });
   },
 );
 
 router.post(
   '/v1/kitchens/validPayment',
-  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
-
+  requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
   validateRequest({
     body: validatePaymentSchema,
   }),
@@ -1147,13 +1111,13 @@ router.post(
 
     if (signature === razorpay_signature) {
       return res.status(200).send({ err: false, message: 'Payment is valid', data: razorpay_order_id });
-    } else {
-      return res.status(400).send({ err: true, message: 'Payment is not valid' });
     }
   },
 );
 
-router.post('/v1/kitchens/razorpay-webhook', async (req: Request, res: Response) => {
+router.post('/v1/kitchens/razorpay-webhook', 
+  requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+  async (req: Request, res: Response) => {
   await runInTransaction(async (session: ClientSession) => {
     const headersResult = RazorpayWebhookHeadersSchema.safeParse(req.headers);
     if (!headersResult.success) {
@@ -1309,7 +1273,7 @@ router.post('/v1/kitchens/razorpay-webhook', async (req: Request, res: Response)
     }
   });
 
-  return res.status(200).send({ err: false, message: 'Webhook processed successfully', data: 'Webhook processed successfully' });
+  return res.status(200).send({ err: false, message: 'Webhook processed successfully', data: {} });
 });
 
 export { router as createKitchenRouter };

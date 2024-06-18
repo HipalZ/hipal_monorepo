@@ -5,6 +5,7 @@ import { ClientSession } from 'mongoose';
 import { validateRequest } from 'zod-express-middleware';
 import { categorySchema } from '@hi/db-models/src/validators';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -13,11 +14,11 @@ router.delete(
   validateRequest({
     body: categorySchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
-    const { id } = req.params as { id: string};
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<{ id: string }, {}, z.infer<typeof categorySchema>>, res: Response) => {
+    const { id } = req.params;
     let categoryNotFound = false;
 
-    try {
       await runInTransaction(async (session: ClientSession) => {
         const category = await Category.findByIdAndDelete(id, {
           session: session,
@@ -36,16 +37,11 @@ router.delete(
           message: 'Category not found',
         });
       }
-
       return res.status(200).send({
+        err:false,
         message: 'Category deleted successfully',
+        data:{}
       });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).send({
-        message: 'An error occurred while deleting the category',
-      });
-    }
   },
 );
 

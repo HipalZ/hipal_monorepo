@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
 import { Settings } from '@hi/db-models';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -15,8 +16,12 @@ router.delete(
   validateRequest({
     params: paramsSchema,
   }),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request<z.infer<typeof paramsSchema>>, res: Response) => {
-    try {
       const { id } = req.params;
       const existingSettings = await Settings.findByIdAndDelete(id);
 
@@ -25,9 +30,7 @@ router.delete(
       }
 
       res.status(200).send({ status: true, message: 'Settings deleted successfully' });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(500).send({ status: false, message: 'Error in deleting settings'});
   }
 );
 

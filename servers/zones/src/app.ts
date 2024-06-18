@@ -5,7 +5,7 @@ import 'express-async-errors'; // Do not remove, it deals with async errors in e
 
 import morgan from 'morgan';
 // Routes
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createZoneRouter } from './routes/create-zone';
 import { deleteZonesRouter } from './routes/delete-zone';
 import { readZonesRouter } from './routes/read-zone';
@@ -30,11 +30,12 @@ app.use(
       'https://hipal.life',
       'https://www.hipal.life',
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:3009',
       'http://localhost:3011',
       'http://localhost:3002',
       'http://localhost:3005',
-
+      'http://localhost:3006',
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -65,7 +66,7 @@ app.use(
     sameSite: 'none',
   }),
 );
-// app.use(authTokenValidator);
+app.use(authTokenValidator);
 
 // Register routes
 app.use(createZoneRouter);

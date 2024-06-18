@@ -5,6 +5,7 @@ import { ExtraAttrs, ExtraType, dishSchema } from '@hi/db-models/src/validators'
 import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 const router = express.Router();
 
 router.post(
@@ -12,6 +13,7 @@ router.post(
   validateRequest({
     body: dishSchema,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
   async <T,K>(req: Request<T,K, z.infer<typeof dishSchema>>, res: Response) => {
     const {
       businessId,
@@ -35,7 +37,6 @@ router.post(
       availability,
     } = req.body;
 
-    try {
       await runInTransaction(async (session: ClientSession) => {
         const dish = await Dish.create(
           [
@@ -75,13 +76,9 @@ router.post(
 
       res.status(201).send({
         message: 'Dish created successfully',
+        err:false,
+        data:{}
       });
-    } catch (e) {
-      console.error(e);
-      res.status(500).send({
-        message: 'An error occurred while creating the dish',
-      });
-    }
   },
 );
 
@@ -90,6 +87,7 @@ router.post(
   validateRequest({
     body: ExtraAttrs,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
   async <T,K>(req: Request<T,K, z.infer<typeof ExtraAttrs>>, res: Response) => {
     const {
       businessId,
@@ -99,7 +97,6 @@ router.post(
       compulsory,
       maxQuantity,
       addOnType,
-
       items,
     } = req.body;
 
@@ -115,7 +112,11 @@ router.post(
       items,
     });
 
-    res.status(201).send(extra);
+    res.status(201).send({
+      err:false,
+      message: 'Extra created successfully',
+      data:extra._id
+    });
   },
 );
 

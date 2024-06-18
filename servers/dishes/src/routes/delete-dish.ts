@@ -1,3 +1,4 @@
+import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Category, Dish } from '@hi/db-models';
 import { dishSchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
@@ -13,11 +14,11 @@ router.delete(
   validateRequest({
     body: dishSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof dishSchema>>, res: Response) => {
-    const { id } = req.params as { id: string };
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request<{ id: string }, {}, z.infer<typeof dishSchema>>, res: Response) => {
+    const { id } = req.params;
     let dishNotFound = false;
 
-    try {
       await runInTransaction(async (session: ClientSession) => {
         const dish = await Dish.findByIdAndDelete(id, {
           session: session,
@@ -37,14 +38,10 @@ router.delete(
       }
 
       return res.status(200).send({
+        err:false,
         message: 'Dish deleted successfully',
+        data:{}
       });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).send({
-        message: 'An error occurred while deleting the dish',
-      });
-    }
   },
 );
 

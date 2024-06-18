@@ -8,6 +8,7 @@ export enum ClientRoles {
   RESTAURANT_OWNER = 'RESTAURANT_OWNER',
   RESTAURANT_MANAGER = 'RESTAURANT_MANAGER',
   RESTAURANT_FLOOR_MANAGER = 'RESTAURANT_FLOOR_MANAGER',
+  RESTAURANT_STAFF = 'RESTAURANT_STAFF',
 }
 // ! Assumes we are going to call current Client before this middleware
 export const requireAuthorization = (roles: ClientRoles[]) => {

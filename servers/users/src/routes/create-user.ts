@@ -14,6 +14,7 @@ import { validateRequest } from 'zod-express-middleware';
 const shortid = require('shortid');
 const FCM = require('fcm-node');
 import moment = require('moment');
+import { requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -139,7 +140,6 @@ router.post(
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
 
-    try {
       let existingUser;
       existingUser = await User.findOne({ phone, role });
       // try {
@@ -159,7 +159,12 @@ router.post(
       // }
 
       if (existingUser) {
-        return res.status(409).send(existingUser);
+        return res.status(409).send({
+          status: false,
+          message: 'User already exist',
+          data: existingUser,
+          err: false,
+        });
       }
       const user = await User.create(req.body);
 
@@ -168,11 +173,13 @@ router.post(
       //   jwt: userJwt,
       // };
 
-      return res.status(201).send(user);
-    } catch (e: any) {
-      console.log(e);
-      return res.status(500).send({ status: false, message: e.message });
-    }
+      return res.status(201).send({
+        status: true,
+        message: 'User created successfully',
+        data: user,
+        err: false,
+      });
+      return res.status(500).send({ status: false, message: "Error while login or signup" });
   },
 );
 
@@ -183,11 +190,15 @@ router.post(
   async (req: Request, res: Response) => {
     let { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = req.body;
 
-    try {
       let existingUser;
       existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
       if (!existingUser) {
-        return res.status(400).send('User not found');
+        return res.status(400).send({
+          status: false,
+          message: 'User not found',
+          data:{},
+          err: true,
+        });
       }
       // try {
       //   if (
@@ -241,11 +252,12 @@ router.post(
       //   return res.status(200).send(modifyUser);
       // }
 
-      return res.status(200).send(existingUser);
-    } catch (e: any) {
-      console.log(e);
-      return res.status(500).send({ status: false, message: e.message });
-    }
+      return res.status(200).send({
+        status: true,
+        message: 'User logged in successfully',
+        data: existingUser,
+        err: false,
+      });
   },
 );
 
@@ -319,7 +331,12 @@ router.post(
       //   };
       // }
 
-      res.status(201).send(user);
+      res.status(201).send({
+        status: true,
+        message: 'User created successfully',
+        data: user,
+        err: false,
+      });
     } else if (action === 'login') {
       const number = phone;
 
@@ -376,7 +393,12 @@ router.post(
       //     jwt: userJwt,
       //   };
       // }
-      res.status(201).send(user);
+      res.status(201).send({
+        status: true,
+        message: 'User logged in successfully',
+        data: user,
+        err: false,
+      });
     } else if (action === 'logout') {
       req.session = null;
       res.send({});
@@ -394,20 +416,23 @@ router.post(
     const existingUser = await User.findOne({ phone, password });
     if (businessId) {
       if (existingUser?.customRole?.[0]?.businessId != businessId) {
-        return res.status(400).send({ status: false, message: 'staff not belong to business...!' });
+        return res.status(400).send({ data:{},status: false, message: 'staff not belong to business...!' });
       }
     }
-    console.log('existingUser', existingUser);
-
     if (!existingUser) {
-      return res.status(400).send({ status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ data:{},status: false, message: 'Phone or Password invalid...!' });
     }
 
     // Generate JWT
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
 
-    res.status(201).send({ existingUser, accessToken, refreshToken });
+    res.status(201).send({ data:{
+      existingUser, accessToken, refreshToken
+    },
+    err:false,
+    message: 'User logged in successfully',
+    existingUser, accessToken, refreshToken });
   },
 );
 
@@ -417,7 +442,6 @@ router.post(
     body: UrlAttrs,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof UrlAttrs>>, res: Response) => {
-    try {
       const { longUrl } = req.body;
       let exit = await UrlModel.findOne({ longUrl });
       if (!exit) {
@@ -428,13 +452,19 @@ router.post(
           urlCode: id.toLowerCase(),
         });
         const result = await Data.save();
-        return res.send(result);
+        return res.send({
+          message: 'Url Shortner Successfully',
+          data: result,
+          err: false,
+        });
       } else {
-        return res.send(exit);
+        return res.send({
+          message: 'Url already exist',
+          data: exit,
+          err: false,
+        });
       }
-    } catch (e: any) {
-      return res.status(500).send({ status: false, message: e.message });
-    }
+      return res.status(500).send({ data:{}, err:true,status: false, message: e.message });
   },
 );
 
@@ -444,7 +474,6 @@ router.post(
     body: UserAttrs,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
-    try {
       const { email, role } = req.body || {};
       const existingUser = await User.findOne({
         email: email,
@@ -452,25 +481,25 @@ router.post(
       });
       if (!existingUser)
         return res.status(404).send({
+          data:{},
+          err:true,
           status: false,
           message: 'Email  Invalid !! Please Try again !!!',
         });
       // Generate JWT
       const userJwt = createJWT(existingUser);
-
-      // // Store it on session object
+      // Store it on session object
       req.session = {
         jwt: userJwt,
       };
 
       return res.status(200).send({
+        err:false,
         status: true,
         message: 'Login SuccessFully !!!',
         data: existingUser,
       });
-    } catch (e: any) {
-      return res.status(500).send({ status: false, message: e.message });
-    }
+      return res.status(500).send({ err:true, data:{},status: false, message: e.message });
   },
 );
 
@@ -520,7 +549,6 @@ router.post(
   '/v1/users/Bill/generateBill',
 
   async (req: Request, res: Response) => {
-    try {
       const { businessname, bill } = req.body;
 
       const mobiles = req.body.mobiles as [];
@@ -546,11 +574,13 @@ router.post(
         await axios(options);
       }
       return res.send({
+        err:false,
+        data:{},
+        status: true,
         message: `Bill send on ${mobiles.join(' ')} this numbers !!!`,
       });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(500).send({ err:true, status: false, message: 'Error while generating bill' });
+
   },
 );
 
@@ -565,11 +595,18 @@ router.post(
     let userExit = await User.findOne({ phone, role: 'RESTAURANT_MANAGER' });
     if (!userExit) {
       return res.status(400).send({
+        err:true,
         status: false,
         message: 'Phone  Invalid !! Please Try again !!!',
+        data:{}
       });
     }
-    return res.send(userExit);
+    return res.send({
+      err:false,
+      status: true,
+      message: 'Login SuccessFully !!!',
+      data: userExit,
+    });
   },
 );
 
@@ -580,7 +617,12 @@ router.post(
     const { phone, password, businessId } = req.body;
     const { withBusinessId } = req.query;
     if (!withBusinessId) {
-      return res.send('withBusinessId  is Required..!');
+      return res.send({
+        status: false,
+        message: 'businessId is required',
+        data:{},
+        err:true,
+      });
     }
     if (withBusinessId == 'true') {
       const existingUser = await User.findOne({
@@ -590,28 +632,38 @@ router.post(
       });
 
       if (!existingUser) {
-        return res.status(400).send({ status: false, message: 'Phone or Password invalid...!' });
+        return res.status(400).send({ err:true, data:{}, status: false, message: 'Phone or Password invalid...!' });
       }
       // const userJwt = createJWT(existingUser);
 
       // req.session = {
       //   jwt: userJwt,
       // };
-      res.status(200).send(existingUser);
+      res.status(200).send({
+        err:false,
+        status: true,
+        message: 'Login SuccessFully !!!',
+        data: existingUser,
+      });
     } else {
       const existingUser = await User.findOne({
         phone,
         role: 'RESTAURANT_MANAGER',
       });
       if (!existingUser) {
-        return res.status(400).send({ status: false, message: 'Phone  invalid...!' });
+        return res.status(400).send({ data:{} , err:true, status: false, message: 'Phone  invalid...!' });
       }
       // const userJwt = createJWT(existingUser);
 
       // req.session = {
       //   jwt: userJwt,
       // };
-      res.status(200).send(existingUser);
+      res.status(200).send({
+        err:false,
+        status: true,
+        message: 'Login SuccessFully !!!',
+        data: existingUser,
+      });
     }
   },
 );
@@ -621,7 +673,6 @@ const SERVER_KEY =
 
 router.post('/v1/users/registrationToken/Send', async (req, res) => {
   const { registrationToken, title, body } = req.body;
-  try {
     const fcm = new FCM(SERVER_KEY);
 
     const pushMessage = {
@@ -652,13 +703,10 @@ router.post('/v1/users/registrationToken/Send', async (req, res) => {
         message: 'Notification sent successfully',
       });
     });
-  } catch (error) {
-    console.log('Error parsing Firebase config file:', error);
     return res.status(500).send({
       status: false,
       message: 'Internal Server Error',
     });
-  }
 });
 
 router.post(
@@ -686,9 +734,14 @@ router.post(
     };
 
     if (!existingUser) {
-      return res.status(400).send({ status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ err:true, data:{},status: false, message: 'Phone or Password invalid...!' });
     }
-    res.status(200).send(existingUser);
+    res.status(200).send({
+      data:existingUser,
+      err:false,
+      status: true,
+      message:'Login SuccessFully !!!'
+    });
   },
 );
 
@@ -710,7 +763,7 @@ router.post(
     }
 
     if (!existingUser) {
-      return res.status(400).send({ status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ err:true, data:{},status: false, message: 'Phone or Password invalid...!' });
     }
 
     // const userJwt = createJWT(existingUser);
@@ -718,12 +771,16 @@ router.post(
     // req.session = {
     //   jwt: userJwt,
     // };
-    res.status(200).send(existingUser);
+    res.status(200).send({
+      data:existingUser,
+      err:false,
+      status: true,
+      message:'Login SuccessFully !!!'
+    });
   },
 );
 
 router.post('/v1/users/Reward', async (req: Request, res: Response) => {
-  try {
     const { claim, settle, userSide } = req.query;
     const currentTime = Date.now();
     const indianTime = moment(currentTime).utcOffset('+05:30');
@@ -754,22 +811,42 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
     claimedAmount = Math.floor(claimedAmount);
 
     if (!loyaltyId || !userPhone) {
-      return res.status(400).send('LoyaltyId and Phone Required');
+      return res.status(400).send({
+        status: false,
+        message: 'LoyaltyId and userPhone required',
+        err:true,
+        data:{}
+      });
     }
     if (settle == 'false') {
       const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
 
       if (!userSide) {
         if (password !== existingUser?.password) {
-          return res.status(400).send('Wrong password');
+          return res.status(400).send({
+            status: false,
+            message: 'Wrong password',
+            err:true,
+            data:{}
+          });
         }
       }
       if (existingUser) {
         if (parseInt(claimedAmount) > existingUser?.rewards) {
-          return res.status(400).send('Enter valid cliamed amount');
+          return res.status(400).send({
+            status: false,
+            message: 'Enter valid claimed amount',
+            err:true,
+            data:{}
+          });
         }
       }
-      return res.send(existingUser);
+      return res.send({
+        status: true,
+        message: 'Claimed amount is valid',
+        err:false,
+        data:existingUser
+      });
     }
     const saveRewardHistory = async (status: any, rewards: any, currentBalance: any) => {
       if (status == 'minus') {
@@ -816,7 +893,13 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
         await saveRewardHistory('plus', rewardsNumber, rewardsNumber);
       }
 
-      return res.status(201).send(newReward);
+      return res.status(201).send({
+        status: true,
+        message: 'User reward created successfully',
+        data:newReward,
+        err:false,
+      
+      });
     }
 
     if (claim === 'true') {
@@ -825,6 +908,8 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
       if (!userSide) {
         if (password !== existingUser?.password) {
           return res.status(400).send({
+            err:true,
+            data:{},
             status: false,
             message: 'Wrong password',
           });
@@ -833,6 +918,8 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
       if (existingUser) {
         if (existingUser?.rewards == 0 || claimedAmountNumber > existingUser?.rewards) {
           return res.status(400).send({
+            err:true,
+            data:{},
             status: false,
             message: 'You can`t claimed 0 coins or claimedAmount should be less than rewards',
           });
@@ -853,7 +940,12 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
         await saveRewardHistory('plus', rewards, updatedReward?.rewards);
       }
 
-      return res.send(updatedReward);
+      return res.send({
+        status: true,
+        message: 'Claimed amount updated successfully',
+        data:updatedReward,
+        err:false,
+      });
     }
 
     if (claim === 'false') {
@@ -866,15 +958,16 @@ router.post('/v1/users/Reward', async (req: Request, res: Response) => {
         await saveRewardHistory('plus', rewards, updatedReward?.rewards);
       }
 
-      return res.send(updatedReward);
+      return res.send({
+        data:updatedReward,
+        status: true,
+        message: 'Rewards updated successfully',
+        err:false,
+      });
     }
-  } catch (err) {
-    console.log('err', err);
-  }
 });
 
 router.post('/v1/users/addCoins', async (req: Request, res: Response) => {
-  try {
     let currentTime = Date.now();
     let momentTime = moment(currentTime);
     let indianTime = momentTime.clone().utcOffset('+05:30');
@@ -915,14 +1008,15 @@ router.post('/v1/users/addCoins', async (req: Request, res: Response) => {
     });
 
     let existingReward = await UserReward.findOne({ userPhone, loyaltyId });
-    return res.send(existingReward);
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
+    return res.send({
+      status: true,
+      message: 'Coins added successfully',
+      data: existingReward,
+      err:false,
+    });
 });
 
 router.post('/v1/users/addBulkCoins', async (req: Request, res: Response) => {
-  try {
     let currentTime = Date.now();
     let momentTime = moment(currentTime);
     let indianTime = momentTime.clone().utcOffset('+05:30');
@@ -932,15 +1026,11 @@ router.post('/v1/users/addBulkCoins', async (req: Request, res: Response) => {
 
     await runInTransaction(async (session: ClientSession) => {
       let loyaltySetting;
-      try {
         loyaltySetting = await LoyaltySettings.findOne({ businessId }, { session });
 
         if (password != loyaltySetting?.password) {
           throw new Error('Wrong Password');
         }
-      } catch (err: any) {
-        throw new Error('Failed to fetch loyalty settings');
-      }
 
       for (let i = 0; i < usersArray?.length; i++) {
         let userObject = usersArray?.[i];
@@ -1020,10 +1110,9 @@ router.post('/v1/users/addBulkCoins', async (req: Request, res: Response) => {
     return res.send({
       status: true,
       message: 'uploaded successfully',
+      err:false,
+      data:{}
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.post(
@@ -1032,7 +1121,12 @@ router.post(
   async (req: Request, res: Response) => {
     let { phone, role, name, email, accessControl } = req.body;
     if (!phone || !role) {
-      return res.status(400).send('phone and role required');
+      return res.status(400).send({
+        status: false,
+        message: 'phone and role required',
+        err:true,
+        data:{}
+      });
     }
 
     let existingUserPhone;
@@ -1054,7 +1148,12 @@ router.post(
         },
       };
       await axios(options);
-      return res.status(400).send(existingUserPhone);
+      return res.status(400).send({
+        status: false,
+        message: 'User already exist',
+        err:true,
+        data: existingUserPhone,
+      });
     }
     if (!existingUserPhone) {
       const user = await User.create({
@@ -1068,7 +1167,7 @@ router.post(
       // Generate JWT
       const userJwt = createJWT(user);
 
-      // // Store it on session object
+      // Store it on session object
 
       req.session = {
         jwt: userJwt,
@@ -1084,7 +1183,12 @@ router.post(
       };
       await axios(options);
 
-      return res.status(201).send(user);
+      return res.status(201).send({
+        status: true,
+        message: 'User created successfully',
+        err:false,
+        data: user,
+      });
     }
   },
 );
@@ -1095,7 +1199,12 @@ router.post(
   async (req: Request, res: Response) => {
     const { phone, otp, role } = req.body;
     if (!phone && !otp) {
-      return res.status(400).send('phone and otp required');
+      return res.status(400).send({
+        status: false,
+        message: 'phone and otp required',
+        err:true,
+        data:{}
+      });
     }
     const options = {
       method: 'GET',
@@ -1109,12 +1218,14 @@ router.post(
     const response = await axios(options);
 
     if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
-      return res.status(400).send({ status: false, message: 'Please enter valid Otp !!' });
+      return res.status(400).send({ err:true, data:{},status: false, message: 'Please enter valid Otp !!' });
     }
 
     return res.status(200).send({
       status: true,
       message: 'Login SuccessFull !!!',
+      data: response.data,
+      err:false
     });
   },
 );

@@ -6,7 +6,7 @@ import cors from 'cors';
 import { createCategoryRouter } from './routes/create-category';
 import { deleteCategoriesRouter } from './routes/delete-category';
 // Routes
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import express from 'express';
 import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
@@ -33,11 +33,12 @@ app.use(
       'https://hipal.life',
       'https://www.hipal.life',
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:3009',
       'http://localhost:3011',
       'http://localhost:3002',
       'http://localhost:3005',
-
+      'http://localhost:3006',
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -70,7 +71,7 @@ app.use(
 );
 
 app.use(idempotent);
-// app.use(authTokenValidator);
+app.use(authTokenValidator);
 app.use(errorHandler);
 // Register routes
 app.use(createCategoryRouter);

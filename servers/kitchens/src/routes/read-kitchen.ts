@@ -80,48 +80,52 @@ router.get(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
-      const { businessId, isAlertOn, zoneId, staffId } = req.query;
+    const { businessId, isAlertOn, zoneId, staffId } = req.query;
 
-      // const swiggyAlerts = await Alert.find({
-      //   businessId: businessId,
-      //   isAlertOn: true,
-      //   tableName: { $in: ["swiggy", "zomato"] },
-      // });
+    // const swiggyAlerts = await Alert.find({
+    //   businessId: businessId,
+    //   isAlertOn: true,
+    //   tableName: { $in: ["swiggy", "zomato"] },
+    // });
 
-      let existingAlerts = await Alert.find({
-        zoneId: zoneId,
+    let existingAlerts = await Alert.find({
+      zoneId: zoneId,
+      businessId,
+      isAlertOn,
+    }).sort({ _id: -1 });
+    existingAlerts = [...existingAlerts];
+
+    if (isAlertOn == 'false') {
+      let PAGE_SIZE = 10;
+      let pageNumber: any = req?.query?.pageNumber || 1;
+
+      const skip: number = (pageNumber - 1) * PAGE_SIZE;
+
+      let history = await Alert.find({
+        isAlertOn: 'false',
         businessId,
-        isAlertOn,
-      }).sort({ _id: -1 });
-      existingAlerts = [...existingAlerts];
+        zoneId,
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE);
 
-      if (isAlertOn == 'false') {
-        let PAGE_SIZE = 10;
-        let pageNumber: any = req?.query?.pageNumber || 1;
-
-        const skip: number = (pageNumber - 1) * PAGE_SIZE;
-
-        let history = await Alert.find({
-          isAlertOn: 'false',
-          businessId,
-          zoneId,
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE);
-
-        return res.status(200).send(history);
-      }
-
-      // existingAlerts = existingAlerts.filter((ele) =>
-      //   tablesArray.includes(ele?.tableId)
-      // );
-
-      res.status(200).send(existingAlerts);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+      return res.status(200).send({
+        err: false,
+        message: 'Alerts fetched successfully',
+        data: history,
+      });
     }
+
+    // existingAlerts = existingAlerts.filter((ele) =>
+    //   tablesArray.includes(ele?.tableId)
+    // );
+
+    res.status(200).send({
+      err: false,
+      message: 'Alerts fetched successfully',
+      data: existingAlerts,
+    });
   },
 );
 
@@ -134,14 +138,22 @@ router.get(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    const { businessId, waiterId } = req.query || {};
+    const { waiterId } = req.query || {};
 
     const array = ['645e17f44451584e375a8a60'];
 
     if (array.includes(waiterId as string)) {
-      res.status(200).send('waiter calling.......!');
+      res.status(200).send({
+        err: false,
+        message: 'waiter calling.......!',
+        data: {}
+      });
     } else {
-      return res.status(400).send('something wrong');
+      return res.status(400).send({
+        err: true,
+        message: 'waiter not found',
+        data: {}
+      });
     }
   },
 );
@@ -154,35 +166,32 @@ router.get(
     const { id } = req.params;
     const existingKitchen = await Kitchen.findById(id);
 
-    res.status(200).send(existingKitchen);
+    res.status(200).send({
+      status: true,
+      data: existingKitchen,
+      message: 'Kitchen fetched successfully'
+    });
   },
 );
 
 router.get(
   '/v1/kitchens/Deletes/Kots',
-
   async (req: Request, res: Response) => {
-    try {
-      const { remove } = req.query || {};
-      if (remove) {
-        let deleted = await Kot.deleteMany();
-        return res.send(deleted);
-      }
-      const allOrderHistory = await Kot.find();
-      return allOrderHistory.length > 0
-        ? res.status(200).send({ status: true, data: allOrderHistory })
-        : res.status(404).send({ status: false, message: 'orderNotFound ....!' });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    const { remove } = req.query || {};
+    if (remove) {
+      let deleted = await Kot.deleteMany();
+      return res.send(deleted);
     }
+    const allOrderHistory = await Kot.find();
+    return allOrderHistory.length > 0
+      ? res.status(200).send({ err: false, status: true, data: allOrderHistory, message: 'Kots deleted successfully' })
+      : res.status(404).send({ err: true, status: false, message: 'orderNotFound ....!', data: {} });
   },
 );
 
 router.get(
   '/v1/kitchens/:id/cleanTempModels',
-
   async (req: Request, res: Response) => {
-    try {
       const { remove, tipsTableId } = req.query || {};
       if (remove) {
         const deleted = await Tempmodel.deleteMany();
@@ -193,10 +202,11 @@ router.get(
         return res.send(deleted);
       }
       const data = await Tempmodel.find();
-      return res.send(data);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.send({
+        err:false,
+        message:'Tempmodels fetched successfully',
+        data
+      });
   },
 );
 
@@ -239,24 +249,23 @@ router.get(
 
     const existingKOTs = await Kot.find(query);
 
-    res.status(200).send(existingKOTs);
+    res.status(200).send({
+      err:false,
+      message:'Kots fetched successfully',
+      data:existingKOTs
+    });
   },
 );
 
 async function fetchTableData(tableId: string) {
-  let tableData;
+  let tableData:any;
 
-  try {
     tableData = await Table.findById(tableId);
 
     if (tableData?.isMerge && tableData?.hierarchy == 'CHILD') {
       tableId = tableData?.parentTableId;
     }
     return tableId as string;
-  } catch (err: any) {
-    console.log(err);
-    return err;
-  }
 }
 
 // router.get(
@@ -527,7 +536,6 @@ async function fetchTableData(tableId: string) {
 // );
 
 router.get('/v1/kitchens/:id/temp-bill', async (req: Request, res: Response) => {
-  try {
     let { tableId, hasServiceCharge, serviceChargePercentage, gstPercentage, userSide } = req.query as {
       tableId: string;
       hasServiceCharge: string;
@@ -750,18 +758,22 @@ router.get('/v1/kitchens/:id/temp-bill', async (req: Request, res: Response) => 
 
       merged.push(obj);
       if (merged?.length == 1) {
-        res.status(200).send([]);
+        res.status(200).send({
+          err: true,
+          message: 'Temp bill not found',
+          data: [],
+        });
       } else {
-        res.status(200).send(merged);
+        res.status(200).send({
+          err: false,
+          message: 'Temp bill fetched successfully',
+          data: merged,
+        });
       }
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.get('/v1/kitchens/kots/allKot', async (req: Request, res: Response) => {
-  try {
     let { businessId, tableId, zoneId, userSide } = req.query;
 
     await runInTransaction(async (session: ClientSession) => {
@@ -818,18 +830,17 @@ router.get('/v1/kitchens/kots/allKot', async (req: Request, res: Response) => {
         return acc;
       }, []);
 
-      res.status(200).send(groupedOrders);
+      res.status(200).send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:groupedOrders
+      });
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.get(
   '/v1/kitchens/getAllKotByWaiter/all',
-
   async (req: Request, res: Response) => {
-    try {
       const { businessId, zoneId, staffId } = req.query;
 
       const filters = {
@@ -879,15 +890,15 @@ router.get(
         return acc;
       }, []);
 
-      res.status(200).send(groupedOrders);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(200).send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:groupedOrders
+      });
   },
 );
 
 router.get('/v1/kitchens/all/WaiterOrder', async (req: Request, res: Response) => {
-  try {
     const { businessId, zoneId, staffId } = req.query;
     await runInTransaction(async (session: ClientSession) => {
       let existingTables = await Table.find({ businessId });
@@ -917,11 +928,12 @@ router.get('/v1/kitchens/all/WaiterOrder', async (req: Request, res: Response) =
 
       existingKitchens = existingKitchens.filter((ele: any) => tablesArray.includes(ele?.tableId));
 
-      res.status(200).send(existingKitchens);
+      res.status(200).send({
+        err:false,
+        message:'Waiter orders fetched successfully',
+        data:existingKitchens
+      });
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.get(
@@ -940,7 +952,11 @@ router.get(
       return res.status(404).send('Not found');
     }
 
-    res.status(200).send(filterByChefId);
+    res.status(200).send({
+      err:false,
+      message:'Kitchens fetched successfully',
+      data:filterByChefId
+    });
   },
 );
 
@@ -969,7 +985,11 @@ router.get('/v1/kitchens/Allkots/ByKitchens', async (req: Request, res: Response
 
     const resultArray = Object.values(groupedDishes);
 
-    return res.send(resultArray);
+    return res.send({
+      err:false,
+      message:'Kots fetched successfully',
+      data:resultArray
+    });
   }
 
   let kots = await Kot.find({ kitchenId, status: 'UNPAID' }).select(
@@ -1059,7 +1079,11 @@ router.get('/v1/kitchens/Allkots/ByKitchens', async (req: Request, res: Response
   newObject.cookingDishes = cookingDishes;
   newArray.push(newObject);
 
-  return res.send(newArray);
+  return res.send({
+    err:false,
+    message:'Kots fetched successfully',
+    data:newArray
+  });
 });
 
 router.get(
@@ -1111,8 +1135,8 @@ router.get(
     }, []);
 
     let kotLength = groupedOrders?.length || 0;
-
-    res.send({ kots: kotLength, dishes });
+    //TODO: change the structure to take the dishes
+    res.status(200).send({ err:false, message:'grouped orders successful', data:{},kots: kotLength, dishes });
   },
 );
 
@@ -1204,7 +1228,11 @@ router.get('/v1/kitchens/:id/Category&Dishes', async (req: Request, res: Respons
 
     const result = CommonDishes(kots);
 
-    return res.send(result);
+    return res.send({
+      err:false,
+      message:'Common dishes fetched successfully',
+      data:result
+    });
   }
 });
 
@@ -1288,7 +1316,6 @@ router.get('/v1/kitchens/:id/Category', async (req: Request, res: Response) => {
   const { businessId, from, to } = req.query;
 
   let categories;
-  try {
     await runInTransaction(async (session: ClientSession) => {
       categories = await Category.find(
         {
@@ -1409,12 +1436,13 @@ router.get('/v1/kitchens/:id/Category', async (req: Request, res: Response) => {
         let ans = preAnalyticsCategory(kots, category);
         let optimizedStructure = CategoryAnalytics(ans, categories);
 
-        res.send(optimizedStructure);
+        res.send({
+          err:false,
+          message:'analytics data',
+          data:optimizedStructure
+        });
       }
     });
-  } catch (err: any) {
-    console.log('err', err);
-  }
 });
 
 const dishesAnalytics = (analytics: any, kot: any) => {
@@ -1515,7 +1543,6 @@ router.get('/v1/kitchens/:id/Dishes', async (req: Request, res: Response) => {
   const { businessId, from, to } = req.query;
 
   let dishes;
-  try {
     await runInTransaction(async (session: ClientSession) => {
       dishes = await Dish.find(
         {
@@ -1637,12 +1664,13 @@ router.get('/v1/kitchens/:id/Dishes', async (req: Request, res: Response) => {
         let ans = preAnalytics(kots, dish);
         let optimizedStructure = dishesAnalytics(ans, kots);
 
-        res.send(optimizedStructure);
+        res.send({
+          err:false,
+          message:'dish analytics',
+          data:optimizedStructure
+        });
       }
     });
-  } catch (err: any) {
-    console.log('err', err);
-  }
 });
 
 router.get('/v1/kitchens/:id/history', async (req: Request, res: Response) => {
@@ -1670,7 +1698,11 @@ router.get('/v1/kitchens/:id/history', async (req: Request, res: Response) => {
 
   const result = Object.values(groupByKotTime);
 
-  res.status(200).send(result);
+  res.status(200).send({
+    err:false,
+    message:'Kots fetched successfully',
+    data:result
+  });
 });
 
 router.get(
@@ -1680,27 +1712,28 @@ router.get(
     const { id } = req.params;
     const existingKot = await Kot.findById(id);
 
-    res.status(200).send(existingKot);
+    res.status(200).send({
+      err:false,
+      message:'Kot fetched successfully',
+      data:existingKot
+    });
   },
 );
 
 router.get('/v1/kitchens/:id/kotPassword', async (req: Request, res: Response) => {
-  try {
     const { businessId } = req.query;
     const exitingKotPass = await Kotpassword.find({ businessId });
-
-    return res.status(201).send(exitingKotPass);
-  } catch (err) {
-    console.error(err); // Log the error for debugging purposes
-    return res.status(500).json({ status: false, message: 'Internal Server Error' });
-  }
+    return res.status(201).send({
+      err:false,
+      message:'Kot Password fetched successfully',
+      data:exitingKotPass
+    });
 });
 
 router.get(
   '/v1/kitchens/:id/ActiveUser',
 
   async (req: Request, res: Response) => {
-    try {
       const { tableId, zoneId, businessId } = req.query || {};
 
       const activeUsers = await Kot.find({
@@ -1723,10 +1756,11 @@ router.get(
         }
       });
 
-      return res.send(arr);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(200).send({
+        err:false,
+        message:'Active users fetched successfully',
+        data:arr
+      });
   },
 );
 
@@ -1739,7 +1773,6 @@ router.get(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId, zoneId } = req.query;
 
       const filters = {
@@ -1797,10 +1830,11 @@ router.get(
         kot['cookedDishes'] = cookedDishes;
       }
 
-      res.status(200).send(result);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(200).send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:result
+      });
   },
 );
 
@@ -2017,7 +2051,6 @@ router.get(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId } = req.query;
       const { id } = req.params;
       if (!businessId || !id) {
@@ -2030,10 +2063,11 @@ router.get(
         dishStatus: 'cooked',
       });
 
-      return res.status(200).send(existingKOTs);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(200).send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:existingKOTs
+      });
   },
 );
 
@@ -2041,17 +2075,17 @@ router.get(
   '/v1/kitchens/:id/passwordManager/:businessId',
 
   async (req: Request, res: Response) => {
-    try {
       const { businessId } = req.params;
       const kotPassword = await Kotpassword.findOne({ businessId });
 
       const obj: any = {};
       obj['deleteKotPassword'] = kotPassword?.password;
 
-      return res.send(obj);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.send({
+        err:false,
+        message:'Kot password fetched successfully',
+        data:obj
+      });
   },
 );
 
@@ -2094,7 +2128,11 @@ router.get(
     let tableCostObj: any = {};
     tableCostObj['totalCost'] = grandTotal;
 
-    res.status(200).send(tableCostObj);
+    res.status(200).send({
+      err:false,
+      message:'Total cost fetched successfully',
+      data:tableCostObj
+    });
   },
 );
 
@@ -2115,7 +2153,11 @@ router.get(
       return res.send(kots);
     }
 
-    res.status(200).send(existingKOTs);
+    res.status(200).send({
+      err:false,
+      message:'Kots fetched successfully',
+      data:existingKOTs
+    });
   },
 );
 
@@ -2123,7 +2165,6 @@ router.get(
   '/v1/kitchens/:id/deleteKotByBusinessId',
 
   async (req: Request, res: Response) => {
-    try {
       const { businessId, remove, removeWaiterOrder } = req.query;
       if (remove) {
         const kots = await Kot.deleteMany({ status: 'PAID' });
@@ -2135,10 +2176,12 @@ router.get(
       }
       const kots = await Kot.find({ status: 'PAID' });
 
-      return res.send(kots);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:kots
+      });
+
   },
 );
 
@@ -2152,7 +2195,6 @@ router.get(
   // ]),
 
   async (req: Request, res: Response) => {
-    try {
       const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
       let query = { ...req.query, date: dayAndDate };
       const ordersHistory = await Waiterkot.find(query, {
@@ -2175,10 +2217,11 @@ router.get(
         'items.dishStatus': 0,
         'items.tableName': 0,
       });
-      return res.send(ordersHistory);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.send({
+        err:false,
+        message:'Orders fetched successfully',
+        data:ordersHistory
+      });
   },
 );
 
@@ -2191,7 +2234,6 @@ router.get(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId, orderId } = req.query;
 
       const filters = {
@@ -2255,10 +2297,11 @@ router.get(
         }
       }
 
-      res.status(200).send(result);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(200).send({
+        err:false,
+        message:'Kots fetched successfully',
+        data:result
+      });
   },
 );
 
@@ -2269,18 +2312,24 @@ router.get(
   async (req: Request, res: Response) => {
     const { kotId } = req.params;
     const existingKot = await Kot.findById(kotId);
-    res.status(200).send(existingKot);
+    res.status(200).send({
+      err:false,
+      message:'Kot fetched successfully',
+      data:existingKot
+    });
   },
 );
 
 router.get(
   '/v1/kitchens/:id/paidkot',
-
   async (req: Request, res: Response) => {
-    const { businessId } = req.query;
-    const paikot = await Tempmodel.deleteMany();
+    const paidKot = await Tempmodel.deleteMany();
 
-    res.status(200).send(paikot);
+    res.status(200).send({
+      err:false,
+      message:'Paid kots fetched successfully',
+      data:paidKot
+    });
   },
 );
 
@@ -2291,18 +2340,34 @@ router.get(
     const { businessId, kot, waiterKots, bill } = req.query;
     if (kot) {
       const kots = await Kot.deleteMany({ status: 'PAID' });
-      return res.send(kots);
+      return res.send({
+        err:false,
+        message:'data removed successfully',
+        data:kots
+      });
     }
     if (waiterKots) {
       const kots = await Waiterkot.deleteMany({ isAccept: true });
-      return res.send(kots);
+      return res.send({
+        err:false,
+        message:'data removed successfully',
+        data:kots
+      });
     }
     if (bill) {
       const kots = await Userbill.deleteMany({ businessId });
-      return res.send(kots);
+      return res.send({
+        err:false,
+        message:'data removed successfully',
+        data:kots
+      });
     }
 
-    res.status(200).send('data removed');
+    res.status(200).send({
+      err:false,
+      message:'Data fetched successfully',
+      data:{}
+    });
   },
 );
 

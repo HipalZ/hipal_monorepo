@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import { Dues, Payment, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
 import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -46,15 +47,22 @@ router.get(
     }
     const existingPayment = await Payment.find(query);
 
-    res.status(200).send(existingPayment);
+    res.status(200).send({
+      err:false,
+      data:existingPayment,
+      message:'existing payment'
+    });
   },
 );
 
 router.get(
   '/v1/payments/:id/test',
-
   async (req: Request, res: Response) => {
-    res.status(200).send('payment test');
+    res.status(200).send({
+      err:false,
+      data:{},
+      message:'payment test'
+    });
   },
 );
 
@@ -153,25 +161,40 @@ router.get('/v1/payments/Sales&Discount', async (req: Request, res: Response) =>
     preTotalSale: pre,
     percentageChange: pre !== 0 ? ((curr - pre) / pre) * 100 : curr > 0 ? 100 : 0, // Assuming 100% increase if preTotalSale is 0 and totalSale is greater than 0.
     DiscountIssued,
+    message: 'Sales and Discount metrics',
+    data:{}
   });
 });
 
 router.get(
   '/v1/payments/:id',
-
+  requireAuthorization([
+    ClientRoles.HIPAL_CUSTOMER,
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingPayment = await Payment.findById(id);
 
-    res.status(200).send(existingPayment);
+    res.status(200).send({
+      err:false,
+      data:existingPayment,
+      message:'existing payment'
+    });
   },
 );
 
 router.get(
   '/v1/payments/Sale/Api',
-
+  requireAuthorization([
+    ClientRoles.HIPAL_CUSTOMER,
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to } = req.query;
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
       const previousDate = currentDate.subtract(1, 'days');
@@ -306,7 +329,11 @@ router.get(
 
         let result = calculateSale(existingPayments);
 
-        return res.status(200).send(result);
+        return res.status(200).send({
+          err:false,
+          data:result,
+          message:'existing payment'
+        });
       }
 
       if (from && to) {
@@ -347,19 +374,23 @@ router.get(
 
         let result = calculateSale(filteredPayments);
 
-        return res.status(200).send(result);
+        return res.status(200).send({
+          err:false,
+          data:result,
+          message:'existing payment'
+        });
       }
-
-      res.status(400).send({ message: 'Invalid request parameters' });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
+      res.status(400).send({ err:true, data:{},message: 'Invalid request parameters' });
   },
 );
 
-router.get('/v1/payments/Sale/Bill', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/Sale/Bill', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId, from, to, mode } = req.query;
 
     const currentDate = momentTimeZone.tz('Asia/Kolkata');
@@ -401,10 +432,18 @@ router.get('/v1/payments/Sale/Bill', async (req: Request, res: Response) => {
           .skip(skip)
           .limit(PAGE_SIZE)
           .sort({ id: -1 });
-        return res.status(200).send(existingPayments);
+        return res.status(200).send({
+          err:false,
+          data:existingPayments,
+          message:'existing payment'
+        });
       }
 
-      return res.status(200).send(existingPayments);
+      return res.status(200).send({
+        err:false,
+        data:existingPayments,
+        message:'existing payment'
+      });
     }
 
     if (from && to) {
@@ -445,18 +484,23 @@ router.get('/v1/payments/Sale/Bill', async (req: Request, res: Response) => {
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.status(200).send(filteredPayments);
+      return res.status(200).send({
+        err:false,
+        data:filteredPayments,
+        message:'existing payment'
+      });
     }
 
-    res.status(400).send({ message: 'Invalid request parameters' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    res.status(400).send({ err:true, data:{}, message: 'Invalid request parameters' });
 });
 
-router.get('/v1/payments/Sale/Dues', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/Sale/Dues', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId } = req.query;
 
     const existingPayments = await Payment.find({
@@ -492,15 +536,20 @@ router.get('/v1/payments/Sale/Dues', async (req: Request, res: Response) => {
     const result = Object.values(userTotals);
     let newObje = { totalDues, items: result } || {};
 
-    return res.status(200).send(newObje);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.status(200).send({
+      err:false,
+      data:newObje,
+      message:'existing payment'
+    });
 });
 
-router.get('/v1/payments/Get/Modes', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/Get/Modes', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId, remove, id } = req.query;
     if (remove) {
       const existingModes = await PaymentMode.deleteOne({
@@ -513,36 +562,54 @@ router.get('/v1/payments/Get/Modes', async (req: Request, res: Response) => {
       businessId,
     });
     if (!existingModes) {
-      return res.status(404).send('Modes Not Found..');
+      return res.status(404).send({
+        err:true,
+        data:{},
+        message:'Modes Not Found'
+      });
     }
 
-    return res.status(200).send(existingModes);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.status(200).send({
+      err:false,
+      data:existingModes,
+      message:'existing payment'
+    });
 });
 
-router.get('/v1/payments/Get/Dues', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/Get/Dues', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId } = req.query;
 
-    const existimgDues = await Dues.find({
+    const existingDues = await Dues.find({
       businessId,
     });
-    if (!existimgDues) {
-      return res.status(404).send('Dues Not Found..');
+    if (!existingDues) {
+      return res.status(404).send({
+        err:true,
+        data:{},
+        message:'Dues Not Found'
+      });
     }
 
-    return res.status(200).send(existimgDues);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.status(200).send({
+      err:false,
+      data:existingDues,
+      message:'existing payment'
+    });
 });
 
-router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/Get/DuesByUser',
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF,
+  ]),
+   async (req: Request, res: Response) => {
     let { duesPersonId, businessId, from, to } = req.query;
     const currentDate = momentTimeZone.tz('Asia/Kolkata');
     const previousDate = currentDate.subtract(1, 'days');
@@ -581,7 +648,11 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
             userName: duesUser?.customerName,
           } || {};
 
-        return res.send(newObje);
+        return res.send({
+          err:false,
+          data:newObje,
+          message:'existing payment'
+        });
       }
 
       totalDues = calculateTotalDues(existingPayments);
@@ -592,7 +663,11 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
           userName: duesUser?.customerName,
         } || {};
 
-      return res.send(newObje);
+      return res.send({
+        err:false,
+        data:newObje,
+        message:'existing payment'
+      });
     }
 
     if (from && to) {
@@ -611,7 +686,11 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
             userName: duesUser?.customerName,
           } || {};
 
-        return res.send(newObje);
+        return res.send({
+          err:false,
+          data:newObje,
+          message:'existing payment'
+        });
       }
       let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -621,7 +700,11 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
 
       toDate.setUTCHours(23, 59, 59, 999);
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        });
       }
       const filteredPayments = await Payment.find({
         businessId,
@@ -641,12 +724,12 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
           items: filteredPayments,
         } || {};
 
-      return res.send(newObje);
+      return res.send({
+        err:false,
+        data:newObje,
+        message:'existing payment'
+      });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
 });
 
 // router.get("/v1/payments/Get/Alert", async (req: Request, res: Response) => {
@@ -692,27 +775,25 @@ router.get('/v1/payments/Get/DuesByUser', async (req: Request, res: Response) =>
 
 router.get(
   '/v1/payments/:id/byUsers',
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
   async (req: Request, res: Response) => {
-    try {
       let { customerPhone } = req.query;
 
       const existingPayments = await Payment.find({
         customerPhone,
       });
 
-      return res.status(200).send(existingPayments);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
+      return res.status(200).send({
+        err:true,
+        data:existingPayments,
+        message:'existing payment'
+      });
   },
 );
 const necessaryFields = {
   items: 0,
   businessId: 0,
   address: 0,
-
   tableName: 0,
   gstin: 0,
   zoneId: 0,
@@ -724,9 +805,12 @@ const necessaryFields = {
 };
 router.get(
   '/v1/payments/:id/saleDashboard',
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to } = req.query;
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
       const previousDate = currentDate.subtract(1, 'days');
@@ -788,16 +872,20 @@ router.get(
           necessaryFields,
         );
       } else {
-        return res.status(404).send('Invalid request parameters');
+        return res.status(404).send({
+          err:true,
+          data:{},
+          message:'Invalid request parameters'
+        });
       }
 
       let result = calculateSale(payments, getPaymentsModes, modes);
 
-      return res.status(200).send(result);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Server error');
-    }
+      return res.status(200).send({
+        err:true,
+        data:result,
+        message:'sales data'
+      });
   },
 );
 
@@ -955,10 +1043,12 @@ function addMissingModes(modesArray: any[], paymentModes: any[]) {
 
 router.get(
   '/v1/payments/:id/saleReport',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to, excel } = req.query;
 
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
@@ -1103,7 +1193,11 @@ router.get(
         }
         ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
-        return res.send([...ans, ...splitArray]);
+        return res.status(200).send({
+          err:false,
+          data:[...ans, ...splitArray],
+          message:'report generated'
+        });
       }
 
       if (from && to) {
@@ -1135,7 +1229,11 @@ router.get(
           }
           ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
-          return res.send([...ans, ...splitArray]);
+          return res.send({
+            err:false,
+            data:[...ans, ...splitArray],
+            message:'report generated'
+          });
         }
         let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -1146,7 +1244,11 @@ router.get(
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          });
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1181,21 +1283,23 @@ router.get(
         }
         ans = ans.filter((pay: any) => pay.paymentType != 'multiple');
 
-        return res.send([...ans, ...splitArray]);
+        return res.send({
+          err:false,
+          data:[...ans, ...splitArray],
+          message:'report generated'
+        });
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
   },
 );
 
 router.get(
   '/v1/payments/:id/discountReport',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to, excel } = req.query;
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
       const previousDate = currentDate.subtract(1, 'days');
@@ -1257,7 +1361,11 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'discountReport generated'
+        });
       }
 
       if (from && to) {
@@ -1291,7 +1399,11 @@ router.get(
             ans.unshift(obj);
           }
 
-          return res.send(ans);
+          return res.status(200).send({
+            err:false,
+            data:ans,
+            message:'discountReport generated'
+          });
         }
         let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -1302,7 +1414,11 @@ router.get(
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          });
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1339,21 +1455,23 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'discountReport generated'
+        });
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
   },
 );
 
 router.get(
   '/v1/payments/:id/duesReport',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to, excel } = req.query;
 
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
@@ -1427,7 +1545,11 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'duesReport generated'
+        });
       }
 
       if (from && to) {
@@ -1466,7 +1588,11 @@ router.get(
             ans.unshift(obj);
           }
 
-          return res.send(ans);
+          return res.send({
+            err:false,
+            data:ans,
+            message:'duesReport generated'
+          });
         }
         let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -1477,7 +1603,11 @@ router.get(
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          });
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1519,21 +1649,23 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'duesReport generated'
+        });
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
   },
 );
 
 router.get(
   '/v1/payments/:id/complimentaryReport',
-
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { businessId, from, to, excel } = req.query;
 
       const currentDate = momentTimeZone.tz('Asia/Kolkata');
@@ -1591,7 +1723,12 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'complimentaryReport generated'
+        
+        });
       }
 
       if (from && to) {
@@ -1623,7 +1760,12 @@ router.get(
             ans.unshift(obj);
           }
 
-          return res.send(ans);
+          return res.send({
+            err:false,
+            data:ans,
+            message:'complimentaryReport generated'
+          
+          });
         }
         let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -1634,7 +1776,11 @@ router.get(
         toDate.setUTCHours(23, 59, 59, 999);
 
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          });
         }
 
         // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1670,17 +1816,22 @@ router.get(
           ans.unshift(obj);
         }
 
-        return res.send(ans);
+        return res.send({
+          err:false,
+          data:ans,
+          message:'complimentaryReport generated'
+        });
       }
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: 'Server error' });
-    }
   },
 );
 
-router.get('/v1/payments/:id/tips', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/tips', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId } = req.query;
 
     // Adjust timezone as necessary
@@ -1705,15 +1856,20 @@ router.get('/v1/payments/:id/tips', async (req: Request, res: Response) => {
       });
     }
 
-    return res.send(ans);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.send({
+      err:false,
+      data:ans,
+      message:'tips generated'
+    });
 });
 
-router.get('/v1/payments/:id/tipsByWaiterName', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/tipsByWaiterName', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId, waiterName, from, to } = req.query;
     const currentDate = momentTimeZone.tz('Asia/Kolkata');
     const previousDate = currentDate.subtract(1, 'days');
@@ -1776,7 +1932,6 @@ router.get('/v1/payments/:id/tipsByWaiterName', async (req: Request, res: Respon
         return res.send({
           waiterName,
           tips: totalTips,
-
           data: existingPayments,
         });
       }
@@ -1789,7 +1944,11 @@ router.get('/v1/payments/:id/tipsByWaiterName', async (req: Request, res: Respon
       toDate.setUTCHours(23, 59, 59, 999);
 
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        });
       }
 
       // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1810,20 +1969,23 @@ router.get('/v1/payments/:id/tipsByWaiterName', async (req: Request, res: Respon
 
       const totalTips = calculateTotalTips(filteredPayments);
 
-      return res.send({
+      return res.status(200).send({
+        err:false,
+        message:"tips generated",
         waiterName,
         tips: totalTips,
         data: filteredPayments,
       });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
 });
 
-router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/discount', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let { businessId, from, to } = req.query;
     const currentDate = momentTimeZone.tz('Asia/Kolkata');
     const previousDate = currentDate.subtract(1, 'days');
@@ -1864,7 +2026,9 @@ router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
 
       const totalDiscount = calculateDiscount(existingPayments);
 
-      return res.send({
+      return res.status(200).send({
+        err:false,
+        message:'discount generated',
         totalDiscount,
         data: existingPayments,
       });
@@ -1883,7 +2047,9 @@ router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
           .limit(PAGE_SIZE);
         const totalDiscount = calculateDiscount(existingPayments);
 
-        return res.send({
+        return res.status(200).send({
+          err:false,
+          message:'discount generated',
           totalDiscount,
           data: existingPayments,
         });
@@ -1897,7 +2063,11 @@ router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
       toDate.setUTCHours(23, 59, 59, 999);
 
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        });
       }
 
       // Format the dates to match the format used in your database (e.g., 'YYYY-MM-DD')
@@ -1916,15 +2086,13 @@ router.get('/v1/payments/:id/discount', async (req: Request, res: Response) => {
         .limit(PAGE_SIZE);
       const totalDiscount = calculateDiscount(filteredPayments);
 
-      return res.send({
+      return res.status(200).send({
+        err:false,
+        message:'discount generated',
         totalDiscount,
         data: filteredPayments,
       });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
 });
 
 // const startOfToday = new Date();
@@ -1936,25 +2104,35 @@ const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
 // get single review
-router.get('/v1/payments/:id/reviews/:reviewsId', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/reviews/:reviewsId', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let { reviewsId } = req.params;
 
     const review = await Reviews.findById(reviewsId);
     if (!review) {
-      return res.status(404).send({ message: 'Review not found' });
+      return res.status(404).send({ err:true, data:{} ,message: 'Review not found' });
     }
 
-    return res.send(review);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.send({
+      err:false,
+      data:review,
+      message:'review generated'
+    });
 });
 
 // get all reviews
-router.get('/v1/payments/:id/reviews', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/reviews', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let businessId = req.query.businessId as string;
     let { from, to } = req.query;
     let fromDate = Number(from);
@@ -1964,7 +2142,7 @@ router.get('/v1/payments/:id/reviews', async (req: Request, res: Response) => {
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
     if (!businessId) {
-      return res.status(400).send({ message: 'businessId is required' });
+      return res.status(400).send({err:true, data:{}, message: 'businessId is required' });
     }
 
     if (!from && !to) {
@@ -1979,12 +2157,20 @@ router.get('/v1/payments/:id/reviews', async (req: Request, res: Response) => {
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send(reviews);
+      return res.send({
+        err:false,
+        data:reviews,
+        message:'reviews generated'
+      });
     }
 
     if (from && to) {
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        });
       }
       const reviews = await Reviews.find({
         businessId,
@@ -1997,31 +2183,40 @@ router.get('/v1/payments/:id/reviews', async (req: Request, res: Response) => {
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send(reviews);
+      return res.send({
+        err:false,
+        data:reviews,
+        message:'reviews generated'
+      });
     }
 
-    return res.status(400).send('Invalid query parameters');
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).send({ message: error.message });
-  }
+    return res.status(400).send({
+      err:true,
+      data:{},
+      message:'Invalid query parameters'
+    });
 });
 
 // get single customer
-router.get('/v1/payments/:id/customer/:customerId', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/customer/:customerId', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let { customerId } = req.params;
 
     const customer = await ReviewsCustomer.findById(customerId);
     if (!customer) {
-      return res.status(404).send({ message: 'customer not found' });
+      return res.status(404).send({ err:true, data:{},message: 'customer not found' });
     }
 
-    return res.send(customer);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Server error' });
-  }
+    return res.send({
+      err:false,
+      data:customer,
+      message:'customer generated'
+    });
 });
 
 // Retrieves a list of customers based on the provided filters.
@@ -2041,8 +2236,13 @@ const filterCustomers = async (from: number, to: number, businessId: string, ski
 };
 
 // get all customers
-router.get('/v1/payments/:id/customers', async (req: Request, res: Response) => {
-  try {
+router.get('/v1/payments/:id/customers', 
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
+  async (req: Request, res: Response) => {
     let businessId = req.query.businessId as string;
     let { from, to, findUser } = req.query;
     let fromDate = Number(from);
@@ -2052,7 +2252,7 @@ router.get('/v1/payments/:id/customers', async (req: Request, res: Response) => 
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
     if (!businessId) {
-      return res.status(400).send({ message: 'businessId is required' });
+      return res.status(400).send({err:true, data:{}, message: 'businessId is required' });
     }
 
     if (findUser) {
@@ -2062,10 +2262,14 @@ router.get('/v1/payments/:id/customers', async (req: Request, res: Response) => 
       });
 
       if (!customers) {
-        return res.status(404).send({ message: 'Customer not found' });
+        return res.status(404).send({ err:true, data:{}, message: 'Customer not found' });
       }
 
-      return res.send(customers);
+      return res.send({
+        err:false,
+        data:customers,
+        message:'customer generated'
+      });
     }
 
     if (!from && !to) {
@@ -2080,23 +2284,38 @@ router.get('/v1/payments/:id/customers', async (req: Request, res: Response) => 
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send(customers);
+      return res.send({
+        err:false,
+        data:customers,
+        message:'customers generated'
+      });
     }
 
     if (from && to) {
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        
+        });
       }
       const customers = await filterCustomers(fromDate, toDate, businessId, skip, PAGE_SIZE);
 
-      return res.send(customers);
+      return res.send({
+        err:false,
+        data:customers,
+        message:'customers generated'
+      });
     }
 
-    return res.status(400).send('Invalid query parameters');
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).send({ message: error.message });
-  }
+    return res.status(400).send(
+      {
+        err:true,
+        data:{},
+        message:'Invalid query parameters'
+      }
+    );
 });
 
 // Filters customers and payments based on a date range and returns statistics.
@@ -2174,16 +2393,19 @@ const filterBasedOnDate = async (from: number, to: number, businessId: string) =
 // Retrieves payments based on the specified date range and business ID.
 router.get(
   '/v1/payments/:id/userDashboard',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { from, to } = req.query;
       let fromDate = Number(from);
       let toDate = Number(to);
 
       const businessId = req.query.businessId as string;
       if (!businessId) {
-        return res.status(400).send({ message: 'businessId is required' });
+        return res.status(400).send({ err:true, data:{},message: 'businessId is required' });
       }
       if (!from && !to) {
         const obj = await filterBasedOnDate(startOfToday.getTime(), endOfToday.getTime(), businessId);
@@ -2192,33 +2414,48 @@ router.get(
       }
       if (from && to) {
         if (fromDate > toDate) {
-          return res.status(400).send('From date cannot be greater than to date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          
+          });
         }
         const obj = await filterBasedOnDate(fromDate, toDate, businessId);
 
-        return res.send(obj);
+        return res.send({
+          err:false,
+          data:obj,
+          message:'userDashboard generated'
+        
+        });
       }
 
-      return res.status(400).send('Invalid query parameters');
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
+      return res.status(400).send({
+        err:true,
+        data:{},
+        message:'Invalid query parameters'
+      
+      });
+      return res.status(500).send({ err:true, data:{},message: error.message });
   },
 );
 
 // Retrieves a list of customers who visited the restaurant today.
 router.get(
   '/v1/payments/:id/newCustomer',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       const businessId = req.query.businessId as string;
       let PAGE_SIZE = 20;
       let pageNumber: any = req?.query?.pageNumber || 1;
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
       if (!businessId) {
-        return res.status(400).send({ message: 'businessId is required' });
+        return res.status(400).send({ err:true, data:{}, message: 'businessId is required' });
       }
       const newCustomers = await ReviewsCustomer.find({
         businessId,
@@ -2232,24 +2469,27 @@ router.get(
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send(newCustomers);
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
+      return res.send({
+        err:false,
+        data:newCustomers,
+        message:'newCustomer generated'
+      });
   },
 );
 
 // Retrieves payment statistics for a specific business and customer phone number
 router.get(
   '/v1/payments/:id/billsByUser',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId, phone } = req.query;
 
       if (!businessId || !phone) {
-        return res.status(400).send({ message: 'businessId and phone is required' });
+        return res.status(400).send({ err:true, data:{}, message: 'businessId and phone is required' });
       }
 
       const paymentStats = await Payment.aggregate([
@@ -2301,27 +2541,30 @@ router.get(
         latestReviews,
       };
 
-      return res.send(obj);
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
+      return res.send({
+        err:false,
+        data:obj,
+        message:'billsByUser generated'
+      });
   },
 );
 
 // Retrieves the payment bills for a specific business and customer phone number.
 router.get(
   '/v1/payments/:id/customerBills',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId, phone, name } = req.query;
       let PAGE_SIZE = 20;
       let pageNumber: any = req?.query?.pageNumber || 1;
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
       if (!businessId || !phone) {
-        return res.status(400).send({ message: 'businessId and phone is required' });
+        return res.status(400).send({ err:true,data:{},message: 'businessId and phone is required' });
       }
 
       const bills = await Payment.find({
@@ -2332,27 +2575,26 @@ router.get(
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send({ customerName: bills[0]?.customerName || name, bills });
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
+      return res.status(200).send({ data:{},err:false,customerName: bills[0]?.customerName || name, bills });
   },
 );
 
 // Retrieves reviews from the database based on the provided criteria.
 router.get(
   '/v1/payments/:id/customerReviews',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       const { businessId, phone, name } = req.query;
       let PAGE_SIZE = 20;
       let pageNumber: any = req?.query?.pageNumber || 1;
       const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
       if (!businessId || !phone) {
-        return res.status(400).send({ message: 'businessId and phone is required' });
+        return res.status(400).send({ err:true, data:{},message: 'businessId and phone is required' });
       }
 
       const reviews = await Reviews.find({
@@ -2363,14 +2605,15 @@ router.get(
         .skip(skip)
         .limit(PAGE_SIZE);
 
-      return res.send({
+      return res.status(200).send({
+        err:false,
+        data:{
+          customerName: reviews[0]?.reviewerName || name,
+          reviews,
+        },
         customerName: reviews[0]?.reviewerName || name,
         reviews,
       });
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
   },
 );
 
@@ -2481,16 +2724,19 @@ function calculateStartAndEndOfDay(daysAgo: number, baseDate: Date) {
 //Retrieves the reviews filtered by the current day.
 router.get(
   '/v1/payments/:id/reviewsDashboard',
-
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request, res: Response) => {
-    try {
       let { from, to } = req.query;
       let startDate = Number(from);
       let endDate = Number(to);
 
       const businessId = req.query.businessId as string;
       if (!businessId) {
-        return res.status(400).send({ message: 'businessId is required' });
+        return res.status(400).send({ err:true, data:{},message: 'businessId is required' });
       }
 
       const latestReviews = await Reviews.find({
@@ -2520,7 +2766,11 @@ router.get(
       }
       if (from && to) {
         if (startDate > endDate) {
-          return res.status(400).send('Start date cannot be greater than end date.');
+          return res.status(400).send({
+            err:true,
+            data:{},
+            message:'From date cannot be greater than to date.'
+          });
         }
         const reviewStatistics = await filterReviewsByDate(startDate, endDate, businessId);
 
@@ -2540,11 +2790,11 @@ router.get(
         });
       }
 
-      return res.status(400).send('Invalid query parameters');
-    } catch (error: any) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
+      return res.status(400).send({
+        err:true,
+        data:{},
+        message:'Invalid query parameters'
+      });
   },
 );
 

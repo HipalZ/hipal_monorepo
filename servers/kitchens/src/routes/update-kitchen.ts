@@ -12,6 +12,7 @@ import { runInTransaction } from '@hi/utils';
 import { ClientSession } from 'mongoose';
 import { validateRequest } from 'zod-express-middleware';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 const currentTime = new Date();
 const options = {
   timeZone: 'Asia/Kolkata',
@@ -41,12 +42,14 @@ const currentDateAndTime = formatterDate.format(currentTime);
 const updatedKOTAttrsSchema = KOTAttrs.partial();
 const updatedKitchenSchema = KitchenAttrs.partial();
 const router = express.Router();
+
 router.put(
   '/v1/kitchens/kots',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedKOTAttrsSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
     const { kots } = req.body as { kots: string[] };
     const created = [];
 
@@ -59,16 +62,20 @@ router.put(
       created.push(kot);
     }
 
-    res.status(201).send(created);
+    res.status(200).send({
+      err: false,
+      message: 'Updated Successfully!',
+      data: {}
+    });
   },
 );
 
-router.put('/v1/kitchens/updateAlert/alert', 
+router.put('/v1/kitchens/updateAlert/alert',
   validateRequest({
     body: updatedKitchenSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
-  try {
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
     await runInTransaction(async (session: ClientSession) => {
       const { alertId, businessId, clearAll } = req.query;
       let alertExit = await Alert.findById(alertId, { session });
@@ -93,7 +100,11 @@ router.put('/v1/kitchens/updateAlert/alert',
           { isAlertOn: false },
           { session },
         );
-        res.send(update);
+        res.send({
+          err:false,
+          message: 'All Alert Cleared',
+          data:update
+        });
       }
 
       if (!alertExit?.tableId) {
@@ -111,6 +122,7 @@ router.put('/v1/kitchens/updateAlert/alert',
         res.send({
           status: true,
           message: 'Alert Cleared',
+          data: alert?._id
         });
       }
 
@@ -137,16 +149,9 @@ router.put('/v1/kitchens/updateAlert/alert',
           deliverdDish: delivered,
         };
 
-        try {
-          await Table.findByIdAndUpdate(alertExit?.tableId, config, {
-            session,
-          });
-        } catch (err: any) {
-          res.status(500).send({
-            status: false,
-            message: err,
-          });
-        }
+        await Table.findByIdAndUpdate(alertExit?.tableId, config, {
+          session,
+        });
       }
 
       const alert = await Alert.findByIdAndUpdate(
@@ -160,147 +165,140 @@ router.put('/v1/kitchens/updateAlert/alert',
         const config = {
           status: alert?.staffId,
         };
-
-        try {
-          await Table.findByIdAndUpdate(alert?.tableId, config, { session });
-        } catch (err: any) {
-          res.status(400).send({
-            status: false,
-            message: 'need assistance not updated !!',
-          });
-        }
+        await Table.findByIdAndUpdate(alert?.tableId, config, { session });
       }
-
-      res.status(200).send(alert);
+      res.status(200).send({
+        err: false,
+        message: 'Alert Cleared',
+        data: alert
+      });
     });
-  } catch (err: any) {
-    res.status(500).send({ status: false, message: err.message });
-  }
-});
-
+})
 router.put(
   '/v1/kitchens/:id',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedKitchenSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
-    const { id } = req.params as { id: string };
+  async (req: Request<{ id: string }, {}, z.infer<typeof updatedKitchenSchema>>, res: Response) => {
+    const { id } = req.params;
     const update = { ...req.body };
     await Kitchen.findByIdAndUpdate(id, update);
 
     const kitchen = await Kitchen.findById(id);
 
-    res.status(200).send(kitchen);
+    res.status(200).send({
+      err: false,
+      message: 'Kitchen updated successfully',
+      data: kitchen
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:kitchenId/kots',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedKOTAttrsSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
-  //TODO :REMOVE UNWANTED ROLE
-    try {
-      const currentTime = Date.now();
-      const momentTime = moment(currentTime);
-      const indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm');
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
+    //TODO :REMOVE UNWANTED ROLE
+    const currentTime = Date.now();
+    const momentTime = moment(currentTime);
+    const indianTime = momentTime.clone().utcOffset('+05:30').format('HH:mm');
 
-      const { kots } = req.body as { kots: KOTType[] };
+    const { kots } = req.body as { kots: KOTType[] };
 
-      let created: any = [];
-      //TODO : USE UPDATEMANY INSTEAD OF LOOP
-      kots.forEach(async (newKOT: KOTType) => {
-        const single = await Kot.findById(newKOT);
-        if (single?.priority == true) {
-          await Kot.findByIdAndUpdate(newKOT, { priority: false });
-        }
-        if (single?.dishStatus == 'cooking') {
-          const kot = {
-            cookedAt: Date.now(),
-            dishStatus: 'cooked',
+    let created: any = [];
+    //TODO : USE UPDATEMANY INSTEAD OF LOOP
+    kots.forEach(async (newKOT: KOTType) => {
+      const single = await Kot.findById(newKOT);
+      if (single?.priority == true) {
+        await Kot.findByIdAndUpdate(newKOT, { priority: false });
+      }
+      if (single?.dishStatus == 'cooking') {
+        const kot = {
+          cookedAt: Date.now(),
+          dishStatus: 'cooked',
+        };
+        const singleId = await Kot.findByIdAndUpdate(newKOT, kot);
+        if (single?.isDeleted == false) {
+          const obj = {
+            businessId: singleId?.businessId,
+            tableName: singleId?.tableName,
+            zoneId: singleId?.zoneId,
+            tableId: singleId?.tableId,
+            staffId: singleId?.staffId,
+            status: 'Cooked',
+            time: indianTime,
+            message: `${singleId?.dish.name} is cooked `,
+            kotId: singleId?.id || singleId?._id,
           };
-          const singleId = await Kot.findByIdAndUpdate(newKOT, kot);
-          if (single?.isDeleted == false) {
-            const obj = {
-              businessId: singleId?.businessId,
-              tableName: singleId?.tableName,
-              zoneId: singleId?.zoneId,
-              tableId: singleId?.tableId,
-              staffId: singleId?.staffId,
-              status: 'Cooked',
-              time: indianTime,
-              message: `${singleId?.dish.name} is cooked `,
-              kotId: singleId?.id || singleId?._id,
-            };
 
-            const saveAlert = new Alert(obj);
-            console.log('save', saveAlert);
-            await saveAlert.save();
-          }
-          created.push(kot);
+          const saveAlert = new Alert(obj);
+          await saveAlert.save();
         }
-      });
-
-      res.status(201).send({ created });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+        created.push(kot);
+      }
+    });
+    res.status(200).send({ err: false, message: 'Kots successfully updated', data: created });
   },
 );
 
 router.put(
   '/v1/kitchens/update/kots/dish',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedKOTAttrsSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
-    try {
-      const { kots } = req.body as { kots: string[] };
-      return runInTransaction(async (session: ClientSession) => {
-        const created = [];
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
+    const { kots } = req.body as { kots: string[] };
+    return runInTransaction(async (session: ClientSession) => {
+      const created = [];
 
-        for (let i = 0; i < kots.length; i++) {
-          const newKOT = kots[i];
-          const kot = {
-            dishStatus: 'delivered',
+      for (let i = 0; i < kots.length; i++) {
+        const newKOT = kots[i];
+        const kot = {
+          dishStatus: 'delivered',
+        };
+        let single = await Kot.findByIdAndUpdate(newKOT, kot, { session });
+
+        if (single?.dishStatus === 'delivered') {
+          const config = {
+            deliverdDish: 1,
           };
-          let single = await Kot.findByIdAndUpdate(newKOT, kot, { session });
-
-          if (single?.dishStatus === 'delivered') {
-            const config = {
-              deliverdDish: 1,
-            };
-            await Table.findByIdAndUpdate(single?.tableId, config, { session });
-          }
-
-          created.push(kot);
+          await Table.findByIdAndUpdate(single?.tableId, config, { session });
         }
 
-        res.status(201).send(created);
+        created.push(kot);
+      }
+
+      res.status(200).send({
+        err: false,
+        message: 'Updated Successfully',
+        data: created
       });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/updateAll/kots/dishStatus',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedKOTAttrsSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
+  async <T, K>(req: Request<T, K, z.infer<typeof updatedKOTAttrsSchema>>, res: Response) => {
     const { tableId } = req.query || {};
     await Kot.updateMany({ tableId }, { $set: { dishStatus: 'delivered' } });
-    res.status(201).send({ status: true, message: 'Updated Successfully......!' });
+    res.status(200).send({ status: true, message: 'Updated Successfully......!', data: {} });
   },
 );
 
 //TODO: datta apply the validation request for this kitchen
-router.put('/v1/kitchens/:id/settle-bill', 
+router.put('/v1/kitchens/:id/settle-bill',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-  try {
     let {
       kots,
       subTotal,
@@ -325,11 +323,15 @@ router.put('/v1/kitchens/:id/settle-bill',
     } = req.body;
     const payDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
     if (!mode || (!Total && Total == null)) {
-      return res.status(400).send('Please enter the required fields.');
+      return res.status(400).send({message:'Please enter the required fields.', data:{}, err:true});
     }
 
     if (mode === 'dues' && !duesPersonId) {
-      return res.status(400).send("When mode is 'dues', a dues person must be selected.");
+      return res.status(400).send({
+        status: false,
+        message: "When mode is dues, a dues person must be selected.",
+        data:{}
+      });
     }
 
     await runInTransaction(async (session: ClientSession) => {
@@ -422,29 +424,14 @@ router.put('/v1/kitchens/:id/settle-bill',
         { session },
       );
 
-      try {
-        await Waiterkot.deleteMany({ tableId: singleKot?.tableId }, { session });
-      } catch (err: any) {
-        console.error(err);
-        throw new Error('Failed to delete the KOTs associated with the table. Please try again.');
-      }
-      try {
-        await Tempmodel.deleteOne(
-          {
-            tableId: singleKot?.tableId,
-          },
-          { session },
-        );
-      } catch (err: any) {
-        console.error(err);
-      }
-
-      try {
-        await Tempmodel.findOneAndUpdate({ tableId: singleKot.tableId }, { $set: { hiCode } }, { upsert: true, session });
-      } catch (err: any) {
-        console.error(err);
-      }
-
+      await Waiterkot.deleteMany({ tableId: singleKot?.tableId }, { session });
+      await Tempmodel.deleteOne(
+        {
+          tableId: singleKot?.tableId,
+        },
+        { session },
+      );
+      await Tempmodel.findOneAndUpdate({ tableId: singleKot.tableId }, { $set: { hiCode } }, { upsert: true, session });
       const updateConfig = {
         status: 'Empty',
         activeUser: 0,
@@ -456,23 +443,17 @@ router.put('/v1/kitchens/:id/settle-bill',
         mergedBy: '',
         reservedBy: '',
       };
-      try {
-        await Table.findByIdAndUpdate(singleKot?.tableId, updateConfig, {
-          session,
-        });
-      } catch (err: any) {
-        console.error(err);
-        throw new Error('Failed to update the table. Please check your update details and try again.');
-      }
+      await Table.findByIdAndUpdate(singleKot?.tableId, updateConfig, {
+        session,
+      });
     });
 
     res.status(200).send({
       status: true,
       message: 'Bill settled successfully',
+      err: false,
+      data: {}
     });
-  } catch (err: any) {
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 // router.put(
@@ -555,7 +536,7 @@ router.put('/v1/kitchens/:id/settle-bill',
 //           acceptedBy: waiterName,
 //         });
 //         //TODO : REMOVE UNWANTED RESPONSE PAYLOAD
-//         return res.status(201).send({
+//         return res.status(200).send({
 //           status: true,
 //           message: "Order Accepted...!",
 //           data: created,
@@ -576,13 +557,17 @@ router.put('/v1/kitchens/:id/settle-bill',
 
 // TODO solve type error datta 
 //TODO datta add the appropriate zod schema
-router.put('/v1/kitchens/:id/acceptOrder/:kotId', 
+router.put('/v1/kitchens/:id/acceptOrder/:kotId',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-  try {
     const { kotId } = req.params;
     const { waiterName, kotPrinter } = req.body;
     if (!kotId) {
-      return res.status(400).send('kotId is required');
+      return res.status(400).send({
+        err:true,
+        message: 'Please enter the required fields.',
+        data:{}
+      });
     }
 
     await runInTransaction(async (session: ClientSession) => {
@@ -679,38 +664,34 @@ router.put('/v1/kitchens/:id/acceptOrder/:kotId',
       }
     });
 
-    return res.status(201).send({
+    return res.status(200).send({
       status: true,
       message: 'Order Accepted...!',
+      data: {}
     });
-  } catch (err: any) {
-    if (err.message === 'Order already accepted' || err.message === 'Order not found') {
-      return res.status(400).send({ status: false, message: err.message });
-    }
-    return res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.put(
   '/v1/kitchens/reject/Order/:orderId',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
   async (req: Request, res: Response) => {
-    try {
-      const { orderId } = req.params;
-      const { waiterName } = req.body;
-      let update = { isReject: true, rejectedBy: waiterName };
+    const { orderId } = req.params;
+    const { waiterName } = req.body;
+    let update = { isReject: true, rejectedBy: waiterName };
 
-      const alert = await Waiterkot.findByIdAndUpdate(orderId, update);
+    const alert = await Waiterkot.findByIdAndUpdate(orderId, update);
 
-      if (!alert) {
-        return res.send({ status: false, message: 'Not Found Order' });
-      }
-
-      res.status(200).send(alert);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (!alert) {
+      return res.send({ status: false, message: 'Not Found Order' });
     }
+
+    res.status(200).send({
+      err: false,
+      message: 'Order Rejected',
+      data: alert,
+    });
   },
 );
 
@@ -718,42 +699,40 @@ router.put(
   '/v1/kitchens/Edit/Order/:orderId',
   // currentUser,
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
-      const { orderId } = req.params;
-      const { waiterName } = req.body;
+    const { orderId } = req.params;
+    const { waiterName } = req.body;
 
-      let update = { isEdit: true, editedBy: waiterName };
+    let update = { isEdit: true, editedBy: waiterName };
 
-      await Waiterkot.findByIdAndUpdate(orderId, update);
+    await Waiterkot.findByIdAndUpdate(orderId, update);
 
-      const alert = await Waiterkot.findById(orderId);
+    const alert = await Waiterkot.findById(orderId);
 
-      if (!alert) {
-        return res.send({ status: false, message: 'Not Found Order' });
-      }
-
-      res.status(200).send(alert);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (!alert) {
+      return res.send({ status: false, message: 'Not Found Order' });
     }
+
+    res.status(200).send({
+      err: false,
+      message: 'Order Edited',
+      data: alert,
+    });
   },
 );
 
-router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Response) => {
-  try {
+router.put('/v1/kitchens/update/transferTable',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request, res: Response) => {
     const { businessId, fromTableId, fromZoneId, fromTableName, toTableId, toZoneId, toTableName, switchedBy } = req.body;
 
     await runInTransaction(async (session: ClientSession) => {
       let checkTable;
 
-      try {
-        checkTable = await Table.findById(toTableId, null, { session });
-        if (checkTable?.status != 'Empty') {
-          throw new Error('Table must be Empty');
-        }
-      } catch (err: any) {
-        throw new Error('Failed to check table status');
+      checkTable = await Table.findById(toTableId, null, { session });
+      if (checkTable?.status != 'Empty') {
+        throw new Error('Table must be Empty');
       }
 
       await Kot.updateMany(
@@ -786,11 +765,7 @@ router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Respon
         reservedBy: '',
       };
 
-      try {
-        await Table.findByIdAndUpdate(fromTableId, config, { session });
-      } catch (err: any) {
-        throw new Error('Failed to update from table');
-      }
+      await Table.findByIdAndUpdate(fromTableId, config, { session });
 
       const query = {
         businessId,
@@ -817,11 +792,7 @@ router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Respon
         time: new Date().toISOString().replace('T', ' ').slice(0, 19),
       };
 
-      try {
-        await Table.findByIdAndUpdate(toTableId, con, { session });
-      } catch (err: any) {
-        throw new Error('Failed to update to table');
-      }
+      await Table.findByIdAndUpdate(toTableId, con, { session });
 
       await Alert.updateMany(
         {
@@ -860,15 +831,13 @@ router.put('/v1/kitchens/update/transferTable', async (req: Request, res: Respon
     res.status(200).send({
       status: true,
       message: 'Table switched successfully',
+      data: {}
     });
-  } catch (err: any) {
-    res.status(500).send({ status: false, message: err.message });
-  }
 });
 
 router.put(
   '/v1/kitchens/:id/updateSingleKot',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     let { isDeleted, deleteKotIds, password, businessId, inventory, reasonForDelete, staffName, priority } = req.body;
@@ -896,57 +865,69 @@ router.put(
         },
       );
 
-      return res.send(deletedKot);
+      return res.send({
+        err: false,
+        message: 'KOT deleted',
+        data: deletedKot
+      });
     }
 
     const existingKot = await Kot.findByIdAndUpdate(id, { priority }, { new: true });
 
-    res.status(200).send(existingKot);
+    res.status(200).send({
+      err: false,
+      message: 'found kot',
+      data: existingKot
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/serviceCharge',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
-      let { tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy } = req.body || {};
+    let { tableId, reapply, serviceChargeRemovedBy, serviceChargeAddedBy } = req.body || {};
 
-      if (reapply) {
-        serviceChargeRemovedBy = '';
-      }
-      if (!reapply) {
-        serviceChargeAddedBy = '';
-      }
-
-      const serviceChargeisExist = await Tempmodel.findOne({
-        tableId,
-        serviceChargeApply: true,
-      });
-
-      if (serviceChargeisExist && reapply) {
-        return res.status(400).send('Service Charge is already applied');
-      }
-
-      const updateServiceCharge = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        {
-          $set: {
-            serviceChargeApply: reapply ? true : false,
-            serviceChargeRemovedBy,
-            serviceChargeAddedBy,
-          },
-        },
-        { upsert: true },
-      );
-      return res.send(updateServiceCharge);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (reapply) {
+      serviceChargeRemovedBy = '';
     }
+    if (!reapply) {
+      serviceChargeAddedBy = '';
+    }
+
+    const serviceChargeisExist = await Tempmodel.findOne({
+      tableId,
+      serviceChargeApply: true,
+    });
+
+    if (serviceChargeisExist && reapply) {
+      return res.status(400).send({
+        err:true,
+        message:'Service Charge is already applied',
+        data:{}
+      });
+    }
+
+    const updateServiceCharge = await Tempmodel.findOneAndUpdate(
+      { tableId: tableId },
+      {
+        $set: {
+          serviceChargeApply: reapply ? true : false,
+          serviceChargeRemovedBy,
+          serviceChargeAddedBy,
+        },
+      },
+      { upsert: true },
+    );
+    return res.send({
+      err: false,
+      message: 'Service Charge Updated',
+      data: updateServiceCharge
+    });
   },
 );
 
@@ -1142,6 +1123,7 @@ router.put(
 
 router.put(
   '/v1/kitchens/:id/orderBySwiggy',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // currentUser,
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
@@ -1149,42 +1131,48 @@ router.put(
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
-      const { businessId, orderId } = req.query;
-      const { password } = req.body;
+    const { businessId, orderId } = req.query;
+    const { password } = req.body;
 
-      let deleteKotPass = await Kotpassword.findOne({ password: password });
-      console.log('deleteKotPass', deleteKotPass);
+    let deleteKotPass = await Kotpassword.findOne({ password: password });
+    console.log('deleteKotPass', deleteKotPass);
 
-      if (password != deleteKotPass?.password) {
-        return res.status(400).send({
-          status: false,
-          message: 'Password is incorrect',
-        });
-      }
-      let result = await Kot.updateMany({ businessId, orderId, isDeleted: false }, { isDeleted: true });
-
-      res.status(200).send(result);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (password != deleteKotPass?.password) {
+      return res.status(400).send({
+        status: true,
+        message: 'Password is incorrect',
+        data: {}
+      });
     }
+    let result = await Kot.updateMany({ businessId, orderId, isDeleted: false }, { isDeleted: true });
+
+    res.status(200).send({
+      err: false,
+      message: 'Order Deleted',
+      data: result
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/kot/:kotId',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
     const { kotId } = req.params;
     let update = { ...req.body };
 
     let updateKot = await Kot.findByIdAndUpdate(kotId, update, { new: true });
-    return res.send(updateKot);
+    return res.status(200).send({
+      err: false,
+      message: 'KOT Updated',
+      data: updateKot
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/tempModel',
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
     const { tableId, remove } = req.query;
     if (tableId) {
@@ -1194,105 +1182,130 @@ router.put(
     if (remove) {
       await Tempmodel.deleteMany();
       // TODO: check the message and status
-      return res.send({
+      return res.status(200).send({
+        err:false,  
         status: true,
         message: 'Deleted Successfully',
-    
+        data:{}
       });
     }
     let tables = await Tempmodel.find();
 
-    return res.send(tables);
+    return res.status(200).send({
+      err: false,
+      message: 'TempModel Updated',
+      data: tables
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/applyDiscount',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
-      let { tableId, discountAmount, discountDescription, discountPercentage, discountMode, discountGivenBy, discountRemovedBy } = req.body || {};
+    let { tableId, discountAmount, discountDescription, discountPercentage, discountMode, discountGivenBy, discountRemovedBy } = req.body || {};
 
-      if (discountAmount == 0) {
-        discountGivenBy = '';
-        discountPercentage = 0;
-      }
-
-      if (!tableId) {
-        return res.status(400).send('Table Id is required');
-      }
-      const updateDiscount = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        {
-          $set: {
-            discountAmount,
-            discountDescription,
-            discountPercentage,
-            discountMode,
-            discountGivenBy,
-            discountRemovedBy,
-          },
-        },
-        { upsert: true, new: true },
-      );
-      return res.send(updateDiscount);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    if (discountAmount == 0) {
+      discountGivenBy = '';
+      discountPercentage = 0;
     }
+
+    if (!tableId) {
+      return res.status(400).send({
+        err:true,
+        message: 'Table Id is required',
+        data:{}
+      });
+    }
+    const updateDiscount = await Tempmodel.findOneAndUpdate(
+      { tableId: tableId },
+      {
+        $set: {
+          discountAmount,
+          discountDescription,
+          discountPercentage,
+          discountMode,
+          discountGivenBy,
+          discountRemovedBy,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    return res.status(200).send({
+      err: false,
+      message: 'Discount Updated',
+      data: updateDiscount
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/applyCoins',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
-      const { tableId, claimedAmount, coinsGivenBy } = req.body || {};
-      if (!claimedAmount || claimedAmount < 0) {
-        return res.status(400).send('Claimed Amount is required and should be greater than 0');
-      }
-      if (!tableId) {
-        return res.status(400).send('Table Id is required');
-      }
-      const updateClaimedAmount = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        { $set: { claimedAmount, coinsGivenBy } },
-        { upsert: true, new: true },
-      );
-      return res.send(updateClaimedAmount);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    const { tableId, claimedAmount, coinsGivenBy } = req.body || {};
+    if (!claimedAmount || claimedAmount < 0) {
+      return res.status(400).send({
+        err:true,
+        message: 'Claimed Amount is required and should be greater than 0',
+        data:{}
+      });
     }
+    if (!tableId) {
+      return res.status(400).send({
+        err:true,
+        message: 'Table Id is required',
+        data:{}
+      });
+    }
+    const updateClaimedAmount = await Tempmodel.findOneAndUpdate(
+      { tableId: tableId },
+      { $set: { claimedAmount, coinsGivenBy } },
+      { upsert: true, new: true },
+    );
+    return res.status(200).send({
+      err: false,
+      message: 'Claimed Amount Updated',
+      data: updateClaimedAmount
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/applyTips',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
-    try {
-      const { tableId, tipsAmount, tipsGivenBy } = req.body || {};
-      if (!tipsAmount || tipsAmount < 0) {
-        return res.status(400).send('Tips Amount is required and should be greater than 0');
-      }
-      if (!tableId) {
-        return res.status(400).send('Table Id is required');
-      }
-      const updateTipsAmount = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        { $set: { tipsAmount, tipsGivenBy } },
-        { upsert: true, new: true },
-      );
-      return res.send(updateTipsAmount);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    const { tableId, tipsAmount, tipsGivenBy } = req.body || {};
+    if (!tipsAmount || tipsAmount < 0) {
+      return res.status(400).send({
+        err:true,
+        message: 'Tips Amount is required and should be greater than 0',
+        data:{}
+      });
     }
+    if (!tableId) {
+      return res.status(400).send({
+        err:true,
+        message: 'Table Id is required',
+        data:{}
+      });
+    }
+    const updateTipsAmount = await Tempmodel.findOneAndUpdate(
+      { tableId: tableId },
+      { $set: { tipsAmount, tipsGivenBy } },
+      { upsert: true, new: true },
+    );
+    return res.status(200).send({
+      err: false,
+      message: 'Tips Amount Updated',
+      data: updateTipsAmount
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/e-bill',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
     const {
       businessId,
@@ -1381,7 +1394,6 @@ router.put(
       );
 
       if (existing) {
-        console.log('existing', existing);
         // Merge quantities and update the price
         existing.dish.qty += item.dish.qty;
         existing.dish.price += item.dish.price;
@@ -1527,13 +1539,13 @@ router.put(
     let saveData = new Userbill(billObj);
     let bill = await saveData.save();
 
-    return res.send({ billId: bill?._id });
+    return res.send({ err: false, message: 'e-bill', data: bill?._id, billId: bill?._id });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/printBill',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   async (req: Request, res: Response) => {
     const {
       businessId,
@@ -1776,56 +1788,64 @@ router.put(
     let saveData = new Userbill(billObj);
     let bill = await saveData.save();
 
-    return res.send({ billId: bill?._id });
+    return res.send({ err: false, message: 'printBill', data: bill?._id, billId: bill?._id });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/applyMode',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
-      const { tableId, mode } = req.body || {};
-      if (!mode || !tableId) {
-        return res.status(400).send(' mode and tableId required');
-      }
-
-      const updateMode = await Tempmodel.findOneAndUpdate({ tableId: tableId }, { $set: { mode } }, { upsert: true, new: true });
-      return res.send(updateMode);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    const { tableId, mode } = req.body || {};
+    if (!mode || !tableId) {
+      return res.status(400).send({
+        err:true,
+        message: 'Mode and tableId required',
+        data:{}
+      });
     }
+
+    const updateMode = await Tempmodel.findOneAndUpdate({ tableId: tableId }, { $set: { mode } }, { upsert: true, new: true });
+    return res.status(200).send({
+      err: false,
+      message: 'Mode Updated',
+      data: updateMode
+    });
   },
 );
 
 router.put(
   '/v1/kitchens/:id/applyDues',
-
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   // requireAuthorization([
   //   ClientRoles.RESTAURANT_OWNER,
   //   ClientRoles.RESTAURANT_MANAGER,
   // ]),
   async (req: Request, res: Response) => {
-    try {
-      const { tableId, duesPersonId, customerName, customerPhone } = req.body || {};
-      if (!duesPersonId || !tableId || !customerName) {
-        return res.status(400).send(' tableId,duesPersonId and customerName required');
-      }
-
-      const updateDues = await Tempmodel.findOneAndUpdate(
-        { tableId: tableId },
-        { $set: { duesPersonId, customerName, customerPhone } },
-        { upsert: true, new: true },
-      );
-      return res.send(updateDues);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
+    const { tableId, duesPersonId, customerName, customerPhone } = req.body || {};
+    if (!duesPersonId || !tableId || !customerName) {
+      return res.status(400).send({
+        err:true,
+        message: 'DuesPerson`s Id, table`s Id and customer name required',
+        data:{}
+      });
     }
+
+    const updateDues = await Tempmodel.findOneAndUpdate(
+      { tableId: tableId },
+      { $set: { duesPersonId, customerName, customerPhone } },
+      { upsert: true, new: true },
+    );
+    return res.send({
+      err: false,
+      message: 'Dues Updated',
+      data: updateDues
+    });
   },
 );
 
-export { router as updateKitchenRouter };
+export { router as updateKitchenRouter }

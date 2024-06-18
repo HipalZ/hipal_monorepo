@@ -8,21 +8,24 @@ import { ClientSession } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { validateRequest } from 'zod-express-middleware';
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 const updatedDishSchema = dishSchema.partial();
+
+// TODO: datta check the dish response message
 router.put('/v1/dishes/:id', 
   validateRequest({
     body: updatedDishSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async (req:Request<{ id: string }, {}, z.infer<typeof updatedDishSchema>>, res: Response) => {
   const { id } = req.params as { id: string };
   const update = { ...req.body } as DishType;
 
   let updatedDish: DishType | null = null;
   let dishNotFound = false;
 
-  try {
     await runInTransaction(async (session: ClientSession) => {
       const dish = await Dish.findById(id).session(session);
 
@@ -33,20 +36,16 @@ router.put('/v1/dishes/:id',
 
       const currentCategories = dish.categories || [];
       const updatedCategories = update.categories || [];
-      console.log('currentCategories', currentCategories);
-      console.log('updatedCategories', updatedCategories);
 
       // Update the dish
       updatedDish = await Dish.findByIdAndUpdate<DishType>(id, { $set: update }, { new: true, session: session });
 
       // Handle new categories added to the dish
       const newCategories = updatedCategories.filter((category) => !currentCategories.includes(category.toString()));
-      console.log('newCategories', newCategories);
       await Category.updateMany({ _id: { $in: newCategories } }, { $addToSet: { dishes: id } }, { session: session });
 
       // Handle existing categories removed from the dish
       const removedCategories = currentCategories.filter((category) => !updatedCategories.includes(category.toString()));
-      console.log('removedCategories', removedCategories);
       await Category.updateMany({ _id: { $in: removedCategories } }, { $pull: { dishes: id } }, { session: session });
     });
 
@@ -56,13 +55,11 @@ router.put('/v1/dishes/:id',
       });
     }
 
-    return res.status(200).send('updated successFully');
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({
-      message: 'An error occurred while updating the dish',
+    return res.status(200).send({
+      err:false,
+      message: 'Dish updated successfully',
+      dish: updatedDish,
     });
-  }
 });
 
 router.put(
@@ -70,8 +67,9 @@ router.put(
   validateRequest({
     body: updatedDishSchema,
   }),
-  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
-    const { extraId } = req.params as { extraId: string };
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request<{ extraId: string }, {}, z.infer<typeof updatedDishSchema>>, res: Response) => {
+    const { extraId } = req.params;
     const update = { ...req.body };
     let updateExtra = await Extra.findByIdAndUpdate(extraId, { $set: update }, { new: true });
     const dishes = await Dish.find({
@@ -132,7 +130,11 @@ router.put(
     //   }
     // }
 
-    res.status(200).send(updateExtra);
+    res.status(200).send({
+      err:false,
+      message: 'Extra updated successfully',
+      data: updateExtra?._id,
+    });
   },
 );
 
@@ -157,11 +159,13 @@ router.put(
 //   }
 // );
 
+//TODO : datta check the response message
 router.put(
   '/v1/dishes/:id/updateAll',
   validateRequest({
     body: updatedDishSchema,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
   async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     const update = { ...req.body };
@@ -173,16 +177,20 @@ router.put(
     }
 
     res.status(200).send({
+      err:false,
       message: 'Dishes updated successfully',
+      data:{}
     });
   },
 );
+
 
 router.put(
   '/v1/dishes/:id/extrasLogicUpdate',
   validateRequest({
     body: updatedDishSchema,
   }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
   async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     let allDishes = await Dish.find({ businessId }).lean();
@@ -212,7 +220,11 @@ router.put(
       await Dish.findByIdAndUpdate(dish?.id || dish?._id, { $set: { extras: newExtra } }, { new: true });
       return { ...dish, extras: newExtra };
     });
-    res.status(200).send(filteredDishesWithExtras);
+    res.status(200).send({
+      err:false,
+      message: 'Extras updated successfully',
+      data:filteredDishesWithExtras
+    });
   },
 );
 

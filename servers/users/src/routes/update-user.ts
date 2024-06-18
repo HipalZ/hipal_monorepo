@@ -25,15 +25,19 @@ router.put('/v1/users/:id/updateReward', async (req: Request, res: Response) => 
   const { loyaltyId, user } = req.query;
 
   if (!loyaltyId) {
-    return res.status(400).send({ message: 'Loyalty ID is required.' });
+    return res.status(400).send({ data:{}, err:true, status:false,message: 'Loyalty ID is required.' });
   }
 
-  try {
     // Find users with the specified loyaltyId
     const users = await UserReward.find({ loyaltyId: loyaltyId });
 
     if (user) {
-      return res.status(200).send(users);
+      return res.status(200).send({
+        data:users,
+        status:true,
+        message: 'Users fetched successfully',
+        err:false,
+      });
     }
 
     // Update each user's phone number if it's 12 digits long
@@ -47,11 +51,7 @@ router.put('/v1/users/:id/updateReward', async (req: Request, res: Response) => 
     // Wait for all updates to complete
     await Promise.all(updates);
 
-    res.status(200).send({ message: 'Users updated successfully.' });
-  } catch (error) {
-    console.error('Error updating users:', error);
-    res.status(500).send({ message: 'Internal server error.' });
-  }
+    res.status(200).send({ err:false, status:true, data:{},message: 'Users updated successfully.' });
 });
 
 router.put('/v1/users/:id/updateRole', async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
@@ -72,9 +72,11 @@ router.put('/v1/users/:id/updateRole', async <T, K>(req: Request<T, K, z.infer<t
       },
     ],
   );
-  console.log('updateResult', updateResult);
-
-  res.send(updateResult);
+  res.send({
+    status: true,
+    message: 'Users updated successfully',
+    data: updateResult,
+  });
 });
 
 router.put(
@@ -82,8 +84,7 @@ router.put(
   validateRequest({
     body: UpdatedUserAttrs,
   }),
-  async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
-    try {
+  async (req:Request<{ userId: string }, {}, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
       const { userId } = req.params as { userId: string };
       const data = req.body || {};
       const userObject = await User.findById(userId);
@@ -94,10 +95,7 @@ router.put(
       const updateUserObject = await User.findByIdAndUpdate(userId, data, {
         new: true,
       });
-      return res.status(200).send({ status: true, data: updateUserObject });
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(200).send({ err: false,status: true, data: updateUserObject });
   },
 );
 

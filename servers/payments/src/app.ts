@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { idempotent } from './middleware/idempotent';
 
 // Routes
@@ -32,10 +32,11 @@ app.use(
       'https://www.hipal.life',
       'http://localhost:3002',
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://localhost:3009',
       'http://localhost:3011',
       'http://localhost:3005',
-
+      'http://localhost:3006',
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -69,7 +70,7 @@ app.use(
 
 app.use(idempotent);
 app.use(errorHandler);
-// app.use(authTokenValidator);
+app.use(authTokenValidator);
 // Register routes
 app.use(createPaymentRouter);
 app.use(readPaymentsRouter);

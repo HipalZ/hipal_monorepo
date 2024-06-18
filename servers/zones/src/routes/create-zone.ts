@@ -3,6 +3,7 @@ import { TableSchema, ZoneSchema } from '@hi/db-models/src/validators';
 import { z } from 'zod';
 import express, { Request, Response } from 'express';
 import { validateRequest } from 'zod-express-middleware';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -11,6 +12,11 @@ router.post(
   validateRequest({
     body: ZoneSchema,
   }),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request<{}, {}, z.infer<typeof ZoneSchema>>, res: Response) => {
     const { businessId, zoneName, zoneType, startTime, endTime, staff, tables, Occupied, charges } = req.body;
 
@@ -26,7 +32,12 @@ router.post(
       charges,
     });
 
-    res.status(201).send(zone);
+    res.status(201).send({
+      status: true,
+      data: zone,
+      err:false,
+      message: 'Zone created successfully',
+    });
   },
 );
 
@@ -35,8 +46,12 @@ router.post(
   validateRequest({
     body: TableSchema,
   }),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request<{ zoneId: string }, {}, z.infer<typeof TableSchema>>, res: Response) => {
-    try {
       const {
         businessId,
         name,
@@ -60,12 +75,6 @@ router.post(
       if (existingTableName) return res.status(400).send({ status: false, message: 'TableName must be unique ...!' });
       const zone = await Zone.findById(zoneId);
 
-      for (let i = 0; i < staff?.length; i++) {
-        // if (!zone.staff.includes(staff[i])) {
-        //   throw new NotAuthorizedError();
-        // }
-      }
-
       const table = await Table.create({
         businessId,
         zoneId,
@@ -87,14 +96,15 @@ router.post(
       });
 
       if (zone) {
-        zone.tables.push(table.id);
+        zone?.tables.push(table.id);
         await zone.save();
       }
 
-      res.status(201).send(table);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      res.status(201).send({
+        status: true,
+        data: table,
+        message: 'Table created successfully',
+      });
   },
 );
 
@@ -104,14 +114,21 @@ const BulkTablesSchema = z.object({
 
 router.post(
   '/v1/zones/:zoneId/bulkTables',
+  //TODO apply params schema
   validateRequest({
     body: BulkTablesSchema,
   }),
+  requireAuthorization([
+    ClientRoles.RESTAURANT_OWNER,
+    ClientRoles.RESTAURANT_MANAGER,
+    ClientRoles.RESTAURANT_STAFF
+  ]),
   async (req: Request<{ zoneId: string }, {}, z.infer<typeof BulkTablesSchema>>, res: Response) => {
-    try {
       let { tables } = req.body;
       const { zoneId } = req.params;
-
+      //TODO 
+      // z.string().refine((v) => isValidObjectId(v))
+      // check whether zoneId exists or not
       for (let i = 0; i < tables?.length; i++) {
         let staff: any = tables[i]?.staff;
 
@@ -119,27 +136,23 @@ router.post(
         const existingTableName = await Table.findOne({ name, zoneId });
         if (existingTableName) return res.status(400).send({ status: false, message: 'TableName must be unique ...!' });
         const zone = await Zone.findById(zoneId);
-
+        // mandatory not comes under if statement
         if (zone) {
-          for (let i = 0; i < staff?.length; i++) {
-            // if (!zone.staff.includes(staff[i])) {
-            //   throw new NotAuthorizedError();
-            // }
-          }
-
           const table = new Table({ ...tables[i], zoneId });
           await table.save();
 
-          zone.tables.push(table.id);
+          zone?.tables?.push(table.id);
           await zone.save();
         }
       }
       const zone = await Zone.findById(zoneId);
 
-      return res.send(zone);
-    } catch (err: any) {
-      return res.status(500).send({ status: false, message: err.message });
-    }
+      return res.status(200).send({
+        status: true,
+        data: zone,
+        message: 'Tables created successfully',
+        err:false,
+      });
   },
 );
 
