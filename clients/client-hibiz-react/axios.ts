@@ -1,3 +1,4 @@
+import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
@@ -25,10 +26,16 @@ axios.interceptors.request.use(
     } else if (config.url.startsWith('/v1/zones')) {
       config.baseURL = 'http://localhost:8008';
     }
+    const { accessToken, refreshToken } = useUserToken.getState();
+    if (accessToken && refreshToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`;
+      config.headers['x-refresh-with'] = refreshToken;
+    }
     return config;
   },
   (error) => {
     // Handle the error
+    
     return Promise.reject(error);
   },
 );

@@ -86,7 +86,7 @@
 		"eslint-config-next": "13.1.6",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-storybook": "^0.6.10",
-		"husky": "^8.0.3",
+		
 		"lint-staged": "^13.1.2",
 		"postcss": "^8.4.21",
 		"postcss-loader": "^7.0.2",
