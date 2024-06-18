@@ -1,8 +1,19 @@
 import express, { Request, Response } from 'express';
 
 import { Dues, Payment, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
-import { CustomerSchema, DuesSchema, PaymentModeSchema, PaymentSchema, ReviewsSchema } from '@hi/db-models/src/validators';
+import {
+  CustomerSchema,
+  DuesSchema,
+  orderSchema,
+  PaymentModeSchema,
+  PaymentSchema,
+  RazorpayWebhookBodySchema,
+  RazorpayWebhookHeadersSchema,
+  ReviewsSchema,
+  validatePaymentSchema,
+} from '@hi/db-models/src/validators';
 import axios from 'axios';
+import { createHmac } from 'crypto';
 import momentTimeZone from 'moment-timezone';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
@@ -19,12 +30,20 @@ const encrypt = (val: string) => {
   encrypted += cipher.final('base64');
   return encrypted;
 };
+const dayAndDate = momentTimeZone.tz('Asia/Kolkata').format('YYYY-MM-DD');
 
 const decrypt = (encrypted: string) => {
   let decipher = crypto.createDecipheriv('aes-256-cbc', ENC_KEY, IV);
   let decrypted = decipher.update(encrypted, 'base64', 'utf8');
   return decrypted + decipher.final('utf8');
 };
+
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
+import { nanoid } from 'nanoid';
+const { validateWebhookSignature } = require('../utils/razorpay-utils');
+
+import { razorpayWrapper } from '../razorpay-wrapper';
 
 const router = express.Router();
 
@@ -635,5 +654,220 @@ router.post(
       });
   },
 );
+
+router.post(
+  '/v1/payments/createOrder',
+  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+  validateRequest({
+    body: orderSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof orderSchema>>, res: Response) => {
+    const { amount, currency, name, phone } = req.body || {};
+    // SAVE ORDER IN DB LIMIT 1 MINS
+    // SAVE NAME AND PHONE IN DB
+    TODO: const uniqueOrderId = nanoid(10);
+    const response = await razorpayWrapper.client.orders.create({
+      amount: amount * 100,
+      currency: currency,
+      receipt: uniqueOrderId,
+      notes: {
+        name: name,
+        phone: phone,
+      },
+    });
+
+    res.status(200).send({ err: false, message: 'Order created successfully', data: response.id });
+  },
+);
+
+router.post(
+  '/v1/payments/validPayment',
+  // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+
+  validateRequest({
+    body: validatePaymentSchema,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof validatePaymentSchema>>, res: Response) => {
+    const { response } = req.body || {};
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
+
+    const signature = createHmac('sha256', process.env.RAZORPAY_SECRET as string)
+      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .digest('hex');
+
+    if (signature === razorpay_signature) {
+      return res.status(200).send({ err: false, message: 'Payment is valid', data: razorpay_order_id });
+    } else {
+      return res.status(400).send({ err: true, message: 'Payment is not valid' });
+    }
+  },
+);
+
+router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response) => {
+  await runInTransaction(async (session: ClientSession) => {
+    const headersResult = RazorpayWebhookHeadersSchema.safeParse(req.headers);
+    if (!headersResult.success) {
+      throw new Error('Invalid headers');
+    }
+    const { 'x-razorpay-signature': razorpaySignature, 'x-razorpay-event-id': razorpayEventId } = headersResult.data;
+
+    const isSignatureValid = validateWebhookSignature(JSON.stringify(req.body), razorpaySignature, process.env.RAZORPAY_WEBHOOK_SECRET as string);
+    if (!isSignatureValid) {
+      console.log('Invalid signature');
+      throw new Error('Invalid signature');
+    }
+
+    const bodyResult = RazorpayWebhookBodySchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      throw new Error('Invalid body');
+    }
+    const { event, payload } = bodyResult.data;
+
+    if (event === 'payment.captured') {
+      console.log('payment captured');
+      // create alert for payment captured
+      // await Alert.create(
+      //   {
+      //     businessId: payload.payment.entity.notes.businessId,
+      //     tableName: payload.payment.entity.notes.tableName,
+      //     tableId: payload.payment.entity.notes.tableId,
+      //     zoneId: payload.payment.entity.notes.zoneId,
+      //     staffId: payload.payment.entity.notes.staffId,
+      //     status: 'PAID_BY_ONLINE',
+      //     time: payload.payment.entity.created_at,
+      //     message: `Paid ${payload.payment.entity.notes.total}`,
+      //     razorpayPaymentId: payload.payment.entity.id,
+      //     razorpayOrderId: payload.payment.entity.order_id,
+      //     razorpayAcquirerData: payload.payment.entity.acquirer_data,
+      //     mode: payload.payment.entity.method,
+      //     razorpayEventId: razorpayEventId,
+      //   },
+      //   { session },
+      // );
+
+      // const tableId = payload.payment.entity.notes.tableId;
+
+      // await Kot.updateMany({ tableId, status: 'UNPAID' }, { status: 'PAID', cookedAt: Date.now() }, { session });
+
+      // const updatedKOTs = await Kot.find({ tableId, status: 'PAID', isDeleted: false }, null, { session });
+
+      // const created: KOTType[] = updatedKOTs.map((kot) => kot.toObject());
+
+      // const items = created.map((kot: any) => {
+      //   const newobj: PaymentItemType = {
+      //     name: kot.dish?.name,
+      //     quantity: kot.dish?.qty || kot.dish?.quantity,
+      //     amount: kot.dish?.price,
+      //     category: kot.category,
+      //     portions: kot.dish?.portions,
+      //     extras: kot.dish?.extras,
+      //     comments: 'spicy',
+      //   };
+
+      //   let price = 0;
+      //   if (newobj.portions) {
+      //     price = parseInt(newobj.portions.price) * (newobj.quantity || 1);
+      //   } else {
+      //     price = newobj.amount || 0;
+      //   }
+
+      //   let extrasPrice = 0;
+      //   if (newobj.extras?.length > 0) {
+      //     for (const extra of newobj.extras) {
+      //       extrasPrice += parseInt(extra.price || 0) * (extra.quantity || extra.qty);
+      //     }
+      //   }
+
+      //   newobj.amount = price + extrasPrice || 0;
+
+      //   return newobj;
+      // });
+
+      // await Tempmodel.deleteOne(
+      //   {
+      //     tableId: tableId,
+      //   },
+      //   { session },
+      // );
+
+      // await Tempmodel.findOneAndUpdate({ tableId }, { $set: { hiCode: payload.payment.entity.notes.hiCode } }, { upsert: true, session });
+
+      // save payment Object in payment collection
+      await Payment.create(
+        [
+          {
+            businessId: payload.payment.entity.notes.businessId,
+            date: dayAndDate,
+            // items: [],
+            // subTotal: Number(payload.payment.entity.notes.subTotal) || 0,
+            // sgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2) || 0,
+            // cgst: Number(payload.payment.entity.notes.cgst)?.toFixed(2) || 0,
+            total: payload.payment.entity.notes.total,
+            // paymentMode: payload.payment.entity.method || 'Online',
+            // paymentDate: payload.payment.entity.notes.dayAndDate || '',
+            mode: payload.payment.entity.method,
+            customerName: payload.payment.entity.notes.name,
+            customerPhone: payload.payment.entity.notes.phone,
+            // discount: payload.payment.entity.notes.discount || 0,
+            // zoneId: payload.payment.entity.notes.zoneId || '',
+            // tableId: payload.payment.entity.notes.tableId || '',
+            // time: payload.payment.entity.notes.indianTime || '',
+            // tableName: payload.payment.entity.notes.tableName || '',
+            claimedAmount: payload.payment.entity.notes.claimedAmount || 0,
+            // serviceCharge: payload.payment.entity.notes.serviceCharge || 0,
+            tips: payload.payment.entity.notes.tips || 0,
+            zoneType: 'Dine In',
+            razorpayPaymentId: payload.payment.entity.id,
+            razorpayOrderId: payload.payment.entity.order_id,
+            razorpayAcquirerData: payload.payment.entity.acquirer_data,
+            razorpayEventId: razorpayEventId,
+          },
+        ],
+        { session },
+      );
+
+      //TODO: LINK PAYMENT OBJECT WITH ORDER OBJECT
+
+      // const updateConfig = {
+      //   status: 'Empty',
+      //   activeUser: 0,
+      //   time: '',
+      //   totalDishQuantity: 0,
+      //   deliveredDish: 0,
+      //   role: null,
+      //   hiCode: '',
+      //   mergedBy: '',
+      //   reservedBy: '',
+      // };
+      // await Table.findByIdAndUpdate(tableId, updateConfig, { session });
+    }
+    //todo: add before capture event
+
+    if (event === 'payment.failed') {
+      console.log('payment failed');
+      // create alert for payment failed
+      // await Alert.create(
+      //   {
+      //     businessId: payload.payment.entity.notes.businessId,
+      //     tableName: payload.payment.entity.notes.tableName,
+      //     tableId: payload.payment.entity.notes.tableId,
+      //     zoneId: payload.payment.entity.notes.zoneId,
+      //     staffId: payload.payment.entity.notes.staffId,
+      //     status: 'FAIL',
+      //     time: payload.payment.entity.created_at,
+      //     message: `FAIL ${payload.payment.entity.notes.total}`,
+      //     razorpayPaymentId: payload.payment.entity.id || '',
+      //     razorpayOrderId: payload.payment.entity.order_id || '',
+      //     razorpayAcquirerData: payload.payment.entity.acquirer_data || '',
+      //     mode: payload.payment.entity.method,
+      //     razorpayEventId: razorpayEventId || '',
+      //   },
+      //   { session },
+      // );
+    }
+  });
+
+  return res.status(200).send({ err: false, message: 'Webhook processed successfully', data: {} });
+});
 
 export { router as createPaymentRouter };

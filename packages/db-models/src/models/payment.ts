@@ -111,7 +111,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
     },
     total: {
-      required: false,
+      required: true,
       type: Number,
     },
     customerId: {

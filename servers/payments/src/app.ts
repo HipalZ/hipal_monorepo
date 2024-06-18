@@ -36,7 +36,8 @@ app.use(
       'http://localhost:3009',
       'http://localhost:3011',
       'http://localhost:3005',
-      'http://localhost:3006',
+      'http://localhost:3001',
+
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',

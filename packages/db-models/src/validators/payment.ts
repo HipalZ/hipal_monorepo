@@ -21,7 +21,7 @@ export const SwiggyBillObj = z.object({
 });
 
 export const PaymentSchema = z.object({
-  businessId: z.string().optional(),
+  businessId: z.string(),
   businessName: z.string().optional(),
   address: z.string().optional(),
   gstin: z.string().optional(),
@@ -30,12 +30,12 @@ export const PaymentSchema = z.object({
   subTotal: z.number().optional(),
   sgst: z.number().optional(),
   cgst: z.number().optional(),
-  total: z.number().optional(),
+  total: z.number(),
   customerId: z.string().optional(),
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
   discount: z.number().optional(),
-  mode: z.string().optional(),
+  mode: z.string(),
   status: z.string().optional(),
   merchantId: z.string().optional(),
   reqData: z.string().optional(),
