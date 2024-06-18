@@ -116,7 +116,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 	const sendPaymentResponse = async (response: any) => {
 		setIsLoading(true)
 		try {
-			const res = await axios.post('/v1/kitchens/validPayment', {
+			const res = await axios.post('/v1/payments/validPayment', {
 				response,
 			})
             console.log('validate pay res',res)
@@ -188,7 +188,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 			try {
 				const config = {
 					method: 'POST',
-					url: '/v1/kitchens/createOrder',
+					url: '/v1/payments/createOrder',
 					data: {
 						businessId: data?.business?._id,
 						amount: total,
