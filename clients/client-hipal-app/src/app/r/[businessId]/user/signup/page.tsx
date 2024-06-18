@@ -2,7 +2,7 @@
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { memo, useState } from "react"
+import { FormEvent, memo, useState } from "react"
 import { toast } from "react-toastify"
 import Welcome from "@/assets/login-background.png"
 import { BiArrowBack } from "react-icons/bi"
@@ -21,7 +21,7 @@ function SignUp() {
 	const params = useParams<{ businessId: string }>();
 	const businessId = params ? params.businessId : undefined;
 
-	const handleSubmit = async (e:Event) => {
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 
 		if (phone.length !== 10) {
@@ -39,17 +39,15 @@ function SignUp() {
 			url: "/v1/users/:id/signUp",
 			data: userData,
 		}
-        console.log('process',process.env.NODE_ENV)
 		try {
 			const res = await axios(config)
-            console.log('res',res)
 			if (res.status === 201) {
-				setUserDetails(res.data)
+				setUserDetails(res.data.data)
 				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
 			}
 		} catch (error) {
 			if ((error as any).response?.status === 409) {
-				setUserDetails((error as any).response.data)
+				setUserDetails((error as any).response.data.data)
 				//TODO: already existing status code
 				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
 			} else {
@@ -58,15 +56,15 @@ function SignUp() {
 		}
 	}
 
-	const goToExplore = () => {
-		router.push(`${routePaths[PAGE_TYPES.EXPLORER](`${businessId}`)}`)
+	const goBack = () => {
+		router.back()
 	}
 
 	return (
 		<section className="relative bg-black">
 			<section className="flex items-center justify-between">
 				<article
-					onClick={goToExplore}
+					onClick={goBack}
 					className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
 				>
 					<BiArrowBack size={20} />

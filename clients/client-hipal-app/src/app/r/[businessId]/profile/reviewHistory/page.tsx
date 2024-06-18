@@ -1,8 +1,6 @@
 "use client"
 import Image from "next/image"
 import React, { ChangeEvent, useState } from "react"
-import Arrow from "@/assets/svg/arrow.svg"
-import Logo from "@/assets/HIPAL_LOGO.svg"
 import { IoIosArrowForward } from "react-icons/io"
 import { BsEmojiSmile, BsEmojiHeartEyes, BsEmojiFrown } from "react-icons/bs"
 import axios from "@/utils/axios"

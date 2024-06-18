@@ -9,10 +9,12 @@ import { useLogin } from "@/components/store/useLogin"
 
 function CategoryPageBtn() {
 	const cart = useCart((s) => s.cart)
-	const {isLogin} = useLogin();
+	const isLogin = useLogin((s)=>s.isLogin);
 	const params = useParams();
 	const businessId = params?.businessId;
+	const setDirection = useLogin((s) => s.setDirection)
 	const proceedToPayment = () =>{
+		setDirection('category')
 		if(!isLogin) return `/r/${businessId}/user/signup/`
 		return `/r/${businessId}/payment`
 	}

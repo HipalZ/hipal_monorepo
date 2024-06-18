@@ -109,12 +109,12 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         }
         try {
             const response = await axios(config)
-            if (response?.data) {
-                setHiCode(response?.data?.password)
-                setRewards(response?.data?.rewards)
-                setUserReward(response?.data)
+            if (response?.data?.data) {
+                setHiCode(response?.data?.data?.password)
+                setRewards(response?.data?.data?.rewards)
+                setUserReward(response?.data?.data)
             }
-            return response?.data
+            return response?.data?.data
         } catch (err) {
             console.log(err)
         }
@@ -133,10 +133,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         }
         try {
             const response = await axios(config2)
-            if (response?.data) {
-                setRewardHistory(response?.data)
+            if (response?.data?.data) {
+                setRewardHistory(response?.data?.data)
             }
-            return response?.data
+            return response?.data?.data
         } catch (err) {
             console.log(err)
         }
@@ -176,7 +176,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         }}
                     >
                         <div className="flex items-center justify-between">
-                            <BackButton onBackURL={gotoExplore()} />
+                            <BackButton />
                             <button
                                 type="button"
                                 onClick={() => getLink(data?.loyalty?.loyaltyId)}

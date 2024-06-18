@@ -10,13 +10,13 @@ async function fetchCategoryPageData(businessId:string) {
 
     const data = {} as IBusinessData
 
-    data["settings"] = settings?.data?.[0] || {}
-    data["dishesData"] = dishesData?.data || {}
+    data["settings"] = settings?.data?.data?.[0] || {}
+    data["dishesData"] = dishesData?.data?.data || {}
 
     const sortCategories = () => {
         const hashedCategories = new Map()
 
-        _categoryData?.data.forEach((category:ICategory) => {
+        _categoryData?.data?.data.forEach((category:ICategory) => {
             hashedCategories.set(category?._id, category)
         })
 
@@ -32,13 +32,12 @@ async function fetchCategoryPageData(businessId:string) {
 
         const sortedCats = Array.from(sortedCategories.values())
 
-        if (isEmpty(sortedCats)) return _categoryData?.data
+        if (isEmpty(sortedCats)) return _categoryData?.data?.data
 
         return sortedCats
     }
     
     const categoryData = sortCategories()
-
     const allCategoriesTypes = () => {
         const mainType = {} as Record<string, ICategory>
         type ICategorySubTypes = Record<string, Record<string, ICategory>>;
@@ -71,7 +70,6 @@ async function fetchCategoryPageData(businessId:string) {
     }
     //@ts-ignore
     data["allCategoriesTypes"] = allCategoriesTypes()
-
     data["categories"] = categoryData
     return data
 }
@@ -82,5 +80,5 @@ export const categoryApis = {
 
 export async function fetchAllBusinessIds() {
     const response = await axios.get(paths.listAllBusiness());
-    return response.data.map((business: { _id: string }) => business._id);
+    return response?.data?.data.map((business: { _id: string }) => business._id);
 }

@@ -32,7 +32,7 @@ function ProfileLikePage() {
 
 	const dashboardData = async () => {
 		const res = await axios.get("/v1/businesses/get/allbusiness")
-		const result = await res.data
+		const result = await res?.data?.data
 		setData(result)
 		return result
 	}
@@ -52,7 +52,6 @@ function ProfileLikePage() {
 	return (
 		<div>
 			<ProfileHeader />
-
 			<div className="flex items-center px-[2rem] justify-center mt-2">
 				<label htmlFor="simple-search" className="sr-only">
 					Search
@@ -89,7 +88,7 @@ function ProfileLikePage() {
 			</div>
 			{searchRestaurants.length > 0 ? (
 				<div className="mx-[1.5rem] grid grid-cols-2 gap-4 mt-[0.5rem] mb-[2rem]">
-					{searchRestaurants?.map((ele, index) => (
+					{searchRestaurants?.map((ele, index:number) => (
 						<div key={index} className="relative focus:text-red-500">
 							<BsSuitHeartFill
 								onClick={() => handleOnClick(ele._id)}

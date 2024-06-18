@@ -10,6 +10,7 @@ import {
     triangleToDataurl,
     waveToDataUrl,
 } from "@/components/atoms/card/pathPattern"
+import BottomButton from "@/components/molecules/bottomButton";
 import useLoyaltyData from "@/components/store/useLoyaltyData"
 import DishData from "@/components/atoms/dishDescription"
 import MainLoyalty from "@/components/atoms/mainLoyalty"
@@ -20,7 +21,6 @@ import Link from "next/link"
 import useBusinessDetails from "../../store/useBusinessDetails"
 // components import
 import MainBackground from "@/components/organisms/explore/mainBackground";
-import BottomButton from "@/components/molecules/bottomButton";
 import HeroSection from "@/components/organisms/explore/heroSection";
 import StoriesComponent from "@/components/organisms/explore/storiesComponent";
 import SpecialOffers from "@/components/organisms/explore/specialOffers";
@@ -97,7 +97,7 @@ function Explore({ data }: { data: IBusinessData }) {
     }, [])
 
     const redirectToMenu = () => {
-        router.push(routePaths[PAGE_TYPES.CATEGORY](data?.business?._id))
+        return `/r/${data?.business?._id}/category/`
     }
 
     return (
@@ -144,10 +144,11 @@ function Explore({ data }: { data: IBusinessData }) {
                     linkedinLink={data?.settings?.themes?.linkedinLink}
                 />
             </div>
-
-            <BottomButton onClick={redirectToMenu}>
-                <div className="flex flex-row space-x-2 capitalize">Menu</div>
-            </BottomButton>
+            <Link href={`${redirectToMenu()}`} passHref>
+                <BottomButton>
+                    <div className="flex flex-row space-x-2 capitalize">Menu</div>
+                </BottomButton>
+            </Link>
             {isModalOpen && (
                 <DishData show={isModalOpen} onClose={() => closeModal()}>
                     <MainLoyalty

@@ -13,8 +13,7 @@ function MainBackground(props: { explore:IExplore }) {
 		<div className="relative h-[60vh] max-h-96 overflow-hidden w-full md:w-1/2 mx-auto">
 			<Image
 				src={explore?.wallpaper || img.src}
-				width={450}
-				height={430}
+				layout="fill"
 				quality={75}
 				sizes="(max-width: 450px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
 				alt={"Explore page wallpaper"}

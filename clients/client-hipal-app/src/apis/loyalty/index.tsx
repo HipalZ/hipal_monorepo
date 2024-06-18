@@ -6,10 +6,9 @@ async function fetchBusinessData(businessId: string) {
     const settings = (await axios(paths.settings(businessId))) || {}
 	const loyalty = await axios(paths.getLoyaltySettings(businessId)) || {}
 	const data = {}
-	data["settings"] = settings?.data[0]
-	data["business"] = businessData?.data || {}
-	data["loyalty"] = loyalty?.data || {}
-    console.log('data',data)
+	data["settings"] = settings?.data?.data[0] || {}
+	data["business"] = businessData?.data?.data || {}
+	data["loyalty"] = loyalty?.data?.data || {}
 	return data;
 }
 
@@ -19,5 +18,5 @@ export const loyaltyApis = {
 
 export async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business: { _id: string }) => business._id);
+	return response?.data?.data.map((business: { _id: string }) => business._id);
 }

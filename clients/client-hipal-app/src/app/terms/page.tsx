@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react'
+"use client"
+import React from 'react'
 import Image from 'next/image'
 import Logo from '@/assets/hipalNewLogo.svg'
 import { isEmpty } from 'lodash-es'
@@ -6,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { HiChevronLeft } from 'react-icons/hi'
 import { getRandomBlurImg } from '@/components/utils/images'
 import styles from './terms.module.css'
+import PlaceholderImg from '@/components/atoms/placeholder'
+import useBusinessDetails from '@/components/store/useBusinessDetails'
 
 interface IData {
     logo:string;
@@ -13,8 +16,9 @@ interface IData {
     location:string;
     phone:string;
 }
-function Terms(props:IData) {
-    const {logo,businessName,location, phone} = props
+const Terms= ()=> {
+	const businessDetails = useBusinessDetails((s) => s.businessDetails)
+	const { logo, businessName, location, phone } = businessDetails as IData
     const router = useRouter()
 	const onBack = () => {
 		router.back()
@@ -462,5 +466,4 @@ function Terms(props:IData) {
 		</div>
 	)
 }
-
 export default Terms

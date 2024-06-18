@@ -4,7 +4,6 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 interface IUserData {
-	[x: string]: any
 	name?: string
 	email?: string
 	phone: string

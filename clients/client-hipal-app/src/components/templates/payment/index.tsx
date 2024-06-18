@@ -119,8 +119,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 			const res = await axios.post('/v1/payments/validPayment', {
 				response,
 			})
-            console.log('validate pay res',res)
-            console.log('payment success',res.status)
 			if (res.status===200) {
 				await handleUserReward()
                 router.push(`/r/${data?.business?._id}/review?orderId=${res?.data?.data}`)
@@ -163,7 +161,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 					subTotal: amount,
 				},
 			)
-            console.log('reward response',response.data)
 			if (response.status === 200) {
 				toast.success('Reward claimed successfully')
 			}
@@ -198,11 +195,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 					},
 				}
 				const response = await axios(config)
-                console.log('cretae ordr response', response.data.data)
 				setRazorPayOrderId(response.data.data)
 				await creatingRazorPayOptions(total, response.data.data)
 			} catch (err) {
-				console.log('err', err)
 				alert('Something is wrong!! please try after sometime')
 				setRazorPayPaymentId('')
 				setRazorPaySignature('')
@@ -211,7 +206,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 		setIsLoading(false)
 	}
 
-    const handleTipSelect = (tip) => {
+    const handleTipSelect = (tip:string) => {
         if (tip === 'Other') {
             setSelectedTip(tip);
             setShowInput(true);
@@ -225,7 +220,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
     };
 
-    const handleCustomTip = (event) => {
+    const handleCustomTip = (event:ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setCustomTip(value);
         setTips(Number(value));
@@ -246,7 +241,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 url: `/v1/users/:businessId/getUserReward?userPhone=${userDetails.phone}&loyaltyId=${data?.loyalty?.loyaltyId}`,
             }
             const response = await axios(config)
-            setUserCoinz(response.data.rewards)
+            setUserCoinz(response?.data?.data?.rewards)
         } catch (err) {
             console.log(err)
         }
@@ -272,7 +267,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
     }
 
-    const handleApplyCoinz = (event: Event, userCoinz: number) => {
+    const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
         const userEnteredValue = Number((event.target as HTMLInputElement).value);
         const canClaimCoinz = Math.round(amount * (data?.loyalty?.setClaimAmount / 100) || 0);
         const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
@@ -365,8 +360,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         {!isEmpty(data?.business?.logo) ? (
                             <Image
                                 src={data?.business?.logo || ''}
-                                height={150}
-                                width={150}
+                                height={100}
+                                width={100}
                                 quality={95}
                                 objectFit='cover'
                                 alt='logo-business'
@@ -538,7 +533,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     </h1>
                 </article>
             </section>
-            <BottomButton onClick={()=>handleCreateOrder(amount)}  themes={data?.settings?.themes}>
+            <BottomButton onClick={()=>handleCreateOrder(amount-claimedCoinz+tips)}  themes={data?.settings?.themes}>
                 <div className='flex flex-row capitalize space-x-36'>
                     <div className='flex-col'>
                         <div>₹ {amount-claimedCoinz+tips} Total</div>

@@ -1,6 +1,6 @@
 "use client"
 import Image from "next/image"
-import React, { useState } from "react"
+import React, { ChangeEvent, useState } from "react"
 import axios from "@/utils/axios"
 import { isEmpty } from "lodash-es"
 import { useParams, useRouter } from "next/navigation"
@@ -30,7 +30,7 @@ function ProfileEdit() {
 		DOB: "",
 	})
 
-	const handleOnChange = (event) => {
+	const handleOnChange = (event:ChangeEvent<HTMLSelectElement>) => {
 		const { name, value } = event.target
 		setData((prevUserData) => ({ ...prevUserData, [name]: value }))
 	}
@@ -43,7 +43,7 @@ function ProfileEdit() {
 		router.push(`${routePaths[PAGE_TYPES.PROFILE](businessId)}`)
 	}
 
-	const handleSubmit = (event) => {
+	const handleSubmit = (event:ChangeEvent<HTMLInputElement>) => {
 		event.preventDefault()
 		result()
 		router.push(`${routePaths[PAGE_TYPES.PROFILE](businessId)}`)
@@ -71,8 +71,8 @@ function ProfileEdit() {
 			const res = user.data.data
 			if (!isEmpty(res)) {
 				setApiData(res)
+				setUserDetails(res)
 			}
-			if (!isEmpty(res)) setUserDetails(res)
 		} catch (error) {
 			console.error(error)
 		}

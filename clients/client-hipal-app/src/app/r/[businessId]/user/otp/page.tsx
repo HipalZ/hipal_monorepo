@@ -4,7 +4,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import axios from "@/utils/axios";
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import Welcome from "@/assets/otp_image.png"
 import { BiArrowBack, BiEditAlt } from "react-icons/bi"
 import Sunlight from "@/assets/Ellipse 1-min.png"
@@ -107,13 +107,12 @@ function OtpPage() {
 
 			const response = await axios(config)
 			if (response.status === 200) {
-				const { _id, ...otherData } = response.data
+				const { _id, ...otherData } = response.data.data
 				setUserDetails({ id: _id, ...otherData })
-				await paymentCustomer(response.data)
+				await paymentCustomer(response.data.data)
 				setIsLogin(true)
-				console.log(response.data)
-				if (response.data?.reward > 0 && response.data?.count === 1) {
-					setCoinz(response.data.reward)
+				if (response.data.data?.reward > 0 && response.data.data?.count === 1) {
+					setCoinz(response.data.data.reward)
 					setIsModalOpen(true)
 					triggerConfettiBlast()
 					setTimeout(triggerConfettiBlast, 1000)
@@ -135,11 +134,6 @@ function OtpPage() {
 			}
 		}
 	}
-
-	const closeModal = () => {
-		setIsModalOpen(false)
-	}
-
 	const goNext = () => {
 		if (direction === "loyalty") {
 			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
@@ -148,8 +142,8 @@ function OtpPage() {
 		}
 	}
 
-	const goToExplore = () => {
-		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`)
+	const goBack = () => {
+		router.back()
 	}
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -175,7 +169,7 @@ function OtpPage() {
 		<section className="relative bg-black">
 			<section className="flex items-center justify-between">
 				<article
-					onClick={goToExplore}
+					onClick={goBack}
 					className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
 				>
 					<BiArrowBack size={20} />
@@ -339,4 +333,4 @@ function OtpPage() {
 	)
 }
 
-export default OtpPage
+export default memo(OtpPage)

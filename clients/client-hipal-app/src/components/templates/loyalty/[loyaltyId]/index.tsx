@@ -30,7 +30,7 @@ const LoyaltyId = ({data}:{data:IBusinessData}) => {
 
 	useEffect(() => {
 		if (data?.loyalty?.loyaltyId) {
-			const patterns = (cardPattern, fontColor) => {
+			const patterns = (cardPattern:string, fontColor:string) => {
 				fontColor = fontColor
 				const src = {
 					wave: waveToDataUrl(fontColor, "white").wave,

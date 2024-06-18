@@ -1,3 +1,4 @@
+import { IBusinessData } from "@/components/types/businessData";
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
@@ -7,10 +8,10 @@ async function fetchBusinessData(businessId: string) {
 	const settings = (await axios(paths.settings(businessId))) || {}
 	const businessData = await axios(paths.businessData(businessId))
 	const loyalty = await axios(paths.getLoyaltySettings(businessId)) || {}
-	const data = {}
-	data["settings"] = settings?.data[0]
-	data["business"] = businessData?.data || {}
-	data["loyalty"] = loyalty?.data || {}
+	const data:IBusinessData = {}
+	data["settings"] = settings?.data?.data[0] || {}
+	data["business"] = businessData?.data?.data || {}
+	data["loyalty"] = loyalty?.data?.data || {}
 	set(
 		data,
 		"settings.explore.openFrom",
@@ -30,5 +31,5 @@ export const businessApis = {
 
 export async function fetchAllBusinessIds() {
 	const response = await axios.get(paths.listAllBusiness());
-	return response.data.map((business: { _id: string }) => business._id);
+	return response?.data?.data.map((business: { _id: string }) => business._id);
 }

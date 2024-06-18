@@ -4,7 +4,7 @@ import { useLogin } from '@/components/store/useLogin'
 import axios from '@/utils/axios'
 import Image from 'next/legacy/image'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { memo, useEffect, useState } from 'react'
+import { ChangeEvent, memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
 import HiLogo from '@/assets/img/HipalZ_logo_title.png'
@@ -18,7 +18,7 @@ import { toast } from 'react-toastify'
 
 export default memo(function Review({ data }: {data:IBusinessData}) {
 	const [improvements, setImprovements] = useState<string[]>([])
-	const [rating, setRating] = useState(null)
+	const [rating, setRating] = useState<string | null>(null);
 	const [description, setDescription] = useState<string | ''>('')
 	const [showSuggestions, setShowSuggestions] = useState(false)
 	const [filteredStaff, setFilteredStaff] = useState([])
@@ -35,7 +35,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 
 	const getStaff = async () => {
 		const response = await axios.get(`/v1/users/${businessId}`)
-		return response.data
+		return response?.data?.data
 	}
 
 	const {
@@ -59,7 +59,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 			setImprovements([...improvements, value])
 		}
 	}
-	const handleRatingChange = (event) => {
+	const handleRatingChange = (event:ChangeEvent<HTMLInputElement>) => {
 		setRating(event.target.value)
 	}
 
@@ -86,7 +86,6 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 				router.push(`/r/${businessId}/explore`)
 			}
 		} catch (error) {
-			console.log(error)
 			toast.error('Review Already Submitted')
 			router.push(`/r/${businessId}/explore`)
 		}
@@ -98,7 +97,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 		router.push(`/r/${businessId}/explore`)
 	}
 
-	const handleDescriptionChange = (event) => {
+	const handleDescriptionChange = (event:ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value
 		setDescription(value)
 
