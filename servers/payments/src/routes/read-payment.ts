@@ -456,7 +456,11 @@ router.get('/v1/payments/Sale/Bill',
           .skip(skip)
           .limit(PAGE_SIZE);
 
-        return res.status(200).send(existingPayments);
+        return res.status(200).send({
+          err:false,
+          data:existingPayments,
+          message:"payments data"
+        });
       }
       let fromDate = new Date(String(from).split('-').reverse().join('-'));
 
@@ -467,7 +471,11 @@ router.get('/v1/payments/Sale/Bill',
       toDate.setUTCHours(23, 59, 59, 999);
 
       if (fromDate > toDate) {
-        return res.status(400).send('From date cannot be greater than to date.');
+        return res.status(400).send({
+          err:true,
+          data:{},
+          message:'From date cannot be greater than to date.'
+        });
       }
 
       const formattedFromDate = fromDate.toISOString().split('T')[0];

@@ -30,14 +30,12 @@ app.use(
       'https://dev.hipal.life',
       'https://hipal.life',
       'https://www.hipal.life',
-      'http://localhost:3002',
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:3005',
       'http://localhost:3009',
       'http://localhost:3011',
-      'http://localhost:3005',
-      'http://localhost:3001',
-
       'https://hipal-hitable.vercel.app',
       'https://dev-hitable.vercel.app',
       'https://hitable.hipal.life',
@@ -70,7 +68,7 @@ app.use(
 );
 
 app.use(idempotent);
-app.use(errorHandler);
+// app.use(errorHandler);
 app.use(authTokenValidator);
 // Register routes
 app.use(createPaymentRouter);

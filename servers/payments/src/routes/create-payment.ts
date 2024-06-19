@@ -665,7 +665,7 @@ router.post(
     const { amount, currency, name, phone } = req.body || {};
     // SAVE ORDER IN DB LIMIT 1 MINS
     // SAVE NAME AND PHONE IN DB
-    TODO: const uniqueOrderId = nanoid(10);
+    const uniqueOrderId = nanoid(10);
     const response = await razorpayWrapper.client.orders.create({
       amount: amount * 100,
       currency: currency,
