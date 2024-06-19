@@ -14,7 +14,6 @@ import { validateRequest } from 'zod-express-middleware';
 const shortid = require('shortid');
 const FCM = require('fcm-node');
 import moment = require('moment');
-import { requireAuthorization } from '@hi/common';
 
 const router = express.Router();
 
@@ -140,46 +139,46 @@ router.post(
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
 
-      let existingUser;
-      existingUser = await User.findOne({ phone, role });
-      // try {
-      //   const options = {
-      //     method: "POST",
-      //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
-      //     headers: {
-      //       accept: "application/json",
-      //       "content-type": "application/json",
-      //       authkey: "387796AmyGlDBq63b2d75aP1",
-      //     },
-      //   };
-      //   await axios(options);
-      // } catch (e: any) {
-      //   console.log(e);
-      //   return res.status(500).send({ status: false, message: e.message });
-      // }
+    let existingUser;
+    existingUser = await User.findOne({ phone, role });
+    // try {
+    //   const options = {
+    //     method: "POST",
+    //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+    //     headers: {
+    //       accept: "application/json",
+    //       "content-type": "application/json",
+    //       authkey: "387796AmyGlDBq63b2d75aP1",
+    //     },
+    //   };
+    //   await axios(options);
+    // } catch (e: any) {
+    //   console.log(e);
+    //   return res.status(500).send({ status: false, message: e.message });
+    // }
 
-      if (existingUser) {
-        return res.status(409).send({
-          status: false,
-          message: 'User already exist',
-          data: existingUser,
-          err: false,
-        });
-      }
-      const user = await User.create(req.body);
-
-      // const userJwt = createJWT(user);
-      // req.session = {
-      //   jwt: userJwt,
-      // };
-
-      return res.status(201).send({
-        status: true,
-        message: 'User created successfully',
-        data: user,
+    if (existingUser) {
+      return res.status(409).send({
+        status: false,
+        message: 'User already exist',
+        data: existingUser,
         err: false,
       });
-      return res.status(500).send({ status: false, message: "Error while login or signup" });
+    }
+    const user = await User.create(req.body);
+
+    // const userJwt = createJWT(user);
+    // req.session = {
+    //   jwt: userJwt,
+    // };
+
+    return res.status(201).send({
+      status: true,
+      message: 'User created successfully',
+      data: user,
+      err: false,
+    });
+    return res.status(500).send({ status: false, message: 'Error while login or signup' });
   },
 );
 
@@ -190,74 +189,74 @@ router.post(
   async (req: Request, res: Response) => {
     let { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = req.body;
 
-      let existingUser;
-      existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
-      if (!existingUser) {
-        return res.status(400).send({
-          status: false,
-          message: 'User not found',
-          data:{},
-          err: true,
-        });
-      }
-      // try {
-      //   if (
-      //     loyaltyId &&
-      //     signUpBonus &&
-      //     signUpBonus > 0 &&
-      //     role == "HIPAL_CUSTOMER"
-      //   ) {
-      //     await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
-      //   }
-      // } catch (e) {
-      //   console.log(e);
-      // }
-
-      // const options = {
-      //   method: "GET",
-      //   url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
-      //   headers: {
-      //     accept: "application/json",
-      //     authkey: "387796AmyGlDBq63b2d75aP1",
-      //   },
-      // };
-
-      // const response = await axios(options);
-      // console.log("response", response);
-
-      // if (
-      //   response?.data?.message === "Mobile no. not found" ||
-      //   response?.data?.message === "OTP not match"
-      // ) {
-      //   return res
-      //     .status(400)
-      //     .send({ status: false, message: "Please enter valid Otp !!" });
-      // }
-      // const userJwt = createJWT(existingUser);
-      // req.session = {
-      //   jwt: userJwt,
-      // };
-
-      // if (loyaltyId && signUpBonus > 0) {
-      //   const userReward = await UserReward.findOne({
-      //     userPhone: phone,
-      //     loyaltyId,
-      //   });
-      //   const modifyUser = {
-      //     ...existingUser,
-
-      //     reward: signUpBonus,
-      //     count: userReward?.scanCount,
-      //   };
-      //   return res.status(200).send(modifyUser);
-      // }
-
-      return res.status(200).send({
-        status: true,
-        message: 'User logged in successfully',
-        data: existingUser,
-        err: false,
+    let existingUser;
+    existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
+    if (!existingUser) {
+      return res.status(400).send({
+        status: false,
+        message: 'User not found',
+        data: {},
+        err: true,
       });
+    }
+    // try {
+    //   if (
+    //     loyaltyId &&
+    //     signUpBonus &&
+    //     signUpBonus > 0 &&
+    //     role == "HIPAL_CUSTOMER"
+    //   ) {
+    //     await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+    //   }
+    // } catch (e) {
+    //   console.log(e);
+    // }
+
+    // const options = {
+    //   method: "GET",
+    //   url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+    //   headers: {
+    //     accept: "application/json",
+    //     authkey: "387796AmyGlDBq63b2d75aP1",
+    //   },
+    // };
+
+    // const response = await axios(options);
+    // console.log("response", response);
+
+    // if (
+    //   response?.data?.message === "Mobile no. not found" ||
+    //   response?.data?.message === "OTP not match"
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .send({ status: false, message: "Please enter valid Otp !!" });
+    // }
+    // const userJwt = createJWT(existingUser);
+    // req.session = {
+    //   jwt: userJwt,
+    // };
+
+    // if (loyaltyId && signUpBonus > 0) {
+    //   const userReward = await UserReward.findOne({
+    //     userPhone: phone,
+    //     loyaltyId,
+    //   });
+    //   const modifyUser = {
+    //     ...existingUser,
+
+    //     reward: signUpBonus,
+    //     count: userReward?.scanCount,
+    //   };
+    //   return res.status(200).send(modifyUser);
+    // }
+
+    return res.status(200).send({
+      status: true,
+      message: 'User logged in successfully',
+      data: existingUser,
+      err: false,
+    });
   },
 );
 
@@ -416,23 +415,29 @@ router.post(
     const existingUser = await User.findOne({ phone, password });
     if (businessId) {
       if (existingUser?.customRole?.[0]?.businessId != businessId) {
-        return res.status(400).send({ data:{},status: false, message: 'staff not belong to business...!' });
+        return res.status(400).send({ data: {}, status: false, message: 'staff not belong to business...!' });
       }
     }
     if (!existingUser) {
-      return res.status(400).send({ data:{},status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ data: {}, status: false, message: 'Phone or Password invalid...!' });
     }
 
     // Generate JWT
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
 
-    res.status(201).send({ data:{
-      existingUser, accessToken, refreshToken
-    },
-    err:false,
-    message: 'User logged in successfully',
-    existingUser, accessToken, refreshToken });
+    res.status(201).send({
+      data: {
+        existingUser,
+        accessToken,
+        refreshToken,
+      },
+      err: false,
+      message: 'User logged in successfully',
+      existingUser,
+      accessToken,
+      refreshToken,
+    });
   },
 );
 
@@ -442,29 +447,29 @@ router.post(
     body: UrlAttrs,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof UrlAttrs>>, res: Response) => {
-      const { longUrl } = req.body;
-      let exit = await UrlModel.findOne({ longUrl });
-      if (!exit) {
-        let id = shortid.generate(); //hggff
-        const Data = new UrlModel({
-          longUrl: longUrl,
-          shortUrl: `${process.env.URL}/v1/users/Url/${id.toLowerCase()}`,
-          urlCode: id.toLowerCase(),
-        });
-        const result = await Data.save();
-        return res.send({
-          message: 'Url Shortner Successfully',
-          data: result,
-          err: false,
-        });
-      } else {
-        return res.send({
-          message: 'Url already exist',
-          data: exit,
-          err: false,
-        });
-      }
-      return res.status(500).send({ data:{}, err:true,status: false, message: e.message });
+    const { longUrl } = req.body;
+    let exit = await UrlModel.findOne({ longUrl });
+    if (!exit) {
+      let id = shortid.generate(); //hggff
+      const Data = new UrlModel({
+        longUrl: longUrl,
+        shortUrl: `${process.env.URL}/v1/users/Url/${id.toLowerCase()}`,
+        urlCode: id.toLowerCase(),
+      });
+      const result = await Data.save();
+      return res.send({
+        message: 'Url Shortner Successfully',
+        data: result,
+        err: false,
+      });
+    } else {
+      return res.send({
+        message: 'Url already exist',
+        data: exit,
+        err: false,
+      });
+    }
+    return res.status(500).send({ data: {}, err: true, status: false, message: '' });
   },
 );
 
@@ -474,32 +479,32 @@ router.post(
     body: UserAttrs,
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
-      const { email, role } = req.body || {};
-      const existingUser = await User.findOne({
-        email: email,
-        role: role,
+    const { email, role } = req.body || {};
+    const existingUser = await User.findOne({
+      email: email,
+      role: role,
+    });
+    if (!existingUser)
+      return res.status(404).send({
+        data: {},
+        err: true,
+        status: false,
+        message: 'Email  Invalid !! Please Try again !!!',
       });
-      if (!existingUser)
-        return res.status(404).send({
-          data:{},
-          err:true,
-          status: false,
-          message: 'Email  Invalid !! Please Try again !!!',
-        });
-      // Generate JWT
-      const userJwt = createJWT(existingUser);
-      // Store it on session object
-      req.session = {
-        jwt: userJwt,
-      };
+    // Generate JWT
+    const userJwt = createJWT(existingUser);
+    // Store it on session object
+    req.session = {
+      jwt: userJwt,
+    };
 
-      return res.status(200).send({
-        err:false,
-        status: true,
-        message: 'Login SuccessFully !!!',
-        data: existingUser,
-      });
-      return res.status(500).send({ err:true, data:{},status: false, message: e.message });
+    return res.status(200).send({
+      err: false,
+      status: true,
+      message: 'Login SuccessFully !!!',
+      data: existingUser,
+    });
+    return res.status(500).send({ err: true, data: {}, status: false, message: 's' });
   },
 );
 
@@ -549,38 +554,37 @@ router.post(
   '/v1/users/Bill/generateBill',
 
   async (req: Request, res: Response) => {
-      const { businessname, bill } = req.body;
+    const { businessname, bill } = req.body;
 
-      const mobiles = req.body.mobiles as [];
+    const mobiles = req.body.mobiles as [];
 
-      for (let i = 0; i < mobiles?.length; i++) {
-        const options = {
-          method: 'POST',
-          url: 'https://control.msg91.com/api/v5/flow/',
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
-            authkey: '387796AmyGlDBq63b2d75aP1',
-          },
-          data: {
-            template_id: '647836a0d6fc0547fb4d8e73',
-            sender: 'HiPalc',
-            short_url: '1',
-            mobiles: mobiles[i],
-            businessname: businessname,
-            bill: bill,
-          },
-        };
-        await axios(options);
-      }
-      return res.send({
-        err:false,
-        data:{},
-        status: true,
-        message: `Bill send on ${mobiles.join(' ')} this numbers !!!`,
-      });
-      return res.status(500).send({ err:true, status: false, message: 'Error while generating bill' });
-
+    for (let i = 0; i < mobiles?.length; i++) {
+      const options = {
+        method: 'POST',
+        url: 'https://control.msg91.com/api/v5/flow/',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+        data: {
+          template_id: '647836a0d6fc0547fb4d8e73',
+          sender: 'HiPalc',
+          short_url: '1',
+          mobiles: mobiles[i],
+          businessname: businessname,
+          bill: bill,
+        },
+      };
+      await axios(options);
+    }
+    return res.send({
+      err: false,
+      data: {},
+      status: true,
+      message: `Bill send on ${mobiles.join(' ')} this numbers !!!`,
+    });
+    return res.status(500).send({ err: true, status: false, message: 'Error while generating bill' });
   },
 );
 
@@ -595,14 +599,14 @@ router.post(
     let userExit = await User.findOne({ phone, role: 'RESTAURANT_MANAGER' });
     if (!userExit) {
       return res.status(400).send({
-        err:true,
+        err: true,
         status: false,
         message: 'Phone  Invalid !! Please Try again !!!',
-        data:{}
+        data: {},
       });
     }
     return res.send({
-      err:false,
+      err: false,
       status: true,
       message: 'Login SuccessFully !!!',
       data: userExit,
@@ -620,8 +624,8 @@ router.post(
       return res.send({
         status: false,
         message: 'businessId is required',
-        data:{},
-        err:true,
+        data: {},
+        err: true,
       });
     }
     if (withBusinessId == 'true') {
@@ -632,7 +636,7 @@ router.post(
       });
 
       if (!existingUser) {
-        return res.status(400).send({ err:true, data:{}, status: false, message: 'Phone or Password invalid...!' });
+        return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
       }
       // const userJwt = createJWT(existingUser);
 
@@ -640,7 +644,7 @@ router.post(
       //   jwt: userJwt,
       // };
       res.status(200).send({
-        err:false,
+        err: false,
         status: true,
         message: 'Login SuccessFully !!!',
         data: existingUser,
@@ -651,7 +655,7 @@ router.post(
         role: 'RESTAURANT_MANAGER',
       });
       if (!existingUser) {
-        return res.status(400).send({ data:{} , err:true, status: false, message: 'Phone  invalid...!' });
+        return res.status(400).send({ data: {}, err: true, status: false, message: 'Phone  invalid...!' });
       }
       // const userJwt = createJWT(existingUser);
 
@@ -659,7 +663,7 @@ router.post(
       //   jwt: userJwt,
       // };
       res.status(200).send({
-        err:false,
+        err: false,
         status: true,
         message: 'Login SuccessFully !!!',
         data: existingUser,
@@ -673,40 +677,40 @@ const SERVER_KEY =
 
 router.post('/v1/users/registrationToken/Send', async (req, res) => {
   const { registrationToken, title, body } = req.body;
-    const fcm = new FCM(SERVER_KEY);
+  const fcm = new FCM(SERVER_KEY);
 
-    const pushMessage = {
-      to: registrationToken,
-      notification: {
-        title: title || 'Title of the Notification',
-        body: body || 'Need your assistance',
-        icon: 'https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf',
-      },
-      data: {
-        key1: 'value1',
-        key2: 'value2',
-      },
-    };
+  const pushMessage = {
+    to: registrationToken,
+    notification: {
+      title: title || 'Title of the Notification',
+      body: body || 'Need your assistance',
+      icon: 'https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf',
+    },
+    data: {
+      key1: 'value1',
+      key2: 'value2',
+    },
+  };
 
-    fcm.send(pushMessage, (err: any, response: any) => {
-      if (err) {
-        console.log('Error sending FCM message:', err);
-        return res.status(500).send({
-          status: false,
-          message: 'Internal Server Error',
-        });
-      }
-
-      console.log('FCM message sent successfully:', response);
-      return res.status(200).send({
-        status: true,
-        message: 'Notification sent successfully',
+  fcm.send(pushMessage, (err: any, response: any) => {
+    if (err) {
+      console.log('Error sending FCM message:', err);
+      return res.status(500).send({
+        status: false,
+        message: 'Internal Server Error',
       });
+    }
+
+    console.log('FCM message sent successfully:', response);
+    return res.status(200).send({
+      status: true,
+      message: 'Notification sent successfully',
     });
-    return res.status(500).send({
-      status: false,
-      message: 'Internal Server Error',
-    });
+  });
+  return res.status(500).send({
+    status: false,
+    message: 'Internal Server Error',
+  });
 });
 
 router.post(
@@ -734,13 +738,13 @@ router.post(
     };
 
     if (!existingUser) {
-      return res.status(400).send({ err:true, data:{},status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
     }
     res.status(200).send({
-      data:existingUser,
-      err:false,
+      data: existingUser,
+      err: false,
       status: true,
-      message:'Login SuccessFully !!!'
+      message: 'Login SuccessFully !!!',
     });
   },
 );
@@ -763,7 +767,7 @@ router.post(
     }
 
     if (!existingUser) {
-      return res.status(400).send({ err:true, data:{},status: false, message: 'Phone or Password invalid...!' });
+      return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
     }
 
     // const userJwt = createJWT(existingUser);
@@ -772,347 +776,328 @@ router.post(
     //   jwt: userJwt,
     // };
     res.status(200).send({
-      data:existingUser,
-      err:false,
+      data: existingUser,
+      err: false,
       status: true,
-      message:'Login SuccessFully !!!'
+      message: 'Login SuccessFully !!!',
     });
   },
 );
 
 router.post('/v1/users/Reward', async (req: Request, res: Response) => {
-    const { claim, settle, userSide } = req.query;
-    const currentTime = Date.now();
-    const indianTime = moment(currentTime).utcOffset('+05:30');
-    const dayAndDate = indianTime.format('DD-MM-YYYY');
-    const time = indianTime.format('HH:mm');
+  const { claim, settle, userSide } = req.query;
+  const currentTime = Date.now();
+  const indianTime = moment(currentTime).utcOffset('+05:30');
+  const dayAndDate = indianTime.format('DD-MM-YYYY');
+  const time = indianTime.format('HH:mm');
 
-    let {
+  let { userPhone, userName, loyaltyId, claimedAmount, waiterName, businessName, rewards, items, tableName, password, total, subTotal, sgst, cgst } =
+    req.body;
+
+  if (!rewards || rewards < 0) {
+    rewards = 0;
+  }
+  rewards = Math.floor(rewards);
+  claimedAmount = Math.floor(claimedAmount);
+
+  if (!loyaltyId || !userPhone) {
+    return res.status(400).send({
+      status: false,
+      message: 'LoyaltyId and userPhone required',
+      err: true,
+      data: {},
+    });
+  }
+  if (settle == 'false') {
+    const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
+
+    if (!userSide) {
+      if (password !== existingUser?.password) {
+        return res.status(400).send({
+          status: false,
+          message: 'Wrong password',
+          err: true,
+          data: {},
+        });
+      }
+    }
+    if (existingUser) {
+      if (parseInt(claimedAmount) > existingUser?.rewards) {
+        return res.status(400).send({
+          status: false,
+          message: 'Enter valid claimed amount',
+          err: true,
+          data: {},
+        });
+      }
+    }
+    return res.send({
+      status: true,
+      message: 'Claimed amount is valid',
+      err: false,
+      data: existingUser,
+    });
+  }
+  const saveRewardHistory = async (status: any, rewards: any, currentBalance: any) => {
+    if (status == 'minus') {
+      rewards = claimedAmountNumber;
+    }
+    const data = new UserRewardHistory({
+      userName: existingReward?.userName || userName,
       userPhone,
-      userName,
-      loyaltyId,
-      claimedAmount,
-      waiterName,
       businessName,
-      rewards,
+      waiterName,
+      status: status,
+      rewards: rewards,
       items,
+      time,
+      date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      currentBalance: currentBalance,
       tableName,
-      password,
+      day: dayAndDate,
+      loyaltyId,
       total,
       subTotal,
       sgst,
       cgst,
-    } = req.body;
+    });
 
-    if (!rewards || rewards < 0) {
-      rewards = 0;
-    }
-    rewards = Math.floor(rewards);
-    claimedAmount = Math.floor(claimedAmount);
+    await data.save();
+  };
+  let claimedAmountNumber = Math.floor(Number(claimedAmount));
+  let rewardsNumber = Math.floor(Number(rewards));
 
-    if (!loyaltyId || !userPhone) {
-      return res.status(400).send({
-        status: false,
-        message: 'LoyaltyId and userPhone required',
-        err:true,
-        data:{}
-      });
-    }
-    if (settle == 'false') {
-      const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
+  let existingReward = await UserReward.findOne({ userPhone, loyaltyId });
 
-      if (!userSide) {
-        if (password !== existingUser?.password) {
-          return res.status(400).send({
-            status: false,
-            message: 'Wrong password',
-            err:true,
-            data:{}
-          });
-        }
-      }
-      if (existingUser) {
-        if (parseInt(claimedAmount) > existingUser?.rewards) {
-          return res.status(400).send({
-            status: false,
-            message: 'Enter valid claimed amount',
-            err:true,
-            data:{}
-          });
-        }
-      }
-      return res.send({
-        status: true,
-        message: 'Claimed amount is valid',
-        err:false,
-        data:existingUser
-      });
-    }
-    const saveRewardHistory = async (status: any, rewards: any, currentBalance: any) => {
-      if (status == 'minus') {
-        rewards = claimedAmountNumber;
-      }
-      const data = new UserRewardHistory({
-        userName: existingReward?.userName || userName,
-        userPhone,
-        businessName,
-        waiterName,
-        status: status,
-        rewards: rewards,
-        items,
-        time,
-        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        currentBalance: currentBalance,
-        tableName,
-        day: dayAndDate,
-        loyaltyId,
-        total,
-        subTotal,
-        sgst,
-        cgst,
-      });
-
-      await data.save();
-    };
-    let claimedAmountNumber = Math.floor(Number(claimedAmount));
-    let rewardsNumber = Math.floor(Number(rewards));
-
-    let existingReward = await UserReward.findOne({ userPhone, loyaltyId });
-
-    if (!existingReward) {
-      const newReward = new UserReward({
-        userPhone,
-        userName,
-        loyaltyId,
-        rewards: rewardsNumber,
-        password: Math.floor(Math.random() * 9000) + 10000,
-        count: 1,
-      });
-      await newReward.save();
-      if (rewards != 0) {
-        await saveRewardHistory('plus', rewardsNumber, rewardsNumber);
-      }
-
-      return res.status(201).send({
-        status: true,
-        message: 'User reward created successfully',
-        data:newReward,
-        err:false,
-      
-      });
+  if (!existingReward) {
+    const newReward = new UserReward({
+      userPhone,
+      userName,
+      loyaltyId,
+      rewards: rewardsNumber,
+      password: Math.floor(Math.random() * 9000) + 10000,
+      count: 1,
+    });
+    await newReward.save();
+    if (rewards != 0) {
+      await saveRewardHistory('plus', rewardsNumber, rewardsNumber);
     }
 
-    if (claim === 'true') {
-      const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
+    return res.status(201).send({
+      status: true,
+      message: 'User reward created successfully',
+      data: newReward,
+      err: false,
+    });
+  }
 
-      if (!userSide) {
-        if (password !== existingUser?.password) {
-          return res.status(400).send({
-            err:true,
-            data:{},
-            status: false,
-            message: 'Wrong password',
-          });
-        }
+  if (claim === 'true') {
+    const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
+
+    if (!userSide) {
+      if (password !== existingUser?.password) {
+        return res.status(400).send({
+          err: true,
+          data: {},
+          status: false,
+          message: 'Wrong password',
+        });
       }
-      if (existingUser) {
-        if (existingUser?.rewards == 0 || claimedAmountNumber > existingUser?.rewards) {
-          return res.status(400).send({
-            err:true,
-            data:{},
-            status: false,
-            message: 'You can`t claimed 0 coins or claimedAmount should be less than rewards',
-          });
-        }
+    }
+    if (existingUser) {
+      if (existingUser?.rewards == 0 || claimedAmountNumber > existingUser?.rewards) {
+        return res.status(400).send({
+          err: true,
+          data: {},
+          status: false,
+          message: 'You can`t claimed 0 coins or claimedAmount should be less than rewards',
+        });
       }
-
-      const updatedReward = await UserReward.findOneAndUpdate(
-        { userPhone, loyaltyId },
-        {
-          $inc: { rewards: -claimedAmountNumber + rewardsNumber, count: 1 },
-        },
-
-        { new: true },
-      );
-
-      await saveRewardHistory('minus', rewards, updatedReward?.rewards);
-      if (rewards != 0) {
-        await saveRewardHistory('plus', rewards, updatedReward?.rewards);
-      }
-
-      return res.send({
-        status: true,
-        message: 'Claimed amount updated successfully',
-        data:updatedReward,
-        err:false,
-      });
     }
 
-    if (claim === 'false') {
-      const updatedReward = await UserReward.findOneAndUpdate(
-        { userPhone, loyaltyId },
-        { $inc: { rewards: rewardsNumber, count: 1 } },
-        { new: true },
-      );
-      if (rewards != 0) {
-        await saveRewardHistory('plus', rewards, updatedReward?.rewards);
-      }
+    const updatedReward = await UserReward.findOneAndUpdate(
+      { userPhone, loyaltyId },
+      {
+        $inc: { rewards: -claimedAmountNumber + rewardsNumber, count: 1 },
+      },
 
-      return res.send({
-        data:updatedReward,
-        status: true,
-        message: 'Rewards updated successfully',
-        err:false,
-      });
+      { new: true },
+    );
+
+    await saveRewardHistory('minus', rewards, updatedReward?.rewards);
+    if (rewards != 0) {
+      await saveRewardHistory('plus', rewards, updatedReward?.rewards);
     }
+
+    return res.send({
+      status: true,
+      message: 'Claimed amount updated successfully',
+      data: updatedReward,
+      err: false,
+    });
+  }
+
+  if (claim === 'false') {
+    const updatedReward = await UserReward.findOneAndUpdate({ userPhone, loyaltyId }, { $inc: { rewards: rewardsNumber, count: 1 } }, { new: true });
+    if (rewards != 0) {
+      await saveRewardHistory('plus', rewards, updatedReward?.rewards);
+    }
+
+    return res.send({
+      data: updatedReward,
+      status: true,
+      message: 'Rewards updated successfully',
+      err: false,
+    });
+  }
 });
 
 router.post('/v1/users/addCoins', async (req: Request, res: Response) => {
-    let currentTime = Date.now();
-    let momentTime = moment(currentTime);
-    let indianTime = momentTime.clone().utcOffset('+05:30');
-    let dayAndDate = indianTime.format('DD-MM-YYYY');
-    const time = momentTime.clone().utcOffset('+05:30').format('HH:mm');
-    let { loyaltyId, userPhone, coins, businessId, password, userName, businessName, waiterName, tableName } = req.body;
-    coins = Math.floor(coins);
+  let currentTime = Date.now();
+  let momentTime = moment(currentTime);
+  let indianTime = momentTime.clone().utcOffset('+05:30');
+  let dayAndDate = indianTime.format('DD-MM-YYYY');
+  const time = momentTime.clone().utcOffset('+05:30').format('HH:mm');
+  let { loyaltyId, userPhone, coins, businessId, password, userName, businessName, waiterName, tableName } = req.body;
+  coins = Math.floor(coins);
 
-    await runInTransaction(async (session: ClientSession) => {
-      let loyaltySetting;
-      try {
-        loyaltySetting = await LoyaltySettings.findOne({ businessId }, { session });
+  await runInTransaction(async (session: ClientSession) => {
+    let loyaltySetting;
+    try {
+      loyaltySetting = await LoyaltySettings.findOne({ businessId }, { session });
 
-        if (password != loyaltySetting?.password) {
-          throw new Error('Wrong Password');
-        }
-      } catch (err: any) {
-        throw new Error('Failed to fetch loyalty settings');
+      if (password != loyaltySetting?.password) {
+        throw new Error('Wrong Password');
       }
+    } catch (err: any) {
+      throw new Error('Failed to fetch loyalty settings');
+    }
 
-      let existingReward = await UserReward.findOneAndUpdate({ userPhone, loyaltyId }, { $inc: { rewards: coins } }, { new: true, session });
+    let existingReward = await UserReward.findOneAndUpdate({ userPhone, loyaltyId }, { $inc: { rewards: coins } }, { new: true, session });
 
-      let data = new UserRewardHistory({
-        userName,
-        userPhone,
-        businessName,
-        waiterName,
-        status: 'plus',
-        rewards: coins,
-        time,
-        date: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        currentBalance: existingReward?.rewards,
-        tableName,
-        day: dayAndDate,
-        loyaltyId,
-      });
-      await data.save({ session });
+    let data = new UserRewardHistory({
+      userName,
+      userPhone,
+      businessName,
+      waiterName,
+      status: 'plus',
+      rewards: coins,
+      time,
+      date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+      currentBalance: existingReward?.rewards,
+      tableName,
+      day: dayAndDate,
+      loyaltyId,
     });
+    await data.save({ session });
+  });
 
-    let existingReward = await UserReward.findOne({ userPhone, loyaltyId });
-    return res.send({
-      status: true,
-      message: 'Coins added successfully',
-      data: existingReward,
-      err:false,
-    });
+  let existingReward = await UserReward.findOne({ userPhone, loyaltyId });
+  return res.send({
+    status: true,
+    message: 'Coins added successfully',
+    data: existingReward,
+    err: false,
+  });
 });
 
 router.post('/v1/users/addBulkCoins', async (req: Request, res: Response) => {
-    let currentTime = Date.now();
-    let momentTime = moment(currentTime);
-    let indianTime = momentTime.clone().utcOffset('+05:30');
-    let dayAndDate = indianTime.format('DD-MM-YYYY');
-    const time = momentTime.clone().utcOffset('+05:30').format('HH:mm');
-    const { loyaltyId, usersArray, password, businessId, uploadedBy } = req.body;
+  let currentTime = Date.now();
+  let momentTime = moment(currentTime);
+  let indianTime = momentTime.clone().utcOffset('+05:30');
+  let dayAndDate = indianTime.format('DD-MM-YYYY');
+  const time = momentTime.clone().utcOffset('+05:30').format('HH:mm');
+  const { loyaltyId, usersArray, password, businessId, uploadedBy } = req.body;
 
-    await runInTransaction(async (session: ClientSession) => {
-      let loyaltySetting;
-        loyaltySetting = await LoyaltySettings.findOne({ businessId }, { session });
+  await runInTransaction(async (session: ClientSession) => {
+    let loyaltySetting;
+    loyaltySetting = await LoyaltySettings.findOne({ businessId }, { session });
 
-        if (password != loyaltySetting?.password) {
-          throw new Error('Wrong Password');
-        }
+    if (password != loyaltySetting?.password) {
+      throw new Error('Wrong Password');
+    }
 
-      for (let i = 0; i < usersArray?.length; i++) {
-        let userObject = usersArray?.[i];
+    for (let i = 0; i < usersArray?.length; i++) {
+      let userObject = usersArray?.[i];
 
-        let userExit = await User.findOne(
-          {
-            phone: userObject?.userPhone,
-            role: 'HIPAL_CUSTOMER',
-          },
-          { session },
-        );
+      let userExit = await User.findOne(
+        {
+          phone: userObject?.userPhone,
+          role: 'HIPAL_CUSTOMER',
+        },
+        { session },
+      );
 
-        if (userExit) {
-          let existingReward = await UserReward.findOne({
-            userPhone: userObject?.userPhone,
-            loyaltyId,
-          });
+      if (userExit) {
+        let existingReward = await UserReward.findOne({
+          userPhone: userObject?.userPhone,
+          loyaltyId,
+        });
 
-          if (!existingReward) {
-            if (userObject?.rewards > 0 && loyaltySetting?.rewardLimit && userObject?.rewards < loyaltySetting?.rewardLimit) {
-              const newReward = new UserReward({
-                userPhone: userObject?.userPhone,
-                userName: userExit?.name,
-                loyaltyId,
-                rewards: Math.floor(userObject?.rewards),
-                password: Math.floor(Math.random() * 9000) + 10000,
-                count: 1,
-              });
-              await newReward.save({ session });
-              const data = new UserRewardHistory({
-                userName: userExit?.name,
-                userPhone: userObject?.userPhone,
-                waiterName: uploadedBy,
-                status: 'plus',
-                rewards: Math.floor(userObject?.rewards),
-                time,
-                date: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                currentBalance: Math.floor(userObject?.rewards),
-                day: dayAndDate,
-                loyaltyId,
-                total: userObject?.total,
-              });
-              await data.save({ session });
-            }
-          } else {
-            if (loyaltySetting?.rewardLimit && existingReward?.rewards < loyaltySetting?.rewardLimit) {
-              await UserReward.findOneAndUpdate(
-                { userPhone: userObject?.userPhone, loyaltyId },
-                {
-                  $inc: {
-                    rewards: Math.floor(userObject?.rewards),
-                    count: 1,
-                  },
+        if (!existingReward) {
+          if (userObject?.rewards > 0 && loyaltySetting?.rewardLimit && userObject?.rewards < loyaltySetting?.rewardLimit) {
+            const newReward = new UserReward({
+              userPhone: userObject?.userPhone,
+              userName: userExit?.name,
+              loyaltyId,
+              rewards: Math.floor(userObject?.rewards),
+              password: Math.floor(Math.random() * 9000) + 10000,
+              count: 1,
+            });
+            await newReward.save({ session });
+            const data = new UserRewardHistory({
+              userName: userExit?.name,
+              userPhone: userObject?.userPhone,
+              waiterName: uploadedBy,
+              status: 'plus',
+              rewards: Math.floor(userObject?.rewards),
+              time,
+              date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+              currentBalance: Math.floor(userObject?.rewards),
+              day: dayAndDate,
+              loyaltyId,
+              total: userObject?.total,
+            });
+            await data.save({ session });
+          }
+        } else {
+          if (loyaltySetting?.rewardLimit && existingReward?.rewards < loyaltySetting?.rewardLimit) {
+            await UserReward.findOneAndUpdate(
+              { userPhone: userObject?.userPhone, loyaltyId },
+              {
+                $inc: {
+                  rewards: Math.floor(userObject?.rewards),
+                  count: 1,
                 },
-                { new: true, session },
-              );
-              const data = new UserRewardHistory({
-                userName: userExit?.name,
-                userPhone: userObject?.userPhone,
-                waiterName: uploadedBy,
-                status: 'plus',
-                rewards: Math.floor(userObject?.rewards),
-                time,
-                date: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                currentBalance: existingReward?.rewards + Math.floor(userObject?.rewards),
-                day: dayAndDate,
-                loyaltyId,
-                total: userObject?.total,
-              });
-              await data.save({ session });
-            }
+              },
+              { new: true, session },
+            );
+            const data = new UserRewardHistory({
+              userName: userExit?.name,
+              userPhone: userObject?.userPhone,
+              waiterName: uploadedBy,
+              status: 'plus',
+              rewards: Math.floor(userObject?.rewards),
+              time,
+              date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+              currentBalance: existingReward?.rewards + Math.floor(userObject?.rewards),
+              day: dayAndDate,
+              loyaltyId,
+              total: userObject?.total,
+            });
+            await data.save({ session });
           }
         }
       }
-    });
+    }
+  });
 
-    return res.send({
-      status: true,
-      message: 'uploaded successfully',
-      err:false,
-      data:{}
-    });
+  return res.send({
+    status: true,
+    message: 'uploaded successfully',
+    err: false,
+    data: {},
+  });
 });
 
 router.post(
@@ -1124,8 +1109,8 @@ router.post(
       return res.status(400).send({
         status: false,
         message: 'phone and role required',
-        err:true,
-        data:{}
+        err: true,
+        data: {},
       });
     }
 
@@ -1151,7 +1136,7 @@ router.post(
       return res.status(400).send({
         status: false,
         message: 'User already exist',
-        err:true,
+        err: true,
         data: existingUserPhone,
       });
     }
@@ -1186,7 +1171,7 @@ router.post(
       return res.status(201).send({
         status: true,
         message: 'User created successfully',
-        err:false,
+        err: false,
         data: user,
       });
     }
@@ -1202,8 +1187,8 @@ router.post(
       return res.status(400).send({
         status: false,
         message: 'phone and otp required',
-        err:true,
-        data:{}
+        err: true,
+        data: {},
       });
     }
     const options = {
@@ -1218,14 +1203,14 @@ router.post(
     const response = await axios(options);
 
     if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
-      return res.status(400).send({ err:true, data:{},status: false, message: 'Please enter valid Otp !!' });
+      return res.status(400).send({ err: true, data: {}, status: false, message: 'Please enter valid Otp !!' });
     }
 
     return res.status(200).send({
       status: true,
       message: 'Login SuccessFull !!!',
       data: response.data,
-      err:false
+      err: false,
     });
   },
 );
