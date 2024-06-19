@@ -10,6 +10,7 @@ export * from './kitchen';
 export * from './kot';
 export * from './kotPassword';
 export * from './loyaltySetting';
+export * from './paramsValidator';
 export * from './payment';
 export * from './paymentMode';
 export * from './printer';

@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 
 import { Category, Dish, Extra } from '@hi/db-models';
+import { paramsSchema } from '@hi/db-models/src/validators';
+import { validateRequest } from 'zod-express-middleware';
 
 const router = express.Router();
 
@@ -46,8 +48,10 @@ router.get('/v1/dishes/:id/test', async (req: Request, res: Response) => {
 
 router.get(
   '/v1/dishes/:id',
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  validateRequest({
+    params: paramsSchema,
+  }),
+
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingDish = await Dish.findById(id).populate(['categories', 'extras', 'filters.dishes']);
@@ -152,8 +156,10 @@ router.get(
 
 router.get(
   '/v1/dishes/:id/analytics',
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  validateRequest({
+    query: paramsSchema,
+  }),
+
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
     let existingDishes = await Dish.find({

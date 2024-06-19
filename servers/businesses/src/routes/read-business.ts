@@ -1,16 +1,14 @@
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
-import { BusinessSchema, loyaltySchema, RoleSchema } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
-import { validateRequest } from 'zod-express-middleware';
 
 const router = express.Router();
 
 router.get(
   '/v1/businesses',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   async (req: Request, res: Response) => {
     const { clientRole, id } = req.query;
     if (clientRole === 'admin') {
@@ -60,9 +58,9 @@ router.get('/v1/businesses/:id', async (req: Request, res: Response) => {
 
 router.get(
   '/v1/businesses/get/Single/:businessId',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   async (req: Request, res: Response) => {
     const { businessId } = req.params;
     const query = req.query;
@@ -100,9 +98,9 @@ router.get(
 
 router.get(
   '/v1/businesses/get/allbusiness',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   async (req: Request, res: Response) => {
     const existingBusinesses = await Business.find({
       isHasSetting: true,
@@ -118,9 +116,9 @@ router.get(
 
 router.get(
   '/v1/businesses/:id/testing',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   async (req: Request, res: Response) => {
     const message = 'Test Successfully...!';
     res.status(200).send({
@@ -132,9 +130,9 @@ router.get(
 
 router.get(
   '/v1/businesses/:businessId/passwordManager',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId } = req.params;
@@ -166,9 +164,9 @@ router.get(
 
 router.get(
   '/v1/businesses/n/:customLink',
-  validateRequest({
-    body: BusinessSchema,
-  }),
+  // validateRequest({
+  //   body: BusinessSchema,
+  // }),
   async (req: Request, res: Response) => {
     let { customLink } = req.params || {};
 
@@ -181,16 +179,18 @@ router.get(
     };
 
     return res.status(200).send({
-      status: true, data: businessIdData, message: 'Business fetched successfully'
+      status: true,
+      data: businessIdData,
+      message: 'Business fetched successfully',
     });
   },
 );
 
 router.get(
   '/v1/businesses/:id/loyalty',
-  validateRequest({
-    body: loyaltySchema,
-  }),
+  // validateRequest({
+  //   body: loyaltySchema,
+  // }),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { hidePassword } = req.query;
@@ -218,9 +218,9 @@ router.get(
 
 router.get(
   '/v1/businesses/:id/getAllLoyaltyBusinesses',
-  validateRequest({
-    body: loyaltySchema,
-  }),
+  // validateRequest({
+  //   body: loyaltySchema,
+  // }),
   async (req: Request, res: Response) => {
     let exitingSettings = (await LoyaltySettings.find({})) || [];
     return res.status(200).send({
@@ -233,9 +233,9 @@ router.get(
 
 router.get(
   '/v1/businesses/roles/:id',
-  validateRequest({
-    body: RoleSchema,
-  }),
+  // validateRequest({
+  //   body: RoleSchema,
+  // }),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingRoles = await Role.findById(id);
@@ -249,9 +249,9 @@ router.get(
 
 router.get(
   '/v1/businesses/:id/roles',
-  validateRequest({
-    body: RoleSchema,
-  }),
+  // validateRequest({
+  //   body: RoleSchema,
+  // }),
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const existingRoles = await Role.find({

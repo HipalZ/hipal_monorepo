@@ -2,34 +2,34 @@ import { z } from 'zod';
 
 const Portion = z.object({
   name: z.string(),
-  price: z.number(),
-  discount: z.number(),
+  price: z.coerce.number(),
+  discount: z.coerce.number(),
   default: z.boolean(),
 });
 
 const Extra = z.object({
   name: z.string(),
-  price: z.number(),
-  qty: z.number(),
+  price: z.coerce.number(),
+  qty: z.coerce.number(),
 });
 
 const SwiggyBillObject = z
   .object({
     totalItems: z.string(),
-    subTotal: z.number(),
-    packingCharges: z.number(),
-    RxPayableGST: z.number(),
-    discount: z.number(),
-    totalPrice: z.number(),
-    swiggyPayableGST: z.number(),
+    subTotal: z.coerce.number(),
+    packingCharges: z.coerce.number(),
+    RxPayableGST: z.coerce.number(),
+    discount: z.coerce.number(),
+    totalPrice: z.coerce.number(),
+    swiggyPayableGST: z.coerce.number(),
   })
   .optional();
 
 const Dish = z.object({
   dishId: z.string(),
   name: z.string(),
-  price: z.number(),
-  qty: z.number(),
+  price: z.coerce.number(),
+  qty: z.coerce.number(),
   comments: z.string(),
   extras: z.array(Extra),
   portions: Portion,
@@ -41,8 +41,8 @@ export const KOTAttrs = z.object({
   zoneId: z.string(),
   tableId: z.string(),
   staffId: z.string().optional(),
-  startedAt: z.number().optional(),
-  cookedAt: z.number().optional(),
+  startedAt: z.coerce.number().optional(),
+  cookedAt: z.coerce.number().optional(),
   status: z.string(),
   dish: Dish,
   customerName: z.string().optional(),
@@ -61,7 +61,7 @@ export const KOTAttrs = z.object({
   staffName: z.string().optional(),
   inventory: z.boolean().default(false).optional(),
   orderId: z.string().optional(),
-  avgTime: z.number().optional(),
+  avgTime: z.coerce.number().optional(),
   taxes: z.array(z.object({})).default([]).optional(),
   swiggyBillObj: SwiggyBillObject,
   match: z.boolean().default(true),

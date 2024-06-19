@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 const portionSchema = z.object({
   name: z.string(),
-  price: z.number(),
-  discount: z.number().optional(),
+  price: z.coerce.number(),
+  discount: z.coerce.number().optional(),
   default: z.boolean(),
   portionType: z.string().optional(),
   id: z.string(),
@@ -11,13 +11,13 @@ const portionSchema = z.object({
 
 const filtersSchema = z.object({
   dishes: z.array(z.string()).optional(),
-  timeToConsume: z.number().optional(),
+  timeToConsume: z.coerce.number().optional(),
   portionBestSuited: z.string().optional(),
   bestWeather: z.string().optional(),
   levelOfSpice: z.string().optional(),
   bestOccasion: z.string().optional(),
   texture: z.string().optional(),
-  time: z.number().optional(),
+  time: z.coerce.number().optional(),
   metaTags: z.array(z.string()).optional(),
 });
 
@@ -31,11 +31,11 @@ const tagSchema = z.object({
 export const dishSchema = z.object({
   businessId: z.string(),
   name: z.string(),
-  price: z.number(),
-  swiggy: z.number().optional(),
+  price: z.coerce.number(),
+  swiggy: z.coerce.number().optional(),
   visibility: z.boolean().default(true),
-  discount: z.number().optional(),
-  avgTime: z.number().optional(),
+  discount: z.coerce.number().optional(),
+  avgTime: z.coerce.number().optional(),
   dishType: z.string(),
   categories: z.array(z.string()).optional(),
   portions: z.array(portionSchema).optional(),
@@ -58,7 +58,7 @@ export const dishSchema = z.object({
   description: z.string().optional(),
   tags: z.array(tagSchema).optional(),
   links: z.array(z.string()).optional(),
-  delayTime: z.number().optional().default(0),
+  delayTime: z.coerce.number().optional().default(0),
   availability: z.boolean().default(true),
 });
 

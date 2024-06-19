@@ -8,7 +8,7 @@ export const ZoneSchema = z.object({
   endTime: z.string().optional(),
   staff: z.array(z.string()).optional(),
   tables: z.array(z.string()).optional(),
-  Occupied: z.number().optional(),
+  Occupied: z.coerce.number().optional(),
   charges: z.array(z.record(z.any())).optional(),
 });
 

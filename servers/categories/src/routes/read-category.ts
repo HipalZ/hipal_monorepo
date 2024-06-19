@@ -2,11 +2,16 @@ import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
-import { Category } from '@hi/db-models';
 import { ClientRoles, requireAuthorization } from '@hi/common';
+import { Category } from '@hi/db-models';
+import { paramsSchema } from '@hi/db-models/src/validators';
+import { validateRequest } from 'zod-express-middleware';
 
 router.get(
   '/v1/categories',
+  validateRequest({
+    query: paramsSchema,
+  }),
   // currentUser,
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
@@ -20,7 +25,7 @@ router.get(
     });
 
     return res.status(200).send({
-      err:false,
+      err: false,
       message: 'Categories fetched successfully',
       data: existingCategories,
     });
@@ -52,11 +57,7 @@ router.get(
 router.get(
   '/v1/categories/get/allChildCategory',
   // currentUser,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_FLOOR_MANAGER,
-    ClientRoles.RESTAURANT_MANAGER,
-  ]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_FLOOR_MANAGER, ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
     let existingCategories = await Category.find({
@@ -70,18 +71,14 @@ router.get(
       filter = existingCategories;
     }
 
-    res.status(200).send({ status: true, data: filter, err:false });
+    res.status(200).send({ status: true, data: filter, err: false });
   },
 );
 
 router.get(
   '/v1/categories/:id/allParentCategory',
   // currentUser,
-  requireAuthorization([
-    ClientRoles.RESTAURANT_OWNER,
-    ClientRoles.RESTAURANT_FLOOR_MANAGER,
-    ClientRoles.RESTAURANT_MANAGER,
-  ]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_FLOOR_MANAGER, ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
     const existingCategories = await Category.find({
@@ -97,22 +94,19 @@ router.get(
   },
 );
 
-router.get(
-  '/v1/categories/All/Categories',
-  async (req: Request, res: Response) => {
-      const { businessId } = req.query;
-      const _categoryData = await Category.find({ businessId })
-        .select('name visibility hierarchy parentCategoryId parentCategory id availability visibility')
-        .populate({
-          path: 'dishes',
-          populate: {
-            path: 'extras',
-          },
-        });
+router.get('/v1/categories/All/Categories', async (req: Request, res: Response) => {
+  const { businessId } = req.query;
+  const _categoryData = await Category.find({ businessId })
+    .select('name visibility hierarchy parentCategoryId parentCategory id availability visibility')
+    .populate({
+      path: 'dishes',
+      populate: {
+        path: 'extras',
+      },
+    });
 
-      return res.status(200).send({ err:false, message:'Categories data', data: { categories: _categoryData } });
-  },
-);
+  return res.status(200).send({ err: false, message: 'Categories data', data: { categories: _categoryData } });
+});
 
 router.get(
   '/v1/categories/Active/Category',
@@ -137,7 +131,7 @@ router.get(
       if (element?.availability) available += 1;
     });
 
-    return res.status(200).send({ err:false, message:'Category analytics obtained',active: Active, visible, available });
+    return res.status(200).send({ err: false, message: 'Category analytics obtained', active: Active, visible, available });
   },
 );
 
@@ -384,7 +378,7 @@ router.get(
 router.get(
   '/v1/categories/:id/analytics',
   // currentUser,
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_FLOOR_MANAGER,ClientRoles.RESTAURANT_MANAGER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_FLOOR_MANAGER, ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request, res: Response) => {
     const { businessId } = req.query;
     let existingDishes = await Category.find({
@@ -392,7 +386,7 @@ router.get(
     }).select('name hierarchy  parentCategory  parentCategoryId ');
 
     res.status(200).send({
-      err:false,
+      err: false,
       message: 'Categories fetched successfully',
       data: existingDishes,
     });
