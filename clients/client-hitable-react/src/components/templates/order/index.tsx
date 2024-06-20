@@ -1,8 +1,8 @@
-import  { memo, useState } from "react";
+import  { memo, startTransition, useState } from "react";
 import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
 import { useAlert } from "@/components/store/useAlert";
-import { type ICartDish, useCart } from "@/components/store/useCart";
+import { ICartDish, useCart } from "@/components/store/useCart";
 import { useTable } from "@/components/store/useTable";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { MdOutlineNoFood } from "react-icons/md";
@@ -35,7 +35,7 @@ function Orders({ setCurrentView }: IProps) {
 				url: `/v1/kitchens/all/WaiterOrder?businessId=${businessId}&zoneId=${zoneId}&staffId=${userDetail?._id}`,
 			};
 			const response = await axios(config);
-			const data = response.data;
+			const data = response.data.data;
 			setOrderData(data);
 			setNewOrderCount(data.length);
 			return data;
@@ -89,7 +89,7 @@ function Orders({ setCurrentView }: IProps) {
 			});
 			toast.info("Please edit the order");
 
-			const orderData = res.data;
+			const orderData = res.data.data;
 			const tableId = orderData.tableId;
 			const cartData = orderData.cart;
 
@@ -102,7 +102,9 @@ function Orders({ setCurrentView }: IProps) {
 				name: orderData.tableName,
 			});
 			rejectOrder(id);
-			navigate(`/r/${businessId}/zone/${zoneId}/${tableId}?edit`);
+			startTransition(()=>{
+				navigate(`/r/${businessId}/zone/${zoneId}/${tableId}?edit`);
+			})
 		} catch (error) {
 			console.error("Failed to update order status:", error);
 		}

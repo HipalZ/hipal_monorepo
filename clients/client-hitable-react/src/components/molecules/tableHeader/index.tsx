@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, startTransition } from "react";
 import { MdMenuOpen } from "react-icons/md";
 import { HiArrowLeft } from "react-icons/hi";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
@@ -19,7 +19,9 @@ function TableHeader({
 }: HeaderProps) {
 	const navigate = useNavigate();
 	const handleRoute = () =>{
-		navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId))
+		startTransition(()=>{
+			navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId))
+		})
 	}
 	return (
 		<div className="flex justify-between pt-[2rem] w-full">

@@ -1,5 +1,5 @@
 import { useAlert } from "@/components/store/useAlert";
-import { useEffect } from "react";
+import { startTransition, useEffect } from "react";
 import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
 import { MdOutlineRedeem } from "react-icons/md";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -17,7 +17,9 @@ function FooterLite() {
   const { newAlertsCount, newOrderCount } = useAlert();
 
   const handleRoute = () =>{
-    navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''))
+    startTransition(()=>{
+      navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''))
+    })
   }
 
   useEffect(() => {}, [newAlertsCount, newOrderCount]);

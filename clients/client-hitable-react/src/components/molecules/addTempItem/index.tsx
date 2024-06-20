@@ -147,15 +147,17 @@ const AddTempDish = ({
       const categories = await axios.get(
         `/v1/categories?businessId=${businessId}`
       );
-      const filterCategory = categories.data.filter(
+      const filterCategory = categories.data.data.filter(
         (ele:ICategory) => ele.hierarchy === "PARENT"
       );
       const kitchens = await axios.get(`/v1/kitchens?businessId=${businessId}`);
+      console.log('kitchens',kitchens);
       const data = {
         categories: filterCategory,
         kitchens: kitchens.data,
       };
       setData(data);
+      return data
     } catch (error) {
       console.error("Error fetching staff details:", error);
     }

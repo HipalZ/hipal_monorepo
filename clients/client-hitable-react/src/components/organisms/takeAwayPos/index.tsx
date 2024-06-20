@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import { useEffect, useState } from "react";
 import axios from "@/components/utils/axios";
 import { toast } from "react-toastify";
@@ -191,7 +191,9 @@ const TakeAwayPos = ({
 				closeModal();
 				toast(`order placed sucessfully for ${zoneName}`);
 				clearCartForTable(tableId);
-				navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId ||'', takeawayId || ''));
+				startTransition(()=>{
+					navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId ||'', takeawayId || ''));
+				})
 			}
 		} catch (error) {
 			console.error(error);

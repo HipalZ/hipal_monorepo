@@ -5,7 +5,7 @@ import { useLogin } from "@/components/store/useLogin";
 import { useZoneStore } from "@/components/store/useZone";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import axios from "@/components/utils/axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { MdOutlineReceiptLong } from "react-icons/md";
 import { ImPrinter } from "react-icons/im";
@@ -13,7 +13,7 @@ import { HiX } from "react-icons/hi";
 import { BiPlus } from "react-icons/bi";
 import { useBusinessStore } from "@/components/store/useBusinessData";
 import { useNavigate, useParams } from "react-router-dom";
-import { BillItemProps, OtherCharges, POSProps, PaymentMethod } from "@/components/types/hiTableData";
+import { BillItemProps, OtherCharges, PaymentMethod } from "@/components/types/hiTableData";
 
 const BillItem = ({ title, value }:BillItemProps) => (
   <div className="flex justify-between mx-4 mt-1 text-sm capitalize text-base-content">
@@ -130,7 +130,9 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
         toast(`Order ${orderId} in ${zoneName} has been successfully settled.`);
         
         closeModal();
-        navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId || '', takeawayId || ''));
+        startTransition(()=>{
+          navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId || '', takeawayId || ''));
+        })
       }
     } catch (error) {
       console.error(error);
@@ -147,7 +149,7 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
     }
 
     const response = await axios.get(url);
-    const billData = response.data;
+    const billData = response.data.data;
     if (!billData) return;
     setBillData(billData);
   }
@@ -157,7 +159,7 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
       const response = await axios.get(
         `/v1/payments/Get/Modes?businessId=${businessId}`
       );
-      setPaymentMethods(response.data);
+      setPaymentMethods(response.data.data);
     } catch (error) {
       console.error("Failed to fetch payment methods", error);
     }
@@ -168,7 +170,7 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
   
 
       const res = await axios.get(url);
-      const billId = res.data.billId;
+      const billId = res.data.data.billId;
       const config = {
         method: "GET",
         url: `/v1/kitchens/Get/UserBill/${billId}`,
@@ -182,7 +184,7 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
             url: "https://ws.hipal.life/bill",
             data: {
               payload: {
-                ...response?.data,
+                ...response?.data?.data,
                 waiterName: userData?.name,
               },
               bill: "bill",
@@ -201,7 +203,7 @@ const TakeAwaySettle = ({ activeButton }:{activeButton:string}):JSX.Element => {
       const url = `/v1/kitchens/:id/swiggyBill?businessId=${businessId}&orderId=${orderId}&userBill=true`;
 
       const res = await axios.get(url);
-      const billId = res.data.billId;
+      const billId = res.data.data.billId;
       const config = {
         method: "post",
         url: "/v1/users/Bill/generateBill",

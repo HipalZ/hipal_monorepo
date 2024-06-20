@@ -21,6 +21,11 @@ const InstructionItem = ({
   variantId,
   tableId
 }: InstructionItemProps) => {
+  console.log("Id", variantId);
+  console.log("variant", variant);
+  console.log("cart", cart);
+  console.log("dishId", dishId);
+  console.log("tableId", tableId);
   const handleDeleteInstruction = () => {
     deleteInstruction(cart,tableId, dishId, variantId);
     toast.success("Instruction deleted successfully");

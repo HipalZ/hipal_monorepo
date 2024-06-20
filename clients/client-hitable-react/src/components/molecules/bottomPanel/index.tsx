@@ -131,4 +131,4 @@ function BottomPanel({ dishData, categoryName }: IDishData) {
     </>
   );
 }
-export default memo(BottomPanel);
+export default BottomPanel

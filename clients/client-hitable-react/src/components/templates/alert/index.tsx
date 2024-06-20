@@ -86,7 +86,7 @@ function Alert() {
 			const response = await axios.get(
 				`/v1/kitchens/get/AllAlertByWaiter?staffId=${userDetail?.id}&businessId=${businessId}&isAlertOn=true&zoneId=${zoneId}`,
 			);
-			const data = await response.data;
+			const data = await response.data.data;
 			setAlertData(data);
 			setNewAlertsCount(data.length);
 			return data;

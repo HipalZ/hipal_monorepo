@@ -31,6 +31,7 @@ const AddDishToCartButton = ({
 						appendClassNames
 					}
 					onClick={onClick}
+					onTouchStart={onClick}
 					{...props}
 					contentEditable={undefined}
 				>
@@ -41,4 +42,4 @@ const AddDishToCartButton = ({
 	);
 };
 
-export default AddDishToCartButton;
+export default AddDishToCartButton

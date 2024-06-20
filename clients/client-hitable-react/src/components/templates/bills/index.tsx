@@ -1,4 +1,4 @@
-import  { memo, useState } from "react";
+import { memo, useState } from "react";
 import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { MdMenuOpen } from "react-icons/md";
 import DatePicker from "react-datepicker";
@@ -8,16 +8,16 @@ import {
 	startOfMonth,
 	endOfMonth,
 	subDays,
-	} from "date-fns";
-	import MiddlePopUp from "@/components/atoms/middlePopUp";
-	import { useBusinessStore } from "@/components/store/useBusinessData";
-	import Bills from "@/components/molecules/bills";
-	import Loader from "@/components/atoms/loader";
-	import { useQuery } from "@tanstack/react-query";
-	import { toast } from "react-toastify";
-	import { ICurrentView } from "@/pages/r/[businessId]/zone";
-	import { useParams } from "react-router-dom";
-	import "react-datepicker/dist/react-datepicker.css";
+} from "date-fns";
+import MiddlePopUp from "@/components/atoms/middlePopUp";
+import { useBusinessStore } from "@/components/store/useBusinessData";
+import Bills from "@/components/molecules/bills";
+import Loader from "@/components/atoms/loader";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { ICurrentView } from "@/pages/r/[businessId]/zone";
+import { useParams } from "react-router-dom";
+import "react-datepicker/dist/react-datepicker.css";
 import axios from "@/components/utils/axios";
 
 interface IBillProps {
@@ -25,7 +25,7 @@ interface IBillProps {
 
 }
 
-function Bill({ setCurrentView }:IBillProps) {
+function Bill({ setCurrentView }: IBillProps) {
 	const businessData = useBusinessStore((s) => s.businessData);
 	const [selectedRange, setSelectedRange] = useState("today");
 	const [startDate, setStartDate] = useState<Date | null>(startOfDay(new Date()));
@@ -44,14 +44,14 @@ function Bill({ setCurrentView }:IBillProps) {
 	const startOfThisMonth = startOfMonth(new Date());
 	const endOfThisMonth = endOfMonth(new Date());
 
-	const formatDate = (date:Date) => {
+	const formatDate = (date: Date) => {
 		const day = String(date?.getDate()).padStart(2, "0");
 		const month = String(date?.getMonth() + 1).padStart(2, "0");
 		const year = date?.getFullYear();
 		return `${day}-${month}-${year}`;
 	};
 
-	const fetchReportForRange = (start:Date, end:Date) => {
+	const fetchReportForRange = (start: Date, end: Date) => {
 		setStartDate(start);
 		setEndDate(end);
 	};
@@ -84,14 +84,13 @@ function Bill({ setCurrentView }:IBillProps) {
 		const formattedStartDate = formatDate(startDate);
 		const formattedEndDate = formatDate(endDate);
 		let url = `/v1/payments/Sale/Bill?businessId=${businessId}&pageNumber=${pageNumber}`;
-		console.log(formattedEndDate, formattedStartDate);
 		if (formattedStartDate && formattedEndDate) {
 			url += `&from=${formattedStartDate}&to=${formattedEndDate}`;
 		}
 
 		try {
 			const res = await axios.get(url);
-			return res.data;
+			return res.data.data || {};
 		} catch (error) {
 			console.error("Error fetching sales report:", error);
 			toast.error("Error fetching sales report")
@@ -142,44 +141,40 @@ function Bill({ setCurrentView }:IBillProps) {
 					<div className="flex flex-wrap items-center justify-start space-x-2">
 						<button
 							type="button"
-							className={`border text-xs px-2 py-1 rounded-md ${
-								selectedRange === "today"
+							className={`border text-xs px-2 py-1 rounded-md ${selectedRange === "today"
 									? "bg-primary text-base-100"
 									: "bg-base-100"
-							}`}
+								}`}
 							onClick={handleTodayClick}
 						>
 							Today
 						</button>
 						<button
 							type="button"
-							className={`border text-xs px-2 py-1 rounded-md ${
-								selectedRange === "yesterday"
+							className={`border text-xs px-2 py-1 rounded-md ${selectedRange === "yesterday"
 									? "bg-primary text-base-100"
 									: "bg-base-100"
-							}`}
+								}`}
 							onClick={handleYesterdayClick}
 						>
 							Yesterday
 						</button>
 						<button
 							type="button"
-							className={`border text-xs px-2 py-1 rounded-md ${
-								selectedRange === "thisMonth"
+							className={`border text-xs px-2 py-1 rounded-md ${selectedRange === "thisMonth"
 									? "bg-primary text-base-100"
 									: "bg-base-100"
-							}`}
+								}`}
 							onClick={handleThisMonthClick}
 						>
 							This Month
 						</button>
 						<button
 							type="button"
-							className={`border text-xs px-2 py-1 rounded-md ${
-								selectedRange === "custom"
+							className={`border text-xs px-2 py-1 rounded-md ${selectedRange === "custom"
 									? "bg-primary text-base-100"
 									: "bg-base-100"
-							}`}
+								}`}
 							onClick={handleCustomDatesClick}
 						>
 							Custom dates
@@ -205,16 +200,16 @@ function Bill({ setCurrentView }:IBillProps) {
 								selected={startDate}
 								onChange={(dates) => {
 									if (Array.isArray(dates) && dates.length === 2) {
-									  const [start, end] = dates;
-									  setStartDate(start);
-									  setEndDate(end);
+										const [start, end] = dates;
+										setStartDate(start);
+										setEndDate(end);
 									} else {
 										//@ts-ignore
-									  setStartDate(dates as Date);
-									  //@ts-ignore
-									  setEndDate(dates as Date);
+										setStartDate(dates as Date);
+										//@ts-ignore
+										setEndDate(dates as Date);
 									}
-								  }}
+								}}
 								startDate={startDate}
 								endDate={endDate}
 								selectsRange
@@ -229,4 +224,4 @@ function Bill({ setCurrentView }:IBillProps) {
 	);
 }
 
-export default memo(Bill) ;
+export default memo(Bill);

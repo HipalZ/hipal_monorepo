@@ -1,5 +1,5 @@
 {
-  "name": "client-hitable-react",
+  "name": "@hipal/client-hitable-react",
   "private": true,
   "version": "0.0.0",
   "type": "module",

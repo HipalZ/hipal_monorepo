@@ -1,4 +1,4 @@
-import {  useEffect, useState } from "react";
+import {  startTransition, useEffect, useState } from "react";
 import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { HiSearch } from "react-icons/hi";
 import { CgProfile } from "react-icons/cg";
@@ -7,7 +7,7 @@ import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
 import { paths } from "@/components/utils/paths";
 import { useLogin } from "@/components/store/useLogin";
 import {
-	type IUserHistory,
+	IUserHistory,
 	useUsersHistory,
 } from "@/components/store/useUsersHistory";
 import Logout from "@/components/atoms/logout";
@@ -54,8 +54,8 @@ const Loyalty = () => {
 			const userHistory = await axios(
 				`/v1/users/${businessId}/RewardHistory?loyaltyId=${loyaltyId}&findUser=${value}`,
 			);
-			if (userHistory.data) {
-				setSingleUser([userHistory.data]);
+			if (userHistory.data.data) {
+				setSingleUser([userHistory.data.data]);
 
 			}
 		} catch (err) {
@@ -70,11 +70,11 @@ const Loyalty = () => {
 			const userHistory = await axios(
 				paths.getUsersHistory(pageNumber, businessId || '', loyaltyId, fieldMasks),
 			);
-			if (usersHistoryZ && userHistory.data) {
-				setUsersHistoryZ(userHistory.data);
-				setUsersHistory(userHistory.data);
+			if (usersHistoryZ && userHistory.data.data) {
+				setUsersHistoryZ(userHistory.data.data);
+				setUsersHistory(userHistory.data.data);
 			}
-			return userHistory.data;
+			return userHistory.data.data;
 		} catch (err) {
 			console.log(err);
 		}
@@ -100,9 +100,11 @@ const Loyalty = () => {
 					fieldMasks,
 				),
 			);
-			if (response.data) {
-				setSingleUserHistory(response?.data);
-				navigate(singleRoute[PAGE_TYPES.TRANSACTIONS](businessId || ''));
+			if (response.data.data) {
+				setSingleUserHistory(response?.data?.data);
+				startTransition(()=>{
+					navigate(singleRoute[PAGE_TYPES.TRANSACTIONS](businessId || ''));
+				})
 			}
 		} catch (err) {
 			console.log(err);

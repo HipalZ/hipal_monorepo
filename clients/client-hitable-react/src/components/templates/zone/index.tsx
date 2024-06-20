@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import HiPalLogo from "@/assets/hipalLogoNew.svg";
 import { MdMenuOpen } from "react-icons/md";
 import { useLogin } from "@/components/store/useLogin";
@@ -30,7 +30,9 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 
 	useEffect(() => {
 		if (!businessId) {
-			navigate("/");
+			startTransition(() => {
+				navigate("/");
+			})
 		}
 	}, [businessId, navigate]);
 
@@ -52,18 +54,21 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 		setZoneName(zone.zoneName);
 
 		if (zone.zoneType === "Dine In") {
-			navigate(
-				routePaths[PAGE_TYPES.TABLES](businessId || zone.businessId, zone?._id),
-			);
+			startTransition(() => {
+				navigate(
+					routePaths[PAGE_TYPES.TABLES](businessId || zone.businessId, zone?._id),
+				);
+			})
 		} else {
 			setZone(zone);
-			navigate(
-				routePaths[PAGE_TYPES.TAKE_AWAY](
-					businessId || zone.businessId,
-					zone?._id,
-				),
-			);
-			console.log("zone.zoneName", zone.zoneName);
+			startTransition(() => {
+				navigate(
+					routePaths[PAGE_TYPES.TAKE_AWAY](
+						businessId || zone.businessId,
+						zone?._id,
+					),
+				);
+			})
 			updateTheme(zone.zoneName);
 		}
 	};
@@ -85,7 +90,9 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 			return orderedZones;
 		} catch (error) {
 			if ((error as AxiosError)?.response?.status === 401) {
-				navigate(`/r/${businessId}/login`);
+				startTransition(()=>{
+					navigate(`/r/${businessId}/login`);
+				})
 			}
 		}
 	};
@@ -101,22 +108,26 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 		enabled: !!businessId && !!isLogin && !!userDetails?._id,
 	});
 
-	if (zoneLoading) {
-		return <Loader />;
-	}
-
 	const handleRetryClick = () => {
 		retryCount.current += 1;
 		if (retryCount.current >= 5) {
-			navigate(`/r/${businessId}/login`);
+			startTransition(()=>{
+				navigate(`/r/${businessId}/login`);
+			})
 		} else {
 			refetch();
 		}
 	};
 
 	const handleRoute = () => {
-		navigate(`/r/${businessId}/login`);
+		startTransition(()=>{
+			navigate(`/r/${businessId}/login`);
+		})
 	};
+
+	if (zoneLoading) {
+		return <Loader />;
+	}
 
 	if (error) {
 		return (
@@ -184,27 +195,23 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 						<div className="flex items-center mx-[1rem] my-2 rounded-xl border border-primary/50">
 							<button
 								type="button"
-								className={`relative capitalize flex w-full h-8 rounded-full transition-colors duration-300 ease-in-out ${
-									isLogin ? "" : ""
-								}`}
+								className={`relative capitalize flex w-full h-8 rounded-full transition-colors duration-300 ease-in-out ${isLogin ? "" : ""
+									}`}
 								onClick={handleToggle}
 							>
 								<span
-									className={`absolute top-0.5 left-[0.125rem] bottom-0.5 w-[49.5%] h-7 transform transition-transform duration-300 ease-in-out rounded-xl ${
-										isLogin ? "translate-x-full bg-green-500" : "bg-gray-300"
-									}`}
+									className={`absolute top-0.5 left-[0.125rem] bottom-0.5 w-[49.5%] h-7 transform transition-transform duration-300 ease-in-out rounded-xl ${isLogin ? "translate-x-full bg-green-500" : "bg-gray-300"
+										}`}
 								/>
 								<div
-									className={`absolute z-50 left-12 top-2 font-[400] text-[0.875rem] leading-[1rem] ${
-										isLogin ? "text-primary" : "text-base-100"
-									}`}
+									className={`absolute z-50 left-12 top-2 font-[400] text-[0.875rem] leading-[1rem] ${isLogin ? "text-primary" : "text-base-100"
+										}`}
 								>
 									day out
 								</div>
 								<div
-									className={`absolute z-50 right-14 top-2 font-[400] text-[0.875rem] leading-[1rem] ${
-										isLogin ? "text-base-100" : "text-primary"
-									}`}
+									className={`absolute z-50 right-14 top-2 font-[400] text-[0.875rem] leading-[1rem] ${isLogin ? "text-base-100" : "text-primary"
+										}`}
 								>
 									day in
 								</div>
@@ -219,14 +226,12 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 					<div
 						key={ele._id}
 						onClick={() => handleOnClick(ele)}
-						className={`flex justify-between items-center py-6 border border-base-300 rounded-xl ${
-							isLogin ? "bg-base-100" : "bg-gray-200"
-						}`}
+						className={`flex justify-between items-center py-6 border border-base-300 rounded-xl ${isLogin ? "bg-base-100" : "bg-gray-200"
+							}`}
 					>
 						<div
-							className={`truncate pl-6 w-[70%] ${
-								isLogin ? "font-[500]" : "font-[500] text-gray-400"
-							}`}
+							className={`truncate pl-6 w-[70%] ${isLogin ? "font-[500]" : "font-[500] text-gray-400"
+								}`}
 						>
 							<span>
 								{ele.zoneName === "zomato" ? "Pick Up" : ele.zoneName}

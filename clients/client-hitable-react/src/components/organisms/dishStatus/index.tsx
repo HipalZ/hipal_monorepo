@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import { useState, memo, useRef, useEffect, lazy } from "react";
 import { BiBowlRice, BiPlus } from "react-icons/bi";
 import type { IStatus } from "@/components/types/hiTableData";
@@ -76,7 +76,7 @@ const DishStatus = ({ activeButton }:{activeButton:string}):JSX.Element => {
 			const response = await axios.get(
 				`/v1/kitchens/kots/allKot?businessId=${businessId}&tableId=${tableId}&zoneId=${zoneId}`,
 			);
-			const kotData = response.data;
+			const kotData = response.data.data;
 			setStatusData(kotData);
 			return kotData;
 		} catch (error) {
@@ -102,7 +102,7 @@ const DishStatus = ({ activeButton }:{activeButton:string}):JSX.Element => {
 					kots: [kotId],
 				},
 			};
-			const res = await axios(config);
+			await axios(config);
 			refetch();
 			closeModal();
 		} catch (error) {
@@ -144,7 +144,9 @@ const DishStatus = ({ activeButton }:{activeButton:string}):JSX.Element => {
 	const handleRetryClick = () => {
 		retryCount.current += 1;
 		if (retryCount.current >= 5) {
-			navigate(`/r/${businessId}/login`);
+			startTransition(()=>{
+				navigate(`/r/${businessId}/login`);
+			})
 		} else {
 			getAllKotSpecificTable();
 		}

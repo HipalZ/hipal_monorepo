@@ -51,14 +51,14 @@ function Switch({setCurrentView}:any) {
 			const res = await axios.get(
 				`/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`,
 			);
-			setBusinesses([res?.data]);
+			setBusinesses([res?.data?.data]);
 			return res?.data;
 		} catch (error) {
 			toast.error("Error fetching tables");
 		}
 	};
 
-	const { isLoading, error, data } = useQuery({
+	const { isLoading } = useQuery({
 		queryKey: ["tables", businessId, zoneId],
 		queryFn: fetchZones,
 		enabled: !!zoneId && !!businessId,

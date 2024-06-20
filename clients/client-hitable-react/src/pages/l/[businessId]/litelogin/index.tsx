@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import HiTableLite from "@/assets/img/hitableLite.png"
 import { useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
@@ -41,8 +41,8 @@ function HiTable() {
   const fetchLoyaltyData = async () => {
     try {
       const response = await axios(paths.getLoyaltySettings(businessId || loyaltyData.businessId));
-      setLoyaltyId(response?.data?.loyaltyId);
-      setLoyaltyData(response?.data);
+      setLoyaltyId(response?.data?.data?.loyaltyId);
+      setLoyaltyData(response?.data?.data);
     } catch (error) {
       console.error("Error fetching business data:", error);
     }
@@ -60,7 +60,7 @@ function HiTable() {
       };
 
       const user = await axios(config);
-      const res = user.data;
+      const res = user.data.data;
       await fetchLoyaltyData();
       if (user.status === 200) {
         setUserDetails(res);
@@ -68,7 +68,9 @@ function HiTable() {
       }
 
       toast.success("Login successful...");
-      navigate(`${singleRoute[PAGE_TYPES.LOYALTY](`${businessId}`)}`);
+      startTransition(()=>{
+        navigate(`${singleRoute[PAGE_TYPES.LOYALTY](`${businessId}`)}`);
+      })
     } catch (err) {
       toast.error("Phone or Password invalid...!");
     }

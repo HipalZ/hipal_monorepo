@@ -54,11 +54,6 @@ const SalesComponent = ({
 					<div className="p-4 mx-6 mt-2 rounded-lg bg-primary text-base-100">
 						<div className="pb-2 text-xs">
 							Gross Sales
-							{/* {inTime && outTime && (
-                <>
-                  ( {inTime.slice(0, 5)} to {outTime.slice(0, 5)} )
-                </>
-              )} */}
 						</div>
 						<div className="text-3xl font-medium">₹ {salesData?.grossSale}</div>
 					</div>
@@ -168,7 +163,7 @@ const SalesComponent = ({
 											key={ele.waiterName}
 											className="mx-4 flex justify-between text-sm items-center py-4 border-b bg-base-100 border-[#cacaca]"
 										>
-											<span>{ele?.waiterName}</span>
+											<span>{ele?.waiterName ? ele?.waiterName : 'waiter'}</span>
 											<span>₹ {ele?.tips}</span>
 										</div>
 									))}

@@ -1,5 +1,5 @@
 import MiddlePopUp from "@/components/atoms/middlePopUp";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { BiShoppingBag } from "react-icons/bi";
 import AvailedCoins from "../availedCoins";
 import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
@@ -23,7 +23,7 @@ const LoyaltyCoinsUsage = ({
 	const params = useParams<{
 		businessId: string;
 	}>();
-	let { businessId } = params; 
+	const businessId = params?.businessId; 
 	const navigate = useNavigate();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const { loyaltyData } = useLoyaltyDatas();
@@ -37,7 +37,9 @@ const LoyaltyCoinsUsage = ({
 		setUserCoinz(singleUserHist?.totalReward);
 	}, [singleUserHist?.totalReward]);
 	const closeModalPop = () => {
-		navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || loyaltyData.businessId));
+		startTransition(()=>{
+			navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || loyaltyData.businessId));
+		})
 		setIsModalOpen(false);
 		closeModal();
 	};
@@ -72,7 +74,8 @@ const LoyaltyCoinsUsage = ({
 		} catch (error: any) {
 			console.error("Error fetching business data:", error?.response.status);
 			if (error?.response.status === 400) {
-				toast.error(error?.response?.data);
+				//TODO: check the response 
+				toast.error(error?.response?.data?.data?.message);
 			}
 		} finally {
 			setIsSending(false);

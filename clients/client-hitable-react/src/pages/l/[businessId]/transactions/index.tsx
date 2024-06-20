@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { MdPerson } from "react-icons/md";
 import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { HiArrowLeft } from "react-icons/hi";
@@ -8,7 +8,7 @@ import { AiFillCaretDown } from "react-icons/ai";
 import PopUp from "@/components/atoms/popUp";
 import LoyaltyCoinsUsage from "@/components/molecules/loyaltyCoinsUsage";
 import {
-  type ISingleUserHistory,
+  ISingleUserHistory,
   useUsersHistory,
 } from "@/components/store/useUsersHistory";
 import { BsFillCaretLeftFill, BsFillCaretRightFill } from "react-icons/bs";
@@ -21,7 +21,9 @@ const Transactions = () => {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const handleTableClick = () => {
-    navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''));
+    startTransition(()=>{
+      navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''));
+    })
   };
   const [singleUserHist, setSingleUserHist] = useState<ISingleUserHistory>();
   const [items, setItems] = useState<ISingleUserHistory[]>([]);
@@ -102,7 +104,9 @@ const Transactions = () => {
 
   useEffect(() => {
     if (singleUserHistory === null) {
-      navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''));
+      startTransition(()=>{
+        navigate(singleRoute[PAGE_TYPES.LOYALTY](businessId || ''));
+      })
     }
     setSingleUserHist(singleUserHistory);
     setItems(singleUserHistory?.items);

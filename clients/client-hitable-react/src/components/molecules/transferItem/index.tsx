@@ -30,7 +30,7 @@ const TransferItem: FC<TransferItemProps> = ({
 			const res = await axios.get(
 				`/v1/zones/WithTables/Zones?businessId=${businessId}`,
 			);
-			return res.data;
+			return res.data.data;
 		} catch (error) {
 			toast.error("Failed to fetch zones");
 		}

@@ -45,7 +45,7 @@ const DeleteItemComponent = ({
 	const fetchUsers = async () => {
 		try {
 			const response = await axios(`/v1/users/${businessId}`);
-			const data = await response.data;
+			const data = await response.data.data;
 			if (deleteData.staffResponsible === "") {
 				handleUpdateDeleteData({ staffResponsible: data[0].name });
 				handleUpdateDeleteData({ staffName: data[0].name });

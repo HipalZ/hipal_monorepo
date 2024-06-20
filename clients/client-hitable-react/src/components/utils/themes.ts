@@ -7,7 +7,6 @@ const zoneColorMapping: { [key: string]: string } = {
 };
 
 export const updateTheme = (zoneName: string) => {
-  console.log('zoneName', zoneName);
   if (typeof document === 'undefined') return null;
 
   if (zoneName && zoneName.trim() !== '') {

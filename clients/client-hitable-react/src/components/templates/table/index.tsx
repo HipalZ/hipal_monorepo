@@ -1,5 +1,5 @@
 import HeaderButton from "@/components/atoms/buttons/headerButton";
-import { useState, memo, useCallback } from "react";
+import { useState, memo, useCallback, startTransition } from "react";
 import { MdAlarm } from "react-icons/md";
 import { TbToolsKitchen2 } from "react-icons/tb";
 import { SiGoogleassistant } from "react-icons/si";
@@ -141,7 +141,7 @@ const Table = () => {
 			const response = await axios(config);
 
 			if (response.status === 201) {
-				setUserDetails(response.data);
+				setUserDetails(response.data.data);
 				setIsLogin(true);
 				result();
 			}
@@ -161,19 +161,18 @@ const Table = () => {
 			const response = await axios.get(
 				`/v1/zones/${zoneId}/tables/ByWaiter?businessId=${businessId}&staffId=${userDetails?._id}`,
 			);
-			const res = response.data;
-			const capacityMap = res.reduce((map: Record<string, number>, table:ITable) => {
+			const res = response.data.data;
+			const capacityMap = res.reduce((map: Record<string, number>, table: ITable) => {
 				map[table._id] = table.capacity;
 				return map;
 			}, {});
-			console.log(res);
-
 			const processedData = res
-				.map((table:ITable) => {
+				.map((table: ITable) => {
 					if (table.isMerge && table.hierarchy === "PARENT") {
 						const totalCapacity = table.mergeTables.reduce(
 							(total, mergedTable) => {
-								return total + capacityMap[mergedTable._id];
+								// use mergedTable.id only
+								return total + capacityMap[mergedTable.id];
 							},
 							0,
 						);
@@ -182,13 +181,13 @@ const Table = () => {
 					return table;
 				})
 				.filter(
-					(table:ITable) =>
+					(table: ITable) =>
 						!table.isMerge || (table.isMerge && table.hierarchy === "PARENT"),
 				);
 
 			setOriginalZoneData(processedData);
 			setTableData(processedData);
-			const preprocessedData = processedData.map((item:ITable) => ({
+			const preprocessedData = processedData.map((item: ITable) => ({
 				...item,
 				status: item.status.toLowerCase(),
 			}));
@@ -204,7 +203,7 @@ const Table = () => {
 			preprocessedData.sort((a: ITable, b: ITable) => {
 				const aStatusOrder = statusOrder[a.status] || statusOrder.default;
 				const bStatusOrder = statusOrder[b.status] || statusOrder.default;
-			
+
 				return aStatusOrder - bStatusOrder;
 			});
 
@@ -229,16 +228,12 @@ const Table = () => {
 		[setTableLocal],
 	);
 
-	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-screen">
-				<Loader />
-			</div>
-		);
-	}
+
 	const goToHome = () => {
 		toast.error("Session has ended Please login again");
-		navigate(`/r/${businessId}/login`);
+		startTransition(() => {
+			navigate(`/r/${businessId}/login`);
+		})
 	};
 
 	const searchTables = () => {
@@ -247,7 +242,24 @@ const Table = () => {
 		);
 	};
 	const searchResults = searchTables();
-
+	const handleClick = (ele) => {
+		startTransition(() => {
+			return navigate(
+				newRoutes[PAGE_TYPES.SINGLE_TABLE](
+					businessId || ele.businessId,
+					zoneId || ele.zoneId,
+					ele._id
+				)
+			);
+		});
+	};
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center h-screen">
+				<Loader />
+			</div>
+		);
+	}
 	if (error) {
 		return (
 			<div className="flex items-center justify-center h-screen">
@@ -265,7 +277,6 @@ const Table = () => {
 					<div className="font-bold capitalize text-base-content">
 						{zoneName}
 					</div>
-
 					<div className="relative">
 						<input
 							onChange={(e) => {
@@ -301,179 +312,169 @@ const Table = () => {
 				<div className="grid items-center gap-0 grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 					{search.length === 0 ? (
 						<>
-							{data?.map((ele:ITable, index:number) => (
-							<Link
-							key={`${ele._id + zoneId}search${index}`}
-							to={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
-							  businessId || ele.businessId,
-							  zoneId || ele.zoneId,
-							  ele?._id,
-							)}`}
-						  >
+							{data?.map((ele: ITable, index: number) => {
+								return (
 									<div
-										onClick={() => handleTableClick(ele)}
-										className={`${
-											classByStatus[ele?.status?.toLowerCase() || "empty"]
-												?.classNames
-										} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
+										key={`${ele._id + zoneId}search${index}`}
+										onClick={() => handleClick(ele)}
 									>
 										<div
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
-													?.businessNameClasses
-											} text-black`}
+											onClick={() => handleTableClick(ele)}
+											className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
+												?.classNames
+												} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
 										>
-											{ele.isMerge
-												? ele.mergeTables
+											<div
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.businessNameClasses
+													} text-black`}
+											>
+												{ele.isMerge
+													? ele.mergeTables
 														.map((table) =>
 															table.name.length > 4
 																? `${table.name.slice(0, 4)}...`
 																: table.name,
 														)
 														.join(" + ")
-												: ele.name}
-										</div>
-										<MdOutlinePeopleOutline
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													: ele.name}
+											</div>
+											<MdOutlinePeopleOutline
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.tableClasses
-											}`}
-										/>
-										<div
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													}`}
+											/>
+											<div
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.numberClasses
-											}`}
-										>
-											{ele?.activeUser < 10
-												? `0${ele?.activeUser}`
-												: ele?.activeUser == null
-													? "00"
-													: ele?.activeUser}
+													}`}
+											>
+												{ele?.activeUser < 10
+													? `0${ele?.activeUser}`
+													: ele?.activeUser == null
+														? "00"
+														: ele?.activeUser}
 											/
 											{ele?.capacity < 10 ? `0${ele?.capacity}` : ele?.capacity}
-										</div>
-										{ele?.status?.toLowerCase() !== "empty" &&
-											ele?.status?.toLowerCase() !== "reserved" && (
-												<div>
-													<div className="absolute top-3 left-6 text-sm font-[500] text-primary">
-														{ele?.time}
+											</div>
+											{ele?.status?.toLowerCase() !== "empty" &&
+												ele?.status?.toLowerCase() !== "reserved" && (
+													<div>
+														<div className="absolute top-3 left-6 text-sm font-[500] text-primary">
+															{ele?.time}
+														</div>
 													</div>
-												</div>
-											)}
-										<div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
-											{ele.status}
-											{ele.isMerge ? " (Merged) " : ""}
-										</div>
-										{ele?.status?.toLowerCase() !== "empty" &&
-											ele?.status?.toLowerCase() !== "reserved" && (
-												<div>
-													<MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
-													<div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
-														{ele?.totalDishQuantity < 10
-															? `0${ele?.deliverdDish}`
-															: ele?.deliverdDish == null
-																? "00"
-																: ele?.deliverdDish}
+												)}
+											<div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
+												{ele.status}
+												{ele.isMerge ? " (Merged) " : ""}
+											</div>
+											{ele?.status?.toLowerCase() !== "empty" &&
+												ele?.status?.toLowerCase() !== "reserved" && (
+													<div>
+														<MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
+														<div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
+															{ele?.totalDishQuantity < 10
+																? `0${ele?.deliverdDish}`
+																: ele?.deliverdDish == null
+																	? "00"
+																	: ele?.deliverdDish}
 														/
 														{ele?.totalDishQuantity < 10
-															? `0${ele?.totalDishQuantity}`
-															: ele?.totalDishQuantity}
+																? `0${ele?.totalDishQuantity}`
+																: ele?.totalDishQuantity}
+														</div>
 													</div>
-												</div>
-											)}
+												)}
+										</div>
 									</div>
-								</Link>
-							))}
+								)
+							})}
 						</>
 					) : (
-						<>
-							{searchResults?.map((ele:ITable, index:number) => (
-								<Link
-									key={`${ele._id + zoneId}search${index}`}
-									to={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
-										businessId || ele.businessId,
-										zoneId || ele.zoneId,
-										ele?._id,
-									)}`}
-								>
-									<div
-										onClick={() => handleTableClick(ele)}
-										className={`${
-											classByStatus[ele?.status?.toLowerCase() || "empty"]
-												?.classNames
-										} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
+							<>
+								{searchResults?.map((ele: ITable, index: number) => (
+									<Link
+										key={`${ele._id + zoneId}search${index}`}
+										to={`${newRoutes[PAGE_TYPES.SINGLE_TABLE](
+											businessId || ele.businessId,
+											zoneId || ele.zoneId,
+											ele?._id,
+										)}`}
 									>
 										<div
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
-													?.businessNameClasses
-											} text-black`}
+											onClick={() => handleTableClick(ele)}
+											className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
+												?.classNames
+												} ${ele.isMerge ? "bg-[#d6ebda]" : ""}`}
 										>
-											{ele.isMerge
-												? ele.mergeTables
+											<div
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
+													?.businessNameClasses
+													} text-black`}
+											>
+												{ele.isMerge
+													? ele.mergeTables
 														.map((table) =>
 															table.name.length > 4
 																? `${table.name.slice(0, 4)}...`
 																: table.name,
 														)
 														.join(" + ")
-												: ele.name}
-										</div>
-										<MdOutlinePeopleOutline
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													: ele.name}
+											</div>
+											<MdOutlinePeopleOutline
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.tableClasses
-											}`}
-										/>
-										<div
-											className={`${
-												classByStatus[ele?.status?.toLowerCase() || "empty"]
+													}`}
+											/>
+											<div
+												className={`${classByStatus[ele?.status?.toLowerCase() || "empty"]
 													?.numberClasses
-											}`}
-										>
-											{ele?.activeUser < 10
-												? `0${ele?.activeUser}`
-												: ele?.activeUser == null
-													? "00"
-													: ele?.activeUser}
+													}`}
+											>
+												{ele?.activeUser < 10
+													? `0${ele?.activeUser}`
+													: ele?.activeUser == null
+														? "00"
+														: ele?.activeUser}
 											/
 											{ele?.capacity < 10 ? `0${ele?.capacity}` : ele?.capacity}
-										</div>
-										{ele?.status?.toLowerCase() !== "empty" &&
-											ele?.status?.toLowerCase() !== "reserved" && (
-												<div>
-													<div className="absolute top-3 left-6 text-sm font-[500] text-primary">
-														{ele?.time}
+											</div>
+											{ele?.status?.toLowerCase() !== "empty" &&
+												ele?.status?.toLowerCase() !== "reserved" && (
+													<div>
+														<div className="absolute top-3 left-6 text-sm font-[500] text-primary">
+															{ele?.time}
+														</div>
 													</div>
-												</div>
-											)}
-										<div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
-											{ele.status}
-											{ele.isMerge ? " (Merged) " : ""}
-										</div>
-										{ele?.status?.toLowerCase() !== "empty" &&
-											ele?.status?.toLowerCase() !== "reserved" && (
-												<div>
-													<MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
-													<div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
-														{ele?.totalDishQuantity < 10
-															? `0${ele?.deliverdDish}`
-															: ele?.deliverdDish == null
-																? "00"
-																: ele?.deliverdDish}
+												)}
+											<div className="absolute text-sm font-normal capitalize bottom-2 left-6 text-base-content/40">
+												{ele.status}
+												{ele.isMerge ? " (Merged) " : ""}
+											</div>
+											{ele?.status?.toLowerCase() !== "empty" &&
+												ele?.status?.toLowerCase() !== "reserved" && (
+													<div>
+														<MdOutlineDinnerDining className="right-[5.5rem] top-6 absolute text-[1rem] opacity-50" />
+														<div className="absolute right-20 bottom-6 text-sm font-[500] text-primary">
+															{ele?.totalDishQuantity < 10
+																? `0${ele?.deliverdDish}`
+																: ele?.deliverdDish == null
+																	? "00"
+																	: ele?.deliverdDish}
 														/
 														{ele?.totalDishQuantity < 10
-															? `0${ele?.totalDishQuantity}`
-															: ele?.totalDishQuantity}
+																? `0${ele?.totalDishQuantity}`
+																: ele?.totalDishQuantity}
+														</div>
 													</div>
-												</div>
-											)}
-									</div>
-								</Link>
-							))}
-						</>
-					)}
+												)}
+										</div>
+									</Link>
+								))}
+							</>
+						)}
 				</div>
 			</div>
 		</div>

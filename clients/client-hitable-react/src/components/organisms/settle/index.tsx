@@ -12,7 +12,7 @@ import { useLoyaltyStore } from "@/components/store/useLoyaltyData";
 import { useTable } from "@/components/store/useTable";
 import { paths } from "@/components/utils/paths";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import type React from "react";
+import React, { startTransition } from "react";
 import {
 	Suspense,
 	lazy,
@@ -238,9 +238,9 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 			const response = await axios.get(
 				`/v1/kitchens/:id/temp-bill?tableId=${tableId}&hasServiceCharge=${hasServiceCharge}&serviceChargePercentage=${serviceChargePercentage}&gstPercentage=${gstPercentage}`,
 			);
-			setUpdatedBillData(response.data[response.data.length - 1]);
-			setBillData(response.data.slice(0, response.data.length - 1));
-			return response.data;
+			setUpdatedBillData(response.data.data[response.data.data.length - 1]);
+			setBillData(response.data.data.slice(0, response.data.data.length - 1));
+			return response.data.data;
 		} catch (error) {
 			toast.error("Error fetching bill");
 		}
@@ -252,7 +252,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 		if (phoneNumber.length === 10) {
 			try {
 				const staffResponse = await axios.get(`/v1/users/${businessId}`);
-				const staffMembers = staffResponse.data;
+				const staffMembers = staffResponse.data.data;
 
 				const isStaffMember = staffMembers.some(
 					(staff: any) => staff.phone === phoneNumber,
@@ -262,11 +262,11 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				} else {
 					const url = paths.getUserReward(Number(userData.phone), loyaltyId);
 					const response = await axios.get(url);
-
-					if (response.data.exists === false) {
+					//TODO: check the response 
+					if (response.data.data.exists === false) {
 						toast.error("User not exist");
 					} else {
-						setUserDetails(response.data);
+						setUserDetails(response.data.data);
 						setIsCoinzModalOpen(true);
 						closeModal();
 					}
@@ -286,13 +286,10 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 		try {
 			const url = paths.getUserReward(processedNumber, loyaltyId);
 			const response = await axios.get(url);
-			if (response.data.exists === false) {
-			} else {
-				setUserDetails(response.data);
-				setIsUserModalOpen(false);
-				setIsCoinzModalOpen(true);
-				closeModal();
-			}
+			setUserDetails(response.data.data);
+			setIsUserModalOpen(false);
+			setIsCoinzModalOpen(true);
+			closeModal();
 		} catch (err) {
 			toast.error("User not exist");
 			console.error("Error verifying number:", err);
@@ -302,12 +299,9 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 	const activeUsers = async (show) => {
 		try {
 			const url = paths.getActiveUser(tableId, zoneId, businessId);
-			console.log(url);
-
 			const response = await axios.get(url);
-			console.log(response.data);
-			const user = response.data.filter((ele) => ele.customerPhone.length > 10);
-			console.log(user.length);
+			console.log('active',response.data.data)
+			const user = response.data.data.filter((ele) => ele?.customerPhone?.length > 10);
 			if (user.length > 0) {
 				setUsers(user);
 				setSelectedUser(user[0].customerPhone);
@@ -468,7 +462,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 			updatedBillData.claimedAmount,
 		);
 		try {
-			const response = await axios.put("/v1/kitchens/:id/applyDiscount", {
+			await axios.put("/v1/kitchens/:id/applyDiscount", {
 				discountAmount: totalDiscount,
 				discountDescription,
 				tableId,
@@ -491,7 +485,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 		}
 		setLoading(true);
 		try {
-			const response = await axios.put("/v1/kitchens/:id/applyTips", {
+			await axios.put("/v1/kitchens/:id/applyTips", {
 				tableId: tableId,
 				tipsAmount: tip,
 				tipsGivenBy: userData?.name,
@@ -518,7 +512,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				} else {
 					setSelectedPaymentMethod(paymentMode);
 					openModal(paymentMode);
-					setDuesPersons(response.data);
+					setDuesPersons(response.data.data);
 				}
 			} catch (error) {
 				console.error("Error fetching dues persons:", error);
@@ -558,7 +552,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				discount: discount,
 				waiterName: userData?.name,
 			};
-			const res = await axios.post("/v1/payments/discountAlert", config);
+			await axios.post("/v1/payments/discountAlert", config);
 		} catch (error) {
 			console.log(error);
 		}
@@ -621,7 +615,8 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				serviceChargePercentage: businessData?.serviceChargePercentage || 0,
 				zoneId: zoneId,
 			});
-			const billId = res.data.billId;
+			console.log('resss',res);
+			const billId = res.data.data.billId;
 			const config = {
 				method: "GET",
 				url: `/v1/kitchens/Get/UserBill/${billId}`,
@@ -634,13 +629,13 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 						url: "https://ws.hipal.life/bill",
 						data: {
 							payload: {
-								...response?.data,
+								...response?.data?.data,
 								waiterName: userData?.name,
 							},
 							bill: "bill",
 						},
 					};
-					const billPrint = axios(config2);
+					axios(config2);
 					toast.success("Bill send successfully");
 				}
 			}
@@ -692,7 +687,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				serviceChargePercentage: businessData?.serviceChargePercentage || 0,
 				zoneId: zoneId,
 			});
-			const billId = res.data.billId;
+			const billId = res.data.data.billId;
 			const config = {
 				method: "post",
 				url: "/v1/users/Bill/generateBill",
@@ -744,9 +739,8 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 	};
 	const removeServiceTax = async (password: string, action: boolean) => {
 		const currentDate = new Date();
-		const formattedDate = `${currentDate.getDate()}/${
-			currentDate.getMonth() + 1
-		}/${currentDate.getFullYear()}`;
+		const formattedDate = `${currentDate.getDate()}/${currentDate.getMonth() + 1
+			}/${currentDate.getFullYear()}`;
 
 		const actionKey = action
 			? "serviceChargeRemovedBy"
@@ -766,7 +760,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 
 		const sendAlert = async () => {
 			try {
-				const res = await axios.post("/v1/payments/serviceChargeAlert", config);
+				await axios.post("/v1/payments/serviceChargeAlert", config);
 			} catch (error) {
 				console.error("Error sending alert:", error);
 			}
@@ -780,6 +774,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 			if (action) {
 				calcAfterServiceChargeRemoval();
 			}
+			//TODO: check the response
 			if (response.status === 200) {
 				toast.success(`Service tax ${action ? "removed" : "added"}`);
 				closeModal();
@@ -874,7 +869,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 					tableName: billData[0]?.tableName,
 				},
 			);
-			if (response.data) {
+			if (response.data.data) {
 				toast.success("Coins redeemed successfully!");
 				setIsCoinzModalOpen(false);
 			} else {
@@ -882,7 +877,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 			}
 		} catch (error: any) {
 			console.error("Error redeeming coins:", error);
-			toast.error(error?.response?.data);
+			toast.error(error?.response?.data?.data);
 		}
 	};
 
@@ -897,7 +892,7 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 			const response = await axios.get(
 				`/v1/payments/Get/Modes?businessId=${businessId}`,
 			);
-			setPaymentMethods(response.data);
+			setPaymentMethods(response.data.data);
 		} catch (error) {
 			console.error("Failed to fetch payment methods", error);
 			toast.error("Failed to fetch payment methods");
@@ -956,7 +951,6 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				}
 				setSettleError(false);
 
-				console.log(userDetails, loyaltyId);
 				if (
 					loyaltyId &&
 					(userDetails?.userPhone || userDetails?.customerPhone)
@@ -968,7 +962,9 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 				}
 				clearCartForTable(tableId);
 				closeModal();
-				navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				startTransition(()=>{
+					navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				})
 			}
 		} catch (error: any) {
 			if (error.response.status === 400) {
@@ -1034,7 +1030,9 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 					await settleMergeTable();
 				}
 				clearCartForTable(tableId);
-				navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				startTransition(()=>{
+					navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				})
 			}
 		} catch (error) {
 			console.log("Error settling multiple payment:", error);
@@ -1047,13 +1045,15 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 	const handleRetryClick = () => {
 		retryCount.current += 1;
 		if (retryCount.current >= 5) {
-			navigate(`/r/${businessId}/zone`);
+			startTransition(()=>{
+				navigate(`/r/${businessId}/zone`);
+			})
 		} else {
 			finalClick();
 		}
 	};
 
-	const { isLoading, error, data } = useQuery({
+	const { isLoading } = useQuery({
 		queryKey: [
 			"updatedGetBill",
 			tableId,
@@ -1086,18 +1086,18 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 						(loading ? (
 							<Loader />
 						) : (
-							<DiscountComponent
-								billData={updatedBillData}
-								discountMode={discountMode}
-								handleDiscountModeChange={handleDiscountModeChange}
-								discountValue={discountValue}
-								handleDiscountChange={handleDiscountChange}
-								discountDescription={discountDescription}
-								setDiscountDescription={setDiscountDescription}
-								removeDiscount={removeDiscount}
-								applyDiscount={applyDiscount}
-							/>
-						))}
+								<DiscountComponent
+									billData={updatedBillData}
+									discountMode={discountMode}
+									handleDiscountModeChange={handleDiscountModeChange}
+									discountValue={discountValue}
+									handleDiscountChange={handleDiscountChange}
+									discountDescription={discountDescription}
+									setDiscountDescription={setDiscountDescription}
+									removeDiscount={removeDiscount}
+									applyDiscount={applyDiscount}
+								/>
+							))}
 					{footButton === "HI_COINS" && (
 						<MobileNumberForCoinz
 							handlePhoneNumberChange={handlePhoneNumberChange}
@@ -1122,17 +1122,17 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 								</button>
 							</div>
 						) : (
-							<PaymentModeSelector
-								billData={updatedBillData}
-								loading={loading}
-								paymentMethods={paymentMethods}
-								selectedPaymentMethod={selectedPaymentMethod}
-								handlePaymentMethodSelection={handlePaymentMethodSelection}
-								handleAmountChange={handleAmountChange}
-								changeToGiveBack={changeToGiveBack}
-								finalClick={finalClick}
-							/>
-						))}
+								<PaymentModeSelector
+									billData={updatedBillData}
+									loading={loading}
+									paymentMethods={paymentMethods}
+									selectedPaymentMethod={selectedPaymentMethod}
+									handlePaymentMethodSelection={handlePaymentMethodSelection}
+									handleAmountChange={handleAmountChange}
+									changeToGiveBack={changeToGiveBack}
+									finalClick={finalClick}
+								/>
+							))}
 					{footButton === "DUES" && (
 						<DuesUserSelector
 							billData={updatedBillData}
@@ -1159,11 +1159,11 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 						(loading ? (
 							<Loader />
 						) : (
-							<PrintBillComponent
-								sendPrintBill={sendPrintBill}
-								closeModal={closeModal}
-							/>
-						))}
+								<PrintBillComponent
+									sendPrintBill={sendPrintBill}
+									closeModal={closeModal}
+								/>
+							))}
 					{footButton === "E_BILL" && (
 						<EBillComponent
 							billData={updatedBillData}
@@ -1273,17 +1273,15 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 					</MiddlePopUp>
 				)}
 				<div
-					className={`${
-						activeButton.toLowerCase() === "settle" && billData.length > 0
+					className={`${activeButton.toLowerCase() === "settle" && billData.length > 0
 							? ""
 							: "hidden"
-					} w-full h-[4rem] fixed bottom-0 z-20 py-2 shadow-lg shadow-base-100 bg-primary`}
+						} w-full h-[4rem] fixed bottom-0 z-20 py-2 shadow-lg shadow-base-100 bg-primary`}
 				>
 					<div ref={fabRef} className="absolute bottom-[5rem] left-6">
 						<div
-							className={`flex flex-col space-y-2 transform origin-bottom ${
-								isFabOpen ? "opacity-100 scale-y-1" : "opacity-0 scale-y-0"
-							} fab-transition`}
+							className={`flex flex-col space-y-2 transform origin-bottom ${isFabOpen ? "opacity-100 scale-y-1" : "opacity-0 scale-y-0"
+								} fab-transition`}
 						>
 							<button
 								type="button"
@@ -1324,8 +1322,8 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 							{isFabOpen ? (
 								<HiX className="text-2xl" />
 							) : (
-								<BiPlus className="text-3xl" />
-							)}
+									<BiPlus className="text-3xl" />
+								)}
 						</button>
 					</div>
 					<button
@@ -1349,11 +1347,10 @@ const Settle = ({ activeButton }: POSProps): JSX.Element => {
 						onClick={() => {
 							openModal("SETTLE");
 						}}
-						className={`${
-							billData.length > 0
+						className={`${billData.length > 0
 								? "absolute text-sm font-[500] px-4 py-2 mr-2 border-base-100 border text-primary bg-base-100 rounded-full right-6 bottom-3"
 								: "hidden"
-						}`}
+							}`}
 					>
 						Settle
 					</button>

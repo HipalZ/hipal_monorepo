@@ -109,7 +109,7 @@ const DeleteMultipleDishes = ({
 				});
 				onClose();
 				refetch();
-				// const data = response.data;
+				// const data = response.data.data;
 
 				// const getCart = getUpdatedCart(data, true);
 				// if ( businessData?.kotPrinter) {
@@ -190,6 +190,7 @@ const DeleteMultipleDishes = ({
 									className="w-[60%] px-4 py-2 mt-2 bg-white rounded-md"
 								/>
 								<button
+									type="button"
 									onClick={handleSelectAll}
 									className="h-10 px-8 mt-2 text-white bg-primary rounded-2xl "
 								>
@@ -292,12 +293,14 @@ const DeleteMultipleDishes = ({
 				return (
 					<div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
 						<button
+							type="button"
 							onClick={onClose}
 							className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
 						>
 							Cancel
 						</button>
 						<button
+							type="button"
 							onClick={handleNextStep}
 							disabled={selectedIds.length === 0}
 							className={`w-full px-4 py-2 text-white rounded-2xl ${
@@ -312,12 +315,14 @@ const DeleteMultipleDishes = ({
 				return (
 					<div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
 						<button
+							type="button"
 							onClick={handleGoBack}
 							className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
 						>
 							Back
 						</button>
 						<button
+							type="button"
 							onClick={handleNextStep}
 							className={`w-full px-4 py-2 text-white rounded-2xl ${
 								deleteData.reasonForDelete === "" ? "bg-gray-400" : "bg-primary"
@@ -332,12 +337,14 @@ const DeleteMultipleDishes = ({
 				return (
 					<div className="fixed flex gap-4 bottom-4 w-full max-w-[27rem] px-4">
 						<button
+							type="button"
 							onClick={handleGoBack}
 							className="w-full px-4 py-2 border text-primary border-primary bg-base-100 rounded-2xl"
 						>
 							Go Back
 						</button>
 						<button
+							type="button"
 							onClick={handleNextStep}
 							className="w-full px-4 py-2 text-white bg-primary rounded-2xl"
 						>

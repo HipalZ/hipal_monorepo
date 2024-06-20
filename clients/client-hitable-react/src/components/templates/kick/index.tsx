@@ -2,7 +2,7 @@ import AddPeopleDine from "@/components/atoms/addPeopleDineIn";
 import DayOutPopup from "@/components/atoms/dayoutPopup";
 import { useTable } from "@/components/store/useTable";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { HiArrowLeft } from "react-icons/hi";
 import { toast } from "react-toastify";
 import AddTempDish from "@/components/molecules/addTempItem";
@@ -19,7 +19,7 @@ export default function KickUser({setCurrentView}: KickUserProps) {
     zoneId: string;
 		tableId: string;
 	}>();
-	let { tableId,businessId,zoneId } = params;
+	const { tableId,businessId,zoneId } = params;
   const navigate = useNavigate();
   const [userKicked, setUserKicked] = useState(Boolean);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,8 +41,10 @@ export default function KickUser({setCurrentView}: KickUserProps) {
     const res = await axios.put(
       `/v1/zones/${zoneId}/tables/${tableId}/KickOutTable`
     );
-    if (res.data) {
-      navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+    if (res.data.data) {
+      startTransition(()=>{
+        navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+      })
     }
     setUserKicked(true);
     setIsModalOpen(false);
@@ -53,13 +55,16 @@ export default function KickUser({setCurrentView}: KickUserProps) {
       const url = `/v1/zones/updateTableReserve/table?tableId=${tableId}${tableData?.status?.toLowerCase() === "reserved" ? "&update=true" : ""}`;
   
       const res = await axios.put(url);
-      if (res.data) {
-        setTableData(res.data);
-        navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+      if (res.data.data) {
+        setTableData(res.data.data);
+        startTransition(()=>{
+          navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+        })
       }
     } catch (error) {
-      console.error("An error occurred while reserving the table:", error);
-      toast.error("An error occurred while reserving the table");
+      if(error.response.status===400){
+        toast.error(error.response.data.message);
+      }
     }
   };
 

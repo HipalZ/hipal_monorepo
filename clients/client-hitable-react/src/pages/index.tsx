@@ -1,5 +1,4 @@
-import type React from "react";
-import { useEffect, useState } from "react";
+import React, { startTransition, useEffect, useState } from "react";
 import HiTableLogo from "@/assets/svg/HiTableLogo.svg";
 import welcome from "@/assets/svg/welcomeLogo.svg";
 import { toast } from "react-toastify";
@@ -23,7 +22,9 @@ function HiTable() {
 
 	useEffect(() => {
 		if (businessId === undefined) {
-			navigate("/");
+			startTransition(() => {
+				navigate("/");
+			})
 		}
 	}, []);
 
@@ -38,16 +39,17 @@ function HiTable() {
 			};
 
 			const user = await axios(config);
-
 			if (user.status === 200) {
-				setUserDetails(user.data);
-				navigate(
-					`${singleRoute[PAGE_TYPES.LOGIN](
-						`${user?.data?.customRole?.[0].businessId}`,
-					)}`,
-				);
-				if (user?.data?.customRole?.[0].businessId) {
-					toast.success(`Hi ${user?.data?.name}`);
+				setUserDetails(user.data.data);
+				startTransition(() => {
+					navigate(
+						`${singleRoute[PAGE_TYPES.LOGIN](
+							`${user?.data?.data?.customRole?.[0].businessId}`,
+						)}`,
+					);
+				})
+				if (user?.data?.data?.customRole?.[0].businessId) {
+					toast.success(`Hi ${user?.data?.data?.name}`);
 				}
 			}
 		} catch (err) {
@@ -55,6 +57,7 @@ function HiTable() {
 			toast.error("User not registered as staff!");
 		}
 	};
+
 	return (
 		<div>
 			<div className="flex justify-center mt-[12rem]">
@@ -88,12 +91,10 @@ function HiTable() {
 					</label>
 				</div>
 			</div>
-
 			<div className="absolute flex items-center justify-center w-full px-6 bottom-4">
 				<button
 					onClick={result}
-					type="button"
-					className="w-full py-3 text-xl rounded-full btn text-base-100 md:w-1/2 lg:w-1/4 on_active_bounce bg-primary"
+					className="w-full py-2 text-sm rounded-full btn text-base-100 md:w-1/2 lg:w-1/4 on_active_bounce bg-primary"
 				>
 					Login
 				</button>

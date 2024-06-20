@@ -10,6 +10,7 @@ export interface ICartExtra {
 
 interface ICartVariantProperties {
   id: string;
+  _id:string;
   extra?: ICartExtra | {};
   portion?: IPortion;
   quantity?: number;
@@ -34,7 +35,6 @@ export interface ICart {
 export interface IUseCart {
   cartBusinessId: string;
   cart: ICart;
-
   setCartBusinessId: (id: string) => void;
   emptyCart: () => void;
   setCart: (tableId: string, dishKey: string, data: ICartDish) => void;

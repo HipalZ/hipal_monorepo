@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import { useState } from "react";
 import { OrderHeader, StatusButton } from "../dishStatus";
 import axios from "@/components/utils/axios";
@@ -54,9 +54,11 @@ const TakeAwayDishStatus = ({
 			};
 			await axios(config);
 			toast.error(`Order ${orderId} has been deleted by ${userName}`);
-			navigate(
-				routePaths[PAGE_TYPES.TAKE_AWAY](businessId || "", takeawayId || ""),
-			);
+			startTransition(() => {
+				navigate(
+					routePaths[PAGE_TYPES.TAKE_AWAY](businessId || "", takeawayId || ""),
+				);
+			})
 		} catch (error) {
 			console.log(error);
 		}
@@ -85,9 +87,8 @@ const TakeAwayDishStatus = ({
 					currentOrder?.kots?.map((kot) => (
 						<div
 							key={kot?._id}
-							className={`relative mb-4 ${
-								kot.match ? "bg-base-100" : "bg-[#FF6262]/20"
-							} `}
+							className={`relative mb-4 ${kot.match ? "bg-base-100" : "bg-[#FF6262]/20"
+								} `}
 						>
 							<div className="mt-4 border-2 rounded-full border-gray-400/30" />
 							<div className="flex flex-col justify-between">
@@ -121,8 +122,8 @@ const TakeAwayDishStatus = ({
 											</button>
 										</div>
 									) : (
-										<StatusButton kot={kot} />
-									)}
+											<StatusButton kot={kot} />
+										)}
 								</div>
 							</div>
 						</div>

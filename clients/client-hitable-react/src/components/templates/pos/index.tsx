@@ -1,4 +1,4 @@
-import  { lazy, useEffect, useRef, useState } from "react";
+import  { lazy, startTransition, useEffect, useRef, useState } from "react";
 import { useTable } from "@/components/store/useTable";
 import SearchComponent from "@/components/molecules/searchPanel";
 import { useSearch } from "@/components/store/useSearch";
@@ -91,6 +91,17 @@ function TablePos({ setCurrentView }: IProps) {
 		enabled: !!businessId,
 	});
 
+
+	const handleRetryClick = () => {
+		retryCount.current += 1;
+		if (retryCount.current >= 5) {
+			startTransition(()=>{
+				navigate(`/r/${businessId}/login`);
+			})
+		} else {
+			category();
+		}
+	};
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-screen">
@@ -98,14 +109,6 @@ function TablePos({ setCurrentView }: IProps) {
 			</div>
 		);
 	}
-	const handleRetryClick = () => {
-		retryCount.current += 1;
-		if (retryCount.current >= 5) {
-			navigate(`/r/${businessId}/login`);
-		} else {
-			category();
-		}
-	};
 	if (error) {
 		<div className="flex items-center justify-center h-screen">
 			<Link to={`/r/${businessId}/login`}>

@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import { useState, useEffect, useCallback, memo } from "react";
 import { toast } from "react-toastify";
 import { ICartVariant, useCart } from "@/components/store/useCart";
@@ -11,7 +11,7 @@ import ParentCategory from "../category/parentCategory";
 import DayOutPopup from "@/components/atoms/dayoutPopup";
 import InstructionInput from "@/components/atoms/instruction";
 import InstructionItem from "@/components/atoms/instructionItem";
-import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
+import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType";
 import {
 	addInstruction,
 	deleteInstruction,
@@ -24,7 +24,7 @@ import type { ICategories, IDish } from "@/components/types/hiTableData";
 import NewDishMenu from "@/components/molecules/newDishMenu";
 import { useSearch } from "@/components/store/useSearch";
 import LoaderComponent from "@/components/atoms/coolLoader";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "@/components/utils/axios";
 
 interface POSProps {
@@ -33,7 +33,7 @@ interface POSProps {
 	search: string;
 }
 
-const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
+const POSComponent = ({ activeButton, data, search }: POSProps): JSX.Element => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [menuModal, setMenuMOdal] = useState<boolean>(false);
 	const cart = useCart((s) => s.cart);
@@ -77,7 +77,7 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 
 	const childCategories = data?.categories ?? [];
 
-	const organizeCategories = useCallback((categories:ICategories[]) => {
+	const organizeCategories = useCallback((categories: ICategories[]) => {
 		const parentChildrenMap = {};
 		const parentDetailsMap = {};
 
@@ -113,7 +113,7 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 	}, []);
 
 	const organizedData = organizeCategories(childCategories);
-	
+
 	const getDishPrice = (
 		dishData: IDish,
 		selectedPortion: any,
@@ -147,9 +147,8 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 		const dishItem = tableCart[dishId];
 		if (dishItem) {
 			const filteredVariants = dishItem.variants.filter(
-				(variant:ICartVariant) => variant._id !== variantId,
+				(variant: ICartVariant) => variant._id !== variantId,
 			);
-
 			if (filteredVariants.length > 0) {
 				const updatedDishItem = { ...dishItem, variants: filteredVariants };
 				setCart(tableId, dishId, updatedDishItem);
@@ -162,7 +161,7 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 	const sendCart = async () => {
 		setIsSending(true);
 		const time = new Date().toLocaleTimeString("it-IT");
-	
+
 		try {
 			const config = {
 				method: "post",
@@ -194,12 +193,14 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 				};
 				axios(config);
 			}
-
+			//TODO : check if status is true
 			if (res.data.status) {
 				closeModal();
 				toast(`order placed successfully for ${tableData.name}`);
 				clearCartForTable(tableId);
-				navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				startTransition(() => {
+					navigate(routePaths[PAGE_TYPES.TABLES](businessId, zoneId));
+				})
 			}
 		} catch (error) {
 			console.error(error);
@@ -260,12 +261,11 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 							<NewDishMenu category={searchHistory} show={true} />
 						</>
 					) : (
-						<ChildCategory childCategories={childCategories} show={false} />
-					)}
+								<ChildCategory childCategories={childCategories} show={false} />
+							)}
 					<div
-						className={`${
-							Object.keys(cart).length === 0 ? "bottom-6" : "bottom-[5rem]"
-						} bg-primary fixed z-1000 left-1/2 transition-all duration-500 transform -translate-x-1/2 text-base-100 flex items-center justify-center py-2 px-6 rounded-2xl`}
+						className={`${Object.keys(cart).length === 0 ? "bottom-6" : "bottom-[5rem]"
+							} bg-primary fixed z-1000 left-1/2 transition-all duration-500 transform -translate-x-1/2 text-base-100 flex items-center justify-center py-2 px-6 rounded-2xl`}
 					>
 						<MdOutlineWidgets className="mr-2 text-2xl" />
 						<div
@@ -278,27 +278,25 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 					</div>
 
 					{menu === "menubtn" && (
-						<>
-							<MenuPopup show={menuModal} onClose={closeMenuModal}>
-								<div className="relative min-h-[50vh]">
-									<div className="fixed top-0 left-0 right-0 px-4 py-2 mt-2 ml-2 font-medium capitalize text-base-content">
-										Category
+						<MenuPopup show={menuModal} onClose={closeMenuModal}>
+							<div className="relative min-h-[50vh]">
+								<div className="fixed top-0 left-0 right-0 px-4 py-2 mt-2 ml-2 font-medium capitalize text-base-content">
+									Category
 									</div>
-									<div className="absolute right-0 p-1 mt-2 mr-2 rounded-full bg-base-100">
-										<HiX
-											className="text-2xl text-primary"
-											onClick={closeMenuModal}
-										/>
-									</div>
-									<div className="absolute inset-0 pb-4 overflow-y-auto top-12 max-h-[30rem] hide-scrollbar">
-										<ParentCategory
-											closeModal={closeMenuModal}
-											parentCategory={organizedData}
-										/>
-									</div>
+								<div className="absolute right-0 p-1 mt-2 mr-2 rounded-full bg-base-100">
+									<HiX
+										className="text-2xl text-primary"
+										onClick={closeMenuModal}
+									/>
 								</div>
-							</MenuPopup>
-						</>
+								<div className="absolute inset-0 pb-4 overflow-y-auto top-12 max-h-[30rem] hide-scrollbar">
+									<ParentCategory
+										closeModal={closeMenuModal}
+										parentCategory={organizedData}
+									/>
+								</div>
+							</div>
+						</MenuPopup>
 					)}
 
 					{menu.toLowerCase() === "livecart" && (
@@ -312,131 +310,131 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 										<LoaderComponent />
 									</div>
 								) : (
-									<div className="pb-[7rem] px-6 overflow-y-auto hide-scrollbar pt-16">
-										{filteredCartItems
-											.filter((ele) => ele)
-											.map((cartItem, index) => {
-												const { dishData, variants } = cartItem;
-												const name = dishData?.name;
-												return variants?.map((variant, variantIndex) => {
-													const { portion, extra, id } = variant;
-													const selectedPortion = portion?.name;
-													const selectedExtra = extra
-														? Object.values(extra)?.filter(
+										<div className="pb-[7rem] px-6 overflow-y-auto hide-scrollbar pt-16">
+											{filteredCartItems
+												.filter((ele) => ele)
+												.map((cartItem, index) => {
+													const { dishData, variants } = cartItem;
+													const name = dishData?.name;
+													return variants?.map((variant, variantIndex) => {
+														const { portion, extra, _id } = variant;
+														const selectedPortion = portion?.name;
+														const selectedExtra = extra
+															? Object.values(extra)?.filter(
 																(item: any) => item?.quantity > 0,
 															)
-														: [];
-													return (
-														<div
-															key={`${dishData?._id}-${index}-${variantIndex}`}
-														>
-															<div className="relative flex justify-between mt-4">
-																<div className="mr-4">
-																	{dishData?.dishType && (
-																		<FoodType
-																			type={dishData?.dishType as FOOD_TYPES}
-																		/>
-																	)}
-																</div>
-																<div className="w-[70%] -ml-12">
-																	<div className="font-medium text-base-content">
-																		{name?.length && name.length < 35
-																			? name
-																			: name?.slice(0, 35) + "..."}
+															: [];
+														return (
+															<div
+																key={`${dishData?._id}-${index}-${variantIndex}`}
+															>
+																<div className="relative flex justify-between mt-4">
+																	<div className="mr-4">
+																		{dishData?.dishType && (
+																			<FoodType
+																				type={dishData?.dishType as FOOD_TYPES}
+																			/>
+																		)}
 																	</div>
-
-																	<div className="mt-1 font-medium text-base-content/50">
-																		<div>{selectedPortion}</div>
-																		<div>
-																			{selectedExtra.map(
-																				(extraItem: any, extraIndex) => (
-																					<div
-																						key={`${dishData?._id}-${index}-${variantIndex}-${extraIndex}`}
-																					>
-																						<span className="mr-2 text-sm">
-																							{extraItem?.quantity}
-																						</span>
-																						x
-																						<span className="ml-2 text-sm">
-																							{extraItem?.name}
-																						</span>
-																					</div>
-																				),
-																			)}
+																	<div className="w-[70%] -ml-12">
+																		<div className="font-medium text-base-content">
+																			{name?.length && name.length < 35
+																				? name
+																				: name?.slice(0, 35) + "..."}
 																		</div>
-																	</div>
 
-																	<div className="flex justify-between">
-																		<div className="mt-4 font-medium text-base-content/50">
-																			₹
+																		<div className="mt-1 font-medium text-base-content/50">
+																			<div>{selectedPortion}</div>
+																			<div>
+																				{selectedExtra.map(
+																					(extraItem: any, extraIndex) => (
+																						<div
+																							key={`${dishData?._id}-${index}-${variantIndex}-${extraIndex}`}
+																						>
+																							<span className="mr-2 text-sm">
+																								{extraItem?.quantity}
+																							</span>
+																						x
+																							<span className="ml-2 text-sm">
+																								{extraItem?.name}
+																							</span>
+																						</div>
+																					),
+																				)}
+																			</div>
+																		</div>
+
+																		<div className="flex justify-between">
+																			<div className="mt-4 font-medium text-base-content/50">
+																				₹
 																			{getDishPrice(
 																				dishData,
 																				selectedPortion,
 																				selectedExtra,
 																			)}
-																		</div>
-																		<button
-																			type="button"
-																			onClick={() =>
-																				handleDeleteItem(
-																					tableId,
-																					dishData?._id,
-																					id,
-																				)
-																			}
-																			className="text-primary rounded-2xl on_active_bounce border border-primary px-6 py-2 bg-base-100 mt-1 -mr-[6rem] font-medium"
-																		>
-																			Delete
+																			</div>
+																			<button
+																				type="button"
+																				onClick={() =>
+																					handleDeleteItem(
+																						tableId,
+																						dishData?._id,
+																						variant._id,
+																					)
+																				}
+																				className="text-primary rounded-2xl on_active_bounce border border-primary px-6 py-2 bg-base-100 mt-1 -mr-[6rem] font-medium"
+																			>
+																				Delete
 																		</button>
-																	</div>
-																</div>
-																<div className="mr-4 font-medium text-right text-base-content/">
-																	x 1
-																</div>
-															</div>
-															{activeInputId === id ? (
-																<InstructionInput
-																	instruction={instruction}
-																	setInstruction={setInstruction}
-																	activeInputId={activeInputId}
-																	addInstruction={addInstruction}
-																	cart={cart}
-																	dishId={dishData?._id}
-																	variantId={id}
-																	tableId={tableId}
-																/>
-															) : (
-																<>
-																	{!variant?.instruction && (
-																		<div
-																			onClick={() => setActiveInputId(id)}
-																			className="flex mt-4 -ml-1 text-orange-600"
-																		>
-																			<HiOutlineClipboardList className="text-2xl" />{" "}
-																			Cooking Instruction
 																		</div>
-																	)}
+																	</div>
+																	<div className="mr-4 font-medium text-right text-base-content/">
+																		x 1
+																</div>
+																</div>
+																{activeInputId === dishData?._id ? (
+																	<InstructionInput
+																		instruction={instruction}
+																		setInstruction={setInstruction}
+																		activeInputId={activeInputId}
+																		addInstruction={addInstruction}
+																		cart={cart}
+																		dishId={dishData?._id}
+																		variantId={id}
+																		tableId={tableId}
+																	/>
+																) : (
+																		<>
+																			{!variant?.instruction && (
+																				<div
+																					onClick={() => setActiveInputId(dishData?._id)}
+																					className="flex mt-4 -ml-1 text-orange-600"
+																				>
+																					<HiOutlineClipboardList className="text-2xl" />{" "}
+																			Cooking Instruction
+																				</div>
+																			)}
 
-																	{variant?.instruction && (
-																		<InstructionItem
-																			deleteInstruction={deleteInstruction}
-																			setActiveInputId={setActiveInputId}
-																			variant={variant}
-																			cart={cart}
-																			dishId={dishData?._id}
-																			variantId={id}
-																			tableId={tableId}
-																		/>
+																			{variant?.instruction && (
+																				<InstructionItem
+																					deleteInstruction={deleteInstruction}
+																					setActiveInputId={setActiveInputId}
+																					variant={variant}
+																					cart={cart}
+																					dishId={dishData?._id}
+																					variantId={variant._id}
+																					tableId={tableId}
+																				/>
+																			)}
+																		</>
 																	)}
-																</>
-															)}
-															<div className="mt-6 border border-dashed" />
-														</div>
-													);
-												});
-											})}
-									</div>
-								)}
+																<div className="mt-6 border border-dashed" />
+															</div>
+														);
+													});
+												})}
+										</div>
+									)}
 							</div>
 							<div className="pb-4 pt-4 fixed w-full h-[4rem] bottom-0 bg-primary">
 								<div className="mx-[3rem] flex justify-between">
@@ -454,9 +452,8 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 										type="button"
 										onClick={sendCart}
 										disabled={isSending}
-										className={`absolute on_active_bounce text-sm px-4 py-2 mr-2 font-medium text-primary bg-base-100 rounded-full right-6 bottom-3 ${
-											isSending ? "opacity-50" : ""
-										}`}
+										className={`absolute on_active_bounce text-sm px-4 py-2 mr-2 font-medium text-primary bg-base-100 rounded-full right-6 bottom-3 ${isSending ? "opacity-50" : ""
+											}`}
 									>
 										{isSending ? "Loading..." : "Continue"}
 									</button>
@@ -467,11 +464,9 @@ const POSComponent = ({ activeButton, data, search }:POSProps):JSX.Element => {
 
 					<div
 						onClick={() => menuOpenModal("liveCart")}
-						className={`${
-							activeButton.toLowerCase() === "pos" ? "" : "hidden"
-						} ${
-							filteredCartItems.filter((ele) => ele).length > 0 ? "" : "hidden"
-						} fixed w-full h-[4rem] bottom-0 bg-primary`}
+						className={`${activeButton.toLowerCase() === "pos" ? "" : "hidden"
+							} ${filteredCartItems.filter((ele) => ele).length > 0 ? "" : "hidden"
+							} fixed w-full h-[4rem] bottom-0 bg-primary`}
 					>
 						<button
 							type="button"

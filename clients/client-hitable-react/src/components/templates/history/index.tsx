@@ -44,11 +44,8 @@ type Dish = {
 	comments: string;
 };
 
-interface IProps {
-	setCurrentView: (view: string) => void;
-}
 
-const History = ({ setCurrentView }: IProps) => {
+const History = () => {
 	const [orderHistoryData, setOrderHistoryData] = useState<Order[]>([]);
 	const [selectedButton, setSelectedButton] = useState("");
 	const params = useParams<{ businessId: string; zoneId: string }>();
@@ -61,7 +58,7 @@ const History = ({ setCurrentView }: IProps) => {
 				url += `&${selectedButton}=true`;
 			}
 			const response = await axios.get(url);
-			setOrderHistoryData(response.data);
+			setOrderHistoryData(response.data.data);
 		} catch (error) {
 			console.log(error);
 		}
@@ -73,9 +70,6 @@ const History = ({ setCurrentView }: IProps) => {
 		}
 		setSelectedButton(value);
 	};
-	function handleBack() {
-		setCurrentView("order");
-	}
 	useEffect(() => {
 		getHistoryData();
 	}, [selectedButton]);
@@ -83,19 +77,6 @@ const History = ({ setCurrentView }: IProps) => {
 	return (
 		<div className="min-h-screen bg-secondary pb-[4rem] relative">
 			<div className="sticky top-0 z-10 bg-secondary">
-				<div className="flex items-center p-6 space-x-4">
-					<button onClick={handleBack}>
-						<BiLeftArrowAlt size={24} />
-					</button>
-					<img
-						className="mr-6"
-						width={68}
-						height={25}
-						src={HiPalLogo}
-						alt="Hi Table Logo"
-					/>
-				</div>
-
 				<div className="flex justify-between">
 					<div className="ml-6 font-bold capitalize text-base-content">
 						Orders History

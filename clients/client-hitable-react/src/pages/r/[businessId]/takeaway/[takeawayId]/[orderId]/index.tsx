@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from "react";
+import { lazy, startTransition, useEffect, useState } from "react";
 import HeaderButtonGroup from "@/components/molecules/headerButtonGroup";
 import { MdMenuOpen } from "react-icons/md";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
@@ -64,8 +64,11 @@ function PosTakeAway() {
 		}
 	};
 	const goBackRouting = () => {
-		navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId || '', takeawayId || ''));
+		startTransition(()=>{
+			navigate(routePaths[PAGE_TYPES.TAKE_AWAY](businessId || '', takeawayId || ''));
+		})
 	};
+	//TODO: convert this to useQuery
 	useEffect(() => {
 		category();
 	}, []);

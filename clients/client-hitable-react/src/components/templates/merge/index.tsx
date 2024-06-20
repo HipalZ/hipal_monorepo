@@ -53,7 +53,7 @@ const MergeTables = ({ setCurrentView }:IMergeTables) => {
 			const res = await axios.get(
 				`/v1/zones/${zoneId}/tablesByZones?businessId=${businessId}`,
 			);
-			setBusinesses([res?.data]);
+			setBusinesses([res?.data?.data]);
 			return res?.data;
 		} catch (error) {
 			toast.error("Error fetching tables");
@@ -92,6 +92,7 @@ const MergeTables = ({ setCurrentView }:IMergeTables) => {
 				},
 			};
 			const response = await axios(config);
+			//TODO: check the response status
 			if (response.status === 200 || response.status === 201) {
 				toast.success("Table Merged Successfully");
 				setCurrentView("pos");

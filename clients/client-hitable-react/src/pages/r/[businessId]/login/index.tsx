@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { startTransition } from "react";
 import { useEffect, useState } from "react";
 import HiTableLogo from "@/assets/svg/HiTableLogo.svg";
 import welcome from "@/assets/svg/welcomeLogo.svg";
@@ -47,13 +47,14 @@ function HiTable() {
 			};
 
 			const response = await axios(config);
-			console.log(response);
 			if (response.status === 201) {
-				setUserDetails(response.data.existingUser);
-				setAccessToken(response.data.accessToken);
-				setRefreshToken(response.data.refreshToken);
+				setUserDetails(response.data.data.existingUser);
+				setAccessToken(response.data.data.accessToken);
+				setRefreshToken(response.data.data.refreshToken);
 				setIsLogin(true);
-				navigate(`${singleRoute[PAGE_TYPES.ZONE](businessId)}`);
+				startTransition(()=>{
+					navigate(`${singleRoute[PAGE_TYPES.ZONE](businessId)}`);
+				})
 			}
 		} catch (err) {
 			return toast.error("Phone or Password invalid...!");
@@ -65,7 +66,7 @@ function HiTable() {
 			const response = await axios.get(
 				`/v1/businesses/get/Single/${businessId}`,
 			);
-			setBusinessData(response.data);
+			setBusinessData(response.data.data);
 		} catch (error) {
 			console.error("Error fetching business data:", error);
 		}
@@ -73,7 +74,7 @@ function HiTable() {
 	const getLoyaltySetting = async (businessId: string) => {
 		try {
 			const response = await axios.get(`/v1/businesses/${businessId}/loyalty`);
-			const data = response.data;
+			const data = response.data.data;
 			setLoyaltyData(data);
 		} catch (error) {
 			console.error("Error fetching loyalty data:", error);
@@ -88,7 +89,9 @@ function HiTable() {
 	}, [businessId]);
 
 	const goToMainLogin = () => {
-		navigate("/");
+		startTransition(()=>{
+			navigate("/");
+		})
 	};
 
 	return (
@@ -148,7 +151,6 @@ function HiTable() {
 			<div className="flex justify-center mb-5">
 				<button
 					onClick={result}
-					type="button"
 					className="on_active_bounce fixed bottom-6 z-50 bg-primary rounded-full w-[20.5rem] font-[600] py-[0.75rem] text-base-100 text-[18px] leading-[1.15rem]"
 				>
 					Login

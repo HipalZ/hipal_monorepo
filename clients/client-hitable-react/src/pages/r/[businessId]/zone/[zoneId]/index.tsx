@@ -1,5 +1,5 @@
 import TestFooter from "@/components/molecules/testFooter";
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useState, startTransition } from "react";
 import Loader from "@/components/atoms/loader";
 import Header from "@/components/molecules/header";
 import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
@@ -35,7 +35,9 @@ function Test() {
 	const goBack = () => {
 		switch (currentView) {
 			case "table":
-				navigate(`/r/${businessId}/zone`);
+				startTransition(()=>{
+					navigate(`/r/${businessId}/zone`);
+				})
 				break;
 			case "alert":
 				setCurrentView("table");
@@ -50,7 +52,9 @@ function Test() {
 				setCurrentView("table");
 				break;
 			default:
-				navigate(`/r/${businessId}/zone`);
+				startTransition(()=>{
+					navigate(`/r/${businessId}/zone`);
+				})
 				break;
 		}
 	};

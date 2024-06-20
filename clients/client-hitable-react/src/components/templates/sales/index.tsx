@@ -82,9 +82,8 @@ function SalesReport({ setCurrentView }: ISalesProps) {
 		}
 		try {
 			const res = await axios.get(url);
-			return res.data;
+			return res.data.data || {};
 		} catch (error) {
-			console.error("Error fetching sales report:", error);
 			toast.error("Error fetching bills report");
 		}
 	};
@@ -94,7 +93,7 @@ function SalesReport({ setCurrentView }: ISalesProps) {
 			const response = await axios(
 				`/v1/kitchens/:id/runningTablesCost?businessId=${businessId}`,
 			);
-			return response.data;
+			return response.data.data;
 		} catch (error) {
 			toast.error("Error fetching running table cost");
 		}

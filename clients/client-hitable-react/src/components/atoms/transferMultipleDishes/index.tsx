@@ -81,7 +81,6 @@ const TransferMultipleDishes = ({
 	);
 
 	const transferItem = async () => {
-		console.log(selectedDishes);
 		try {
 			const config = {
 				toZoneId: transferData?.toZoneId,

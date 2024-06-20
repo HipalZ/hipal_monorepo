@@ -125,7 +125,7 @@ function Status() {
 			const response = await axios.get(
 				`/v1/kitchens/getAllKotByWaiter/all?businessId=${businessId}&zoneId=${zoneId}&staffId=${userDetails?._id}`,
 			);
-			const data = response.data;
+			const data = response.data.data;
 			setStatusData(data);
 			setFilteredStatusData(data);
 			return data;

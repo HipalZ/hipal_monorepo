@@ -41,7 +41,7 @@ function BillDetails({ billData }:IBillDetailsProps) {
           <div className="overflow-auto pb-4 max-h-[40vh] hide-scrollbar">
             {billData.map((bill, index) => (
               <div
-                key={bill.Total}
+                key={bill._id}
                 className={`flex justify-between capitalize font-[500] mx-4 mt-4 text-base-content hide-scrollbar ${
                   index !== billData.length - 1
                     ? "pb-4 border-b border-dashed"

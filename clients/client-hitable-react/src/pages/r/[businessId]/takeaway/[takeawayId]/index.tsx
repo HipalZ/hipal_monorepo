@@ -1,5 +1,5 @@
 import Header from "@/components/molecules/header";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import HiPalLogo from "@/assets/svg/hipalLogoNew.svg";
 import { HiSearch, HiX } from "react-icons/hi";
 import { useLogin } from "@/components/store/useLogin";
@@ -119,7 +119,7 @@ const TakeAway = () => {
 		setSearch("");
 	};
 
-	const handleOrderId = (e:any) => {
+	const handleOrderId = (e: any) => {
 		const value = (e.target as HTMLInputElement).value;
 		setOrderId(value);
 	}
@@ -129,9 +129,11 @@ const TakeAway = () => {
 		if (orderExists) {
 			toast.error("Order already exists");
 		} else {
-			navigate(
-				newRoutes[PAGE_TYPES.TAKE_AWAY_ID](businessId || '', takeawayId ||'', orderId),
-			);
+			startTransition(() => {
+				navigate(
+					newRoutes[PAGE_TYPES.TAKE_AWAY_ID](businessId || '', takeawayId || '', orderId),
+				);
+			})
 		}
 	};
 
@@ -142,7 +144,7 @@ const TakeAway = () => {
 		try {
 			const url = `/v1/kitchens/:id/orderBySwiggy?businessId?businessId=${businessId}&zoneId=${takeawayId}`;
 			const response = await axios(url);
-			const orders: Order[] = await response.data;
+			const orders: Order[] = await response.data.data;
 			setOrders(orders);
 		} catch (error) {
 			console.log("Error fetching orders:", error);
@@ -164,7 +166,9 @@ const TakeAway = () => {
 		);
 
 	const goBack = () => {
-		navigate(`/r/${businessId}/zone`);
+		startTransition(() => {
+			navigate(`/r/${businessId}/zone`);
+		})
 	};
 
 	return (
@@ -183,18 +187,16 @@ const TakeAway = () => {
 			<div className="sticky top-0 z-50 bg-secondary">
 				<div className="flex justify-between">
 					<div
-						className={`${
-							searchOpen ? "hidden" : ""
-						} ml-6 mt-8 font-bold capitalize text-base-content text-[1rem] leading-[1.25rem]`}
+						className={`${searchOpen ? "hidden" : ""
+							} ml-6 mt-8 font-bold capitalize text-base-content text-[1rem] leading-[1.25rem]`}
 					>
 						{zoneName}
 					</div>
 					<div
 						ref={searchRef}
 						onClick={searchClick}
-						className={`${
-							searchOpen ? "w-[100%] mb-6" : "w-[30%] disabled"
-						} mt-6 mx-6 `}
+						className={`${searchOpen ? "w-[100%] mb-6" : "w-[30%] disabled"
+							} mt-6 mx-6 `}
 					>
 						<label htmlFor="simple-search" className="sr-only">
 							Search
@@ -203,8 +205,8 @@ const TakeAway = () => {
 							{searchOpen ? (
 								<HiX className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
 							) : (
-								<HiSearch className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
-							)}
+									<HiSearch className="absolute inset-y-0 w-4 h-4 text-primary/80 dark:text-primary flex items-center pointer-events-none top-[0.625rem] right-2" />
+								)}
 							<input
 								onChange={(e) => {
 									setSearch(e.target.value);
@@ -221,9 +223,8 @@ const TakeAway = () => {
 					</div>
 				</div>
 				<div
-					className={`${
-						searchOpen ? "hidden" : ""
-					} sticky flex justify-between pb-6 mx-6 mt-6`}
+					className={`${searchOpen ? "hidden" : ""
+						} sticky flex justify-between pb-6 mx-6 mt-6`}
 				>
 					{filterButtons.map(({ name, Icon, text }, index) => (
 						<HeaderButton
@@ -245,48 +246,49 @@ const TakeAway = () => {
 				{orders.length === 0 ? (
 					<p className="text-center text-gray-500">No orders found.</p>
 				) : (
-					<div className="masonry-item">
-						{orders?.map((order) => (
-							<div
-								onClick={() => {
-									setCurrentOrder(order);
-									navigate(
-										newRoutes[PAGE_TYPES.TAKE_AWAY_ID](
-											businessId || '',
-											takeawayId || '',
-											order?.orderId,
-										),
-									);
-								}}
-								key={order?.orderId}
-								className={`flex items-center justify-between p-4 mb-4 border flex-col-2 rounded-xl ${
-									order.dishStatus === "cooking" ? "bg-primary/10" : ""
-								}`}
-							>
-								<div>
-									<div className="text-primary">
-										{order?.kotTime?.slice(0, 5)}
-									</div>
-									<div className="font-semibold">{order?.orderId}</div>
-									{!order.isMatch ? (
-										<div className="text-sm text-[#AA1821] flex items-center">
-											<ImWarning className="mr-2" /> Action Required!
+						<div className="masonry-item">
+							{orders?.map((order) => (
+								<div
+									onClick={() => {
+										setCurrentOrder(order);
+										startTransition(() => {
+											navigate(
+												newRoutes[PAGE_TYPES.TAKE_AWAY_ID](
+													businessId || '',
+													takeawayId || '',
+													order?.orderId,
+												),
+											);
+										})
+									}}
+									key={order?.orderId}
+									className={`flex items-center justify-between p-4 mb-4 border flex-col-2 rounded-xl ${order.dishStatus === "cooking" ? "bg-primary/10" : ""
+										}`}
+								>
+									<div>
+										<div className="text-primary">
+											{order?.kotTime?.slice(0, 5)}
 										</div>
-									) : (
-										<div className="opacity-60">{order?.dishStatus}</div>
-									)}
-								</div>
-								<div className="flex flex-col items-center justify-center mr-6 space-y-4">
-									<MdDinnerDining className="opacity-50" />
-									<div className="text-primary">
-										{" "}
-										{order?.totalDishes}/{order?.totalDishes}
+										<div className="font-semibold">{order?.orderId}</div>
+										{!order.isMatch ? (
+											<div className="text-sm text-[#AA1821] flex items-center">
+												<ImWarning className="mr-2" /> Action Required!
+											</div>
+										) : (
+												<div className="opacity-60">{order?.dishStatus}</div>
+											)}
+									</div>
+									<div className="flex flex-col items-center justify-center mr-6 space-y-4">
+										<MdDinnerDining className="opacity-50" />
+										<div className="text-primary">
+											{" "}
+											{order?.totalDishes}/{order?.totalDishes}
+										</div>
 									</div>
 								</div>
-							</div>
-						))}
-					</div>
-				)}
+							))}
+						</div>
+					)}
 			</div>
 			<div
 				onClick={() => setIsOrderModalOpen(true)}
