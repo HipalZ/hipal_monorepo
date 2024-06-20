@@ -16,7 +16,7 @@ function App() {
   const getAllKot = async () => {
     try {
       const res = await axios(`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}`);
-      setNewKotCount(res.data.length);
+      setNewKotCount(res.data.data.length);
       if (res.data.length > newKotCount) {
         const sound = new Howl({
           src: ['/sounds/kitchen.mp3'],
@@ -28,7 +28,7 @@ function App() {
           sound.pause();
         }, 3000);
       }
-      setKotData(res.data);
+      setKotData(res.data.data);
     } catch (error) {
       setKotData([]);
       setNewKotCount(0);

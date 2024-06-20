@@ -5,7 +5,7 @@ import FilterPopup from '@/components/atom/filterPopup';
 import { useKotStore } from '@/components/store/useKot';
 import { useUserLogin } from '@/components/store/useUserLogin';
 import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
-import React, { startTransition, useState } from 'react';
+import { startTransition, useState } from 'react';
 import { BiBell, BiPhoneCall } from 'react-icons/bi';
 import { FiBox } from 'react-icons/fi';
 import { HiArrowLeft } from 'react-icons/hi';
@@ -123,12 +123,12 @@ function Header({ children, businessId }: HeaderProps) {
     }, 250);
   };
 
+  // currently code commented in backend
   const callWaiter = async (userId: string | null) => {
     if (!userId) {
       toast.error('No user ID selected');
       return;
     }
-
     try {
       await axios.post(
         '/v1/kitchens/User/WaiterCalling',
@@ -155,7 +155,7 @@ function Header({ children, businessId }: HeaderProps) {
   const fetchUsers = async () => {
     try {
       const response = await axios(`/v1/users/${businessId}`);
-      const data: User[] = await response.data;
+      const data: User[] = await response.data.data;
       setUserList(data);
     } catch (error) {
       console.error('Error fetching user list:', error);

@@ -2,15 +2,18 @@ import welcome from '@/assets/png/hikitchen.png';
 import HiKitchenLogo from '@/assets/svg/hikitchenlogo.svg';
 import axios from '@/axios';
 import { useUserLogin } from '@/components/store/useUserLogin';
+import { useUserToken } from '@/components/store/useUserToken';
 import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
-import type React from 'react';
+import React from 'react';
 import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 function LandingPage() {
   const { phoneNumber, setBusinessId, setPhoneNumber, setUser } = useUserLogin();
-
+  
+  const setAccessToken = useUserToken((s) => s.setAccessToken);
+  const setRefreshToken = useUserToken((s) => s.setRefreshToken);
   const navigate = useNavigate();
   const handlePhoneNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(event.target.value);
@@ -32,12 +35,14 @@ function LandingPage() {
       };
 
       const user = await axios(config);
-      setUser(user.data);
+      setUser(user.data.data);
       if (user.status === 200) {
-        toast.success(`Hi ${user?.data?.name}`);
-        setBusinessId(user?.data?.customRole?.[0].businessId);
+        toast.success(`Hi ${user?.data?.data?.existingUser?.name}`);
+        setAccessToken(user.data.data.accessToken);
+        setRefreshToken(user.data.data.refreshToken);
+        setBusinessId(user?.data?.data?.existingUser?.customRole?.[0].businessId);
         startTransition(() => {
-          navigate(`${singleRoute[PAGE_TYPES.LOGIN](`${user?.data?.customRole?.[0].businessId}`)}`);
+          navigate(`${singleRoute[PAGE_TYPES.LOGIN](`${user?.data?.data?.existingUser?.customRole?.[0].businessId}`)}`);
         });
       } else {
         toast.error('Phone or Password invalid...!');

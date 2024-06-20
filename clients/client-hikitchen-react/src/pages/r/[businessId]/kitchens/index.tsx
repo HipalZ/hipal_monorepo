@@ -43,8 +43,8 @@ function Kitchens() {
       };
       const res = await axios(config);
       if (res.status === 200) {
-        setKitchenData(res.data);
-        return res.data;
+        setKitchenData(res.data.data);
+        return res.data.data;
       }
       return [];
     } catch (error) {

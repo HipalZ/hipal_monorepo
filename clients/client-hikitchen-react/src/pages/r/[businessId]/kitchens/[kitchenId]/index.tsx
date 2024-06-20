@@ -1,4 +1,4 @@
-import axios from '@/axios';
+import  from '@/';
 import HistoryCard from '@/components/atom/historyCard';
 import KitchenComponent from '@/components/atom/kitchenComponent';
 import KotCard from '@/components/atom/kotCard';
@@ -40,10 +40,10 @@ function KotComponent() {
 
   const getAllKot = async () => {
     try {
-      const res = await axios(`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}`);
+      const res = await (`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}`);
 
       if (res.status === 200) {
-        setKotData(res.data);
+        setKotData(res.data.data);
       }
     } catch (error) {
       console.log(error);
@@ -52,10 +52,10 @@ function KotComponent() {
 
   const getHistoryKot = async () => {
     try {
-      const res = await axios(`/v1/kitchens/${kitchenId}/kitchenHistory?businessId=${businessId}`);
+      const res = await (`/v1/kitchens/${kitchenId}/kitchenHistory?businessId=${businessId}`);
 
       if (res.status === 200) {
-        setHistoryData(res.data);
+        setHistoryData(res.data.data);
       }
     } catch (error) {
       console.log(error);
@@ -63,10 +63,10 @@ function KotComponent() {
   };
   const getFilterKot = async () => {
     try {
-      const res = await axios(`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}&items=true`);
+      const res = await (`/v1/kitchens/Allkots/ByKitchens?kitchenId=${kitchenId}&items=true`);
 
       if (res.status === 200) {
-        setFilterData(res.data);
+        setFilterData(res.data.data);
       }
     } catch (error) {
       console.log(error);
@@ -94,7 +94,7 @@ function KotComponent() {
             kots: selectedDishes,
           },
         };
-        await axios(config);
+        await (config);
         getAllKot();
         getFilterKot();
         clearSelectedDishes();

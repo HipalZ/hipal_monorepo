@@ -3,6 +3,7 @@ import HiKitchenLogo from '@/assets/svg/hikitchenlogo.svg';
 import axios from '@/axios';
 import { useBusinessData } from '@/components/store/useBusinessData';
 import { useUserLogin } from '@/components/store/useUserLogin';
+import { useUserToken } from '@/components/store/useUserToken';
 import { PAGE_TYPES, singleRoute } from '@/components/utils/routes';
 import { useQuery } from '@tanstack/react-query';
 import React, { startTransition } from 'react';
@@ -13,7 +14,8 @@ function Login() {
   const { phoneNumber, password, setIsLogin, setPassword, setPhoneNumber, setUser } = useUserLogin();
   const { businessData, setBusinessData } = useBusinessData();
   const navigate = useNavigate();
-
+  const setAccessToken = useUserToken((s) => s.setAccessToken);
+  const setRefreshToken = useUserToken((s) => s.setRefreshToken);
   const { businessId } = useParams<{ businessId: string }>();
 
   const handlePhoneNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,9 +44,11 @@ function Login() {
       };
 
       const user = await axios(config);
-      const isData = user?.data && Object.keys(user.data).length > 0;
+      const isData = user?.data?.data?.existingUser && Object.keys(user.data.data).length > 0;
       if (isData) {
-        setUser(user.data);
+        setUser(user.data.data?.existingUser);
+        setAccessToken(user.data.data.accessToken);
+        setRefreshToken(user.data.data.refreshToken);
       }
       if (user.status === 200) {
         toast.success('Login Successfully');
@@ -63,7 +67,7 @@ function Login() {
   async function getBusinessData() {
     try {
       const res = await axios(`/v1/businesses/get/Single/${businessId}`);
-      const data = await res.data;
+      const data = await res.data.data;
       setBusinessData(data);
       return data;
     } catch (error) {
