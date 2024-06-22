@@ -1053,9 +1053,9 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
 });
 
 router.post('/v1/payments/verifyOrder', async (req: Request, res: Response) => {
-  const { completionCode, order_id } = req.body;
+  const { completionCode } = req.body;
 
-  const order = await PaymentAlert.findOne({ order_id: order_id, completionCode: completionCode });
+  const order = await PaymentAlert.findOne({ completionCode: completionCode });
   if (!order) {
     return res.status(404).send({ message: 'Order not found', err: true, data: {} });
   }
