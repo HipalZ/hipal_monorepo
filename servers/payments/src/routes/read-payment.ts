@@ -77,7 +77,19 @@ router.get(
   async (req: Request, res: Response) => {
     const { businessId, alertType } = req.query;
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).populate('order_id');
+    if (alertType == 'ALL') {
+      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType: ['OFFLINE', 'WAITER'], isAccepted: false })
+        .sort({ date: -1 })
+        .populate('order_id');
+
+      res.status(200).send({
+        err: false,
+        data: existingPaymentAlerts,
+        message: 'existing payment alerts',
+      });
+    }
+
+    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ date: -1 }).populate('order_id');
 
     res.status(200).send({
       err: false,
