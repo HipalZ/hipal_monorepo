@@ -192,23 +192,26 @@ router.put(
   async (req: Request, res: Response) => {
     const { alertId } = req.params;
     const { comment } = req.body;
+
     await runInTransaction(async (session: ClientSession) => {
-      const alert = await PaymentAlert.findById(alertId, null, { session }).select('_id alertType isAccepted order_id businessId');
-
-      console.log('alert', alert);
-
+      const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
+        '_id alertType isAccepted order_id businessId',
+      );
       if (!alert) {
         res.status(404).send({ message: 'Alert not found', err: true, data: {} });
         return;
       }
-      if (comment) {
-        await PaymentAlert.findByIdAndUpdate(alertId, { comment }, { session });
-      }
-      if (alert.alertType === 'OFFLINE') {
-        const pinCode = Math.floor(1000 + Math.random() * 9000);
 
+      if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
+        const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment }, { new: true, session }).populate('order_id');
+        res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        return;
+      }
+
+      if (alert.alertType === 'OFFLINE') {
         if (alert && !alert.isAccepted) {
           const order = await Order.findById(alert.order_id, null, { session });
+
           await Payment.create(
             [
               {
@@ -268,16 +271,18 @@ router.put(
             await TempBill.findOneAndDelete({ businessId: order.businessId, tableName: order.tableName }, { session });
           }
         }
+
+        const pinCode = Math.floor(1000 + Math.random() * 9000);
         const updateAlert = await PaymentAlert.findByIdAndUpdate(
           alertId,
           { isAccepted: true, completionCode: pinCode, comment },
-          { session },
+          { new: true, session },
         ).populate('order_id');
 
         res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
         return;
       }
-      res.status(400).send({ message: 'Order accepted successfully', err: false, data: {} });
+      res.status(400).send({ message: 'Invalid alert type', err: true, data: {} });
       return;
     });
   },
