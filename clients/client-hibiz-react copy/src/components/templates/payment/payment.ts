@@ -1,1 +1,0 @@
-export type paymentHeaderType = "Overview" | "Payments" | "Refunds" | "Sales" 
