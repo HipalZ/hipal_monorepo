@@ -20,13 +20,15 @@ import confetti from "canvas-confetti";
 import usePayment from "@/components/store/usePayment";
 import Coinz from '@/assets/img/coinz.png'
 import { BsPatchPlusFill } from "react-icons/bs";
+import LoyaltyId from "../loyalty/[loyaltyId]";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
 
 type PageStates = 'INVOICE' | 'MODE'
 
 const Payment = ({ data }: { data: IBusinessData }) => {
 
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
-    const [claimedCoinz, setClaimedCoinz] = useState<number>(0)
+    const [claimedCoinz, setClaimedCoinz] = useState(0)
     const [tips, setTips] = useState(0);
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -40,6 +42,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const router = useRouter()
     const { setRazorPayPaymentId, razorPayOrderId, setRazorPayOrderId, setRazorPaySignature } =
     usePayment()
+
+    const {loyaltySetting} =useLoyaltyData()
 
 	const creatingRazorPayOptions = async (total: number, orderId: string) => {
 		if (!orderId) {
@@ -57,7 +61,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 		const time = new Date().toLocaleTimeString('it-IT')
 		script.onload = () => {
 			const options = {
-				key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+				key: "rzp_test_DZMxVyKgZ9crXx",
 				amount: total,
 				currency: 'INR',
 				name: 'PALTRIBE',
@@ -89,10 +93,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 					address: 'Paltribe solutions',
 					businessId: data?.business?._id,
 					total: amount - claimedCoinz + tips,
-					claimedAmount: claimedCoinz,
+					claimedCoins: claimedCoinz,
+                    billValue: amount,
 					tips: tips,
-					dayAndDate: dayAndDate,
-					indianTime: time.slice(0, 5),
+                    loyaltyId: loyaltySetting.loyaltyId,
+				
 				},
 				theme: {
 					color: '#3399cc',
@@ -120,7 +125,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 				response,
 			})
 			if (res.status===200) {
-				await handleUserReward()
                 router.push(`/r/${data?.business?._id}/review?orderId=${res?.data?.data}`)
 				setRazorPaySignature('')
 				setRazorPayOrderId('')
@@ -139,33 +143,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 			console.log(error)
 		} finally {
 			setIsLoading(false)
-		}
-	}
-
-    const handleUserReward = async () => {
-		try {
-			const isClaimed = claimedCoinz > 0 ? 'true' : 'false'
-			const rewardAmount =
-				(amount -
-					claimedCoinz + tips) *
-				(data?.loyalty?.setReward / 100)
-			const response = await axios.post(
-				`/v1/users/Reward?claim=${isClaimed}&settle=true&userSide=true`,
-				{
-					loyaltyId: data?.loyalty?.loyaltyId,
-					userPhone: userDetails?.phone,
-					userName: userDetails?.name,
-					claimedAmount: claimedCoinz,
-					rewards: rewardAmount,
-					total: amount - claimedCoinz + tips,
-					subTotal: amount,
-				},
-			)
-			if (response.status === 200) {
-				toast.success('Reward claimed successfully')
-			}
-		} catch (err) {
-			console.log(err)
 		}
 	}
 
@@ -188,10 +165,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 					url: '/v1/payments/createOrder',
 					data: {
 						businessId: data?.business?._id,
-						amount: total,
+						total: total,
 						currency: 'INR',
-						name: userDetails.name,
-						phone: userDetails.phone,
+                        claimedCoins: claimedCoinz,
+                        billValue: amount,
+						name: userDetails.name|| "shyam",
+						phone: userDetails.phone || "1234567890",
+                        tips: tips,
 					},
 				}
 				const response = await axios(config)

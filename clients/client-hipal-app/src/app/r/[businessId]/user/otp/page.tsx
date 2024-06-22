@@ -106,13 +106,14 @@ function OtpPage() {
 			}
 
 			const response = await axios(config)
+			const data = response.data.data.user
 			if (response.status === 200) {
-				const { _id, ...otherData } = response.data.data
+				const { _id, ...otherData } =data
 				setUserDetails({ id: _id, ...otherData })
-				await paymentCustomer(response.data.data)
+				await paymentCustomer(data)
 				setIsLogin(true)
-				if (response.data.data?.reward > 0 && response.data.data?.count === 1) {
-					setCoinz(response.data.data.reward)
+				if (data?.reward > 0 && data?.count === 1) {
+					setCoinz(data.reward)
 					setIsModalOpen(true)
 					triggerConfettiBlast()
 					setTimeout(triggerConfettiBlast, 1000)
