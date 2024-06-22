@@ -3,7 +3,6 @@ import axios from "@/axios";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useLoyalityData } from "@/components/store/useLoyality";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import type { IBusinessData } from "@/components/types/businessData";
 import { paths } from "@/components/utils/paths";
@@ -14,28 +13,15 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import hipalHandLogo from "@/assets/login/hand.png";
-import "./business.css";
 import { IoWarning } from "react-icons/io5";
 import { TbHomePlus } from "react-icons/tb";
+import "./business.css";
 
 const Business = memo(() => {
 	const setBusinessData = useBusinessData((s) => s.setBusinessData);
 	const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
-	const setThemes = useBusinessData((s) => s.setThemes);
-	const {
-		setLoyaltyId,
-		setRewardLimit,
-		setExpiryDate,
-		setRewardsValue,
-		setMaximumClaim,
-		setOrigin,
-		setCardPattern,
-		setCardColor,
-		setFontColor,
-		setLogo,
-	} = useLoyalityData();
-	const { setIsLoyaltyExists, setExistingLoyalty } = useBusinessData();
 	const user = useOwnerLogin((s) => s.user);
+	console.log('user',user)
 	const navigate = useNavigate();
 	const filteredBusinesses = businesses?.filter(
 		(business: IBusinessData) =>
@@ -48,10 +34,8 @@ const Business = memo(() => {
 			const response = await axios.get(
 				`${paths.getSingleBusiness(businessId)}`,
 			);
-			const data = await response.data;
+			const data = await response.data.data;
 			setBusinessData(data);
-			getThemes(businessId);
-			getBusinessLoyalty(businessId);
 			startTransition(() => {
 				navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](businessId));
 			});
@@ -59,39 +43,7 @@ const Business = memo(() => {
 			console.error(error);
 		}
 	};
-	const getThemes = async (businessId: string) => {
-		try {
-			const response = await axios.get(`${paths.getTheme(businessId)}`);
-			const data = await response.data;
-			setThemes(data?.[0]?.themes);
-		} catch (error) {
-			console.error(error);
-		}
-	};
 
-	const getBusinessLoyalty = async (businessId: string) => {
-		try {
-			const res = await axios.get(`${paths.getLoyalty(businessId)}`);
-			const data = await res.data;
-			setLoyaltyId(data?.loyaltyId);
-			const isEmptyData = data && Object.keys(data).length > 0;
-			setIsLoyaltyExists(!isEmptyData);
-			if (data) {
-				setRewardLimit(data?.rewardLimit);
-				setExpiryDate(data?.expiryDate);
-				setRewardsValue(data?.rewardsValue);
-				setMaximumClaim(data?.maximumClaim);
-				setOrigin(data?.origin);
-				setCardPattern(data?.cardPattern);
-				setCardColor(data?.cardColor);
-				setFontColor(data?.fontColor);
-				setLogo(data?.logo);
-			}
-			setExistingLoyalty(data);
-		} catch (error) {
-			console.error(error);
-		}
-	};
 
 	const getBusiness = async () => {
 		try {
@@ -99,19 +51,19 @@ const Business = memo(() => {
 				const response = await axios.get(
 					`${paths.getSingleBusiness(user?.customRole?.[0]?.businessId)}`,
 				);
-				setBusinesses([response.data]);
+				setBusinesses([response.data.data]);
 				return;
 			}
 			const response = await axios.get(`/v1/businesses?id=${user._id}`);
-			if (response.data === undefined || response.data.length === 0) {
+			if (response.data.data === undefined || response.data.data.length === 0) {
 				localStorage.removeItem("ownerLogin");
 				toast.error("connection refused please login");
 				startTransition(() => {
 					navigate("/");
 				});
 			}
-			setBusinesses(response.data);
-			return [response.data];
+			setBusinesses(response.data.data);
+			return [response.data.data]; 
 		} catch (error) {
 			console.log(error);
 		}
@@ -133,6 +85,7 @@ const Business = memo(() => {
 		enabled: !!user._id,
 	});
 
+
 	return (
 		<>
 			<div className="business_gradient">
@@ -146,7 +99,7 @@ const Business = memo(() => {
 				</section>
 				<section className="business_gradient_hero_section">
 					<div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">
-						{user.name.charAt(0)}
+						{user?.name?.charAt(0)}
 					</div>
 					<article className="pl-4">
 						<div className="flex items-center text-2xl text-[#000000] w-full h-[1.25rem]">
@@ -164,7 +117,7 @@ const Business = memo(() => {
 					</article>
 				</section>
 			</div>
-			<div className=" parent_business_cards">
+			<div className="parent_business_cards">
 				{filteredBusinesses?.map((ele: IBusinessData) => (
 					<section
 						onClick={() => handleRoute(ele._id)}
@@ -203,7 +156,7 @@ const Business = memo(() => {
 					</section>
 				))}
 			</div>
-			{user.role !== "RESTAURANT_MANAGER" && (
+			{/* {user.role !== "RESTAURANT_MANAGER" && ( */}
 				<button
 					type="button"
 					onClick={addBusiness}
@@ -211,7 +164,7 @@ const Business = memo(() => {
 				>
 					+ Add Business
 				</button>
-			)}
+			
 			{isLoad && <LoadingSpinner />}
 		</>
 	);

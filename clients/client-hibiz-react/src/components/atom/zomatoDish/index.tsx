@@ -72,14 +72,14 @@ const ZomatoDish = ({
   async function getExtras() {
     try {
       const addOns = await axios.get(paths.getExtraApi(businessId));
-      setAddOns(addOns?.data);
+      setAddOns(addOns?.data.data);
       setDishesData((prev) => {
-        return { ...prev, addOns: addOns?.data };
+        return { ...prev, addOns: addOns?.data.data };
       });
       if (editDish) {
       } else {
         setData((prev: any) => {
-          return { ...prev, extras: addOns?.data };
+          return { ...prev, extras: addOns?.data.data };
         });
       }
     } catch (err) {
@@ -89,19 +89,19 @@ const ZomatoDish = ({
   async function getCategoryDishesApi() {
     try {
       const category = await axios.get(paths.getCategoryApi(businessId));
-      const allDishes = category?.data?.reduce((acc: any[], category: ICategory) => {
+      const allDishes = category?.data.data?.reduce((acc: any[], category: ICategory) => {
         const seenIds = new Set(acc.map((dish) => dish._id));
         const uniqueDishes = category.dishes.filter((dish) => !seenIds.has(dish._id));
         return acc.concat(uniqueDishes);
       }, []);
-      setCategory(category?.data);
+      setCategory(category?.data.data);
       setDishesData((prev) => {
-        return { ...prev, categories: category?.data };
+        return { ...prev, categories: category?.data.data };
       });
       if (editDish) {
       } else {
         setData((prev: any) => {
-          return { ...prev, categories: category?.data, dishes: allDishes };
+          return { ...prev, categories: category?.data.data, dishes: allDishes };
         });
       }
     } catch (err) {
@@ -166,7 +166,7 @@ const ZomatoDish = ({
   };
   return (
     <>
-      <div className="rounded-md px-4 pb-4 pt-2">
+      <div className="px-4 pt-2 pb-4 rounded-md">
         <div className="mt-2 space-y-4">
           <div>
             <label className="mb-2 block font-medium text-[#000000]" htmlFor="dishName">
@@ -179,7 +179,7 @@ const ZomatoDish = ({
               id="dishName"
               type="text"
               placeholder="Name"
-              className="w-full rounded-md border p-2"
+              className="w-full p-2 border rounded-md"
             />
           </div>
           <div>
@@ -193,14 +193,14 @@ const ZomatoDish = ({
               id="dishPrice"
               type="text"
               placeholder="Price"
-              className="w-full rounded-md border p-2"
+              className="w-full p-2 border rounded-md"
             />
           </div>
           <div>
             <label className="mb-2 block font-medium text-[#000000]" htmlFor="taxesCharges">
               Kitchen <span className="text-red-500">*</span>
             </label>
-            <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full rounded-md border p-2">
+            <select onChange={handleKitchenChange} value={selectedKitchenId} className="w-full p-2 border rounded-md">
               {kitchen?.map((kitchen: any) => (
                 <option className="!bg-white !text-[#000000]" key={kitchen?._id} value={kitchen?._id}>
                   {kitchen?.kitchenName}
@@ -209,10 +209,10 @@ const ZomatoDish = ({
             </select>
           </div>
           <div className="rounded-md border border-[#cacaca] p-2">
-            <div className="relative flex w-full justify-between">
+            <div className="relative flex justify-between w-full">
               <h1>Category</h1>
               <div onClick={addCategory}>
-                <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
+                <button type="button" className="px-4 py-1 border rounded-md on_active_bounce border-1 ">
                   Add
                 </button>
               </div>
@@ -220,12 +220,12 @@ const ZomatoDish = ({
             <div className="grid grid-cols-1 md:grid-cols-2 md:gap-2 lg:grid-cols-4">
               {postCategory?.map((category: any, index: number) => {
                 return (
-                  <div key={index.toString()} className="border-1 mt-2 flex flex-col rounded-md border p-3">
+                  <div key={index.toString()} className="flex flex-col p-3 mt-2 border rounded-md border-1">
                     <div className="flex items-center">
                       <MdDinnerDining />
                       <h1 className="mx-2 capitalize">{category?.name}</h1>
                     </div>
-                    <div className="mt-4 flex self-end">
+                    <div className="flex self-end mt-4">
                       <button type="button" onClick={() => removeCategoryCharges(index)} className="text-[#2F80ED]">
                         Remove
                       </button>
@@ -258,7 +258,7 @@ const ZomatoDish = ({
                 <button type="button" onClick={() => handleRemovePortion(index)} className="float-right text-blue-500">
                   ✖
                 </button>
-                <div className="mx-1 space-y-2 pb-2">
+                <div className="pb-2 mx-1 space-y-2">
                   <label>
                     Portion Name <span className="text-red-500">*</span>
                   </label>
@@ -275,7 +275,7 @@ const ZomatoDish = ({
                         .replace(/[^\w\s]/g, '');
                       setPortions(newPortions);
                     }}
-                    className="w-full rounded-md border p-2"
+                    className="w-full p-2 border rounded-md"
                   />
                   <label>
                     Price <span className="text-red-500">*</span>
@@ -291,7 +291,7 @@ const ZomatoDish = ({
                       newPortions[index].price = value;
                       setPortions(newPortions);
                     }}
-                    className="w-full rounded-md border p-2"
+                    className="w-full p-2 border rounded-md"
                   />
                   <label>Type</label>
                   <select
@@ -301,7 +301,7 @@ const ZomatoDish = ({
                       setPortions(newPortions);
                     }}
                     value={[...portions][index].portionType?.replace(/[^a-zA-Z ]/, '').toLowerCase()}
-                    className="w-full rounded-md border p-2"
+                    className="w-full p-2 border rounded-md"
                   >
                     {dishTypes?.map((dish: any) => (
                       <option className="!bg-white !text-[#000000]" key={dish?._id} value={dish?.type?.replace(/[^a-zA-Z ]/, '').toLowerCase()}>
@@ -314,22 +314,22 @@ const ZomatoDish = ({
             ))}
           </div>
         </div>
-        <div className="relative my-4 mt-4 flex w-full justify-between">
+        <div className="relative flex justify-between w-full my-4 mt-4">
           <h1>Addons</h1>
           <div onClick={addOnsPopUp}>
-            <button type="button" className="on_active_bounce border-1 rounded-md border px-4 py-1 ">
+            <button type="button" className="px-4 py-1 border rounded-md on_active_bounce border-1 ">
               Add
             </button>
           </div>
         </div>
         {postAddOns?.map((addon: any, index: number) => {
           return (
-            <div key={index.toString()} className="border-1 my-4 flex flex-col rounded-md border p-3">
+            <div key={index.toString()} className="flex flex-col p-3 my-4 border rounded-md border-1">
               <div className="flex items-center">
                 <MdDinnerDining />
                 <h1 className="mx-2 capitalize">{addon?.name}</h1>
               </div>
-              <div className="mt-4 flex self-end">
+              <div className="flex self-end mt-4">
                 <button type="button" onClick={() => removeAddons(index)} className="text-[#2F80ED]">
                   Remove
                 </button>

@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": " vite --port 3002",
+    "dev": " vite --port 3005",
     "bundle:development": "dotenv -e .env pnpm run bundle",
     "bundle": "vite build",
     "build": "vite build",
-    "serve": "vite preview",
+    "serve": "vite preview --port 3005",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "eslint-plugin-react-compiler": "0.0.0-experimental-51a85ea-20240601",
     "exceljs": "^4.4.0",
     "flowbite": "^1.8.1",
+    "framer-motion": "^11.2.11",
     "lodash-es": "^4.17.21",
     "postcss-cli": "^11.0.0",
     "qrcode": "^1.5.3",
@@ -39,6 +40,7 @@
     "react-toastify": "^10.0.5",
     "react-top-loading-bar": "^2.3.1",
     "tailwind-merge": "^2.3.0",
+    "unimported": "^1.31.1",
     "vite-plugin-babel": "^1.2.0",
     "vite-plugin-pages": "^0.32.2",
     "xlsx": "^0.18.5",

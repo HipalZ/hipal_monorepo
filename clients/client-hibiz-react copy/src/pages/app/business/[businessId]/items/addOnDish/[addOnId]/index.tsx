@@ -1,0 +1,289 @@
+import Hi from '@/assets/svg/hi.svg';
+import axios from '@/axios';
+import DeleteConfirmationModal from '@/components/atom/deleteUser';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import PopUp from '@/components/atom/popUp';
+import ErrorComponent from '@/components/errorComponent';
+import VariantComponent from '@/components/molecules/addVariantPopup';
+import Header from '@/components/molecules/header';
+import useAddOnStore, { type Variant } from '@/components/store/useAddOn';
+import { useQuery } from '@tanstack/react-query';
+import type React from 'react';
+import { memo, startTransition, useState } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+const EditAddOn = memo(() => {
+  const navigate = useNavigate();
+  const [isAddOnTypeModalOpen, setIsAddOnTypeModalOpen] = useState(false);
+  const [deletePopup, setDeletePopup] = useState(false);
+  const [storeDeleteVariant, setStoreDeleteVariant] = useState<Variant>({});
+  const [loading, setLoading] = useState(false);
+  const { addOnId, businessId } = useParams<{
+    businessId: string;
+    addOnId: string;
+  }>();
+  const {
+    addOnName,
+    setAddOnName,
+    addOnType,
+    setAddOnType,
+    setSelections,
+    setNoOfOptions,
+    maxQuantity,
+    setMaxQuantity,
+    compulsoryQuantity,
+    setCompulsoryQuantity,
+    variants,
+    deleteVariant,
+    setCurrentVariant,
+    setVariants,
+  } = useAddOnStore();
+  const [errorCompulsory, setErrorCompulsory] = useState(false);
+  const [errorMaxQty, setErrorMaxQty] = useState(false);
+  const openModal = () => {
+    if (addOnType) {
+      setIsAddOnTypeModalOpen(true);
+    } else {
+      toast.error('please select add on type');
+    }
+  };
+
+  const handleDeleteVariant = (variant: Variant) => {
+    setDeletePopup(true);
+    setStoreDeleteVariant((prev) => {
+      return { ...prev, id: variant?._id, name: variant?.name };
+    });
+  };
+  const handleEditVariant = (variant: Variant) => {
+    setCurrentVariant(variant);
+    openModal();
+  };
+
+  const saveAddOn = async () => {
+    if (variants.length === 0) {
+      toast.error('Please add variants');
+      return;
+    }
+    setLoading(true);
+    try {
+      const config = {
+        method: 'PUT',
+        url: `/v1/dishes/:id/extra/${addOnId}`,
+        data: {
+          businessId: businessId,
+          name: addOnName,
+          numOptions: maxQuantity,
+          numSelections: maxQuantity,
+          compulsory: compulsoryQuantity,
+          maxQuantity: maxQuantity,
+          addOnType: addOnType,
+          items: variants,
+        },
+      };
+      await axios(config);
+      toast.success('Add on added successfully');
+      startTransition(() => {
+        navigate(`/app/business/${businessId}/items?tab=items`);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    setLoading(false);
+  };
+
+  const handleMaxQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newValue = Number.parseFloat(e.target.value) || 0;
+    newValue = Math.max(newValue, 0);
+
+    if (compulsoryQuantity > newValue) {
+      setCompulsoryQuantity(0);
+      setMaxQuantity(newValue);
+      setErrorMaxQty(true);
+      setTimeout(() => {
+        setErrorMaxQty(false);
+      }, 3500);
+      return;
+    }
+    setMaxQuantity(newValue);
+    setErrorMaxQty(false);
+  };
+  const handleCompulsoryQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newValue = Number.parseFloat(e.target.value) || 0;
+    newValue = Math.max(newValue, 0);
+    if (maxQuantity < Number(e.target.value)) {
+      setErrorCompulsory(true);
+      setTimeout(() => {
+        setErrorCompulsory(false);
+      }, 3500);
+      return;
+    }
+    setCompulsoryQuantity(newValue);
+    setErrorCompulsory(false);
+    setCompulsoryQuantity(newValue);
+  };
+
+  const getAddOn = async () => {
+    try {
+      const getSingleAddOn = await axios.get(`/v1/dishes/:id/getExtra/${addOnId}`);
+      const data = getSingleAddOn.data.data;
+      setAddOnName(data.name);
+      setAddOnType(data.addOnType);
+      setSelections(data.numSelections);
+      setNoOfOptions(data.numOptions);
+      setMaxQuantity(data.maxQuantity);
+      setCompulsoryQuantity(data.compulsory);
+      setVariants(data.items);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const {
+    isLoading,
+    error,
+    data: addonData,
+    refetch,
+  } = useQuery({
+    queryKey: ['addOn', addOnId],
+    queryFn: getAddOn,
+    enabled: !!addOnId,
+  });
+  function deleteItem() {
+    deleteVariant(storeDeleteVariant?._id);
+    setDeletePopup(false);
+  }
+
+  const handleBack = () => {
+    startTransition(() => {
+      navigate(`/app/business/${businessId}?tab=items`);
+    });
+  };
+
+  if (error) return <ErrorComponent refetch={refetch} />;
+  return (
+    <>
+      {isLoading && <LoadingSpinner />}
+      <div className="pb-[7rem]">
+        <div className="sticky top-0 z-20 linear_gradient_background">
+          <Header title="AddOn" onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+          <div className="flex items-center justify-between px-6 pb-4 mt-6">
+            <div className="flex text-2xl">
+              <span className="">Edit a Add On</span>
+            </div>
+          </div>
+        </div>
+        <div className="px-4 mt-4 space-y-2">
+          <span className="font-medium">Name of the Add On</span>
+          <input
+            onChange={(e) => {
+              setAddOnName(e.target.value);
+            }}
+            maxLength={24}
+            value={addOnName || ''}
+            type="text"
+            id="floating_outlined"
+            className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
+            placeholder="Name"
+          />
+        </div>
+        <div className="px-4 mt-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Add On Type</span>
+          </div>
+          <select
+            value={addOnType}
+            onChange={(e) => setAddOnType(e.target.value)}
+            className="w-full rounded-md border border-[#000000] px-4 py-2 focus:border-[#000000] focus:outline-none focus:ring-0"
+          >
+            <option value="">Select Type</option>
+            <option value="single">Single selection</option>
+            <option value="multiple">Quantity based selection</option>
+          </select>
+        </div>
+        <div className="flex">
+          <div className="px-4 mt-4 space-y-2">
+            <span className="font-medium">Max quantity choices</span>
+            <input
+              onChange={handleMaxQuantityChange}
+              value={maxQuantity || ''}
+              maxLength={3}
+              type="tel"
+              id="floating_outlined"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
+              placeholder="0"
+            />
+            {errorMaxQty ? <small className="text-red-500">*Max quantity cannot be more than selections and less than compulsory</small> : null}
+          </div>
+          <div className="px-4 mt-4 space-y-2">
+            <span className="font-medium">Compulsory choices</span>
+            <input
+              onChange={handleCompulsoryQuantityChange}
+              value={compulsoryQuantity || ''}
+              maxLength={3}
+              type="tel"
+              id="floating_outlined"
+              className="peer mb-0 ml-0 mr-0 block w-full rounded-md border border-gray-800 bg-transparent pb-2 pl-4 pr-[7rem] pt-2 text-base text-gray-900 focus:border-[#000000] focus:outline-none focus:ring-0 dark:border-[#000000] dark:text-white"
+              placeholder="0"
+            />
+            {errorCompulsory ? <small className="text-red-500">* Compulsory quantity cannot be more than max quantity and selections</small> : null}
+          </div>
+        </div>
+        <div className="flex justify-between px-4 mt-4">
+          <span className="font-medium">Variant</span>
+          <button type="button" onClick={openModal} className="on_active_bounce rounded-md border border-[#000000] px-4 py-1">
+            Add
+          </button>
+        </div>
+        <div className={`${variants.length === 0 ? '' : 'border border-[#000000]'}  mx-4 mt-4 space-y-2 rounded-md p-4`}>
+          {variants.map((variant) => (
+            <div key={variant._id} className="rounded-md border border-[#cacaca] p-2">
+              <div className="w-48 truncate">{variant?.name}</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm opacity-80">
+                  <span>x {variant?.maxQuantity}</span>
+                  <span>₹ {variant.price}</span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <button type="button" onClick={() => handleEditVariant(variant)}>
+                    Edit
+                  </button>
+                  <button type="button" className="text-[#2F80ED]" onClick={() => handleDeleteVariant(variant)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* </form> */}
+        {isAddOnTypeModalOpen && (
+          <PopUp show={isAddOnTypeModalOpen} onClose={() => setIsAddOnTypeModalOpen(false)}>
+            <VariantComponent compulsoryQuantity={compulsoryQuantity} onClose={() => setIsAddOnTypeModalOpen(false)} />
+          </PopUp>
+        )}
+        {deletePopup && (
+          <PopUp show={deletePopup} onClose={() => setDeletePopup(false)}>
+            <DeleteConfirmationModal
+              text={`Are you sure you want to delete ${storeDeleteVariant?.name}?`}
+              closeModal={() => setDeletePopup(false)}
+              onDelete={() => deleteItem()}
+            />
+          </PopUp>
+        )}
+        <div
+          onClick={saveAddOn}
+          className={`${loading ? 'pointer-events-none opacity-50' : ''} on_active_bounce fixed bottom-0 w-full cursor-pointer p-4 outline-none`}
+        >
+          <button type="button" className={'w-full rounded-md bg-[#000000] py-2 text-white'}>
+            {loading ? 'Loading...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+});
+
+export default EditAddOn;

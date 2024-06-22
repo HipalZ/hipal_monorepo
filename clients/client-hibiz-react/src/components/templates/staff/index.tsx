@@ -3,7 +3,6 @@ import axios from "@/axios";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import PopUp from "@/components/atom/popUp";
 import ErrorComponent from "@/components/errorComponent";
-import AddStaffPopup from "@/components/molecules/addStaffpopup";
 import Header from "@/components/molecules/header";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import type { UserProfile } from "@/components/types/businessData";
@@ -12,7 +11,6 @@ import { routeToDashboard } from "@/components/utils/routes";
 import { useQuery } from "@tanstack/react-query";
 import { memo, startTransition, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { IoPersonCircleSharp } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
 import NoStaff from "@/assets/noStaff.png"
 import Avatar from "@/assets/avtarStaff.png"
@@ -38,11 +36,11 @@ const Staff = memo(() => {
 
 		try {
 			const response = await axios.get(url);
-			const filteredStaff = response.data.filter(
+			const filteredStaff = response.data.data.filter(
 				(staff: UserProfile) => staff._id !== user._id,
 			);
 			setStaffDetails(filteredStaff);
-			return response.data;
+			return response.data.data;
 		} catch (error) {
 			console.error("Error fetching staff details:", error);
 		}
@@ -85,8 +83,8 @@ const Staff = memo(() => {
 									key={staff._id}
 									onClick={() => handleStaffDetails(staff?._id)}
 									className="on_active_bounce p-4 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
-								>	
-								<img src={Avatar} alt="Avatar" />
+								>
+									<img src={Avatar} alt="Avatar" />
 									<div className="flex flex-col pt-6 pb-2">
 										<span>{staff?.name}</span>
 
@@ -113,12 +111,6 @@ const Staff = memo(() => {
 				</button>
 				{isAddStaffOpen && (
 					<PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
-						{/* <AddStaffPopup
-							businessId={businessId || ""}
-							onClose={() => setIsAddStaffOpen(false)}
-							staffDetails={staffDetails}
-							getStaff={getStaff}
-						/> */}
 						<NewAddStaff />
 					</PopUp>
 				)}

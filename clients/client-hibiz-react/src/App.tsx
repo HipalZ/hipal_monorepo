@@ -30,34 +30,6 @@ function App() {
   const isLoggedIn = useOwnerLogin((s) => s.isLogin);
   const user = useOwnerLogin((s) => s.user);
 
-  // useEffect(() => {
-  //   const result = async () => {
-  //     try {
-  //       const config = {
-  //         method: 'POST',
-  //         url: '/v1/users/Owner/Login',
-  //         data: {
-  //           phone: phoneNumber,
-  //           password: password,
-  //         },
-  //       };
-
-  //       const user = await axios(config);
-  //       if (user.data) {
-  //         setUser(user.data);
-  //         setIsLogin(true);
-  //         navigate(routePaths[PAGE_TYPES.BUSINESS]());
-  //       }
-  //     } catch (err) {
-  //       toast.error('Login failed!');
-  //     }
-  //   };
-
-  //   if (isLoggedIn && location.pathname === '/') {
-  //     result();
-  //   }
-  // }, [isLoggedIn, location.pathname]);
-
   useEffect(() => {
     if (isLoggedIn) {
       const pathSegments = location.pathname.split('/');

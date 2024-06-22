@@ -1,5 +1,5 @@
 import useTimings from '@/components/store/useTimings';
-import { Disclosure } from '@headlessui/react';
+import {  Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { memo } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
@@ -25,10 +25,10 @@ const TipsAccordion = memo(({ tips, pageNumberFunction, currentPage }: IProps) =
           tips.map((bill: any, index: number) => (
             <div key={index.toString()}>
               {bill?.tips > 0 && (
-                <Disclosure>
+                 <Disclosure  as="div" defaultOpen={true}>
                   {({ open }) => (
                     <div className="rounded-xl border border-[#cacaca]">
-                      <Disclosure.Button className={`w-full rounded-xl p-4 ${bill?.settle ? 'border-[#219653] bg-[#219653]/10' : ''}`}>
+                      <DisclosureButton className={`w-full rounded-xl p-4 ${bill?.settle ? 'border-[#219653] bg-[#219653]/10' : ''}`}>
                         <div className="flex justify-between">
                           <div className="font-medium">₹ {bill?.total}</div>
                           <div className="text-sm opacity-60">
@@ -42,8 +42,8 @@ const TipsAccordion = memo(({ tips, pageNumberFunction, currentPage }: IProps) =
                             <AiFillCaretDown className={`ml-2 h-3 w-3 ${open ? 'rotate-180 transform' : ''}`} />
                           </div>
                         </div>
-                      </Disclosure.Button>
-                      <Disclosure.Panel className="mx-4 text-sm">
+                      </DisclosureButton>
+                      <DisclosurePanel className="mx-4 text-sm">
                         <div className="flex justify-between border-y border-[#cacaca] py-4 text-base opacity-70">
                           <div className="flex items-center">
                             <MdPerson className="" />
@@ -71,7 +71,7 @@ const TipsAccordion = memo(({ tips, pageNumberFunction, currentPage }: IProps) =
                             : null}
                         </div>
                         <BillSummary {...bill} />
-                      </Disclosure.Panel>
+                      </DisclosurePanel>
                     </div>
                   )}
                 </Disclosure>

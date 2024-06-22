@@ -1,11 +1,11 @@
 import HipalLogo from "@/assets/hipal.png";
-import Hipal from "./hipal";
-import SignUpPage from "./signUp";
-import Otp from "./otp";
+import Hipal from "../../components/templates/signupPage/hipal";
+import SignUpPage from "../../components/templates/signupPage/signUp";
+import Otp from "../../components/templates/signupPage/otp";
 import useLoginStore from "@/components/store/useLogin";
-import Password from "./password";
+import Password from "../../components/templates/signupPage/password";
 import "./signUp.css";
-import Congratulation from "./congratulation";
+import Congratulation from "../../components/templates/signupPage/congratulation";
 
 export const SectionWithLogo = ({
 	children,

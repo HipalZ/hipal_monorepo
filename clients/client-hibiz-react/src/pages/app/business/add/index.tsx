@@ -8,7 +8,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import BusinessType from "./businessType";
 import OutletType from "./outletTypeForm";
 import AddName from "./addName";
-import Congratulation from "@/pages/signup/congratulation";
+import Congratulation from "@/components/templates/signupPage/congratulation";
 import { SectionWithLogo } from "@/pages/signup";
 import "./add.css"
 
