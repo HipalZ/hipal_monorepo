@@ -37,8 +37,8 @@ import { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
 const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
+import { TempBillSchema } from '@hi/db-models/src/validators/bill';
 import { razorpayWrapper } from '../razorpay-wrapper';
-import { TempBillSchema } from './bill';
 
 const router = express.Router();
 

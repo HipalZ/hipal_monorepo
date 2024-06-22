@@ -2989,4 +2989,23 @@ router.get(
     });
   },
 );
+
+router.get(
+  '/v1/payments/:id/testing',
+
+  async (req: Request, res: Response) => {
+    const { businessId, tableName } = req.query;
+
+    // const billExist = await TempBill.findOne({ businessId: businessId, tableName: tableName });
+    // if (!billExist) {
+    //   return res.status(404).send({ err: true, data: {}, message: 'Bill not found' });
+    // }
+
+    return res.send({
+      err: false,
+      data: {},
+      message: 'Testing',
+    });
+  },
+);
 export { router as readPaymentsRouter };

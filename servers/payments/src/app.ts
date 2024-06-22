@@ -4,8 +4,6 @@ import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 
-import { idempotent } from './middleware/idempotent';
-
 // Routes
 
 import { errorHandler } from '@hi/common';
@@ -68,16 +66,16 @@ app.use(
   }),
 );
 
-app.use(idempotent);
+// app.use(idempotent);
 
 // app.use(authTokenValidator);
 // Register routes
 app.use(createPaymentRouter);
 app.use(readPaymentsRouter);
 app.use(updatePaymentsRouter);
-app.use(errorHandler);
 app.all('*', () => {
-  throw new Error('Route not found');
+  return { message: 'Not Found' };
 });
+app.use(errorHandler);
 
 export { app };

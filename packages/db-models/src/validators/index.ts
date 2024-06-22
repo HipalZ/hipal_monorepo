@@ -1,5 +1,6 @@
 export * from './admin';
 export * from './alert';
+export * from './bill';
 export * from './business';
 export * from './category';
 export * from './create_order';
