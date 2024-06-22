@@ -3,15 +3,185 @@ import express, { Request, Response } from 'express';
 import moment from 'moment';
 
 import { ClientRoles, requireAuthorization } from '@hi/common';
-import { Dues, Order, Payment, PaymentAlert } from '@hi/db-models';
+import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, TempBill, UserReward, UserRewardHistory } from '@hi/db-models';
 import { paramsSchema, PaymentSchema } from '@hi/db-models/src/validators';
 
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
 import type { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
 const router = express.Router();
-
 const updatedPaymentSchema = PaymentSchema.partial();
 const updatedDuesSchema = PaymentSchema.partial();
+
+const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
+  let total = exist + reward;
+
+  const sum = Math.floor(Math.min(total, limit)) || 0;
+
+  const finalReward = Math.abs(sum - exist) || 0;
+  return { finalReward, curentBalance: sum };
+};
+
+const addRewardHistory = async (
+  status: string,
+  tableName: string,
+  loyaltyId: string,
+  total: number,
+  userName: string,
+  userPhone: string,
+  addCoins: number,
+  currentBalance: number,
+  billValue: number,
+  session: ClientSession,
+) => {
+  const data = await UserRewardHistory.create(
+    [
+      {
+        userName: userName,
+        userPhone,
+        rewards: addCoins,
+        status: status,
+        claimedCoins: 0,
+
+        currentBalance: currentBalance,
+        tableName,
+        loyaltyId,
+        total,
+        subTotal: billValue,
+      },
+    ],
+    { session },
+  );
+
+  return data;
+};
+
+const removeRewardHistory = async (
+  status: string,
+  tableName: string,
+  loyaltyId: string,
+  total: number,
+  userName: string,
+  userPhone: string,
+  addCoins: number,
+  currentBalance: number,
+  billValue: number,
+  session: ClientSession,
+) => {
+  const data = await UserRewardHistory.create(
+    [
+      {
+        userName: userName,
+        userPhone,
+        rewards: addCoins,
+        status: status,
+        claimedCoins: addCoins,
+        currentBalance: currentBalance,
+        tableName,
+        loyaltyId,
+        total,
+        subTotal: billValue,
+      },
+    ],
+    { session },
+  );
+
+  return data;
+};
+
+const removeCoins = async (
+  claimedCoins: number,
+  tableName: string,
+  userPhone: string,
+  total: number,
+  loyaltyId: string,
+  billValue: number,
+  session: ClientSession,
+) => {
+  const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
+  if (existingUser && existingUser.rewards > claimedCoins) {
+    const updatedReward = await UserReward.findOneAndUpdate(
+      { userPhone, loyaltyId },
+      {
+        $inc: { rewards: -claimedCoins, count: 1 },
+      },
+      { new: true, session },
+    );
+
+    await removeRewardHistory(
+      'minus',
+      tableName,
+      loyaltyId,
+      total,
+      existingUser.userName,
+      userPhone,
+      claimedCoins,
+      updatedReward?.rewards || 0,
+      billValue,
+      session,
+    );
+
+    return updatedReward;
+  }
+  return null;
+};
+
+const addCoins = async (
+  coins: number,
+  userPhone: string,
+  tableName: string,
+  businessId: string,
+  total: number,
+  loyaltyId: string,
+  billValue: number,
+  session: ClientSession,
+) => {
+  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }).select('rewards');
+  const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }).select('rewardLimit');
+  if (existingUser && existingLoyalty) {
+    const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
+
+    console.log('coinsCalculated', coinsCalculated);
+
+    const updatedReward = await UserReward.findOneAndUpdate(
+      { userPhone, loyaltyId },
+      {
+        $inc: { rewards: coinsCalculated.finalReward, count: 1 },
+      },
+      { new: true, session },
+    ).select('userName userPhone rewards');
+    await addRewardHistory(
+      'plus',
+      tableName,
+      loyaltyId,
+      total,
+      updatedReward?.userName || '',
+      userPhone,
+      coinsCalculated.finalReward,
+      updatedReward?.rewards || 0,
+      billValue,
+      session,
+    );
+
+    return null;
+  }
+  return null;
+};
+
+const calculatedCashbackCoins = async (businessId: string, billValue: number, claimedCoins: number) => {
+  const LoyaltySetting = await LoyaltySettings.findOne({ businessId }).select('rewardLimit setReward');
+  if (!LoyaltySetting || typeof LoyaltySetting.setReward !== 'number') {
+    console.error('LoyaltySetting not found or setReward is not a number');
+    return 0; // Or handle this case as appropriate for your application
+  }
+
+  const subTotal = billValue - claimedCoins;
+
+  const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
+
+  return Math.floor(coinsToBeAdded);
+};
 
 router.put(
   '/v1/payments/:pid/order/:alertId',
@@ -22,44 +192,100 @@ router.put(
   async (req: Request, res: Response) => {
     const { alertId } = req.params;
     const { comment } = req.body;
-    const alert = await PaymentAlert.findById(alertId).select('_id alertType isAccepted order_id businessId');
+    await runInTransaction(async (session: ClientSession) => {
+      const alert = await PaymentAlert.findById(alertId, null, { session }).select('_id alertType isAccepted order_id businessId');
 
-    if (!alert) {
-      return res.status(404).send({ message: 'Alert not found', err: true, data: {} });
-    }
-    if (comment) {
-      const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { comment }).populate('order_id');
-      return res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
-    }
-    if (alert.alertType === 'OFFLINE') {
-      const pinCode = Math.floor(1000 + Math.random() * 9000);
+      console.log('alert', alert);
 
-      if (alert && !alert.isAccepted) {
-        const order = await Order.findById(alert.order_id);
-
-        await Payment.create({
-          businessId: alert.businessId,
-          order_id: order?._id,
-          total: order?.total,
-          mode: 'OFFLINE',
-          status: 'SUCCESS',
-          customerName: order?.name,
-          customerPhone: order?.phone,
-          billValue: order?.billValue,
-          tips: order?.tips,
-          tableName: order?.tableName,
-        });
+      if (!alert) {
+        res.status(404).send({ message: 'Alert not found', err: true, data: {} });
+        return;
       }
-      const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, completionCode: pinCode, comment }).populate('order_id');
+      if (comment) {
+        await PaymentAlert.findByIdAndUpdate(alertId, { comment }, { session });
+      }
+      if (alert.alertType === 'OFFLINE') {
+        const pinCode = Math.floor(1000 + Math.random() * 9000);
 
-      return res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
-    }
+        if (alert && !alert.isAccepted) {
+          const order = await Order.findById(alert.order_id, null, { session });
+          await Payment.create(
+            [
+              {
+                businessId: alert.businessId,
+                order_id: order?._id,
+                total: order?.total,
+                mode: 'offline',
+                status: 'SUCCESS',
+                paymentMode: 'offline',
+                customerName: order?.name,
+                claimedCoins: order?.claimedCoins,
+                customerPhone: order?.phone,
+                billValue: order?.billValue,
+                tips: order?.tips,
+                tableName: order?.tableName,
+              },
+            ],
+            { session },
+          );
+
+          if (order?.claimedCoins && order?.claimedCoins > 0) {
+            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+            await removeCoins(
+              Number(order?.claimedCoins),
+              order.tableName || '',
+              order?.phone || '',
+              Number(order?.total),
+              existingLoyalty?.loyaltyId as string,
+              Number(order?.billValue),
+              session,
+            );
+
+            const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
+
+            await addCoins(
+              cashBack,
+              order?.phone || '',
+              order.tableName || '',
+              order.businessId.toString(),
+              Number(order.total),
+              existingLoyalty?.loyaltyId as string,
+              Number(order.billValue),
+              session,
+            );
+
+            await LoyaltyCoinsInfo.findOneAndUpdate(
+              { businessId: order.businessId.toString() },
+
+              {
+                $inc: {
+                  coinzIssued: cashBack,
+                  coinzRedeemed: Number(order.claimedCoins),
+                },
+              },
+              { upsert: true, session },
+            );
+            await TempBill.findOneAndDelete({ businessId: order.businessId, tableName: order.tableName }, { session });
+          }
+        }
+        const updateAlert = await PaymentAlert.findByIdAndUpdate(
+          alertId,
+          { isAccepted: true, completionCode: pinCode, comment },
+          { session },
+        ).populate('order_id');
+
+        res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        return;
+      }
+      res.status(400).send({ message: 'Order accepted successfully', err: false, data: {} });
+      return;
+    });
   },
 );
 
 router.put(
   '/v1/payments/:id',
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({
     body: updatedPaymentSchema,
   }),

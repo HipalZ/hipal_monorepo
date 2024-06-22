@@ -16,6 +16,7 @@ export const PaymentSchema = z.object({
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
   mode: z.string(),
+  paymentMode: z.string(),
   tableName: z.string().optional(),
   claimedCoins: z.coerce.number().optional(),
   tips: z.coerce.number().default(0),

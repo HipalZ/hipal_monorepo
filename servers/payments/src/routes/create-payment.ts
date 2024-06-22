@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import {
   Dues,
+  LoyaltyCoinsInfo,
   LoyaltySettings,
   Order,
   Payment,
@@ -10,6 +11,7 @@ import {
   PaymentMode,
   Reviews,
   ReviewsCustomer,
+  TempBill,
   UserReward,
   UserRewardHistory,
 } from '@hi/db-models';
@@ -36,6 +38,7 @@ import { nanoid } from 'nanoid';
 const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
 import { razorpayWrapper } from '../razorpay-wrapper';
+import { TempBillSchema } from './bill';
 
 const router = express.Router();
 
@@ -772,7 +775,6 @@ const addRewardHistory = async (
         rewards: addCoins,
         status: status,
         claimedCoins: 0,
-        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         currentBalance: currentBalance,
         tableName,
         loyaltyId,
@@ -806,7 +808,6 @@ const removeRewardHistory = async (
         rewards: addCoins,
         status: status,
         claimedCoins: addCoins,
-        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         currentBalance: currentBalance,
         tableName,
         loyaltyId,
@@ -910,7 +911,7 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 
   const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
 
-  return coinsToBeAdded;
+  return Math.floor(coinsToBeAdded);
 };
 
 router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response) => {
@@ -971,6 +972,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
             customerName: getOrder?.name,
             order_id: getOrder?._id,
             customerPhone: getOrder?.phone,
+            paymentMode: 'online',
             tableName: payload.payment.entity.notes.tableName,
             claimedCoins: payload.payment.entity.notes.claimedCoins || 0,
             tips: payload.payment.entity.notes.tips || 0,
@@ -1026,6 +1028,23 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
           Number(payload.payment.entity.notes.billValue),
           session,
         );
+
+        await LoyaltyCoinsInfo.findOneAndUpdate(
+          { businessId: payload.payment.entity.notes.businessId },
+
+          {
+            $inc: {
+              coinzIssued: cashBack,
+              coinzRedeemed: claimCoins,
+            },
+          },
+          { upsert: true, session },
+        );
+
+        await TempBill.findOneAndDelete(
+          { businessId: payload.payment.entity.notes.businessId, tableName: payload.payment.entity.notes.tableName },
+          { session },
+        );
       }
     }
   });
@@ -1062,6 +1081,36 @@ router.post(
       // comment : payload.payment.entity.notes.comment
     });
     return res.status(200).send({ message: 'Order verified successfully', err: false, data: alert });
+  },
+);
+
+router.post(
+  '/v1/payments/bill',
+  validateRequest({
+    body: TempBillSchema,
+  }),
+
+  async (req: Request, res: Response) => {
+    const { businessId, tableName, billValue, total, tips, claimedCoins } = req.body;
+    const billExist = await TempBill.findOne({ businessId: businessId, tableName: tableName });
+
+    if (billExist) {
+      return res.status(400).send({
+        err: true,
+        message: 'Bill Already exists...',
+        data: billExist,
+      });
+    }
+    const createBill = await TempBill.create({
+      businessId: businessId,
+      billValue: billValue,
+      total: total,
+      tips: tips,
+      claimedCoins: claimedCoins,
+
+      tableName: tableName,
+    });
+    return res.status(200).send({ message: 'Order verified successfully', err: false, data: createBill });
   },
 );
 

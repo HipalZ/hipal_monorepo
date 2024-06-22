@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 
 import { ClientRoles, requireAuthorization } from '@hi/common';
-import { Dues, Order, Payment, PaymentAlert, PaymentMode, Reviews, ReviewsCustomer } from '@hi/db-models';
-import { paramsSchema } from '@hi/db-models/src/validators';
+import { Dues, LoyaltyCoinsInfo, Order, Payment, PaymentAlert, PaymentMode, Reviews, ReviewsCustomer, TempBill } from '@hi/db-models';
+import { paramsSchema, PaymentType } from '@hi/db-models/src/validators';
 import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
 import { validateRequest } from 'zod-express-middleware';
@@ -88,31 +88,203 @@ router.get(
 );
 
 router.get(
-  '/v1/payments/:id/paymentHistory',
+  '/v1/payments/:id/paymentAlertHistory',
   validateRequest({
     query: paramsSchema,
   }),
 
   async (req: Request, res: Response) => {
-    const { businessId } = req.query;
+    const { businessId, from, to } = req.query;
+    let fromDate = Number(from);
+    let toDate = Number(to);
+    let PAGE_SIZE = 20;
+    let pageNumber: any = req?.query?.pageNumber || 1;
+    const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId }).populate('order_id');
+    if (!from && !to) {
+      const existingPaymentAlerts = await PaymentAlert.find({
+        businessId,
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
+      })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
 
-    res.status(200).send({
-      err: false,
-      data: existingPaymentAlerts,
-      message: 'existing payment alerts',
-    });
+      res.status(200).send({
+        err: false,
+        data: existingPaymentAlerts,
+        message: 'existing payment alerts',
+      });
+    }
+
+    if (from && to) {
+      if (fromDate > toDate) {
+        return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+      }
+      const existingPaymentAlerts = await PaymentAlert.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
+
+      res.status(200).send({
+        err: false,
+        data: existingPaymentAlerts,
+        message: 'existing payment alerts',
+      });
+    }
+    return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
   },
 );
 
-router.get('/v1/payments/:id/test', async (req: Request, res: Response) => {
-  res.status(200).send({
-    err: false,
-    data: {},
-    message: 'payment test',
-  });
-});
+router.get(
+  '/v1/payments/:id/salesDashboard',
+  validateRequest({
+    query: paramsSchema,
+  }),
+  async (req: Request, res: Response) => {
+    const { businessId, from, to, pageNumber = 1 } = req.query;
+    const fromDate = Number(from);
+    const toDate = Number(to);
+
+    const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({ businessId }).select('coinzIssued coinzRedeemed');
+    if (!from && !to) {
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
+      }).select('total claimedCoins paymentMode');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
+
+      const totalOnlineSale = existingPayments.reduce(
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total : 0),
+        0,
+      );
+
+      const totalOfflineSale = existingPayments.reduce(
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'offline' ? payment.total : 0),
+        0,
+      );
+
+      return res.status(200).send({
+        err: false,
+        data: {
+          totalSale,
+          totalDiscount: totalCoins,
+          totalOnlineSale,
+          totalOfflineSale,
+          coinzIssued: loyaltyCoinInfo?.coinzIssued,
+          coinzRedeemed: loyaltyCoinInfo?.coinzRedeemed,
+        },
+        message: 'existing payment',
+      });
+    }
+    if (from && to) {
+      if (fromDate > toDate) {
+        return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+      }
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      }).select('total claimedCoins paymentMode');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
+
+      const totalOnlineSale = existingPayments.reduce(
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total : 0),
+        0,
+      );
+
+      const totalOfflineSale = existingPayments.reduce(
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'offline' ? payment.total : 0),
+        0,
+      );
+
+      return res.status(200).send({
+        err: false,
+        data: {
+          totalSale,
+          totalDiscount: totalCoins,
+          totalOnlineSale,
+          totalOfflineSale,
+          coinzIssued: loyaltyCoinInfo?.coinzIssued,
+          coinzRedeemed: loyaltyCoinInfo?.coinzRedeemed,
+        },
+        message: 'existing payment',
+      });
+    }
+    return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+  },
+);
+
+router.get(
+  '/v1/payments/:id/bills',
+  validateRequest({
+    query: paramsSchema,
+  }),
+  async (req: Request, res: Response) => {
+    const { businessId, from, to } = req.query;
+    const fromDate = Number(from);
+    const toDate = Number(to);
+
+    if (!from && !to) {
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
+      }).populate('order_id');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+
+      return res.status(200).send({
+        err: false,
+        data: {
+          existingPayments,
+          totalSale,
+        },
+        message: 'existing payment',
+      });
+    }
+    if (from && to) {
+      if (fromDate > toDate) {
+        return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+      }
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      }).populate('order_id');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+
+      return res.status(200).send({
+        err: false,
+        data: {
+          totalSale,
+          existingPayments,
+        },
+        message: 'existing payment',
+      });
+    }
+    return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+  },
+);
 
 router.get('/v1/payments/Sales&Discount', async (req: Request, res: Response) => {
   let { date, businessId } = req.query;
@@ -2786,37 +2958,23 @@ router.get(
     });
   },
 );
+router.get(
+  '/v1/payments/:pid/getBill',
+  validateRequest({
+    params: paramsSchema,
+  }),
+  async (req: Request, res: Response) => {
+    const { businessId, tableName } = req.query;
+    const billExist = await TempBill.findOne({ businessId: businessId, tableName: tableName });
+    if (!billExist) {
+      return res.status(404).send({ err: true, data: {}, message: 'Bill not found' });
+    }
 
-// router.get(
-//   "/v1/payments/:id/paymentAlert",
-//   currentUser,
-//   // requireAuthorization([
-//   //   ClientRoles.RESTAURANT_OWNER,
-//   //   ClientRoles.RESTAURANT_MANAGER,
-//   // ]),
-//   async (req: Request, res: Response) => {
-//     const { businessId, tableId, zoneId } = req.query;
-//     const alerts = await Alert.find({
-//       businessId,
-//       zoneId,
-//       isAlertOn: true,
-//     });
-
-//     res.status(200).send(alerts);
-//   }
-// );
-
-// router.get(
-//   "/v1/payments/:id/deleteAlert/:alertId",
-
-//   async (req: Request, res: Response) => {
-//     const { alertId } = req.params;
-//     const deleteAlert = await Alert.findByIdAndUpdate(alertId, {
-//       isAlertOn: false,
-//     });
-
-//     res.status(200).send(deleteAlert);
-//   }
-// );
-
+    return res.send({
+      err: false,
+      data: billExist,
+      message: 'Bill generated',
+    });
+  },
+);
 export { router as readPaymentsRouter };

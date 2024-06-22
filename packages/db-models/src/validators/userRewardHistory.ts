@@ -8,7 +8,7 @@ const UserRewardHistoryAttrs = z.object({
   waiterName: z.string().optional(),
   rewards: z.coerce.number().optional(),
   status: z.string().optional(),
-  date: z.string().optional(),
+  date: z.coerce.number().default(Date.now()),
   time: z.string().optional(),
   items: z.array(z.unknown()).default([]).optional(),
   total: z.coerce.number().default(0),

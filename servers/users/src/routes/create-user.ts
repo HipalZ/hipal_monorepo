@@ -139,9 +139,17 @@ router.post(
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
+    if (!phone || !role) {
+      return res.status(400).send({
+        status: false,
+        message: 'Phone and role required',
+        data: {},
+        err: true,
+      });
+    }
 
     let existingUser;
-    existingUser = await User.findOne({ phone, role });
+    existingUser = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
     // try {
     //   const options = {
     //     method: "POST",
@@ -199,12 +207,7 @@ router.post(
       });
     }
     // try {
-    //   if (
-    //     loyaltyId &&
-    //     signUpBonus &&
-    //     signUpBonus > 0 &&
-    //     role == "HIPAL_CUSTOMER"
-    //   ) {
+    //   if (loyaltyId && signUpBonus && signUpBonus > 0 && role == 'HIPAL_CUSTOMER') {
     //     await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
     //   }
     // } catch (e) {
@@ -212,37 +215,32 @@ router.post(
     // }
 
     // const options = {
-    //   method: "GET",
+    //   method: 'GET',
     //   url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
     //   headers: {
-    //     accept: "application/json",
-    //     authkey: "387796AmyGlDBq63b2d75aP1",
+    //     accept: 'application/json',
+    //     authkey: '387796AmyGlDBq63b2d75aP1',
     //   },
     // };
 
     // const response = await axios(options);
-    // console.log("response", response);
 
-    // if (
-    //   response?.data?.message === "Mobile no. not found" ||
-    //   response?.data?.message === "OTP not match"
-    // ) {
-    //   return res
-    //     .status(400)
-    //     .send({ status: false, message: "Please enter valid Otp !!" });
+    // if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
+    //   return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
     // }
-    // const userJwt = createJWT(existingUser);
-    // req.session = {
-    //   jwt: userJwt,
-    // };
 
     // if (loyaltyId && signUpBonus > 0) {
     //   const userReward = await UserReward.findOne({
     //     userPhone: phone,
     //     loyaltyId,
     //   });
+    //   const accessToken = createAccessToken(existingUser);
+    //   const refreshToken = createRefreshToken(existingUser);
     //   const modifyUser = {
     //     ...existingUser,
+
+    //     accessToken,
+    //     refreshToken,
 
     //     reward: signUpBonus,
     //     count: userReward?.scanCount,
@@ -414,13 +412,13 @@ router.post(
   }),
   async <T, K>(req: Request<T, K, z.infer<typeof staffValidator>>, res: Response) => {
     const { phone, password } = req.body;
-    const staff = await User.findOne({ phone: '5555555543', role: 'RESTAURANT_STAFF' }).populate({
+    const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
       path: 'customRole.businessId',
       select: 'businessName address logo',
     });
 
     const isPasswordValid = await verifyPassword(password, staff?.password as string);
-    console.log('isPasswordValid', isPasswordValid);
+
     if (!isPasswordValid) {
       return res.status(400).send({
         message: 'Invalid Password',
@@ -796,16 +794,18 @@ router.post(
   '/v1/users/Owner/Login',
 
   async (req: Request, res: Response) => {
-    const { phone, password } = req.body;
+    const { phone, password, role } = req.body;
     let existingUser;
     if (password == '1234') {
       existingUser = await User.findOne({
         phone,
+        role: 'RESTAURANT_OWNER',
       });
     } else {
       existingUser = await User.findOne({
         phone,
         password,
+        role: 'RESTAURANT_OWNER',
       });
     }
 
@@ -813,13 +813,10 @@ router.post(
       return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
     }
 
-    // const userJwt = createJWT(existingUser);
-
-    // req.session = {
-    //   jwt: userJwt,
-    // };
+    const accessToken = createAccessToken(existingUser);
+    const refreshToken = createRefreshToken(existingUser);
     res.status(200).send({
-      data: existingUser,
+      data: { existingUser, accessToken, refreshToken },
       err: false,
       status: true,
       message: 'Login SuccessFully !!!',
@@ -1159,7 +1156,7 @@ router.post(
 
     let existingUserPhone;
 
-    existingUserPhone = await User.findOne({ phone, role });
+    existingUserPhone = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
     if (existingUserPhone) {
       const userJwt = createJWT(existingUserPhone);
 

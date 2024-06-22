@@ -103,6 +103,10 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       type: String,
     },
+    paymentMode: {
+      required: true,
+      type: String,
+    },
     billValue: {
       required: true,
       type: Number,
@@ -127,6 +131,10 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
     razorpayOrderId: {
       type: String,
+    },
+    claimedCoins: {
+      type: Number,
+      default: 0,
     },
 
     razorpayAcquirerData: {

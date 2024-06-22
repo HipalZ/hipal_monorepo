@@ -15,22 +15,19 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     },
     currentBalance: Number,
     status: String,
-    date: String,
-    time: String,
+    date: {
+      type: Number,
+      default: Date.now(),
+    },
     businessName: {
       type: String,
     },
     waiterName: {
       type: String,
     },
-    items: {
-      type: [],
-      default: [],
-    },
+
     tableName: String,
-    day: {
-      type: String,
-    },
+
     loyaltyId: {
       type: String,
     },
@@ -41,18 +38,6 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     subTotal: {
       type: Number,
       default: 0,
-    },
-    sgst: {
-      type: Number,
-      default: 0,
-    },
-    cgst: {
-      type: Number,
-      default: 0,
-    },
-    reward_date: {
-      type: Number,
-      default: Date.now(),
     },
   },
   {
