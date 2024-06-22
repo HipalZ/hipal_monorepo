@@ -1,40 +1,45 @@
-import axiosConstructor from "axios";
-
-// Function to determine the base URL based on the environment
-function getBaseURL(url: string): string {
-  const mode = "development";
-  let port;
-  if (url.startsWith("/v1/businesses")) port = "8001";
-  else if (url.startsWith("/v1/categories")) port = "8002";
-  else if (url.startsWith("/v1/dishes")) port = "8003";
-  else if (url.startsWith("/v1/kitchens")) port = "8004";
-  else if (url.startsWith("/v1/payments")) port = "8005";
-  else if (url.startsWith("/v1/settings")) port = "8006";
-  else if (url.startsWith("/v1/users")) port = "8007";
-  else if (url.startsWith("/v1/zones")) port = "8008";
-  console.log("URL", mode, port);
-
-  if (mode === "development" && port) {
-    return `http://localhost:${port}`;
-  } else {
-    return "https://api.hipal.life";
-  }
-}
+import axiosConstructor from 'axios';
+import { useUserToken } from '@/components/store/useUserToken';
 
 const axios = axiosConstructor.create({
+  baseURL: import.meta.env.VITE_API_URL as string,
   withCredentials: true,
-});
-
+})
 axios.interceptors.request.use(
   (config: any) => {
-    if (config.url) {
-      config.baseURL = getBaseURL(config.url);
+    if (config.url == undefined) {
+      return;
     }
+    // Modify the baseURL based on the request URL
+    if (config.url.startsWith('/v1/businesses')) {
+      config.baseURL = 'http://localhost:8001';
+    } else if (config.url.startsWith('/v1/categories')) {
+      config.baseURL = 'http://localhost:8002';
+    } else if (config.url.startsWith('/v1/dishes')) {
+      config.baseURL = 'http://localhost:8003';
+    } else if (config.url.startsWith('/v1/kitchens')) {
+      config.baseURL = 'http://localhost:8004';
+    } else if (config.url.startsWith('/v1/payments')) {
+      config.baseURL = 'http://localhost:8005';
+    } else if (config.url.startsWith('/v1/settings')) {
+      config.baseURL = 'http://localhost:8006';
+    } else if (config.url.startsWith('/v1/users')) {
+      config.baseURL = 'http://localhost:8007';
+    } else if (config.url.startsWith('/v1/zones')) {
+      config.baseURL = 'http://localhost:8008';
+    }
+    const { accessToken, refreshToken } = useUserToken.getState();
+    console.log(accessToken, refreshToken);
+    if (accessToken && refreshToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`;
+      config.headers['x-refresh-with'] = refreshToken;
+    }
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    // Handle the error
+    return Promise.reject(error);
+  },
 );
-
-//TODO: Implement response error handling
-
 export default axios;

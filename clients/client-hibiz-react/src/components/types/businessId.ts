@@ -11,6 +11,8 @@ import { BsCurrencyRupee, BsFillPersonFill } from 'react-icons/bs';
 import { AiFillHeart } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { User } from '../store/useOwnerLogin';
+import Love from "@/assets/made_love.png"
+import React from 'react';
 
 export interface ICardButton {
     Icon: React.ElementType;
@@ -24,6 +26,13 @@ export interface ICardButton {
         opacity?: string;
     };
     visible: boolean;
+}
+
+export interface ILiteVersionCardButton {
+    image: string,
+    text: string;
+    description: string;
+    navigateTo?: string;
 }
 
 export const cardButtons: ICardButton[] = [
@@ -224,6 +233,60 @@ export const cardButtons: ICardButton[] = [
         visible: true,
     },
 ];
+
+export const liteVersionCardButtons: ILiteVersionCardButton[] = [
+    {
+        image: Love,
+        text: "Themes",
+        description: "Activate after Hi-site",
+        navigateTo:"businessControl"
+    },
+    // {
+    //     image: Love,
+    //     text: "Loyalty",
+    //     description: "Activate after Hi-site",
+    //     navigateTo:"loyalty"
+
+    // },
+    {
+        image: Love,
+        text: "Payments",
+        description: "Activate after Hi-site",
+        navigateTo:"payments"
+    },
+    {
+        image: Love,
+        text: "Staff",
+        description: "Activate after Hi-site",
+        navigateTo:"staff"
+    },
+    // {
+    //     image: Love,
+    //     text: "Hi-site",
+    //     description: "Activate after Hi-site"
+    // },
+    // {
+    //     image: Love,
+    //     text: "Settings",
+    //     description: "Activate after Hi-site"
+    // },
+    // {
+    //     image: Love,
+    //     text: "Customerz",
+    //     description: "Activate after Hi-site"
+    // },
+    // {
+    //     image: Love,
+    //     text: "Reviewz",
+    //     description: "Activate after Hi-site"
+    // },
+    // {
+    //     image: Love,
+    //     text: "Analytics",
+    //     description: "Activate after Hi-site",
+    //     navigateTo:"analytics"
+    // },
+]
 export interface AccessControlMapping {
     [key: string]: string;
 }
@@ -240,28 +303,28 @@ export const getUpdatedCardButtons = (
     cards: ICardButton[],
     user: User,
     handleNoAccess: () => void
-  ) => {
+) => {
     if (user.role !== 'RESTAURANT_MANAGER') {
-      return cards.map((card: ICardButton) => ({ ...card }));
+        return cards.map((card: ICardButton) => ({ ...card }));
     }
-  
+
     if (user.accessControl === undefined || Object.keys(user.accessControl).length === 0) {
-      toast.error('You do not have access to this business');
-      localStorage.removeItem('ownerLogin');
-      handleNoAccess();
-      return [];
+        toast.error('You do not have access to this business');
+        localStorage.removeItem('ownerLogin');
+        handleNoAccess();
+        return [];
     }
-  
+
     return cards.map((card: ICardButton) => {
-      const hasAccess =
-        user.accessControl &&
-        Object.entries(user.accessControl).some(([key, value]) => {
-          const permissionName = accessControlMapping[key];
-          return permissionName === card.text && value;
-        });
-      return {
-        ...card,
-        visible: hasAccess,
-      };
+        const hasAccess =
+            user.accessControl &&
+            Object.entries(user.accessControl).some(([key, value]) => {
+                const permissionName = accessControlMapping[key];
+                return permissionName === card.text && value;
+            });
+        return {
+            ...card,
+            visible: hasAccess,
+        };
     });
-  };
+};

@@ -1,0 +1,12 @@
+.svgClass {
+    width: 20rem;
+    height: 40rem;
+    margin: 0 1rem;
+}
+
+@media (min-width: 1024px) {
+    .svgClass {
+        width: 20rem;
+        height: calc(100vh -25vh - 98px);
+    }
+}

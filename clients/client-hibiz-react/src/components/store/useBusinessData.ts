@@ -1,4 +1,3 @@
-import { beans } from '@/components/atom/pathPattern';
 import type { IBusinessData } from '@/components/types/businessData';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -9,7 +8,6 @@ interface IExistingLoyalty {
   loyaltyId: string;
   cardColor: string;
   fontColor: string;
-  cardPattern: Record<string, any>;
   password: string;
   expiryDate: string;
   setReward: number;
@@ -37,7 +35,6 @@ export const useBusinessData = create(
         loyaltyId: '',
         cardColor: '',
         fontColor: '',
-        cardPattern: beans('#000000'),
         setReward: 0,
         setClaimAmount: 0,
         logo: '',

@@ -108,7 +108,6 @@ function Bills({
         closeModal();
       }
     } catch (error: any) {
-      console.error(error?.response?.data);
       toast.error(error?.response?.data);
     } finally {
       setLoading(false);
@@ -248,7 +247,7 @@ function Bills({
                             <PopUp show={isModalOpen} onClose={closeModal}>
                               {footButton.toLowerCase() === 'settle' && (
                                 <div className="relative min-h-[70vh]">
-                                  <div className="mt-4 flex justify-between">
+                                  <div className="flex justify-between mt-4">
                                     <div className="ml-6 text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">Payment Mode</div>
                                     <div className="mr-[1.5rem] text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">
                                       ₹ {bill?.total}
@@ -275,7 +274,7 @@ function Bills({
                                                   value={selectedPaymentMethod}
                                                   checked={selectedPaymentMethod === method?.mode}
                                                 />
-                                                <div className="ml-4 line-clamp-1 font-medium capitalize">{method?.mode}</div>
+                                                <div className="ml-4 font-medium capitalize line-clamp-1">{method?.mode}</div>
                                               </div>
                                             </div>
                                           );
@@ -307,7 +306,7 @@ function Bills({
                               )}
                               {footButton.toLowerCase() === 'split payment' && (
                                 <div className="relative min-h-[80vh]">
-                                  <div className="mt-4 flex justify-between">
+                                  <div className="flex justify-between mt-4">
                                     <div className="ml-6 text-[1rem] font-[500] capitalize leading-[1.25rem] text-[#002D4B]">
                                       select payment methods
                                     </div>
@@ -333,7 +332,7 @@ function Bills({
                                             type="checkbox"
                                             checked={multiplePaymentMethods.includes(method?.mode)}
                                           />
-                                          <div className="ml-4 line-clamp-1 font-medium capitalize">{method?.mode}</div>
+                                          <div className="ml-4 font-medium capitalize line-clamp-1">{method?.mode}</div>
                                         </div>
                                       ))}
                                   </div>
@@ -378,7 +377,7 @@ function Bills({
           ))}
         </div>
       ) : (
-        <div className="fixed left-1/2 top-1/2 flex -translate-x-1/2 transform flex-col text-center">
+        <div className="fixed flex flex-col text-center transform -translate-x-1/2 left-1/2 top-1/2">
           <p>No Bills Found</p>
           <span>
             {inTime && outTime && (

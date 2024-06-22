@@ -1,19 +1,22 @@
-import Header from "@/components/molecules/header";
-import { routeToDashboard } from "@/components/utils/routes";
-import { startTransition, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import Hi from "@/assets/svg/hi.svg";
-import { FaArrowLeft } from "react-icons/fa";
-import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import BusinessControl from "./businessControl";
-import ExplorePage from "./explorePage";
-import MenuPage from "./menu";
-import Setting from "./setting";
-import Congratulation from "@/pages/signup/congratulation";
-import { SectionWithLogo } from "@/pages/signup";
-import "./businessControl.css";
+import React, { startTransition, useCallback, lazy, Suspense, memo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+import useBusinessCtrl from '@/components/store/useBusinessCtrl';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import Header from '@/components/molecules/header';
+import { routeToDashboard } from '@/components/utils/routes';
+import Hi from '@/assets/svg/hi.svg';
+import './businessControl.css';
 
-const MainBusinessPage = () => {
+// Lazy load the components
+const ExplorePage = lazy(() => import('@/components/templates/businessForm/explorePage'));
+const MenuPage = lazy(() => import('@/components/templates/businessForm/menu'));
+const Congratulation = lazy(() => import('@/components/templates/signupPage/congratulation'));
+const SectionWithLogo = lazy(() => import('@/pages/signup').then(module => ({ default: module.SectionWithLogo })));
+const BusinessControl = lazy(() => import('@/components/templates/businessForm/businessControl'));
+const Setting = lazy(() => import('@/components/templates/businessForm/setting'));
+
+const MainBusinessPage: React.FC = () => {
 	const navigate = useNavigate();
 	const { businessId } = useParams<{ businessId: string }>();
 	const { step, setStep } = useBusinessCtrl();
@@ -43,25 +46,23 @@ const MainBusinessPage = () => {
 						leftIcon={<FaArrowLeft />}
 						centerImage={Hi}
 						rightImage={Hi}
-						isIconBusinessShow={false}
+						isIconBusinessShow={true}
 					/>
 				</div>
 			)}
-			{step === 0 && <BusinessControl />}
-
-			{step === 1 && <ExplorePage />}
-
-			{step === 2 && <MenuPage />}
-
-			{step === 3 && <Setting />}
-
-			{step === 4 && (
-				<SectionWithLogo>
-					<Congratulation />
-				</SectionWithLogo>
-			)}
+			<Suspense fallback={<div><LoadingSpinner /></div>}>
+				{step === 0 && <BusinessControl />}
+				{step === 1 && <ExplorePage />}
+				{step === 2 && <MenuPage />}
+				{step === 3 && <Setting />}
+				{step === 4 && (
+					<SectionWithLogo>
+						<Congratulation />
+					</SectionWithLogo>
+				)}
+			</Suspense>
 		</main>
 	);
 };
 
-export default MainBusinessPage;
+export default memo(MainBusinessPage);
