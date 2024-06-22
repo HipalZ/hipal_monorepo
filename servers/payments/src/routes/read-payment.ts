@@ -87,6 +87,25 @@ router.get(
   },
 );
 
+router.get(
+  '/v1/payments/:id/paymentHistory',
+  validateRequest({
+    query: paramsSchema,
+  }),
+
+  async (req: Request, res: Response) => {
+    const { businessId } = req.query;
+
+    const existingPaymentAlerts = await PaymentAlert.find({ businessId }).populate('order_id');
+
+    res.status(200).send({
+      err: false,
+      data: existingPaymentAlerts,
+      message: 'existing payment alerts',
+    });
+  },
+);
+
 router.get('/v1/payments/:id/test', async (req: Request, res: Response) => {
   res.status(200).send({
     err: false,
