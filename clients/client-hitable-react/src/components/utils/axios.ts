@@ -1,5 +1,9 @@
-import axiosConstructor from 'axios';
+import axiosConstructor , { AxiosError } from 'axios';
 import { useUserToken } from '@/components/store/useUserToken';
+import {ZodError} from 'zod';
+import {fromZodError} from 'zod-validation-error'
+import {handleCatchErrors} from './errorHandler';
+import { toast } from 'react-toastify';
 
 const axios = axiosConstructor.create({
   baseURL: import.meta.env.VITE_API_URL as string,
@@ -38,6 +42,9 @@ axios.interceptors.request.use(
   },
   (error) => {
     // Handle the error
+    // console.log('error',error);
+    // toast.error(error?.response?.data?.message || error.message);
+    // handleCatchErrors(error);
     return Promise.reject(error);
   },
 );

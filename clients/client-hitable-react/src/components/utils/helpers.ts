@@ -1,6 +1,8 @@
 import { ICartDish, ICartExtra, ICart, ICartVariant } from "../store/useCart";
 import { IBusinessData, IStatus } from "../types/hiTableData";
 import axios from "./axios";
+import { ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge'
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -229,7 +231,7 @@ export const getUpdatedCart = (kot: IStatus, isDeleted: boolean) => {
   return cart;
 };
 
-export function timestampToTime(timestamp:Date) {
+export function timestampToTime(timestamp: Date) {
   const date = new Date(timestamp * 1000);
   const hours = date.getHours();
   const minutes = "0" + date.getMinutes();
@@ -240,3 +242,39 @@ export function timestampToTime(timestamp:Date) {
   return formattedTime;
 }
 
+export function timestampToDateTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const day = date.getDate();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const month = monthNames[date.getMonth()];
+
+  // Determine the day suffix
+  let daySuffix;
+  switch (day) {
+    case 1: case 21: case 31:
+      daySuffix = "st";
+      break;
+    case 2: case 22:
+      daySuffix = "nd";
+      break;
+    case 3: case 23:
+      daySuffix = "rd";
+      break;
+    default:
+      daySuffix = "th";
+  }
+
+  // Convert to 12-hour format
+  const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
+  const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
+  const amPm = hours < 12 ? "AM" : "PM";
+
+  return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
+}
+
+//apply cn
+export const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs));
+};

@@ -1,0 +1,80 @@
+export type NavItemTypes = 'online' | 'on floor' | 'history' | 'sales';
+
+export interface HiClientzData {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    customRole: CustomRole[];
+    password: string;
+    role: string[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  }
+  
+export interface CustomRole {
+    businessId: Business;
+    customRoleId: string;
+    role: string;
+    accessControl: AccessControl;
+    bookMark: boolean;
+    _id: string;
+  }
+  
+export interface Business {
+    _id: string;
+    businessName: string;
+    logo: string;
+    address: string;
+  }
+  
+export interface AccessControl {
+    hibiz: boolean;
+    _id: string;
+  }
+
+export interface Order {
+  _id: string;
+  businessId: string;
+  total: number;
+  currency: string;
+  billValue: number;
+  receipt: string;
+  name: string;
+  phone: string;
+  tips: number;
+  claimedCoins: number;
+  discount: number;
+  order_id: string;
+  tableName: null | string;
+  date: number;
+}
+
+export interface Alert {
+  completionCode: null | string;
+  errorReason: null | string;
+  errorDescription: null | string;
+  _id: string;
+  businessId: string;
+  comment: null | string;
+  status: string;
+  tableName: string;
+  alertType: string;
+  order_id: Order;
+  payment_id: string;
+  isAccepted: boolean;
+  message: string;
+  coinsApplied: boolean;
+  date: number;
+  name:string;
+}
+
+export interface ISalesLite {
+  totalSale: number;
+  totalDiscount: number;
+  totalOnlineSale: number;
+  totalOfflineSale: number;
+  coinzIssued: number;
+  coinzRedeemed: number;
+}
