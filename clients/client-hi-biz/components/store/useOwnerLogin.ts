@@ -54,6 +54,7 @@ export const useOwnerLogin = create(
         customRole: [],
         password: '',
         id: '',
+        _id:'',
         accessControl: {
           dish: false,
           staff: false,

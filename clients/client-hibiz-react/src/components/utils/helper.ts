@@ -136,7 +136,7 @@ export const getSalesApi = async (businessId: string) => {
 
   try {
     const res = await axios.get(url);
-    return res.data;
+    return res.data.data;
   } catch (error) {
     console.error('Error fetching sales report:', error);
   }

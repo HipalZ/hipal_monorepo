@@ -1,9 +1,9 @@
 import HipalLogo from "@/assets/hipal.png";
-import Hipal from "./hipal";
-import "./login.css";
-import Login from "./login";
-import ForgotPassword from "./forgotPassword";
+import Hipal from "../../components/templates/loginPage/hipal";
+import Login from "../../components/templates/loginPage/login";
+import ForgotPassword from "../../components/templates/loginPage/forgotPassword";
 import useLoginStore from "@/components/store/useLogin";
+import "./login.css";
 
 const SectionWithLogo = ({
 	children,
