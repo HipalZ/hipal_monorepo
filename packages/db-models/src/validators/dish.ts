@@ -1,5 +1,13 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 const portionSchema = z.object({
   name: z.string(),
   price: z.coerce.number(),
@@ -10,7 +18,7 @@ const portionSchema = z.object({
 });
 
 const filtersSchema = z.object({
-  dishes: z.array(z.string()).optional(),
+  dishes: z.array(ObjectIdSchema).optional(),
   timeToConsume: z.coerce.number().optional(),
   portionBestSuited: z.string().optional(),
   bestWeather: z.string().optional(),
@@ -29,7 +37,7 @@ const tagSchema = z.object({
 });
 
 export const dishSchema = z.object({
-  businessId: z.string(),
+  businessId: ObjectIdSchema,
   name: z.string(),
   price: z.coerce.number(),
   swiggy: z.coerce.number().optional(),
@@ -37,10 +45,10 @@ export const dishSchema = z.object({
   discount: z.coerce.number().optional(),
   avgTime: z.coerce.number().optional(),
   dishType: z.string(),
-  categories: z.array(z.string()).optional(),
+  categories: z.array(ObjectIdSchema).optional(),
   portions: z.array(portionSchema).optional(),
-  extras: z.array(z.string()).optional(),
-  kitchenId: z.string(),
+  extras: z.array(ObjectIdSchema).optional(),
+  kitchenId: ObjectIdSchema,
   filters: filtersSchema
     .default({
       timeToConsume: 0,

@@ -1,7 +1,15 @@
-import { string, z } from 'zod';
-
+import mongoose from 'mongoose';
+import { z } from 'zod';
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 export const categorySchema = z.object({
-  businessId: z.string(),
+  businessId: ObjectIdSchema,
   name: z.string().max(100),
   visibility: z.boolean(),
   timerOn: z.boolean().optional(),
@@ -13,7 +21,7 @@ export const categorySchema = z.object({
   parentCategoryId: z.string().optional().default(''),
   coverImage: z.string().url().optional(),
   links: z.array(z.string()).optional(),
-  dishes: z.array(string()).optional().default([]),
+  dishes: z.array(ObjectIdSchema).optional().default([]),
   version: z.coerce.number().optional(),
   availability: z.boolean().default(true),
   charges: z.array(z.unknown()).optional(),

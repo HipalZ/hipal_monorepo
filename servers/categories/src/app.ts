@@ -7,7 +7,7 @@ import { createCategoryRouter } from './routes/create-category';
 import { deleteCategoriesRouter } from './routes/delete-category';
 // Routes
 import { authTokenValidator, errorHandler } from '@hi/common';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
 import { readCategoriesRouter } from './routes/read-category';
@@ -72,7 +72,17 @@ app.use(
 );
 
 app.use(idempotent);
-app.use(authTokenValidator);
+const excludedPaths = ['/v1/categories']; // Add more paths as needed
+
+// Conditional middleware to exclude authTokenValidator on certain routes
+const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+  if (!excludedPaths.includes(req.path)) {
+    return authTokenValidator(req, res, next);
+  }
+  next();
+};
+
+app.use(conditionalAuthTokenValidator);
 app.use(errorHandler);
 // Register routes
 app.use(createCategoryRouter);

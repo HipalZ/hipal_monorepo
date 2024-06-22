@@ -16,21 +16,6 @@ interface RequestWithUser extends Request {
   currentUser?: UserPayload;
 }
 
-// const createAccessToken = (user: any) => {
-//   return jwt.sign(
-//     {
-//       id: user.id,
-//       email: user.email,
-//       name: user.name,
-//       phone: user.phone,
-//       role: user.role,
-//       customRole: user.customRole,
-//     },
-//     process.env.JWT_SECRET as string,
-//     { expiresIn: '1m' }, // Add 7 day expiration
-//   );
-// };
-
 export const authTokenValidator = async function (request: RequestWithUser, res: Response, next: NextFunction) {
   try {
     const accessToken = request.headers.authorization?.split(' ')[1];
@@ -52,8 +37,6 @@ export const authTokenValidator = async function (request: RequestWithUser, res:
     if (!decodedToken) {
       return res.status(401).send({ status: false, error: true, message: 'Invalid Token!' });
     }
-
-    console.log('decodedToken:', decodedToken);
 
     if (!request.currentUser) {
       request.currentUser = decodedToken as UserPayload;

@@ -1,5 +1,6 @@
-import mongoose, { Model } from 'mongoose';
-import { AlertType } from '../validators';
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { AlertType } from '../validators';
 
 const alertSchema = new mongoose.Schema<AlertType>(
   {

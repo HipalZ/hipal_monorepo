@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
-import { authTokenValidator, errorHandler } from '@hi/common';
+import { errorHandler } from '@hi/common';
 import { createUserRouter } from './routes/create-business';
 import { deleteBusinessesRouter } from './routes/delete-business';
 import { readBusinessRouter } from './routes/read-business';
@@ -67,7 +67,23 @@ app.use(
     sameSite: 'none',
   }),
 );
-app.use(authTokenValidator);
+// // List of paths to exclude
+// const excludedPaths = ['/v1/businesses', '/v1/businesses/get/allbusiness', '/v1/businesses/:id']; // Add more paths as needed
+
+// // Conditional middleware to exclude authTokenValidator on certain routes or if the method is GET
+// const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+//   // Check if the request path is in the excludedPaths list or if the request method is GET
+//   const isExcludedPath = excludedPaths.some((path) => path === req.path);
+
+//   if (isExcludedPath && req.method === 'GET') {
+//     return next();
+//   }
+
+//   // Call the authTokenValidator for other requests
+//   authTokenValidator(req, res, next);
+// };
+
+// app.use(conditionalAuthTokenValidator);
 // app.use(currentUser);
 
 // Register routes

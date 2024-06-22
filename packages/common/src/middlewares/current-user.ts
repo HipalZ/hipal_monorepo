@@ -11,13 +11,6 @@ export enum ClientRoles {
   RESTAURANT_STAFF = 'RESTAURANT_STAFF',
 }
 
-// id: user.id,
-//       email: user.email,
-//       name: user.name,
-//       phone: user.phone,
-//       role: user.role,
-//       customRole: user.customRole,
-
 interface UserPayload {
   id: string;
   role: ClientRoles;

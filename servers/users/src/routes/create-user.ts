@@ -1,5 +1,5 @@
 // import { BadRequestError, NotFoundError, validateRequest } from "@hipal/common";
-import { UrlAttrs, UserAttrs } from '@hi/db-models/src/validators';
+import { staffValidator, UrlAttrs, UserAttrs } from '@hi/db-models/src/validators';
 import axios from 'axios';
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
@@ -7,6 +7,7 @@ import { redisWrapper } from '../redis-wrapper';
 
 import { Admin, LoyaltySettings, UrlModel, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
+import bcrypt from 'bcrypt';
 import { ClientSession } from 'mongoose';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
@@ -133,9 +134,9 @@ const addSignUpBonus = async (
 
 router.post(
   '/v1/users/:id/signUp',
-  // validateRequest({
-  //   body: UserAttrs,
-  // }),
+  validateRequest({
+    body: UserAttrs,
+  }),
   async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
     let { phone, role } = req.body;
 
@@ -157,28 +158,26 @@ router.post(
     //   return res.status(500).send({ status: false, message: e.message });
     // }
 
+    const accessTokenExistingUser = createAccessToken(existingUser);
+    const refreshTokenExistingUser = createRefreshToken(existingUser);
     if (existingUser) {
       return res.status(409).send({
         status: false,
         message: 'User already exist',
-        data: existingUser,
+        data: { user: existingUser, accessToken: accessTokenExistingUser, refreshToken: refreshTokenExistingUser },
         err: false,
       });
     }
     const user = await User.create(req.body);
-
-    // const userJwt = createJWT(user);
-    // req.session = {
-    //   jwt: userJwt,
-    // };
+    const accessToken = createAccessToken(user);
+    const refreshToken = createRefreshToken(user);
 
     return res.status(201).send({
       status: true,
       message: 'User created successfully',
-      data: user,
+      data: { user: user, accessToken, refreshToken },
       err: false,
     });
-    return res.status(500).send({ status: false, message: 'Error while login or signup' });
   },
 );
 
@@ -251,10 +250,13 @@ router.post(
     //   return res.status(200).send(modifyUser);
     // }
 
+    const accessToken = createAccessToken(existingUser);
+    const refreshToken = createRefreshToken(existingUser);
+
     return res.status(200).send({
       status: true,
       message: 'User logged in successfully',
-      data: existingUser,
+      data: { user: existingUser, accessToken, refreshToken },
       err: false,
     });
   },
@@ -406,37 +408,78 @@ router.post(
 );
 
 router.post(
-  '/v1/users/waiterLogin',
-  // validateUser,
-  // validateRequest,
-  async (req: Request, res: Response) => {
-    const { phone, password, businessId } = req.body;
+  '/v1/users/:id/stafflogin',
+  validateRequest({
+    body: staffValidator,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof staffValidator>>, res: Response) => {
+    const { phone, password } = req.body;
+    const staff = await User.findOne({ phone: '5555555543', role: 'RESTAURANT_STAFF' }).populate({
+      path: 'customRole.businessId',
+      select: 'businessName address logo',
+    });
 
-    const existingUser = await User.findOne({ phone, password });
-    if (businessId) {
-      if (existingUser?.customRole?.[0]?.businessId != businessId) {
-        return res.status(400).send({ data: {}, status: false, message: 'staff not belong to business...!' });
-      }
+    const isPasswordValid = await verifyPassword(password, staff?.password as string);
+    console.log('isPasswordValid', isPasswordValid);
+    if (!isPasswordValid) {
+      return res.status(400).send({
+        message: 'Invalid Password',
+        data: {},
+        err: true,
+      });
     }
-    if (!existingUser) {
-      return res.status(400).send({ data: {}, status: false, message: 'Phone or Password invalid...!' });
-    }
-
     // Generate JWT
-    const accessToken = createAccessToken(existingUser);
-    const refreshToken = createRefreshToken(existingUser);
+    const accessToken = createAccessToken(staff);
+    const refreshToken = createRefreshToken(staff);
 
-    res.status(201).send({
-      data: {
-        existingUser,
-        accessToken,
-        refreshToken,
-      },
+    return res.send({
+      message: 'Staff Logged in Successfully',
+      data: { user: staff, accessToken, refreshToken },
       err: false,
-      message: 'User logged in successfully',
-      existingUser,
-      accessToken,
-      refreshToken,
+    });
+  },
+);
+
+const saltRounds = 10;
+
+async function hashPassword(password: string): Promise<string> {
+  const hash = await bcrypt.hash(password, saltRounds);
+  return hash;
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
+}
+router.post(
+  '/v1/users/:id/addStaff',
+  validateRequest({
+    body: UserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UserAttrs>>, res: Response) => {
+    const { phone, role, name, password, customRole } = req.body;
+    const existingUser = await User.findOne({ phone, role: 'RESTAURANT_STAFF' }).select('phone');
+    if (existingUser) {
+      return res.status(409).send({
+        message: 'Staff already exist',
+        data: existingUser,
+        err: false,
+      });
+    }
+
+    if (password === undefined) {
+      return res.status(400).send({
+        message: 'Password is required',
+        err: true,
+      });
+    }
+
+    const hashPass = await hashPassword(password);
+
+    const createStaff = await User.create({ phone, role, password: hashPass, name, customRole });
+    return res.send({
+      message: 'Staff Created Successfully',
+      data: createStaff,
+      err: false,
     });
   },
 );

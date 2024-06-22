@@ -1,5 +1,6 @@
-import mongoose, { Model } from 'mongoose';
-import { BusinessType } from '../validators';
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { BusinessType } from '../validators';
 
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -149,14 +150,14 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: Boolean,
       default: false,
     },
-    tags:{
+    tags: {
       type: [String],
       default: [],
     },
     description: {
       type: String,
       default: '',
-    }
+    },
   },
   {
     timestamps: true,

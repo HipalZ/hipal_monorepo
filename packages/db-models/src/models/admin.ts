@@ -1,7 +1,7 @@
-import mongoose, { Model } from 'mongoose';
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { AdminType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
-
-import { AdminType } from '../validators';
 
 const adminSchema = new mongoose.Schema<AdminType>(
   {

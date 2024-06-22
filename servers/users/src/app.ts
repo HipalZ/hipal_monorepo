@@ -69,7 +69,15 @@ app.use(
 );
 
 // Define a list of routes to exclude from authTokenValidator
-const excludedPaths = ['/v1/users/waiterLogin', '/v1/users/chef/Login', '/v1/users/Owner/Login']; // Add more paths as needed
+const excludedPaths = [
+  '/v1/users/waiterLogin',
+  '/v1/users/chef/Login',
+  '/v1/users/Owner/Login',
+  '/v1/businesses/get/allbusiness',
+  '/v1/users/:id/signIn',
+  '/v1/users/:id/signUp',
+  '/v1/users/:businessId/getUserReward',
+]; // Add more paths as needed
 
 // Conditional middleware to exclude authTokenValidator on certain routes
 const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {

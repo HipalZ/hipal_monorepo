@@ -52,7 +52,7 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     },
     reward_date: {
       type: Number,
-      default: Date.now,
+      default: Date.now(),
     },
   },
   {

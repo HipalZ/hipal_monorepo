@@ -1,6 +1,7 @@
-import mongoose, { Model } from 'mongoose';
-import { CategoryType } from '../validators';
-const ObjectId = mongoose.Schema.Types.ObjectId as any;
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { CategoryType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 const categorySchema = new mongoose.Schema<CategoryType>(
   {
     businessId: {

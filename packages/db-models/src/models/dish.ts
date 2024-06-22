@@ -1,6 +1,7 @@
-import mongoose, { Model } from 'mongoose';
-import { DishType, FiltersType, PortionType, TagType } from '../validators';
-const ObjectId = mongoose.Schema.Types.ObjectId as any;
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { DishType, FiltersType, PortionType, TagType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const tagsSchema = new mongoose.Schema<TagType>(
   {

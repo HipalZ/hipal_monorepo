@@ -1,6 +1,6 @@
 import cookieSession from 'cookie-session';
 import cors from 'cors';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 // Routes
 import { authTokenValidator, errorHandler } from '@hi/common';
@@ -67,7 +67,17 @@ app.use(
   }),
 );
 
-app.use(authTokenValidator);
+const excludedPaths = ['/v1/settings']; // Add more paths as needed
+
+// Conditional middleware to exclude authTokenValidator on certain routes
+const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+  if (!excludedPaths.includes(req.path)) {
+    return authTokenValidator(req, res, next);
+  }
+  next();
+};
+
+app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createSettingsRouter);

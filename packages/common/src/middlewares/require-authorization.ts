@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import { NotAuthorizedError } from '../errors/notAuthorizedError';
 
 export enum ClientRoles {
   OPERATOR = 'OPERATOR',
@@ -18,7 +17,7 @@ export const requireAuthorization = (roles: ClientRoles[]) => {
       return res.status(401).send({ message: 'Invalid Domain' });
     }
     if (!req.currentUser) {
-      throw new NotAuthorizedError();
+      return res.status(401).send({ message: 'Not Authorized' });
     }
 
     const exists = roles.includes(req.currentUser?.role as ClientRoles);

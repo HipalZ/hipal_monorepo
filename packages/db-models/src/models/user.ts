@@ -1,20 +1,6 @@
 import mongoose, { Model } from 'mongoose';
 import { CustomRoleType, UserControllerType, UserType } from '../validators';
-
-const CustomRole = {
-  businessId: {
-    type: String,
-    // required: true,
-  },
-  customRoleId: {
-    type: String,
-    // required: true,
-  },
-  roleName: {
-    type: String,
-    // required: true,
-  },
-};
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const UserController = {
   hibiz: {
@@ -47,9 +33,33 @@ const UserController = {
   },
 };
 
-const customRoleSchema = new mongoose.Schema<CustomRoleType>(CustomRole);
-
 const userController = new mongoose.Schema<UserControllerType>(UserController);
+
+const CustomRole = {
+  businessId: {
+    type: ObjectId,
+    required: true,
+    ref: 'Business',
+  },
+  customRoleId: {
+    type: ObjectId,
+    required: true,
+    ref: 'Role',
+  },
+  role: {
+    type: String,
+  },
+  accessControl: {
+    type: userController,
+    default: {},
+  },
+  bookMark: {
+    type: Boolean,
+    default: false,
+  },
+};
+
+const customRoleSchema = new mongoose.Schema<CustomRoleType>(CustomRole);
 
 const userSchema = new mongoose.Schema<UserType>(
   {
@@ -65,16 +75,7 @@ const userSchema = new mongoose.Schema<UserType>(
     phone: {
       type: String,
       required: true,
-    },
-
-    DOB: {
-      type: String,
-    },
-    gender: {
-      type: String,
-    },
-    userDiscription: {
-      type: String,
+      unique: true,
     },
     customRole: {
       type: [customRoleSchema],
@@ -82,19 +83,12 @@ const userSchema = new mongoose.Schema<UserType>(
     },
     password: {
       type: String,
-      required: false,
+      required: true,
     },
-    accessControl: {
-      type: userController,
-      default: {},
-    },
+
     role: {
       type: [String],
       default: [],
-    },
-    withScaner: {
-      type: Boolean,
-      default: false,
     },
   },
   {

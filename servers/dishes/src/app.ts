@@ -1,6 +1,6 @@
 import cookieSession from 'cookie-session';
 import cors from 'cors';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 import { idempotent } from './middleware/idempotent';
@@ -71,7 +71,17 @@ app.use(
 
 app.use(idempotent);
 app.use(errorHandler);
-app.use(authTokenValidator);
+const excludedPaths = ['/v1/dishes']; // Add more paths as needed
+
+// Conditional middleware to exclude authTokenValidator on certain routes
+const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+  if (!excludedPaths.includes(req.path)) {
+    return authTokenValidator(req, res, next);
+  }
+  next();
+};
+
+app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createDishRouter);
