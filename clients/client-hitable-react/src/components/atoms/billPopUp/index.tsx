@@ -9,13 +9,13 @@ import axios from "@/components/utils/axios";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 
 const BillPopUp = memo(() => {
-    const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData, setViewData } = useLiteStore();
+    const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData, setViewData,removeOfflineAlert } = useLiteStore();
     const [showTick, setShowTick] = useState(false);
     const clickViewMore = useLiteStore((s) => s.clickViewMore);
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore)
     const [clickComment, setClickComment] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [comment, setComment] = useState('')
+    const [comment, setComment] = useState('') 
 
     const copyText = () => {
         const text = document.querySelector('#discount-reason')?.textContent || '';
@@ -61,8 +61,9 @@ const BillPopUp = memo(() => {
         setClickedConfirm(true);
     }
 
-    const handleCloseConfirm = () => {
+    const handleCloseConfirm = (id:string) => {
         setClickViewMore(!clickViewMore);
+        removeOfflineAlert(id)
         setClickedConfirm(false);
     }
 
@@ -95,7 +96,7 @@ const BillPopUp = memo(() => {
                 </div>
                 <div className="flex justify-center mb-5">
                     <button
-                        onClick={handleCloseConfirm}
+                        onClick={()=>handleCloseConfirm(viewData._id)}
                         className="on_active_bounce fixed bottom-4 z-50 bg-black rounded-full w-[20.5rem] py-[0.75rem] text-base-100 text-[18px] leading-[1.15rem]"
                     >
                         Close

@@ -27,6 +27,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                 url: `/v1/payments/:pid/order/${id}`,
             };
             const response = await axios(config);
+            console.log('off',response);
             if (response.status === 200) {
                 removeOfflineAlert(id);
             }
