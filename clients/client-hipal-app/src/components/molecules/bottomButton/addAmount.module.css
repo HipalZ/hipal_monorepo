@@ -1,0 +1,100 @@
+@keyframes float {
+    0% {
+      transform: translate(-50%, -10%);
+    }
+    50% {
+      transform: translate(-50%, -50%);
+    }
+    100% {
+      transform: translate(-50%, -10%);
+    }
+  }
+  
+  @keyframes float2 {
+    0% {
+      transform: translate(-50%, -90%);
+    }
+    50% {
+      transform: translate(-50%, -50%);
+    }
+    100% {
+      transform: translate(-50%, -90%);
+    }
+  }
+  
+  .bottom_ring {
+    position: absolute;
+    width: 306px;
+    height: 53px;
+    border-radius: 50%;
+    border: 1px solid #000000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    animation: float 5s ease-in-out infinite;
+  }
+  
+  .mid_ring {
+    position: absolute;
+    width: 306px;
+    height: 53px;
+    border-radius: 50%;
+    background-color: #C0ADF2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+  
+  .top_ring {
+    position: absolute;
+    width: 306px;
+    height: 53px;
+    border-radius: 50%;
+    border: 1px solid #000000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    animation: float2 5s ease-in-out infinite;
+  }
+  
+  .globe_payment {
+    position: absolute;
+    width: 193px;
+    height: 193px;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -95%);
+    z-index: 2;
+  }
+  
+  .globe_payment::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5); 
+    z-index: -1; 
+    border-radius: 50%; 
+  }
+
+  .plus_pay_right {
+    position: absolute;
+    top:-10rem;
+    right: 3rem;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    font-weight: 100 !important;
+  }
+
+  .plus_pay_left {
+    position: absolute;
+    top:-4rem;
+    left: 4rem;
+    transform: translate(0%, -25%);
+    z-index: 2;
+    font-weight: 100 !important;
+  }

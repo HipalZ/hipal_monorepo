@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import {  Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { HiX } from 'react-icons/hi'
 
@@ -32,7 +32,7 @@ export default function BottomPopUp({
 						leaveTo='opacity-0 translate-y-full'
 					>
 						<Dialog.Panel className='relative w-full max-w-md shadow-md bg-base-100 rounded-t-[1.5rem] '>
-							<div className='absolute z-50 on_active_bounce flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 -top-12 left-1/2'>
+							<div className='absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-12 left-[45%]'>
 								<HiX
 									className='p-2 text-4xl text-black bg-white rounded-full cursor-pointer'
 									onClick={onClose}

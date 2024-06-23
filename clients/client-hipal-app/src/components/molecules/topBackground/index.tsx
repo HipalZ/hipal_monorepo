@@ -8,13 +8,15 @@ import { updateTheme } from "@/components/utils/themes"
 import Image from "next/image"
 import { memo, useEffect } from "react"
 
-function TopBackground({ themes }: { themes:IThemes }) {
+function TopBackground({ themes }: { themes: IThemes | undefined }) {
 	const { getPreviousPath } = useRoutingFlow()
 	const onBackURL = `${getPreviousPath()}`
 
-	useEffect(()=>{
-		updateTheme(themes)
-	},[themes])
+	useEffect(() => {
+		if (themes) {
+			updateTheme(themes)
+		}
+	}, [themes])
 
 	return (
 		<div className="relative h-[20vh] w-full overflow-hidden ">
@@ -23,7 +25,7 @@ function TopBackground({ themes }: { themes:IThemes }) {
 					src={themes?.miniBanner || ""}
 					width={700}
 					height={300}
-					quality={75}
+					quality={95}
 					objectFit="cover"
 					className="mx-auto"
 					alt={"miniBanner Image"}

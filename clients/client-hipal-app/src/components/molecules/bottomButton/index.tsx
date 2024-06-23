@@ -20,30 +20,25 @@ function BottomButton({
   }, [router, businessId]);
 
   return (
-    <center className="fixed bottom-0 z-20 p-4 bg-base-100 w-full max-w-[30rem]">
+    <>
       {children ? (
-        children
+        <center className="fixed bottom-0 z-20 p-4 bg-base-100 w-full max-w-[30rem]">
+          {children}
+        </center>
       ) : (
-        <>
-          <div role="button" className="flex items-center justify-center flex-1 text-sm">
-            <AiFillHome size={22} />
-            Home
-          </div>
-          <div role="button" className="flex items-center justify-center flex-1 text-sm">
-            <MdOutlineMenuBook size={22} />
-            Pay Bill
-          </div>
-          <button
-            onClick={goToMenu}
-            type="button"
-            className="on_active_bounce flex items-center justify-center w-[40%] py-3 rounded-full text-base-100 bg-primary text-sm"
-          >
-            <MdOutlineMenuBook size={22} />
-            &nbsp; Menu
+        <center className="fixed bottom-0 z-20 flex items-center justify-between p-4 bg-base-100 w-full max-w-[30rem]">
+          <center role="button" className="text-sm">
+            <AiFillHome size={22} />	Home
+          </center>
+          <center role="button" className="text-sm">
+            <MdOutlineMenuBook size={22} />	Pay Bill
+          </center>
+          <button onClick={goToMenu} type="button" className="on_active_bounce flex items-center justify-center w-[40%] py-3 rounded-full text-base-100 bg-primary text-sm">
+            <MdOutlineMenuBook size={22} /> &nbsp;	Menu
           </button>
-        </>
+        </center>
       )}
-    </center>
+    </>
   );
 }
 

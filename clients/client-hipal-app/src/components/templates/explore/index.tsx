@@ -28,8 +28,6 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const {setTableName} = useTableData()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const isLogin = useLogin((s) => s.isLogin)
-    const setDirection = useLogin((s) => s.setDirection)
 
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
@@ -48,15 +46,6 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
         return value?.src[pattern as keyof typeof value.src];
     }, [srcColor]);
 
-    const goToLoyalty = (str: string) => {
-        if (!isLogin) {
-            setDirection(str)
-            return routePaths[PAGE_TYPES.SIGN_UP](data?.business?._id || '')
-        } else {
-            setDirection("")
-            return routePaths[PAGE_TYPES.LOYALTY](data?.business?._id || '')
-        }
-    }
 
     useEffect(() => {
         if (data?.loyalty?.loyaltyId) {
@@ -69,10 +58,6 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
         }
         setTableName(tableName || '')
     }, [])
-
-    const redirectToMenu = () => {
-        return `/r/${data?.business?._id}/category/`
-    }
 
     return (
         <div className="relative flex flex-col w-full pb-16 ">

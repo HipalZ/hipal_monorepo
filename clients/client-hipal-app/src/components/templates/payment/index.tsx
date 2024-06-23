@@ -4,28 +4,27 @@ import { isEmpty } from "lodash-es";
 import Image from "next/image";
 import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
-import { MdCurrencyRupee, MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
+import {MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
 import { IBusinessData } from "@/components/types/businessData";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/utils/axios";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { SlCreditCard } from 'react-icons/sl'
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 import usePayment from "@/components/store/usePayment";
-import Coinz from '@/assets/img/coinz.png'
 import { BsPatchPlusFill } from "react-icons/bs";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import useTableData from "@/components/store/useTableData";
+import PaymentComponent from "./selectPayment";
 
-type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
+export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
 const Payment = ({ data }: { data: IBusinessData }) => {
     const [otp, setOtp] = useState(["", "", "", ""])
@@ -40,9 +39,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
         setTips, tips } = usePaymentStore()
-    const {tableName,setTableName} = useTableData()
+    const { tableName, setTableName } = useTableData()
     const [offlineOrderId, setOfflineOrderId] = useState('')
     const router = useRouter()
+    const searchParams = useSearchParams()
+    console.log("search params", typeof searchParams?.get("amount"));
 
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
@@ -81,35 +82,45 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setOtp(newOtp)
     }
 
+    const handlePaymentSuccess = (response: any) => {
+        sendPaymentResponse(response);
+        setRazorPaySignature(response.razorpay_signature);
+        setRazorPayOrderId(response.razorpay_order_id);
+        setRazorPayPaymentId(response.razorpay_payment_id);
+    };
+
+    const handlePaymentDismiss = () => {
+        setRazorPaySignature('');
+        setRazorPayOrderId('');
+        setRazorPayPaymentId('');
+        setOfflineOrderId('');
+        toast.error('Payment failed');
+    };
+    const handlePaymentFailure = (response: any) => {
+        setRazorPayOrderId(response.error.metadata.order_id);
+        console.error(response);
+    };
+
     const creatingRazorPayOptions = async (total: number, orderId: string) => {
         if (!orderId) {
-            return
+            return;
         }
-        const script = document.createElement('script')
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-        script.async = true
-        document.body.appendChild(script)
-        const date = new Date()
-        const day = String(date.getDate()).padStart(2, '0')
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const year = date.getFullYear()
-        const dayAndDate = `${day}-${month}-${year}`
-        const time = new Date().toLocaleTimeString('it-IT')
+
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+
         script.onload = () => {
             const options = {
-                key: "rzp_test_DZMxVyKgZ9crXx",
+                key: 'rzp_test_DZMxVyKgZ9crXx',
                 amount: total,
                 currency: 'INR',
                 name: 'PALTRIBE',
                 description: 'Test Transaction',
                 image: 'https://example.com/your_logo',
                 order_id: orderId,
-                handler: (response) => {
-                    sendPaymentResponse(response)
-                    setRazorPaySignature(response.razorpay_signature)
-                    setRazorPayOrderId(response.razorpay_order_id)
-                    setRazorPayPaymentId(response.razorpay_payment_id)
-                },
+                handler: handlePaymentSuccess,
                 prefill: {
                     name: userDetails.name,
                     email: userDetails.email,
@@ -118,13 +129,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 modal: {
                     subscription_card_change: true,
                     remember_customer: true,
-                    ondismiss: () => {
-                        setRazorPaySignature('')
-                        setRazorPayOrderId('')
-                        setRazorPayPaymentId('')
-                        setOfflineOrderId('')
-                        toast.error('Payment failed')
-                    },
+                    ondismiss: handlePaymentDismiss,
                 },
                 notes: {
                     address: 'Paltribe solutions',
@@ -139,20 +144,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 theme: {
                     color: '#3399cc',
                 },
-            }
-            const rzp1 = new (window as any).Razorpay(options)
-            rzp1.open()
-            rzp1.on(
-                'payment.failed',
-                (response) => {
-                    setRazorPayOrderId(response.error.metadata.order_id)
-                },
-                (error) => {
-                    console.error(error)
-                },
-            )
-        }
-    }
+            };
+
+            const rzp1 = new (window as any).Razorpay(options);
+            rzp1.open();
+            rzp1.on('payment.failed', handlePaymentFailure);
+        };
+    };
 
     // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
@@ -228,7 +226,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 },
             }
             const response = await axios(config)
-            console.log(response);
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
                 setOfflineOrderId(response.data.data.order_id)
@@ -242,46 +239,54 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
     }
 
+    const createRazorPayOrder = async (total: number): Promise<string> => {
+        const config = {
+            method: 'POST',
+            url: '/v1/payments/createOrder',
+            data: {
+                businessId: data?.business?._id,
+                total: total,
+                currency: 'INR',
+                claimedCoins: claimedCoinz,
+                billValue: billValue,
+                name: userDetails.name || 'user',
+                phone: userDetails.phone || '+91**********',
+                tips: tips,
+                tableName: tableName,
+            },
+        };
+        const response = await axios(config);
+        const orderId = response.data.data;
+        setRazorPayOrderId(orderId);
+        return orderId;
+    };
+
+
     const handleCreateOrder = async (total: number) => {
         if (total <= 0) {
-            return toast.error('Invalid amount')
+            return toast.error('Invalid amount');
         }
         if(tableName === ''){return toast.error('Please scan to start')}
         if (selectedMode.toLowerCase() === 'offline') {
-            handleCreateOfflineOrder()
-        } else {
-            setIsLoading(true)
-            if (razorPayOrderId?.length) {
-                await creatingRazorPayOptions(total, razorPayOrderId)
-            } else {
-                try {
-                    const config = {
-                        method: 'POST',
-                        url: '/v1/payments/createOrder',
-                        data: {
-                            businessId: data?.business?._id,
-                            total: total,
-                            currency: 'INR',
-                            claimedCoins: claimedCoinz,
-                            billValue: billValue,
-                            name: userDetails.name || "user",
-                            phone: userDetails.phone || "+91**********",
-                            tips: tips,
-                            tableName: tableName,
-                        },
-                    }
-                    const response = await axios(config)
-                    setRazorPayOrderId(response.data.data)
-                    await creatingRazorPayOptions(total, response.data.data)
-                } catch (err) {
-                    alert('Something is wrong!! please try after sometime')
-                    setRazorPayPaymentId('')
-                    setRazorPaySignature('')
-                }
-            }
-            setIsLoading(false)
+            await handleCreateOfflineOrder();
+            return;
         }
-    }
+
+        setIsLoading(true);
+
+        try {
+            const orderId = razorPayOrderId || await createRazorPayOrder(total);
+            if (orderId) {
+                await creatingRazorPayOptions(total, orderId);
+            }
+        } catch (error) {
+            toast.error('Something went wrong! Please try again later.');
+            setRazorPayPaymentId('');
+            setRazorPaySignature('');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleTipSelect = (tip: string) => {
         if (tip === 'Other') {
@@ -337,15 +342,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
-    const handleBillAmount = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^0-9.]/g, '');
-        setBillValue(Number(value))
-        if (claimedCoinz) {
-            toast.error('Reapply coinz to apply')
-            setClaimedCoinz(0)
-        }
-    }
-
     const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
         const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
         const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
@@ -359,6 +355,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleBack = () => {
+        console.log(selectedMode);
         if (selectedMode === 'MODE') {
             return setSelectedMode('INVOICE')
         }
@@ -397,13 +394,17 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     />
                 </div>
                 <BottomButton>
-                    <button onClick={handleCoins}>
+                    <button className="w-full px-4 py-3 rounded-full bg-primary text-base-100" onClick={handleCoins}>
                         Next
                     </button>
                 </BottomButton>
             </BottomPopUp>
         )
     }
+
+    useEffect(() => {
+        setBillValue(Number(searchParams?.get("amount")))
+    }, [])
 
     return (
         <div className='relative'>
@@ -421,7 +422,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         </button>
                     </span>
                 </article>
-                <center className='absolute mt-2 ml-8 text-xl font-semibold left-1/3'>You Pay</center>
+                <center className='absolute mt-2 ml-8 text-xl font-semibold left-1/3'>HiPay</center>
                 <br />
                 <br />
             </section>
@@ -453,8 +454,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                     blurDataURL={getRandomBlurImg(100, 100)}
                                 />
                             ) : (
-                                    <PlaceholderImg />
-                                )}
+                                <PlaceholderImg />
+                            )}
                         </div>
                         <br />
                         {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
@@ -465,10 +466,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             <span className='text-[2rem]'>
                                 <Image src={celebration} alt='celebration' height={25} width={25} />
                             </span>{' '}
-                        &nbsp;&nbsp;Special discount for Special members !!!
-                    </h6>
+                            &nbsp;&nbsp;Special discount for Special members !!!
+                        </h6>
                     </div>
-                    <center className="text-2xl">
+                    {/* <center className="text-2xl">
                         Enter the Amount
                 </center>
                     <input
@@ -478,28 +479,28 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         placeholder='Enter amount'
                         maxLength={6}
                         className='w-[90%] border border-[#000] pl-4 min-h-[3rem] font-semibold text-[1rem] rounded-[1rem] my-auto !py-2 mx-4 mt-4'
-                    />
+                    /> */}
                     <article
                         onClick={openModal}
                         className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'
                     >
                         <div className='flex items-center'>
                             <IoMdCard size={30} className='-rotate-45 ' />
-                        &nbsp; &nbsp;
-                        <div>
+                            &nbsp; &nbsp;
+                            <div>
                                 <h6>Use Coinz</h6>
                                 <h6>{claimedCoinz} coinz applied</h6>
                             </div>
                         </div>
                         <div className='flex items-center space-x-4'>
                             <h6>
-                                {userCoinz}
+                                {userCoinz - claimedCoinz }
                             </h6>
                             <MdKeyboardArrowRight size={30} />
                         </div>
                     </article>
                     <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
-                        <h6 className="text-base mx-6 mt-4">Bill Summary</h6>
+                        <h6 className="mx-6 mt-4 text-base">Bill Summary</h6>
                         <div className='relative mx-6 text-[1.25rem] text-base-content border border-primary py-4 rounded-2xl'>
                             <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-content leading-[1.25rem]'>
                                 <h1>Total bill amount</h1>
@@ -528,7 +529,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                         </span>
                                     </div>
                                 </div>
-                                {isTipActive ? <div className='flex space-x-2 mx-2'>
+                                {isTipActive ? <div className='flex mx-2 space-x-2'>
                                     {['10', '20', '50', 'Other'].map((tip, index) => (
                                         <button
                                             key={index}
@@ -554,90 +555,24 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                             className='absolute right-0 top-0 bg-primary text-white px-2 py-0.5 rounded-lg'
                                         >
                                             Save
-                                </button>
+                                        </button>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <BottomButton themes={data?.settings?.themes}>
-                        <div onClick={()=>handleMode('MODE')} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'}`} >
-                            <span>Select Mode</span>
+                    <BottomButton >
+                        <div onClick={() => handleMode("MODE")} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'} bg-primary text-base-100 py-3 px-3 rounded-full`} >
+                            <span>Proceed to pay ₹ {billValue - claimedCoinz + tips}</span>
                         </div>
                     </BottomButton>
                 </> :
-                <>
-                    <center>
-                        <Image src={Coinz} alt="Coinz" width={200} height={200} />
-                    </center>
-                    <section className='mx-[1.5rem] mb-[1.5rem]'>
-                        <center className='text-lg font-semibold text-base-content'>Payment Modes</center>
-                        <br />
-                        <article
-                            onClick={() => handleMode('ONLINE')}
-                            className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} flex items-center py-4 space-x-2 border-2 hover:border-primary rounded-2xl`}
-                        >
-                            <input
-                                type="radio"
-                                name="paymentMode"
-                                checked={selectedMode === 'ONLINE'}
-                                value="ONLINE"
-                                onChange={() => handleMode('ONLINE')}
-                                className='mx-4'
-                                disabled={!data?.business?.isPaymentIntegrated}
-                            />
-                            <span className='rounded-full bg-base-200'>
-                                <SlCreditCard size={30} />
-                            </span>
-                            <h1>
-                                <span className='text-base font-semibold'>Pay Online</span>
-                                <br />
-                                <span>UPI | Debit card | Credit Card</span>
-                            </h1>
-                        </article>
-                        <br />
-                        <article
-                            onClick={() => handleMode('OFFLINE')}
-                            className='flex items-center py-4 space-x-2 border-2 hover:border-primary rounded-2xl'
-                        >
-                            <input
-                                type="radio"
-                                name="paymentMode"
-                                checked={selectedMode === 'OFFLINE'}
-                                value="OFFLINE"
-                                onChange={() => handleMode('OFFLINE')}
-                                className='mx-4'
-                            />
-                            <span className='bg-base-200 rounded-full'>
-                                <MdCurrencyRupee size={20} />
-                            </span>
-                            <h1>
-                                <span className='text-base font-semibold'>Pay Offline</span>
-                                <br />
-                                <span>Cash</span>
-                            </h1>
-                        </article>
-                    </section>
-                    {selectedPay ? null : <BottomButton themes={data?.settings?.themes}>
-                        <div onClick={() => handleCreateOrder(billValue - claimedCoinz + tips)} className='flex flex-row capitalize space-x-36'>
-                            <div className='flex-col'>
-                                <div>₹ {billValue - claimedCoinz + tips} Total</div>
-                            </div>
-                            <div className='flex flex-row'>
-                                <span className='my-auto'>Pay</span>
-                            </div>
-                        </div>
-                    </BottomButton>}
-                </>
+                <PaymentComponent data={data} tips={tips}
+                    billValue={billValue} claimedCoinz={claimedCoinz}
+                    handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
+                    setSelectedMode={setSelectedMode} selectedPay={selectedPay} />
             }
             {renderPopUpContent()}
-            <footer
-                onKeyDown={navigateTermsAgreement}
-                onClick={navigateTermsAgreement}
-                className='bg-primary w-full text-base-content h-[3.5rem] flex justify-center items-center fixed bottom-0 left-1/2 transform -translate-x-1/2 '
-            >
-                <span className='text-base-100'>Terms & agreement</span>
-            </footer>
             {isLoading ? <LoadingSpinner /> : null}
             {selectedPay ? <>
                 <h1>Confirmation Code</h1>

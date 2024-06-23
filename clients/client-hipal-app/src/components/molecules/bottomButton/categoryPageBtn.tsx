@@ -1,43 +1,78 @@
-"use client"
-import { useCart } from "@/components/store/useCart"
-import { getGrandTotalPrice } from "@/components/utils/helpers"
-import Link from "next/link"
-import { memo } from "react"
-import BottomButton from "."
-import { useParams } from "next/navigation"
-import { useLogin } from "@/components/store/useLogin"
+"use client";
+import { memo, useCallback, useState } from "react";
+import BottomButton from ".";
+import { useParams, useRouter } from "next/navigation";
+import { useLogin } from "@/components/store/useLogin";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import AddAmountModal from "./addAmountModal";
 
 function CategoryPageBtn() {
-	const cart = useCart((s) => s.cart)
-	const isLogin = useLogin((s)=>s.isLogin);
+	const isLogin = useLogin((s) => s.isLogin);
 	const params = useParams();
+	const [inputModal, setInputModal] = useState(false);
 	const businessId = params?.businessId;
-	const setDirection = useLogin((s) => s.setDirection)
-	const proceedToPayment = () =>{
-		setDirection('category')
-		if(!isLogin) return `/r/${businessId}/user/signup/`
-		return `/r/${businessId}/payment`
+	const setDirection = useLogin((s) => s.setDirection);
+	const router = useRouter();
+
+	const closeModal = useCallback(() => {
+		setInputModal(false);
 	}
+		, [setInputModal]);
+	const openModal = useCallback(() => {
+		setInputModal(true);
+	}
+		, [setInputModal]);
+
+	const proceedToPayment = useCallback(() => {
+		setDirection('category');
+		if (!isLogin) {
+			router.push(`/r/${businessId}/user/signup`);
+		} else {
+			openModal()
+		}
+	}, [setDirection, isLogin, businessId, router]);
 
 	return (
-		<Link href={`${proceedToPayment()}`} passHref>
+		<>
 			<BottomButton>
-				<div className="flex flex-row capitalize space-x-28">
-					<div className="flex flex-row">
-						<span className="my-auto">Proceed to Pay</span>
-					</div>
-					{Object.keys(cart).length > 0 && (
-						<div className="flex-col">
-							<div>{Object.keys(cart).length && Object.keys(cart).length} items </div>
-							<div>
-								<span>&#8377;</span> {getGrandTotalPrice(cart)}
-							</div>
-						</div>
-					)}
-				</div>
+				{isLogin ? (
+					<section className="flex items-center justify-between gap-4">
+						<button className="w-full px-2 py-3 text-sm border rounded-full border-primary">
+							Call Waiter
+						</button>
+						<button onClick={proceedToPayment} className="w-full px-2 py-3 text-sm rounded-full bg-primary text-base-100">
+							Pay Bill
+						</button>
+					</section>
+				) : (
+					<section className="flex items-center justify-between gap-4">
+						<button className="w-full px-2 py-3 text-sm border rounded-full border-primary">
+							Scan to Call Waiter
+						</button>
+						<button onClick={proceedToPayment} className="w-full px-2 py-3 text-sm rounded-full bg-primary text-base-100">
+							Scan to Pay
+						</button>
+					</section>
+				)}
 			</BottomButton>
-		</Link>
-	)
+			{inputModal &&
+				<BottomPopUp show={inputModal} onClose={closeModal}>
+					<AddAmountModal />
+				</BottomPopUp>
+			}
+		</>
+	);
 }
 
-export default memo(CategoryPageBtn)
+export default memo(CategoryPageBtn);
+
+
+
+// {Object.keys(cart).length > 0 && (
+// 	<div className="flex-col">
+// 	  <div>{Object.keys(cart).length} items</div>
+// 	  <div>
+// 		<span>&#8377;</span> {getGrandTotalPrice(cart)}
+// 	  </div>
+// 	</div>
+//   )}

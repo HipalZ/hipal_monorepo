@@ -40,7 +40,7 @@ function OtpPage() {
 	const params = useParams<{ businessId: string }>();
 	const businessId = params ? params.businessId : undefined;
 	const sendOtp = useLogin((s) => s.sendOtp)
-	const { _id: loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
+	const {  loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
 	const direction = useLogin((s) => s.direction)
 
 	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -56,22 +56,7 @@ function OtpPage() {
 		setOtp(newOtp)
 	}
 
-	const paymentCustomer = async (data: any) => {
-		try {
-			const config = {
-				method: "POST",
-				url: "/v1/payments/customer",
-				data: {
-					phone: data.phone,
-					businessId: businessId,
-					name: data.name,
-				},
-			}
-			await axios(config)
-		} catch (err) {
-			console.log(err)
-		}
-	}
+	
 	function randomInRange(min:number, max:number) {
 		return Math.random() * (max - min) + min
 	}
@@ -109,13 +94,12 @@ function OtpPage() {
 			}
 
 			const response = await axios(config)
-			const data = response.data.data.user
+			const data = response.data.data
 			if (response.status === 200) {
 				const { _id, ...otherData } =data
 				setAccessToken(response.data.data.accessToken)
 				setRefreshToken(response.data.data.refreshToken)
 				setUserDetails({ id: _id, ...otherData })
-				await paymentCustomer(data)
 				setIsLogin(true)
 				if (data?.reward > 0 && data?.count === 1) {
 					setCoinz(data.reward)

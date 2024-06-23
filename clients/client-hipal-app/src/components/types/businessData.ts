@@ -92,7 +92,7 @@ export interface IExplore {
 export interface IThemes{
 	primaryColor: string
 	secondaryColor: string
-	accentColor: string
+	accentColor?: string
 	fontFamily?: string
 	fontURL?: string
 	buttonStyle?: string

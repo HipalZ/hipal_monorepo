@@ -41,7 +41,6 @@ function SignUp() {
 		}
 		try {
 			const res = await axios(config)
-			console.log('data',res)
 			if (res.status === 201) {
 				setUserDetails(res.data.data?.user)
 				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
@@ -49,11 +48,8 @@ function SignUp() {
 		} catch (error) {
 			if ((error as any).response?.status === 409) {
 				setUserDetails((error as any).response.data.data?.user)
-				//TODO: already existing status code
 				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
-			} else {
-				toast.error("An error occurred. Please try again later")
-			}
+			} 
 		}
 	}
 

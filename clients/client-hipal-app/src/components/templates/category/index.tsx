@@ -12,20 +12,21 @@ export default function Category({ data }: { data: IBusinessData }) {
     return (
         <div className="relative flex flex-col w-full pb-14">
             <TopBackground themes={data?.settings?.themes} />
-            <CategoryHeader categories={data?.categories} allCategoriesTypes={data?.allCategoriesTypes} primaryColor={data?.settings?.themes?.primaryColor}/>
+            <CategoryHeader categories={data?.categories} allCategoriesTypes={data?.allCategoriesTypes} primaryColor={data?.settings?.themes?.primaryColor} />
             <div>
                 <div className="!mt-0 !scroll-smooth ">
                     <DishesList allCategoriesTypes={data?.allCategoriesTypes} categories={data?.categories} />
                 </div>
-                <PageName endBanner={data?.settings?.themes?.endBanner} />
-                <Footer footerText={data?.settings?.themes?.footerText}
-                    instagramLink={data?.settings?.themes?.instagramLink}
-                    facebookLink={data?.settings?.themes?.facebookLink}
-                    youtubeLink={data?.settings?.themes?.youtubeLink}
-                    linkedinLink={data?.settings?.themes?.linkedinLink}
+                <Footer
+                    footerText={data?.settings?.themes?.footerText || ''}
+                    instagramLink={data?.settings?.themes?.instagramLink || ''}
+                    facebookLink={data?.settings?.themes?.facebookLink || ''}
+                    youtubeLink={data?.settings?.themes?.youtubeLink || ''}
+                    linkedinLink={data?.settings?.themes?.linkedinLink || ''}
                 />
+                <PageName />
             </div>
-            {businessId !== BUSINESS_ID.KOI_AND_CO && <CategoryPageBtn />}
+            <CategoryPageBtn />
         </div>
     );
 }

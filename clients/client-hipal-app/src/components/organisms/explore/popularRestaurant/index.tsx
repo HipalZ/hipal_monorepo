@@ -11,7 +11,7 @@ function PopularRestaurant(props: IPopularRestProps) {
 	const { popular } = props
 	const router = useRouter()
 	const handleRecommendedDishClick = (id: string) => {
-		router.push(routePaths[PAGE_TYPES.DISH_ID](popular[0]?.businessId, id))
+		router.push(routePaths[PAGE_TYPES.DISH_ID](popular?.[0]?.businessId, id))
 	}
 
 	return (
