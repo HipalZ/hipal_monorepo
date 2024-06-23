@@ -8,10 +8,6 @@ interface PaymentStore{
 	setRazorPayPaymentId: (paymentId: string) => void
 	setRazorPayOrderId: (orderId: string) => void
 	setRazorPaySignature: (signature: string) => void
-
-	// saving offline orderId
-	offlineOrderId: string
-	setOfflineOrderId: (orderId: string) => void
 }
 
 const usePayment = create(
@@ -23,8 +19,6 @@ const usePayment = create(
 			setRazorPayPaymentId: (paymentId) => set({ razorPayPaymentId: paymentId }),
 			setRazorPayOrderId: (orderId) => set({ razorPayOrderId: orderId }),
 			setRazorPaySignature: (signature) => set({ razorPaySignature: signature }),
-			offlineOrderId: '',
-			setOfflineOrderId: (orderId) => set({ offlineOrderId: orderId }),
 		}),
 		{
 			name: 'payment-store',

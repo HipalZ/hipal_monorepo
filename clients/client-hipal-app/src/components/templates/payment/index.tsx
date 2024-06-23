@@ -39,12 +39,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
         setTips, tips } = usePaymentStore()
-
+    const [offlineOrderId, setOfflineOrderId] = useState('')
     const router = useRouter()
 
     const { setRazorPayPaymentId, razorPayOrderId,
-        setRazorPayOrderId, setRazorPaySignature,
-        offlineOrderId, setOfflineOrderId } =
+        setRazorPayOrderId, setRazorPaySignature, } =
         usePayment()
 
     const { loyaltySetting } = useLoyaltyData()
@@ -112,6 +111,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         setRazorPaySignature('')
                         setRazorPayOrderId('')
                         setRazorPayPaymentId('')
+                        setOfflineOrderId('')
                         toast.error('Payment failed')
                     },
                 },
@@ -181,7 +181,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 url: '/v1/payments/verifyOrder',
                 data: {
                     order_id: offlineOrderId,
-                    confirmCode: otp.join(''),
+                    completionCode: otp.join(''),
                 },
             }
             const response = await axios(config)
@@ -191,6 +191,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
         } catch (err) {
             toast.error('invalid code')
+            setOtp(["", "", "", ""])
         }
     }
 
@@ -212,9 +213,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 },
             }
             const response = await axios(config)
+            console.log(response);
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
                 setOfflineOrderId(response.data.data.order_id)
+                console.log(response.data.data.order_id);
                 setSelectedPay(true)
             }
 
@@ -224,7 +227,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const handleCreateOrder = async (total: number) => {
-        if(total<=0){
+        if (total <= 0) {
             return toast.error('Invalid amount')
         }
         if (selectedMode.toLowerCase() === 'offline') {
@@ -278,7 +281,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleCustomTip = (event: ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
+        const value = event.target.value.replace(/[^0-9.]/g, '');
         setCustomTip(value);
         setTips(Number(value));
     };
@@ -327,7 +330,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
-        const userEnteredValue = Number((event.target as HTMLInputElement).value);
+        const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
         const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
         const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
 
@@ -368,7 +371,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     <br />
                     <input
                         onChange={(e) => handleApplyCoinz(e, userCoinz)}
-                        type='number'
+                        type='text'
                         value={claimedCoinz || ''}
                         placeholder='Enter amount'
                         min={0}
@@ -522,9 +525,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                 {selectedTip === 'Other' && showInput && (
                                     <div className='relative mt-4'>
                                         <input
-                                            type="number"
+                                            type="text"
                                             onChange={handleCustomTip}
                                             value={customTip}
+                                            maxLength={5}
                                             placeholder='Enter tip amount'
                                             className='w-full border border-[#000] pl-4 font-semibold text-[1rem] rounded-[1rem]'
                                         />
@@ -597,7 +601,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             </h1>
                         </article>
                     </section>
-                    <BottomButton themes={data?.settings?.themes}>
+                    {selectedPay ? null : <BottomButton themes={data?.settings?.themes}>
                         <div onClick={() => handleCreateOrder(billValue - claimedCoinz + tips)} className='flex flex-row capitalize space-x-36'>
                             <div className='flex-col'>
                                 <div>₹ {billValue - claimedCoinz + tips} Total</div>
@@ -606,7 +610,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                 <span className='my-auto'>Pay</span>
                             </div>
                         </div>
-                    </BottomButton>
+                    </BottomButton>}
                 </>
             }
             {renderPopUpContent()}
