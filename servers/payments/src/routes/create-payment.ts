@@ -695,6 +695,12 @@ router.post(
 
     const uniqueOrderId = nanoid(15);
 
+    const orderAlreadyExist = await PaymentAlert.findOne({ tableName, isAccepted: false });
+
+    if (orderAlreadyExist) {
+      return res.status(400).send({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
+    }
+
     const saveOrder = await Order.create({
       total,
       currency,
@@ -719,7 +725,7 @@ router.post(
       // comment : payload.payment.entity.notes.comment
     });
 
-    res.status(200).send({ err: false, message: 'Order created successfully', data: saveOrder._id });
+    res.status(200).send({ err: false, message: 'Order created successfully', data: { order_id: saveOrder._id } });
   },
 );
 
@@ -872,9 +878,6 @@ const addCoins = async (
   const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }).select('rewardLimit');
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
-
-    console.log('coinsCalculated', coinsCalculated);
-
     const updatedReward = await UserReward.findOneAndUpdate(
       { userPhone, loyaltyId },
       {

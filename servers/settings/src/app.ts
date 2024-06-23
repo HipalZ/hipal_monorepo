@@ -77,16 +77,16 @@ const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFu
   next();
 };
 
-// app.use(conditionalAuthTokenValidator);
+app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createSettingsRouter);
 app.use(readSettingsRouter);
 app.use(updateSettingsRouter);
 app.use(deleteSettingsRouter);
-app.use(errorHandler);
-app.all('*', () => {
-  return 'Not Found';
-});
 
+app.all('*', () => {
+  throw new Error('Route not found');
+});
+app.use(errorHandler);
 export { app };

@@ -76,7 +76,7 @@ app.use(updateZonesRouter);
 app.use(deleteZonesRouter);
 
 app.all('*', () => {
-  throw 'Route not found';
+  throw new Error('Route not found');
 });
 
 app.use(errorHandler);

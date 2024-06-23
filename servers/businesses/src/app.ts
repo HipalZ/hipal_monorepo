@@ -1,10 +1,10 @@
 import cookieSession from 'cookie-session';
 import cors from 'cors';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import 'express-async-errors'; // Do not remove, it deals with async errors in express routes
 import morgan from 'morgan';
 // Routes
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createUserRouter } from './routes/create-business';
 import { deleteBusinessesRouter } from './routes/delete-business';
 import { readBusinessRouter } from './routes/read-business';
@@ -67,24 +67,32 @@ app.use(
     sameSite: 'none',
   }),
 );
-// // List of paths to exclude
-// const excludedPaths = ['/v1/businesses', '/v1/businesses/get/allbusiness', '/v1/businesses/:id']; // Add more paths as needed
+// List of paths to exclude
+const excludedPaths = [
+  '/v1/businesses',
+  '/v1/businesses/:id/loyalty',
+  '/v1/businesses/get/allbusiness',
+  '/v1/businesses/:id',
+  '/v1/businesses/get/Single/:id',
+]; // Add more paths as needed
 
-// // Conditional middleware to exclude authTokenValidator on certain routes or if the method is GET
-// const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
-//   // Check if the request path is in the excludedPaths list or if the request method is GET
-//   const isExcludedPath = excludedPaths.some((path) => path === req.path);
+// Convert paths with dynamic segments into regular expressions
+const excludedPathRegexes = excludedPaths.map((path) => new RegExp('^' + path.replace(/:[^\s/]+/g, '([^\\s/]+)') + '$'));
 
-//   if (isExcludedPath && req.method === 'GET') {
-//     return next();
-//   }
+// Conditional middleware to exclude authTokenValidator on certain routes or if the method is GET
+const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFunction) => {
+  // Check if the request path matches any of the excluded path patterns or if the request method is GET
+  const isExcludedPath = excludedPathRegexes.some((regex) => regex.test(req.path));
 
-//   // Call the authTokenValidator for other requests
-//   authTokenValidator(req, res, next);
-// };
+  if (isExcludedPath && req.method === 'GET') {
+    return next();
+  }
 
-// app.use(conditionalAuthTokenValidator);
-// app.use(currentUser);
+  // Call the authTokenValidator for other requests
+  authTokenValidator(req, res, next);
+};
+
+app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createUserRouter);

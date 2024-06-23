@@ -6,7 +6,7 @@ import morgan from 'morgan';
 
 // Routes
 
-import { errorHandler } from '@hi/common';
+import { authTokenValidator, errorHandler } from '@hi/common';
 import { createPaymentRouter } from './routes/create-payment';
 import { readPaymentsRouter } from './routes/read-payment';
 import { updatePaymentsRouter } from './routes/update-payment';
@@ -68,13 +68,13 @@ app.use(
 
 // app.use(idempotent);
 
-// app.use(authTokenValidator);
+app.use(authTokenValidator);
 // Register routes
 app.use(createPaymentRouter);
 app.use(readPaymentsRouter);
 app.use(updatePaymentsRouter);
 app.all('*', () => {
-  return { message: 'Not Found' };
+  throw new Error('Route not found');
 });
 app.use(errorHandler);
 

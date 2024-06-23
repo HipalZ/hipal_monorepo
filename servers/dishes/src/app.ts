@@ -90,10 +90,9 @@ app.use(updateDishesRouter);
 app.use(deleteDishesRouter);
 
 app.all('*', () => {
-  return 'Route not found';
+  throw new Error('Route not found');
 });
 
-// workers node
-// master node
+app.use(errorHandler);
 
 export { app };

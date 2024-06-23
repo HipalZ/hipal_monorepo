@@ -289,6 +289,21 @@ router.put(
 );
 
 router.put(
+  '/v1/payments/:pid/rejectOrder/:alertId',
+  // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  validateRequest({
+    params: paramsSchema,
+  }),
+  async (req: Request, res: Response) => {
+    const { alertId } = req.params;
+
+    const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true }, { new: true }).populate('order_id');
+
+    res.status(200).send({ message: 'Order rejected successfully', err: false, data: updateAlert });
+  },
+);
+
+router.put(
   '/v1/payments/:id',
   // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
   validateRequest({

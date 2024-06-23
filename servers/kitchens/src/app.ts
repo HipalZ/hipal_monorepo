@@ -67,7 +67,7 @@ app.use(
 );
 
 app.use(idempotent);
-app.use(errorHandler);
+
 app.use(authTokenValidator);
 // Register routes
 app.use(createKitchenRouter);
@@ -75,7 +75,7 @@ app.use(readKitchenRouter);
 app.use(updateKitchenRouter);
 
 app.all('*', () => {
-  return 'Not Found';
+  throw new Error('Route not found');
 });
 
 app.use(errorHandler);
