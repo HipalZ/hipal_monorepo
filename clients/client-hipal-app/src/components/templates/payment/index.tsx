@@ -23,6 +23,7 @@ import { BsPatchPlusFill } from "react-icons/bs";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
+import useTableData from "@/components/store/useTableData";
 
 type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -39,6 +40,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
         setTips, tips } = usePaymentStore()
+    const {tableName,setTableName} = useTableData()
     const [offlineOrderId, setOfflineOrderId] = useState('')
     const router = useRouter()
 
@@ -123,7 +125,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     billValue: billValue,
                     tips: tips,
                     loyaltyId: loyaltySetting.loyaltyId,
-                    tableName: "abcd-T-1",
+                    tableName: tableName,
                 },
                 theme: {
                     color: '#3399cc',
@@ -152,10 +154,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             })
             if (res.status === 200) {
                 router.push(`/r/${data?.business?._id}/review?orderId=${res?.data?.data}`)
+                toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
                 setRazorPayPaymentId('')
-                toast.success('Payment successful')
+                setTableName('')
             } else {
                 toast.error('Payment failed')
             }
@@ -209,7 +212,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     phone: userDetails.phone || "+91**********",
                     tips: tips,
                     currency: "INR",
-                    tableName: "abcd-T-1",
+                    tableName: tableName,
                 },
             }
             const response = await axios(config)
@@ -217,7 +220,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
                 setOfflineOrderId(response.data.data.order_id)
-                console.log(response.data.data.order_id);
+                setTableName('')
                 setSelectedPay(true)
             }
 
@@ -250,7 +253,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             name: userDetails.name || "user",
                             phone: userDetails.phone || "+91**********",
                             tips: tips,
-                            tableName: "abcd-T-1",
+                            tableName: tableName,
                         },
                     }
                     const response = await axios(config)

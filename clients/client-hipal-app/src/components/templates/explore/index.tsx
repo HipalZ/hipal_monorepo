@@ -1,8 +1,5 @@
 "use client"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
-import {
-    beans,
-} from "@/components/atoms/card/pathPattern"
 import BottomButton from "@/components/molecules/bottomButton";
 import useLoyaltyData from "@/components/store/useLoyaltyData"
 import DishData from "@/components/atoms/dishDescription"
@@ -21,9 +18,14 @@ import SubLoyalty from "@/components/atoms/subLoyalty";
 import PageName from "@/components/molecules/pageName";
 import Footer from "@/components/molecules/footer"
 import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
+import { useSearchParams } from "next/navigation";
+import useTableData from "@/components/store/useTableData";
 
 function Explore({ data }: { data: IBusinessData }): JSX.Element {
-
+    const searchParams = useSearchParams()
+ 
+    const tableName = searchParams?.get('tableName')
+    const {setTableName} = useTableData()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const isLogin = useLogin((s) => s.isLogin)
@@ -65,6 +67,7 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
         if (data?.business) {
             setBusinessDetails(data.business);
         }
+        setTableName(tableName || '')
     }, [])
 
     const redirectToMenu = () => {

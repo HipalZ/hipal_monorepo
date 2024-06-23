@@ -1,14 +1,11 @@
-import axiosConstructor , { AxiosError } from 'axios';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useUserToken } from '@/components/store/useUserToken';
-import {ZodError} from 'zod';
-import {fromZodError} from 'zod-validation-error'
-import {handleCatchErrors} from './errorHandler';
-import { toast } from 'react-toastify';
+import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
   baseURL: import.meta.env.VITE_API_URL as string,
   withCredentials: true,
-})
+});
 axios.interceptors.request.use(
   (config: any) => {
     if (config.url == undefined) {
@@ -33,9 +30,14 @@ axios.interceptors.request.use(
       config.baseURL = 'http://localhost:8008';
     }
     const { accessToken, refreshToken } = useUserToken.getState();
+    const accessTokenLite = useHiClientZ.getState().accessToken;
+    const refreshTokenLite = useHiClientZ.getState().refreshToken;
     if (accessToken && refreshToken) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
       config.headers['x-refresh-with'] = refreshToken;
+    } else if (accessTokenLite && refreshTokenLite) {
+      config.headers['Authorization'] = `Bearer ${accessTokenLite}`;
+      config.headers['x-refresh-with'] = refreshTokenLite;
     }
 
     return config;
