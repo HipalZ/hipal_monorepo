@@ -16,9 +16,9 @@ function RestaurantTime(props: IProps) {
 						<div className="flex flex-row space-x-2">
 							<FiClock className="my-auto " />
 							<div className="my-auto">
-								{openFrom}
+								{openFrom.slice(0, 9)}
 								{openFrom && openFrom && " - "}
-								{openTill}
+								{openTill.slice(0, 9)}
 							</div>
 						</div>
 					</OnImgButton>

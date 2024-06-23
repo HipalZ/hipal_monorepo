@@ -1,21 +1,52 @@
 import type { ICart } from "@/components/store/useCart"
 import { ILoyaltySetting } from "../store/useLoyaltyData"
 
-interface IBiz{
-	businessName: string
-	registeredName: string
-	businessType: string
-	gstRegistered: boolean
-	multipleOutlets: boolean
-	description:string
-	tags: string[]
-	customLink: string
-	logo: string
-	address: string
-	staff: string[]
-	id: string
-	_id: string
-}
+export interface IBiz {
+	businessName: string;
+	registeredName: string;
+	businessType: string;
+	gstRegistered: boolean;
+	multipleOutlets: boolean;
+	description: string;
+	tags: string[];
+	customLink: string;
+	logo: string;
+	address: string;
+	staff: string[];
+	_id: string;
+	close: string;
+	createdAt: string;
+	fssaiLicenseNumber: string;
+	gstNumber: string;
+	gstPercentage: number;
+	hibiz: boolean;
+	hikitchen: boolean;
+	hipeople: boolean;
+	hitable: boolean;
+	isHasDishData: boolean;
+	isHasGst: boolean;
+	isHasSetting: boolean;
+	isPaymentIntegrated: boolean;
+	kotPrinter: boolean;
+	likes: string[];
+	loyalty: boolean;
+	open: string;
+	serviceCharge: boolean;
+	serviceChargePercentage: number;
+	serviceChargeRemovalPass: string;
+	serviceControl: {
+	  discountPassword: string;
+	};
+	status: boolean;
+	takeAwayName: string;
+	tier: string;
+	updatedAt: string;
+	wallpaper: string;
+	withPopCorn: boolean;
+	__v: number;
+	id: string; // Assuming this is the same as _id or an additional identifier
+  }
+  
 export interface IBusinessData {
 	_id: string
 	settings?: ISettings
@@ -38,22 +69,22 @@ export interface ICategories extends ICategory {
 export interface IExplore {
 	wallpaper: string
 	phone: string
-	countryCode: string
+	countryCode?: string
 	location: string
-	openFrom: string
-	close: string
-	specialOffers: {
+	openFrom?: string
+	openTill?: string
+	specialOffers?: {
 		wallpaper: string
 		offerName: string
-		redirectType?: undefined
-		redirectId?: undefined
-		redirectName?: undefined
+		redirectType?: string
+		redirectId?: string
+		redirectName?: string
 	}[]
-	popular: {
-		id: string
+	popular?: {
+		_id: string
 		name: string
 	}[]
-	highlights: {
+	highlights?: {
 		name: string
 		stories: string[]
 	}[]
@@ -62,17 +93,17 @@ export interface IThemes{
 	primaryColor: string
 	secondaryColor: string
 	accentColor: string
-	fontFamily: string
-	fontURL: string
-	buttonStyle: string
-	miniBanner: string
-	specialBanner: string
-	endBanner: string
-	instagramLink: string
-	facebookLink: string
-	youtubeLink: string
-	linkedinLink: string
-	footerText: string
+	fontFamily?: string
+	fontURL?: string
+	buttonStyle?: string
+	miniBanner?: string
+	specialBanner?: string
+	endBanner?: string
+	instagramLink?: string
+	facebookLink?: string
+	youtubeLink?: string
+	linkedinLink?: string
+	footerText?: string
 }
 export interface ISettings {
 	businessId: string
@@ -85,7 +116,7 @@ export interface ISettings {
 		categoryCard: string
 		dishCard: string
 	}
-	id: string
+	_id: string
 }
 export interface IDish {
 	[x: string]: any

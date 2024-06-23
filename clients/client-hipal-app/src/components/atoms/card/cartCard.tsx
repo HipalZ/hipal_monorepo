@@ -8,7 +8,7 @@ import { getRandomBlurImg } from "@/components/utils/images"
 import { routePaths } from "@/components/utils/routes"
 import Image from "next/legacy/image"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { memo, useEffect, useMemo, useState } from "react"
 import PlaceholderImg from "../placeholder"
 

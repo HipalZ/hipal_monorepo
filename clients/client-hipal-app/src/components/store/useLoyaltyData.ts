@@ -33,7 +33,6 @@ export const useLoyaltyData = create(
 				logo: "",
 				signUpBonus: 0,
 				expiryDate: "",
-				_id: "",
 			},
 			setLoyaltySetting: (loyaltySetting: ILoyaltySetting) =>
 				set({ loyaltySetting: loyaltySetting }),

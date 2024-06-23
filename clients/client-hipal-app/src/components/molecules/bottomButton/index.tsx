@@ -1,8 +1,8 @@
 "use client"
-import { useStory } from "@/components/store/useStory"
 import { IThemes } from "@/components/types/businessData"
-import { updateTheme } from "@/components/utils/themes"
-import React, { memo, useEffect } from "react"
+import React, { memo } from "react"
+import { MdOutlineMenuBook } from "react-icons/md"
+import { AiFillHome } from "react-icons/ai";
 
 function BottomButton({
 	children,
@@ -13,32 +13,26 @@ function BottomButton({
 	...props
 }: {
 	appendClassNames?: string
-	themes:IThemes,
+	themes: IThemes,
 	onClick?: () => void
 	children: React.ReactNode
 	placingOrder?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-	const { isStoryOn } = useStory()
-	if (isStoryOn) {
-		return null
-	}
-	useEffect(() => {
-		updateTheme(themes)
-	},[themes])
+
 	return (
-		<div className="fixed bottom-0 z-20 w-[100%] max-w-[30rem] py-2 rotate-180 shadow-lg bg-base-100 shadow-base-100">
-			<div className="flex flex-col mx-auto rotate-180 justify-items-center">
-				<button
-					className={`min-h-[3rem] w-[90%] max-w-[28rem] btn btn-primary btn-md mx-auto font-semibold text-[1rem] rounded-full shadow-lg my-auto !py-2 ${appendClassNames}`}
-					onClick={onClick}
-					aria-busy={placingOrder}
-					disabled={placingOrder}
-					{...props}
-				>
-					{children}
+		<>
+			<center className="fixed bottom-0 z-20 flex items-center justify-between p-4 bg-base-100 w-full max-w-[30rem]">
+				<center role="button" className="text-sm">
+					<AiFillHome size={22} />	Home
+				</center>
+				<center role="button" className="text-sm">
+					<MdOutlineMenuBook size={22} />	Pay Bill
+				</center>
+				<button type="button" className="flex items-center justify-center w-[40%] py-4 rounded-full text-base-100 bg-primary text-sm">
+					<MdOutlineMenuBook size={22} /> &nbsp;	Menu
 				</button>
-			</div>
-		</div>
+			</center>
+		</>
 	)
 }
 

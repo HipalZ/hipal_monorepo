@@ -14,7 +14,7 @@ const ReadMore = ({ text, className }: { text: string; className?: string }) => 
 			}`}
 			onClick={toggleReadMore}
 		>
-			{text}
+			{text} sankalesha shaokd andna bfja amn fnjaf am m,afjka amnkanfjka nfmna
 		</p>
 	)
 }

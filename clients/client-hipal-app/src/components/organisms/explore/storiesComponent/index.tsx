@@ -11,13 +11,11 @@ import { MdClose } from "react-icons/md"
 import ReactInstaStories from "react-insta-stories"
 
 interface IStoriesComponent{
-	highlights: {
 		name: string
 		stories: string[]
 		_id: string
-	}[]
 }
-export default memo(function StoriesComponent({highlights}:{highlights:IStoriesComponent}) {
+export default memo(function StoriesComponent({highlights}:{highlights:IStoriesComponent[]}) {
 	// const data = _useAllBusiness((s) => s.data)
 	const setIsStoryOn = useStory((s) => s.setIsStoryOn)
 	const isStoryOn = useStory((s) => s.isStoryOn)

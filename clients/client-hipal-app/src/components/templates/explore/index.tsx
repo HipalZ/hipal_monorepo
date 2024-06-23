@@ -1,14 +1,7 @@
 "use client"
-import { useRouter } from "next/navigation"
-import { memo, useEffect, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import {
     beans,
-    bowl,
-    bud,
-    flower,
-    love,
-    triangleToDataurl,
-    waveToDataUrl,
 } from "@/components/atoms/card/pathPattern"
 import BottomButton from "@/components/molecules/bottomButton";
 import useLoyaltyData from "@/components/store/useLoyaltyData"
@@ -22,19 +15,20 @@ import useBusinessDetails from "../../store/useBusinessDetails"
 // components import
 import MainBackground from "@/components/organisms/explore/mainBackground";
 import HeroSection from "@/components/organisms/explore/heroSection";
-import StoriesComponent from "@/components/organisms/explore/storiesComponent";
 import SpecialOffers from "@/components/organisms/explore/specialOffers";
 import PopularRestaurant from "@/components/organisms/explore/popularRestaurant";
 import SubLoyalty from "@/components/atoms/subLoyalty";
 import PageName from "@/components/molecules/pageName";
 import Footer from "@/components/molecules/footer"
+import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
 
-function Explore({ data }: { data: IBusinessData }) {
+function Explore({ data }: { data: IBusinessData }): JSX.Element {
+
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const router = useRouter()
     const isLogin = useLogin((s) => s.isLogin)
     const setDirection = useLogin((s) => s.setDirection)
+
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
 
@@ -45,54 +39,31 @@ function Explore({ data }: { data: IBusinessData }) {
     const closeModal = () => {
         setIsModalOpen(false)
     }
-    const findPattern = (pattern: string) => {
-        let value = srcColor.find((item) => item.src.hasOwnProperty(pattern))
-        return value?.src
-    }
-    const srcColor = [
-        {
-            src: { wave: waveToDataUrl(loyaltySetting?.cardColor, "white").wave },
-        },
-        {
-            src: {
-                triangle: triangleToDataurl("white").triangle,
-            },
-        },
-        {
-            src: {
-                beans: beans(loyaltySetting?.fontColor).beans,
-            },
-        },
-        {
-            src: { bud: bud(loyaltySetting?.fontColor).bud },
-        },
-        {
-            src: { bowl: bowl(loyaltySetting?.fontColor).bowl },
-        },
-        {
-            src: { love: love(loyaltySetting?.fontColor).love },
-        },
-        {
-            src: { flower: flower(loyaltySetting?.fontColor).flower },
-        },
-    ]
+    const srcColor = useMemo(() => createSrcColor(loyaltySetting), [loyaltySetting]);
+
+    const findPattern = useCallback((pattern: PatternKeys) => {
+        const value = srcColor.find((item) => pattern in item.src);
+        return value?.src[pattern as keyof typeof value.src];
+    }, [srcColor]);
 
     const goToLoyalty = (str: string) => {
         if (!isLogin) {
             setDirection(str)
-            return routePaths[PAGE_TYPES.SIGN_UP](data?.business?._id)
+            return routePaths[PAGE_TYPES.SIGN_UP](data?.business?._id || '')
         } else {
             setDirection("")
-            return routePaths[PAGE_TYPES.LOYALTY](data?.business?._id)
+            return routePaths[PAGE_TYPES.LOYALTY](data?.business?._id || '')
         }
     }
 
     useEffect(() => {
         if (data?.loyalty?.loyaltyId) {
-            openModal()
+            // openModal()
             setLoyaltySetting(data?.loyalty)
             findPattern(data?.loyalty?.cardPattern)
-            setBusinessDetails(data?.business)
+        }
+        if (data?.business) {
+            setBusinessDetails(data.business);
         }
     }, [])
 
@@ -105,36 +76,35 @@ function Explore({ data }: { data: IBusinessData }) {
             <MainBackground explore={data?.settings?.explore} />
 
             <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
-                <HeroSection
-                    logo={data?.business?.logo}
-                    businessName={data?.business?.businessName}
-                    businessId={data?.business?._id}
-                    tags={data?.business?.tags}
-                    description={data?.business?.description}
-                    themes={data?.settings?.themes}
-                />
-                <div className="-my-2">
-                    <StoriesComponent highlights={data?.settings?.explore?.highlights} />
-                </div>
+                <HeroSection data={data} />
+                {/* {
+                    data?.settings?.explore?.highlights && (
+                        <div className="-my-2">
+                            <StoriesComponent highlights={data?.settings?.explore?.highlights} />
+                        </div>
+                    )
+                } */}
 
-                <SpecialOffers specialOffers={data?.settings?.explore?.specialOffers} />
-
-                <PopularRestaurant popular={data?.settings?.explore?.popular} />
+                <SpecialOffers explore={data?.settings?.explore} />
 
                 {loyaltySetting?._id && (
-                    <Link href={`${goToLoyalty("loyalty")}`} passHref>
-                        <div className="relative p-4 mx-4 overflow-hidden border rounded-xl border-accent bg-base-200/50">
-                            <div className="absolute right-[2rem] -bottom-[1.1rem] bg-white w-[64px] h-[64px]" />
-                            <div className="absolute w-[35%] h-full transform rotate-45 bg-base-300 -bottom-[0.8125rem] -right-12" />
+                    <section className="py-10 h-[25rem] !mt-0 bg-black">
+                        <center><h4 className="pb-4 text-2xl text-white">REWARDZ</h4></center>
+                        <div className="relative p-4 overflow-hidden border rounded-xl border-accent ">
                             <SubLoyalty
                                 logo={businessDetails?.logo}
                                 cardColor={loyaltySetting?.cardColor}
                                 fontColor={loyaltySetting?.fontColor}
-                                src={findPattern(loyaltySetting?.cardPattern) || beans(loyaltySetting?.fontColor)}
                             />
                         </div>
-                    </Link>
+
+                    </section>
                 )}
+
+
+                <PopularRestaurant popular={data?.settings?.explore?.popular} />
+
+
 
                 <PageName endBanner={data?.settings?.themes?.endBanner} />
                 <Footer footerText={data?.settings?.themes?.footerText}
@@ -144,11 +114,9 @@ function Explore({ data }: { data: IBusinessData }) {
                     linkedinLink={data?.settings?.themes?.linkedinLink}
                 />
             </div>
-            <Link href={`${redirectToMenu()}`} passHref>
-                <BottomButton>
-                    <div className="flex flex-row space-x-2 capitalize">Menu</div>
-                </BottomButton>
-            </Link>
+            <BottomButton >
+                <div className="flex flex-row space-x-2 capitalize">Menu</div>
+            </BottomButton>
             {isModalOpen && (
                 <DishData show={isModalOpen} onClose={() => closeModal()}>
                     <MainLoyalty

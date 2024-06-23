@@ -4,25 +4,23 @@ import Image from "next/legacy/image"
 import { memo, useEffect } from "react"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { updateTheme } from "@/components/utils/themes"
+import { IBiz, IBusinessData, IThemes } from "@/components/types/businessData"
 
 interface IHeroSection {
-	businessId: string,
-	logo: string,
-	businessName: string,
-	description: string,
-	tags: string[],
-	themes:any,
+	data: IBusinessData
 }
-export default memo(function HeroSection(props: IHeroSection) {
-	const { logo, businessName, description, tags, themes } = props
+export default memo(function HeroSection({data}: IHeroSection): JSX.Element {
+	const {businessName,logo,tags,description} = data.business as IBiz
+	const themes = data.settings?.themes as IThemes
 	useEffect(()=>{
         updateTheme(themes)
     },[themes])
 	
 	return (
-		<div className="flex flex-col px-4">
-			<div className="flex flex-row pt-6 pb-2 space-x-4 min-h-max">
-				{logo && logo.length >0 ? (
+		<div className="relative flex flex-col px-4">
+			<figure className="absolute z-10 -top-[3rem]">
+				
+			{data.business?.logo ? (
 					<Image
 						src={logo}
 						height={100}
@@ -30,23 +28,21 @@ export default memo(function HeroSection(props: IHeroSection) {
 						quality={75}
 						objectFit="cover"
 						alt="logo-business"
-						className="object-center w-1/3 border rounded-lg shadow-sm aspect-square"
+						className="object-center w-1/3 border rounded-full shadow-sm aspect-square"
 						placeholder="blur"
 						blurDataURL={getRandomBlurImg(100, 100)}
 					/>
 				) : (
 					<PlaceholderImg />
 				)}
-
-				<div className="flex flex-col items-start justify-center w-2/3 pb-4 pr-1 space-y-1 prose">
+			</figure>
+			<div className="pt-10 space-y-2">
 					{businessName && (
-						<h2 className="my-0 font-semibold capitalize">{businessName}</h2>
+						<h4 className="mt-4 text-2xl font-semibold capitalize">{businessName}</h4>
 					)}
-					<h3 className="flex flex-row flex-wrap my-0 text-sm font-bold line-clamp-2 divide-base-content">
+					<h3 className="flex text-sm font-bold line-clamp-2 divide-base-content">
 						{Array.isArray(tags) ? tags.join(" | ") : tags}
-						<br />
 					</h3>
-				</div>
 			</div>
 			<div className="mt-auto">
 				<div

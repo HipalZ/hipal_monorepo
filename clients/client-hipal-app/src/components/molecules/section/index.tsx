@@ -16,8 +16,8 @@ function Section({
 
 	return (
 		<section className="flex flex-col my-2" {...props}>
-			<div className="px-4 prose mb-2">
-				<CustomTag className={`!font-medium !text-2xl ${tagClassName}`}>{title}</CustomTag>
+			<div className="px-4 mb-2 prose">
+				<CustomTag className={`!font-medium !text-xl pb-2 ${tagClassName}`}>{title}</CustomTag>
 			</div>
 
 			<div>{children}</div>

@@ -1,6 +1,16 @@
 import { ICart, ICartDish, ICartExtra, ICartVariant } from "@/components/store/useCart"
 import { IBusinessData } from "@/components/types/businessData"
 import isEmpty from "lodash-es/isEmpty"
+import {
+    beans,
+    bowl,
+    bud,
+    flower,
+    love,
+    triangleToDataurl,
+    waveToDataUrl,
+} from "@/components/atoms/card/pathPattern"
+import { ILoyaltySetting } from "../store/useLoyaltyData"
 
 export const getPrice = (price: number | string) => {
 	if (!price || price === 0) {
@@ -95,3 +105,13 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
 	})
 	return total
 }
+export type PatternKeys = 'wave' | 'triangle' | 'beans' | 'bud' | 'bowl' | 'love' | 'flower';
+export const createSrcColor = (loyaltySetting: ILoyaltySetting) => [
+	{ src: { wave: waveToDataUrl(loyaltySetting?.cardColor, "white").wave } },
+	{ src: { triangle: triangleToDataurl("white").triangle } },
+	{ src: { beans: beans(loyaltySetting?.fontColor).beans } },
+	{ src: { bud: bud(loyaltySetting?.fontColor).bud } },
+	{ src: { bowl: bowl(loyaltySetting?.fontColor).bowl } },
+	{ src: { love: love(loyaltySetting?.fontColor).love } },
+	{ src: { flower: flower(loyaltySetting?.fontColor).flower } },
+  ];

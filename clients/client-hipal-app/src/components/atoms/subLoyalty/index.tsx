@@ -1,107 +1,76 @@
 import useLoyaltyData from "@/components/store/useLoyaltyData"
-import React, { useEffect, useState } from "react"
-import {
-	beans,
-	bowl,
-	bud,
-	flower,
-	love,
-	triangleToDataurl,
-	waveToDataUrl,
-} from "../card/pathPattern"
+import Stairs from "@/assets/backgroundStairs.png"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import TitleTransition from "../titletransition"
-import useBusinessDetails from "@/components/store/useBusinessDetails"
+import { useInView } from "framer-motion";
 
 interface ILoyaltyCard {
 	logo: string
-	src: Record<string, any>
 	cardColor: string
 	fontColor: string
 }
 
-const SubLoyalty = ({ logo, src, cardColor, fontColor }: ILoyaltyCard) => {
-	const [image, setImage] = useState<any>("")
+const SubLoyalty = ({ logo, cardColor, fontColor }: ILoyaltyCard) => {
 	const { loyaltySetting } = useLoyaltyData()
 	const [cardPattern, setCardPattern] = useState("")
 	const [logos, setLogos] = useState<any>("")
-	const businessDetails = useBusinessDetails((s) => s.businessDetails.businessName)
+	const ref = useRef(null);
+	const isInView = useInView(ref,{once: true});
 
 	useEffect(() => {
 		setLogos(loyaltySetting?.logo)
 		setCardPattern(loyaltySetting?.cardPattern)
 	}, [loyaltySetting])
-	useEffect(() => {
-		const patterns = (cardPattern, fontColor) => {
-			const defaultColor = "#FAE8CA"
-
-			fontColor = fontColor || defaultColor
-
-			const src = {
-				wave: waveToDataUrl(fontColor, "white").wave,
-				triangle: triangleToDataurl("white").triangle,
-				beans: beans(fontColor).beans,
-				bud: bud(fontColor).bud,
-				bowl: bowl(fontColor).bowl,
-				love: love(fontColor).love,
-				flower: flower(fontColor).flower,
-			}
-			return src[cardPattern]
-		}
-		patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor)
-		setImage(patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor))
-	}, [loyaltySetting, cardPattern, fontColor])
 
 	return (
-		<div className="flex items-center justify-between">
-			<div className="text-base w-[60%] font-semibold text-primary">
-				<div>Treat yourself to a</div>
-				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails} align="left" />
-
-				<div>with every bill you settle!!</div>
-			</div>
-			<div className="w-[30%] -mr-4">
-				<div
-					className={`${cardColor ? cardColor : "bg-primary"} rounded-md`}
-					style={{
-						height: "65px",
-						width: "80px",
-						backgroundImage: `url(${image})`,
-						backgroundColor: cardColor || "primary",
-						backgroundSize:
-							cardPattern === "beans" ||
-							cardPattern === "bowl" ||
-							cardPattern === "love" ||
-							cardPattern === "flower" ||
-							cardPattern === "bud"
-								? "25px 25px"
-								: "cover",
-						backgroundPosition:
-							cardPattern === "beans" ||
-							cardPattern === "bowl" ||
-							cardPattern === "love" ||
-							cardPattern === "flower" ||
-							cardPattern === "bud"
-								? "right 5% top 50%"
-								: "",
-						backgroundRepeat: "no-repeat",
-						transform: "skewX(10deg) skewY(10deg) rotateZ(45deg)",
-					}}
-				>
-					<h1
-						style={{
-							maxWidth: "calc(100% - 2rem)",
-							whiteSpace: "nowrap",
-							color: `${fontColor}`,
-						}}
-						className="text-[0.5rem] ml-[1rem] font-semibold flex self-start"
-					>
-						<Image src={logos || logo} alt="logo" height={20} width={20} />
-					</h1>
+		<section className="flex items-center justify-between gap-4">
+			<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[200px] h-[16.5rem] rounded-2xl">
+				<div className="text-xl font-semibold text-white">
+					{loyaltySetting.setReward}% Coinzback
 				</div>
-			</div>
-		</div>
-	)
+				<figure
+					className="absolute top-[67%] left-[6%] transform -translate-y-[13%] overflow-hidden"
+				>
+					<Image width={150} src={Stairs} alt="stars" />
+				</figure>
+				<center className="text-base text-white">At every bill</center>
+				<center className={`relative pb-4 ${isInView ? "flipping-card" : ""} `}>
+					<div
+						className="mt-10 overflow-hidden rounded card_up_down"
+						style={{
+							height: "77px", 
+							width: "128px",
+							backgroundColor: "#FEFAEE",
+						}}
+					>
+						<figure
+							className="aspect-square w-[2.5rem] h-[2.5rem] overflow-hidden absolute top-1/2 left-[8%] transform -translate-y-1/2 rounded-full"
+						>
+							<Image src={logos || logo} alt="logo" height={36} width={36} />
+						</figure>
+						 
+						<figcaption
+							style={{
+								color: `#183D2E`,
+							}}
+							className="absolute text-sm transform -translate-x-[20%] -translate-y-[30%] rounded-full aspect-square top-1/2 left-1/2"
+						>
+							Loyalty card
+						</figcaption>
+					<div className="h-full w-[0.625rem] absolute top-1/2 right-0 transform -translate-y-1/2 bg-[#183D2E]" />
+					</div>
+					<div className="bottom_shadow" />
+				</center>
+					<div className="h-full w-[0.625rem] text-sm absolute top-[30%] right-4 text-white animate-pulse" >✨</div>
+				<button className="relative z-10 py-1 px-4 rounded-full w-full text-sm bg-[#00000050] text-white mt-4">
+					claim Now
+				</button>
+			</center>
+			<center className="w-full p-4 bg-base-200 max-w-[200px] h-[16.5rem] rounded-2xl">
+				
+			</center>
+		</section>
+	) 
 }
 
 export default SubLoyalty
