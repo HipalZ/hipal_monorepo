@@ -5,12 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import useTimings from "@/components/store/useTimings";
 import { ISalesLite } from "@/components/types/businessData";
+import { timestampToDateTime } from "@/components/utils/helper";
 
 const Overview = memo(() => {
     const params = useParams();
     const businessId = params?.businessId;
     const [salesData, setSalesData] = useState<ISalesLite>()
-    const {timeStampStart, timeStampEnd} = useTimings()
+    const { timeStampStart, timeStampEnd } = useTimings()
     const handleHistoryData = async () => {
         try {
             const config = {
@@ -31,7 +32,7 @@ const Overview = memo(() => {
     }
 
     useQuery({
-        queryKey: ['onlineAlerts', businessId , timeStampStart, timeStampEnd],
+        queryKey: ['onlineAlerts', businessId, timeStampStart, timeStampEnd],
         queryFn: handleHistoryData,
         enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
     });
@@ -43,6 +44,7 @@ const Overview = memo(() => {
                     <div className="sales_payment_background_effect1" />
                     <div className="sales_payment_background_effect2" />
                     <div className="sales_payment_background_effect3" />
+                    <center className="mt-4">{timestampToDateTime(timeStampStart)}</center>
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-[0.125rem] bg-white h-[50%] mt-10"></div>
                     </div>
@@ -51,7 +53,7 @@ const Overview = memo(() => {
                             Today’s Sales
                         </h3>
                         <h1 className="absolute text-3xl left-4 bottom-6">
-                            ₹ {salesData?.totalSale}
+                            ₹ {salesData?.totalSale?.toLocaleString('en-IN')}
                         </h1>
                     </section>
                     <section>
@@ -59,7 +61,7 @@ const Overview = memo(() => {
                             Total Discounts
                         </h3>
                         <h1 className="absolute text-3xl right-4 bottom-6">
-                            ₹ {salesData?.totalDiscount}
+                            ₹ {salesData?.totalDiscount?.toLocaleString('en-IN')}
                         </h1>
                     </section>
                 </article>
@@ -71,7 +73,7 @@ const Overview = memo(() => {
                             <small>Online</small>
                         </p>
                         <h1 className="mt-6 text-2xl">
-                            ₹ {salesData?.totalOnlineSale}
+                            ₹ {salesData?.totalOnlineSale?.toLocaleString('en-IN')}
                         </h1>
                     </article>
 
@@ -82,26 +84,26 @@ const Overview = memo(() => {
                             <small>On floor</small>
                         </p>
                         <h1 className="mt-6 text-2xl">
-                            ₹ {salesData?.totalOfflineSale}
+                            ₹ {salesData?.totalOfflineSale?.toLocaleString('en-IN')}
                         </h1>
                     </article>
                 </section>
             </section>
             <section className="flex justify-between gap-4 mx-4 mt-6">
                 <article className="w-full p-4 border border-[#00000050] rounded-xl">
-                    <b>
+                    <b> OverAll <br/>
                         Coinz issued
                     </b>
                     <h6>
-                        ₹ {salesData?.coinzIssued}
+                        ₹ {salesData?.coinzIssued?.toLocaleString('en-IN')}
                     </h6>
                 </article>
                 <article className="w-full p-4 border border-[#00000050] rounded-xl">
-                    <b>
+                    <b> OverAll<br/>
                         Coinz used
                     </b>
                     <h6>
-                        ₹ {salesData?.coinzRedeemed}
+                        ₹ {salesData?.coinzRedeemed?.toLocaleString('en-IN')}
                     </h6>
                 </article>
             </section>

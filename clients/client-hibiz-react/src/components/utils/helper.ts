@@ -270,3 +270,35 @@ export const zoneType = [
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
+
+export function timestampToDateTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const day = date.getDate();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const month = monthNames[date.getMonth()];
+
+  // Determine the day suffix
+  let daySuffix;
+  switch (day) {
+    case 1: case 21: case 31:
+      daySuffix = "st";
+      break;
+    case 2: case 22:
+      daySuffix = "nd";
+      break;
+    case 3: case 23:
+      daySuffix = "rd";
+      break;
+    default:
+      daySuffix = "th";
+  }
+
+  // Convert to 12-hour format
+  const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
+  const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
+  const amPm = hours < 12 ? "AM" : "PM";
+
+  return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
+}

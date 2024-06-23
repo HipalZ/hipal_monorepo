@@ -115,6 +115,42 @@ export interface ISalesLite {
   coinzIssued: number;
   coinzRedeemed: number;
 }
+export interface OrderDetails {
+  _id: string;
+  businessId: string;
+  total: number;
+  currency?: string;
+  billValue: number;
+  receipt?: string;
+  name: string;
+  phone: string;
+  tips: number;
+  claimedCoins: number;
+  discount?: number;
+  order_id: string;
+  tableName: string;
+  date: number;
+  __v: number;
+}
+
+export interface HistoryData {
+  _id: string;
+  businessId: string;
+  date: number;
+  total: number;
+  customerName: string;
+  customerPhone: string;
+  mode: string;
+  paymentMode: string;
+  billValue: number;
+  tableName: string;
+  order_id: OrderDetails;
+  tips: number;
+  claimedCoins: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 export interface NetworkInformation extends EventTarget {
   downlink?: number;

@@ -199,6 +199,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const handleCreateOfflineOrder = async () => {
+        if(tableName === ''){
+            return toast.error('Please scan to start')
+        }
         try {
             const config = {
                 method: 'POST',
@@ -233,6 +236,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (total <= 0) {
             return toast.error('Invalid amount')
         }
+        if(tableName === ''){return toast.error('Please scan to start')}
         if (selectedMode.toLowerCase() === 'offline') {
             handleCreateOfflineOrder()
         } else {

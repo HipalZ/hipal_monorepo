@@ -6,15 +6,16 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "@/axios";
 import { useParams } from "react-router-dom";
 import useTimings from "@/components/store/useTimings";
-import { Alert } from "@/components/types/businessData";
+import { Alert, HistoryData } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
 import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 
 const PaymentSales = memo(() => {
     const [open, setOpen] = useState(false)
+    const [salesData, setSalesData] = useState<HistoryData>({})
     const [pageNumber, setPageNumber] = useState(1);
     const [totalSales, setTotalSales] = useState(0)
-    const [historyData, setHistoryData] = useState<Alert[]>([])
+    const [historyData, setHistoryData] = useState<HistoryData[]>([])
     const { timeStampStart, timeStampEnd } = useTimings()
     const params = useParams();
     const businessId = params?.businessId;
@@ -29,8 +30,9 @@ const PaymentSales = memo(() => {
     }, [setOpen, open])
 
 
-    const openModel = useCallback(() => {
+    const openModel = useCallback((data:Alert) => {
         setOpen(true)
+        setSalesData(data)
     }, [setOpen, open])
 
     // number privacy
@@ -41,25 +43,16 @@ const PaymentSales = memo(() => {
         return `${firstPart}****${lastPart}`;
     };
 
-    const calculateTotalSales = useCallback((data: Alert[]) => {
-        const total = data.reduce((acc, data) => acc + (data?.order_id?.total || 0), 0);
-        setTotalSales(total);
-    }, []);
-
     const handleHistoryData = async () => {
         try {
             const config = {
                 method: "GET",
-                url: `/v1/payments/:id/paymentAlertHistory?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
+                url: `/v1/payments/:id/bills?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
             };
             const response = await axios(config);
-            if (response.status === 200) {
-                setHistoryData(response.data.data);
-                calculateTotalSales(response.data.data);
-                return response.data.data;
-            } else {
-                return [];
-            }
+            setHistoryData(response.data.data.existingPayments);
+            setTotalSales(response.data.data.totalSale);
+            return response.data.data;
         } catch (err) {
             console.log(err);
             return [];
@@ -68,7 +61,6 @@ const PaymentSales = memo(() => {
 
     const defaultClass = "text-base w-10 h-10 flex justify-center items-center bg-[#dad1f8] text-black border rounded-full border-[#2B354D]"
 
-
     useQuery({
         queryKey: ['historyAlerts', businessId, timeStampStart, timeStampEnd, pageNumber],
         queryFn: handleHistoryData,
@@ -76,7 +68,7 @@ const PaymentSales = memo(() => {
     });
 
     return (
-        <>
+        <main className="relative">
             <article className="card_payment">
                 <div className="sales_payment_background_effect1" />
                 <div className="sales_payment_background_effect2" />
@@ -85,15 +77,15 @@ const PaymentSales = memo(() => {
                     Today's Sales
                 </div>
                 <h1 className="absolute text-3xl left-6 top-12">
-                    ₹ {totalSales}
+                    ₹ {totalSales?.toLocaleString('en-IN')}
                 </h1>
                 <p className="absolute bottom-6 left-6">
-                    <span className="opacity-50">Last Synced</span>  2 hours ago
+                    <span className="opacity-50">Last Synced</span>  recently
                 </p>
             </article>
             <section className="flex items-center justify-between px-4 pt-2">
                 <h3 className="text-2xl font-semibold">
-                    Today
+                    {/* {timestampToDateTime(timeStampStart)} */}
                 </h3>
                 {/* <button className="flex items-center justify-center px-4 py-1 space-x-2 border border-black rounded-2xl">
                     <MdOutlinePictureAsPdf /> <small>Download statement</small>
@@ -101,9 +93,8 @@ const PaymentSales = memo(() => {
             </section>
             <section className="grid md:grid-cols-2 lg:grid-cols-3">
                 {historyData && historyData?.length > 0 ? historyData.map((data) => {
-                    if (data?.alertType === 'WAITER') { return; }
                     return (
-                        <section className="payment_card_ui">
+                        <section key={data?._id} className="payment_card_ui" onClick={()=>openModel(data)}>
                             <section className="flex justify-between">
                                 <section>
                                     <figure className="flex items-center space-x-4">
@@ -124,12 +115,12 @@ const PaymentSales = memo(() => {
                             </section>
                             <section className="flex gap-4">
                                 <button className={cn("flex items-center justify-center px-2 py-1 space-x-2 rounded-2xl",
-                                    data?.alertType === "ONLINE" ? 'bg-green-200 text-green-700' : 'bg-orange-200 text-orange-500'
+                                    data?.mode === "online" ? 'bg-green-200 text-green-700' : 'bg-orange-200 text-orange-500'
 
                                 )}>
-                                    <small>{data?.alertType.toLowerCase()} Payment success</small>
+                                    <small>{data?.mode} Payment</small>
                                 </button>
-                                <button onClick={openModel} className="flex items-center justify-center px-2 py-1 space-x-2 bg-[#73F88047] text-[#23B371] rounded-2xl">
+                                <button className="flex items-center justify-center px-2 py-1 space-x-2 bg-[#73F88047] text-[#23B371] rounded-2xl">
                                     <small>{data?.order_id?.claimedCoins} Coinz used </small>
                                 </button>
                             </section>
@@ -165,9 +156,9 @@ const PaymentSales = memo(() => {
             </div>
             {open &&
                 <PopUp onClose={closeModel} show={true}>
-                    <PaymentModal />
+                    <PaymentModal salesData={salesData}/>
                 </PopUp>
-            }</>
+            }</main>
     )
 })
 

@@ -21,7 +21,7 @@ const Business = memo(() => {
 	const setBusinessData = useBusinessData((s) => s.setBusinessData);
 	const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
 	const user = useOwnerLogin((s) => s.user);
-	console.log('user',user)
+	
 	const navigate = useNavigate();
 	const filteredBusinesses = businesses?.filter(
 		(business: IBusinessData) =>
