@@ -17,6 +17,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import HipalLogo from "@/assets/hipalNewLogo.svg"
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg"
+import { useUserToken } from "@/components/store/useUserToken";
 
 function OtpPage() {
 	const [otp, setOtp] = useState(["", "", "", ""])
@@ -27,6 +28,8 @@ function OtpPage() {
 	const [customerName, setCustomerName] = useState(userDetails.name)
 	const businessLogo = useBusinessDetails((s) => s.businessDetails.logo)
 	const [logo, setLogo] = useState(businessLogo)
+	const setAccessToken = useUserToken((s) => s.setAccessToken)
+	const setRefreshToken = useUserToken((s) => s.setRefreshToken)
 	const inputRefs = [
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
@@ -109,6 +112,8 @@ function OtpPage() {
 			const data = response.data.data.user
 			if (response.status === 200) {
 				const { _id, ...otherData } =data
+				setAccessToken(response.data.data.accessToken)
+				setRefreshToken(response.data.data.refreshToken)
 				setUserDetails({ id: _id, ...otherData })
 				await paymentCustomer(data)
 				setIsLogin(true)

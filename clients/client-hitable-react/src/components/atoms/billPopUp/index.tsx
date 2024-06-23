@@ -160,7 +160,7 @@ const BillPopUp = memo(() => {
           </div>
           <div className="mx-6 mb-2 grid grid-cols-2">
             <h1>Discount</h1>
-            <p>: {viewData?.order_id?.discount} Coin used</p>
+            <p>: {viewData?.order_id?.claimedCoins} Coin used</p>
           </div>
           <hr className="m-6 h-[0.1rem] bg-[#CACACA] text-black" />
           <div className="mx-6 mb-2 grid grid-cols-2">

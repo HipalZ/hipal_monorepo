@@ -14,11 +14,12 @@ function App() {
   const { loading, setOnlineAlertData, setOfflineAlertData, setRefetchOnlineAlerts, setRefetchOfflineAlerts, setLoading } = useLiteStore();
 
   const fetchAlerts = async (alertType: string) => {
+    const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
     setLoading(true);
     try {
       const config = {
         method: 'GET',
-        url: `/v1/payments/:id/paymentAlerts?businessId=${businessId}&alertType=${alertType}`,
+        url: `/v1/payments/:id/${url}?businessId=${businessId}&alertType=${alertType}`,
       };
       const response = await axios(config);
       if (response.status === 200) {
@@ -52,14 +53,14 @@ function App() {
     queryKey: ['onlineAlerts', businessId],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 15000, // 15 seconds
+    refetchInterval: 13000, // 15 seconds
   });
 
   const { refetch: refetchOfflineAlerts } = useQuery({
     queryKey: ['offlineAlerts', businessId],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 15000, // 15 seconds
+    refetchInterval: 11000, // 15 seconds
   });
 
   return (

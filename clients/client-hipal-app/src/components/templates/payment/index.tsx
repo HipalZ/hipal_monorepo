@@ -547,7 +547,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         </div>
                     </div>
                     <BottomButton themes={data?.settings?.themes}>
-                        <div onClick={handleMode} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'}`} >
+                        <div onClick={()=>handleMode('MODE')} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'}`} >
                             <span>Select Mode</span>
                         </div>
                     </BottomButton>
