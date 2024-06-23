@@ -21,37 +21,50 @@ router.put(
   },
 );
 
+router.put(
+  '/v1/users/:id/bookmark',
+  validateRequest({
+    body: UpdatedUserAttrs,
+  }),
+  async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
+    const { userId, businessId } = req.body;
+    const result = await User.updateOne({ _id: userId, 'customRole.businessId': businessId }, { $set: { 'customRole.$.bookMark': true } });
+
+    return res.status(200).send({ status: true, message: 'User updated successfully', data: result });
+  },
+);
+
 router.put('/v1/users/:id/updateReward', async (req: Request, res: Response) => {
   const { loyaltyId, user } = req.query;
 
   if (!loyaltyId) {
-    return res.status(400).send({ data:{}, err:true, status:false,message: 'Loyalty ID is required.' });
+    return res.status(400).send({ data: {}, err: true, status: false, message: 'Loyalty ID is required.' });
   }
 
-    // Find users with the specified loyaltyId
-    const users = await UserReward.find({ loyaltyId: loyaltyId });
+  // Find users with the specified loyaltyId
+  const users = await UserReward.find({ loyaltyId: loyaltyId });
 
-    if (user) {
-      return res.status(200).send({
-        data:users,
-        status:true,
-        message: 'Users fetched successfully',
-        err:false,
-      });
-    }
-
-    // Update each user's phone number if it's 12 digits long
-    const updates = users.map(async (user) => {
-      if (user.userPhone.length === 12) {
-        user.userPhone = user.userPhone.substring(2); // Remove the first two digits
-        await user.save(); // Save the updated user
-      }
+  if (user) {
+    return res.status(200).send({
+      data: users,
+      status: true,
+      message: 'Users fetched successfully',
+      err: false,
     });
+  }
 
-    // Wait for all updates to complete
-    await Promise.all(updates);
+  // Update each user's phone number if it's 12 digits long
+  const updates = users.map(async (user) => {
+    if (user.userPhone.length === 12) {
+      user.userPhone = user.userPhone.substring(2); // Remove the first two digits
+      await user.save(); // Save the updated user
+    }
+  });
 
-    res.status(200).send({ err:false, status:true, data:{},message: 'Users updated successfully.' });
+  // Wait for all updates to complete
+  await Promise.all(updates);
+
+  res.status(200).send({ err: false, status: true, data: {}, message: 'Users updated successfully.' });
 });
 
 router.put('/v1/users/:id/updateRole', async <T, K>(req: Request<T, K, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
@@ -84,18 +97,18 @@ router.put(
   validateRequest({
     body: UpdatedUserAttrs,
   }),
-  async (req:Request<{ userId: string }, {}, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
-      const { userId } = req.params as { userId: string };
-      const data = req.body || {};
-      const userObject = await User.findById(userId);
-      // return res.send(userObject);
+  async (req: Request<{ userId: string }, {}, z.infer<typeof UpdatedUserAttrs>>, res: Response) => {
+    const { userId } = req.params as { userId: string };
+    const data = req.body || {};
+    const userObject = await User.findById(userId);
+    // return res.send(userObject);
 
-      if (!userObject) return res.status(400).send({ status: false, message: 'User Not Found Given Id !!! ' });
+    if (!userObject) return res.status(400).send({ status: false, message: 'User Not Found Given Id !!! ' });
 
-      const updateUserObject = await User.findByIdAndUpdate(userId, data, {
-        new: true,
-      });
-      return res.status(200).send({ err: false,status: true, data: updateUserObject });
+    const updateUserObject = await User.findByIdAndUpdate(userId, data, {
+      new: true,
+    });
+    return res.status(200).send({ err: false, status: true, data: updateUserObject });
   },
 );
 

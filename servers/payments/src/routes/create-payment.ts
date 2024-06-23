@@ -1068,17 +1068,15 @@ router.post(
     body: PaymentAlertSchema,
   }),
   async (req: Request, res: Response) => {
-    const { businessId, tableName, message } = req.body;
+    const { businessId, tableName, message, name, phone } = req.body;
 
     const alert = await PaymentAlert.create({
       businessId: businessId,
       alertType: 'WAITER',
-
+      name: name,
       status: 'SUCCESS',
       tableName: tableName,
-
       message: message,
-      // comment : payload.payment.entity.notes.comment
     });
     return res.status(200).send({ message: 'Order verified successfully', err: false, data: alert });
   },

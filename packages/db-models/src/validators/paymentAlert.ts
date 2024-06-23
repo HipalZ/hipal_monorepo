@@ -22,6 +22,7 @@ export const PaymentAlertSchema = z.object({
   isAccepted: z.boolean().default(false).optional(),
   coinsApplied: z.boolean().default(false).optional(),
   completionCode: z.number().optional(),
+  name: z.string().optional(),
   date: z.number().default(Date.now()),
 });
 

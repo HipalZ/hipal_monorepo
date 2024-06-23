@@ -37,6 +37,8 @@ export const UserAttrs = z.object({
   role: z.string().optional(),
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
+  businessId: ObjectIdSchema.optional(),
+  userId: ObjectIdSchema.optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;

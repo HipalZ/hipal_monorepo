@@ -12,6 +12,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>({
   payment_id: { type: ObjectId, default: null, ref: 'Payment' },
   isAccepted: { type: Boolean, default: false },
   message: { type: String, default: null },
+  name: { type: String, default: null },
   errorReason: { type: String, default: null },
   errorDescription: { type: String, default: null },
   coinsApplied: { type: Boolean, default: false },
