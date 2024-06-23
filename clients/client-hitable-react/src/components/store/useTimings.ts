@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type State = {
+interface State {
   inTime: string;
   outTime: string;
   timeStampStart: number;
@@ -21,7 +21,7 @@ type State = {
   setDayOut: (dayOut: string) => void;
   setStatus: (status: string) => void;
   setRating: (rating: string) => void;
-};
+}
 
 const useTimings = create<State>((set) => ({
   inTime: '',

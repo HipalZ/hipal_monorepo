@@ -19,6 +19,7 @@ const ProfileHeader = memo((props: { position: boolean }) => {
     }
 
     const handleLogout = () =>{
+        localStorage.clear();
         startTransition(()=>{
             navigate(`/l/${businessId}/login`)
         })

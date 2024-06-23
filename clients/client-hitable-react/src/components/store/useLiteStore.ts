@@ -29,10 +29,21 @@ interface ILiteStore {
   salesData: ISalesLite;
   setSalesData: (value: ISalesLite) => void;
   // remove alert
-  removeAlert: (id: string) => void;
+  removeOnlineAlert: (id: string) => void;
+  removeOfflineAlert: (id: string) => void;
 
   viewData: Alert;
   setViewData: (value: Alert) => void;
+
+  // refetch online and offline data
+  refetchOnlineAlerts: () => void;
+  refetchOfflineAlerts: () => void;
+  setRefetchOnlineAlerts: (fn: () => void) => void;
+  setRefetchOfflineAlerts: (fn: () => void) => void;
+
+  // loading states
+  loading: boolean;
+  setLoading: (value: boolean) => void;
 }
 
 
@@ -51,9 +62,18 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   setHistoryData : (value) => set({historyData : value}),
   salesData: {} as ISalesLite,
   setSalesData: (value) => set({salesData: value}),
-  removeAlert: (id) => set((state) => ({
+  removeOnlineAlert: (id) => set((state) => ({
     onlineAlertData: state.onlineAlertData.filter(alert => alert._id !== id)
+  })),
+  removeOfflineAlert: (id) => set((state) => ({
+    offlineAlertData: state.offlineAlertData.filter(alert => alert._id !== id)
   })),
   viewData: {} as Alert,
   setViewData: (value) => set({viewData: value}),
+  refetchOnlineAlerts: () => {},
+  refetchOfflineAlerts: () => {},
+  setRefetchOnlineAlerts: (fn) => set({ refetchOnlineAlerts: fn }),
+  setRefetchOfflineAlerts: (fn) => set({ refetchOfflineAlerts: fn }),
+  loading: false,
+  setLoading: (value) => set({ loading: value }),
 }));

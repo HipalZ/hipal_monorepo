@@ -1,20 +1,24 @@
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import useTimings from "@/components/store/useTimings";
 import axios from "@/components/utils/axios";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react"
 import { CiGlobe } from "react-icons/ci";
+import DateRangePicker from "../dateRangePicker";
 import './index.css'
 
 const SalesLite = memo(() => {
     const { selectedBiz } = useHiClientZ();
     const businessId = selectedBiz?.businessId?._id;
-    const {salesData, setSalesData} = useLiteStore();
+    const {salesData, setSalesData, setLoading} = useLiteStore();
+    const {timeStampStart, timeStampEnd} = useTimings()
     const handleHistoryData = async () => {
+        setLoading(true)
         try {
             const config = {
                 method: "GET",
-                url: `/v1/payments/:id/salesDashboard?businessId=${businessId}`,
+                url: `/v1/payments/:id/salesDashboard?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}`,
             };
             const response = await axios(config);
             if (response.status === 200) {
@@ -26,17 +30,20 @@ const SalesLite = memo(() => {
         } catch (err) {
             console.log(err);
             return {};
+        }finally{
+            setLoading(false)
         }
     }
 
     useQuery({
-        queryKey: ['onlineAlerts', businessId],
+        queryKey: ['onlineAlerts', businessId, timeStampStart, timeStampEnd],
         queryFn: handleHistoryData,
-        enabled: !!businessId,
+        enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
     });
 
     return (
         <>
+            <DateRangePicker/>
             <section className="payment_layout">
                 <article className="card_payment_overview">
                     <div className="sales_payment_background_effect1" />

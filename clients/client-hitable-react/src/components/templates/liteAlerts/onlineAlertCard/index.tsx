@@ -2,7 +2,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import { Alert } from "@/components/types/hiClientzData";
 import axios from "@/components/utils/axios";
 import { cn, timestampToDateTime } from "@/components/utils/helpers";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { CiGlobe } from "react-icons/ci";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { PiCoinsFill } from "react-icons/pi";
@@ -14,11 +14,11 @@ interface IOnlineProp {
 
 const OnlineAlertCard = memo((props: IOnlineProp) => {
     const { selectedNavItem, onlineAlertData } = props;
-    const { removeAlert,setViewData } = useLiteStore()
+    const { removeOnlineAlert, setViewData } = useLiteStore()
     const clickViewMore = useLiteStore((s) => s.clickViewMore);
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore)
-    
-    const handleViewMore = (alert:Alert) => {
+
+    const handleViewMore = (alert: Alert) => {
         setViewData(alert)
         setClickViewMore(!clickViewMore);
     }
@@ -31,7 +31,7 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
             };
             const response = await axios(config);
             if (response.status === 200) {
-                removeAlert(id);
+                removeOnlineAlert(id);
             }
         } catch (err) {
             console.log(err);
@@ -46,15 +46,15 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
                     return (
                         <section key={alert?._id} className={cn('relative', alert?.coinsApplied ? 'h-[10.5rem]' : 'h-[9rem]', "my-4 rounded-xl mx-4 p-4", selectedNavItem === 'online' ? 'bg-white' : 'bg-gray-300')}>
                             <section className="flex justify-between mb-2">
-                                <article className="flex items-center bg-green-100 px-2 w-[8rem] rounded-full">
-                                    <span><CiGlobe /></span>
+                                <article className={cn("flex items-center px-2 w-[8rem] rounded-full", alert?.alertType === "ONLINE" ? ' bg-green-100' : 'bg-red-100')}>
+                                    {alert?.alertType === "ONLINE" ? <span><CiGlobe /></span> : <span><PiCoinsFill /></span>}
                         &nbsp;
                         <h1 className="text-xs">Received {alert?.alertType.toLowerCase()}</h1>
                                 </article>
                                 <article>
                                     <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
                                 </article>
-                                <IoCloseCircleSharp onClick={() => handleRemoveAlert(alert?._id)} size={24} className="inline absolute -right-2 -top-2 text-red-400" />
+                                {selectedNavItem === 'online' ? <IoCloseCircleSharp onClick={() => handleRemoveAlert(alert?._id)} size={24} className="inline absolute -right-2 -top-2 text-red-400" /> : null}
                             </section>
                             <div className="flex justify-between">
                                 <section>
@@ -74,9 +74,10 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
                                         <h1 className="text-base text-gray-700">{alert?.tableName}</h1>
                                         <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                                     </article>
-                                    <button onClick={()=>handleViewMore(alert)} className="bg-black text-white py-1 px-6 mt-6 rounded-full">
+                                    <button onClick={() => handleViewMore(alert)} className="bg-black text-white py-1 px-6 mt-6 rounded-full">
                                         <h1 className="text-xs">{selectedNavItem === 'online' ? 'More' : 'View'}</h1>
                                     </button>
+                                    <h1 className="mt-2">Code: {alert?.alertType !== "ONLINE" ? alert?.completionCode : null}</h1>
                                 </section>
                             </div>
                         </section>

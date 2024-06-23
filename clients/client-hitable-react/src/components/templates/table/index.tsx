@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "@/components/atoms/loader";
 import { AxiosError } from "axios";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, use, useParams } from "react-router-dom";
 import axios from "@/components/utils/axios";
 import { PAGE_TYPES, newRoutes } from "@/components/utils/routes";
 
@@ -113,7 +113,7 @@ const Table = () => {
 		setUserDetails,
 	} = useLogin();
 	const setTableLocal = useTable((s) => s.setTableData);
-	const navigate = useNavigate();
+	const  = use();
 	const params = useParams<{ businessId: string; zoneId: string }>();
 	const { businessId, zoneId } = params;
 
@@ -232,7 +232,7 @@ const Table = () => {
 	const goToHome = () => {
 		toast.error("Session has ended Please login again");
 		startTransition(() => {
-			navigate(`/r/${businessId}/login`);
+			(`/r/${businessId}/login`);
 		})
 	};
 
@@ -244,7 +244,7 @@ const Table = () => {
 	const searchResults = searchTables();
 	const handleClick = (ele) => {
 		startTransition(() => {
-			return navigate(
+			return (
 				newRoutes[PAGE_TYPES.SINGLE_TABLE](
 					businessId || ele.businessId,
 					zoneId || ele.zoneId,

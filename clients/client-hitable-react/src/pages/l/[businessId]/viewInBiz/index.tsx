@@ -1,6 +1,6 @@
 import logo from '@/assets/img/Hilogo.png'
 import dummyLogo from '@/assets/img/dummyLogo.png'
-import HiClientZAnimation from '@/components/atoms/hiClientzAnimation';
+// import HiClientZAnimation from '@/components/atoms/hiClientzAnimation';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';

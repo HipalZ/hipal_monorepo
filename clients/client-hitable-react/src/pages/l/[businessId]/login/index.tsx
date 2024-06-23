@@ -12,10 +12,12 @@ import axios from '@/components/utils/axios'
 import { useHiClientZ } from '@/components/store/useHiClientzData'
 import { toast } from 'react-toastify'
 import './login.css'
+import { useLiteStore } from '@/components/store/useLiteStore';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [password, setPassword] = useState<string>('')
+  const {setLoading} = useLiteStore()
   // store
   const { setCaptainData, setAccessToken, setRefreshToken } = useHiClientZ()
   const { businessId } = useParams<{ businessId: string }>();
@@ -31,6 +33,7 @@ const Login = () => {
 
   //apis 
   const handleLogin = async () => {
+    setLoading(true)
     try {
       const config = {
         method: "POST",
@@ -52,6 +55,8 @@ const Login = () => {
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || error.message)
+    }finally{
+      setLoading(false)
     }
   }
 

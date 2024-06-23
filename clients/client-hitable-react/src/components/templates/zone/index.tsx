@@ -34,7 +34,7 @@ function ZonesComponent({ setCurrentView }: IZoneProps) {
 				navigate("/");
 			})
 		}
-	}, [businessId, navigate]);
+	}, [businessId]);
 
 	const handleToggle = () => {
 		if (!isLogin) {

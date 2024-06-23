@@ -1,8 +1,7 @@
-import { memo, startTransition, useState } from 'react';
+import { memo, startTransition } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import promoAvatar from '@/assets/img/promoCardAvatar.png'
-import logo from "@/assets/img/dummyLogo.png";
 import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg'
 import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg'
 import { FooterSection } from '@/components/atoms/footerSection';
@@ -11,13 +10,6 @@ import ProfileHeader from '@/components/templates/liteAlerts/profileHeader';
 import { CustomRole } from '@/components/types/hiClientzData';
 
 const Businesses = memo(() => {
-    const initialBusinesses = [
-        { _id: '1', name: 'White Mango', location: 'Defense Colony, Secunderabad', logo: logo, default: true },
-        { _id: '2', name: 'White Mango', location: 'Defense Colony, Secunderabad', logo: logo, default: false },
-        { _id: '3', name: 'White Mango', location: 'Defense Colony, Secunderabad', logo: logo, default: false },
-        { _id: '4', name: 'White Mango', location: 'Defense Colony, Secunderabad', logo: logo, default: false },
-    ];
-    const [businesses, setBusinesses] = useState(initialBusinesses);
     // store
     const { captainData,setSelectedBiz } = useHiClientZ();
     const navigate = useNavigate();
@@ -26,14 +18,7 @@ const Businesses = memo(() => {
     const inBusinesses = location.pathname.includes('businesses')
     const handleUpdateDefault = (e, id: string) => {
         e.stopPropagation();
-        const updatedBusinesses = businesses.map(biz => {
-            if (biz._id === id) {
-                return { ...biz, default: true };
-            } else {
-                return { ...biz, default: false };
-            }
-        });
-        setBusinesses(updatedBusinesses);
+        
     };
 
     const exploreBusiness = (biz:CustomRole) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import axios from "@/components/utils/axios";
 import { Disclosure } from "@headlessui/react";
 import { FiChevronDown } from "react-icons/fi";
@@ -95,7 +95,9 @@ function Switch({setCurrentView}:any) {
         toast.success(
           `Table ${tableData.name} transferred to ${toTable.name} successfully`
         );
-        navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+        startTransition(()=>{
+          navigate(routePaths[PAGE_TYPES.TABLES](businessId || '', zoneId || ''));
+        })
       }
     } catch (error) {
       toast.error("Error transferring table");

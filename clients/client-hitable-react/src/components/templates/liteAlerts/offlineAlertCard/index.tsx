@@ -4,6 +4,8 @@ import callwaiter from '@/assets/img/callwaiter.png';
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { timestampToDateTime } from "@/components/utils/helpers";
 import { PiCoinsFill } from "react-icons/pi";
+import { IoCloseCircleSharp } from "react-icons/io5";
+import axios from "@/components/utils/axios";
 
 interface IOfflineProp {
     offlineAlertData: Alert[];
@@ -11,19 +13,36 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
     const { offlineAlertData } = props;
-    const { setViewData,clickViewMore,setClickViewMore } = useLiteStore()
+    const { removeOfflineAlert, setViewData,clickViewMore,setClickViewMore } = useLiteStore()
 
     const handleViewMore = (alert:Alert) => {
         setViewData(alert)
         setClickViewMore(!clickViewMore);
     }
+
+    const handleRemoveAlert = async (id: string) => {
+        try {
+            const config = {
+                method: "PUT",
+                url: `/v1/payments/:pid/order/${id}`,
+            };
+            const response = await axios(config);
+            if (response.status === 200) {
+                removeOfflineAlert(id);
+            }
+        } catch (err) {
+            console.log(err);
+            return {};
+        }
+    }
+
     return (
         <main className="lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 pb-[5rem]">
             {Array.from(offlineAlertData) &&  offlineAlertData?.length > 0 && offlineAlertData.map((alert: Alert) => {
                 return (
                     <section key={alert?._id}>
                         {alert?.alertType === "WAITER" ? <div className="bg-white h-[7rem] rounded-xl mx-4 p-4 my-4">
-                            <section className="flex justify-between mb-2">
+                            <section className="flex justify-between mb-2 relative">
                                 <article className="flex items-center bg-[#ffe9cf] px-2 w-[8rem] rounded-full">
                                     <img src={callwaiter} alt="callwaiter" />
                                     &nbsp;&nbsp;
@@ -32,6 +51,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                                 <article>
                                     <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                                 </article>
+                                <IoCloseCircleSharp onClick={() => handleRemoveAlert(alert?._id)} size={24} className="inline absolute -right-6 -top-6 text-red-400" />
                             </section>
                             <div className="flex justify-between">
                                 <section>
@@ -45,7 +65,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                                 </section>
                             </div>
                         </div>
-                            : <div className="bg-white h-[10.5rem] rounded-xl mx-4 p-4">
+                            : <div className="bg-white h-[10.5rem] rounded-xl mx-4 p-4 my-4">
                                 <section className="flex justify-between mb-2">
                                     <article className="flex items-center bg-[#ffe9cf] px-2 w-[8.5rem] rounded-full">
                                         <span><CiGlobe /></span>

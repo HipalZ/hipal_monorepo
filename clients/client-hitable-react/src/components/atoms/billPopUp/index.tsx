@@ -9,12 +9,13 @@ import axios from "@/components/utils/axios";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 
 const BillPopUp = memo(() => {
-    const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData ,setViewData} = useLiteStore();
+    const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData, setViewData } = useLiteStore();
     const [showTick, setShowTick] = useState(false);
     const clickViewMore = useLiteStore((s) => s.clickViewMore);
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore)
     const [clickComment, setClickComment] = useState(false)
-    const [isLoading , setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [comment, setComment] = useState('')
 
     const copyText = () => {
         const text = document.querySelector('#discount-reason')?.textContent || '';
@@ -38,6 +39,9 @@ const BillPopUp = memo(() => {
             const config = {
                 method: "PUT",
                 url: `/v1/payments/:pid/order/${id}`,
+                data: {
+                    comment: comment
+                }
             };
             const response = await axios(config);
             if (response.status === 200) {
@@ -47,7 +51,7 @@ const BillPopUp = memo(() => {
             console.log(err);
             return {};
         }
-        finally{
+        finally {
             setIsLoading(false)
         }
     }
@@ -97,7 +101,7 @@ const BillPopUp = memo(() => {
                         Close
 				</button>
                 </div>
-                {isLoading ? <LoadingSpinner/> :null}
+                {isLoading ? <LoadingSpinner /> : null}
             </section>
         )
     }
@@ -110,7 +114,12 @@ const BillPopUp = memo(() => {
     };
 
     const handleComment = () => {
+        console.log('comment')
+        
         setClickComment(!clickComment)
+    }
+    const handleAddComment = (e) => {
+        setComment(e.target.value)
     }
 
     return (
@@ -164,20 +173,21 @@ const BillPopUp = memo(() => {
                             <span className={cn("px-4 py-2 rounded-2xl", showTick ? 'text-green-500 bg-green-500/20' : 'text-[#7f46ff] bg-[#f3eeff] ')} onClick={copyText} style={{ cursor: 'pointer' }}>{showTick ? 'Copied' : 'Copy'}</span>
                         </div>
                     </div>
-                    <div onClick={handleComment} className="m-6 p-4 rounded-2xl flex items-center space-x-2 text-white w-[10.5rem] h-[2rem] bg-black"><MdOutlineMessage />
+                    {selectedNavItem === "on floor" ? <div onClick={handleComment} className="m-6 p-4 rounded-2xl flex items-center space-x-2 text-white w-[10.5rem] h-[2rem] bg-black"><MdOutlineMessage />
                         <button>Add Comment</button>
-                    </div>
-                    {clickComment ? <textarea
-                        // onChange={handlePhoneNumberChange}
-                        // type="text"
-                        // value={phoneNumber}
-                        maxLength={10}
-                        minLength={10}
-                        id="floating_outlined3"
-                        className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black rounded-xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
-                        placeholder=" "
-                        required
-                    /> : null}
+                    </div>:null}
+                    {!clickComment && selectedNavItem ==="on floor" ? <div className="mx-6">
+                        <textarea
+                            onChange={handleAddComment}
+                            id="floating_outlined3"
+                            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black rounded-xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+                            placeholder=" "
+                            required
+                            style={{
+                                resize: 'none',
+                            }}
+                        />
+                    </div> : null}
                     {selectedNavItem === "online" || selectedNavItem === "history" ?
                         <div className="flex justify-center mb-5">
                             <button

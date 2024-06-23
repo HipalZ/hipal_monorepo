@@ -4,10 +4,18 @@ import { memo } from "react";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import ProfileHeader from "../profileHeader";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import './index.css'
 
 const HeaderAlerts = memo(() => {
     const { selectedBiz } = useHiClientZ();
-    const { selectedNavItem } = useLiteStore();
+    const { selectedNavItem, refetchOfflineAlerts, refetchOnlineAlerts,loading } = useLiteStore();
+    const refetchData = () => {
+        if (selectedNavItem === "online") {
+            refetchOnlineAlerts();
+        } else if (selectedNavItem === "on floor") {
+            refetchOfflineAlerts();
+        }
+    };
     return (
         <header className="sticky top-0 h-[5rem] w-full flex items-center justify-between px-6 py-4 bg-white !z-10">
             <div className="flex space-x-3 items-center">
@@ -20,7 +28,13 @@ const HeaderAlerts = memo(() => {
                 </div>
             </div>
             <div className="flex items-center space-x-3">
-                {selectedNavItem === "online" || selectedNavItem === "on floor" ? <HiOutlineRefresh size={24} /> : null}
+                {(selectedNavItem === "online" || selectedNavItem === "on floor") && (
+                    <HiOutlineRefresh
+                        onClick={refetchData}
+                        size={24}
+                        className={`cursor-pointer ${loading ? "animate-spin" : ""}`}
+                    />
+                )}
                 <ProfileHeader position={false} />
             </div>
         </header>
