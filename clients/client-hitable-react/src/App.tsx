@@ -4,6 +4,7 @@ import LoadingSpinner from './components/atoms/loadingSpinner';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
 import axios from './components/utils/axios';
+import { Howl } from 'howler';
 import MainRouter from './routes';
 
 function App() {
@@ -11,11 +12,10 @@ function App() {
   const location = useLocation();
   const isAlerts = location.pathname.includes('alerts');
   const businessId = selectedBiz?.businessId?._id;
-  const { loading, setOnlineAlertData, setOfflineAlertData, setRefetchOnlineAlerts, setRefetchOfflineAlerts, setLoading } = useLiteStore();
+  const { loading, setOnlineCount, onlineCount,offlineCount,setOfflineCount,setOnlineAlertData, setOfflineAlertData, setRefetchOnlineAlerts, setRefetchOfflineAlerts } = useLiteStore();
 
   const fetchAlerts = async (alertType: string) => {
     const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
-    setLoading(true);
     try {
       const config = {
         method: 'GET',
@@ -30,14 +30,25 @@ function App() {
     } catch (err) {
       console.log(err);
       return [];
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleOnlineAlerts = async () => {
     const data = await fetchAlerts('ONLINE');
     setOnlineAlertData(data);
+    setOnlineCount(data.length);
+    // if (data.length > onlineCount) {
+      // initializeMessaging('New order', 'Hey pal, we have new order');
+      const sound = new Howl({
+        src: ['/sounds/order.mp3'],
+        autoplay: true,
+        loop: true,
+      });
+      sound.play();
+      setTimeout(() => {
+        sound.pause();
+      }, 3000);
+    // }
     setRefetchOnlineAlerts(refetchOnlineAlerts);
     return data;
   };
@@ -45,6 +56,19 @@ function App() {
   const handleOfflineAlerts = async () => {
     const data = await fetchAlerts('ALL');
     setOfflineAlertData(data);
+    setOfflineCount(data.length);
+    // if (data.length > offlineCount) {
+      // initializeMessaging('New order', 'Hey pal, we have new order');
+      const sound = new Howl({
+        src: ['/sounds/order.mp3'],
+        autoplay: true,
+        loop: true,
+      });
+      sound.play();
+      setTimeout(() => {
+        sound.pause();
+      }, 3000);
+    // }
     setRefetchOfflineAlerts(refetchOfflineAlerts);
     return data;
   };

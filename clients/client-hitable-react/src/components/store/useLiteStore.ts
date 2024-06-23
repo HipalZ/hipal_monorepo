@@ -44,6 +44,14 @@ interface ILiteStore {
   // loading states
   loading: boolean;
   setLoading: (value: boolean) => void;
+
+  // online order count
+  onlineCount : number;
+  setOnlineCount : (value : number) => void;
+
+  // offline order count
+  offlineCount : number;
+  setOfflineCount : (value : number) => void;
 }
 
 
@@ -76,4 +84,8 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   setRefetchOfflineAlerts: (fn) => set({ refetchOfflineAlerts: fn }),
   loading: false,
   setLoading: (value) => set({ loading: value }),
+  onlineCount : 0,
+  setOnlineCount : (value) => set({onlineCount : value}),
+  offlineCount : 0,
+  setOfflineCount : (value) => set({offlineCount : value}),
 }));
