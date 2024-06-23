@@ -139,11 +139,11 @@
             margin: 2rem 0 0 0;
         }
         .online_card1{
-            max-width: 20rem;
+            width: 10rem;
             height: 9rem;
         }
         .online_card2{
-            max-width: 20rem;
+            width: 10rem;
             height: 9rem;
         }
     }

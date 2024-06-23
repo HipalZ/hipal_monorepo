@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type State = {
+interface State {
   inTime: string;
   outTime: string;
   timeStampStart: number;
@@ -21,7 +21,7 @@ type State = {
   setDayOut: (dayOut: string) => void;
   setStatus: (status: string) => void;
   setRating: (rating: string) => void;
-};
+}
 
 const useTimings = create<State>((set) => ({
   inTime: '',
@@ -34,16 +34,16 @@ const useTimings = create<State>((set) => ({
   status: '',
   rating: '',
   selectedRange: 'today',
-  setSelectedRange: (selectedRange) => set({ selectedRange }),
-  setInTime: (inTime) => set({ inTime }),
-  setOutTime: (outTime) => set({ outTime }),
-  setTimeStampStart: (timeStampStart) => set({ timeStampStart }),
-  setTimeStampEnd: (timeStampEnd) => set({ timeStampEnd }),
-  setDayIn: (dayIn) => set({ dayIn }),
-  setPickDate: (pickDate) => set({ pickDate }),
-  setDayOut: (dayOut) => set({ dayOut }),
-  setStatus: (status) => set({ status }),
-  setRating: (rating) => set({ rating }),
+  setSelectedRange: (selectedRange:string) => set({ selectedRange }),
+  setInTime: (inTime:string) => set({ inTime }),
+  setOutTime: (outTime:string) => set({ outTime }),
+  setTimeStampStart: (timeStampStart:number) => set({ timeStampStart }),
+  setTimeStampEnd: (timeStampEnd:number) => set({ timeStampEnd }),
+  setDayIn: (dayIn:string) => set({ dayIn }),
+  setPickDate: (pickDate:string) => set({ pickDate }),
+  setDayOut: (dayOut:string) => set({ dayOut }),
+  setStatus: (status:string) => set({ status }),
+  setRating: (rating:string) => set({ rating }),
 }));
 
 export default useTimings;

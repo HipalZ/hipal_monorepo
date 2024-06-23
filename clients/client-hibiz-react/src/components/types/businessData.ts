@@ -71,6 +71,50 @@ export type IBusinessDetails = {
 };
 
 
+export interface Order {
+  _id: string;
+  businessId: string;
+  total: number;
+  currency: string;
+  billValue: number;
+  receipt: string;
+  name: string;
+  phone: string;
+  tips: number;
+  claimedCoins: number;
+  discount: number;
+  order_id: string;
+  tableName: null | string;
+  date: number;
+}
+
+export interface Alert {
+  completionCode: null | string;
+  errorReason: null | string;
+  errorDescription: null | string;
+  _id: string;
+  businessId: string;
+  comment: null | string;
+  status: string;
+  tableName: string;
+  alertType: string;
+  order_id: Order;
+  payment_id: string;
+  isAccepted: boolean;
+  message: string;
+  coinsApplied: boolean;
+  date: number;
+  name:string;
+}
+
+export interface ISalesLite {
+  totalSale: number;
+  totalDiscount: number;
+  totalOnlineSale: number;
+  totalOfflineSale: number;
+  coinzIssued: number;
+  coinzRedeemed: number;
+}
 
 export interface NetworkInformation extends EventTarget {
   downlink?: number;
@@ -85,3 +129,5 @@ export interface NavigatorWithNetworkInformation extends Navigator {
   mozConnection?: NetworkInformation;
   webkitConnection?: NetworkInformation;
 }
+
+

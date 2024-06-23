@@ -87,7 +87,7 @@ const Business = memo(() => {
 
 
 	return (
-		<>
+		<main className="h-screen">
 			<div className="business_gradient">
 				<section className="sticky top-0 z-10 w-full px-0 pb-4">
 					<Header
@@ -166,7 +166,7 @@ const Business = memo(() => {
 				</button>
 			
 			{isLoad && <LoadingSpinner />}
-		</>
+		</main>
 	);
 });
 

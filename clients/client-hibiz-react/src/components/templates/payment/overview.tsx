@@ -1,7 +1,41 @@
-import { memo } from "react"
+import axios from "@/axios";
+import { memo, useState } from "react"
 import { CiGlobe } from "react-icons/ci";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import useTimings from "@/components/store/useTimings";
+import { ISalesLite } from "@/components/types/businessData";
 
-const Overview = () => {
+const Overview = memo(() => {
+    const params = useParams();
+    const businessId = params?.businessId;
+    const [salesData, setSalesData] = useState<ISalesLite>()
+    const {timeStampStart, timeStampEnd} = useTimings()
+    const handleHistoryData = async () => {
+        try {
+            const config = {
+                method: "GET",
+                url: `/v1/payments/:id/salesDashboard?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}`,
+            };
+            const response = await axios(config);
+            if (response.status === 200) {
+                setSalesData(response?.data?.data)
+                return response.data.data;
+            } else {
+                return {};
+            }
+        } catch (err) {
+            console.log(err);
+            return {};
+        }
+    }
+
+    useQuery({
+        queryKey: ['onlineAlerts', businessId , timeStampStart, timeStampEnd],
+        queryFn: handleHistoryData,
+        enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+    });
+
     return (
         <>
             <section className="payment_layout">
@@ -9,9 +43,6 @@ const Overview = () => {
                     <div className="sales_payment_background_effect1" />
                     <div className="sales_payment_background_effect2" />
                     <div className="sales_payment_background_effect3" />
-                    <center className="pt-4">
-                        20 spe 2020, 22.00
-                    </center>
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-[0.125rem] bg-white h-[50%] mt-10"></div>
                     </div>
@@ -20,7 +51,7 @@ const Overview = () => {
                             Today’s Sales
                         </h3>
                         <h1 className="absolute text-3xl left-4 bottom-6">
-                            ₹ 3,65,500
+                            ₹ {salesData?.totalSale}
                         </h1>
                     </section>
                     <section>
@@ -28,7 +59,7 @@ const Overview = () => {
                             Total Discounts
                         </h3>
                         <h1 className="absolute text-3xl right-4 bottom-6">
-                            ₹ 3,65,500
+                            ₹ {salesData?.totalDiscount}
                         </h1>
                     </section>
                 </article>
@@ -40,7 +71,7 @@ const Overview = () => {
                             <small>Online</small>
                         </p>
                         <h1 className="mt-6 text-2xl">
-                            ₹ 3,65,500
+                            ₹ {salesData?.totalOnlineSale}
                         </h1>
                     </article>
 
@@ -51,7 +82,7 @@ const Overview = () => {
                             <small>On floor</small>
                         </p>
                         <h1 className="mt-6 text-2xl">
-                            ₹ 3,65,500
+                            ₹ {salesData?.totalOfflineSale}
                         </h1>
                     </article>
                 </section>
@@ -62,7 +93,7 @@ const Overview = () => {
                         Coinz issued
                     </b>
                     <h6>
-                        ₹ 3,65
+                        ₹ {salesData?.coinzIssued}
                     </h6>
                 </article>
                 <article className="w-full p-4 border border-[#00000050] rounded-xl">
@@ -70,31 +101,13 @@ const Overview = () => {
                         Coinz used
                     </b>
                     <h6>
-                        ₹ 3,65
-                    </h6>
-                </article>
-            </section>
-            <section className="flex justify-between gap-4 mx-4 mt-4">
-                <article className="w-full p-4 border border-[#00000050] rounded-xl">
-                    <b>
-                    Couponz issued
-                    </b>
-                    <h6>
-                        ₹ 3,65
-                    </h6>
-                </article>
-                <article className="w-full p-4 border border-[#00000050] rounded-xl">
-                    <b>
-                    Couponz used
-                    </b>
-                    <h6>
-                        ₹ 3,65
+                        ₹ {salesData?.coinzRedeemed}
                     </h6>
                 </article>
             </section>
         </>
 
     )
-}
+})
 
-export default memo(Overview)
+export default Overview
