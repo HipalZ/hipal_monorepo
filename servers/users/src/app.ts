@@ -75,6 +75,7 @@ const excludedPaths = [
   '/v1/users/Owner/Login',
   '/v1/businesses/get/allbusiness',
   '/v1/users/:id/signIn',
+  '/v1/users/:id/stafflogin',
   '/v1/users/:id/signUp',
   '/v1/users/:businessId/getUserReward',
 ]; // Add more paths as needed
@@ -92,9 +93,9 @@ const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFu
 app.use(createUserRouter);
 app.use(readUserRouter);
 app.use(updateUserRouter);
-app.use(errorHandler);
-app.all('*', () => {
-  return 'Not Found';
-});
 
+app.all('*', () => {
+  throw new Error('Route not found');
+});
+app.use(errorHandler);
 export { app };

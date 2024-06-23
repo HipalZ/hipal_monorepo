@@ -150,6 +150,7 @@ router.post(
 
     let existingUser;
     existingUser = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
+
     // try {
     //   const options = {
     //     method: "POST",
@@ -166,9 +167,9 @@ router.post(
     //   return res.status(500).send({ status: false, message: e.message });
     // }
 
-    const accessTokenExistingUser = createAccessToken(existingUser);
-    const refreshTokenExistingUser = createRefreshToken(existingUser);
     if (existingUser) {
+      const accessTokenExistingUser = createAccessToken(existingUser);
+      const refreshTokenExistingUser = createRefreshToken(existingUser);
       return res.status(409).send({
         status: false,
         message: 'User already exist',
@@ -176,7 +177,9 @@ router.post(
         err: false,
       });
     }
+
     const user = await User.create(req.body);
+    console.log('user', user);
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
@@ -417,7 +420,7 @@ router.post(
       select: 'businessName address logo',
     });
 
-    const isPasswordValid = await verifyPassword(password, staff?.password as string);
+    const isPasswordValid = await verifyPassword(password, staff?.password || '');
 
     if (!isPasswordValid) {
       return res.status(400).send({
@@ -659,57 +662,20 @@ router.post(
   '/v1/users/chef/Login',
   // validateUser,
   async (req: Request, res: Response) => {
-    const { phone, password, businessId } = req.body;
-    const { withBusinessId } = req.query;
-    if (!withBusinessId) {
-      return res.send({
-        status: false,
-        message: 'businessId is required',
-        data: {},
-        err: true,
-      });
+    const { phone } = req.body;
+
+    const existing = await User.findOne({ phone, role: 'RESTAURANT_STAFF' });
+
+    if (!existing) {
+      return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
     }
-    if (withBusinessId == 'true') {
-      const existingUser = await User.findOne({
-        phone,
-        password,
-        customRole: { $elemMatch: { businessId } },
-      });
 
-      if (!existingUser) {
-        return res.status(400).send({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
-      }
-      // const userJwt = createJWT(existingUser);
-
-      // req.session = {
-      //   jwt: userJwt,
-      // };
-      res.status(200).send({
-        err: false,
-        status: true,
-        message: 'Login SuccessFully !!!',
-        data: existingUser,
-      });
-    } else {
-      const existingUser = await User.findOne({
-        phone,
-        role: 'RESTAURANT_MANAGER',
-      });
-      if (!existingUser) {
-        return res.status(400).send({ data: {}, err: true, status: false, message: 'Phone  invalid...!' });
-      }
-      // const userJwt = createJWT(existingUser);
-
-      // req.session = {
-      //   jwt: userJwt,
-      // };
-      res.status(200).send({
-        err: false,
-        status: true,
-        message: 'Login SuccessFully !!!',
-        data: existingUser,
-      });
-    }
+    res.status(200).send({
+      data: existing,
+      err: false,
+      status: true,
+      message: 'Login SuccessFully !!!',
+    });
   },
 );
 

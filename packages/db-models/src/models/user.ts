@@ -83,7 +83,7 @@ const userSchema = new mongoose.Schema<UserType>(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
 
     role: {
