@@ -29,7 +29,7 @@ const createAccessToken = (user: any) => {
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '5m' }, // Add 7 day expiration
+    { expiresIn: '60m' }, // Add 7 day expiration
   );
 };
 
@@ -58,7 +58,7 @@ const createRefreshToken = (user: any) => {
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '10m' }, // Add 30 day expiration
+    { expiresIn: '60m' }, // Add 30 day expiration
   );
 };
 
@@ -232,17 +232,13 @@ router.post(
       const refreshToken = createRefreshToken(existingUser);
       const modifyUser = {
         ...existingUser,
-
-        accessToken,
-        refreshToken,
-
         reward: signUpBonus,
         count: userReward?.scanCount,
       };
       return res.status(200).send({
         status: true,
         message: 'User logged in successfully',
-        data: modifyUser,
+        data: { user: modifyUser, accessToken, refreshToken },
         err: false,
       });
     }
