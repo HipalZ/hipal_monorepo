@@ -1,5 +1,4 @@
 import { useLogin } from "@/components/store/useLogin"
-import useLoyaltyData from "@/components/store/useLoyaltyData"
 import React, { useEffect, useState } from "react"
 import {
 	beans,
@@ -12,15 +11,15 @@ import {
 } from "../card/pathPattern"
 import Image from "next/image"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import PlaceholderImg from "../placeholder"
 import { useParams } from "next/navigation"
+import { PatternKeys } from "@/components/utils/helpers"
 
 interface ILoyaltyCard {
 	logo: string
-	src: Record<string, any>
 	cardColor: string
 	fontColor: string
 	hiCode?: string
@@ -30,7 +29,6 @@ interface ILoyaltyCard {
 const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILoyaltyCard) => {
 	const [image, setImage] = useState<any>("")
 	const [cardPattern, setCardPattern] = useState("")
-	const [logos, setLogos] = useState<string>("")
 	const userName = useLogin((s) => s.userDetails.name)
 	const isLogin = useLogin((s) => s.isLogin)
 	const setDirection = useLogin((s) => s.setDirection)
@@ -42,7 +40,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {
 			setDirection(str)
-			router.push(routePaths[PAGE_TYPES.SIGN_UP](businessId))
+			router.push(routePaths[PAGE_TYPES.SIGN_UP](businessId ))
 		} else {
 			setDirection("")
 			router.push(routePaths[PAGE_TYPES.LOYALTY](businessId))
@@ -54,12 +52,11 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	}
 
 	useEffect(() => {
-		setLogos(loyaltySetting?.logo)
 		setCardPattern(loyaltySetting?.cardPattern)
 	}, [loyaltySetting])
 
 	useEffect(() => {
-		const patterns = (cardPattern, fontColor) => {
+		const patterns = (cardPattern:PatternKeys, fontColor:string) => {
 			const defaultColor = "#FAE8CA"
 			fontColor = fontColor || defaultColor
 

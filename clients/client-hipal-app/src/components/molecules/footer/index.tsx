@@ -13,9 +13,9 @@ interface IFooter{
 const Footer=(props:IFooter) =>{
 	const { footerText, instagramLink, facebookLink, linkedinLink, youtubeLink } = props;
 	return (
-			<div className="flex flex-col space-y-4 ">
+			<div className="!-mt-8">
 				{footerText && (
-					<div className="px-4 text-lg mt-[1rem] text-base-100-content">
+					<div className="px-4 text-lg text-base-100-content">
 						{footerText}
 					</div>
 				)}
@@ -61,11 +61,7 @@ const Footer=(props:IFooter) =>{
 						</a>
 					)}
 				</div>
-				<div className="flex flex-col px-6 py-5 bg-base-300">
-					<span className="mx-auto mb-auto text-sm font-bold tracking-wider text-base-content">
-						Copyright by Paltribe
-					</span>
-				</div>
+				
 			</div>
 	)
 }

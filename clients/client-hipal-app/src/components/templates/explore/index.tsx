@@ -58,7 +58,7 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
 
     useEffect(() => {
         if (data?.loyalty?.loyaltyId) {
-            // openModal()
+            openModal()
             setLoyaltySetting(data?.loyalty)
             findPattern(data?.loyalty?.cardPattern)
         }
@@ -93,37 +93,32 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
                         <div className="relative p-4 overflow-hidden border rounded-xl border-accent ">
                             <SubLoyalty
                                 logo={businessDetails?.logo}
-                                cardColor={loyaltySetting?.cardColor}
-                                fontColor={loyaltySetting?.fontColor}
                             />
                         </div>
 
                     </section>
                 )}
-
-
+                
                 <PopularRestaurant popular={data?.settings?.explore?.popular} />
-
-
-
-                <PageName endBanner={data?.settings?.themes?.endBanner} />
-                <Footer footerText={data?.settings?.themes?.footerText}
-                    instagramLink={data?.settings?.themes?.instagramLink}
-                    facebookLink={data?.settings?.themes?.facebookLink}
-                    youtubeLink={data?.settings?.themes?.youtubeLink}
-                    linkedinLink={data?.settings?.themes?.linkedinLink}
+                
+                <Footer
+                    footerText={data?.settings?.themes?.footerText || ""}
+                    instagramLink={data?.settings?.themes?.instagramLink || ""}
+                    facebookLink={data?.settings?.themes?.facebookLink || ""}
+                    youtubeLink={data?.settings?.themes?.youtubeLink || ""}
+                    linkedinLink={data?.settings?.themes?.linkedinLink || ""}
                 />
+                
+                <PageName />
             </div>
-            <BottomButton >
-                <div className="flex flex-row space-x-2 capitalize">Menu</div>
-            </BottomButton>
-            {isModalOpen && (
+            <BottomButton />
+
+            {!isModalOpen && (
                 <DishData show={isModalOpen} onClose={() => closeModal()}>
                     <MainLoyalty
                         logo={businessDetails?.logo}
                         cardColor={loyaltySetting?.cardColor}
                         fontColor={loyaltySetting?.fontColor}
-                        src={findPattern(loyaltySetting?.cardPattern) || beans(loyaltySetting?.fontColor)}
                         loyaltySetting={data?.loyalty}
                     />
                 </DishData>

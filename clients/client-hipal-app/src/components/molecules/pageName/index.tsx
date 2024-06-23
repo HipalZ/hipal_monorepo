@@ -1,29 +1,27 @@
 "use client"
-import PlaceholderImg from "@/components/atoms/placeholder"
-import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/legacy/image"
+import Footer from "@/assets/bonuscard/footer.png"
+import Image from "next/image"
 import { memo } from "react"
 
-interface IPageName {
-	endBanner: string
-}
-function PageComponent(props: IPageName)  {
-	const { endBanner } = props
+
+function PageComponent() {
 	return (
-		<div className=" mb-4 bg-base-300 relative flex flex-col h-[50vh]">
-			{
-				endBanner && endBanner?.length > 0 ? <Image
-					src={endBanner}
-					quality={75}
-					width={100}
-					height={100}
-					alt={"background"}
-					layout="fill"
-					objectFit="cover"
-					placeholder="blur"
-					blurDataURL={getRandomBlurImg(100, 100)}
-				/> : <PlaceholderImg />
-			}
+		<div>
+			<Image
+				src={Footer}
+				quality={95}
+				width={480}
+				height={480}
+				alt="background"
+				objectFit="cover"
+			/>
+			<section>
+				<ol className="pt-8 pb-16 mx-4 space-y-2 text-sm custom-list">
+					<li>Menu items, nutritional information and prices are set by the businesses. </li>
+					<li>Refunds and application of rewards are managed by the businesses directly</li>
+					<li>An average active adult requires 2,000 Kcal energy per day, however calorie needs may vary. </li>
+				</ol>
+			</section>
 		</div>
 	)
 }
