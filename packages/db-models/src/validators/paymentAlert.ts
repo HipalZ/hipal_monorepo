@@ -23,6 +23,7 @@ export const PaymentAlertSchema = z.object({
   coinsApplied: z.boolean().default(false).optional(),
   completionCode: z.number().optional(),
   name: z.string().optional(),
+  isRejected: z.boolean().default(false).optional(),
   date: z.number().default(Date.now()),
 });
 
