@@ -56,21 +56,24 @@ const PaymentModal = (props: PaymentModalProps) => {
                     </a>
                 </div>
             </div>
+            <h1 className="mx-6 font-semibold">Used reason</h1>
             <div className="m-6 flex flex-col rounded-2xl bg-gray-300 p-4">
                 <h1 id="discount-reason">
                     User {salesData?.order_id?.name} discount applied ₹ {salesData?.order_id?.claimedCoins}
                 </h1>
                 <br />
-                {/* <div className="flex self-end">
-                    <span
-                        className={cn('rounded-2xl px-4 py-2', showTick ? 'bg-green-500/20 text-green-500' : 'bg-[#f3eeff] text-[#7f46ff] ')}
-                        onClick={copyText}
-                        style={{ cursor: 'pointer' }}
-                    >
-                        {showTick ? 'Copied' : 'Copy'}
-                    </span>
-                </div> */}
             </div>
+            {
+                salesData?.comment && salesData?.comment.length > 0 ? <>
+                    <h1 className="mx-6 font-semibold">
+                        Added Comment
+                </h1>
+                    <div className="m-6 flex flex-col rounded-2xl bg-gray-300 p-4">
+                        <p>{salesData?.comment}</p>
+                        <br />
+                    </div>
+                </> : null
+            }
         </section>
     )
 }

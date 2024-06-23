@@ -6,7 +6,7 @@ import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
 import { MdCurrencyRupee, MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
 import { IBusinessData } from "@/components/types/businessData";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,15 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
         usePayment()
+
+    // by default setting to zero instead of previous stale data
+    useEffect(()=>{
+        setBillValue(0)
+        setClaimedCoinz(0)
+        setTips(0)
+        setSelectedTip('')
+        setCustomTip('')
+    },[])
 
     const { loyaltySetting } = useLoyaltyData()
 
@@ -229,6 +238,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 
         } catch (err) {
             console.log(err)
+            toast.error(err.message)
         }
     }
 
@@ -447,7 +457,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                 )}
                         </div>
                         <br />
-                        {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz + tips}</h4> : null}
+                        {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
                         <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {billValue}</h4>
                     </article>
                     <div className='my-2'>

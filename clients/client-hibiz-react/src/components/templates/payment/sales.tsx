@@ -101,7 +101,6 @@ const PaymentSales = memo(() => {
                                         <img src={Online} alt="online" />
                                         <figcaption className="text-[0.825rem] opacity-50">
                                             <h6>order id : {data?.order_id?.order_id}</h6>
-                                            <h6>₹ {data?.order_id?.total}</h6>
                                         </figcaption>
                                     </figure>
                                 </section>
@@ -120,7 +119,7 @@ const PaymentSales = memo(() => {
                                 )}>
                                     <small>{data?.mode} Payment</small>
                                 </button>
-                                <button className="flex items-center justify-center px-2 py-1 space-x-2 bg-[#73F88047] text-[#23B371] rounded-2xl">
+                                <button className="flex items-center justify-center px-2 py-1 space-x-2 bg-[#e7fedc] text-[#23B371] rounded-2xl">
                                     <small>{data?.order_id?.claimedCoins} Coinz used </small>
                                 </button>
                             </section>
