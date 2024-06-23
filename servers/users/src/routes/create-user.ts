@@ -69,10 +69,6 @@ const addSignUpBonus = async (
   name: string,
   bonus: number,
 ) => {
-  const currentTime = Date.now();
-  const indianTime = moment(currentTime).utcOffset('+05:30');
-  const dayAndDate = indianTime.format('DD-MM-YYYY');
-  const time = indianTime.format('HH:mm');
   let existingReward = await UserReward.findOne({
     userPhone: phone,
     loyaltyId,
@@ -94,10 +90,7 @@ const addSignUpBonus = async (
       userPhone: phone,
       status: 'plus',
       rewards: bonus,
-      time,
-      date: new Date().toISOString().slice(0, 19).replace('T', ' '),
       currentBalance: bonus,
-      day: dayAndDate,
       loyaltyId,
     });
 
@@ -114,10 +107,8 @@ const addSignUpBonus = async (
         status: 'plus',
         rewards: bonus,
 
-        time,
-        date: new Date().toISOString().slice(0, 19).replace('T', ' '),
         currentBalance: userReward?.rewards || bonus,
-        day: dayAndDate,
+
         loyaltyId,
       });
 
@@ -209,13 +200,13 @@ router.post(
         err: true,
       });
     }
-    // try {
-    //   if (loyaltyId && signUpBonus && signUpBonus > 0 && role == 'HIPAL_CUSTOMER') {
-    //     await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
-    //   }
-    // } catch (e) {
-    //   console.log(e);
-    // }
+    try {
+      if (loyaltyId && signUpBonus && signUpBonus > 0 && role == 'HIPAL_CUSTOMER') {
+        await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+      }
+    } catch (e) {
+      console.log(e);
+    }
 
     // const options = {
     //   method: 'GET',
@@ -232,24 +223,29 @@ router.post(
     //   return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
     // }
 
-    // if (loyaltyId && signUpBonus > 0) {
-    //   const userReward = await UserReward.findOne({
-    //     userPhone: phone,
-    //     loyaltyId,
-    //   });
-    //   const accessToken = createAccessToken(existingUser);
-    //   const refreshToken = createRefreshToken(existingUser);
-    //   const modifyUser = {
-    //     ...existingUser,
+    if (loyaltyId && signUpBonus > 0) {
+      const userReward = await UserReward.findOne({
+        userPhone: phone,
+        loyaltyId,
+      });
+      const accessToken = createAccessToken(existingUser);
+      const refreshToken = createRefreshToken(existingUser);
+      const modifyUser = {
+        ...existingUser,
 
-    //     accessToken,
-    //     refreshToken,
+        accessToken,
+        refreshToken,
 
-    //     reward: signUpBonus,
-    //     count: userReward?.scanCount,
-    //   };
-    //   return res.status(200).send(modifyUser);
-    // }
+        reward: signUpBonus,
+        count: userReward?.scanCount,
+      };
+      return res.status(200).send({
+        status: true,
+        message: 'User logged in successfully',
+        data: modifyUser,
+        err: false,
+      });
+    }
 
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
