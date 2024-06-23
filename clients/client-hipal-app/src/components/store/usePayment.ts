@@ -1,17 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type PaymentStore = {
+interface PaymentStore{
 	razorPayPaymentId: string
 	razorPayOrderId: string
 	razorPaySignature: string
 	setRazorPayPaymentId: (paymentId: string) => void
 	setRazorPayOrderId: (orderId: string) => void
 	setRazorPaySignature: (signature: string) => void
+
+	// saving offline orderId
+	offlineOrderId: string
+	setOfflineOrderId: (orderId: string) => void
 }
 
-const usePayment = create<PaymentStore>(
-	persist(
+const usePayment = create(
+	persist<PaymentStore>(
 		(set) => ({
 			razorPayPaymentId: '',
 			razorPayOrderId: '',
@@ -19,6 +23,8 @@ const usePayment = create<PaymentStore>(
 			setRazorPayPaymentId: (paymentId) => set({ razorPayPaymentId: paymentId }),
 			setRazorPayOrderId: (orderId) => set({ razorPayOrderId: orderId }),
 			setRazorPaySignature: (signature) => set({ razorPaySignature: signature }),
+			offlineOrderId: '',
+			setOfflineOrderId: (orderId) => set({ offlineOrderId: orderId }),
 		}),
 		{
 			name: 'payment-store',
