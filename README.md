@@ -14,9 +14,9 @@ pnpm dev
 
 asds
 
-```
+````
 sd
-```
+```asd
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
@@ -51,4 +51,4 @@ kubectl create secret generic "digitalocean-dns" \
   --from-literal=access-token="$DO_API_TOKEN"
 
 secret/digitalocean-dns created
-```
+````
