@@ -1,24 +1,23 @@
-import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png'
-import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png'
-import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png'
-import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png'
-import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png'
-import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png'
-import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png'
-import '@/pages/l/[businessId]/login/login.css'
-import { memo } from 'react'
+import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png';
+import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png';
+import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png';
+import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png';
+import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png';
+import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
+import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
+import '@/pages/l/[businessId]/login/login.css';
+import { memo } from 'react';
 
 const Login = memo(() => {
-
   return (
     <center>
       <section className="relative max-w-[30rem]">
-        <div className="mobileGrad h-[28rem] mx-[4rem] mt-[4rem] flex justify-center border-1">
+        <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
-            <h1 className="text-3xl mt-[2rem] font-bold">HiClientZ</h1>
+            <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
           </div>
         </div>
-        <div className="absolute top-1/2 flex justify-between mx-8">
+        <div className="absolute top-1/2 mx-8 flex justify-between">
           <section>
             <img src={liteLoginIcon1} alt="liteLoginIcon1" width={55} height={55} loading="lazy" className="liteLoginIcon1" />
           </section>
@@ -44,9 +43,9 @@ const Login = memo(() => {
       </section>
       <div className="text-2xl">Welcome to HipalZ</div>
       &nbsp;
-      <center className="text-base">Approach us for your business url</center>
+      <center className="text-base">up to date </center>
     </center>
-  )
+  );
 });
 
-export default Login
+export default Login;

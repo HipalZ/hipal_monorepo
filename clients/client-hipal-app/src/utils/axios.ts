@@ -1,7 +1,7 @@
 import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
-const env = process.env.NEXT_API_URL;
+const env = process.env.NODE_ENV as string;
 
 const axios = axiosConstructor.create({
   baseURL:process.env.NEXT_API_URL,
@@ -13,7 +13,7 @@ axios.interceptors.request.use(
       return;
     }
     console.log('env',env)
-    if(!env){
+    if(env !== "production" && env !== "test"){
       // Modify the baseURL based on the request URL
       if (config.url.startsWith('/v1/businesses')) {
         config.baseURL = 'http://localhost:8001';
