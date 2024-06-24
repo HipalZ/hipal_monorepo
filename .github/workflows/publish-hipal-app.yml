@@ -1,10 +1,13 @@
 name: CI
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_HIPALZ_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
+
 on:
   push:
-    branches: ['test']
+    branches:
+      - test
     paths:
       - 'clients/client-hipal-app/**'
 
@@ -30,13 +33,9 @@ jobs:
         with:
           always-auth: true
           node-version: 18
-          # cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install
-
-      # - name: Build
-      #   run: pnpm build
 
       - name: Install Vercel CLI
         run: npm install --global vercel@canary
@@ -50,6 +49,4 @@ jobs:
       - name: Deploy Project Artifacts to Vercel
         id: vercel
         run: |
-          # vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           echo "::set-output name=deployment-url::$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)"
-          # echo "deployment-url=hello" >> $GITHUB_OUTPUT
