@@ -1,74 +1,73 @@
-import { startTransition, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useParams } from "react-router-dom";
-import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png'
-import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png'
-import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png'
-import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png'
-import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png'
-import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png'
-import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png'
-import axios from '@/components/utils/axios'
-import { useHiClientZ } from '@/components/store/useHiClientzData'
-import { toast } from 'react-toastify'
-import './login.css'
+import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png';
+import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png';
+import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png';
+import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png';
+import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png';
+import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
+import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-
+import axios from '@/components/utils/axios';
+import { startTransition, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import './login.css';
+//tes
 const Login = () => {
-  const [phoneNumber, setPhoneNumber] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
-  const {setLoading} = useLiteStore()
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const { setLoading } = useLiteStore();
   // store
-  const { setCaptainData, setAccessToken, setRefreshToken } = useHiClientZ()
+  const { setCaptainData, setAccessToken, setRefreshToken } = useHiClientZ();
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
 
   //methods
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhoneNumber(e.target.value)
-  }
+    setPhoneNumber(e.target.value);
+  };
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value)
-  }
+    setPassword(e.target.value);
+  };
 
-  //apis 
+  //apis
   const handleLogin = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const config = {
-        method: "POST",
-        url: "/v1/users/:id/stafflogin",
+        method: 'POST',
+        url: '/v1/users/:id/stafflogin',
         data: {
           phone: phoneNumber,
           password: password,
         },
       };
       const response = await axios(config);
-      if(response.status===200){
+      if (response.status === 200) {
         setCaptainData(response.data.data.user);
         setAccessToken(response.data.data.accessToken);
         setRefreshToken(response.data.data.refreshToken);
-        toast.success(`Hi ${response.data.data.user.name}! Welcome to HiClientZ`)
+        toast.success(`Hi ${response.data.data.user.name}! Welcome to HiClientZ`);
         startTransition(() => {
-          navigate(`/l/${businessId}/businesses`)
-        })
+          navigate(`/l/${businessId}/businesses`);
+        });
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || error.message)
-    }finally{
-      setLoading(false)
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <center>
       <section className="relative max-w-[30rem]">
-        <div className="mobileGrad h-[28rem] mx-[4rem] mt-[4rem] flex justify-center border-1">
+        <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
-            <h1 className="text-3xl mt-[2rem] font-bold">HiClientZ</h1>
+            <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
           </div>
         </div>
-        <div className="absolute top-1/2 flex justify-between mx-8">
+        <div className="absolute top-1/2 mx-8 flex justify-between">
           <section>
             <img src={liteLoginIcon1} alt="liteLoginIcon1" width={55} height={55} loading="lazy" className="liteLoginIcon1" />
           </section>
@@ -92,7 +91,7 @@ const Login = () => {
           </section>
         </div>
       </section>
-      <section className="relative max-w-[30rem] px-[2rem] mt-[2.5rem] mb-[5.89rem] ml-0 mr-0 space-y-6">
+      <section className="relative mb-[5.89rem] ml-0 mr-0 mt-[2.5rem] max-w-[30rem] space-y-6 px-[2rem]">
         <div className="relative">
           <input
             onChange={handlePhoneNumberChange}
@@ -101,23 +100,23 @@ const Login = () => {
             maxLength={10}
             minLength={10}
             id="floating_outlined3"
-            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black rounded-xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
             placeholder=" "
             required
           />
           <label
             htmlFor="floating_outlined3"
-            className="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Your Phone Number
-					</label>
+          </label>
         </div>
         <div className="relative">
           <input
             onChange={handlePasswordChange}
             type="password"
             id="floating_outlined4"
-            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black rounded-xl dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
             placeholder=" "
             maxLength={4}
             minLength={4}
@@ -125,22 +124,22 @@ const Login = () => {
           />
           <label
             htmlFor="floating_outlined4"
-            className="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Your Password
-					</label>
+          </label>
         </div>
       </section>
-      <article className="flex justify-center mb-5">
+      <article className="mb-5 flex justify-center">
         <button
           onClick={handleLogin}
-          className="on_active_bounce fixed bottom-6 z-50 bg-black rounded-full w-[20.5rem] py-[0.75rem] text-base-100 text-[18px] leading-[1.15rem]"
+          className="on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
         >
           Get Started
-				</button>
+        </button>
       </article>
     </center>
-  )
+  );
 };
 
-export default Login
+export default Login;
