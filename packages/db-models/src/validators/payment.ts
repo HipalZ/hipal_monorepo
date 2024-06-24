@@ -27,6 +27,7 @@ export const PaymentSchema = z.object({
   razorpayAcquirerData: z.any().optional(),
   razorpayEventId: z.string().optional(),
   paymentIds: z.array(z.string()).optional(),
+  waiterName: z.string().optional(),
   comment: z.string().optional(),
 });
 

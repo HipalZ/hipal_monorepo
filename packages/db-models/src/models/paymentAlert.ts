@@ -15,6 +15,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>({
   name: { type: String, default: null },
   isRejected: { type: Boolean, default: false },
   errorReason: { type: String, default: null },
+  tableName: { type: String, required: true },
   errorDescription: { type: String, default: null },
   coinsApplied: { type: Boolean, default: false },
   date: { type: Number, default: Date.now() },

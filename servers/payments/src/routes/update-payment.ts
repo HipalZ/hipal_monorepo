@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import moment from 'moment';
 
 import { ClientRoles, requireAuthorization } from '@hi/common';
-import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, TempBill, UserReward, UserRewardHistory } from '@hi/db-models';
+import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, UserReward, UserRewardHistory } from '@hi/db-models';
 import { paramsSchema, PaymentSchema } from '@hi/db-models/src/validators';
 
 import { runInTransaction } from '@hi/utils';
@@ -178,6 +178,8 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 
   const subTotal = billValue - claimedCoins;
 
+  console.log('subTotal', subTotal, 'LoyaltySetting.setReward', LoyaltySetting.setReward, 'billValue', billValue, 'claimedCoins', claimedCoins);
+
   const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
 
   return Math.floor(coinsToBeAdded);
@@ -191,7 +193,7 @@ router.put(
   }),
   async (req: Request, res: Response) => {
     const { alertId } = req.params;
-    const { comment } = req.body;
+    const { comment, waiterName } = req.body;
 
     await runInTransaction(async (session: ClientSession) => {
       const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
@@ -227,6 +229,7 @@ router.put(
                 billValue: order?.billValue,
                 tips: order?.tips,
                 tableName: order?.tableName,
+                waiterName,
               },
             ],
             { session },
@@ -243,9 +246,11 @@ router.put(
               Number(order?.billValue),
               session,
             );
+          }
 
+          if (order) {
             const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
-
+            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
             await addCoins(
               cashBack,
               order?.phone || '',
@@ -268,7 +273,6 @@ router.put(
               },
               { upsert: true, session },
             );
-            await TempBill.findOneAndDelete({ businessId: order.businessId, tableName: order.tableName }, { session });
           }
         }
 

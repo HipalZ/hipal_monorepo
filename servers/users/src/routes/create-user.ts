@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { redisWrapper } from '../redis-wrapper';
 
-import { Admin, LoyaltySettings, UrlModel, User, UserReward, UserRewardHistory } from '@hi/db-models';
+import { Admin, LoyaltyCoinsInfo, LoyaltySettings, UrlModel, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import { runInTransaction } from '@hi/utils';
 import bcrypt from 'bcrypt';
 import { ClientSession } from 'mongoose';
@@ -83,6 +83,15 @@ const addSignUpBonus = async (
       password: Math.floor(Math.random() * 9000) + 10000,
       scanCount: 1,
     });
+    await LoyaltyCoinsInfo.findOneAndUpdate(
+      { businessId: loyaltyId },
+
+      {
+        $inc: {
+          coinzIssued: bonus,
+        },
+      },
+    );
 
     await newReward.save();
     const data = new UserRewardHistory({
@@ -99,7 +108,15 @@ const addSignUpBonus = async (
   } else if (existingReward) {
     if (!existingReward?.scanCount || existingReward?.scanCount == 0) {
       let userReward = await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { rewards: bonus, scanCount: 1 } }, { new: true });
+      await LoyaltyCoinsInfo.findOneAndUpdate(
+        { businessId: loyaltyId },
 
+        {
+          $inc: {
+            coinzIssued: bonus,
+          },
+        },
+      );
       const data = new UserRewardHistory({
         userName: userReward?.userName || name,
         userPhone: userReward?.userPhone || phone,

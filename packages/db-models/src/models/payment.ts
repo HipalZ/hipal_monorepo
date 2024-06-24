@@ -143,6 +143,9 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     razorpayEventId: {
       type: String,
     },
+    waiterName: {
+      type: String,
+    },
     comment: {
       type: String,
     },

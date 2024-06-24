@@ -77,7 +77,7 @@ router.get(
   async (req: Request, res: Response) => {
     const { businessId, alertType } = req.query;
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ date: -1 }).populate('order_id');
+    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
 
     return res.status(200).send({
       err: false,
@@ -97,7 +97,7 @@ router.get(
     const { businessId, alertType } = req.query;
 
     const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType: ['OFFLINE', 'WAITER'], isAccepted: false })
-      .sort({ date: -1 })
+      .sort({ _id: -1 })
       .populate('order_id');
 
     return res.status(200).send({
@@ -125,16 +125,18 @@ router.get(
     if (!from && !to) {
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
+        isAccepted: true,
         date: {
           $gte: startOfToday.getTime(),
           $lte: endOfToday.getTime(),
         },
       })
+        .sort({ _id: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate('order_id');
 
-      res.status(200).send({
+      return res.status(200).send({
         err: false,
         data: existingPaymentAlerts,
         message: 'existing payment alerts',
@@ -147,16 +149,18 @@ router.get(
       }
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
+        isAccepted: true,
         date: {
           $gte: fromDate,
           $lte: toDate,
         },
       })
+        .sort({ _id: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate('order_id');
 
-      res.status(200).send({
+      return res.status(200).send({
         err: false,
         data: existingPaymentAlerts,
         message: 'existing payment alerts',
@@ -206,7 +210,7 @@ router.get(
           totalOnlineSale,
           totalOfflineSale,
           coinzIssued: loyaltyCoinInfo?.coinzIssued,
-          coinzRedeemed: loyaltyCoinInfo?.coinzRedeemed,
+          coinzRedeemed: totalCoins,
         },
         message: 'existing payment',
       });
@@ -261,6 +265,9 @@ router.get(
     const { businessId, from, to } = req.query;
     const fromDate = Number(from);
     const toDate = Number(to);
+    let PAGE_SIZE = 20;
+    let pageNumber: any = req?.query?.pageNumber || 1;
+    const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
     if (!from && !to) {
       const existingPayments = await Payment.find({
@@ -269,7 +276,11 @@ router.get(
           $gte: startOfToday.getTime(),
           $lte: endOfToday.getTime(),
         },
-      }).populate('order_id');
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
       const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
 
       return res.status(200).send({
@@ -291,7 +302,11 @@ router.get(
           $gte: fromDate,
           $lte: toDate,
         },
-      }).populate('order_id');
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
       const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
 
       return res.status(200).send({
