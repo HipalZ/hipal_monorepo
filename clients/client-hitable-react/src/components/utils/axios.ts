@@ -8,7 +8,6 @@ const axios = axiosConstructor.create({
 });
 axios.interceptors.request.use(
   (config: any) => {
-    console.log('env',import.meta.env.VITE_API_URL)
     if (config.url == undefined) {
       return;
     }
