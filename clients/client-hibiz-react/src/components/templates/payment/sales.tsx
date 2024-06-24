@@ -91,7 +91,7 @@ const PaymentSales = memo(() => {
                     <MdOutlinePictureAsPdf /> <small>Download statement</small>
                 </button> */}
             </section>
-            <section className="grid md:grid-cols-2 lg:grid-cols-3">
+            <section className="grid md:grid-cols-2 lg:grid-cols-3 pb-[5rem]">
                 {historyData && historyData?.length > 0 ? historyData.map((data) => {
                     return (
                         <section key={data?._id} className="payment_card_ui" onClick={()=>openModel(data)}>
@@ -100,7 +100,7 @@ const PaymentSales = memo(() => {
                                     <figure className="flex items-center space-x-4">
                                         <img src={Online} alt="online" />
                                         <figcaption className="text-[0.825rem] opacity-50">
-                                            <h6>order id : {data?.order_id?.order_id}</h6>
+                                            <h6>order id : {data?._id?.slice(-6)}</h6>
                                         </figcaption>
                                     </figure>
                                 </section>
@@ -130,7 +130,7 @@ const PaymentSales = memo(() => {
                         No Data Found
             </div>}
             </section>
-            <div className="fixed z-20 flex items-center justify-center space-x-4 transform -translate-x-1/2 bottom-[5rem] left-1/2">
+            <div className="fixed z-20 flex items-center justify-center space-x-4 transform -translate-x-1/2 bottom-[3rem] left-1/2">
                 {historyData && historyData.length >= 0 && (
                     <button
                         type="button"

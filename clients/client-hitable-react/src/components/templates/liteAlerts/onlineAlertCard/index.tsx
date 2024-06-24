@@ -14,7 +14,7 @@ interface IOnlineProp {
 
 const OnlineAlertCard = memo((props: IOnlineProp) => {
     const { selectedNavItem, onlineAlertData } = props;
-    const { removeOnlineAlert, setViewData } = useLiteStore()
+    const { removeOnlineAlert, setViewData , removeOnlineCount} = useLiteStore()
     const clickViewMore = useLiteStore((s) => s.clickViewMore);
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore)
 
@@ -32,6 +32,7 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
             const response = await axios(config);
             if (response.status === 200) {
                 removeOnlineAlert(id);
+                removeOnlineCount()
             }
         } catch (err) {
             console.log(err);

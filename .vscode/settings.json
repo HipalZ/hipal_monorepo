@@ -1,8 +1,18 @@
 {
     "typescript.tsdk": "node_modules/typescript/lib",
     "cSpell.words": [
+        "Clientz",
+        "coinz",
         "daisyui",
+<<<<<<< Updated upstream
         "hibiz",
         "kots"
+=======
+        "daybeforeyesterday",
+        "kots",
+        "Recieved",
+        "Tempmodel",
+        "Vamsi"
+>>>>>>> Stashed changes
     ]
 }

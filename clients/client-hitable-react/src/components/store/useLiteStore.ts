@@ -52,6 +52,11 @@ interface ILiteStore {
   // offline order count
   offlineCount : number;
   setOfflineCount : (value : number) => void;
+
+  // remove offline count on alert removal
+  removeOfflineCount : () => void;
+  removeOnlineCount : () => void;
+
 }
 
 
@@ -88,4 +93,6 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   setOnlineCount : (value) => set({onlineCount : value}),
   offlineCount : 0,
   setOfflineCount : (value) => set({offlineCount : value}),
+  removeOfflineCount : () => set((state) => ({offlineCount : state.offlineCount - 1})),
+  removeOnlineCount : () => set((state) => ({onlineCount : state.onlineCount - 1})),
 }));

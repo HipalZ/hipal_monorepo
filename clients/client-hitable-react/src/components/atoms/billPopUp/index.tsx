@@ -148,7 +148,7 @@ const BillPopUp = memo(() => {
           <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
             <div className="mx-6 mt-10 flex justify-between">
               <h1 className="text-base text-gray-500">{timestampToDateTime(viewData?.date)}</h1>
-              <p>{viewData?._id.slice(-6)}</p>
+              <p>{viewData?._id?.slice(-6)}</p>
             </div>
             {viewData?.alertType !== "ONLINE" && viewData?.alertType !== "WAITER" && viewData?.completionCode !== null ? <center className="mt-4">{viewData?.completionCode?.toString()?.split('').map((digit, index) => (
               <span key={index} className="bg-gray-500 text-white mx-2 px-2 py-2">

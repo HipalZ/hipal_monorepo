@@ -1,24 +1,25 @@
-import { Alert } from '@/components/types/businessData'
+import { HistoryData } from '@/components/types/businessData'
 import { timestampToDateTime } from '@/components/utils/helper'
 import { MdOutlineCall } from 'react-icons/md'
 
 interface PaymentModalProps {
-    salesData: Alert
+    salesData: HistoryData
 }
 const PaymentModal = (props: PaymentModalProps) => {
     const { salesData } = props
-    console.log(salesData)
+
     const hideMiddleNumbers = (phone: string) => {
         if (phone.length <= 4) return phone;
         const firstPart = phone.slice(0, 3);
         const lastPart = phone.slice(-3);
         return `${firstPart}****${lastPart}`;
     };
+
     return (
         <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
             <div className="mx-6 mt-10 flex justify-between">
                 <h1 className="text-base text-gray-500">{timestampToDateTime(salesData?.date)}</h1>
-                <p>{salesData?.payment_id}</p>
+                <p>order id : {salesData?._id.slice(-5)}</p>
             </div>
     &nbsp;
             <div className="mx-6 mb-2 grid grid-cols-2">

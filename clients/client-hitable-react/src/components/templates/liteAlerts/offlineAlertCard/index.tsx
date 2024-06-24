@@ -13,7 +13,7 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
     const { offlineAlertData } = props;
-    const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore } = useLiteStore()
+    const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore()
 
     const handleViewMore = (alert: Alert) => {
         setViewData(alert)
@@ -30,6 +30,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
             console.log('off', response);
             if (response.status === 200) {
                 removeOfflineAlert(id);
+                removeOfflineCount();
             }
         } catch (err) {
             console.log(err);
