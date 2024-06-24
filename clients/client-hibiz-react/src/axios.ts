@@ -12,7 +12,8 @@ axios.interceptors.request.use(
     if (config.url == undefined) {
       return;
     }
-    if(!env){
+    console.log('env',env)
+    if(env !== "production" && env !== "test"){
       // Modify the baseURL based on the request URL
       if (config.url.startsWith('/v1/businesses')) {
         config.baseURL = 'http://localhost:8001';
