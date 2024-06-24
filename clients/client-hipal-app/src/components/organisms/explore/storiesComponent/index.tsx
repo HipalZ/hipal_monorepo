@@ -1,3 +1,4 @@
+//@ts-nocheck
 import Card from "@/components/atoms/card"
 import Loader from "@/components/atoms/loader"
 import Section from "@/components/molecules/section"

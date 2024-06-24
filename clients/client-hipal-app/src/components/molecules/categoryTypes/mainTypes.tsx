@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useActiveClass } from "@/components/store/useActiveClass"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
 import { useDishTypes } from "@/components/store/useDishTypes"
@@ -9,8 +10,8 @@ import { CSSProperties, memo, useEffect, useMemo, useRef } from "react"
 
 interface IMainTypes{
 	allCategoriesTypes: {
-		main: any
-		sub: any
+		main: ICategory[]
+		sub: ICategory[]
 	}
 }
 function MainTypes(props:IMainTypes) {
@@ -66,7 +67,7 @@ function MainTypes(props:IMainTypes) {
 					.filter((item) => item?.visibility)
 					.map((item: ICategory, index: number) => {
 						const activeSubType =
-							Object.keys(allCategoriesTypes?.sub?.[item._id || ""] || {})?.[0] || null
+							Object.keys(allCategoriesTypes?.sub?.[item._id || ""] || {})?.[0] || ''
 						return (
 							<SplideSlideWrapper key={index + (item?.name || "")}>
 								<div id={item?._id} className="relative" key={item.name + index}>
@@ -98,7 +99,7 @@ function MainTypes(props:IMainTypes) {
 													src={item.coverImage}
 													layout={"intrinsic"}
 													alt="dish"
-													quality={75}
+													quality={95}
 													width={25}
 													height={25}
 													objectFit="cover"

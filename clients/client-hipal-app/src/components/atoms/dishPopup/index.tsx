@@ -3,8 +3,9 @@ import WallpaperCarousel from "@/components/atoms/backgroundCarousel"
 import { isEmpty } from "lodash-es"
 import NotAvailable from "../notAvailable"
 import PlaceholderImg from "../placeholder"
+import { IDish } from "@/components/types/businessData"
 
-export default function DishPopup({ dishData }) {
+export default function DishPopup({ dishData }:{dishData: IDish}) {
 	const isAvailable = dishData?.availability
 	const handleInsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		e.stopPropagation()

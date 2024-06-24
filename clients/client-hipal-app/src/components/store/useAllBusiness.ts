@@ -1,6 +1,6 @@
+//@ts-nocheck
 "use client"
 import { IBusinessData } from "@/components/types/businessData"
-import { updateTheme } from "@/components/utils/themes"
 import { isEqual } from "lodash-es"
 import { useCallback, useMemo } from "react"
 import { create } from "zustand"

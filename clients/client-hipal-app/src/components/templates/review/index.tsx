@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client"
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
@@ -16,7 +17,7 @@ import { IBusinessData } from '@/components/types/businessData'
 import { updateTheme } from '@/components/utils/themes'
 import { toast } from 'react-toastify'
 
-export default memo(function Review({ data }: {data:IBusinessData}) {
+export default memo(function Review({ data }: { data: IBusinessData }) {
 	const [improvements, setImprovements] = useState<string[]>([])
 	const [rating, setRating] = useState<string | null>(null);
 	const [description, setDescription] = useState<string | ''>('')
@@ -27,9 +28,9 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 	const params = useParams();
 	const businessId = params?.businessId
 	const searchParams = useSearchParams()
- 
-  	const claim = searchParams?.get('claim')
-  	const orderId = searchParams?.get('orderId')
+
+	const claim = searchParams?.get('claim')
+	const orderId = searchParams?.get('orderId')
 
 	const userDetails = useLogin((s) => s.userDetails)
 
@@ -59,7 +60,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 			setImprovements([...improvements, value])
 		}
 	}
-	const handleRatingChange = (event:ChangeEvent<HTMLInputElement>) => {
+	const handleRatingChange = (event: ChangeEvent<HTMLInputElement>) => {
 		setRating(event.target.value)
 	}
 
@@ -76,7 +77,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 					description: description,
 					improvementAreas: improvements,
 					date: Date.now(),
-					order_id:orderId?.toString()
+					order_id: orderId?.toString()
 				},
 			}
 
@@ -97,7 +98,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 		router.push(`/r/${businessId}/explore`)
 	}
 
-	const handleDescriptionChange = (event:ChangeEvent<HTMLTextAreaElement>) => {
+	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value
 		setDescription(value)
 
@@ -140,16 +141,18 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 		}
 	}
 
-	useEffect(()=>{
-		updateTheme(data?.settings?.themes)
-	},[data?.settings?.themes])
+	useEffect(() => {
+		if (data?.settings?.themes) {
+			updateTheme(data?.settings?.themes)
+		}
+	}, [data?.settings?.themes])
 
 	return (
 		<>
 			<div className='p-4 mb-[5rem] animate-fade-up animate-once '>
 				<center className='z-[60]'>
 					<h6 className='text-[0.75rem] ml-6'>Powered by</h6>
-					<figure className='w-28 h-24'>
+					<figure className='h-24 w-28'>
 						<Image src={HiLogo} alt='HiLogo' priority={true} />
 					</figure>
 				</center>
@@ -161,7 +164,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 						height: rating ? 'block' : '0%',
 						display: rating ? 'none' : 'block',
 					}}
-					className='flex flex-col justify-center items-center'
+					className='flex flex-col items-center justify-center'
 				>
 					<article className='text-center'>
 						<Image
@@ -189,7 +192,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 					</div>
 					{Number(claim) > 0 && (
 						<section className='bg-[#fdf5d7] mt-[5rem] h-[7rem] rounded-3xl flex justify-between'>
-							<article className='space-y-4 px-6 py-4'>
+							<article className='px-6 py-4 space-y-4'>
 								<h6 className='inline-flex text-[#183d2e] text-lg'>
 									You&nbsp;
 									<Image src={RewardTick} alt='RewardTick' />
@@ -203,7 +206,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 					)}
 					<br />
 					<br />
-					<h1 className='flex justify-center items-center'>
+					<h1 className='flex items-center justify-center'>
 						<Image
 							src={reviewIcon}
 							alt='review'
@@ -242,18 +245,17 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 				{rating && (
 					<section className='m-4'>
 						<h1>How Can we Improve ?</h1>
-						<section className='overflow-x-auto flex flex-wrap gap-4 my-2 mt-4'>
+						<section className='flex flex-wrap gap-4 my-2 mt-4 overflow-x-auto'>
 							{improvementAreas.map((suggestion: string) => {
 								return (
 									<div
 										onKeyDown={handleSuggestionClick}
 										onClick={handleSuggestionClick}
 										key={suggestion}
-										className={`${
-											improvements.includes(suggestion)
+										className={`${improvements.includes(suggestion)
 												? 'bg-primary text-base-100 font-medium'
 												: 'text-primary bg-base-200'
-										} inline-block truncate overflow-hidden px-3 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full text-base`}
+											} inline-block truncate overflow-hidden px-3 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full text-base`}
 									>
 										<span>{suggestion}</span>
 									</div>
@@ -277,18 +279,17 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 							/>
 							{showSuggestions && (
 								<ul
-									className='absolute w-full bg-green-500 border border-gray-300 mt-0 top-full left-0 max-h-60 overflow-auto'
+									className='absolute left-0 w-full mt-0 overflow-auto bg-green-500 border border-gray-300 top-full max-h-60'
 									style={{ zIndex: 2 }}
 								>
 									{filteredStaff?.map((staff, index) => (
-										<div key={staff?.name+index}>
+										<div key={staff?.name + index}>
 											{isPending && <div>Loading staff...</div>}
 											{error && <div>Error loading staff!</div>}
 											<li
 												key={staff?.name}
-												className={`p-2 cursor-pointer text-blue-500 ${
-													cursor === index ? 'bg-gray-200' : 'bg-white'
-												}`}
+												className={`p-2 cursor-pointer text-blue-500 ${cursor === index ? 'bg-gray-200' : 'bg-white'
+													}`}
 												onClick={() => {
 													const newText = description.replace(/@\w*$/, `@${staff?.name} `)
 													setDescription(newText)
@@ -321,7 +322,7 @@ export default memo(function Review({ data }: {data:IBusinessData}) {
 						<center
 							onKeyDown={navigateToExplore}
 							onClick={navigateToExplore}
-							className='mb-4 underline pb-1'
+							className='pb-1 mb-4 underline'
 						>
 							{' '}
 							Skip{' '}

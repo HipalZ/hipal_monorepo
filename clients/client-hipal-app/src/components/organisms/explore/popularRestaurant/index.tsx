@@ -1,17 +1,19 @@
 import DiscountDishCard from "@/components/molecules/discountDishCard"
 import Section from "@/components/molecules/section"
+import { IDish } from "@/components/types/businessData"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { Splide, SplideSlide } from "@splidejs/react-splide"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 interface IPopularRestProps {
-	popular: []
+	popular: any
 }
 function PopularRestaurant(props: IPopularRestProps) {
 	const { popular } = props
 	const router = useRouter()
+	const { businessId } = useParams<{ businessId: string }>() ?? { businessId: '' };
 	const handleRecommendedDishClick = (id: string) => {
-		router.push(routePaths[PAGE_TYPES.DISH_ID](popular?.[0]?.businessId, id))
+		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, id))
 	}
 
 	return (
@@ -37,13 +39,12 @@ function PopularRestaurant(props: IPopularRestProps) {
 						<button className="splide__arrow splide__arrow--next">Next</button>
 					</div>
 
-					{popular?.map((dishData, key) => (
+					{popular?.map((dishData: IDish, key:number) => (
 						<SplideSlide key={`${key}FilterPopularDishes` + (dishData?._id || "")}>
 							{dishData && (
 								<DiscountDishCard
-									businessId={popular[0]?.businessId}
 									dishData={dishData}
-									onClick={() => handleRecommendedDishClick(dishData)}
+									onClick={() => handleRecommendedDishClick(dishData._id)}
 								/>
 							)}
 						</SplideSlide>

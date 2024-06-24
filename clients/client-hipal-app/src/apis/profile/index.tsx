@@ -1,9 +1,10 @@
+import { IBusinessData } from "@/components/types/businessData";
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 
 async function fetchBusinessData(businessId: string) {
     const settings = (await axios(paths.settings(businessId))) || {}
-	const data = {}
+	const data = {} as IBusinessData
 	data["settings"] = settings?.data?.data[0] || {}
 	return data;
 }

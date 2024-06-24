@@ -30,7 +30,7 @@ function QuantityPickerNonOutline({
 	function onIncreaseQuantity() {
 		setQuantity(quantity + 1)
 	}
-	const handleCheckboxChange = (isChecked) => {
+	const handleCheckboxChange = (isChecked:boolean) => {
 		if (extra?.maxQuantity === 0) {
 			return
 		}

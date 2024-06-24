@@ -32,6 +32,7 @@ export const useRewardHistory = create<IuserRewardHistoryState>((set) => ({
 			day: "",
 			loyaltyId: "",
 			id: "",
+			_id: "",
 		},
 	},
 	setRewardHistory: (rewardHistory: IUserRewardData) => set({ rewardHistory }),

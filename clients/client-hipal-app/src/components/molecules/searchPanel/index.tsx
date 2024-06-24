@@ -11,11 +11,10 @@ import Link from "next/link";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import { ICategory } from "@/components/types/businessData";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
+import { ICategory, IDish } from "@/components/types/businessData";
 
 export interface ICat {
-    id: string;
+    _id: string;
     name: string;
 }
 
@@ -64,7 +63,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
 
             return matchesSearchText || categoryMatchesSearchText;
         });
-    }, [searchText, categories]);
+    }, [searchText, categories]) as IDish[]
 
     const filterCategory = useMemo(
         () =>
@@ -78,7 +77,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
 
     const present = filterCategory?.[0];
 
-    const redirectToDish = (dishId: string, category: ICat) => {
+    const redirectToDish = (dishId: string, category: ICat[]) => {
         setActiveCategory(category?.[0]?._id);
         setSearchOpen(!search);
         router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId));

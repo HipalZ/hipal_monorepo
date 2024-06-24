@@ -4,6 +4,9 @@ import { memo } from "react"
 import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
 import { IExplore } from "@/components/types/businessData";
+import { useLogin } from "@/components/store/useLogin";
+import { useParams, useRouter } from "next/navigation";
+import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 function MainBackground(props: { explore: IExplore | undefined }) {
 	const explore = props.explore ?? {
@@ -18,6 +21,15 @@ function MainBackground(props: { explore: IExplore | undefined }) {
 		highlights: [],
 		openTill: ''
 	};
+
+	const { businessId } = useParams<{ businessId: string }>() ?? { businessId: '' };
+	const router = useRouter()
+
+	const { isLogin } = useLogin()
+
+	const goToLoginPage = () => {
+		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](businessId)}`)
+	}
 
 	return (
 		<div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
@@ -42,12 +54,16 @@ function MainBackground(props: { explore: IExplore | undefined }) {
 						</div>
 					)
 				}
+				{
+					!isLogin && (
+						<div onClick={goToLoginPage} className="flex flex-row ml-auto space-x-2">
+							<button className="glass-morphism">
+								Login/Sign up
+							</button>
+						</div>
+					)
+				}
 
-				<div className="flex flex-row ml-auto space-x-2">
-					<button className="glass-morphism">
-						Login/Sign up
-					</button>
-				</div>
 			</div>
 		</div>
 	)

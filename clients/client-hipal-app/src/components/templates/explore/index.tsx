@@ -4,10 +4,7 @@ import BottomButton from "@/components/molecules/bottomButton";
 import useLoyaltyData from "@/components/store/useLoyaltyData"
 import DishData from "@/components/atoms/dishDescription"
 import MainLoyalty from "@/components/atoms/mainLoyalty"
-import { useLogin } from "@/components/store/useLogin"
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { IBusinessData } from "@/components/types/businessData"
-import Link from "next/link"
 import useBusinessDetails from "../../store/useBusinessDetails"
 // components import
 import MainBackground from "@/components/organisms/explore/mainBackground";
@@ -87,7 +84,7 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
                     </section>
                 )}
                 
-                <PopularRestaurant popular={data?.settings?.explore?.popular} />
+                <PopularRestaurant popular={data?.settings?.explore?.popular } />
                 
                 <Footer
                     footerText={data?.settings?.themes?.footerText || ""}

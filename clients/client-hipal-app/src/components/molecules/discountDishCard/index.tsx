@@ -1,17 +1,14 @@
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { BsSunFill } from "react-icons/bs"
-import { MdLocalOffer } from "react-icons/md"
-import { AiOutlineStar } from "react-icons/ai"
-
 import PlaceholderImg from "@/components/atoms/placeholder"
 import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType"
+import { IDish } from "@/components/types/businessData"
 
 function DiscountDishCard({
 	dishData,
 	onClick,
 }: {
-	dishData
+	dishData:IDish
 	onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }) {
 	return (
@@ -48,57 +45,6 @@ function DiscountDishCard({
 					</div>
 				)}
 			</div>
-
-			{/* tag section  */}
-			{dishData?.tags?.length > 0 ? (
-				dishData?.tags?.slice(0, 1).map((item, index) => {
-					if (item?.icon == "star_outline") {
-						return (
-							<div
-								className={`px-3 rounded-[0.5rem] -ml-[0.9rem] py-1 text-primary text-[${item?.color}] absolute  bottom-0 left-0 text-[0.813rem]  md:text-[0.813rem]  text-xs font-medium normal-case  `}
-								key={index + 1}
-							>
-								{/* // local_offer wb_sunny star_outline */}
-								<AiOutlineStar className={"inline-flex"} /> {item?.text}
-							</div>
-						)
-					}
-					if (item?.icon == "local_offer") {
-						return (
-							<div
-								key={index}
-								className={`  rounded-lg px-3  -ml-[0.9rem] py-1 text-primary text-[${item?.color}] absolute  bottom-0 left-0 text-[0.813rem]  md:text-[0.813rem]  text-xs font-medium normal-case  `}
-							>
-								{/* // local_offer wb_sunny star_outline */}
-								<MdLocalOffer className={"inline-flex"} /> {item?.text}
-							</div>
-						)
-					}
-					if (item?.icon == "wb_sunny") {
-						return (
-							<div
-								key={index}
-								className={` px-3 rounded-[0.5rem] -ml-[0.9rem] py-1 ${item?.text.length > 18 ? (item.text = item.text.slice(0, 12)) : ""
-									} text-primary text-[${item?.color
-									}] absolute  bottom-0 left-0 text-[0.813rem]  md:text-[0.813rem]  text-xs font-medium normal-case  `}
-							>
-								{/* // local_offer wb_sunny star_outline */}
-								<BsSunFill className={"inline-flex"} /> {item?.text}
-							</div>
-						)
-					}
-				})
-			) : (
-				<></>
-			)}
-
-			{/* Offering section */}
-
-			{dishData?.discount >0 ? (
-				<div className="absolute top-0 left-0 -mt-[0.1rem] z-10 px-3 py-1 text-xs font-bold normal-case shadow-lg bg-success text-success-content rounded-br-2xl">
-					{dishData?.discount}% off
-				</div>
-			):null}
 		</button>
 	)
 }

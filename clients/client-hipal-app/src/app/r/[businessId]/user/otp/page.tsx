@@ -142,7 +142,7 @@ function OtpPage() {
 	}
 
 	useEffect(() => {
-		let audio
+		let audio:HTMLAudioElement
 		if (isModalOpen) {
 			audio = new Audio("/sounds/Money.mp3")
 			audio.play()

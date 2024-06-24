@@ -7,8 +7,9 @@ import { Fragment, memo } from "react"
 import { RxCross2 } from "react-icons/rx"
 import ChoosePortions from "../choosePortions"
 import AddDishToCartButton from "../bottomButton/AddDishToCartButton"
+import { IDish } from "@/components/types/businessData"
 
-function BottomPanel({ dishData }) {
+function BottomPanel({ dishData }:{dishData: IDish}) {
 	const { closeBottomPanel, isBottomPanelOpened, openBottomPanel } = useBottomPanel()
 	const validationExtras = useBottomPanel((s) => s.validationExtras)
 	const setBounceButton = useBottomPanel((s) => s.setBounceButton)
@@ -47,7 +48,6 @@ function BottomPanel({ dishData }) {
 	}
 
 	return (
-		<>
 			<Transition show={isBottomPanelOpened(dishData?._id)} as={Fragment}>
 				<Dialog as="div" className="relative !z-[99999999]" onClose={(e) => closeModalNothing(e)}>
 					<Transition.Child
@@ -104,7 +104,6 @@ function BottomPanel({ dishData }) {
 					</div>
 				</Dialog>
 			</Transition>
-		</>
 	)
 }
 export default memo(BottomPanel)

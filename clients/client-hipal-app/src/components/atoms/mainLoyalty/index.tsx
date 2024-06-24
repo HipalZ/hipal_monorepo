@@ -15,15 +15,15 @@ import { useRouter } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import PlaceholderImg from "../placeholder"
-import { useParams } from "next/navigation"
 import { PatternKeys } from "@/components/utils/helpers"
+import { ILoyaltySetting } from "@/components/store/useLoyaltyData"
 
 interface ILoyaltyCard {
-	logo: string
+	logo?: string
 	cardColor: string
 	fontColor: string
 	hiCode?: string
-	loyaltySetting: any
+	loyaltySetting: ILoyaltySetting
 }
 
 const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILoyaltyCard) => {
@@ -33,17 +33,16 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const isLogin = useLogin((s) => s.isLogin)
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
-	const params = useParams()
-	const businessId = params?.businessId
 
-	const businessDetails = useBusinessDetails((s) => s.businessDetails.businessName)
+
+	const businessDetails = useBusinessDetails((s) => s.businessDetails)
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {
 			setDirection(str)
-			router.push(routePaths[PAGE_TYPES.SIGN_UP](businessId ))
+			router.push(routePaths[PAGE_TYPES.SIGN_UP](loyaltySetting.businessId || businessDetails._id))
 		} else {
 			setDirection("")
-			router.push(routePaths[PAGE_TYPES.LOYALTY](businessId))
+			router.push(routePaths[PAGE_TYPES.LOYALTY](loyaltySetting.businessId || businessDetails._id))
 		}
 	}
 
@@ -56,7 +55,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	}, [loyaltySetting])
 
 	useEffect(() => {
-		const patterns = (cardPattern:PatternKeys, fontColor:string) => {
+		const patterns = (cardPattern: PatternKeys, fontColor: string) => {
 			const defaultColor = "#FAE8CA"
 			fontColor = fontColor || defaultColor
 
@@ -80,7 +79,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 			<div className="py-4 text-xl font-semibold text-center text-primary syne-font">
 				<div>Treat yourself to a</div>
 
-				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails} align="center" />
+				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails.businessName} align="center" />
 
 				<div>with every bill you settle!!</div>
 			</div>

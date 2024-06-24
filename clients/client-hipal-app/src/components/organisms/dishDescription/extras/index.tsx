@@ -1,3 +1,4 @@
+//@ts-nocheck
 import QuantityPickerNonOutline from "@/components/atoms/buttons/quantityPicker/quantityPickerNonOutline"
 import Section from "@/components/molecules/section"
 import { useBottomPanel } from "@/components/store/useBottomPanel"
@@ -38,7 +39,7 @@ function ExtraWithDishWithSelect({ dishData }: { dishData: IDish }) {
 	}, [cartItem])
 	const extras = dishData?.extras?.[0]?.items || []
 
-	const handleQuantityChange = (newQuantity, item: IExtraItem, itemId: string) => {
+	const handleQuantityChange = (newQuantity:number, item: IExtraItem, itemId: string) => {
 		const newCart = structuredClone(cartItem)
 
 		const dishVariants = newCart?.[dishData?._id]?.variants

@@ -8,19 +8,19 @@ async function fetchBusinessData(businessId: string) {
 	const settings = (await axios(paths.settings(businessId))) || {}
 	const businessData = await axios(paths.businessData(businessId))
 	const loyalty = await axios(paths.getLoyaltySettings(businessId)) || {}
-	const data:IBusinessData = {}
+	const data = {} as IBusinessData
 	data["settings"] = settings?.data?.data[0] || {}
 	data["business"] = businessData?.data?.data || {}
 	data["loyalty"] = loyalty?.data?.data || {}
 	set(
 		data,
 		"settings.explore.openFrom",
-		getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom),
+		getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom || ""),
 	)
 	set(
 		data,
 		"settings.explore.openTill",
-		getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill),
+		getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill || ""),
 	)
 	return data;
 }

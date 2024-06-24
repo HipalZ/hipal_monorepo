@@ -15,6 +15,7 @@ import Image from "next/image"
 import { useRewardHistory } from "@/components/store/useRewardHistory"
 import type { IBusinessData, UserData } from "@/components/types/businessData"
 import { useParams } from "next/navigation"
+import { PatternKeys } from "@/components/utils/helpers"
 
 const LoyaltyId = ({data}:{data:IBusinessData}) => {
 	const params = useParams()
@@ -30,7 +31,7 @@ const LoyaltyId = ({data}:{data:IBusinessData}) => {
 
 	useEffect(() => {
 		if (data?.loyalty?.loyaltyId) {
-			const patterns = (cardPattern:string, fontColor:string) => {
+			const patterns = (cardPattern:PatternKeys, fontColor:string) => {
 				fontColor = fontColor
 				const src = {
 					wave: waveToDataUrl(fontColor, "white").wave,
@@ -41,13 +42,13 @@ const LoyaltyId = ({data}:{data:IBusinessData}) => {
 					love: love(fontColor).love,
 					flower: flower(fontColor).flower,
 				}
-				// return the value from src object that corresponds to cardPattern key
+				
 				return src[cardPattern]
 			}
 			patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor)
 			setImage(patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor))
 			setClaimImage(
-				patterns(data?.loyalty?.cardPattern, data?.settings?.themes?.secondaryColor.substring(1)),
+				patterns(data?.loyalty?.cardPattern, data?.settings?.themes?.secondaryColor.substring(1)|| ''),
 			)
 		}
 	}, [data?.loyalty, data?.loyalty?.cardPattern, data?.loyalty?.fontColor])

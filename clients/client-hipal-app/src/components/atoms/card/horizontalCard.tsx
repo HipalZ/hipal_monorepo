@@ -1,6 +1,6 @@
 import DishTag from "@/components/atoms/dishTag"
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
-import type { ICategory, IDish } from "@/components/types/businessData"
+import type {  IDish } from "@/components/types/businessData"
 import { getPrice } from "@/components/utils/helpers"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
@@ -13,6 +13,7 @@ import NotAvailable from "../notAvailable"
 import { useCart } from "@/components/store/useCart"
 import RecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 import PlaceholderImg from "../placeholder"
+import { ICat } from "@/components/molecules/searchPanel"
 
 function HorizontalCard({
 	dishData,
@@ -25,21 +26,21 @@ function HorizontalCard({
 	noAddBtn?: boolean
 	noDescription?: boolean
 	isTopScrollWithSubTypes?: boolean
-	redirection?: (id: string, categories: ICategory[]) => void
+	redirection?: (id: string, categories: ICat[]) => void
 }) {
 	const coverImage = dishData?.images?.[0]
 	const isAvailable = dishData?.availability
 	const [isModalOpen, setIsModalOpen] = useState(false)
-	const [selectedDish, setSelectedDish] = useState(null)
+	const [selectedDish, setSelectedDish] = useState({} as IDish)
 	const cart = useCart((s) => s.cart)
 	const isDishInCart = cart.hasOwnProperty(dishData._id)
-	const openModal = (dishData) => {
+	const openModal = (dishData:any) => {
 		setSelectedDish(dishData)
 		setIsModalOpen(true)
 	}
 
 	const closeModal = () => {
-		setSelectedDish(null)
+		setSelectedDish({} as IDish)
 		setIsModalOpen(false)
 	}
 
@@ -117,7 +118,7 @@ function HorizontalCard({
 								<NotAvailable className="w-32 h-32 overflow-hidden rounded-xl" />
 							</div>
 						) : noDescription ? (
-							<div onClick={() => redirection(dishData._id, dishData.categories)}>
+							<div >
 								<PlaceholderImg className="w-32 h-32 overflow-hidden rounded-xl" />
 							</div>
 						) : (

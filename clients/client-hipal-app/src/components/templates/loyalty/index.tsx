@@ -19,7 +19,6 @@ import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Gift from "@/assets/gift.png"
-import Footer from "@/components/molecules/footer"
 import Hundred from "@/assets/100.png"
 import Cal from "@/assets/cal.png"
 import Cracker from "@/assets/crack.png"
@@ -29,11 +28,13 @@ import { useQuery } from "@tanstack/react-query"
 import { IBusinessData } from "@/components/types/businessData"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import RedeemButton from "@/components/atoms/redeemButton"
+import { PatternKeys } from "@/components/utils/helpers"
+import useBusinessDetails from "@/components/store/useBusinessDetails"
+import useLoyaltyData from "@/components/store/useLoyaltyData"
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const router = useRouter()
     const params = useParams();
-    const businessId = params?.businessId
     const userName = useLogin((s) => s.userDetails.name)
     const [HiCode, setHiCode] = useState()
     const [rewards, setRewards] = useState()
@@ -43,9 +44,11 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const [image, setImage] = useState<string>("")
     const [isHiCodeModalOpen, setIsHiCodeModalOpen] = useState(false)
     const [animate, setAnimate] = useState(false)
+    const businessDetails = useBusinessDetails((s) => s.businessDetails)
+    const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting)
 
     useEffect(() => {
-        const patterns = (cardPattern:string, fontColor:string) => {
+        const patterns = (cardPattern:PatternKeys, fontColor:string) => {
             const defaultColor = "#FAE8CA"
             fontColor = fontColor || defaultColor
 
@@ -150,10 +153,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 
     const getLink = (loyaltyId: string) => {
         getUserRewardHistory()
-        return router.push(routePaths[PAGE_TYPES.LOYALTY_BY_ID](businessId, loyaltyId))
-    }
-    const gotoExplore = () => {
-        return routePaths[PAGE_TYPES.EXPLORER](businessId)
+        return router.push(routePaths[PAGE_TYPES.LOYALTY_BY_ID](businessDetails._id, loyaltyId))
     }
 
     useEffect(() => {
@@ -340,17 +340,15 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         </div>
                     </div>
                 </div>
-                <Footer />
             </div>
             <RedeemButton setIsHiCodeModalOpen={setIsHiCodeModalOpen} themes={data?.settings?.themes}/>
             {isHiCodeModalOpen && (
                 <DishData show={isHiCodeModalOpen} onClose={() => setIsHiCodeModalOpen(false)}>
                     <MainLoyalty
                         hiCode={HiCode}
-                        logo={data?.business?.logo}
                         cardColor={data?.loyalty?.cardColor}
                         fontColor={data?.loyalty?.fontColor}
-                        src={findPattern(data?.loyalty?.cardPattern) || beans(data?.loyalty?.fontColor)}
+                        loyaltySetting={loyaltySetting}
                     />
                 </DishData>
             )}

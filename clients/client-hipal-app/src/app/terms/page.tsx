@@ -9,6 +9,7 @@ import { getRandomBlurImg } from '@/components/utils/images'
 import styles from './terms.module.css'
 import PlaceholderImg from '@/components/atoms/placeholder'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
+import { IBiz } from '@/components/types/businessData'
 
 interface IData {
     logo:string;
@@ -18,7 +19,7 @@ interface IData {
 }
 const Terms= ()=> {
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
-	const { logo, businessName, location, phone } = businessDetails as IData
+	const { logo, businessName, location, phone } = businessDetails as IBiz
     const router = useRouter()
 	const onBack = () => {
 		router.back()

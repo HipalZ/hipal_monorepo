@@ -1,7 +1,7 @@
 import { motion } from "framer-motion"
 import { memo, useEffect, useState } from "react"
 
-const NumberAnimation = ({ number }) => {
+const NumberAnimation = ({ number }: { number: number }) => {
 	const [displayNumber, setDisplayNumber] = useState(number)
 
 	useEffect(() => {

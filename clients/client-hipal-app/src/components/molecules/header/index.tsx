@@ -1,5 +1,5 @@
 import { useRouter, useSearchParams } from "next/navigation"
-import { memo, useEffect, useMemo, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { FiChevronLeft, FiX } from "react-icons/fi"
 import { HiLightBulb, HiSearch } from "react-icons/hi"
 import { useInView } from "react-intersection-observer"
@@ -8,8 +8,7 @@ import QuickFilter from "@/components/atoms/quickFilter"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import Link from "next/link"
 import { useCart } from "@/components/store/useCart"
-import bookmark from "@/assets/svg/bookmark.svg";
-import Image from "next/image"
+
 import { ICategory } from "@/components/types/businessData"
 
 function Header({
@@ -37,7 +36,6 @@ function Header({
 }) {
 	//TODO : add the bookmark
 	const router = useRouter()
-	const cart = useCart((s) => s.cart)
 	const [state, setState] = useState({
 		showSearchBox: title ? false : true,
 	})
@@ -49,7 +47,6 @@ function Header({
 	}) // roundedHeader is false when the header is scrolled to the top
 	const {
 		ref: headerRef,
-		inView,
 		entry,
 	} = useInView({
 		threshold: 1,
@@ -100,7 +97,6 @@ function Header({
 		}
 	}, [routePaths[PAGE_TYPES.REVIEW]])
 	return (
-		<>
 			<div
 				ref={headerRef}
 				className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
@@ -153,7 +149,7 @@ function Header({
 								</CustomTag>
 							</div>
 						) : (
-							<SearchPanel closeSearchBox={closeSearchBox} categories={categories} primaryColor={primaryColor}/>
+							<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []} primaryColor={primaryColor || ""}/>
 						)}
 						{skipReview && (
 							<Link
@@ -175,7 +171,7 @@ function Header({
 					{showOtherButtons && (
 						<div className="flex flex-row ml-auto ">
 							{!state.showSearchBox && (
-								<div className="flex justify-around items-center pl-2 ml-auto">
+								<div className="flex items-center justify-around pl-2 ml-auto">
 									<div className="mt-1 mr-2">
 										<QuickFilter />
 									</div>
@@ -199,7 +195,6 @@ function Header({
 				</div>
 				{children && <div>{children}</div>}
 			</div>
-		</>
 	)
 
 	function changeHeaderStyle() {

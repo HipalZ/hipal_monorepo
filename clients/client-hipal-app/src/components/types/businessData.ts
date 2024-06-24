@@ -1,5 +1,6 @@
 import type { ICart } from "@/components/store/useCart"
 import { ILoyaltySetting } from "../store/useLoyaltyData"
+import { ICat } from "../molecules/searchPanel";
 
 export interface IBiz {
 	businessName: string;
@@ -43,8 +44,10 @@ export interface IBiz {
 	updatedAt: string;
 	wallpaper: string;
 	withPopCorn: boolean;
+	location: string;
+	phone: string;
 	__v: number;
-	id: string; // Assuming this is the same as _id or an additional identifier
+	id: string;
   }
   
 export interface IBusinessData {
@@ -66,6 +69,12 @@ export interface IBusinessData {
 export interface ICategories extends ICategory {
 	dishes: IDish[]
 }
+
+export interface IPopular {
+	_id: string
+	name: string
+
+}
 export interface IExplore {
 	wallpaper: string
 	phone: string
@@ -80,10 +89,7 @@ export interface IExplore {
 		redirectId?: string
 		redirectName?: string
 	}[]
-	popular?: {
-		_id: string
-		name: string
-	}[]
+	popular?: IPopular[]
 	highlights?: {
 		name: string
 		stories: string[]
@@ -119,7 +125,6 @@ export interface ISettings {
 	_id: string
 }
 export interface IDish {
-	[x: string]: any
 	businessId: string
 	availability: false
 	name: string
@@ -129,10 +134,7 @@ export interface IDish {
 	discount: null
 	avgTime: null
 	dishType: string
-	categories: {
-		id: string
-		name: string
-	}[]
+	categories:ICat[]
 	portions: IPortion[]
 	extras: IExtras[]
 	filters: {
@@ -150,13 +152,13 @@ export interface IDish {
 	tags: never[]
 	links: never[]
 	version: number
-	id: string
+	id:string
+	_id: string
 	dishId: string
 }
 
 export interface IExtras {
-	[x: string]: any
-	id: string
+	_id: string
 	addOnType?: string
 	maxQuantity: number
 	name?: string
@@ -181,7 +183,7 @@ export interface ICategory {
 	coverImage: string
 	links: never[]
 	dishes: {
-		id: string
+		_id: string
 		name: string
 	}[]
 	version: number
@@ -234,4 +236,5 @@ export interface UserData {
 	day: string
 	loyaltyId: string
 	id: string
+	_id: string
 }

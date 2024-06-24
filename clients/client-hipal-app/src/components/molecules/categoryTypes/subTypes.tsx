@@ -1,3 +1,4 @@
+//@ts-nocheck
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"

@@ -13,7 +13,7 @@ function BottomButton({
   children?: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId } = useParams<{ businessId: string }>() || { businessId: "" };
 
   const goToMenu = useCallback(() => {
     router.push(routePaths[PAGE_TYPES.CATEGORY](businessId || ""));

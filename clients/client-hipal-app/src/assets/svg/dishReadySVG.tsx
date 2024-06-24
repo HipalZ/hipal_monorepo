@@ -1,6 +1,5 @@
-export default function DishReadySVG(props) {
+export default function DishReadySVG(props:any) {
 	return (
-		<>
 			<svg
 				width="42"
 				height="52"
@@ -18,6 +17,5 @@ export default function DishReadySVG(props) {
 					fill="#F14638"
 				/>
 			</svg>
-		</>
 	)
 }

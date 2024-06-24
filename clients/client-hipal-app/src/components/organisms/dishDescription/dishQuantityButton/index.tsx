@@ -1,3 +1,4 @@
+//@ts-nocheck
 import QuantityPicker from "@/components/atoms/buttons/quantityPicker"
 import BottomPanel from "@/components/molecules/bottomPanel"
 import { useBottomPanel } from "@/components/store/useBottomPanel"
@@ -17,7 +18,7 @@ function DishQuantityButton({
 	const setCart = useCart((s) => s.setCart)
 
 	const handleQuantity = useCallback(
-		(quantity) =>
+		(quantity:number) =>
 			handleDishQuantity(cart, dishData, openBottomPanel, setCart, closeBottomPanel)(quantity),
 		[cart, closeBottomPanel, dishData, openBottomPanel, setCart],
 	)

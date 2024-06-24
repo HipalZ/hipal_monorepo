@@ -1,5 +1,6 @@
 import { isEmpty } from "lodash-es"
 import { memo } from "react"
+import { IconType } from "react-icons"
 import { AiOutlineStar } from "react-icons/ai"
 import { BsSunFill } from "react-icons/bs"
 import { MdLocalOffer } from "react-icons/md"
@@ -7,13 +8,13 @@ import { MdLocalOffer } from "react-icons/md"
 function DishTag({
 	tags,
 }: {
-	tags: {
-		text: string
-		color: string
-		icon: string
-	}[]
+	readonly tags: ReadonlyArray<{
+		readonly text: string
+		readonly color: string
+		readonly icon: string
+	}>
 }) {
-	const TAG_TYPES = {
+	const TAG_TYPES: { [key: string]: { Icon: IconType } } = {
 		star_outline: {
 			Icon: AiOutlineStar,
 		},
@@ -31,17 +32,15 @@ function DishTag({
 	if (isEmpty(tags)) return null
 
 	return (
-		<>
-			<div
-				className={
-					"px-3 rounded-[8px] text-primary text-[0.813rem]  leading-3 font-bold normal-case flex flex-row gap-2"
-				}
-				style={{ color: tag?.color || "hsl(var(--bc))" }}
-			>
-				<Icon className="w-6 h-6 my-auto" />
-				<span className="my-auto">{tag.text}</span>
-			</div>
-		</>
+		<div
+			className={
+				"px-3 rounded-[8px] text-primary text-[0.813rem]  leading-3 font-bold normal-case flex flex-row gap-2"
+			}
+			style={{ color: tag?.color || "hsl(var(--bc))" }}
+		>
+			<Icon className="w-6 h-6 my-auto" />
+			<span className="my-auto">{tag.text}</span>
+		</div>
 	)
 }
 

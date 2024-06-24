@@ -50,6 +50,8 @@ export const useBusinessDetails = create(
         updatedAt: "",
         wallpaper: "",
         withPopCorn: false,
+        location: "",
+        phone: "",
         __v: 0,
         id: "",
       },

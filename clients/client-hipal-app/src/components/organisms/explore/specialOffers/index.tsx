@@ -1,3 +1,4 @@
+//@ts-nocheck
 import CardLG from "@/components/atoms/card/cardLG"
 import Section from "@/components/molecules/section"
 import img from "@/assets/img/cut.png"

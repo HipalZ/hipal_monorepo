@@ -10,7 +10,7 @@ import { ImSpoonKnife } from "react-icons/im"
 import DishQuantityButton from "../dishQuantityButton"
 
 import PlaceholderImg from "@/components/atoms/placeholder"
-function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal: (str) => void }) {
+function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal: (str:IDish) => void }) {
 	const { dishesData } = _useAllBusiness((s) => s.data)
 	const recommendations = useMemo(() => {
 		const recommendationList = dishData?.filters?.dishes

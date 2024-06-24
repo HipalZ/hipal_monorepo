@@ -8,7 +8,7 @@ interface WallpaperCarouselProps {
 	 * Array of wallpaper urls
 	 */
 	wallpapers: string[]
-	isAvailable: string
+	isAvailable: boolean
 }
 
 function WallpaperCarousel({ wallpapers, isAvailable }: WallpaperCarouselProps) {

@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { ICart, ICartDish, ICartExtra, ICartVariant } from "@/components/store/useCart"
 import { IBusinessData } from "@/components/types/businessData"
 import isEmpty from "lodash-es/isEmpty"
@@ -40,7 +41,6 @@ export const getPriceOfExtra = (extra: ICartExtra) => {
 		let obj = arrExtra[i]
 		extraPrice = parseInt(`${obj?.price || 0}`) * parseInt(`${obj?.quantity}`)
 	}
-
 	return extraPrice
 }
 

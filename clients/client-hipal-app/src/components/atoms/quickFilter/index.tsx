@@ -23,7 +23,7 @@ function QuickFilter() {
 	}
 	const { setActiveDishType, isActiveDishType } = useActiveClass()
 
-	const foodTypeIcons = {
+	const foodTypeIcons: { [key: string]: JSX.Element } = {
 		veg: (
 			<div className="p-1">
 				<div className="w-4 h-4 p-[0.125rem] border-2 border-green-900">

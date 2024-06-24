@@ -4,15 +4,17 @@ import { useEffect } from "react";
 
 type Props = {
     setIsHiCodeModalOpen: (value: boolean) => void;
-    themes: IThemes;
+    themes: IThemes | undefined;
 }
 
-const RedeemButton = (props:Props) => {
+const RedeemButton = (props: Props) => {
     const { setIsHiCodeModalOpen, themes } = props;
 
-    useEffect(()=>{
-        updateTheme(themes)
-    },[themes])
+    useEffect(() => {
+        if (themes) {
+            updateTheme(themes)
+        }
+    }, [themes])
 
     return (
         <div className="fixed w-[100%] max-w-[30rem] bottom-0 z-20 flex items-center justify-between px-6 py-4 space-x-4 shadow-2xl bg-base-100 shadow-base-100">
