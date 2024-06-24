@@ -1,4 +1,4 @@
-name: CI
+name: Build and Push hipal
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -6,8 +6,7 @@ env:
 
 on:
   push:
-    branches:
-      - test
+    branches: ['test']
     paths:
       - 'package.json'
       - 'clients/client-hipal-app/**'
