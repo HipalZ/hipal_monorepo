@@ -13,7 +13,7 @@ const RedeemButton = (props: Props) => {
     useEffect(() => {
         if (themes) {
             updateTheme(themes)
-        }
+        } 
     }, [themes])
 
     return (
