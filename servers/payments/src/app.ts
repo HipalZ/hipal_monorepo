@@ -29,6 +29,7 @@ app.use(
       'https://dev.hipal.life',
       'https://hipal.life',
       'https://www.hipal.life',
+      'https://api.test.hipalz.com',
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:3002',
