@@ -4,9 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
+    "dev:test": "dotenv -e ./env/.env.test next --host",
+    "bundle:development": "dotenv -e .env pnpm run bundle",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:test": "dotenv -e ./env/.env.test pnpm run build",
+    "bundle:test": "dotenv -e ./env/.env.test pnpm run bundle",
+    "build:production": "dotenv -e ./env/.env.production pnpm run build",
+    "bundle:production": "dotenv -e ./env/.env.production pnpm run bundle",
+    "bundle": "next build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.19",
@@ -61,6 +68,7 @@
     "prettier": "^2.8.8",
     "tailwindcss": "^3.4.4",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "dotenv-cli": "^7.3.0"
   }
 }
