@@ -2,7 +2,7 @@ name: Build and Push hipal
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_HIPALZ_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
 
 on:
   push:
