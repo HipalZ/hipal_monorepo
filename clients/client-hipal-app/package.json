@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
-    "dev:test": "dotenv -e ./env/.env.test next --host",
+    "dev:test": "dotenv -e ./.env.test next --host",
     "bundle:development": "dotenv -e .env pnpm run bundle",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:test": "dotenv -e ./env/.env.test pnpm run build",
-    "bundle:test": "dotenv -e ./env/.env.test pnpm run bundle",
-    "build:production": "dotenv -e ./env/.env.production pnpm run build",
-    "bundle:production": "dotenv -e ./env/.env.production pnpm run bundle",
+    "build:test": "dotenv -e ./.env.test pnpm run build",
+    "bundle:test": "dotenv -e ./.env.test pnpm run bundle",
+    "build:production": "dotenv -e ./.env.production pnpm run build",
+    "bundle:production": "dotenv -e ./.env.production pnpm run bundle",
     "bundle": "next build"
   },
   "dependencies": {
