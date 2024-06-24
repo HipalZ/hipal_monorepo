@@ -165,7 +165,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
                 setRazorPayPaymentId('')
-                setTableName('')
             } else {
                 toast.error('Payment failed')
             }
@@ -229,13 +228,12 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
                 setOfflineOrderId(response.data.data.order_id)
-                setTableName('')
                 setSelectedPay(true)
             }
 
         } catch (err) {
             console.log(err)
-            toast.error(err.message)
+            toast.error(err.response?.data?.message || 'Something went wrong')
         }
     }
 
