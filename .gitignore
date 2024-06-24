@@ -1,2 +1,3 @@
 node_modules
 clients/client-hibiz-react-copy/dist
+infra/*

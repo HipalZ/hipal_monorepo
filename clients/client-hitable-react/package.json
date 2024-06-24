@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 vite --host --port 3001",
+    "dev": "vite --host --port 3001",
+    "dev:test": "dotenv -e ./env/.env.test vite --host",
     "bundle:development": "dotenv -e .env pnpm run bundle",
     "build": "vite build",
     "serve": "vite preview --host --port 3005",
