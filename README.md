@@ -12,7 +12,7 @@ yarn dev
 pnpm dev
 ```
 
-asd
+asds
 
 ```
 sd
