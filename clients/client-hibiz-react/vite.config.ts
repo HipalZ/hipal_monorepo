@@ -1,15 +1,16 @@
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
 import Pages from 'vite-plugin-pages';
 import { VitePWA } from 'vite-plugin-pwa';
+import babel from 'vite-plugin-babel';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 const ReactCompilerConfig = {
   compilationMode: 'annotation',
 };
 
 export default defineConfig({
+  envDir: 'env',
   plugins: [
     react(),
     babel({

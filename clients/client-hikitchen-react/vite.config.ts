@@ -10,6 +10,8 @@ const ReactCompilerConfig = {
 };
 
 export default defineConfig({
+  envDir: 'env',
+
   plugins: [
     react(),
     Pages({

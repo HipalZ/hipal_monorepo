@@ -1,15 +1,16 @@
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
 import Pages from 'vite-plugin-pages';
 import { VitePWA } from 'vite-plugin-pwa';
+import babel from 'vite-plugin-babel';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 const ReactCompilerConfig = {
   compilationMode: 'annotation',
 };
 
 export default defineConfig({
+  envDir: 'env',
   plugins: [
     react(),
     babel({
@@ -25,28 +26,27 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'android-chrome-192x192.png', 'mstile-70x70.png'],
       manifest: {
-        "name": "HiTable",
-        "short_name": "HiTable",
-        "description": "digital menu application",
-        "scope": "/",
-        "start_url": "/",
-        "icons": [
+        name: 'HiTable',
+        short_name: 'HiTable',
+        description: 'digital menu application',
+        scope: '/',
+        start_url: '/',
+        icons: [
           {
-            "src": "/android-chrome-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
+            src: '/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
           },
           {
-            "src": "/android-chrome-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-          }
+            src: '/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
         ],
-        "theme_color": "#2C62F0",
-        "background_color": "#ffffff",
-        "display": "standalone"
-      }
-      ,
+        theme_color: '#2C62F0',
+        background_color: '#ffffff',
+        display: 'standalone',
+      },
     }),
   ],
   resolve: {
@@ -55,4 +55,4 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-})
+});
