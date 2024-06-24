@@ -96,10 +96,9 @@ function OtpPage() {
 			const response = await axios(config)
 			const data = response.data.data
 			if (response.status === 200) {
-				const { _id, ...otherData } =data
-				setAccessToken(response.data.data.accessToken)
-				setRefreshToken(response.data.data.refreshToken)
-				setUserDetails({ id: _id, ...otherData })
+				setAccessToken(data.accessToken)
+				setRefreshToken(data.refreshToken)
+				setUserDetails(data?.user)
 				setIsLogin(true)
 				if (data?.reward > 0 && data?.count === 1) {
 					setCoinz(data.reward)

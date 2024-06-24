@@ -43,7 +43,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const [offlineOrderId, setOfflineOrderId] = useState('')
     const router = useRouter()
     const searchParams = useSearchParams()
-    console.log("search params", typeof searchParams?.get("amount"));
 
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
@@ -261,7 +260,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
 
-    const handleCreateOrder = async (total: number) => {
+    const handleCreateOrder = async (total: number, mode:string) => {
         if (total <= 0) {
             return toast.error('Invalid amount');
         }
@@ -269,7 +268,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             toast.error('Please scan to start')
             return router.push(`/scan`)
         }
-        if (selectedMode.toLowerCase() === 'offline') {
+        if (mode.toLowerCase() === 'offline') {
             await handleCreateOfflineOrder();
             return;
         }
@@ -357,7 +356,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleBack = () => {
-        console.log(selectedMode);
         if (selectedMode === 'MODE') {
             return setSelectedMode('INVOICE')
         }

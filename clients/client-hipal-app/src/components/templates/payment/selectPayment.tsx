@@ -23,7 +23,7 @@ interface PaymentComponentProps {
     billValue: number;
     claimedCoinz: number;
     tips: number;
-    handleCreateOrder: (amount: number) => void;
+    handleCreateOrder: (amount: number, mode:string) => void;
     selectedMode: PageStates;
     setSelectedMode: (mode: PageStates) => void;
     selectedPay: boolean;
@@ -49,7 +49,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
 
     const createOrder = (amount: number, mode: PageStates) => {
         setSelectedMode(mode)
-        handleCreateOrder(amount)
+        handleCreateOrder(amount, mode)
     };
 
     return (
