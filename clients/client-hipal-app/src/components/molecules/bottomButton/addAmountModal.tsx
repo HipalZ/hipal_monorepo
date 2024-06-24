@@ -1,23 +1,27 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import Globe from "@/assets/payment/globe.png";
 import style from "./addAmount.module.css";
 import Image from 'next/image';
 import { TfiPlus } from "react-icons/tfi";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
+import useTableData from '@/components/store/useTableData';
+import axios from '@/utils/axios';
 
 const AddAmountModal = () => {
     const params = useParams();
     const businessId = params?.businessId;
     const router = useRouter();
     const [amount, setAmount] = useState(0);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setAmount(value === "" ? 0 : parseInt(value));
     }
+    const { tableName } = useTableData()
 
-    const proceedToPayment = () => {
+    const proceedToPayment = useCallback(() => {
         if (amount === 0) {
             toast.error('Please enter amount');
             return;
@@ -25,8 +29,48 @@ const AddAmountModal = () => {
         if (amount > 0) {
             router.push(`/r/${businessId}/payment?amount=${amount}`);
         }
-    }
+    }, [amount, businessId, router]);
 
+    const callTheWaiter = useCallback(async () => {
+        if (!tableName) {
+            toast.error('Please Scan the table to call waiter');
+            return;
+        }
+        if (loading) {
+            return toast.error('Please wait for a moment');
+        }
+
+        setLoading(true);
+        try {
+            const config = {
+                method: 'POST',
+                url: '/v1/payments/createWaiterAlert',
+                data: {
+                    businessId: businessId,
+                    tableName: tableName,
+                    message: 'Please settle my table',
+                    alertType: 'WAITER',
+                    status: 'WAITER'
+                }
+            };
+            const response = await axios(config);
+            if (response.status === 200) {
+                toast.success('Waiter will be there soon. Thank you!!');
+            }
+        } catch (err: any) {
+            const errors = err.response?.data?.errors;
+            if (errors && Array.isArray(errors)) {
+                errors.forEach((error: { message: string }) => {
+                    console.log(error.message);
+                    toast.error('Please Scan the table to call waiter');
+                });
+            } else {
+                toast.error('An error occurred. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [businessId, tableName]);
     return (
         <section className='h-[80vh] overflow-y-auto overflow-x-hidden'>
             <header>
@@ -34,7 +78,7 @@ const AddAmountModal = () => {
                     HiPay
                 </center>
             </header>
-            <section className='relative mt-[35vh]'>
+            <section className='relative mt-[30vh]'>
                 <div className={`${style.top_ring}`} />
                 <div className={`${style.mid_ring}`} />
                 <div className={`${style.bottom_ring}`} />
@@ -43,7 +87,9 @@ const AddAmountModal = () => {
                 </figure>
                 <TfiPlus className={`${style.plus_pay_right}`} size={48} />
                 <TfiPlus className={`${style.plus_pay_left}`} size={24} />
-                <section className='absolute mx-6 space-y-6 -bottom-[12rem] w-[88%]'>
+
+                <section className='absolute mx-6 space-y-4 -bottom-[16rem] w-[88%]'>
+                    <p className='-mb-4 text-primary'>Add bill amount</p>
                     <input
                         placeholder='Enter Amount'
                         value={amount || ''}
@@ -54,9 +100,18 @@ const AddAmountModal = () => {
                         minLength={1}
                         required
                     />
-                    <button onClick={proceedToPayment} className='w-full px-4 py-3 rounded-full bg-primary text-base-100'>
-                        Next
-                    </button>
+                    <div className='flex items-end justify-between gap-4'>
+                        <button disabled={loading} onClick={callTheWaiter} className="w-full px-8 py-3 text-sm border rounded-full border-primary">
+                            {loading ? (
+                                <span className="loader_spinner !border-t-primary"></span>
+                            ) : (
+                                'Call Captain'
+                            )}
+                        </button>
+                        <button onClick={proceedToPayment} className='w-full px-4 py-3 rounded-full bg-primary text-base-100'>
+                            Next
+                        </button>
+                    </div>
                 </section>
             </section>
         </section>

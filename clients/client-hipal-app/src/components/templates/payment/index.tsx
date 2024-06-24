@@ -1,6 +1,6 @@
 "use client"
 import PlaceholderImg from "@/components/atoms/placeholder";
-import { isEmpty, truncate } from "lodash-es";
+import { isEmpty } from "lodash-es";
 import Image from "next/image";
 import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
@@ -568,7 +568,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                         />
                                         <button
                                             onClick={handleSaveTip}
-                                            className='bg-primary text-base text-white px-4 py-2 rounded-lg'
+                                            className='px-4 py-2 text-base text-white rounded-lg bg-primary'
                                         >
                                             Save
                                         </button>

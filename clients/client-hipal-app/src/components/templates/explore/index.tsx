@@ -18,6 +18,7 @@ import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import Rewards from "./rewards";
 
 function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
@@ -72,6 +73,9 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
                         </div>
                     )
                 } */}
+                {
+                  <Rewards />
+                }
 
                 <SpecialOffers explore={data?.settings?.explore} />
 

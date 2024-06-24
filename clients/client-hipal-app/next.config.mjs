@@ -2,8 +2,8 @@ const nextConfig = {
 	experimental: {
 	  appDir: true,
 	},
-	reactStrictMode: true,
-	swcMinify: true,
+	reactStrictMode: false,
+	swcMinify: false,
 	images: {
 		  domains: [
 			  "picsum.photos",

@@ -102,7 +102,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                         Hassel free & easy payments from your favorite UPI, Card or net banking
                     </div>
                     <button onClick={() => createOrder(billValue, 'OFFLINE')} className='absolute px-4 py-1 text-white bg-black rounded-full bottom-2 left-2'>
-                        Pay waiter
+                        Pay offline
                     </button>
                 </article>
                 <article className='w-full max-w-[11.625rem] h-[15.65rem] relative bg-white rounded-2xl overflow-hidden'>
