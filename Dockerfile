@@ -1,4 +1,4 @@
-FROM node:21 AS base
+FROM node:18-alpine3.19 AS base
 RUN npm install -g pnpm
 COPY package.json /app/package.json
 COPY . /app

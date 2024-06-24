@@ -1005,7 +1005,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
             order_id: getOrder?._id,
             message: `Paid ${payload.payment.entity.notes.total}`,
             tableName: payload.payment.entity.notes.tableName,
-            isAccepted: true,
+            isAccepted: false,
           },
         ],
         { session },
