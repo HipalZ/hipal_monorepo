@@ -1,0 +1,31 @@
+name: Build and Push client-hitable-test Server Image
+
+on:
+  push:
+    branches: ['test']
+    paths:
+      - 'Dockerfile'
+      - 'package.json'
+      - 'clients/client-hibiz-react/**'
+
+env:
+  DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
+  DOCKER_REPOSITORY: client-hibiz-test
+
+jobs:
+  build-and-push:
+    name: Build and Push to DigitalOcean Container Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to DigitalOcean Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u doctl --password-stdin
+
+      - name: Build, tag, and push image to DigitalOcean Container Registry
+        run: |
+          IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
+          docker build --target client-hibiz-react -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:latest .
+          docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY --all-tags
