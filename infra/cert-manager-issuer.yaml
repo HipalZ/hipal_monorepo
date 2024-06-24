@@ -16,9 +16,9 @@ spec:
       name: letsencrypt-nginx-wcard-private
     solvers:
       # Use the HTTP-01 challenge provider
-      # - http01:
-      #     ingress:
-      #       class: nginx
+      - http01:
+          ingress:
+            class: nginx
       - dns01:
           digitalocean:
             # Kubernetes secret that contains the DO API token .

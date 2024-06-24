@@ -36,3 +36,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+```sh
+DO_API_TOKEN="dop_v1_8168740023d5b1d220ca141db4e658f9afe5f5ae5b6e61ccebc731ddd2ecc4e4"
+
+kubectl create secret generic "digitalocean-dns" \
+  --namespace hipalz \
+  --from-literal=access-token="$DO_API_TOKEN"
+
+secret/digitalocean-dns created
+```
