@@ -1,106 +1,52 @@
-import React, { startTransition, useEffect, useState } from "react";
-import HiTableLogo from "@/assets/svg/HiTableLogo.svg";
-import welcome from "@/assets/svg/welcomeLogo.svg";
-import { toast } from "react-toastify";
-import { useLogin } from "@/components/store/useLogin";
-import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
-import { useNavigate } from "react-router-dom";
-import axios from "@/components/utils/axios";
+import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png'
+import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png'
+import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png'
+import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png'
+import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png'
+import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png'
+import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png'
+import '@/pages/l/[businessId]/login/login.css'
+import { memo } from 'react'
 
-function HiTable() {
-	const userDetail = useLogin((s) => s.userDetails);
-	const navigate = useNavigate();
-	const businessId = userDetail.customRole?.[0]?.businessId;
-	const [phoneNumber, setPhoneNumber] = useState<string>("");
-	const setUserDetails = useLogin((s) => s.setUserDetails);
+const Login = memo(() => {
 
-	const handlePhoneNumberChange = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setPhoneNumber(event.target.value);
-	};
+  return (
+    <center>
+      <section className="relative max-w-[30rem]">
+        <div className="mobileGrad h-[28rem] mx-[4rem] mt-[4rem] flex justify-center border-1">
+          <div className="flex flex-col items-center">
+            <h1 className="text-3xl mt-[2rem] font-bold">HiClientZ</h1>
+          </div>
+        </div>
+        <div className="absolute top-1/2 flex justify-between mx-8">
+          <section>
+            <img src={liteLoginIcon1} alt="liteLoginIcon1" width={55} height={55} loading="lazy" className="liteLoginIcon1" />
+          </section>
+          <section className="-mt-5">
+            <img src={liteLoginIcon2} alt="liteLoginIcon2" width={38} height={38} loading="lazy" className="liteLoginIcon2" />
+          </section>
+          <section className="mt-5 w-10">
+            <img src={liteLoginIcon3} alt="liteLoginIcon3" width={43} height={43} loading="lazy" className="liteLoginIcon3" />
+          </section>
+          <section className="mx-4">
+            <img src={liteLoginIcon4} alt="liteLoginIcon4" width={98} height={98} loading="lazy" className="liteLoginIcon4" />
+          </section>
+          <section className="-mt-10">
+            <img src={liteLoginIcon5} alt="liteLoginIcon5" width={57} height={57} loading="lazy" className="liteLoginIcon5" />
+          </section>
+          <section className="mt-10">
+            <img src={liteLoginIcon6} alt="liteLoginIcon6" width={43} height={43} loading="lazy" className="liteLoginIcon6" />
+          </section>
+          <section>
+            <img src={liteLoginIcon7} alt="liteLoginIcon7" width={45} height={45} loading="lazy" className="liteLoginIcon7" />
+          </section>
+        </div>
+      </section>
+      <div className="text-2xl">Welcome to HipalZ</div>
+      &nbsp;
+      <center className="text-base">Approach us for your business url</center>
+    </center>
+  )
+});
 
-	useEffect(() => {
-		if (businessId === undefined) {
-			startTransition(() => {
-				navigate("/");
-			})
-		}
-	}, []);
-
-	const result = async () => {
-		try {
-			const config = {
-				method: "POST",
-				url: "/v1/users/chef/Login?withBusinessId=false",
-				data: {
-					phone: phoneNumber,
-				},
-			};
-
-			const user = await axios(config);
-			if (user.status === 200) {
-				setUserDetails(user.data.data);
-				startTransition(() => {
-					navigate(
-						`${singleRoute[PAGE_TYPES.LOGIN](
-							`${user?.data?.data?.customRole?.[0].businessId}`,
-						)}`,
-					);
-				})
-				if (user?.data?.data?.customRole?.[0].businessId) {
-					toast.success(`Hi ${user?.data?.data?.name}`);
-				}
-			}
-		} catch (err) {
-			console.log(err);
-			toast.error("User not registered as staff!");
-		}
-	};
-
-	return (
-		<div>
-			<div className="flex justify-center mt-[12rem]">
-				<img width={104} height={31} src={HiTableLogo} alt="Hi Table Logo" />
-			</div>
-			<div className="flex justify-center mt-[1rem] mx-[3.375rem]">
-				<img width={283} height={223} src={welcome} alt="Hi Table Logo" />
-			</div>
-			<div className="text-center mt-[2.5rem]">
-				<span className="font-[400] text-base-content text-[1rem] leading-[1.125rem]">
-					Let’s get started
-				</span>
-			</div>
-			<div className="relative w-full px-[3.125rem] mt-[2.5rem] mb-[5.89rem] ml-0 mr-0 space-y-4">
-				<div className="relative">
-					<input
-						onChange={handlePhoneNumberChange}
-						type="text"
-						id="floating_outlined"
-						className="block w-full px-4 py-3 text-base border rounded-lg text-base-content bg-base-100 dark:text-base-100 focus:outline-none focus:border-primary peer"
-						placeholder=" "
-						maxLength={10}
-						minLength={10}
-						required
-					/>
-					<label
-						htmlFor="floating_outlined"
-						className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-base-100 dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-primary peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
-					>
-						Phone number
-					</label>
-				</div>
-			</div>
-			<div className="absolute flex items-center justify-center w-full px-6 bottom-4">
-				<button
-					onClick={result}
-					className="w-full py-2 text-sm rounded-full btn text-base-100 md:w-1/2 lg:w-1/4 on_active_bounce bg-primary"
-				>
-					Login
-				</button>
-			</div>
-		</div>
-	);
-}
-
-export default HiTable;
+export default Login
