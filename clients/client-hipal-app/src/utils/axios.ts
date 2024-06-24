@@ -1,10 +1,10 @@
 import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
-const env = process.env.NODE_ENV as string;
+const env = process.env.NODE_ENV || process.env.NEXT_PUBLIC_NODE_ENV as string;
 
 const axios = axiosConstructor.create({
-  baseURL:process.env.NEXT_API_URL,
+  baseURL:process.env.NEXT_API_URL || process.env.NEXT_PUBLIC_API_URL as string,
   withCredentials: true,
 })
 axios.interceptors.request.use(
@@ -12,7 +12,7 @@ axios.interceptors.request.use(
     if (config.url == undefined) {
       return;
     }
-    console.log('env',env)
+    console.log('env',env, process.env.NEXT_API_URL, process.env.NEXT_PUBLIC_API_URL)
     if(env !== "production" && env !== "test"){
       // Modify the baseURL based on the request URL
       if (config.url.startsWith('/v1/businesses')) {
