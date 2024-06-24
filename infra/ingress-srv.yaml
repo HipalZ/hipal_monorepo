@@ -74,3 +74,33 @@ spec:
                 name: payments-server-test
                 port:
                   number: 80
+    - host: table.test.hipalz.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client-hitable-test
+                port:
+                  number: 80
+    - host: kitchen.test.hipalz.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client-hikitchen-test
+                port:
+                  number: 80
+    - host: biz.test.hipalz.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client-hibiz-test
+                port:
+                  number: 80
