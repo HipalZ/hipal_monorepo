@@ -47,22 +47,22 @@ COPY --from=client-hibiz-react-build /app/clients/client-hibiz-react/nginx.conf 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 
-# FROM base AS client-hikitchen-react-build
-# WORKDIR /app/clients/client-hikitchen-react
-# RUN pnpm run bundle:development
+FROM base AS client-hikitchen-react-build
+WORKDIR /app/clients/client-hikitchen-react
+RUN pnpm run bundle:development
 
-# FROM nginx:alpine AS client-hikitchen-react
-# COPY --from=client-hikitchen-react-build /app/clients/client-hikitchen-react/dist /usr/share/nginx/html
-# COPY --from=client-hikitchen-react-build /app/clients/client-hikitchen-react/nginx.conf /etc/nginx/conf.d/default.conf
-# EXPOSE 80
-# CMD ["nginx", "-g", "daemon off;"]
+FROM nginx:alpine AS client-hikitchen-react
+COPY --from=client-hikitchen-react-build /app/clients/client-hikitchen-react/dist /usr/share/nginx/html
+COPY --from=client-hikitchen-react-build /app/clients/client-hikitchen-react/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 
-# FROM base AS client-hitable-react-build
-# WORKDIR /app/clients/client-hitable-react
-# RUN pnpm run bundle:development
+FROM base AS client-hitable-react-build
+WORKDIR /app/clients/client-hitable-react
+RUN pnpm run bundle:development
 
-# FROM nginx:alpine AS client-hitable-react
-# COPY --from=client-hitable-react-build /app/clients/client-hitable-react/dist /usr/share/nginx/html
-# COPY --from=client-hitable-react-build /app/clients/client-hitable-react/nginx.conf /etc/nginx/conf.d/default.conf
-# EXPOSE 80
-# CMD ["nginx", "-g", "daemon off;"]
+FROM nginx:alpine AS client-hitable-react
+COPY --from=client-hitable-react-build /app/clients/client-hitable-react/dist /usr/share/nginx/html
+COPY --from=client-hitable-react-build /app/clients/client-hitable-react/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

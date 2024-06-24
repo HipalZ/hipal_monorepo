@@ -1,9 +1,9 @@
-import { ReactNode, Suspense } from 'react';
-import { useRoutes, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import routes from '~react-pages';
 import Loader from '@/components/atom/loader';
-
+import { AnimatePresence, motion } from 'framer-motion';
+import { ReactNode, Suspense } from 'react';
+import { useLocation, useRoutes } from 'react-router-dom';
+import routes from '~react-pages';
+//testing
 export default function MainRouter() {
   const location = useLocation();
   const element = useRoutes(routes) as ReactNode;
@@ -30,9 +30,7 @@ export default function MainRouter() {
         variants={variants}
         transition={{ duration: 0.15, ease: 'easeOut' }}
       >
-        <Suspense fallback={<Loader />}>
-          {element}
-        </Suspense>
+        <Suspense fallback={<Loader />}>{element}</Suspense>
       </motion.div>
     </AnimatePresence>
   );

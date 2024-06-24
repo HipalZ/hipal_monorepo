@@ -1,4 +1,3 @@
-import  from '@/';
 import HistoryCard from '@/components/atom/historyCard';
 import KitchenComponent from '@/components/atom/kitchenComponent';
 import KotCard from '@/components/atom/kotCard';
