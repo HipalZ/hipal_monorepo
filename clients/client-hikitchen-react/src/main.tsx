@@ -1,6 +1,7 @@
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 
+import { APP_ENV, BASE_URL } from '@/configs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import React from 'react';
@@ -17,7 +18,7 @@ const queryClient = new QueryClient({
   },
 });
 
-console.log(import.meta.env);
+console.log({ APP_ENV, BASE_URL });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
