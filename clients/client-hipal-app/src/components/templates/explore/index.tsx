@@ -1,26 +1,28 @@
 "use client"
+
+import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
+
 import BottomButton from "@/components/molecules/bottomButton";
-import useLoyaltyData from "@/components/store/useLoyaltyData"
 import DishData from "@/components/atoms/dishDescription"
-import MainLoyalty from "@/components/atoms/mainLoyalty"
+import Footer from "@/components/molecules/footer"
+import HeroSection from "@/components/organisms/explore/heroSection";
 import { IBusinessData } from "@/components/types/businessData"
-import useBusinessDetails from "../../store/useBusinessDetails"
 // components import
 import MainBackground from "@/components/organisms/explore/mainBackground";
-import HeroSection from "@/components/organisms/explore/heroSection";
-import SpecialOffers from "@/components/organisms/explore/specialOffers";
-import PopularRestaurant from "@/components/organisms/explore/popularRestaurant";
-import SubLoyalty from "@/components/atoms/subLoyalty";
+import MainLoyalty from "@/components/atoms/mainLoyalty"
 import PageName from "@/components/molecules/pageName";
-import Footer from "@/components/molecules/footer"
-import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
+import PopularRestaurant from "@/components/organisms/explore/popularRestaurant";
+import Rewards from "./rewards";
+import SpecialOffers from "@/components/organisms/explore/specialOffers";
+import SubLoyalty from "@/components/atoms/subLoyalty";
+import useBusinessDetails from "../../store/useBusinessDetails"
+import useLoyaltyData from "@/components/store/useLoyaltyData"
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
-import Rewards from "./rewards";
 
-function Explore({ data }: { data: IBusinessData }): JSX.Element {
+export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
  
     const tableName = searchParams?.get('tableName')
@@ -119,4 +121,3 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
     )
 }
 
-export default memo(Explore)

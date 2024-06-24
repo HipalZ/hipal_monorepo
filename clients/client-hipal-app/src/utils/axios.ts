@@ -1,5 +1,5 @@
-import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
+import { useUserToken } from '@/components/store/useUserToken';
 
 const env = process.env.NODE_ENV || process.env.NEXT_PUBLIC_NODE_ENV as string;
 
@@ -7,11 +7,12 @@ const axios = axiosConstructor.create({
   baseURL:process.env.NEXT_API_URL || process.env.NEXT_PUBLIC_API_URL as string,
   withCredentials: true,
 })
+console.log({axios});
 axios.interceptors.request.use(
   (config: any) => {
-    if (config.url == undefined) {
-      return;
-    }
+    // if (config.url == undefined) {
+    //   return;
+    // }
     console.log('env',env, process.env.NEXT_API_URL, process.env.NEXT_PUBLIC_API_URL)
     if(env !== "production" && env !== "test"){
       // Modify the baseURL based on the request URL
@@ -34,9 +35,9 @@ axios.interceptors.request.use(
       }
     }
     const { accessToken, refreshToken } = useUserToken.getState();
-    if (accessToken && refreshToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-      config.headers['x-refresh-with'] = refreshToken;
+    if (accessToken || refreshToken) {
+      if (accessToken) config.headers['Authorization'] = `Bearer ${accessToken}`;
+      if (refreshToken) config.headers['x-refresh-with'] = refreshToken;
     }
 
     return config;

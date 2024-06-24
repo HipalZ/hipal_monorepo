@@ -1,7 +1,7 @@
 const nextConfig = {
-	experimental: {
-	  appDir: true,
-	},
+	// experimental: {
+	//   appDir: true,
+	// },
 	reactStrictMode: false,
 	swcMinify: false,
 	images: {
@@ -16,14 +16,14 @@ const nextConfig = {
 		  minimumCacheTTL: 31536000,
 		  // unoptimized: true,
 	  },
-	async rewrites() {
-	  return [
-		{
-		  source: '/',
-		  destination: '/index.html',
-		},
-	  ];
-	},
+	// async rewrites() {
+	//   return [
+	// 	{
+	// 	  source: '/',
+	// 	  destination: '/index.html',
+	// 	},
+	//   ];
+	// },
 	async headers() {
 	  return [
 		{
