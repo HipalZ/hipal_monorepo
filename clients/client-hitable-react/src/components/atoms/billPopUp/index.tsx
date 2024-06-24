@@ -4,7 +4,7 @@ import LoadingSpinner from '@/components/atoms/loadingSpinner';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import axios from '@/components/utils/axios';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { memo, useState } from 'react';
+import { ChangeEvent, memo, useState } from 'react';
 import { MdOutlineCall, MdOutlineMessage } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import PopUp from '../popUp';
@@ -131,19 +131,24 @@ const BillPopUp = memo(() => {
 
     setClickComment(!clickComment);
   };
-  const handleAddComment = (e) => {
+
+  const handleAddComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setComment(e.target.value);
   };
 
+  const handleClosePopup = () =>{
+    setClickViewMore(!clickViewMore);
+  }
+
   return (
-    <PopUp show={clickViewMore} status={viewData?.alertType}>
+    <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>
       {clickedConfirm && selectedNavItem !== 'history' ? (
         <ConfirmPopUp />
       ) : (
           <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
             <div className="mx-6 mt-10 flex justify-between">
               <h1 className="text-base text-gray-500">{timestampToDateTime(viewData?.date)}</h1>
-              <p>{viewData?._id}</p>
+              <p>{viewData?._id.slice(-6)}</p>
             </div>
             {viewData?.alertType !== "ONLINE" && viewData?.alertType !== "WAITER" && viewData?.completionCode !== null ? <center className="mt-4">{viewData?.completionCode?.toString()?.split('').map((digit, index) => (
               <span key={index} className="bg-gray-500 text-white mx-2 px-2 py-2">
