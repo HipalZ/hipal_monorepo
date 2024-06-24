@@ -17,7 +17,7 @@ importers:
         version: 7.4.2
       eslint:
         specifier: ^9.4.0
-        version: 9.4.0
+        version: 9.5.0
       lint-staged:
         specifier: ^15.2.5
         version: 15.2.5
@@ -59,7 +59,7 @@ importers:
         version: 2.0.0(vue@2.7.10)
       core-js:
         specifier: ^3.25.3
-        version: 3.37.1
+        version: 3.25.3
       mime:
         specifier: ^3.0.0
         version: 3.0.0
@@ -144,7 +144,7 @@ importers:
         version: 8.33.0
       eslint-config-prettier:
         specifier: ^8.5.0
-        version: 8.6.0(eslint@8.33.0)
+        version: 8.10.0(eslint@8.33.0)
       eslint-plugin-nuxt:
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.33.0)
@@ -162,7 +162,7 @@ importers:
         version: 1.5.0
       prettier:
         specifier: ^2.7.1
-        version: 2.8.3
+        version: 2.8.8
 
   clients/client-admin:
     dependencies:
@@ -177,7 +177,7 @@ importers:
         version: 3.0.0
       core-js:
         specifier: ^3.25.3
-        version: 3.37.1
+        version: 3.25.3
       nuxt:
         specifier: ^2.15.8
         version: 2.15.8(consola@3.2.3)(prettier@2.8.3)(typescript@4.9.5)(vue@2.7.10)
@@ -220,7 +220,7 @@ importers:
         version: 8.33.0
       eslint-config-prettier:
         specifier: ^8.5.0
-        version: 8.6.0(eslint@8.33.0)
+        version: 8.10.0(eslint@8.33.0)
       eslint-plugin-nuxt:
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.33.0)
@@ -229,13 +229,13 @@ importers:
         version: 9.5.1(eslint@8.33.0)
       prettier:
         specifier: ^2.7.1
-        version: 2.8.3
+        version: 2.8.8
 
   clients/client-hi-biz:
     dependencies:
       '@fontsource/inter':
         specifier: ^5.0.8
-        version: 5.0.8
+        version: 5.0.18
       '@headlessui/react':
         specifier: ^1.7.17
         version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
@@ -244,7 +244,7 @@ importers:
         version: 13.4.19
       '@tanstack/react-query':
         specifier: ^5.36.0
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       '@types/node':
         specifier: 20.5.0
         version: 20.5.0
@@ -304,7 +304,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^4.10.1
-        version: 4.10.1(react@18.2.0)
+        version: 4.12.0(react@18.2.0)
       react-swipeable:
         specifier: ^7.0.1
         version: 7.0.1(react@18.2.0)
@@ -332,7 +332,7 @@ importers:
     devDependencies:
       '@types/lodash-es':
         specifier: ^4.17.8
-        version: 4.17.8
+        version: 4.17.12
       '@types/papaparse':
         specifier: ^5.3.9
         version: 5.3.9
@@ -365,7 +365,7 @@ importers:
         version: 2.0.4(react-dom@18.3.1)(react@18.3.1)
       '@tanstack/react-query':
         specifier: ^5.40.0
-        version: 5.40.1(react@18.3.1)
+        version: 5.45.0(react@18.3.1)
       autoprefixer:
         specifier: 10.4.15
         version: 10.4.15(postcss@8.4.38)
@@ -522,7 +522,7 @@ importers:
         version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^5.36.0
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       '@types/node':
         specifier: 18.16.3
         version: 18.16.3
@@ -567,7 +567,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^4.8.0
-        version: 4.10.1(react@18.2.0)
+        version: 4.12.0(react@18.2.0)
       react-responsive:
         specifier: ^9.0.2
         version: 9.0.2(react@18.2.0)
@@ -589,7 +589,7 @@ importers:
         version: 2.2.11
       '@types/lodash-es':
         specifier: ^4.17.7
-        version: 4.17.8
+        version: 4.17.12
       '@types/uuid':
         specifier: ^9.0.1
         version: 9.0.7
@@ -610,7 +610,7 @@ importers:
         version: 2.0.4(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^5.40.0
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       axios:
         specifier: ^1.7.2
         version: 1.7.2
@@ -695,13 +695,13 @@ importers:
         version: 4.6.2(eslint@8.57.0)
       eslint-plugin-react-refresh:
         specifier: ^0.4.6
-        version: 0.4.6(eslint@8.57.0)
+        version: 0.4.7(eslint@8.57.0)
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
       prettier:
         specifier: ^3.3.0
-        version: 3.3.0
+        version: 3.3.1
       tailwindcss:
         specifier: ^3.4.4
         version: 3.4.4(ts-node@10.9.2)
@@ -725,13 +725,13 @@ importers:
         version: 1.2.5(react-dom@18.2.0)(react@18.2.0)
       '@next/bundle-analyzer':
         specifier: ^14.1.0
-        version: 14.2.3
+        version: 14.2.4
       '@splidejs/react-splide':
         specifier: ^0.7.12
         version: 0.7.12
       '@tanstack/react-query':
         specifier: ^5.40.1
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.35.5
         version: 5.35.5(@tanstack/react-query@5.40.1)(react@18.2.0)
@@ -758,7 +758,7 @@ importers:
         version: 4.17.21
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       next:
         specifier: 13.1.6
         version: 13.1.6(@babel/core@7.24.7)(react-dom@18.2.0)(react@18.2.0)
@@ -779,16 +779,16 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^4.10.1
-        version: 4.10.1(react@18.2.0)
+        version: 4.12.0(react@18.2.0)
       react-insta-stories:
         specifier: ^2.4.2
-        version: 2.4.2(react@18.2.0)
+        version: 2.7.0(react@18.2.0)
       react-intersection-observer:
         specifier: ^9.4.1
-        version: 9.4.1(react@18.2.0)
+        version: 9.10.3(react-dom@18.2.0)(react@18.2.0)
       react-loading-skeleton:
         specifier: ^3.1.0
-        version: 3.1.0(react@18.2.0)
+        version: 3.4.0(react@18.2.0)
       react-query:
         specifier: ^3.39.3
         version: 3.39.3(react-dom@18.2.0)(react@18.2.0)
@@ -828,7 +828,7 @@ importers:
         version: 0.5.9(tailwindcss@3.4.4)
       '@types/lodash-es':
         specifier: ^4.17.6
-        version: 4.17.8
+        version: 4.17.12
       '@types/react':
         specifier: 18.0.27
         version: 18.0.27
@@ -843,22 +843,22 @@ importers:
         version: 13.1.6(eslint@8.33.0)(typescript@4.9.5)
       eslint-config-prettier:
         specifier: ^8.6.0
-        version: 8.6.0(eslint@8.33.0)
+        version: 8.10.0(eslint@8.33.0)
       postcss:
         specifier: ^8.4.21
         version: 8.4.23
       postcss-preset-env:
         specifier: ^9.5.2
-        version: 9.5.2(postcss@8.4.23)
+        version: 9.5.14(postcss@8.4.23)
       prettier:
         specifier: ^2.8.3
-        version: 2.8.3
+        version: 2.8.8
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.4(ts-node@10.9.2)
       tsconfig-paths-webpack-plugin:
         specifier: ^4.0.0
-        version: 4.0.0
+        version: 4.1.0
       typescript:
         specifier: 4.9.5
         version: 4.9.5
@@ -1021,13 +1021,13 @@ importers:
         version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
       '@lottiefiles/react-lottie-player':
         specifier: ^3.5.3
-        version: 3.5.3(react@18.2.0)
+        version: 3.5.4(react@18.2.0)
       '@material-tailwind/react':
         specifier: ^2.1.1
         version: 2.1.1(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^5.35.5
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       '@types/react':
         specifier: 18.2.0
         version: 18.2.0
@@ -1063,7 +1063,7 @@ importers:
         version: 4.17.21
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       next:
         specifier: 13.3.4
         version: 13.3.4(@babel/core@7.24.7)(react-dom@18.2.0)(react@18.2.0)
@@ -1081,7 +1081,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^4.8.0
-        version: 4.10.1(react@18.2.0)
+        version: 4.12.0(react@18.2.0)
       react-toastify:
         specifier: ^9.1.3
         version: 9.1.3(react-dom@18.2.0)(react@18.2.0)
@@ -1100,7 +1100,7 @@ importers:
     devDependencies:
       '@types/lodash-es':
         specifier: ^4.17.7
-        version: 4.17.8
+        version: 4.17.12
       '@types/uuid':
         specifier: ^9.0.1
         version: 9.0.7
@@ -1115,7 +1115,7 @@ importers:
         version: 5.0.2(postcss@8.4.23)
       postcss-preset-env:
         specifier: ^9.5.2
-        version: 9.5.2(postcss@8.4.23)
+        version: 9.5.14(postcss@8.4.23)
       tailwindcss:
         specifier: 3.3.2
         version: 3.3.2
@@ -1133,7 +1133,7 @@ importers:
         version: 2.1.9(react-dom@18.3.1)(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^5.40.1
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       axios:
         specifier: ^1.7.2
         version: 1.7.2
@@ -1166,7 +1166,7 @@ importers:
         version: 6.9.0(react-dom@18.3.1)(react@18.2.0)
       react-dom:
         specifier: ^18.2.0
-        version: 18.3.1(react@18.2.0)
+        version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^5.2.1
         version: 5.2.1(react@18.2.0)
@@ -1272,7 +1272,7 @@ importers:
         version: 1.2.5(react-dom@18.2.0)(react@18.2.0)
       '@next/bundle-analyzer':
         specifier: ^14.2.3
-        version: 14.2.3
+        version: 14.2.4
       '@preact/signals':
         specifier: ^1.2.3
         version: 1.2.3(preact@10.22.0)
@@ -1287,7 +1287,7 @@ importers:
         version: 0.4.4(tailwindcss@3.4.4)
       '@tanstack/react-query':
         specifier: ^5.35.1
-        version: 5.40.1(react@18.2.0)
+        version: 5.45.0(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.35.5
         version: 5.35.5(@tanstack/react-query@5.40.1)(react@18.2.0)
@@ -1308,7 +1308,7 @@ importers:
         version: 10.1.0
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       framer-motion:
         specifier: ^9.1.7
         version: 9.1.7(react-dom@18.2.0)(react@18.2.0)
@@ -1335,16 +1335,16 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-icons:
         specifier: ^4.7.1
-        version: 4.10.1(react@18.2.0)
+        version: 4.12.0(react@18.2.0)
       react-insta-stories:
         specifier: ^2.4.2
-        version: 2.4.2(react@18.2.0)
+        version: 2.7.0(react@18.2.0)
       react-intersection-observer:
         specifier: ^9.4.1
-        version: 9.4.1(react@18.2.0)
+        version: 9.10.3(react-dom@18.2.0)(react@18.2.0)
       react-loading-skeleton:
         specifier: ^3.1.0
-        version: 3.1.0(react@18.2.0)
+        version: 3.4.0(react@18.2.0)
       react-toastify:
         specifier: ^9.1.1
         version: 9.1.3(react-dom@18.2.0)(react@18.2.0)
@@ -1402,16 +1402,16 @@ importers:
         version: 1.6.4
       '@types/express':
         specifier: ^4.17.17
-        version: 4.17.17
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^9.0.1
         version: 9.0.1
       '@types/lodash-es':
         specifier: ^4.17.6
-        version: 4.17.8
+        version: 4.17.12
       '@types/mongoose':
         specifier: ^5.11.97
-        version: 5.11.97(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 5.11.97(@aws-sdk/client-sso-oidc@3.600.0)
       '@types/node':
         specifier: 18.11.18
         version: 18.11.18
@@ -1447,7 +1447,7 @@ importers:
         version: 13.1.6(eslint@8.33.0)(typescript@4.9.5)
       eslint-config-prettier:
         specifier: ^8.6.0
-        version: 8.6.0(eslint@8.33.0)
+        version: 8.10.0(eslint@8.33.0)
       eslint-plugin-storybook:
         specifier: ^0.6.10
         version: 0.6.10(eslint@8.33.0)(typescript@4.9.5)
@@ -1462,7 +1462,7 @@ importers:
         version: 7.0.2(postcss@8.4.23)(webpack@5.91.0)
       prettier:
         specifier: ^2.8.3
-        version: 2.8.3
+        version: 2.8.8
       storybook-addon-next:
         specifier: ^1.7.1
         version: 1.7.1(@storybook/addon-actions@6.5.16)(@storybook/addons@6.5.16)(next@13.1.6)(postcss@8.4.23)(react-dom@18.2.0)(react@18.2.0)(webpack@5.91.0)
@@ -1474,7 +1474,7 @@ importers:
         version: 3.4.4(ts-node@10.9.2)
       tsconfig-paths-webpack-plugin:
         specifier: ^4.0.0
-        version: 4.0.0
+        version: 4.1.0
       typescript:
         specifier: 4.9.5
         version: 4.9.5
@@ -1514,7 +1514,7 @@ importers:
     dependencies:
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -1548,7 +1548,7 @@ importers:
         version: 9.1.0(eslint@9.5.0)
       eslint-config-turbo:
         specifier: latest
-        version: 2.0.3(eslint@9.5.0)
+        version: 1.10.6(eslint@9.5.0)
       eslint-import-resolver-typescript:
         specifier: ^3.6.1
         version: 3.6.1(@typescript-eslint/parser@6.19.0)(eslint-plugin-import@2.29.1)(eslint@9.5.0)
@@ -1563,7 +1563,7 @@ importers:
         version: 5.1.3(eslint-config-prettier@9.1.0)(eslint@9.5.0)(prettier@3.3.1)
       eslint-plugin-promise:
         specifier: ^6.1.1
-        version: 6.2.0(eslint@9.5.0)
+        version: 6.1.1(eslint@9.5.0)
       eslint-plugin-react:
         specifier: latest
         version: 7.34.3(eslint@9.5.0)
@@ -1618,7 +1618,7 @@ importers:
         version: link:../../packages/utils
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -1633,10 +1633,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -1645,7 +1645,7 @@ importers:
         version: 8.5.1
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1657,13 +1657,13 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       zod:
         specifier: ^3.23.8
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@hipal/common':
         specifier: ^0.0.4
@@ -1679,7 +1679,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -1706,7 +1706,7 @@ importers:
         version: 0.0.4
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -1739,7 +1739,7 @@ importers:
         version: 10.2.2
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       mongoose-update-if-current:
         specifier: ^1.4.0
         version: 1.4.0(mongoose@6.7.1)
@@ -1785,7 +1785,7 @@ importers:
         version: 2.0.0(@types/node@20.14.2)(typescript@4.1.5)
       typescript:
         specifier: ^4.1.5
-        version: 4.1.5
+        version: 4.9.5
 
   servers/dishes:
     dependencies:
@@ -1800,7 +1800,7 @@ importers:
         version: link:../../packages/utils
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -1815,10 +1815,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -1830,7 +1830,7 @@ importers:
         version: 10.2.2
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       mongoose-update-if-current:
         specifier: ^1.4.0
         version: 1.4.0(mongoose@6.7.1)
@@ -1845,7 +1845,7 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -1854,7 +1854,7 @@ importers:
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@types/body-parser':
         specifier: ^1.19.2
@@ -1867,7 +1867,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -1897,7 +1897,7 @@ importers:
         version: link:../../packages/utils
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -1912,10 +1912,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -1927,13 +1927,13 @@ importers:
         version: 10.2.2
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       moment-timezone:
         specifier: ^0.5.43
         version: 0.5.43
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -1948,7 +1948,7 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -1957,7 +1957,7 @@ importers:
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@hipal/common':
         specifier: ^0.0.5
@@ -1973,7 +1973,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -2000,7 +2000,7 @@ importers:
         version: 0.0.9
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -2021,10 +2021,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -2036,13 +2036,13 @@ importers:
         version: 10.2.2
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       moment-timezone:
         specifier: ^0.5.43
         version: 0.5.43
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2060,13 +2060,13 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       zod:
         specifier: ^3.23.8
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@types/bcrypt':
         specifier: ^5.0.2
@@ -2082,7 +2082,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -2106,7 +2106,7 @@ importers:
         version: link:../../packages/utils
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -2121,10 +2121,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -2133,7 +2133,7 @@ importers:
         version: 8.5.1
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2145,13 +2145,13 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       zod:
         specifier: ^3.23.8
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@hipal/common':
         specifier: ^0.0.4
@@ -2167,7 +2167,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -2194,7 +2194,7 @@ importers:
         version: 1.6.3
       axios:
         specifier: ^1.6.2
-        version: 1.6.2
+        version: 1.7.2
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -2212,10 +2212,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -2227,13 +2227,13 @@ importers:
         version: 8.5.1
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       moment-timezone:
         specifier: ^0.5.43
         version: 0.5.43
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2251,13 +2251,13 @@ importers:
         version: 2.2.16
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       zod:
         specifier: ^3.23.8
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@types/apicache':
         specifier: ^1.6.6
@@ -2276,7 +2276,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -2300,7 +2300,7 @@ importers:
         version: link:../../packages/utils
       axios:
         specifier: ^1.1.3
-        version: 1.6.2
+        version: 1.7.2
       body-parser:
         specifier: ^1.20.1
         version: 1.20.1
@@ -2315,10 +2315,10 @@ importers:
         version: 16.4.5
       express:
         specifier: ^4.18.2
-        version: 4.18.2
+        version: 4.19.2
       express-async-errors:
         specifier: ^3.1.1
-        version: 3.1.1(express@4.18.2)
+        version: 3.1.1(express@4.19.2)
       express-validator:
         specifier: ^6.14.2
         version: 6.14.2
@@ -2330,10 +2330,10 @@ importers:
         version: 10.2.2
       moment:
         specifier: ^2.29.4
-        version: 2.29.4
+        version: 2.30.1
       mongoose:
         specifier: ^6.7.1
-        version: 6.7.1(@aws-sdk/client-sso-oidc@3.592.0)
+        version: 6.7.1(@aws-sdk/client-sso-oidc@3.600.0)
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -2345,13 +2345,13 @@ importers:
         version: 4.4.0
       typescript:
         specifier: ^4.8.4
-        version: 4.8.4
+        version: 4.9.5
       zod:
         specifier: ^3.23.8
         version: 3.23.8
       zod-express-middleware:
         specifier: ^1.4.0
-        version: 1.4.0(@types/express@4.17.14)(express@4.18.2)(zod@3.23.8)
+        version: 1.4.0(@types/express@4.17.21)(express@4.19.2)(zod@3.23.8)
     devDependencies:
       '@hipal/common':
         specifier: ^0.0.5
@@ -2367,7 +2367,7 @@ importers:
         version: 2.8.12
       '@types/express':
         specifier: ^4.17.14
-        version: 4.17.14
+        version: 4.17.21
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -12309,6 +12309,7 @@ packages:
 
   /@types/node@20.5.0:
     resolution: {integrity: sha512-Mgq7eCtoTjT89FqNoTzzXg2XvCi5VMhRV6+I2aYanc6kQCBImeNaAYRs/DyoVqk1YEUJK5gN9VO7HRIdz4Wo3Q==}
+    dev: false
 
   /@types/node@20.5.1:
     resolution: {integrity: sha512-4tT2UrL5LBqDwoed9wZ6N3umC4Yhz3W3FloMmiiG4JwmUJWpie0c7lcnUNd4gtMKuDEO4wRVS8B6Xa0uMRsMKg==}
@@ -13776,6 +13777,8 @@ packages:
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
+    dependencies:
+      acorn: 8.12.0
 
   /acorn@6.4.2:
     resolution: {integrity: sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==}
@@ -25676,7 +25679,7 @@ packages:
     resolution: {integrity: sha512-WyQFAdDZpExQh32j0U0feWisZ0dmOtPl44qYmJKkq9xFWY3p+4qnRzCHeNrkeRhwPHz9bQ3mo0/yVkaply0MNw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       color: 3.2.1
       has: 1.0.4
       postcss: 7.0.39
@@ -25689,7 +25692,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       caniuse-api: 3.0.0
       colord: 2.9.3
       postcss: 8.4.38
@@ -25710,7 +25713,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       postcss: 8.4.38
       postcss-value-parser: 4.2.0
     dev: false
@@ -26346,7 +26349,7 @@ packages:
     resolution: {integrity: sha512-U7e3r1SbvYzO0Jr3UT/zKBVgYYyhAz0aitvGIYOYK5CPmkNih+WDSsS5tvPrJ8YMQYlEMvsZIiqmn7HdFUaeEQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       caniuse-api: 3.0.0
       cssnano-util-same-parent: 4.0.1
       postcss: 7.0.39
@@ -26360,7 +26363,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       caniuse-api: 3.0.0
       cssnano-utils: 5.0.0(postcss@8.4.38)
       postcss: 8.4.38
@@ -26412,7 +26415,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       alphanum-sort: 1.0.2
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       cssnano-util-get-arguments: 4.0.0
       postcss: 7.0.39
       postcss-value-parser: 3.3.1
@@ -26425,7 +26428,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       cssnano-utils: 5.0.0(postcss@8.4.38)
       postcss: 8.4.38
       postcss-value-parser: 4.2.0
@@ -26447,6 +26450,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
+      cssesc: 3.0.0
       postcss: 8.4.38
       postcss-selector-parser: 6.1.0
     dev: false
@@ -26689,7 +26693,7 @@ packages:
     resolution: {integrity: sha512-od18Uq2wCYn+vZ/qCOeutvHjB5jm57ToxRaMeNuf0nWVHaP9Hua56QyMF6fs/4FSUnVIw0CBPsU0K4LnBPwYwg==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       postcss: 7.0.39
       postcss-value-parser: 3.3.1
     dev: false
@@ -26700,7 +26704,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       postcss: 8.4.38
       postcss-value-parser: 4.2.0
     dev: false
@@ -26863,8 +26867,8 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       autoprefixer: 9.8.8
-      browserslist: 4.23.0
-      caniuse-lite: 1.0.30001629
+      browserslist: 4.23.1
+      caniuse-lite: 1.0.30001636
       css-blank-pseudo: 0.1.4
       css-has-pseudo: 0.10.0
       css-prefers-color-scheme: 3.1.1
@@ -27006,11 +27010,11 @@ packages:
       '@csstools/postcss-trigonometric-functions': 3.0.8(postcss@8.4.23)
       '@csstools/postcss-unset-value': 3.0.1(postcss@8.4.23)
       autoprefixer: 10.4.19(postcss@8.4.23)
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       css-blank-pseudo: 6.0.2(postcss@8.4.23)
       css-has-pseudo: 6.0.5(postcss@8.4.23)
       css-prefers-color-scheme: 9.0.1(postcss@8.4.23)
-      cssdb: 7.11.2
+      cssdb: 8.0.2
       postcss: 8.4.23
       postcss-attribute-case-insensitive: 6.0.3(postcss@8.4.23)
       postcss-clamp: 4.1.0(postcss@8.4.23)
@@ -27029,7 +27033,7 @@ packages:
       postcss-image-set-function: 6.0.3(postcss@8.4.23)
       postcss-lab-function: 6.0.16(postcss@8.4.23)
       postcss-logical: 7.0.1(postcss@8.4.23)
-      postcss-nesting: 12.1.2(postcss@8.4.23)
+      postcss-nesting: 12.1.5(postcss@8.4.23)
       postcss-opacity-percentage: 2.0.0(postcss@8.4.23)
       postcss-overflow-shorthand: 5.0.1(postcss@8.4.23)
       postcss-page-break: 3.0.4(postcss@8.4.23)
@@ -27071,7 +27075,7 @@ packages:
     resolution: {integrity: sha512-gKWmR5aUulSjbzOfD9AlJiHCGH6AEVLaM0AV+aSioxUDd16qXP1PCh8d1/BGVvpdWn8k/HiK7n6TjeoXN1F7DA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       caniuse-api: 3.0.0
       has: 1.0.4
       postcss: 7.0.39
@@ -27083,7 +27087,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       caniuse-api: 3.0.0
       postcss: 8.4.38
     dev: false
@@ -27765,7 +27769,6 @@ packages:
   /q@1.5.1:
     resolution: {integrity: sha512-kV/CThkXo6xyFEZUugw/+pIOywXcDbFYgSct5cT3gqlbkBE1SJdwy6UQoZvodiWF/ckQLZyDE/Bu1M6gVu5lVw==}
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
-
   /qrcode@1.5.3:
     resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
     engines: {node: '>=10.13.0'}
@@ -28256,7 +28259,7 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      hyphenate-style-name: 1.0.5
+      hyphenate-style-name: 1.1.0
       matchmediaquery: 0.4.2
       prop-types: 15.8.1
       react: 18.2.0
@@ -28269,7 +28272,7 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      hyphenate-style-name: 1.0.5
+      hyphenate-style-name: 1.1.0
       matchmediaquery: 0.3.1
       prop-types: 15.8.1
       react: 18.2.0
@@ -28881,7 +28884,7 @@ packages:
     resolution: {integrity: sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==}
     hasBin: true
     dependencies:
-      is-core-module: 2.13.1
+      is-core-module: 2.14.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
@@ -28889,7 +28892,7 @@ packages:
     resolution: {integrity: sha512-U7WjGVG9sH8tvjW5SmGbQuui75FiyjAX72HX15DwBBwF9dNiQZRQAg9nnPhYy+TUnE0+VcrttuvNI8oSxZcocA==}
     hasBin: true
     dependencies:
-      is-core-module: 2.13.1
+      is-core-module: 2.14.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
@@ -29547,7 +29550,7 @@ packages:
       call-bind: 1.0.7
       es-errors: 1.3.0
       get-intrinsic: 1.2.4
-      object-inspect: 1.13.1
+      object-inspect: 1.13.2
 
   /sift@16.0.1:
     resolution: {integrity: sha512-Wv6BjQ5zbhW7VFefWusVP33T/EM0vYikCaQ2qR8yULbsilAT8/wQaXvuQ3ptGLpoKx+lihJE3y2UTgKDyyNHZQ==}
@@ -29667,7 +29670,7 @@ packages:
       define-property: 0.2.5
       extend-shallow: 2.0.1
       map-cache: 0.2.2
-      source-map: 0.5.6
+      source-map: 0.5.7
       source-map-resolve: 0.5.3
       use: 3.1.1
     transitivePeerDependencies:
@@ -29679,7 +29682,7 @@ packages:
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@sentry/node': 7.116.0
+      '@sentry/node': 7.118.0
       global-agent: 3.0.0
     dev: false
 
@@ -29913,7 +29916,7 @@ packages:
       sass-loader: 13.3.3(webpack@5.91.0)
       semver: 7.6.2
       tsconfig-paths: 4.2.0
-      tsconfig-paths-webpack-plugin: 4.0.0
+      tsconfig-paths-webpack-plugin: 4.1.0
     transitivePeerDependencies:
       - fibers
       - node-sass
@@ -30261,7 +30264,7 @@ packages:
     resolution: {integrity: sha512-7GlLk9JwlElY4Y6a/rmbH2MhVlTyVmiJd1PfTCqFaIBEGMYNsrO/v3SeGTdhBThLg4Z+NbOk/qFMwCa+J+3p/g==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       postcss: 7.0.39
       postcss-selector-parser: 3.1.2
     dev: false
@@ -30272,7 +30275,7 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       postcss: 8.4.38
       postcss-selector-parser: 6.1.0
     dev: false
@@ -30284,7 +30287,7 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
       commander: 4.1.1
-      glob: 10.4.1
+      glob: 10.4.2
       lines-and-columns: 1.2.4
       mz: 2.7.0
       pirates: 4.0.6
@@ -30417,7 +30420,7 @@ packages:
       fast-glob: 3.3.2
       glob-parent: 6.0.2
       is-glob: 4.0.3
-      jiti: 1.21.3
+      jiti: 1.21.6
       lilconfig: 2.1.0
       micromatch: 4.0.7
       normalize-path: 3.0.0
@@ -30449,7 +30452,7 @@ packages:
       fast-glob: 3.3.2
       glob-parent: 6.0.2
       is-glob: 4.0.3
-      jiti: 1.21.3
+      jiti: 1.21.6
       lilconfig: 2.1.0
       micromatch: 4.0.7
       normalize-path: 3.0.0
@@ -30480,7 +30483,7 @@ packages:
       fast-glob: 3.3.2
       glob-parent: 6.0.2
       is-glob: 4.0.3
-      jiti: 1.21.3
+      jiti: 1.21.6
       lilconfig: 2.1.0
       micromatch: 4.0.7
       normalize-path: 3.0.0
@@ -30679,7 +30682,7 @@ packages:
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.11.3
+      acorn: 8.12.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -30964,7 +30967,7 @@ packages:
       tree-kill: 1.2.2
       ts-node: 10.9.2(@types/node@20.14.2)(typescript@4.1.5)
       tsconfig: 7.0.0
-      typescript: 4.1.5
+      typescript: 4.9.5
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -31019,8 +31022,8 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
       '@types/node': 18.11.18
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
+      acorn: 8.12.0
+      acorn-walk: 8.3.3
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
@@ -31132,6 +31135,7 @@ packages:
         optional: true
     dependencies:
       typescript: 4.9.5
+    dev: true
 
   /tsconfig-paths-webpack-plugin@4.0.0:
     resolution: {integrity: sha512-fw/7265mIWukrSHd0i+wSwx64kYUSAKPfxRDksjKIYTxSAp9W9/xcZVBF4Kl0eqQd5eBpAQ/oQrc5RyM/0c1GQ==}
@@ -31422,7 +31426,7 @@ packages:
   /unctx@2.3.1:
     resolution: {integrity: sha512-PhKke8ZYauiqh3FEMVNm7ljvzQiph0Mt3GBRve03IJm7ukfaON2OBK795tLwhbyfzknuRRkW0+Ze+CQUmzOZ+A==}
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
       estree-walker: 3.0.3
       magic-string: 0.30.10
       unplugin: 1.10.1
@@ -31504,7 +31508,7 @@ packages:
     hasBin: true
     dependencies:
       '@typescript-eslint/parser': 6.19.0(eslint@8.57.0)(typescript@5.4.5)
-      '@typescript-eslint/typescript-estree': 6.19.0(typescript@5.4.5)
+      '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.4.5)
       chalk: 4.1.2
       cosmiconfig: 8.3.6(typescript@5.4.5)
       debug: 4.3.5
@@ -31631,7 +31635,7 @@ packages:
     resolution: {integrity: sha512-d6Mhq8RJeGA8UfKCu54Um4lFA0eSaRa3XxdAJg8tIdxbu1ubW0hBCZUL7yI2uGyYCRndvbK8FLHzqy2XKfeMsg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      acorn: 8.11.3
+      acorn: 8.12.0
       chokidar: 3.6.0
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.2
@@ -31664,7 +31668,7 @@ packages:
       '@babel/standalone': 7.24.7
       '@babel/types': 7.24.7
       defu: 6.1.4
-      jiti: 1.21.3
+      jiti: 1.21.6
       mri: 1.2.0
       scule: 1.3.0
     transitivePeerDependencies:
@@ -31701,7 +31705,7 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
     dependencies:
-      browserslist: 4.23.0
+      browserslist: 4.23.1
       escalade: 3.1.2
       picocolors: 1.0.1
 
@@ -32329,8 +32333,8 @@ packages:
       sharp:
         optional: true
     dependencies:
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
+      acorn: 8.12.0
+      acorn-walk: 8.3.3
       decache: 4.6.2
       file-loader: 6.2.0(webpack@5.91.0)
       loader-utils: 2.0.4
@@ -32449,8 +32453,8 @@ packages:
     hasBin: true
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
+      acorn: 8.12.0
+      acorn-walk: 8.3.3
       commander: 7.2.0
       debounce: 1.2.1
       escape-string-regexp: 4.0.0
@@ -32460,7 +32464,7 @@ packages:
       opener: 1.5.2
       picocolors: 1.0.1
       sirv: 2.0.4
-      ws: 7.5.9
+      ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -32472,8 +32476,8 @@ packages:
     hasBin: true
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      acorn: 8.11.3
-      acorn-walk: 8.3.2
+      acorn: 8.12.0
+      acorn-walk: 8.3.3
       commander: 7.2.0
       debounce: 1.2.1
       escape-string-regexp: 4.0.0
@@ -32482,7 +32486,7 @@ packages:
       opener: 1.5.2
       picocolors: 1.0.1
       sirv: 2.0.4
-      ws: 7.5.9
+      ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -32641,12 +32645,12 @@ packages:
       '@webassemblyjs/ast': 1.12.1
       '@webassemblyjs/wasm-edit': 1.12.1
       '@webassemblyjs/wasm-parser': 1.12.1
-      acorn: 8.11.3
-      acorn-import-assertions: 1.9.0(acorn@8.11.3)
-      browserslist: 4.23.0
+      acorn: 8.12.0
+      acorn-import-attributes: 1.9.5(acorn@8.12.0)
+      browserslist: 4.23.1
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.17.0
-      es-module-lexer: 1.5.3
+      es-module-lexer: 1.5.4
       eslint-scope: 5.1.1
       events: 3.3.0
       glob-to-regexp: 0.4.1
@@ -32657,7 +32661,7 @@ packages:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.10(webpack@5.91.0)
+      terser-webpack-plugin: 5.3.10(webpack@5.92.1)
       watchpack: 2.4.1
       webpack-sources: 3.2.3
     transitivePeerDependencies:
@@ -33109,7 +33113,7 @@ packages:
       fast-json-stable-stringify: 2.1.0
       pretty-bytes: 5.6.0
       upath: 1.2.0
-      webpack: 5.91.0
+      webpack: 5.92.1
       webpack-sources: 1.4.3
       workbox-build: 6.6.0
     transitivePeerDependencies:
