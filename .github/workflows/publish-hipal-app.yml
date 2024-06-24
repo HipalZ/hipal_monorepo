@@ -9,6 +9,7 @@ on:
     branches:
       - test
     paths:
+      - 'package.json'
       - 'clients/client-hipal-app/**'
 
 jobs:
@@ -21,8 +22,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - uses: pnpm/action-setup@v2.0.1
         with:
