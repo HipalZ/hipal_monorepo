@@ -92,7 +92,7 @@ const addSignUpBonus = async (
         },
       },
     );
-    //te
+    //testing
     await newReward.save();
     const data = new UserRewardHistory({
       userName: name,
