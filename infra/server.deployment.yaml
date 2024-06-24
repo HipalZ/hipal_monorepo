@@ -1,0 +1,215 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dishes-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dishes-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: dishes-server-test
+    spec:
+      containers:
+        - name: dishes-server-test
+          image: registry.digitalocean.com/hipalz-repo/dishes-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zones-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zones-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: zones-server-test
+    spec:
+      containers:
+        - name: zones-server-test
+          image: registry.digitalocean.com/hipalz-repo/zones-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: categories-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: categories-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: categories-server-test
+    spec:
+      containers:
+        - name: categories-server-test
+          image: registry.digitalocean.com/hipalz-repo/categories-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: settings-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: settings-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: settings-server-test
+    spec:
+      containers:
+        - name: settings-server-test
+          image: registry.digitalocean.com/hipalz-repo/settings-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: payments-server-test
+    spec:
+      containers:
+        - name: payments-server-test
+          image: registry.digitalocean.com/hipalz-repo/payments-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kitchens-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kitchens-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: kitchens-server-test
+    spec:
+      containers:
+        - name: kitchens-server-test
+          image: registry.digitalocean.com/hipalz-repo/kitchens-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: users-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: users-server-test
+    spec:
+      containers:
+        - name: users-server-test
+          image: registry.digitalocean.com/hipalz-repo/users-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: businesses-server-test
+  namespace: hipalz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: businesses-server-test
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: businesses-server-test
+    spec:
+      containers:
+        - name: businesses-server-test
+          image: registry.digitalocean.com/hipalz-repo/businesses-test-server:latest
+          imagePullPolicy: Always
+          # imagePullSecrets: hipalz-repo
+          ports:
+            - name: http
+              containerPort: 4500

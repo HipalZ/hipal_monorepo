@@ -1,0 +1,74 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-hipalz
+  namespace: hipalz
+  annotations:
+    cert-manager.io/issuer: letsencrypt-nginx-wcard
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.test.hipalz.com
+      secretName: test.hipalz.com
+  rules:
+    - host: api.test.hipalz.com
+      http:
+        paths:
+          - path: /v1/users/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: users-server-test
+                port:
+                  number: 80
+          - path: /v1/businesses/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: businesses-server-test
+                port:
+                  number: 80
+          - path: /v1/categories/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: categories-server-test
+                port:
+                  number: 80
+          - path: /v1/dishes/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: dishes-server-test
+                port:
+                  number: 80
+          - path: /v1/settings/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: settings-server-test
+                port:
+                  number: 80
+          - path: /v1/kitchens/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: kitchens-server-test
+                port:
+                  number: 80
+          - path: /v1/zones/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: zones-server-test
+                port:
+                  number: 80
+          - path: /v1/payments/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: payments-server-test
+                port:
+                  number: 80

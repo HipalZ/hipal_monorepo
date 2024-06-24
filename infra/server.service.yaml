@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dishes-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: dishes-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zones-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: zones-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: categories-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: categories-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: settings-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: settings-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: payments-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kitchens-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: kitchens-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: users-server-test
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: businesses-server-test
+  namespace: hipalz
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4500
+  selector:
+    app: businesses-server-test
