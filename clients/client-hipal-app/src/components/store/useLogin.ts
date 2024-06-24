@@ -27,13 +27,15 @@ interface IUseLogin {
 	errorMsg: string
 	direction: string
 	role: IRole
-
+	// from page
+	fromPage: string,
 	setUserDetails: (d: IUserData) => void
 	setRole: (d: IRole) => void
 	setIsLogin: (d: boolean) => void
 	setHiCode: (d: string) => void
 	setErrorMsg: (d: string) => void
 	setDirection: (d: string) => void
+	setFromPage: (d: string) => void
 	isLoginCred: () => boolean
 	sendOtp: () => Promise<any>
 }
@@ -62,12 +64,13 @@ export const useLogin = create(
 				customerPhone: "",
 			},
 			direction: "",
-
+			fromPage: '',
 			setUserDetails: (d: IUserData) => set({ userDetails: d }),
 			setIsLogin: (d: boolean) => set({ isLogin: d }),
 			setHiCode: (d: string) => set({ hiCode: d }),
 			setErrorMsg: (d: string) => set({ errorMsg: d }),
 			setDirection: (d: string) => set({ direction: d }),
+			setFromPage: (d: string) => set({ fromPage: d }),
 			setRole: (d: IRole) => set({ role: d }),
 
 			isLoginCred: () => get()?.userDetails.phone?.length === 10,

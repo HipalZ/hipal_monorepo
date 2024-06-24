@@ -1,10 +1,10 @@
 "use client"
 import PlaceholderImg from "@/components/atoms/placeholder";
-import { isEmpty } from "lodash-es";
+import { isEmpty, truncate } from "lodash-es";
 import Image from "next/image";
 import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
-import {MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
+import { MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
@@ -23,6 +23,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import useTableData from "@/components/store/useTableData";
 import PaymentComponent from "./selectPayment";
+import MiddlePopUp from "@/components/atoms/middlePopUp";
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -38,8 +39,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { userDetails } = useLogin()
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
-        setTips, tips } = usePaymentStore()
-    const { tableName, setTableName } = useTableData()
+        setTips, tips, selectedPay, setSelectedPay } = usePaymentStore()
+    const { tableName } = useTableData()
     const [offlineOrderId, setOfflineOrderId] = useState('')
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -49,17 +50,16 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         usePayment()
 
     // by default setting to zero instead of previous stale data
-    useEffect(()=>{
+    useEffect(() => {
         setBillValue(0)
         setClaimedCoinz(0)
         setTips(0)
         setSelectedTip('')
         setCustomTip('')
-    },[])
+    }, [])
 
     const { loyaltySetting } = useLoyaltyData()
 
-    const [selectedPay, setSelectedPay] = useState(false)
 
     const inputRefs = [
         useRef<HTMLInputElement>(null),
@@ -183,6 +183,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const verifyOrder = async () => {
+        if (otp.includes('') || otp.length < 4) {
+            return toast.error('Please enter the code')
+        }
         try {
             const config = {
                 method: 'POST',
@@ -195,6 +198,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const response = await axios(config)
             if (response?.status === 200) {
                 toast.success(response.data.message)
+                setSelectedPay(false)
                 router.push(`/r/${data?.business?._id}/review?orderId=${response?.data?.data?.order_id}`)
             }
         } catch (err) {
@@ -204,7 +208,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const handleCreateOfflineOrder = async () => {
-        if(tableName === ''){
+        if (tableName === '') {
             toast.error('Please scan to start')
             return router.push(`/scan`)
         }
@@ -231,7 +235,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 setSelectedPay(true)
             }
 
-        } catch (err:any) {
+        } catch (err: any) {
             console.log(err)
             toast.error(err.response?.data?.message || 'Something went wrong')
         }
@@ -260,11 +264,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
 
-    const handleCreateOrder = async (total: number, mode:string) => {
+    const handleCreateOrder = async (total: number, mode: string) => {
         if (total <= 0) {
             return toast.error('Invalid amount');
         }
-        if(tableName === ''){
+        if (tableName === '') {
             toast.error('Please scan to start')
             return router.push(`/scan`)
         }
@@ -314,6 +318,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleMode = (mode: PageStates) => {
+        if(showInput){
+            return toast.error('Please save the tip amount')
+        }
         setSelectedMode(mode);
     };
 
@@ -371,6 +378,15 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 spread: 70,
                 origin: { y: 0.6 },
             })
+            let audio: HTMLAudioElement
+            audio = new Audio("/sounds/Money.mp3")
+            audio.play()
+            return () => {
+                if (audio) {
+                    audio.pause()
+                    audio.currentTime = 0
+                }
+            }
         }
     }
 
@@ -454,8 +470,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                     blurDataURL={getRandomBlurImg(100, 100)}
                                 />
                             ) : (
-                                <PlaceholderImg />
-                            )}
+                                    <PlaceholderImg />
+                                )}
                         </div>
                         <br />
                         {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
@@ -494,7 +510,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         </div>
                         <div className='flex items-center space-x-4'>
                             <h6>
-                                {userCoinz - claimedCoinz }
+                                {userCoinz - claimedCoinz}
                             </h6>
                             <MdKeyboardArrowRight size={30} />
                         </div>
@@ -541,18 +557,18 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                                     ))}
                                 </div> : null}
                                 {selectedTip === 'Other' && showInput && (
-                                    <div className='relative mt-4'>
+                                    <div className='flex mt-4 space-x-6'>
                                         <input
                                             type="text"
                                             onChange={handleCustomTip}
                                             value={customTip}
                                             maxLength={5}
                                             placeholder='Enter tip amount'
-                                            className='w-full border border-[#000] pl-4 font-semibold text-[1rem] rounded-[1rem]'
+                                            className='w-[70%] border border-[#000] pl-4 font-semibold text-[1rem] rounded-[1rem]'
                                         />
                                         <button
                                             onClick={handleSaveTip}
-                                            className='absolute right-0 top-0 bg-primary text-white px-2 py-0.5 rounded-lg'
+                                            className='bg-primary text-base text-white px-4 py-2 rounded-lg'
                                         >
                                             Save
                                         </button>
@@ -574,25 +590,29 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             {renderPopUpContent()}
             {isLoading ? <LoadingSpinner /> : null}
-            {selectedPay ? <>
-                <h1>Confirmation Code</h1>
-                <section className="flex">
-                    {otp.map((_, index) => (
-                        <input
-                            type="tel"
-                            key={index.toString()}
-                            value={otp[index]}
-                            onChange={(e) => handleConfirmCode(e, index)}
-                            max={1}
-                            min={0}
-                            ref={inputRefs[index]}
-                            className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none `}
-                            required
-                        />
-                    ))}
-                    <button onClick={verifyOrder}>Save</button>
-                </section>
-            </> : null}
+            <MiddlePopUp show={selectedPay} onClose={verifyOrder}>
+                <div className="h-full p-4">
+                    <center className="text-2xl">Confirmation Code</center>
+                    <br />
+                    <center>
+                        {otp.map((_, index) => (
+                            <input
+                                type="tel"
+                                key={index.toString()}
+                                value={otp[index]}
+                                onChange={(e) => handleConfirmCode(e, index)}
+                                max={1}
+                                min={0}
+                                ref={inputRefs[index]}
+                                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none `}
+                                required
+                            />
+                        ))}
+                    </center>
+                    <br />
+                    <center>Enter the code to avail get rewards🥳</center>
+                </div>
+            </MiddlePopUp>
 
         </div>
     )

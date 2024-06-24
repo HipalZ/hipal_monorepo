@@ -1,9 +1,9 @@
 "use client";
-import React, { memo, useCallback } from "react";
+import React, { memo } from "react";
 import { MdOutlineMenuBook } from "react-icons/md";
 import { AiFillHome } from "react-icons/ai";
-import { useParams, useRouter } from "next/navigation";
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 function BottomButton({
   onClick,
@@ -12,12 +12,7 @@ function BottomButton({
   onClick?: () => void;
   children?: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const router = useRouter();
   const { businessId } = useParams<{ businessId: string }>() || { businessId: "" };
-
-  const goToMenu = useCallback(() => {
-    router.push(routePaths[PAGE_TYPES.CATEGORY](businessId || ""));
-  }, [router, businessId]);
 
   return (
     <>
@@ -26,18 +21,20 @@ function BottomButton({
           {children}
         </center>
       ) : (
-        <center className="fixed bottom-0 z-20 flex items-center justify-between p-4 bg-base-100 w-full max-w-[30rem]">
-          <center role="button" className="text-sm">
-            <AiFillHome size={22} />	Home
+          <center className="fixed bottom-0 z-20 flex items-center justify-between p-4 bg-base-100 w-full max-w-[30rem]">
+            <center role="button" className="text-sm">
+              <AiFillHome size={22} />	Home
           </center>
-          <center role="button" className="text-sm">
-            <MdOutlineMenuBook size={22} />	Pay Bill
+            <center role="button" className="text-sm">
+              <MdOutlineMenuBook size={22} />	Pay Bill
           </center>
-          <button onClick={goToMenu} type="button" className="on_active_bounce flex items-center justify-center w-[40%] py-3 rounded-full text-base-100 bg-primary text-sm">
-            <MdOutlineMenuBook size={22} /> &nbsp;	Menu
+            <Link href={`/r/${businessId}/category`}>
+              <button type="button" className="on_active_bounce flex items-center justify-center w-full py-3 px-4 rounded-full text-base-100 bg-primary text-sm">
+                <MdOutlineMenuBook size={22} /> &nbsp;	Menu
           </button>
-        </center>
-      )}
+            </Link>
+          </center>
+        )}
     </>
   );
 }

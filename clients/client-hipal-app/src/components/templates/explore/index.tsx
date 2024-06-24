@@ -17,12 +17,14 @@ import Footer from "@/components/molecules/footer"
 import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
  
     const tableName = searchParams?.get('tableName')
     const {setTableName} = useTableData()
+    const {setSelectedPay} = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -54,6 +56,7 @@ function Explore({ data }: { data: IBusinessData }): JSX.Element {
             setBusinessDetails(data.business);
         }
         setTableName(tableName || '')
+        setSelectedPay(false)
     }, [])
 
     return (

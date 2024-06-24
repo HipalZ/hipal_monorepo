@@ -7,9 +7,9 @@ return (
 <>
   <ProgressBar
     height="4px"
-    color="hsl(var(--p))"
+    color="#000"
     options={{ showSpinner: true }}
-    // shallowRouting
+    shallowRouting
   />
   {children}
 </>

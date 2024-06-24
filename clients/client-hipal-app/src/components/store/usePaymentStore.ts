@@ -11,6 +11,9 @@ interface IUsePaymentStore {
     setTotal: (total: number) => void
     billValue: number
     setBillValue: (value: number) => void
+    // to show popup confirm code
+    selectedPay: boolean
+    setSelectedPay: (selected: boolean) => void
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -29,5 +32,8 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
     billValue: 0,
     setBillValue: (value: number) => set(() => ({ billValue: value })),
+
+    selectedPay:false,
+    setSelectedPay: (selected: boolean) => set(() => ({ selectedPay: selected })),
 
 }))

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import ProgressProvider from '@/components/atoms/progressBar';
 import './globals.css';
 
+const DynamicProgress = dynamic(()=>import('@/components/atoms/progressBar'), {ssr: false});
 const DynamicToast = dynamic(() => import('@/components/atoms/toastContainer'), { ssr: false });
 const DynamicQueryComponent = dynamic(() => import('@/components/atoms/queryComponent'), { ssr: false });
 
@@ -19,14 +19,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className='w-full max-w-[30rem] mx-auto'>
-        <ProgressProvider>
+        <DynamicProgress>
           <DynamicToast />
           <DynamicQueryComponent>
             <div id="root">
               {children}
             </div>
           </DynamicQueryComponent>
-        </ProgressProvider>
+        </DynamicProgress>
       </body>
     </html>
   );
