@@ -1,23 +1,23 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const Themes = z.object({
+export const Themes = z.object({
   primaryColor: z.string(),
   secondaryColor: z.string(),
   accentColor: z.string(),
-  fontFamily: z.string(),
-  fontURL: z.string(),
-  buttonStyle: z.string(),
-  miniBanner: z.string(),
-  specialBanner: z.string(),
-  endBanner: z.string(),
-  instagramLink: z.string(),
-  facebookLink: z.string(),
-  youtubeLink: z.string(),
-  linkedinLink: z.string(),
-  footerText: z.string(),
+  fontFamily: z.string().optional(),
+  fontURL: z.string().optional(),
+  buttonStyle: z.string().optional(),
+  miniBanner: z.string().optional(),
+  specialBanner: z.string().optional(),
+  endBanner: z.string().optional(),
+  instagramLink: z.string().optional(),
+  facebookLink: z.string().optional(),
+  youtubeLink: z.string().optional(),
+  linkedinLink: z.string().optional(),
+  footerText: z.string().optional(),
 });
 
-const specialOffer = z.object({
+export const specialOffer = z.object({
   wallpaper: z.string(),
   offerName: z.string(),
   redirectType: z.string(),
@@ -25,31 +25,31 @@ const specialOffer = z.object({
   redirectName: z.string(),
 });
 
-const Highlight = z.object({
+export const Highlight = z.object({
   name: z.string(),
   stories: z.array(z.string()),
 });
 
-const Explore = z.object({
-  wallpaper: z.string(),
-  phone: z.string(),
-  countryCode: z.string(),
-  location: z.string(),
-  openFrom: z.string(),
-  openTill: z.string(),
-  specialOffers: z.array(specialOffer),
-  popular: z.array(z.string()),
-  highlights: z.array(Highlight),
+export const Explore = z.object({
+  wallpaper: z.string().optional(),
+  phone: z.string().optional(),
+  countryCode: z.string().optional(),
+  location: z.string().optional(),
+  openFrom: z.string().optional(),
+  openTill: z.string().optional(),
+  specialOffers: z.array(specialOffer).optional(),
+  popular: z.array(z.string()).optional(),
+  highlights: z.array(Highlight).optional(),
 });
 
-const Navigation = z.object({
+export const Navigation = z.object({
   from: z.string(),
   to: z.string(),
   categoryCard: z.string(),
   dishCard: z.string(),
 });
 
-const settingsSchema = z.object({
+export const settingsSchema = z.object({
   businessId: z.string(),
   themes: Themes.optional(),
   explore: Explore.optional(),

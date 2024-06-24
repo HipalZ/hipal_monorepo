@@ -1,22 +1,16 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model } from 'mongoose';
 
-import {
-  KOTType,
-  KotDishType,
-  KotPortionType,
-  KotSwiggyBillObjectType,
-  KotExtraType,
-} from "../validators";
+import { KOTType, KotDishType, KotExtraType, KotPortionType, KotSwiggyBillObjectType } from '../validators';
 
 const kotExtraSchema = new mongoose.Schema<KotExtraType>(
   {
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     price: {
       type: Number,
-      required: false,
+      required: true,
     },
     qty: {
       type: Number,
@@ -26,18 +20,18 @@ const kotExtraSchema = new mongoose.Schema<KotExtraType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const kotPortionSchema = new mongoose.Schema<KotPortionType>(
   {
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     price: {
       type: Number,
-      required: false,
+      required: true,
     },
     discount: {
       type: Number,
@@ -50,7 +44,7 @@ const kotPortionSchema = new mongoose.Schema<KotPortionType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const kotSwiggyBillObjectSchema = new mongoose.Schema<KotSwiggyBillObjectType>(
@@ -86,7 +80,7 @@ const kotSwiggyBillObjectSchema = new mongoose.Schema<KotSwiggyBillObjectType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const kotDishSchema = new mongoose.Schema<KotDishType>(
@@ -123,7 +117,7 @@ const kotDishSchema = new mongoose.Schema<KotDishType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const KOTSchema = new mongoose.Schema<KOTType>(
@@ -134,15 +128,15 @@ const KOTSchema = new mongoose.Schema<KOTType>(
     },
     kitchenId: {
       type: String,
-      required: false,
+      required: true,
     },
     zoneId: {
       type: String,
-      required: false,
+      required: true,
     },
     tableId: {
       type: String,
-      required: false,
+      required: true,
     },
     staffId: {
       type: String,
@@ -174,22 +168,22 @@ const KOTSchema = new mongoose.Schema<KOTType>(
     },
     dishStatus: {
       type: String,
-      enum: ["cooking", "cooked", "delivered"],
-      default: "cooking",
+      enum: ['cooking', 'cooked', 'delivered'],
+      default: 'cooking',
     },
     kotTime: {
       type: String,
-      default: "",
+      default: '',
     },
     tableName: {
       type: String,
-      default: "",
+      default: '',
     },
     dishType: String,
     category: String,
     date: {
       type: String,
-      default: "",
+      default: '',
     },
     instructions: {
       type: String,
@@ -244,9 +238,9 @@ const KOTSchema = new mongoose.Schema<KOTType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Kot: Model<KOTType> = mongoose.model<KOTType>("KOT", KOTSchema);
+const Kot: Model<KOTType> = mongoose.model<KOTType>('KOT', KOTSchema);
 
 export { Kot };

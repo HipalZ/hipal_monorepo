@@ -1,7 +1,0 @@
-FROM node:21 AS dish-server
-COPY package.json /app/package.json
-RUN pnpm install
-
-COPY . /app
-WORKDIR /app/servers/dishes
-CMD ["pnpm", "start", "development"]

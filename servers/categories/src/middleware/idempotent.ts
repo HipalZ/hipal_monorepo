@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { LRUCache } from "lru-cache";
+import { NextFunction, Request, Response } from 'express';
+import { LRUCache } from 'lru-cache';
 
 const options = {
   max: 500,
@@ -15,7 +15,7 @@ const options = {
 const cache = new LRUCache(options);
 
 export const idempotent = (req: Request, res: Response, next: NextFunction) => {
-  const idemKey = req.headers["h-idem-id"] as string;
+  const idemKey = req.headers['h-idem-id'] as string;
   if (cache.has(idemKey)) {
     const cachedResponse = cache.get(idemKey);
     return res.status(cachedResponse.statusCode).send(cachedResponse.body);

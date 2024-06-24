@@ -1,0 +1,86 @@
+import DateRangePicker from "@/components/atoms/dateRangePicker"
+import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useLiteStore } from "@/components/store/useLiteStore";
+import useTimings from "@/components/store/useTimings";
+import axios from "@/components/utils/axios";
+import { useQuery } from "@tanstack/react-query"
+import { memo, useState } from "react"
+import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
+import OnlineAlertCard from "@/components/templates/liteAlerts/onlineAlertCard";
+
+const History = memo(() => {
+    const [pageNumber, setPageNumber] = useState(1);
+    const { selectedBiz } = useHiClientZ();
+    const { historyData, setHistoryData } = useLiteStore();
+    const { timeStampStart, timeStampEnd } = useTimings();
+    const businessId = selectedBiz?.businessId?._id;
+
+	const handleClick = (newPage: number) => {
+        if(newPage < 1) return;
+		setPageNumber(newPage);
+	};
+
+    const handleHistoryData = async () => {
+        try {
+            const config = {
+                method: "GET",
+                url: `/v1/payments/:id/paymentAlertHistory?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
+            };
+            const response = await axios(config);
+            if (response.status === 200) {
+                setHistoryData(response.data.data)
+                return response.data.data;
+            } else {
+                return [];
+            }
+        } catch (err) {
+            console.log(err);
+            return [];
+        }
+    }
+    const defaultClass = "text-base w-10 h-10 flex justify-center items-center bg-[#f3eeff] text-[#834cff] border rounded-full border-[#2B354D]"
+
+    useQuery({
+        queryKey: ['onlineAlerts', businessId, timeStampStart, timeStampEnd, pageNumber],
+        queryFn: handleHistoryData,
+        enabled: !!businessId && !!timeStampStart && !!timeStampEnd && !!pageNumber,
+    });
+
+    return (
+        <>
+            <div className="h-[2rem] px-4 py-8 flex justify-between items-center">
+                <h1 className="text-lg font-semibold">History</h1>
+            </div>
+            <DateRangePicker />
+            <OnlineAlertCard selectedNavItem='history' onlineAlertData={historyData} />
+            <div className="fixed z-20 flex items-center justify-center space-x-4 transform -translate-x-1/2 bottom-[5rem] left-1/2">
+                {historyData && historyData.length >= 0 && (
+                    <button
+                        type="button"
+                        onClick={() => handleClick(pageNumber - 1)}
+                        className={defaultClass}
+                    >
+                        <BiChevronsLeft />
+                    </button>
+                )}
+                <p className="w-10 h-10 flex justify-center items-center bg-black text-white border rounded-full border-[#2B354D]">
+                    {pageNumber}
+                </p>
+                {historyData && historyData.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => handleClick(pageNumber + 1)}
+                        className={defaultClass}
+                    >
+                        <BiChevronsRight />
+                    </button>
+                )}
+            </div>
+            <br />
+        </>
+    )
+
+})
+
+export default History
+

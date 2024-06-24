@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const BusinessSchema = z.object({
   businessName: z.string(),
@@ -8,15 +8,15 @@ export const BusinessSchema = z.object({
   multipleOutlets: z.boolean(),
   customLink: z.string(),
   logo: z.string(),
-  address: z.string(),
-  staff: z.array(z.string()),
+  address: z.string().optional(),
+  staff: z.array(z.string()).optional(),
   gstNumber: z.string().optional(),
   fssaiLicenseNumber: z.string().optional(),
-  status: z.boolean(),
+  status: z.boolean().optional(),
   likes: z.array(z.string()).optional(),
   wallpaper: z.string().optional(),
   tier: z.string().optional(),
-  expiry: z.number().optional(),
+  expiry: z.coerce.number().optional(),
   open: z.string().optional(),
   close: z.string().optional(),
   isHasSetting: z.boolean().optional(),
@@ -27,16 +27,18 @@ export const BusinessSchema = z.object({
   hibiz: z.boolean().optional(),
   kotPrinter: z.boolean().optional(),
   serviceCharge: z.boolean().optional(),
-  serviceChargePercentage: z.number().optional(),
-  serviceChargeRemovalPass: z.number().optional(),
+  serviceChargePercentage: z.coerce.number().optional(),
+  serviceChargeRemovalPass: z.coerce.number().optional(),
   serviceControl: z.record(z.any()).optional(),
-  ownerPhone: z.number().optional(),
+  ownerPhone: z.coerce.number().optional(),
   takeAwayName: z.string().optional(),
   loyalty: z.boolean().optional(),
   isHasGst: z.boolean().optional(),
-  gstPercentage: z.number().optional(),
+  gstPercentage: z.coerce.number().optional(),
   isPaymentIntegrated: z.boolean().optional(),
   withPopCorn: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+  description: z.string().optional(),
 });
 
 export type BusinessType = z.infer<typeof BusinessSchema>;

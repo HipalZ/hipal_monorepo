@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { KitchenType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { KitchenType } from '../validators';
 
 const kitchenSchema = new mongoose.Schema<KitchenType>(
   {
@@ -12,7 +12,7 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
       type: String,
     },
     description: {
-      required: true,
+      required: false,
       type: String,
     },
     staff: {
@@ -22,12 +22,9 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Kitchen: Model<KitchenType> = mongoose.model<KitchenType>(
-  "Kitchen",
-  kitchenSchema
-);
+const Kitchen: Model<KitchenType> = mongoose.model<KitchenType>('Kitchen', kitchenSchema);
 
 export { Kitchen };

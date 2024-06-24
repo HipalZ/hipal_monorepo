@@ -1,12 +1,15 @@
-import { z } from "zod";
+import mongoose from 'mongoose';
+import { z } from 'zod';
 
-const CustomRole = z.object({
-  businessId: z.string(),
-  customRoleId: z.string(),
-  roleName: z.string(),
-});
-
-const UserController = z
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+export const UserController = z
   .object({
     hibiz: z.boolean().optional(),
     dish: z.boolean().optional(),
@@ -16,20 +19,26 @@ const UserController = z
     reports: z.boolean().optional(),
     zones_table: z.boolean().optional(),
   })
-  .default({});
+  .default({})
+  .optional();
+export const CustomRole = z.object({
+  businessId: ObjectIdSchema,
+  customRoleId: ObjectIdSchema,
+  roleName: z.string().optional(),
+  role: z.string().optional(),
+  accessControl: UserController,
+  bookMark: z.boolean().optional(),
+});
 
-const UserAttrs = z.object({
-  name: z.string().default(""),
-  email: z.string().default(""),
-  phone: z.string(),
-  role: z.string().default(""),
-  DOB: z.string().optional(),
-  userDiscription: z.string().optional(),
-  gender: z.string().optional(),
+export const UserAttrs = z.object({
+  name: z.string().max(100).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(10).max(10),
+  role: z.string().optional(),
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
-  accessControl: UserController,
-  withScaner: z.boolean().default(false),
+  businessId: ObjectIdSchema.optional(),
+  userId: ObjectIdSchema.optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;

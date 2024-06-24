@@ -1,7 +1,7 @@
-import mongoose, { Model } from "mongoose";
-const ObjectId = mongoose.Schema.Types.ObjectId
-
-import { AdminType } from "../validators";
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { AdminType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const adminSchema = new mongoose.Schema<AdminType>(
   {
@@ -29,9 +29,9 @@ const adminSchema = new mongoose.Schema<AdminType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Admin: Model<AdminType> = mongoose.model<AdminType>("Admin", adminSchema);
+const Admin: Model<AdminType> = mongoose.model<AdminType>('Admin', adminSchema);
 
 export { Admin };

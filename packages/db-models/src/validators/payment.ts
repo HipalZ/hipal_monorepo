@@ -1,84 +1,36 @@
-import { z } from "zod";
+import mongoose from 'mongoose';
+import { z } from 'zod';
 
-const Item = z.object({
-  name: z.string(),
-  quantity: z.number(),
-  amount: z.number(),
-  portions: z.any(),
-  extras: z.any(),
-  comments: z.string(),
-});
-
-const SwiggyBillObj = z.object({
-  totalItems: z.number(),
-  subTotal: z.number(),
-  packingCharges: z.number(),
-  RxPayableGST: z.number(),
-  swiggyPayableGST: z.number(),
-  discount: z.number(),
-  totalPrice: z.number(),
-});
-
-const PaymentAttrs = z.object({
-  businessId: z.string().optional(),
-  businessName: z.string().optional(),
-  address: z.string().optional(),
-  gstin: z.string().optional(),
-  date: z.string().optional(),
-  items: z.array(Item).optional(),
-  subTotal: z.number().optional(),
-  sgst: z.number().optional(),
-  cgst: z.number().optional(),
-  total: z.number().optional(),
-  customerId: z.string().optional(),
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+export const PaymentSchema = z.object({
+  businessId: ObjectIdSchema,
+  total: z.coerce.number().positive(),
+  billValue: z.coerce.number().positive(),
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
-  discount: z.number().optional(),
-  mode: z.string().optional(),
-  status: z.string().optional(),
-  merchantId: z.string().optional(),
-  reqData: z.string().optional(),
-  postURL: z.string().optional(),
-  paymentMode: z.string().optional(),
-  respMsg: z.string().optional(),
-  bankRefId: z.string().optional(),
-  pgRefId: z.string().optional(),
-  tranStatus: z.string().optional(),
-  respCode: z.string().optional(),
-  zoneId: z.string().optional(),
-  tableId: z.string().optional(),
-  paymentDate: z.string().optional(),
-  time: z.string().optional(),
+  mode: z.string(),
+  paymentMode: z.string(),
   tableName: z.string().optional(),
-  modeCommission: z.number().default(0),
-  duesPersonId: z.string().optional(),
-  settle: z.boolean().default(false),
-  logo: z.string().optional(),
-  discountDescription: z.string().optional(),
-  claimedAmount: z.number().optional(),
-  serviceCharge: z.number().optional(),
-  modeBreakDown: z.any().default(null),
-  otherCharges: z.any().default(null),
-  waiterName: z.string().optional(),
-  tips: z.number().default(0),
-  zoneType: z.string().optional(),
-  isEdit: z.boolean().default(false),
-  editedBy: z.string().optional(),
-  orderId: z.string().optional(),
-  swiggyBillObj: SwiggyBillObj.optional(),
-  payment_date: z.number().default(Date.now()),
+  claimedCoins: z.coerce.number().optional(),
+  tips: z.coerce.number().default(0),
+  order_id: ObjectIdSchema,
+  date: z.coerce.number().default(Date.now()),
   razorpayPaymentId: z.string().optional(),
   razorpayOrderId: z.string().optional(),
   razorpayAcquirerData: z.any().optional(),
   razorpayEventId: z.string().optional(),
-  serviceChargeRemovedBy: z.string().optional(),
-  serviceChargeAddedBy: z.string().optional(),
-  coinsGivenBy: z.string().optional(),
-  discountGivenBy: z.string().optional(),
-  discountRemovedBy: z.string().optional(),
-  tipsGivenBy: z.string().optional(),
+  paymentIds: z.array(z.string()).optional(),
+  waiterName: z.string().optional(),
+  comment: z.string().optional(),
 });
 
-export type PaymentType = z.infer<typeof PaymentAttrs>;
-export type PaymentItemType = z.infer<typeof Item>;
-export type PaymentSwiggyBillObjType = z.infer<typeof SwiggyBillObj>;
+export type PaymentType = z.infer<typeof PaymentSchema>;
+// export type PaymentItemType = z.infer<typeof Item>;
+// export type PaymentSwiggyBillObjType = z.infer<typeof SwiggyBillObj>;

@@ -1,27 +1,31 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import { natsWrapper } from "../nats-wrapper";
-import { Category, Dish, Extra } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
+import { Category, Dish, Extra } from '@hi/db-models';
+import { runInTransaction } from '@hi/utils';
 
-import { v4 as uuidv4 } from "uuid";
-import {
-  DishType,
-  ExtraType,
-  KotExtraType,
-} from "@hi/db-models/src/validators";
-import { ClientSession } from "mongoose";
+import { DishType, dishSchema } from '@hi/db-models/src/validators';
+import { ClientSession } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
 const router = express.Router();
+const updatedDishSchema = dishSchema.partial();
 
-router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
+// TODO: datta check the dish response message
+router.put('/v1/dishes/:id', 
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async (req:Request<{ id: string }, {}, z.infer<typeof updatedDishSchema>>, res: Response) => {
+  const { id } = req.params as { id: string };
   const update = { ...req.body } as DishType;
 
   let updatedDish: DishType | null = null;
   let dishNotFound = false;
 
-  try {
     await runInTransaction(async (session: ClientSession) => {
       const dish = await Dish.findById(id).session(session);
 
@@ -32,71 +36,48 @@ router.put("/v1/dishes/:id", async (req: Request, res: Response) => {
 
       const currentCategories = dish.categories || [];
       const updatedCategories = update.categories || [];
-      console.log("currentCategories", currentCategories);
-      console.log("updatedCategories", updatedCategories);
 
       // Update the dish
-      updatedDish = await Dish.findByIdAndUpdate<DishType>(
-        id,
-        { $set: update },
-        { new: true, session: session }
-      );
+      updatedDish = await Dish.findByIdAndUpdate<DishType>(id, { $set: update }, { new: true, session: session });
 
       // Handle new categories added to the dish
-      const newCategories = updatedCategories.filter(
-        (category) => !currentCategories.includes(category.toString())
-      );
-      console.log("newCategories", newCategories);
-      await Category.updateMany(
-        { _id: { $in: newCategories } },
-        { $addToSet: { dishes: id } },
-        { session: session }
-      );
+      const newCategories = updatedCategories.filter((category) => !currentCategories.includes(category.toString()));
+      await Category.updateMany({ _id: { $in: newCategories } }, { $addToSet: { dishes: id } }, { session: session });
 
       // Handle existing categories removed from the dish
-      const removedCategories = currentCategories.filter(
-        (category) => !updatedCategories.includes(category.toString())
-      );
-      console.log("removedCategories", removedCategories);
-      await Category.updateMany(
-        { _id: { $in: removedCategories } },
-        { $pull: { dishes: id } },
-        { session: session }
-      );
+      const removedCategories = currentCategories.filter((category) => !updatedCategories.includes(category.toString()));
+      await Category.updateMany({ _id: { $in: removedCategories } }, { $pull: { dishes: id } }, { session: session });
     });
 
     if (dishNotFound) {
       return res.status(404).send({
-        message: "Dish not found",
+        message: 'Dish not found',
       });
     }
 
-    return res.status(200).send("updated successFully");
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({
-      message: "An error occurred while updating the dish",
+    return res.status(200).send({
+      err:false,
+      message: 'Dish updated successfully',
+      dish: updatedDish,
     });
-  }
 });
 
 router.put(
-  "/v1/dishes/:id/extra/:extraId",
-
-  async (req: Request, res: Response) => {
+  '/v1/dishes/:id/extra/:extraId',
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async (req: Request<{ extraId: string }, {}, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { extraId } = req.params;
     const update = { ...req.body };
-    let updateExtra = await Extra.findByIdAndUpdate(
-      extraId,
-      { $set: update },
-      { new: true }
-    );
+    let updateExtra = await Extra.findByIdAndUpdate(extraId, { $set: update }, { new: true });
     const dishes = await Dish.find({
-      "extras.id": extraId,
+      'extras.id': extraId,
     });
 
     const swiggyDishes = await Dish.find({
-      "delivery.extras.id": extraId,
+      'delivery.extras.id': extraId,
     });
 
     const copiedObject = {
@@ -149,8 +130,12 @@ router.put(
     //   }
     // }
 
-    res.status(200).send(updateExtra);
-  }
+    res.status(200).send({
+      err:false,
+      message: 'Extra updated successfully',
+      data: updateExtra?._id,
+    });
+  },
 );
 
 // router.put(
@@ -174,10 +159,14 @@ router.put(
 //   }
 // );
 
+//TODO : datta check the response message
 router.put(
-  "/v1/dishes/:id/updateAll",
-
-  async (req: Request, res: Response) => {
+  '/v1/dishes/:id/updateAll',
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     const update = { ...req.body };
     const dishes = await Dish.find({ businessId });
@@ -187,27 +176,30 @@ router.put(
       await Dish.findByIdAndUpdate(id, { $set: update }, { new: true });
     }
 
-    res.status(200).send("updated successFully");
-  }
+    res.status(200).send({
+      err:false,
+      message: 'Dishes updated successfully',
+      data:{}
+    });
+  },
 );
 
-router.put(
-  "/v1/dishes/:id/extrasLogicUpdate",
 
-  async (req: Request, res: Response) => {
+router.put(
+  '/v1/dishes/:id/extrasLogicUpdate',
+  validateRequest({
+    body: updatedDishSchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<T,K, z.infer<typeof updatedDishSchema>>, res: Response) => {
     const { businessId } = req.query;
     let allDishes = await Dish.find({ businessId }).lean();
-    const filteredDishesWithExtras = allDishes?.filter(
-      (dish: any) => dish?.extras?.length > 0
-    );
+    const filteredDishesWithExtras = allDishes?.filter((dish: any) => dish?.extras?.length > 0);
     filteredDishesWithExtras?.map(async (dish: any) => {
       const newExtra = dish.extras.map((extra: any) => {
         const updatedExtra = {
           ...extra,
-          addOnType:
-            extra.addOnType !== undefined || extra.addOnType === "single"
-              ? extra.addOnType
-              : "multiple",
+          addOnType: extra.addOnType !== undefined || extra.addOnType === 'single' ? extra.addOnType : 'multiple',
           id: extra.id !== undefined ? extra.id : uuidv4(),
           maxQuantity: extra.maxQuantity !== undefined ? extra.maxQuantity : 1,
         };
@@ -215,28 +207,25 @@ router.put(
           updatedExtra.items = extra.items.map((item: any) => {
             return {
               ...item,
-              ExtraType: item.ExtraType !== undefined ? item.ExtraType : "veg",
+              ExtraType: item.ExtraType !== undefined ? item.ExtraType : 'veg',
               id: item.id !== undefined ? item.id : uuidv4(),
-              maxQuantity:
-                item.maxQuantity !== undefined ? item.maxQuantity : 1,
-              visibility:
-                item.visibility !== undefined ? item.visibility : true,
-              availability:
-                item.availability !== undefined ? item.availability : true,
+              maxQuantity: item.maxQuantity !== undefined ? item.maxQuantity : 1,
+              visibility: item.visibility !== undefined ? item.visibility : true,
+              availability: item.availability !== undefined ? item.availability : true,
             };
           });
         }
         return updatedExtra;
       });
-      await Dish.findByIdAndUpdate(
-        dish?.id || dish?._id,
-        { $set: { extras: newExtra } },
-        { new: true }
-      );
+      await Dish.findByIdAndUpdate(dish?.id || dish?._id, { $set: { extras: newExtra } }, { new: true });
       return { ...dish, extras: newExtra };
     });
-    res.status(200).send(filteredDishesWithExtras);
-  }
+    res.status(200).send({
+      err:false,
+      message: 'Extras updated successfully',
+      data:filteredDishesWithExtras
+    });
+  },
 );
 
 export { router as updateDishesRouter };

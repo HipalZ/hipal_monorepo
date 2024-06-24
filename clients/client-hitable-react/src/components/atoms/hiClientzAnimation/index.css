@@ -1,0 +1,136 @@
+/* body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+  overflow: hidden;
+} */
+.container {
+  font-size: 6px;
+  width: 40em;
+  height: 40em;
+  position: relative;
+}
+
+.main-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 15em;
+  left: 15em;
+  border-radius: 50%;
+  box-shadow: 0 0 3em rgb(255, 128, 0);
+}
+
+.icon1,
+.icon2,
+.icon3,
+.icon5,
+.icon6,
+.icon7
+{
+  position: absolute;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+  border-width: 0.1em 0.1em 0 0;
+  border-radius: 50%;
+}
+.icon1 {
+  top: 12.5em;
+  left: 12.5em;
+  width: 15em;
+  height: 15em;
+  animation: orbit 68.7s linear infinite;
+}
+
+.icon2 {
+  top: 10em;
+  left: 10em;
+  width: 20em;
+  height: 20em;
+  animation: orbit 48.7s linear infinite;
+}
+
+.icon3 {
+  top: 6em;
+  left: 6em;
+  width: 28em;
+  height: 28em; 
+  animation: orbit 36.5s linear infinite;   
+}
+
+.icon5 {
+  top: 2em;
+  left: 2.5em;
+  width: 36em;
+  height: 36em; 
+  animation: orbit 26.5s linear infinite;
+}
+.icon6 {
+  top: -2em;
+  left: -2em;
+  width: 45em;
+  height: 45em; 
+  animation: orbit 21s linear infinite;
+}
+.icon7 {
+  top: -7em;
+  left: -7em;
+  width: 55em;
+  height: 55em; 
+  animation: orbit 17s linear infinite;
+}
+
+.icon1::before {
+  top: 1.5em;
+  right: 0.8em;
+  width: 2em;
+  height: 2em;
+  background-size: cover;
+}
+.icon2::before {
+  top: 2em;
+  right: 2em;
+  width: 2em;
+  height: 2em;
+  background-size: cover;
+}
+.icon3::before {
+  top: 3em;
+  right: 0em;
+  width: 5em;
+  height: 5em;
+  background-size: cover;
+}
+
+.icon5::before {
+  top: 5em;
+  right: 3em;
+  width: 3em;
+  height: 3em;
+  background-size: cover;
+}
+.icon6::before {
+  top: 6em;
+  right: 3em;
+  width: 5em;
+  height: 5em;
+  background-size: cover;
+}
+.icon7::before {
+  top: 7.5em;
+  right: 5em;
+  width: 4.5em;
+  height: 4.5em;
+  background-size: cover;
+}
+
+
+@keyframes orbit {
+  to {
+      transform: rotate(360deg);
+  }
+}

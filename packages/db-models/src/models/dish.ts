@@ -1,7 +1,7 @@
-import mongoose, { Model } from "mongoose";
-import { DishType, PortionType, FiltersType, TagType } from "../validators";
-const ObjectId = mongoose.Schema.Types.ObjectId as any;
-import { ClientSession } from "mongoose";
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { DishType, FiltersType, PortionType, TagType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const tagsSchema = new mongoose.Schema<TagType>(
   {
@@ -19,12 +19,12 @@ const tagsSchema = new mongoose.Schema<TagType>(
     },
     fontColor: {
       type: String,
-      required: true,
+      required: false,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const portionSchema = new mongoose.Schema<PortionType>(
@@ -56,7 +56,7 @@ const portionSchema = new mongoose.Schema<PortionType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const filtersSchema = new mongoose.Schema<FiltersType>(
@@ -64,7 +64,7 @@ const filtersSchema = new mongoose.Schema<FiltersType>(
     dishes: {
       type: [ObjectId],
       required: false,
-      ref: "Dish",
+      ref: 'Dish',
     },
     timeToConsume: {
       type: Number,
@@ -101,7 +101,7 @@ const filtersSchema = new mongoose.Schema<FiltersType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const dishSchema = new mongoose.Schema<DishType>(
@@ -109,7 +109,7 @@ const dishSchema = new mongoose.Schema<DishType>(
     businessId: {
       type: ObjectId,
       required: true,
-      ref: "Business",
+      ref: 'Business',
       index: true,
     },
     name: {
@@ -144,7 +144,7 @@ const dishSchema = new mongoose.Schema<DishType>(
     categories: {
       type: [ObjectId],
       required: false,
-      ref: "category",
+      ref: 'category',
     },
     portions: [
       {
@@ -156,12 +156,12 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: [ObjectId],
       required: false,
       default: [],
-      ref: "Extra",
+      ref: 'Extra',
     },
     kitchenId: {
       type: ObjectId,
       required: true,
-      ref: "Kitchen",
+      ref: 'Kitchen',
     },
     filters: {
       type: filtersSchema,
@@ -195,9 +195,9 @@ const dishSchema = new mongoose.Schema<DishType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Dish: Model<DishType> = mongoose.model<DishType>("Dish", dishSchema);
+const Dish: Model<DishType> = mongoose.model<DishType>('Dish', dishSchema);
 
 export { Dish };

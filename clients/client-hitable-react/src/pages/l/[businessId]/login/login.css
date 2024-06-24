@@ -1,0 +1,37 @@
+.mobileGrad{
+    background: linear-gradient(white, white) padding-box,
+    linear-gradient(to bottom, #6D9CE9, #AE7DE5,rgba(0,0,0,0)) border-box;
+    border-radius: 2em;
+    border: 4px solid transparent;
+}
+
+@keyframes moveUpDown {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  
+  /* Apply to liteLoginIcon1 with a faster movement */
+  .liteLoginIcon1, .liteLoginIcon2, .liteLoginIcon7 {
+    animation: moveUpDown 3s infinite alternate;
+  }
+  
+  /* Example for other icons, adjust as needed */
+  .liteLoginIcon3 {
+    animation: moveUpDown 4s infinite alternate;
+  }
+  .liteLoginIcon4 {
+    animation: moveUpDown 3s infinite alternate;
+  }
+  .liteLoginIcon5 {
+    animation: moveUpDown 2s infinite alternate;
+  }
+  .liteLoginIcon6 {
+    animation: moveUpDown 2s infinite alternate;
+  }
+
+  
+  /* liteLoginIcon4 remains unchanged, no animation applied */

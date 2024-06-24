@@ -1,68 +1,68 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const Portion = z.object({
   name: z.string(),
-  price: z.number(),
-  discount: z.number(),
+  price: z.coerce.number(),
+  discount: z.coerce.number(),
   default: z.boolean(),
 });
 
 const Extra = z.object({
   name: z.string(),
-  price: z.number(),
-  qty: z.number(),
+  price: z.coerce.number(),
+  qty: z.coerce.number(),
 });
 
 const SwiggyBillObject = z
   .object({
     totalItems: z.string(),
-    subTotal: z.number(),
-    packingCharges: z.number(),
-    RxPayableGST: z.number(),
-    discount: z.number(),
-    totalPrice: z.number(),
-    swiggyPayableGST: z.number(),
+    subTotal: z.coerce.number(),
+    packingCharges: z.coerce.number(),
+    RxPayableGST: z.coerce.number(),
+    discount: z.coerce.number(),
+    totalPrice: z.coerce.number(),
+    swiggyPayableGST: z.coerce.number(),
   })
   .optional();
 
 const Dish = z.object({
   dishId: z.string(),
   name: z.string(),
-  price: z.number(),
-  qty: z.number(),
+  price: z.coerce.number(),
+  qty: z.coerce.number(),
   comments: z.string(),
   extras: z.array(Extra),
   portions: Portion,
 });
 
-const KOTAttrs = z.object({
+export const KOTAttrs = z.object({
   businessId: z.string(),
   kitchenId: z.string().optional(),
-  zoneId: z.string().optional(),
-  tableId: z.string().optional(),
+  zoneId: z.string(),
+  tableId: z.string(),
   staffId: z.string().optional(),
-  startedAt: z.number().optional(),
-  cookedAt: z.number().optional(),
+  startedAt: z.coerce.number().optional(),
+  cookedAt: z.coerce.number().optional(),
   status: z.string(),
   dish: Dish,
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
-  dishStatus: z.enum(["cooking", "cooked", "delivered"]),
-  kotTime: z.string().default(""),
-  tableName: z.string().default(""),
-  date: z.string().default(""),
+  dishStatus: z.enum(['cooking', 'cooked', 'delivered']),
+  kotTime: z.string().default(''),
+  tableName: z.string().default(''),
+  date: z.string().default('').optional(),
   instructions: z.string().optional(),
   dishType: z.string(),
   category: z.string(),
   kotDate: z.string(),
-  priority: z.boolean().default(false),
-  isDeleted: z.boolean().default(false),
-  reasonForDelete: z.string(),
-  staffName: z.string(),
-  inventory: z.boolean().default(false),
-  orderId: z.string(),
-  avgTime: z.number(),
-  taxes: z.array(z.object({})).default([]),
+  priority: z.boolean().default(false).optional(),
+  isDeleted: z.boolean().default(false).optional(),
+  reasonForDelete: z.string().optional(),
+  staffName: z.string().optional(),
+  inventory: z.boolean().default(false).optional(),
+  orderId: z.string().optional(),
+  avgTime: z.coerce.number().optional(),
+  taxes: z.array(z.object({})).default([]).optional(),
   swiggyBillObj: SwiggyBillObject,
   match: z.boolean().default(true),
   isGst: z.boolean().default(true),

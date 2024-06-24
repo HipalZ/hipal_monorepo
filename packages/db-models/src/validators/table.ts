@@ -1,33 +1,25 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const TableSchema = z.object({
+export const TableSchema = z.object({
   businessId: z.string(),
   zoneId: z.string(),
   name: z.string(),
-  capacity: z.number(),
-  staff: z.array(z.string()),
-  status: z.enum([
-    "Occupied",
-    "Settled",
-    "Clean",
-    "Empty",
-    "Reserved",
-    "Need assistance",
-    "Active",
-  ]),
-  activeUser: z.number(),
-  time: z.string(),
-  totalDishQuantity: z.number(),
-  deliverdDish: z.number(),
-  role: z.record(z.any()),
-  hiCode: z.string(),
-  isMerge: z.boolean(),
-  hierarchy: z.string(),
-  parentTableId: z.string(),
-  parentZoneId: z.string(),
-  mergeTables: z.array(z.record(z.any())),
-  mergedBy: z.string().optional(),
-  reservedBy: z.string().optional(),
+  capacity: z.coerce.number(),
+  staff: z.array(z.string()).optional(),
+  status: z.enum(['Occupied', 'Settled', 'Clean', 'Empty', 'Reserved', 'Need assistance', 'Active']),
+  activeUser: z.coerce.number().optional(),
+  time: z.string().optional(),
+  totalDishQuantity: z.coerce.number().optional(),
+  deliverdDish: z.coerce.number().optional(),
+  role: z.record(z.any()).optional(),
+  hiCode: z.string().optional(),
+  isMerge: z.boolean().optional(),
+  hierarchy: z.string().optional(),
+  parentTableId: z.string().optional(),
+  parentZoneId: z.string().optional(),
+  mergeTables: z.array(z.record(z.any())).optional(),
+  mergedBy: z.string().optional().optional(),
+  reservedBy: z.string().optional().optional(),
 });
 
 export type TableTypes = z.infer<typeof TableSchema>;

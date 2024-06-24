@@ -1,29 +1,22 @@
-import express, { Request, Response } from "express";
+import { Category, Dish } from '@hi/db-models';
+import express, { Request, Response } from 'express';
+import { ClientSession } from 'mongoose';
+import { categorySchema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { validateRequest } from 'zod-express-middleware';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 
-import { natsWrapper } from "../nats-wrapper";
-
-import { Category, Dish } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
-import { CategoryType, categorySchema } from "@hi/db-models/src/validators";
-// import { validateRequest } from "../middleware/request";
-import { validateRequest, RequestValidation } from "zod-express-middleware";
-import { z } from "zod";
 const router = express.Router();
 
 //TODO: remove v1 from the route
 router.post(
-  "/v1/categories",
+  '/v1/categories',
   validateRequest({
-    params: z.object({
-      urlParameter: z.string(),
-    }),
     body: categorySchema,
-    query: z.object({
-      queryKey: z.string().length(64),
-    }),
   }),
-  async (req: Request, res: Response) => {
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
     const {
       businessId,
       name,
@@ -36,13 +29,11 @@ router.post(
       parentCategory,
       parentCategoryId,
       coverImage,
-
       links,
       dishes,
       availability,
       charges,
     } = req.body;
-
     await runInTransaction(async (session: ClientSession) => {
       const category = await Category.create(
         [
@@ -67,24 +58,24 @@ router.post(
         ],
         {
           session: session,
-        }
+        },
       );
 
       if (!category) {
-        throw new Error("Category creation failed");
+        throw new Error('Category creation failed');
       }
       // throw new Error("Category creation failed");
       // @ts-ignore
       const categoryId = category[0]._id;
-      let dish = await Dish.updateMany(
-        { _id: { $in: dishes } },
-        { $push: { categories: categoryId } },
-        { session }
-      );
+      await Dish.updateMany({ _id: { $in: dishes } }, { $push: { categories: categoryId } }, { session });
     });
     //{error: ,message: data }
-    return res.status(200).send("Category created");
-  }
+    return res.status(201).send({
+      message: 'Category created successfully',
+      status: true,
+      data:{}
+    });
+  },
 );
 
 export { router as createCategoryRouter };

@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const DuesAttrs = z.object({
+export const DuesSchema = z.object({
   businessId: z.string().optional(),
   duesPersonNames: z.string().optional(),
 });
 
-export type DuesType = z.infer<typeof DuesAttrs>;
+export type DuesType = z.infer<typeof DuesSchema>;

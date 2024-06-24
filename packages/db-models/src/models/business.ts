@@ -1,5 +1,6 @@
-import mongoose, { Model } from "mongoose";
-import { BusinessType } from "../validators";
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
+import type { BusinessType } from '../validators';
 
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -29,29 +30,30 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     logo: {
       type: String,
-      required: false,
+      required: true,
     },
     address: {
       type: String,
-      required: true,
+      required: false,
     },
     staff: {
       type: [String],
-      required: true,
+      required: false,
     },
     gstNumber: {
       type: String,
-      default: "",
+      default: '',
       required: false,
     },
     fssaiLicenseNumber: {
       type: String,
-      default: "",
+      default: '',
       required: false,
     },
     status: {
       type: Boolean,
-      required: true,
+      required: false,
+      default: false,
     },
     likes: {
       type: [String],
@@ -61,7 +63,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     wallpaper: {
       type: String,
       required: false,
-      default: "",
+      default: '',
     },
     tier: {
       type: String,
@@ -126,7 +128,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     takeAwayName: {
       type: String,
-      default: "",
+      default: '',
     },
     loyalty: {
       type: Boolean,
@@ -148,15 +150,20 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: Boolean,
       default: false,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    description: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Business: Model<BusinessType> = mongoose.model<BusinessType>(
-  "Business",
-  businessSchema
-);
+const Business: Model<BusinessType> = mongoose.model<BusinessType>('Business', businessSchema);
 
 export { Business };

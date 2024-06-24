@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { KotPasswordType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { KotPasswordType } from '../validators';
 
 const kotPasswordSchema = new mongoose.Schema<KotPasswordType>({
   businessId: {
@@ -11,9 +11,6 @@ const kotPasswordSchema = new mongoose.Schema<KotPasswordType>({
   },
 });
 
-const Kotpassword: Model<KotPasswordType> = mongoose.model<KotPasswordType>(
-  "kotpassword",
-  kotPasswordSchema
-);
+const Kotpassword: Model<KotPasswordType> = mongoose.model<KotPasswordType>('kotpassword', kotPasswordSchema);
 
 export { Kotpassword };

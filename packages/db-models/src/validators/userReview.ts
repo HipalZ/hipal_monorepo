@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ReviewSchema = z.object({
+export const ReviewUserSchema = z.object({
   userId: z.string(),
   businessId: z.string(),
   keyword: z.string(),
@@ -17,4 +17,4 @@ export const ReviewSchema = z.object({
   businessName: z.string(),
 });
 
-export type Review = z.infer<typeof ReviewSchema>;
+export type Review = z.infer<typeof ReviewUserSchema>;

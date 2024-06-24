@@ -1,5 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import { UserRewardType } from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { UserRewardType } from '../validators';
 
 const userRewardSchema = new mongoose.Schema<UserRewardType>(
   {
@@ -36,12 +36,9 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const UserReward: Model<UserRewardType> = mongoose.model<UserRewardType>(
-  "userReward",
-  userRewardSchema
-);
+const UserReward: Model<UserRewardType> = mongoose.model<UserRewardType>('userReward', userRewardSchema);
 
 export { UserReward };

@@ -1,6 +1,5 @@
-import mongoose, {Model} from "mongoose";
-import {PrinterType} from "../validators";
-
+import mongoose, { Model } from 'mongoose';
+import { PrinterType } from '../validators';
 
 const printerSchema = new mongoose.Schema<PrinterType>(
   {
@@ -15,15 +14,11 @@ const printerSchema = new mongoose.Schema<PrinterType>(
       type: String,
     },
   },
-    {
-        timestamps: true,
-    }
-
+  {
+    timestamps: true,
+  },
 );
 
-const Printer: Model<PrinterType> = mongoose.model<PrinterType>(
-    "Printer",
-    printerSchema
-  );
-  
-  export { Printer};
+const Printer: Model<PrinterType> = mongoose.model<PrinterType>('Printer', printerSchema);
+
+export { Printer };

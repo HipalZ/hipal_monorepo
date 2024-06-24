@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const RoleSchema = z.object({
+export const RoleSchema = z.object({
   name: z.string(),
   description: z.string(),
   permissions: z.array(z.string()),

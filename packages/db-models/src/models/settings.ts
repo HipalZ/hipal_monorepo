@@ -1,12 +1,5 @@
-import mongoose, { Model } from "mongoose";
-import {
-  ThemesType,
-  SpecialOfferType,
-  HighlightType,
-  ExploreType,
-  NavigationType,
-  SettingsType,
-} from "../validators";
+import mongoose, { Model } from 'mongoose';
+import { ExploreType, HighlightType, NavigationType, SettingsType, SpecialOfferType, ThemesType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId as any;
 
 const themesSchema = new mongoose.Schema<ThemesType>({
@@ -47,7 +40,7 @@ const exploreSchema = new mongoose.Schema<ExploreType>({
   openFrom: { type: String },
   openTill: { type: String },
   specialOffers: { type: [specialOfferSchema] },
-  popular: { type: [ObjectId], ref: "dish" },
+  popular: { type: [ObjectId], ref: 'Dish' },
   highlights: { type: [highlightSchema] },
 });
 
@@ -63,7 +56,7 @@ const settingsSchema = new mongoose.Schema<SettingsType>(
     businessId: {
       required: true,
       type: ObjectId,
-      ref: "Business",
+      ref: 'Business',
     },
     themes: {
       required: false,
@@ -84,12 +77,9 @@ const settingsSchema = new mongoose.Schema<SettingsType>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Settings: Model<SettingsType> = mongoose.model<SettingsType>(
-  "Settings",
-  settingsSchema
-);
+const Settings: Model<SettingsType> = mongoose.model<SettingsType>('Settings', settingsSchema);
 
 export { Settings };

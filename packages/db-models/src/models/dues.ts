@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 interface DuesAttrs {
   businessId: string;
@@ -24,13 +24,13 @@ const duesSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 duesSchema.statics.build = (attrs: DuesAttrs) => {
   return new Dues(attrs);
 };
 
-const Dues = mongoose.model<DuesDoc, DuesModel, {}>("Dues", duesSchema);
+const Dues = mongoose.model<DuesDoc, DuesModel, {}>('Dues', duesSchema);
 
 export { Dues };

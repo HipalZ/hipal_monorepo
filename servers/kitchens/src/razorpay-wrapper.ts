@@ -1,4 +1,4 @@
-import Razorpay from "razorpay";
+import Razorpay from 'razorpay';
 
 class RazorPayWrapper {
   private _client?: Razorpay;
@@ -9,7 +9,7 @@ class RazorPayWrapper {
 
   get client() {
     if (!this._client) {
-      throw new Error("Cannot access Razorpay client before creating it");
+      throw new Error('Cannot access Razorpay client before creating it');
     }
 
     return this._client;

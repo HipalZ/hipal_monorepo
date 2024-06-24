@@ -1,16 +1,20 @@
-import express, { Request, Response } from "express";
-// import { validateDish } from "./validators/new-dish-validator";
-
-import { Category, Dish, Extra } from "@hi/db-models";
-import { runInTransaction } from "@hi/utils";
-import { ClientSession } from "mongoose";
-import { DishType, ExtraType } from "@hi/db-models/src/validators";
+import express, { Request, Response } from 'express';
+import { validateRequest } from 'zod-express-middleware';
+import { Category, Dish, Extra } from '@hi/db-models';
+import { ExtraAttrs, ExtraType, dishSchema } from '@hi/db-models/src/validators';
+import { runInTransaction } from '@hi/utils';
+import { ClientSession } from 'mongoose';
+import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 const router = express.Router();
 
 router.post(
-  "/v1/dishes",
-  // validateDish,
-  async (req: Request, res: Response) => {
+  '/v1/dishes',
+  validateRequest({
+    body: dishSchema,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<T,K, z.infer<typeof dishSchema>>, res: Response) => {
     const {
       businessId,
       name,
@@ -33,7 +37,6 @@ router.post(
       availability,
     } = req.body;
 
-    try {
       await runInTransaction(async (session: ClientSession) => {
         const dish = await Dish.create(
           [
@@ -59,7 +62,7 @@ router.post(
               availability,
             },
           ],
-          { session: session }
+          { session: session },
         );
         // @ts-ignore
         await Category.updateMany(
@@ -67,24 +70,25 @@ router.post(
           { _id: { $in: categories } },
           // @ts-ignore
           { $push: { dishes: dish[0]._id } },
-          { session: session }
+          { session: session },
         );
       });
 
-      res.status(201).send("Dish created successfully");
-    } catch (e) {
-      // handle error
-    }
-  }
+      res.status(201).send({
+        message: 'Dish created successfully',
+        err:false,
+        data:{}
+      });
+  },
 );
 
 router.post(
-  "/v1/dishes/extra",
-  // validateDish,
-  // currentUser,
-  // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
-  // validateRequest,
-  async (req: Request, res: Response) => {
+  '/v1/dishes/extra',
+  validateRequest({
+    body: ExtraAttrs,
+  }),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
+  async <T,K>(req: Request<T,K, z.infer<typeof ExtraAttrs>>, res: Response) => {
     const {
       businessId,
       name,
@@ -93,7 +97,6 @@ router.post(
       compulsory,
       maxQuantity,
       addOnType,
-
       items,
     } = req.body;
 
@@ -109,8 +112,12 @@ router.post(
       items,
     });
 
-    res.status(201).send(extra);
-  }
+    res.status(201).send({
+      err:false,
+      message: 'Extra created successfully',
+      data:extra._id
+    });
+  },
 );
 
 // router.post(

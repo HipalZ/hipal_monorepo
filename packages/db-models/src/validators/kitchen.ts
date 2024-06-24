@@ -1,9 +1,9 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const KitchenAttrs = z.object({
+export const KitchenAttrs = z.object({
   businessId: z.string(),
   kitchenName: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   staff: z.array(z.string()).optional(),
 });
 
