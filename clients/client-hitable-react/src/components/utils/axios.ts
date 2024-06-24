@@ -1,20 +1,19 @@
+import { APP_ENV, BASE_URL } from '@/configs';
+
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
-const env = import.meta.env.VITE_NODE_ENV as string;
-
 const axios = axiosConstructor.create({
-  baseURL: import.meta.env.VITE_API_URL as string,
-  withCredentials: true,
+  baseURL: BASE_URL,
 });
 axios.interceptors.request.use(
   (config: any) => {
     if (config.url == undefined) {
       return;
     }
-    
-    if(!env){
+
+    if (APP_ENV !== 'test' && APP_ENV !== 'production') {
       // Modify the baseURL based on the request URL
       if (config.url.startsWith('/v1/businesses')) {
         config.baseURL = 'http://localhost:8001';
