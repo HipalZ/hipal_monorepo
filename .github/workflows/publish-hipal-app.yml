@@ -9,15 +9,16 @@ on:
     branches: ['test']
     paths:
       - 'package.json'
-      - 'clients/client-hipal-app/**'
+      - '*'
 
 jobs:
   build:
     name: Build and Test
-    timeout-minutes: 15
     runs-on: ubuntu-latest
-    outputs:
-      deployment-url: ${{ steps.vercel.outputs.deployment-url }}
+
+    # outputs:
+    #   deployment-url: ${{ steps.vercel.outputs.deployment-url }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
