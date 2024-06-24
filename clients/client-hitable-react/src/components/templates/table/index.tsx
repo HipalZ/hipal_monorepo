@@ -113,7 +113,6 @@ const Table = () => {
 		setUserDetails,
 	} = useLogin();
 	const setTableLocal = useTable((s) => s.setTableData);
-	const  = use();
 	const params = useParams<{ businessId: string; zoneId: string }>();
 	const { businessId, zoneId } = params;
 

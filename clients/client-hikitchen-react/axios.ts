@@ -2,7 +2,7 @@ import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_HOST,
+  baseURL: import.meta.env.VITE_API_URL as string,
   withCredentials: true,
 });
 

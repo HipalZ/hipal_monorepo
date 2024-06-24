@@ -9,7 +9,11 @@
     "bundle": "vite build",
     "build": "vite build",
     "serve": "vite preview --port 3005",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "build:test": "dotenv -e ./env/.env.test pnpm run build",
+    "bundle:test": "dotenv -e ./env/.env.test pnpm run bundle",
+    "build:production": "dotenv -e ./env/.env.production pnpm run build",
+    "bundle:production": "dotenv -e ./env/.env.production pnpm run bundle"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.18",
@@ -65,6 +69,7 @@
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
     "vite": "^4.0.0",
-    "vite-plugin-pwa": "^0.14.7"
+    "vite-plugin-pwa": "^0.14.7",
+    "dotenv-cli": "^7.3.0"
   }
 }
