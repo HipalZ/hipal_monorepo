@@ -15,7 +15,6 @@ import { ILoyaltySetting } from "../store/useLoyaltyData"
 
 export const getPrice = (price: number | string) => {
 	if (!price || price === 0) {
-		// return 'FREE'
 		return ""
 	}
 
