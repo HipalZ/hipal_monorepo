@@ -23,13 +23,21 @@ const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
 ];
 
 const Alerts = memo(() => {
-    const { selectedNavItem, setSelectedNavItem } = useLiteStore();
+    const { selectedNavItem, setSelectedNavItem, onlineCount, offlineCount } = useLiteStore();
     const handleNavItemClick = (type: NavItemTypes) => {
         setSelectedNavItem(type);
     };
     const navClass = "text-[#6F2EFF] bg-[#6F2EFF]/10 px-3 rounded-full py-1 flex items-center text-xl";
     const defaultClass = "text-gray-500 rounded-full flex items-center text-xl";
 
+    const handleCount = (type: string) => {
+        if (type === 'online' && onlineCount > 0) {
+            return onlineCount;
+        } else if (type === 'on floor' && offlineCount > 0) {
+            return offlineCount;
+        }
+        return null;
+    }
     return (
         <main className="bg-gray-200 min-h-screen relative">
             <HeaderAlerts />
@@ -38,7 +46,7 @@ const Alerts = memo(() => {
                 {selectedNavItem === 'on floor' && <OfflineAlerts />}
                 {selectedNavItem === 'history' && <History />}
                 {selectedNavItem === 'sales' && <SalesLite />}
-                <BillPopUp/>
+                <BillPopUp />
                 <div className="fixed bottom-0 h-[4.5rem] bg-white w-full shadow-2xl flex justify-around items-center">
                     {navItems.map(({ type, icon: Icon }) => (
                         <button
@@ -49,12 +57,18 @@ const Alerts = memo(() => {
                                 transition: 'background-color 0.2s ease, color 0.2s ease',
                                 backgroundColor: selectedNavItem === type ? '#f3eeff' : 'transparent',
                                 color: selectedNavItem === type ? '#6F2EFF' : '#777777',
+                                position: 'relative',
                             }}
                         >
                             <Icon size={24} color={selectedNavItem === type ? '#6F2EFF' : '#777777'} />
-                            <span style={{ opacity: selectedNavItem === type ? 1 : 0, transition: 'opacity 0.2s ease' }}>
+                            {handleCount(type) !== null && (
+                                <span className="bg-red-500 text-white rounded-full px-2 text-base absolute bottom-5 -right-4">
+                                    {handleCount(type)}
+                                </span>
+                            )}
+                            <h1 style={{ opacity: selectedNavItem === type ? 1 : 0, transition: 'opacity 0.2s ease' }}>
                                 &nbsp;{selectedNavItem === type ? type : null}
-                            </span>
+                            </h1>
                         </button>
                     ))}
                 </div>

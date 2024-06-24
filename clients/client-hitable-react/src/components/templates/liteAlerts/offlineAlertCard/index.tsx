@@ -13,9 +13,9 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
     const { offlineAlertData } = props;
-    const { removeOfflineAlert, setViewData,clickViewMore,setClickViewMore } = useLiteStore()
+    const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore } = useLiteStore()
 
-    const handleViewMore = (alert:Alert) => {
+    const handleViewMore = (alert: Alert) => {
         setViewData(alert)
         setClickViewMore(!clickViewMore);
     }
@@ -27,7 +27,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                 url: `/v1/payments/:pid/order/${id}`,
             };
             const response = await axios(config);
-            console.log('off',response);
+            console.log('off', response);
             if (response.status === 200) {
                 removeOfflineAlert(id);
             }
@@ -39,7 +39,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
 
     return (
         <main className="lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 pb-[5rem]">
-            {Array.from(offlineAlertData) &&  offlineAlertData?.length > 0 && offlineAlertData.map((alert: Alert) => {
+            {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? offlineAlertData.map((alert: Alert) => {
                 return (
                     <section key={alert?._id}>
                         {alert?.alertType === "WAITER" ? <div className="bg-white h-[7rem] rounded-xl mx-4 p-4 my-4">
@@ -95,7 +95,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                                             <h1 className="text-base text-gray-700">{alert?.order_id?.tableName}</h1>
                                             <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                                         </article>
-                                        <button onClick={()=>handleViewMore(alert)} className="bg-black text-white py-1 px-6 mt-6 rounded-full">
+                                        <button onClick={() => handleViewMore(alert)} className="bg-black text-white py-1 px-6 mt-6 rounded-full">
                                             <h1 className="text-xs">View</h1>
                                         </button>
                                     </section>
@@ -103,7 +103,9 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                             </div>}
                     </section>
                 )
-            })}
+            }) : <div className="text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                    No Data Found
+        </div>}
         </main>
     )
 };
