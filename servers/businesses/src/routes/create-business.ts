@@ -1,9 +1,9 @@
+import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
 import { BusinessSchema, loyaltySchema, RoleSchema } from '@hi/db-models/src/validators';
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
-import {requireAuthorization,ClientRoles} from "@hi/common"
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.post(
   validateRequest({
     body: BusinessSchema,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER]),
   async <T, K>(req: Request<T, K, z.infer<typeof BusinessSchema>>, res: Response) => {
     const {
       likes,
@@ -48,7 +48,7 @@ router.post(
       isPaymentIntegrated,
       withPopCorn,
       tags,
-      description
+      description,
     } = req.body;
 
     let currentObject: any = req?.currentUser;
@@ -90,48 +90,50 @@ router.post(
       isPaymentIntegrated,
       withPopCorn,
       tags,
-      description
+      description,
     });
     await business.save();
 
     res.status(201).send({
-      err:false,
+      err: false,
       message: 'Business created successfully',
-      data:business._id
+      data: business._id,
     });
   },
 );
+
+//testing
 
 router.post(
   '/v1/businesses/:id/loyalty',
   validateRequest({
     body: loyaltySchema,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER]),
   async <T, K>(req: Request<T, K, z.infer<typeof loyaltySchema>>, res: Response) => {
-      const { businessId, password } = req.body;
+    const { businessId, password } = req.body;
 
-      let ExitSetting = await LoyaltySettings.findOne({
-        businessId,
-      });
+    let ExitSetting = await LoyaltySettings.findOne({
+      businessId,
+    });
 
-      if (ExitSetting) {
-        return res.status(400).send({
-          message:'Loyalty already exists',
-          status: false,
-        });
-      }
-      let newPass = Math.floor(Math.random() * 9000) + 10000;
-      let data = new LoyaltySettings({
-        ...req.body,
-        password: password || newPass,
+    if (ExitSetting) {
+      return res.status(400).send({
+        message: 'Loyalty already exists',
+        status: false,
       });
-      const saveLoyaltySetup = await data.save();
-      return res.status(201).send({
-        err:false,
-        message: 'Loyalty created successfully',
-        data:saveLoyaltySetup._id
-      });
+    }
+    let newPass = Math.floor(Math.random() * 9000) + 10000;
+    let data = new LoyaltySettings({
+      ...req.body,
+      password: password || newPass,
+    });
+    const saveLoyaltySetup = await data.save();
+    return res.status(201).send({
+      err: false,
+      message: 'Loyalty created successfully',
+      data: saveLoyaltySetup._id,
+    });
   },
 );
 
@@ -140,7 +142,7 @@ router.post(
   validateRequest({
     body: RoleSchema,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER]),
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER]),
   async (req: Request<{ id: string }, {}, z.infer<typeof RoleSchema>>, res: Response) => {
     const { name, description, permissions } = req.body;
     const { id } = req.params as { id: string };
@@ -153,9 +155,9 @@ router.post(
     });
 
     return res.status(201).send({
-      err:false,
+      err: false,
       message: 'Role created successfully',
-      data:role._id
+      data: role._id,
     });
   },
 );
