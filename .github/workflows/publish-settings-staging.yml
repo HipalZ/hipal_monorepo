@@ -2,40 +2,30 @@ name: Build and Push settings Server Image
 
 on:
   push:
-    branches:
-      - staging
+    branches: ['test']
     paths:
       - 'Dockerfile'
       - 'package.json'
       - 'servers/settings/**'
 
 env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: settings-server
+  DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
+  DOCKER_REPOSITORY: settings-test-server
 
 jobs:
   build-and-push:
-    name: Build and Push to Amazon ECR
+    name: Build and Push to DigitalOcean Container Registry
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@13d241b293754004c80624b5567555c4a39ffbe3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to DigitalOcean Container Registry
+        run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u doctl --password-stdin
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@aaf69d68aa3fb14c1d5a6be9ac61fe15b48453a2
-
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
-          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
-          docker build --target settings-server -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+          docker build --target settings-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:latest .
+          docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY --all-tags

@@ -1,12 +1,12 @@
+import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Category, Dish } from '@hi/db-models';
-import express, { Request, Response } from 'express';
-import { ClientSession } from 'mongoose';
 import { categorySchema } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
-import { validateRequest } from 'zod-express-middleware';
+import express, { Request, Response } from 'express';
+import { ClientSession } from 'mongoose';
 import { z } from 'zod';
-import { ClientRoles, requireAuthorization } from '@hi/common';
-
+import { validateRequest } from 'zod-express-middleware';
+//testing
 const router = express.Router();
 
 //TODO: remove v1 from the route
@@ -15,8 +15,8 @@ router.post(
   validateRequest({
     body: categorySchema,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
-  async <T,K>(req: Request<T,K, z.infer<typeof categorySchema>>, res: Response) => {
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async <T, K>(req: Request<T, K, z.infer<typeof categorySchema>>, res: Response) => {
     const {
       businessId,
       name,
@@ -73,7 +73,7 @@ router.post(
     return res.status(201).send({
       message: 'Category created successfully',
       status: true,
-      data:{}
+      data: {},
     });
   },
 );

@@ -1,20 +1,20 @@
-import express, { Request, Response } from 'express';
-import { validateRequest } from 'zod-express-middleware';
+import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Category, Dish, Extra } from '@hi/db-models';
-import { ExtraAttrs, ExtraType, dishSchema } from '@hi/db-models/src/validators';
+import { dishSchema, ExtraAttrs, ExtraType } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
+import express, { Request, Response } from 'express';
 import { ClientSession } from 'mongoose';
 import { z } from 'zod';
-import { ClientRoles, requireAuthorization } from '@hi/common';
+import { validateRequest } from 'zod-express-middleware';
 const router = express.Router();
-
+//testing
 router.post(
   '/v1/dishes',
   validateRequest({
     body: dishSchema,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
-  async <T,K>(req: Request<T,K, z.infer<typeof dishSchema>>, res: Response) => {
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async <T, K>(req: Request<T, K, z.infer<typeof dishSchema>>, res: Response) => {
     const {
       businessId,
       name,
@@ -37,48 +37,48 @@ router.post(
       availability,
     } = req.body;
 
-      await runInTransaction(async (session: ClientSession) => {
-        const dish = await Dish.create(
-          [
-            {
-              businessId,
-              name,
-              price,
-              swiggy,
-              discount,
-              avgTime,
-              dishType,
-              categories,
-              portions,
-              extras,
-              kitchenId,
-              filters,
-              images,
-              description,
-              tags,
-              links,
-              visibility,
-              delayTime,
-              availability,
-            },
-          ],
-          { session: session },
-        );
+    await runInTransaction(async (session: ClientSession) => {
+      const dish = await Dish.create(
+        [
+          {
+            businessId,
+            name,
+            price,
+            swiggy,
+            discount,
+            avgTime,
+            dishType,
+            categories,
+            portions,
+            extras,
+            kitchenId,
+            filters,
+            images,
+            description,
+            tags,
+            links,
+            visibility,
+            delayTime,
+            availability,
+          },
+        ],
+        { session: session },
+      );
+      // @ts-ignore
+      await Category.updateMany(
         // @ts-ignore
-        await Category.updateMany(
-          // @ts-ignore
-          { _id: { $in: categories } },
-          // @ts-ignore
-          { $push: { dishes: dish[0]._id } },
-          { session: session },
-        );
-      });
+        { _id: { $in: categories } },
+        // @ts-ignore
+        { $push: { dishes: dish[0]._id } },
+        { session: session },
+      );
+    });
 
-      res.status(201).send({
-        message: 'Dish created successfully',
-        err:false,
-        data:{}
-      });
+    res.status(201).send({
+      message: 'Dish created successfully',
+      err: false,
+      data: {},
+    });
   },
 );
 
@@ -87,18 +87,9 @@ router.post(
   validateRequest({
     body: ExtraAttrs,
   }),
-  requireAuthorization([ClientRoles.RESTAURANT_OWNER,ClientRoles.RESTAURANT_MANAGER,ClientRoles.RESTAURANT_STAFF]),
-  async <T,K>(req: Request<T,K, z.infer<typeof ExtraAttrs>>, res: Response) => {
-    const {
-      businessId,
-      name,
-      numOptions,
-      numSelections,
-      compulsory,
-      maxQuantity,
-      addOnType,
-      items,
-    } = req.body;
+  requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_MANAGER, ClientRoles.RESTAURANT_STAFF]),
+  async <T, K>(req: Request<T, K, z.infer<typeof ExtraAttrs>>, res: Response) => {
+    const { businessId, name, numOptions, numSelections, compulsory, maxQuantity, addOnType, items } = req.body;
 
     const extra = await Extra.create<ExtraType>({
       businessId,
@@ -113,9 +104,9 @@ router.post(
     });
 
     res.status(201).send({
-      err:false,
+      err: false,
       message: 'Extra created successfully',
-      data:extra._id
+      data: extra._id,
     });
   },
 );
