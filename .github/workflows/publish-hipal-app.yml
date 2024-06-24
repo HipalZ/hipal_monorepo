@@ -4,8 +4,9 @@ env:
   VERCEL_HIPALZ_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
 on:
   push:
-    branches:
-      - test
+    branches: ['test']
+    paths:
+      - 'clients/client-hipal-app/**'
 
 jobs:
   build:
