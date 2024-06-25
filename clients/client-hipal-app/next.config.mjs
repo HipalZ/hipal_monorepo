@@ -1,3 +1,8 @@
+
+
+/**
+ * @type {import('next').NextConfig}
+ */
 const nextConfig = {
 	// experimental: {
 	//   appDir: true,
@@ -16,14 +21,15 @@ const nextConfig = {
 		  minimumCacheTTL: 31536000,
 		  // unoptimized: true,
 	  },
-	// async rewrites() {
-	//   return [
-	// 	{
-	// 	  source: '/',
-	// 	  destination: '/index.html',
-	// 	},
-	//   ];
-	// },
+	async redirects() {
+	  return [
+		{
+		  source: '/n/:businessId',
+		  destination: '/r/:businessId/explore',
+		  permanent: true,
+		},
+	  ];
+	},
 	async headers() {
 	  return [
 		{
