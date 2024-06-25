@@ -1,4 +1,4 @@
-name: Build and Push client-hitable-test Server Image
+name: Build and Push client-hibiz-test Server Image
 
 on:
   push:
