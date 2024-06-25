@@ -159,7 +159,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 response,
             })
             if (res.status === 200) {
-                router.push(`/r/${data?.business?._id}/review?orderId=${res?.data?.data}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
@@ -199,7 +199,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             if (response?.status === 200) {
                 toast.success(response.data.message)
                 setSelectedPay(false)
-                router.push(`/r/${data?.business?._id}/review?orderId=${response?.data?.data?.order_id}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${response?.data?.data?.order_id}`)
             }
         } catch (err) {
             toast.error('invalid code')
@@ -590,7 +590,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             {renderPopUpContent()}
             {isLoading ? <LoadingSpinner /> : null}
-            <MiddlePopUp show={selectedPay} onClose={verifyOrder}>
+            <MiddlePopUp show={selectedPay} onClose={verifyOrder} onSave={verifyOrder}>
                 <div className="h-full p-4">
                     <center className="text-2xl">Confirmation Code</center>
                     <br />
@@ -613,7 +613,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     <center>Enter the code to avail get rewards🥳</center>
                 </div>
             </MiddlePopUp>
-
         </div>
     )
 };

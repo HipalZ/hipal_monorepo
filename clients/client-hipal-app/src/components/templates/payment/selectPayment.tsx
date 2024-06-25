@@ -99,7 +99,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                     }}
                         className='bg-[#EACBBF] rounded-b-[3rem] h-1/2' />
                     <div className='px-4 pt-2 text-xs leading-2'>
-                        Hassel free & easy payments from your favorite UPI, Card or net banking
+                        Hassle free & easy payments from your favorite UPI, Card or net banking
                     </div>
                     <button onClick={() => createOrder(billValue, 'OFFLINE')} className='absolute px-4 py-1 text-white bg-black rounded-full bottom-2 left-2'>
                         Pay offline
@@ -113,7 +113,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                         backgroundRepeat: 'no-repeat',
                     }} className='bg-[#F7C846] rounded-b-[3rem] h-1/2' />
                     <div className='px-4 pt-2 text-xs leading-2'>
-                        Hassel free & easy payments from your favorite UPI, Card or net banking
+                        Hassle free & easy payments from your favorite UPI, Card or net banking
                     </div>
                     <button onClick={() => createOrder(billValue, 'ONLINE')} className='absolute px-4 py-1 text-white bg-black rounded-full bottom-2 left-2'>
                         Pay online

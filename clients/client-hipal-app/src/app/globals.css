@@ -482,8 +482,9 @@ input[type='password'] {
 	display:flex;
 	justify-content: center;
 	flex-direction: row-reverse; 
-	column-gap:16px;
+	column-gap:8px;
 	align-items: center;
+	width:fit-content
 }
 .rate:not(:checked) > input {
 	appearance: none;
@@ -494,7 +495,7 @@ input[type='password'] {
     overflow:hidden;
     white-space:nowrap;
     cursor:pointer;
-    font-size:3.125rem;
+    font-size:2.5rem;
     color:#ccc;
 }
 .rate:not(:checked) > label:before {

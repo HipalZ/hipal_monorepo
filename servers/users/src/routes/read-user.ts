@@ -188,6 +188,7 @@ router.get('/v1/users/staff/Single', async (req: Request, res: Response) => {
   });
 });
 
+//TODO: add validate req
 router.get('/v1/users/:businessId/getUserReward', async (req: Request, res: Response) => {
   const { userPhone, loyaltyId } = req.query;
 

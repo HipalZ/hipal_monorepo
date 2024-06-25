@@ -238,3 +238,30 @@ export interface UserData {
 	id: string
 	_id: string
 }
+
+export interface User {
+	_id: string;
+	name: string;
+	email: string;
+	phone: string;
+	customRole: CustomRole[];
+	password: string;
+	role: string[];
+	createdAt: string;
+	updatedAt: string;
+	__v: number;
+  };
+  
+export interface  CustomRole  {
+	businessId: string;
+	customRoleId: string;
+	role: string;
+	accessControl: AccessControl;
+	bookMark: boolean;
+	_id: string;
+  };
+  
+export interface  AccessControl {
+	hibiz: boolean;
+	_id: string;
+  };

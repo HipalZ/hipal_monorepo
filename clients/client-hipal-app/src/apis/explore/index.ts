@@ -3,14 +3,22 @@ import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 import { set } from "lodash-es";
+import { redirect } from 'next/navigation';
 
 async function fetchBusinessData(businessId: string) {
-	// if businessId is a slug, meaning regex it to see if it is objectId, if not objectId, fetch businessData via slug.
-	const isObjectId = false;
-	const bId = isObjectId ? businessId: "your api call businessid";
-	const settings = (await axios(paths.settings(bId))) || {}
-	const businessData = await axios(paths.businessData(bId))
-	const loyalty = await axios(paths.getLoyaltySettings(bId)) || {}
+	const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+	let bizId = businessId;
+	if (!objectIdRegex.test(businessId)) {
+		const response = await axios.get(`/v1/businesses/n/${businessId}`);
+		bizId = response.data.data.businessId; 
+	}
+	if (!bizId) {
+        redirect('/');
+    }
+
+	const settings = (await axios(paths.settings(bizId))) || {}
+	const businessData = await axios(paths.businessData(bizId))
+	const loyalty = await axios(paths.getLoyaltySettings(bizId)) || {}
 	const data = {} as IBusinessData
 	data["settings"] = settings?.data?.data[0] || {}
 	data["business"] = businessData?.data?.data || {}

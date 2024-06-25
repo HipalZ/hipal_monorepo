@@ -1,7 +1,6 @@
 "use client"
-
 import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
-import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import BottomButton from "@/components/molecules/bottomButton";
 import DishData from "@/components/atoms/dishDescription"

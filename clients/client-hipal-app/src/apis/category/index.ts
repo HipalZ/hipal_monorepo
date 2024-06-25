@@ -2,11 +2,21 @@ import axios from "@/utils/axios";
 import { paths } from "@/components/utils/paths";
 import { isEmpty } from "lodash-es";
 import { IBusinessData, ICategory } from "@/components/types/businessData";
+import { redirect } from 'next/navigation';
 
 async function fetchCategoryPageData(businessId:string) {
-    const settings = (await axios(paths.settings(businessId))) || {}
-    const dishesData = (await axios(paths.dishesData(businessId))) || {}
-    const _categoryData = (await axios(paths.categoryByBusiness(businessId))) || {}
+    const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+	let bizId = businessId;
+	if (!objectIdRegex.test(businessId)) {
+		const response = await axios.get(`/v1/businesses/n/${businessId}`);
+		bizId = response.data.data.businessId; 
+	}
+	if (!bizId) {
+        redirect('/');
+    }
+    const settings = (await axios(paths.settings(bizId))) || {}
+    const dishesData = (await axios(paths.dishesData(bizId))) || {}
+    const _categoryData = (await axios(paths.categoryByBusiness(bizId))) || {}
 
     const data = {} as IBusinessData
 

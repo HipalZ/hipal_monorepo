@@ -28,6 +28,21 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     improvementAreas: {
       type: [String],
     },
+    foodTaste: {
+      type: Boolean,
+    },
+    ambience:{
+      type:Boolean
+    },
+    hygiene: {
+      type: Boolean,
+    },
+    service:{
+      type:Boolean
+    },
+    staffs:{
+      type:[String]
+    },
     date: {
       required: true,
       type: Number,

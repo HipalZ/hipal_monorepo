@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use client"
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
@@ -8,34 +7,73 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ChangeEvent, memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
-import HiLogo from '@/assets/img/HipalZ_logo_title.png'
-import dummy from '@/assets/img/OTC.png'
-import ReviewCoinz from '@/assets/img/review-coinz.png'
-import RewardTick from '@/assets/img/Rewarded-tick.png'
+import HiLogoText from '@/assets/img/Hipal_logo_with_white_text.png'
 import { useQuery } from '@tanstack/react-query'
-import { IBusinessData } from '@/components/types/businessData'
+import { IBusinessData, User } from '@/components/types/businessData'
 import { updateTheme } from '@/components/utils/themes'
 import { toast } from 'react-toastify'
+import { MdOutlineMessage, MdOutlinePerson } from 'react-icons/md'
+import MiddlePopUp from '@/components/atoms/middlePopUp'
+import reviewHand from '@/assets/img/review-hand.png'
+import useBusinessDetails from '@/components/store/useBusinessDetails'
+import { RxCrossCircled } from 'react-icons/rx'
+import { cn } from '@/components/utils/helpers'
 
 export default memo(function Review({ data }: { data: IBusinessData }) {
-	const [improvements, setImprovements] = useState<string[]>([])
-	const [rating, setRating] = useState<string | null>(null);
-	const [description, setDescription] = useState<string | ''>('')
-	const [showSuggestions, setShowSuggestions] = useState(false)
-	const [filteredStaff, setFilteredStaff] = useState([])
-	const [cursor, setCursor] = useState(-1)
 	const router = useRouter()
 	const params = useParams();
 	const businessId = params?.businessId
 	const searchParams = useSearchParams()
-
 	const claim = searchParams?.get('claim')
 	const orderId = searchParams?.get('orderId')
+	const amount = searchParams?.get('amount')
+	const businessName = useBusinessDetails((s) => s.businessDetails?.businessName);
+	const logo = useBusinessDetails((s) => s.businessDetails?.logo);
+
+	const [rating, setRating] = useState<string | null>();
+	const [description, setDescription] = useState<string | ''>('')
+	const [showSuggestions, setShowSuggestions] = useState(false)
+	const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+	const [staffs, setStaffs] = useState<User[]>([])
+	const [foodTaste, setFoodTaste] = useState(null);
+	const [ambience, setAmbience] = useState(null);
+	const [hygiene, setHygiene] = useState(null);
+	const [service, setService] = useState(null);
+	const [openComment, setOpenComment] = useState(false);
+
+	const improvementAreas = [
+		{ name: 'Food Taste', state: foodTaste, setState: setFoodTaste },
+		{ name: 'Waiter & Behavior', state: service, setState: setService },
+		{ name: 'Ambience', state: ambience, setState: setAmbience },
+		{ name: 'Hygiene & Celanese', state: hygiene, setState: setHygiene },
+	];
+
+	const handleFeedback = (area, value) => {
+		area.setState(value);
+	};
+
+	const handleSelectStaff = (staff) => {
+		console.log('staff', staff);
+		if (!selectedStaff.includes(staff)) {
+			setSelectedStaff([...selectedStaff, staff]);
+		}
+	};
+
+	const handleRemoveStaff = (staffToRemove) => {
+		setSelectedStaff(selectedStaff.filter(staff => staff !== staffToRemove));
+	};
+
+	const handleKeyDown = (e) => {
+		if (e.key === 'Enter') {
+			handleSelectStaff(e.target.innerText);
+		}
+	};
 
 	const userDetails = useLogin((s) => s.userDetails)
 
 	const getStaff = async () => {
 		const response = await axios.get(`/v1/users/${businessId}`)
+		setStaffs(response?.data?.data)
 		return response?.data?.data
 	}
 
@@ -52,14 +90,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 		staleTime: 1000 * 10,
 	})
 
-	const handleSuggestionClick = async (event) => {
-		const value = event.target.innerText
-		if (improvements.includes(value)) {
-			setImprovements(improvements.filter((keyword) => keyword !== value))
-		} else {
-			setImprovements([...improvements, value])
-		}
-	}
+
 	const handleRatingChange = (event: ChangeEvent<HTMLInputElement>) => {
 		setRating(event.target.value)
 	}
@@ -75,9 +106,13 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					reviewerPhone: `91${userDetails?.phone}`,
 					reviewRating: Number(rating),
 					description: description,
-					improvementAreas: improvements,
 					date: Date.now(),
-					order_id: orderId?.toString()
+					order_id: orderId?.toString(),
+					staffs: selectedStaff,
+					foodTaste,
+					ambience,
+					hygiene,
+					service,
 				},
 			}
 
@@ -92,8 +127,6 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 		}
 	}
 
-	const improvementAreas = ['Food Taste', 'Waiter & Behavior', 'Ambience', 'Hygiene & Celanese']
-
 	const navigateToExplore = () => {
 		router.push(`/r/${businessId}/explore`)
 	}
@@ -101,44 +134,10 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value
 		setDescription(value)
-
-		const parts = value.split(' ')
-		const lastPart = parts[parts.length - 1]
-		if (lastPart.startsWith('@')) {
-			if (!showSuggestions) {
-				setShowSuggestions(true)
-			}
-		} else {
-			setShowSuggestions(false)
-		}
 	}
 
-	// Filter staff list whenever text or staff list updates
-	useEffect(() => {
-		if (showSuggestions && staffList) {
-			const parts = description.split(' ')
-			const lastPart = parts[parts.length - 1]
-			const searchQuery = lastPart.slice(1)
-			const filtered = staffList.filter((staff) =>
-				staff.name.toLowerCase().startsWith(searchQuery.toLowerCase()),
-			)
-			setFilteredStaff(filtered)
-			setCursor(-1) // Reset cursor
-		}
-	}, [staffList, description, showSuggestions])
-
-	const handleKeyDown = (event) => {
-		if (event.key === 'ArrowDown' && cursor < filteredStaff.length - 1) {
-			setCursor((c) => c + 1)
-		} else if (event.key === 'ArrowUp' && cursor > 0) {
-			setCursor((c) => c - 1)
-		} else if (event.key === 'Enter' && cursor >= 0 && filteredStaff.length > 0) {
-			event.preventDefault()
-			const selectedName = filteredStaff[cursor]?.name
-			const newText = description.replace(/@\w*$/, `@${selectedName} `)
-			setDescription(newText)
-			setShowSuggestions(false)
-		}
+	const handleSaveStaff = () => {
+		setShowSuggestions(!showSuggestions)
 	}
 
 	useEffect(() => {
@@ -149,13 +148,11 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 
 	return (
 		<>
-			<div className='p-4 mb-[5rem] animate-fade-up animate-once '>
-				<center className='z-[60]'>
-					<h6 className='text-[0.75rem] ml-6'>Powered by</h6>
-					<figure className='h-24 w-28'>
-						<Image src={HiLogo} alt='HiLogo' priority={true} />
-					</figure>
-				</center>
+			<div className='p-4 animate-fade-up animate-once '>
+				<figure className='z-10 rounded-full flex items-center space-x-2'>
+					<Image src={logo} alt='logo' height={38} width={38} />
+					<span>{businessName}</span>
+				</figure>
 				<section
 					style={{
 						opacity: rating ? 0 : 1,
@@ -171,42 +168,26 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 							src={success}
 							alt='success'
 							priority={true}
-							width={80}
-							height={80}
+							width={100}
+							height={100}
 							className='animate-pulse'
 						/>
 						<h1 className='text-xl'>Payment Success!</h1>
 					</article>
 					<br />
 					<div className='text-center'>
-						{/* <h1 className='text-xl font-semibold'>₹ {total}</h1> */}
+						<h1 className='text-xl font-semibold'>₹ {amount}</h1>
 						&nbsp;
-						<div className='relative'>
-							<figure className='absolute left-[41%] z-10 rounded-full'>
-								<Image src={dummy} alt='logo' height={52} width={52} />
-							</figure>
-							<div className='absolute left-[51%] text-xl flex justify-center items-center rounded-full border w-[50px] h-[50px] bg-black text-white'>
-								{userDetails?.name?.charAt(0)}
-							</div>
-						</div>
 					</div>
-					{Number(claim) > 0 && (
-						<section className='bg-[#fdf5d7] mt-[5rem] h-[7rem] rounded-3xl flex justify-between'>
-							<article className='px-6 py-4 space-y-4'>
-								<h6 className='inline-flex text-[#183d2e] text-lg'>
-									You&nbsp;
-									<Image src={RewardTick} alt='RewardTick' />
-									&nbsp;Rewarded
-								</h6>
-								<h1 className='text-3xl'>{claim} Coinz</h1>
-							</article>
-							<br />
-							<Image src={ReviewCoinz} alt='ReviewCoinz' />
-						</section>
-					)}
-					<br />
-					<br />
-					<h1 className='flex items-center justify-center'>
+					<center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center>
+					{Number(claim) > 0 && <center className="flex items-center justify-center my-4">
+						<Image src={reviewHand} alt="review-hand" />
+						<h1 className="text-primary w-32">🎉 You Won <span className="text-3xl text-primary">{claim}</span> coinz</h1>
+					</center>}
+				</section>
+				&nbsp;
+			<div className="bg-base-200 -mx-4 px-4 pt-4">
+					<h1 className='flex items-center justify-center text-xl font-semibold'>
 						<Image
 							src={reviewIcon}
 							alt='review'
@@ -215,119 +196,144 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 							width={35}
 							quality={95}
 						/>
-						&nbsp; <b className='text-base'>Rate us</b>&nbsp; and get more coinz
-					</h1>
-				</section>
-				<section className='m-4'>
-					<div className='rate'>
-						<input type='radio' id='star5' name='rate' value='5' onChange={handleRatingChange} />
-						<label htmlFor='star5' title='text'>
-							5 stars
+						&nbsp; How was your experience
+				</h1>
+					<center className='m-2'>
+						<div className='rate'>
+							<input type='radio' id='star5' name='rate' value='5' onChange={handleRatingChange} />
+							<label htmlFor='star5' title='text'>
+								5 stars
 						</label>
-						<input type='radio' id='star4' name='rate' value='4' onChange={handleRatingChange} />
-						<label htmlFor='star4' title='text'>
-							4 stars
+							<input type='radio' id='star4' name='rate' value='4' onChange={handleRatingChange} />
+							<label htmlFor='star4' title='text'>
+								4 stars
 						</label>
-						<input type='radio' id='star3' name='rate' value='3' onChange={handleRatingChange} />
-						<label htmlFor='star3' title='text'>
-							3 stars
+							<input type='radio' id='star3' name='rate' value='3' onChange={handleRatingChange} />
+							<label htmlFor='star3' title='text'>
+								3 stars
 						</label>
-						<input type='radio' id='star2' name='rate' value='2' onChange={handleRatingChange} />
-						<label htmlFor='star2' title='text'>
-							2 stars
+							<input type='radio' id='star2' name='rate' value='2' onChange={handleRatingChange} />
+							<label htmlFor='star2' title='text'>
+								2 stars
 						</label>
-						<input type='radio' id='star1' name='rate' value='1' onChange={handleRatingChange} />
-						<label htmlFor='star1' title='text'>
-							1 star
+							<input type='radio' id='star1' name='rate' value='1' onChange={handleRatingChange} />
+							<label htmlFor='star1' title='text'>
+								1 star
 						</label>
-					</div>
-				</section>
-				{rating && (
-					<section className='m-4'>
-						<h1>How Can we Improve ?</h1>
-						<section className='flex flex-wrap gap-4 my-2 mt-4 overflow-x-auto'>
-							{improvementAreas.map((suggestion: string) => {
-								return (
-									<div
-										onKeyDown={handleSuggestionClick}
-										onClick={handleSuggestionClick}
-										key={suggestion}
-										className={`${improvements.includes(suggestion)
-												? 'bg-primary text-base-100 font-medium'
-												: 'text-primary bg-base-200'
-											} inline-block truncate overflow-hidden px-3 py-1 justify-center items-center border bg-base-100/50 border-[#cacaca] rounded-full text-base`}
-									>
-										<span>{suggestion}</span>
-									</div>
-								)
-							})}
-						</section>
-					</section>
-				)}
-				{rating && (
-					<section className='m-4 bg-base-100 shadow-base-100'>
-						<div className='relative'>
-							<textarea
-								onChange={handleDescriptionChange}
-								onKeyDown={handleKeyDown}
-								value={description}
-								style={{ resize: 'none', position: 'relative', zIndex: 1 }}
-								id='floating_outlined'
-								className='h-36 block w-full pt-2 pb-3 pl-4 pr-[7rem] mb-0 ml-0 mr-0 !text-primary bg-transparent border-gray-800 rounded-lg border dark:text-white focus:outline-none focus:ring-0 peer'
-								placeholder='Write a Review and @Tag the Staff Members here'
-								maxLength={600}
-							/>
-							{showSuggestions && (
-								<ul
-									className='absolute left-0 w-full mt-0 overflow-auto bg-green-500 border border-gray-300 top-full max-h-60'
-									style={{ zIndex: 2 }}
-								>
-									{filteredStaff?.map((staff, index) => (
-										<div key={staff?.name + index}>
-											{isPending && <div>Loading staff...</div>}
-											{error && <div>Error loading staff!</div>}
-											<li
-												key={staff?.name}
-												className={`p-2 cursor-pointer text-blue-500 ${cursor === index ? 'bg-gray-200' : 'bg-white'
-													}`}
-												onClick={() => {
-													const newText = description.replace(/@\w*$/, `@${staff?.name} `)
-													setDescription(newText)
-													setShowSuggestions(false)
-												}}
-											>
-												{staff?.name}
-											</li>
-										</div>
-									))}
-								</ul>
-							)}
 						</div>
-					</section>
-				)}
-			</div>
-			<div className='fixed bottom-0 z-20 w-full py-2 rotate-180 shadow-lg bg-base-100 shadow-base-100'>
-				<div className='flex flex-col mx-auto rotate-180 justify-items-center'>
-					{rating && rating > 0 ? (
-						<button
-							type='button'
-							onClick={result}
-							className={
-								'min-h-[3rem] !capitalize btn btn-primary btn-md mx-auto font-normal text-[0.8rem] rounded-full shadow-lg min-w-389 min-w-[95%] my-auto !py-2 '
-							}
-						>
-							Submit
-						</button>
-					) : (
-						<center
-							onKeyDown={navigateToExplore}
-							onClick={navigateToExplore}
-							className='pb-1 mb-4 underline'
-						>
-							{' '}
-							Skip{' '}
-						</center>
+					</center>
+					<center
+						onClick={navigateToExplore}
+						className='pb-1 mb-8 underline'
+					>
+						Skip
+				</center>
+					{rating && (
+						<section className="border border-1 rounded-lg border-[#FFC814] bg-white">
+							{improvementAreas.length > 0 &&
+								improvementAreas.map((each) => (
+									<article key={each.name} className="m-5 flex justify-between">
+										<h1 className="text-sm">{each.name}</h1>
+										<div>
+											<span
+												className={`p-2 rounded-full ${each.state === true ? 'bg-primary' : ''}`}
+												onClick={() => handleFeedback(each, true)}
+											>
+												👍
+											</span>
+											&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+											<span
+												className={`p-2 rounded-full ${each.state === false ? 'bg-primary' : ''}`}
+												onClick={() => handleFeedback(each, false)}
+											>
+												👎
+                    						</span>
+										</div>
+									</article>
+								))}
+						</section>
 					)}
+				&nbsp;
+				{rating && <article className="flex justify-around">
+						<button onClick={() => setOpenComment(!openComment)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
+							<MdOutlineMessage size={20} />
+							<span>Comment</span>
+						</button>
+						<button onClick={() => setShowSuggestions(!showSuggestions)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
+							<MdOutlinePerson size={20} />
+							<span>
+								Tag Staff
+						</span>
+						</button>
+					</article>}
+					<br />
+					<div className="flex flex-wrap space-x-2">
+						{
+							selectedStaff && selectedStaff.length > 0 && selectedStaff?.map((staff) => (
+								<div key={staff} className="flex ">
+									<span className="px-4 bg-white text-black rounded-md my-2">{staff}</span>
+									<RxCrossCircled onClick={() => handleRemoveStaff(staff)} />
+								</div>
+							)
+							)
+						}
+					</div>
+					{openComment && (
+						<section className='my-4 bg-white shadow-base-100'>
+							<div className='relative'>
+								<textarea
+									onChange={handleDescriptionChange}
+									value={description}
+									style={{ resize: 'none', position: 'relative', zIndex: 1 }}
+									id='floating_outlined'
+									className='h-36 block w-full pt-2 pb-3 pl-4 pr-[7rem] mb-0 ml-0 mr-0 !text-primary bg-transparent border-gray-800 rounded-lg border dark:text-white focus:outline-none focus:ring-0 peer'
+									placeholder='Please leave a comment'
+									maxLength={600}
+								/>
+							</div>
+						</section>
+					)}
+
+					<MiddlePopUp onSave={handleSaveStaff} show={showSuggestions} onClose={() => setShowSuggestions(!showSuggestions)}>
+						<ul
+							className='w-full h-[60vh] mt-0 overflow-auto border border-gray-300'
+							style={{ zIndex: 2 }}
+						>
+							<center className="text-xl font-semibold my-4">Staff members</center>
+							{staffs?.map((staff, index) => (
+								<div key={staff?.name + index}>
+									{isPending && <center>Loading staff...</center>}
+									{error && <center>Error loading staff!</center>}
+									<li
+										key={staff?.name}
+										onKeyDown={handleKeyDown}
+										onClick={() => handleSelectStaff(staff?.name)}
+										className={cn("h-16 p-4 hover:bg-gray-200 text-xl", selectedStaff.includes(staff?.name) && "bg-primary text-white")}
+									>
+										👤{staff?.name.length > 10 ? `${staff?.name.slice(0, 10)}...` : staff?.name}
+									</li>
+								</div>
+							))}
+						</ul>
+					</MiddlePopUp>
+					<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem]  -mx-4">
+						<figure className='h-16 pt-4'>
+							<Image src={HiLogoText} alt='HiLogo' priority={true} />
+						</figure>
+						<h6 className='text-[0.75rem] text-white w-20 pt-4'>Powered by HipalZ</h6>
+					</center>
+					{rating && rating.length > 0 ? (
+						<article className="flex justify-center">
+							<button
+								onClick={result}
+								className="on_active_bounce text-base-100 fixed bottom-20 z-50 w-[20.5rem] rounded-full bg-primary py-[0.75rem] text-[18px] leading-[1.15rem]"
+							>
+								Submit
+					  </button>
+						</article>
+					) : (
+							null
+						)}
 				</div>
 			</div>
 		</>

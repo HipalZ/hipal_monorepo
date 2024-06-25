@@ -3,15 +3,17 @@ import { ICart, ICartDish, ICartExtra, ICartVariant } from "@/components/store/u
 import { IBusinessData } from "@/components/types/businessData"
 import isEmpty from "lodash-es/isEmpty"
 import {
-    beans,
-    bowl,
-    bud,
-    flower,
-    love,
-    triangleToDataurl,
-    waveToDataUrl,
+	beans,
+	bowl,
+	bud,
+	flower,
+	love,
+	triangleToDataurl,
+	waveToDataUrl,
 } from "@/components/atoms/card/pathPattern"
 import { ILoyaltySetting } from "../store/useLoyaltyData"
+import { ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge'
 
 export const getPrice = (price: number | string) => {
 	if (!price || price === 0) {
@@ -113,4 +115,9 @@ export const createSrcColor = (loyaltySetting: ILoyaltySetting) => [
 	{ src: { bowl: bowl(loyaltySetting?.fontColor).bowl } },
 	{ src: { love: love(loyaltySetting?.fontColor).love } },
 	{ src: { flower: flower(loyaltySetting?.fontColor).flower } },
-  ];
+];
+
+//apply cn
+export const cn = (...inputs: ClassValue[]) => {
+	return twMerge(clsx(inputs));
+};

@@ -17,7 +17,7 @@ app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ['https://biz.test.hipalz.com', 'https://table.test.hipalz.com', 'https://kitchen.test.hipalz.com'],
+    origin: ['http://localhost:3001','http://localhost:3002','https://biz.test.hipalz.com', 'https://table.test.hipalz.com', 'https://kitchen.test.hipalz.com'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 200,
