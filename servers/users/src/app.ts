@@ -21,6 +21,7 @@ app.use(
   cors({
     preflightContinue: true,
     origin: '*',
+    allowedHeaders: ['Authorization', 'x-refresh-with'],
   }),
 );
 // app.use(
