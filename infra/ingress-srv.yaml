@@ -8,6 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
     cert-manager.io/issuer: letsencrypt-nginx-wcard
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
 spec:
   ingressClassName: nginx
   tls:

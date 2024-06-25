@@ -14,18 +14,13 @@ import { updateUserRouter } from './routes/update-user';
 const app = express();
 // app.disable('x-powered-by');
 app.use(morgan('dev'));
-// app.set('trust proxy', true); // * traffic received from ingress
+app.set('trust proxy', true); // * traffic received from ingress
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ['*'],
-    // methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    // preflightContinue: true,
-    // optionsSuccessStatus: 200,
-    // credentials: true,
-    // allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
-    // allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
+    preflightContinue: true,
+    origin: '*',
   }),
 );
 // app.use(
