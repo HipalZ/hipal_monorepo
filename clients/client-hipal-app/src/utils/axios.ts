@@ -5,7 +5,7 @@ const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV as string;
 
 const axios = axiosConstructor.create({
   baseURL:process.env.NEXT_API_URL || process.env.NEXT_PUBLIC_API_URL as string,
-  withCredentials: true,
+
 })
 console.log({axios});
 axios.interceptors.request.use(
