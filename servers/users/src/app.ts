@@ -22,7 +22,7 @@ app.use(
     preflightContinue: false,
     optionsSuccessStatus: 200,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with', 'X-refresh-with'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with', 'X-refresh-with', 'X-Refresh-With'],
   }),
 );
 // app.use(
