@@ -34,16 +34,16 @@ axios.interceptors.request.use(
       }
     }
 
-    // const { accessToken, refreshToken } = useUserToken.getState();
-    // const accessTokenLite = useHiClientZ.getState().accessToken;
-    // const refreshTokenLite = useHiClientZ.getState().refreshToken;
-    // if (accessToken && refreshToken) {
-    //   config.headers['Authorization'] = `Bearer ${accessToken}`;
-    //   config.headers['x-refresh-with'] = refreshToken;
-    // } else if (accessTokenLite && refreshTokenLite) {
-    //   config.headers['Authorization'] = `Bearer ${accessTokenLite}`;
-    //   config.headers['x-refresh-with'] = refreshTokenLite;
-    // }
+    const { accessToken, refreshToken } = useUserToken.getState();
+    const accessTokenLite = useHiClientZ.getState().accessToken;
+    const refreshTokenLite = useHiClientZ.getState().refreshToken;
+    if (accessToken && refreshToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`;
+      config.headers['x-refresh-with'] = refreshToken;
+    } else if (accessTokenLite && refreshTokenLite) {
+      config.headers['Authorization'] = `Bearer ${accessTokenLite}`;
+      config.headers['x-refresh-with'] = refreshTokenLite;
+    }
 
     return config;
   },

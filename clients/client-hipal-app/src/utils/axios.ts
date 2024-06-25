@@ -34,11 +34,11 @@ axios.interceptors.request.use(
         config.baseURL = 'http://localhost:8008';
       }
     }
-    // const { accessToken, refreshToken } = useUserToken.getState();
-    // if (accessToken || refreshToken) {
-    //   if (accessToken) config.headers['Authorization'] = `Bearer ${accessToken}`;
-    //   if (refreshToken) config.headers['x-refresh-with'] = refreshToken;
-    // }
+    const { accessToken, refreshToken } = useUserToken.getState();
+    if (accessToken || refreshToken) {
+      if (accessToken) config.headers['Authorization'] = `Bearer ${accessToken}`;
+      if (refreshToken) config.headers['x-refresh-with'] = refreshToken;
+    }
 
     return config;
   },
