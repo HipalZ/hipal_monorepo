@@ -1,13 +1,10 @@
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { memo, useEffect, useState } from "react"
 import { FiChevronLeft, FiX } from "react-icons/fi"
 import { HiLightBulb, HiSearch } from "react-icons/hi"
 import { useInView } from "react-intersection-observer"
 import SearchPanel from "../searchPanel"
 import QuickFilter from "@/components/atoms/quickFilter"
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
-import Link from "next/link"
-import { useCart } from "@/components/store/useCart"
 
 import { ICategory } from "@/components/types/businessData"
 
@@ -39,9 +36,6 @@ function Header({
 	const [state, setState] = useState({
 		showSearchBox: title ? false : true,
 	})
-	const [skipReview, setSkipReview] = useState(false)
-	const searchParams = useSearchParams()
-	const businessId = searchParams?.get("businessId") as string
 	const [data, setData] = useState({
 		roundedHeader: false,
 	}) // roundedHeader is false when the header is scrolled to the top
@@ -89,13 +83,7 @@ function Header({
 		changeHeaderStyle()
 	}, [entry])
 	
-	useEffect(() => {
-		const pathArr = location.pathname.split("/")
-		const review = pathArr[pathArr.length - 1]
-		if (review === "review") {
-			setSkipReview(true)
-		}
-	}, [routePaths[PAGE_TYPES.REVIEW]])
+
 	return (
 			<div
 				ref={headerRef}
@@ -103,10 +91,9 @@ function Header({
 					} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
 				`}
 			>
-				{/* `relative` tag is required for search box */}
 				<div className="relative flex flex-row w-full px-6 mx-auto space-x-2 ">
 					{/* Back Button */}
-					<div className={`flex w-full ${skipReview ? "justify-between" : ""}`}>
+					<div className={`flex w-full`}>
 						<button
 							className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${data.roundedHeader &&
 								((!state.showSearchBox && title) || !(!state.showSearchBox && title))
@@ -133,9 +120,7 @@ function Header({
 								<>
 									<FiChevronLeft className="text-2xl text-primary" />
 								</>
-							) : (
-								<></>
-							)}
+							) :null}
 						</button>
 
 						{!state.showSearchBox && title ? (
@@ -151,23 +136,9 @@ function Header({
 						) : (
 							<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []} primaryColor={primaryColor || ""}/>
 						)}
-						{skipReview && (
-							<Link
-								href={`${routePaths[PAGE_TYPES.EXPLORER](`${businessId}`)}`}
-								className="flex justify-self-end"
-							>
-								<div className="text-center text-primary text-[0.875rem]">Skip the review</div>
-							</Link>
-						)}
 					</div>
 
 					{!state.showSearchBox && otherButtons && otherButtons}
-					{/* <Image alt="bookmark" className="border-primary border rounded-[15px] text-primary" src={bookmark} width={50} height={30} />
-					{Object.keys(cart).length > 0 && (
-						<span >
-							{Object.keys(cart).length && Object.keys(cart).length}
-						</span>
-					)} */}
 					{showOtherButtons && (
 						<div className="flex flex-row ml-auto ">
 							{!state.showSearchBox && (

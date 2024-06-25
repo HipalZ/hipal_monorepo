@@ -18,6 +18,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails"
 import HipalLogo from "@/assets/hipalNewLogo.svg"
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg"
 import { useUserToken } from "@/components/store/useUserToken";
+import { toast } from 'react-toastify';
 
 function OtpPage() {
 	const [otp, setOtp] = useState(["", "", "", ""])
@@ -40,8 +41,9 @@ function OtpPage() {
 	const params = useParams<{ businessId: string }>();
 	const businessId = params ? params.businessId : undefined;
 	const sendOtp = useLogin((s) => s.sendOtp)
-	const {  loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
+	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
 	const direction = useLogin((s) => s.direction)
+	const [loading, setLoading] = useState<boolean>(false);
 
 	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
 		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
@@ -56,8 +58,8 @@ function OtpPage() {
 		setOtp(newOtp)
 	}
 
-	
-	function randomInRange(min:number, max:number) {
+
+	function randomInRange(min: number, max: number) {
 		return Math.random() * (max - min) + min
 	}
 
@@ -77,6 +79,11 @@ function OtpPage() {
 			setError("Please enter the complete OTP.")
 			return
 		}
+		if (loading) {
+			return toast.error('Please wait for a moment');
+
+		}
+		setLoading(true);
 
 		try {
 			const config = {
@@ -109,6 +116,7 @@ function OtpPage() {
 					return
 				}
 				goNext()
+
 			}
 
 			setOtp(["", "", "", ""])
@@ -121,13 +129,14 @@ function OtpPage() {
 			if (inputRefs[0].current) {
 				inputRefs[0].current.focus()
 			}
+			setLoading(false)
 		}
 	}
-	const goNext = () => {
+	const goNext =  () => {
 		if (direction === "loyalty") {
-			router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
+			 router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
 		} else {
-			router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`))
+			 router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`))
 		}
 	}
 
@@ -141,7 +150,7 @@ function OtpPage() {
 	}
 
 	useEffect(() => {
-		let audio:HTMLAudioElement
+		let audio: HTMLAudioElement
 		if (isModalOpen) {
 			audio = new Audio("/sounds/Money.mp3")
 			audio.play()
@@ -252,8 +261,13 @@ function OtpPage() {
 							</span>
 						</article>
 					</Link>
-					<button type="submit" className="w-full bg-black rounded-full btn">
-						{userDetails.name !== "" ? "sign in" : "Sign up"}
+					<button disabled={loading} type="submit" className="w-full bg-black rounded-full btn">
+						{loading ? (
+							<span className="loader_spinner !border-t-base-100 "></span>
+						) :
+							userDetails.name !== "" ? "sign in" : "Sign up"
+						}
+
 					</button>
 					<small className="flex justify-center mt-2">
 						Didn’t receive the code? &nbsp;

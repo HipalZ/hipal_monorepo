@@ -37,10 +37,10 @@ function DishesTypes({
 	}, [allCategoriesTypes])
 
 	return (
-		<div className="flex flex-col w-full">
+		<>
 			<MainTypes allCategoriesTypes={allCategoriesTypes}/>
 			<SubTypes allCategoriesTypes={allCategoriesTypes} categories={categories} />
-		</div>
+		</>
 	)
 }
 

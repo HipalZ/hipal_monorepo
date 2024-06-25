@@ -1,6 +1,6 @@
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
 import { IExplore } from "@/components/types/businessData";
@@ -27,9 +27,9 @@ function MainBackground(props: { explore: IExplore | undefined }) {
 
 	const { isLogin } = useLogin()
 
-	const goToLoginPage = () => {
+	const goToLoginPage = useCallback(() => {
 		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](businessId)}`)
-	}
+	}, [businessId, router])
 
 	return (
 		<div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">

@@ -84,11 +84,9 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                 {loyaltySetting?._id && (
                     <section className="py-10 h-[25rem] !mt-0 bg-black">
                         <center><h4 className="pb-4 text-2xl text-white">REWARDZ</h4></center>
-                        <div className="relative p-4 overflow-hidden border rounded-xl border-accent ">
                             <SubLoyalty
                                 logo={businessDetails?.logo}
                             />
-                        </div>
 
                     </section>
                 )}

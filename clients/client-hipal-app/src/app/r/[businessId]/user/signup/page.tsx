@@ -1,14 +1,13 @@
 "use client"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { FormEvent, memo, useState } from "react"
+import { FormEvent, memo, useCallback, useState } from "react"
 import { toast } from "react-toastify"
 import Welcome from "@/assets/login-background.png"
 import { BiArrowBack } from "react-icons/bi"
 import HipalLogo from "@/assets/hipalNewLogo.svg"
 import { useLogin } from "@/components/store/useLogin"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import axios from "@/utils/axios"
 
@@ -16,13 +15,17 @@ function SignUp() {
 	const [logo, setLogo] = useState<string>('')
 	const [phone, setPhone] = useState("")
 	const { setUserDetails } = useLogin()
-    const businessData = useBusinessDetails((s) => s.businessDetails)
+	const businessData = useBusinessDetails((s) => s.businessDetails)
 	const router = useRouter()
 	const params = useParams<{ businessId: string }>();
 	const businessId = params ? params.businessId : undefined;
+	const [loader, setLoader] = useState<boolean>(false)
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
+		if (loader) return toast.error("Please wait for a moment")
+
+		setLoader(true)
 
 		if (phone.length !== 10) {
 			toast.error("Please enter a valid phone number")
@@ -43,19 +46,20 @@ function SignUp() {
 			const res = await axios(config)
 			if (res.status === 201) {
 				setUserDetails(res.data.data?.user)
-				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
+				await router.push(`${routePaths[PAGE_TYPES.OTP](businessId ?? "")}`)
+				setLoader(false)
 			}
 		} catch (error) {
 			if ((error as any).response?.status === 409) {
 				setUserDetails((error as any).response.data.data?.user)
-				router.push(`${routePaths[PAGE_TYPES.OTP](`${businessId}`)}`)
-			} 
-		}
+				router.push(`${routePaths[PAGE_TYPES.OTP](businessId ?? "")}`)
+			}
+		} 
 	}
 
-	const goBack = () => {
+	const goBack = useCallback(() => {
 		router.back()
-	}
+	}, [router])
 
 	return (
 		<section className="relative bg-black">
@@ -101,8 +105,12 @@ function SignUp() {
 						required
 					/>
 				</section>
-				<button type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn">
-					get started
+				<button disabled={loader} type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn">
+					{loader ? (
+						<span className="loader_spinner !border-t-base-100 "></span>
+					) : (
+						'Get Started'
+					)}
 				</button>
 				<center className="mx-12 mt-4 text-xs">
 					By continuing you are agreeing to the{" "}

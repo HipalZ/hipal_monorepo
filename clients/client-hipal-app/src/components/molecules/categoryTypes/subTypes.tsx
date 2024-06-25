@@ -6,16 +6,17 @@ import { ICategory } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import Link from "next/link"
-import { memo, useEffect, useMemo, useRef } from "react"
+import { memo, useMemo, useRef } from "react"
+import Coinz from "@/assets/bonuscard/coin.png"
 
-interface ISubTypes{
+interface ISubTypes {
 	allCategoriesTypes: {
 		sub: any
 	},
 	categories: ICategory[]
 }
-function SubTypes(props:ISubTypes) {
-	const { allCategoriesTypes,categories } = props
+function SubTypes(props: ISubTypes) {
+	const { allCategoriesTypes, categories } = props
 	const subTypeContainerRef = useRef(null)
 	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
 	const isActiveCategory = useActiveClass((s) => s.isActiveCategory)
@@ -30,87 +31,60 @@ function SubTypes(props:ISubTypes) {
 		return allCategoriesTypes?.sub?.[parentCategory || ""] || null
 	}, [allCategoriesTypes?.sub, parentCategory])
 
-	useEffect(() => {
-		if (typeof document === "undefined") return
-
-		const el = document.getElementById(`subType${isActiveCategory}`) as HTMLElement
-
-		if (!el || !subTypeContainerRef.current) return
-		const container = subTypeContainerRef.current as HTMLElement
-
-		container.scrollTo({
-			left:
-				el.getBoundingClientRect().x -
-				container.getBoundingClientRect().x +
-				container.scrollLeft -
-				container.clientWidth / 2 +
-				el.getBoundingClientRect().width / 2,
-			behavior: "smooth",
-		})
-	}, [isActiveCategory])
-
 	return (
 		<>
 			{!!subTypes && (
-				<div className="flex flex-row w-full mx-auto">
-					<div
-						ref={subTypeContainerRef}
-						className="flex flex-row max-w-full space-x-0 overflow-x-auto -webkit-flex snap-proximity snap-x"
-					>
-						{Object.values(subTypes).map((item: ICategory, index: number) => (
-							<div
-								id={"subType" + item?._id}
-								className="relative ml-4 snap-center"
-								key={item.name + index}
+				<div
+					ref={subTypeContainerRef}
+					className="-webkit-flex snap-proximity snap-x"
+				>
+					{Object.values(subTypes).map((item: ICategory, index: number) => (
+						<div
+							id={"subType" + item?._id}
+							className="relative p-4 ml-4 snap-center"
+							key={item.name + index}
+						>
+							<Link
+								href={`#${item?._id}`}
+								onClick={() => {
+									setActiveCategory(item?._id)
+									setActiveParentCategory(item?.parentCategoryId ? item?.parentCategoryId : "")
+								}}
 							>
-								<Link
-									className="on_active_bounce rounded-full  flex flex-col capitalize !px-2 !py-1 text-sm min-w-fit font-[550] space-y-2 text-base-content"
-									href={`#${item?._id}`}
-									onClick={() => {
-										setActiveCategory(item?._id)
-										setActiveParentCategory(item?.parentCategoryId ? item?.parentCategoryId : "")
-									}}
+								<button
+									className={` ${isActiveCategory === item?._id ? "scale-125 bg-primary/10" : ""
+										} flex border border-primary rounded-full items-center justify-between px-2 py-1`}
 								>
-									<div
-										className={`!w-12 !h-12 rounded-lg overflow-hidden mx-auto ${
-											isActiveCategory === item?._id ? "scale-125" : ""
-										}`}
-									>
-										{!!item.coverImage ? (
+									{!!item.coverImage ? (
+										<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
 											<Image
-												src={item.coverImage}
-												layout={"intrinsic"}
+												src={Coinz}
 												alt="dish"
-												quality={75}
-												width={50}
-												height={50}
+												quality={95}
+												width={35}
+												height={35}
 												objectFit="cover"
-												placeholder="blur"
-												className="my-2 scale-150"
 												blurDataURL={getRandomBlurImg(50, 50)}
 											/>
-										) : (
-												<PlaceholderImg className="w-12 h-12" />
+										</figure>
+									)
+										: (
+											<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
+											<PlaceholderImg className="rounded-full" />
+											</figure>
 										)}
-									</div>
-
-									<span
-										className={`font-semibold text-center px-2 text-[0.725rem] w-[5rem] ${
-											isActiveCategory === item?._id ? "text-primary " : ""
-										} `}
+									<h6
+										className={` ${isActiveCategory === item?._id ? "text-primary " : ""
+											} text-sm`}
 									>
 										{item?.name}
-									</span>
+									</h6>
+								</button>
 
-									<div
-										className={`${
-											isActiveCategory === item._id ? "bg-primary" : "bg-transparent"
-										}  w-full h-0.5 rounded-full -pb-2 mx-auto`}
-									></div>
-								</Link>
-							</div>
-						))}
-					</div>
+
+							</Link>
+						</div>
+					))}
 				</div>
 			)}
 		</>

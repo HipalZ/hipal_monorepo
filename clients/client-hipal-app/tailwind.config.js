@@ -21,11 +21,11 @@ module.exports = {
 		themes: [
 		  {
 			light: {
-			  primary: "#F14638",
+			  primary: "#183D2E",
 			  secondary: "#000",
 			  accent: "#EFC54D",
 			  neutral: "#1A202C",
-			  "base-100": "#FFFFFC",
+			  "base-100": "#FEFBEF",
 			  info: "#E6E6E6",
 			  success: "#2FBD4E",
 			  "success-content": "#fff",

@@ -16,6 +16,7 @@ const nextConfig = {
 			  "dev.storage.hipal.life",
 			  "storage.hipal.life",
 			  "images.unsplash.com",
+			  "example.com"
 		  ],
 		  // formats: ['image/avif', 'image/webp'],
 		  minimumCacheTTL: 31536000,

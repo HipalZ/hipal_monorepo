@@ -5,8 +5,9 @@ import DishesList from '@/components/organisms/category/dishesList'
 import CategoryPageBtn from '@/components/molecules/bottomButton/categoryPageBtn'
 import TopBackground from '@/components/molecules/topBackground'
 import { IBusinessData } from '@/components/types/businessData'
+import { memo } from 'react'
 
-export default function Category({ data }: { data: IBusinessData }) {
+ const  Category =  memo(({ data }: { data: IBusinessData }) => {
     return (
         <div className="relative flex flex-col w-full pb-14">
             <TopBackground themes={data?.settings?.themes} />
@@ -27,4 +28,6 @@ export default function Category({ data }: { data: IBusinessData }) {
             <CategoryPageBtn />
         </div>
     );
-}
+})
+
+export default Category

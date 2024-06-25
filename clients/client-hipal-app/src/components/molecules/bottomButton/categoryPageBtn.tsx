@@ -56,7 +56,7 @@ const CategoryPageBtn = memo(() => {
 			<BottomButton>
 				<section className="flex items-center justify-between gap-4">
 					<button onClick={triggerCallWaiter} className="w-full px-2 py-3 text-sm border rounded-full border-primary">
-						{isLogin ? 'Call Waiter' : 'Scan to Call Waiter'}
+						{isLogin ? 'Call Captain' : 'Scan to Call Waiter'}
 					</button>
 					<button onClick={proceedToPayment} className="w-full px-2 py-3 text-sm rounded-full bg-primary text-base-100">
 						{isLogin ? 'Pay Bill' : 'Scan to Pay'}

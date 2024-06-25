@@ -16,8 +16,8 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 	const isInView = useInView(ref, { once: true });
 
 	return (
-		<section className="flex items-center justify-center gap-2">
-			<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[200px] h-[16.5rem] rounded-2xl">
+		<section className="relative flex items-center justify-center gap-4 mt-4 overflow-hidden">
+			<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
 				<div className="text-xl font-semibold text-white">
 					{loyaltySetting.setReward}% Coinzback
 				</div>
@@ -61,7 +61,7 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 			</center>
 			{
 				loyaltySetting?.signUpBonus &&
-				<center ref={ref} className="w-full relative bg-[#E63C45] overflow-hidden max-w-[200px] h-[16.5rem] rounded-2xl">
+				<center ref={ref} className="w-full relative bg-[#E63C45] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
 					<div className="pt-4 text-xl font-semibold leading-8 text-white">
 						Signup bonus
 					</div>

@@ -21,33 +21,18 @@ export interface ICat {
 // NOTE: A `relative` tag must be added to the parent of this component
 function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchBox: () => void; categories: ICategory[], primaryColor: string}) {
     const panel = useRef(null);
-    const [isPanelOpen, setIsPanelOpen] = useState(false);
     const { searchText, setSearchText } = useSearch();
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
     const [search, setSearchOpen] = useState(false);
     const router = useRouter();
     const params = useParams();
     const { businessId } = params as { businessId: string };
-
-    const togglePopover = (searchText = "") => {
-        if (searchText.length > 0) {
-            if (!isPanelOpen) {
-                setIsPanelOpen(true);
-            }
-        } else {
-            setIsPanelOpen(false);
-        }
-    };
-
     const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
         setSearchOpen(true);
-        togglePopover(e.target.value);
     };
 
-    const handleClearSearchText = () => {
-        setSearchText("");
-    };
+  
 
 	const dishData = useMemo(() => {
         if (!categories) return [];
@@ -86,33 +71,23 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
     return (
         <div className="flex flex-row w-full" ref={panel}>
             <div
-                className="active:bg-primary-content border-primary bg-base-100 focus-within:border-primary-focus focus-within:shadow focus-within:shadow-primary-focus/25 focus-within:bg-base-100-content max-w-screen flex flex-row w-[110%] min-w-max px-2 py-1.5 !-mx-2 space-x-2 overflow-hidden transition-all border rounded-lg z-50 "
-                onClick={() => togglePopover(searchText)}
+                className="active:bg-primary-content border-primary bg-base-100 max-w-screen flex flex-row w-[110%] min-w-max px-2 py-1.5 !-mx-2 space-x-2 overflow-hidden transition-all border rounded-lg z-50 "
             >
                 <input
                     autoFocus
-                    type="text"
+                    type="search"
                     placeholder="Search"
                     className="w-full px-2 text-sm bg-transparent focus:outline-none"
                     value={searchText}
                     onChange={handleSearchTextChange}
+                    onBlur={closeSearchBox}
                 />
-                {searchText.length > 0 ? (
-                    <HiX
-                        className="w-5 h-5 mx-2 my-auto text-sm cursor-pointer text-primary"
-                        onClick={handleClearSearchText}
-                    />
-                ) : (
-                    <HiSearch
-                        className="w-4 h-4 mx-2 my-auto text-sm text-primary"
-                        onClick={closeSearchBox}
-                    />
-                )}
+                
             </div>
             {search && (
                 <Transition
                     as={Fragment}
-                    show={isPanelOpen}
+                    show={search}
                     enter="transition ease-out duration-200"
                     enterFrom="opacity-0 -translate-y-1"
                     enterTo="opacity-100 translate-y-0"
@@ -121,7 +96,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                     leaveTo="opacity-0 -translate-y-1"
                 >
                     <div
-                        className="z-50 pb-14"
+                        className="!z-50 pb-14"
                         style={{
                             position: "absolute",
                             top: "2.5rem",

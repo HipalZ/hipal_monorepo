@@ -2,16 +2,17 @@
 import Header from "@/components/molecules/header"
 import DishesTypes from "@/components/organisms/category/dishTypes"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"
+import { divide } from "lodash-es"
 import { memo, useEffect, useState } from "react"
 import { useInView } from "react-intersection-observer"
 
 interface ICategoryProps {
 	allCategoriesTypes: any
 	categories: any,
-	primaryColor:string
+	primaryColor: string
 }
 function CategoryHeader(props: ICategoryProps) {
-	const { allCategoriesTypes, categories,primaryColor } = props
+	const { allCategoriesTypes, categories, primaryColor } = props
 	const [data, setData] = useState({
 		roundedHeader: false,
 	}) // roundedHeader is false when the header is scrolled to the top
@@ -32,8 +33,8 @@ function CategoryHeader(props: ICategoryProps) {
 			backURL={`${getPreviousPath()}`}
 			primaryColor={primaryColor}
 			title={
-				<div className="flex flex-row my-0 space-x-3">
-					<h4 className=" my-0 !text-2xl prose font-semibold">Menu</h4>
+				<div className="text-xl">
+					Menu
 				</div>
 			}
 			showOtherButtons
