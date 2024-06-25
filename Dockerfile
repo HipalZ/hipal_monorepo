@@ -6,34 +6,42 @@ WORKDIR /app
 RUN pnpm install
 
 FROM base AS dishes-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/dishes
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS businesses-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/businesses
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS categories-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/categories
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS kitchens-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/kitchens
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS payments-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/payments
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS settings-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/settings
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS users-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/users
 CMD ["pnpm", "run", "start:development"]
 
 FROM base AS zones-server
+RUN rm -r /app/clients
 WORKDIR /app/servers/zones
 CMD ["pnpm", "run", "start:development"]
 
