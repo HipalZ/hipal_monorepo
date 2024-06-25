@@ -18,7 +18,7 @@ const start = async () => {
 
   razorpayWrapper.create(process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_SECRET);
 
-  app.listen(process.env.PORT, () => {
+  app.listen(+(process.env.PORT ?? 4500), '0.0.0.0', () => {
     console.log(`Listening on port ${process.env.PORT}`);
   });
 };
