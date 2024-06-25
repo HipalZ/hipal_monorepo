@@ -5,9 +5,12 @@ import axios from "@/utils/axios";
 import { set } from "lodash-es";
 
 async function fetchBusinessData(businessId: string) {
-	const settings = (await axios(paths.settings(businessId))) || {}
-	const businessData = await axios(paths.businessData(businessId))
-	const loyalty = await axios(paths.getLoyaltySettings(businessId)) || {}
+	// if businessId is a slug, meaning regex it to see if it is objectId, if not objectId, fetch businessData via slug.
+	const isObjectId = false;
+	const bId = isObjectId ? businessId: "your api call businessid";
+	const settings = (await axios(paths.settings(bId))) || {}
+	const businessData = await axios(paths.businessData(bId))
+	const loyalty = await axios(paths.getLoyaltySettings(bId)) || {}
 	const data = {} as IBusinessData
 	data["settings"] = settings?.data?.data[0] || {}
 	data["business"] = businessData?.data?.data || {}
