@@ -29,7 +29,7 @@ const createAccessToken = (user: any) => {
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '60m' }, // Add 7 day expiration
+    { expiresIn: '7d' }, // Add 7 day expiration
   );
 };
 
@@ -58,7 +58,7 @@ const createRefreshToken = (user: any) => {
       customRole: user.customRole,
     },
     process.env.JWT_SECRET as string,
-    { expiresIn: '60m' }, // Add 30 day expiration
+    { expiresIn: '30d' }, // Add 30 day expiration
   );
 };
 
@@ -159,21 +159,21 @@ router.post(
     let existingUser;
     existingUser = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
 
-    // try {
-    //   const options = {
-    //     method: "POST",
-    //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
-    //     headers: {
-    //       accept: "application/json",
-    //       "content-type": "application/json",
-    //       authkey: "387796AmyGlDBq63b2d75aP1",
-    //     },
-    //   };
-    //   await axios(options);
-    // } catch (e: any) {
-    //   console.log(e);
-    //   return res.status(500).send({ status: false, message: e.message });
-    // }
+    try {
+      const options = {
+        method: 'POST',
+        url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+      await axios(options);
+    } catch (e: any) {
+      console.log(e);
+      return res.status(500).send({ status: false, message: e.message });
+    }
 
     if (existingUser) {
       const accessTokenExistingUser = createAccessToken(existingUser);
@@ -187,7 +187,7 @@ router.post(
     }
 
     const user = await User.create(req.body);
-    console.log('user', user);
+
     const accessToken = createAccessToken(user);
     const refreshToken = createRefreshToken(user);
 
@@ -225,20 +225,20 @@ router.post(
       console.log(e);
     }
 
-    // const options = {
-    //   method: 'GET',
-    //   url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
-    //   headers: {
-    //     accept: 'application/json',
-    //     authkey: '387796AmyGlDBq63b2d75aP1',
-    //   },
-    // };
+    const options = {
+      method: 'GET',
+      url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+      headers: {
+        accept: 'application/json',
+        authkey: '387796AmyGlDBq63b2d75aP1',
+      },
+    };
 
-    // const response = await axios(options);
+    const response = await axios(options);
 
-    // if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
-    //   return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
-    // }
+    if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
+      return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
+    }
 
     if (loyaltyId && signUpBonus > 0) {
       const userReward = await UserReward.findOne({

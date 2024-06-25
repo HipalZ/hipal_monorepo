@@ -66,7 +66,7 @@ router.get('/v1/users/:id/test', async (req: Request, res: Response) => {
     data: {},
     err: false,
     status: true,
-    message: 'Testing',
+    message: 'User fetched successfully',
   });
 });
 
