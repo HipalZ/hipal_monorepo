@@ -31,7 +31,7 @@ app.use(
     // allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
   }),
 );
-
+//
 app.use(idempotent);
 const excludedPaths = ['/v1/categories']; // Add more paths as needed
 

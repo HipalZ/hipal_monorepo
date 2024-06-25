@@ -17,6 +17,7 @@ app.disable('x-powered-by');
 app.set('trust proxy', true); // * traffic received from ingres
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+//
 app.use(
   cors({
     origin: ['*'],

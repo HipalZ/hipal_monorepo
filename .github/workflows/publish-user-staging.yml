@@ -26,6 +26,6 @@ jobs:
 
       - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
-          IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)
-          docker build --target users-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:latest .
-          docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY --all-tags
+          IMAGE_TAG=latest
+          docker build --target users-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
+          docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
