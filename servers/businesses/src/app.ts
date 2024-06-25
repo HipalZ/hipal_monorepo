@@ -52,7 +52,7 @@ const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFu
   authTokenValidator(req, res, next);
 };
 
-app.use(conditionalAuthTokenValidator);
+// app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createUserRouter);
