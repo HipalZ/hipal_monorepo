@@ -28,13 +28,6 @@ app.use(
     allowedHeaders: '*',
   }),
 );
-app.use(
-  cookieSession({
-    signed: false,
-    secure: true,
-    sameSite: 'none',
-  }),
-);
 
 // Define a list of routes to exclude from authTokenValidator
 const excludedPaths = [

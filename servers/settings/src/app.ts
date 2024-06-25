@@ -18,19 +18,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ['https://biz.test.hipalz.com', 'https://table.test.hipalz.com', 'https://kitchen.test.hipalz.com/'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: '*',
+    methods: '*',
     preflightContinue: true,
     optionsSuccessStatus: 200,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
-  }),
-);
-app.use(
-  cookieSession({
-    signed: false,
-    secure: true,
-    sameSite: 'none',
+    allowedHeaders: '*',
   }),
 );
 
@@ -44,7 +37,7 @@ const conditionalAuthTokenValidator = (req: Request, res: Response, next: NextFu
   next();
 };
 
-app.use(conditionalAuthTokenValidator);
+// app.use(conditionalAuthTokenValidator);
 
 // Register routes
 app.use(createSettingsRouter);
