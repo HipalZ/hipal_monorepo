@@ -32,11 +32,11 @@ axios.interceptors.request.use(
         config.baseURL = 'http://localhost:8008';
       }
     }
-    const { accessToken, refreshToken } = useUserToken.getState();
-    if (accessToken && refreshToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-      config.headers['x-refresh-with'] = refreshToken;
-    }
+    // const { accessToken, refreshToken } = useUserToken.getState();
+    // if (accessToken && refreshToken) {
+    //   config.headers['Authorization'] = `Bearer ${accessToken}`;
+    //   config.headers['x-refresh-with'] = refreshToken;
+    // }
 
     return config;
   },
