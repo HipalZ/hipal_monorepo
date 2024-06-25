@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "build:local": "dotenv -e .env.local pnpm run build",
+    "bundle:local": "dotenv -e .env.local pnpm run bundle",
     "build:test": "dotenv -e ./.env.test pnpm run build",
     "bundle:test": "dotenv -e ./.env.test pnpm run bundle",
     "build:production": "dotenv -e ./.env.production pnpm run build",

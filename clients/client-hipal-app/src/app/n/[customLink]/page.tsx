@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 const fetchBusinessData = async (customLink: string) => {
   try {
     const res = await axios.get(`/v1/businesses/n/${customLink}`);
+    console.log({ res })
     const businessId = res.data.data.businessId;
     return businessId;
   } catch (e) {
@@ -14,6 +15,7 @@ const fetchBusinessData = async (customLink: string) => {
 
 export default async function Slug({ params }: { params: { customLink: string } }) {
   const businessId = await fetchBusinessData(params.customLink);
+  console.log({ businessId });
   if (!businessId) {
     redirect('/');
   }

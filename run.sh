@@ -7,7 +7,7 @@ cd servers/businesses
 echo "Starting the businesses server..."
 
 # Run the pnpm start command
-pnpm dev &
+pnpm dev:local &
 
 # Print a message to the console
 cd ../../
@@ -17,7 +17,7 @@ cd servers/users
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 echo "Starting the users server..."
 
@@ -30,7 +30,7 @@ cd servers/categories
 echo "Starting the categories server..."
 
 # Run the pnpm start command
-pnpm dev &
+pnpm dev:local &
 
 cd ../../
 
@@ -44,7 +44,7 @@ echo "Starting the dishes server..."
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 cd ../../
 
@@ -58,7 +58,7 @@ echo "Starting the kitchens server..."
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 cd ../../
 
@@ -72,7 +72,7 @@ echo "Starting the payments server..."
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 cd ../../
 
@@ -86,7 +86,7 @@ echo "Starting the settings server..."
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 cd ../../
 
@@ -100,7 +100,7 @@ echo "Starting the zones server..."
 
 # Run the pnpm start command
 
-pnpm dev &
+pnpm dev:local &
 
 
 cd ../../
