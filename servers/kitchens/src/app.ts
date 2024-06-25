@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ['*'],
+    origin: ['https://biz.test.hipalz.com', 'https://table.test.hipalz.com', 'https://kitchen.test.hipalz.com/'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: true,
     optionsSuccessStatus: 200,
@@ -25,8 +25,13 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
   }),
 );
-//
-app.use(idempotent);
+app.use(
+  cookieSession({
+    signed: false,
+    secure: true,
+    sameSite: 'none',
+  }),
+);
 
 app.use(authTokenValidator);
 // Register routes

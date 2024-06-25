@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { authTokenValidator, errorHandler } from '@hi/common';
 import express, { NextFunction } from 'express';
 
+import cookieSession from 'cookie-session';
 import cors from 'cors';
 import morgan from 'morgan';
 import { createUserRouter } from './routes/create-user';
@@ -12,14 +13,14 @@ import { readUserRouter } from './routes/read-user';
 import { updateUserRouter } from './routes/update-user';
 
 const app = express();
-// app.disable('x-powered-by');
+app.disable('x-powered-by');
 app.use(morgan('dev'));
 app.set('trust proxy', true); // * traffic received from ingress
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: ['*'],
+    origin: ['https://biz.test.hipalz.com', 'https://table.test.hipalz.com', 'https://kitchen.test.hipalz.com/'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: true,
     optionsSuccessStatus: 200,
@@ -27,13 +28,13 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Cookie', 'h-idem-id', 'x-refresh-with'],
   }),
 );
-// app.use(
-//   cookieSession({
-//     signed: false,
-//     secure: true,
-//     sameSite: 'none',
-//   }),
-// );
+app.use(
+  cookieSession({
+    signed: false,
+    secure: true,
+    sameSite: 'none',
+  }),
+);
 
 // Define a list of routes to exclude from authTokenValidator
 const excludedPaths = [
