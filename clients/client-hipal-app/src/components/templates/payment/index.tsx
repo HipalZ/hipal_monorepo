@@ -1,28 +1,24 @@
 "use client"
-import PlaceholderImg from "@/components/atoms/placeholder";
-import { isEmpty } from "lodash-es";
-import Image from "next/image";
-import celebration from '@/assets/img/celebration-emoji.png'
-import { IoMdCard } from "react-icons/io";
-import { MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
-import { getRandomBlurImg } from "@/components/utils/images";
+import { MdOutlineChevronLeft } from "react-icons/md";
 import { ChangeEvent, useEffect, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
 import { IBusinessData } from "@/components/types/businessData";
 import { useRouter, useSearchParams } from "next/navigation";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/utils/axios";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 import usePayment from "@/components/store/usePayment";
-import { BsPatchPlusFill } from "react-icons/bs";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import useTableData from "@/components/store/useTableData";
 import PaymentComponent from "./selectPayment";
+import AvailableCoinz from "./availableCoinz";
+import BillSummary from "./billSummary";
+import PaymentCard from "./paymentCard";
+import UseCoinzPopup from "./useCoinzPopup";
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -41,6 +37,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { tableName, setTableName } = useTableData()
     const router = useRouter()
     const searchParams = useSearchParams()
+    const { loyaltySetting } = useLoyaltyData()
 
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
@@ -55,7 +52,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setCustomTip('')
     }, [])
 
-    const { loyaltySetting } = useLoyaltyData()
     const handlePaymentSuccess = (response: any) => {
         sendPaymentResponse(response);
         setRazorPaySignature(response.razorpay_signature);
@@ -199,7 +195,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             url: '/v1/payments/createOrder',
             data: {
                 businessId: data?.business?._id,
-                total: billValue-claimedCoinz+tips,
+                total: billValue - claimedCoinz + tips,
                 currency: 'INR',
                 claimedCoins: claimedCoinz,
                 billValue: billValue,
@@ -270,7 +266,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleMode = (mode: PageStates) => {
-        if(showInput){
+        if (showInput) {
             return toast.error('Please save the tip amount')
         }
         setSelectedMode(mode);
@@ -337,42 +333,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
         }
     }
-
-    const renderPopUpContent = () => {
-        return (
-            <BottomPopUp show={isModalOpen} onClose={closeModal}>
-                <div className='h-[15rem] p-6'>
-                    <h1 className='text-xl font-semibold'>
-                        Available Coins : {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
-                    </h1>
-                    <h6 className='my-1 text-sm opacity-50'>Enter No. of coins</h6>
-                    <br />
-                    <input
-                        onChange={(e) => handleApplyCoinz(e, userCoinz)}
-                        type='text'
-                        value={claimedCoinz || ''}
-                        placeholder='Enter amount'
-                        min={0}
-                        max={userCoinz}
-                        className='border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 '
-                    />
-                </div>
-                <BottomButton>
-                    <button className="w-full px-4 py-3 rounded-full bg-primary text-base-100" onClick={handleCoins}>
-                        Next
-                    </button>
-                </BottomButton>
-            </BottomPopUp>
-        )
-    }
-
     useEffect(() => {
         setBillValue(Number(searchParams?.get("amount")))
     }, [])
 
     return (
-        <div className='relative'>
-            <section className='sticky top-0 z-20 w-full px-4 pt-4 pb-2 bg-base-100'>
+        <div>
+            <section className='z-20 w-full px-4 pt-4 pb-2 bg-base-100'>
                 <article>
                     <span className='float-start'>
                         <button
@@ -392,128 +359,30 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             </section>
             {selectedMode === "INVOICE" ?
                 <>
-                    <article className='relative h-[10rem] flex flex-col items-center justify-center mx-4 mt-10 space-y-2 text-xl rounded-3xl bg-primary text-base-100'>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                left: '50%',
-                                top: '0',
-                                transform: 'translate(-50%, -50%)',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                aspectRatio: '1',
-                            }}
-                        >
-                            {!isEmpty(data?.business?.logo) ? (
-                                <Image
-                                    src={data?.business?.logo || ''}
-                                    height={100}
-                                    width={100}
-                                    quality={95}
-                                    objectFit='cover'
-                                    alt='logo-business'
-                                    className='object-center w-1/2 border rounded-lg shadow-sm aspect-square'
-                                    placeholder='blur'
-                                    blurDataURL={getRandomBlurImg(100, 100)}
-                                />
-                            ) : (
-                                    <PlaceholderImg />
-                                )}
-                        </div>
-                        <br />
-                        {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
-                        <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {billValue}</h4>
-                    </article>
-                    <div className='my-2'>
-                        <h6 className='flex px-4 py-1 m-auto text-sm rounded-lg w-fit bg-base-100 text-base-content'>
-                            <span className='text-[2rem]'>
-                                <Image src={celebration} alt='celebration' height={25} width={25} />
-                            </span>{' '}
-                            &nbsp;&nbsp;Special discount for Special members !!!
-                        </h6>
-                    </div>
-                    <article
-                        onClick={openModal}
-                        className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'
-                    >
-                        <div className='flex items-center'>
-                            <IoMdCard size={30} className='-rotate-45 ' />
-                            &nbsp; &nbsp;
-                            <div>
-                                <h6>Use Coinz</h6>
-                                <h6>{claimedCoinz} coinz applied</h6>
-                            </div>
-                        </div>
-                        <div className='flex items-center space-x-4'>
-                            <h6>
-                                {userCoinz - claimedCoinz}
-                            </h6>
-                            <MdKeyboardArrowRight size={30} />
-                        </div>
-                    </article>
-                    <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
-                        <h6 className="mx-6 mt-4 text-base">Bill Summary</h6>
-                        <div className='relative mx-6 text-[1.25rem] text-base-content border border-primary py-4 rounded-2xl'>
-                            <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-content leading-[1.25rem]'>
-                                <h1>Total bill amount</h1>
-                                <h1>₹ {billValue}</h1>
-                            </div>
-                            {claimedCoinz > 0 && (
-                                <div className='flex justify-between mx-4 mt-1 text-sm capitalize text-base-content'>
-                                    <h1 className='text-[1rem]'>Hi-Coinz</h1>
-                                    <div className='flex'>
-                                        <span className='text-base'>
-                                            ₹ {claimedCoinz || 0}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                            <div className='mx-2 mt-2'>
-                                <div className='flex justify-between m-2 text-sm capitalize text-base-content'>
-                                    <div className="flex items-center">
-                                        <span onClick={() => setIsTipActive(true)}><BsPatchPlusFill size={22} /></span>
-                                        <h1 className='text-[1rem] mx-2'>Tips </h1>
-                                        {isTipActive ? <span onClick={clearTheTip} className="underline">(Clear Tip)</span> : null}
-                                    </div>
-                                    <div className='flex'>
-                                        <span className='text-base'>
-                                            ₹ {tips || 0}
-                                        </span>
-                                    </div>
-                                </div>
-                                {isTipActive ? <div className='flex mx-2 space-x-2'>
-                                    {['10', '20', '50', 'Other'].map((tip, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => handleTipSelect(tip)}
-                                            className={`px-4 py-1 rounded-lg text-base ${selectedTip === tip ? 'bg-primary text-white' : 'bg-gray-200'}`}
-                                        >
-                                            {tip}
-                                        </button>
-                                    ))}
-                                </div> : null}
-                                {selectedTip === 'Other' && showInput && (
-                                    <div className='flex mt-4 space-x-6'>
-                                        <input
-                                            type="text"
-                                            onChange={handleCustomTip}
-                                            value={customTip}
-                                            maxLength={5}
-                                            placeholder='Enter tip amount'
-                                            className='w-[70%] border border-[#000] pl-4 font-semibold text-[1rem] rounded-[1rem]'
-                                        />
-                                        <button
-                                            onClick={handleSaveTip}
-                                            className='px-4 py-2 text-base text-white rounded-lg bg-primary'
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                   <PaymentCard 
+                        claimedCoinz={claimedCoinz}
+                        billValue={billValue}
+                        logo={data?.business?.logo}
+                   />
+                    <UseCoinzPopup 
+                        openModal={openModal}
+                        userCoinz={userCoinz}
+                        claimedCoinz={claimedCoinz}
+                    />
+                    <BillSummary 
+                        billValue={billValue}
+                        claimedCoinz={claimedCoinz}
+                        tips={tips}
+                        isTipActive={isTipActive}
+                        setIsTipActive={setIsTipActive}
+                        clearTheTip={clearTheTip}
+                        handleTipSelect={handleTipSelect}
+                        selectedTip={selectedTip}
+                        customTip={customTip}
+                        showInput={showInput}
+                        handleCustomTip={handleCustomTip}
+                        handleSaveTip={handleSaveTip}
+                    />
                     <BottomButton >
                         <div onClick={() => handleMode("MODE")} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'} bg-primary text-base-100 py-3 px-3 rounded-full`} >
                             <span>Proceed to pay ₹ {billValue - claimedCoinz + tips}</span>
@@ -525,7 +394,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
                     setSelectedMode={setSelectedMode} selectedPay={selectedPay} />
             }
-            {renderPopUpContent()}
+            <AvailableCoinz
+                isModalOpen={isModalOpen}
+                closeModal={closeModal}
+                claimedCoinz={claimedCoinz}
+                userCoinz={userCoinz}
+                handleCoins={handleCoins}
+                handleApplyCoinz={handleApplyCoinz}
+            />
             {isLoading ? <LoadingSpinner /> : null}
         </div>
     )
