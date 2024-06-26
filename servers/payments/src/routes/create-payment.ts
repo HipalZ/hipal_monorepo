@@ -754,6 +754,7 @@ router.post(
 );
 
 const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
+  console.log('exist', exist, 'reward', reward, 'limit', limit);
   let total = exist + reward;
 
   const sum = Math.min(total, limit);
@@ -838,7 +839,7 @@ const removeCoins = async (
   session: ClientSession,
 ) => {
   const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
-  if (existingUser && existingUser.rewards > claimedCoins) {
+  if (existingUser && existingUser.rewards >= claimedCoins) {
     const updatedReward = await UserReward.findOneAndUpdate(
       { userPhone, loyaltyId },
       {
@@ -875,10 +876,12 @@ const addCoins = async (
   billValue: number,
   session: ClientSession,
 ) => {
-  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }).select('rewards');
-  const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }).select('rewardLimit');
+  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }, null, { session }).select('rewards');
+
+  const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }, null, { session }).select('rewardLimit');
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
+
     const updatedReward = await UserReward.findOneAndUpdate(
       { userPhone, loyaltyId },
       {
@@ -1014,7 +1017,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
       );
       if (payload.payment.entity.notes.loyaltyId) {
         if (claimCoins > 0) {
-          await removeCoins(
+          const updateUser = await removeCoins(
             Number(payload.payment.entity.notes.claimedCoins),
             payload.payment.entity.notes.tableName || '',
             getOrder?.phone || '',

@@ -160,6 +160,40 @@ router.get(
   },
 );
 
+router.get(
+  '/v1/users/:id/loyaltyUserHistiry',
+
+  async (req: Request, res: Response) => {
+    const { userPhone, loyaltyId } = req.query;
+
+    const existingUser = await UserRewardHistory.find({
+      userPhone,
+      loyaltyId,
+    }).select('rewards status date');
+
+    const totalWin = existingUser.reduce((acc, item) => {
+      if (item.status === 'plus') {
+        return acc + (item.rewards || 0);
+      }
+      return acc;
+    }, 0);
+
+    const totalSave = existingUser.reduce((acc, item) => {
+      if (item.status === 'minus') {
+        return acc + (item?.rewards ?? 0);
+      }
+      return acc;
+    }, 0);
+
+    res.status(200).send({
+      data: { totalWin, totalSave },
+      status: true,
+      message: 'User fetched successfully',
+      err: false,
+    });
+  },
+);
+
 router.get('/v1/users/staff/Single', async (req: Request, res: Response) => {
   const { staffId, password, remove } = req.query;
   let user;

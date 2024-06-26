@@ -100,7 +100,7 @@ const removeCoins = async (
   session: ClientSession,
 ) => {
   const existingUser = await UserReward.findOne({ userPhone, loyaltyId });
-  if (existingUser && existingUser.rewards > claimedCoins) {
+  if (existingUser && existingUser.rewards >= claimedCoins) {
     const updatedReward = await UserReward.findOneAndUpdate(
       { userPhone, loyaltyId },
       {
@@ -137,12 +137,10 @@ const addCoins = async (
   billValue: number,
   session: ClientSession,
 ) => {
-  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }).select('rewards');
-  const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }).select('rewardLimit');
+  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }, null, { session }).select('rewards');
+  const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }, null, { session }).select('rewardLimit');
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
-
-    console.log('coinsCalculated', coinsCalculated);
 
     const updatedReward = await UserReward.findOneAndUpdate(
       { userPhone, loyaltyId },
@@ -178,9 +176,10 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 
   const subTotal = billValue - claimedCoins;
 
-  console.log('subTotal', subTotal, 'LoyaltySetting.setReward', LoyaltySetting.setReward, 'billValue', billValue, 'claimedCoins', claimedCoins);
-
   const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
+  if (coinsToBeAdded < 0) {
+    return 0;
+  }
 
   return Math.floor(coinsToBeAdded);
 };
