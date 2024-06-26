@@ -78,4 +78,40 @@ router.post(
   },
 );
 
+router.post(
+  '/v1/categories/:id/categories',
+
+  async (req: Request, res: Response) => {
+    let categories = req.body.categories;
+
+    for (let i = 0; i < categories.length; i++) {
+      await Category.create({
+        businessId: categories[i].businessId,
+        name: categories[i].name,
+        visibility: categories[i].visibility,
+        timerOn: categories[i].timerOn,
+        timerStart: categories[i].timerStart,
+        timerEnd: categories[i].timerEnd,
+        availableDays: categories[i].availableDays,
+        hierarchy: categories[i].hierarchy,
+        parentCategory: categories[i].parentCategory,
+        parentCategoryId: categories[i].parentCategoryId,
+        coverImage: categories[i].coverImage,
+        links: categories[i].links,
+        dishes: categories[i].dishes,
+        availability: categories[i].availability,
+        charges: categories[i].charges,
+        version: 0,
+        _id: categories[i]._id,
+      });
+    }
+
+    return res.status(201).send({
+      message: 'Category created successfully',
+      status: true,
+      data: {},
+    });
+  },
+);
+
 export { router as createCategoryRouter };

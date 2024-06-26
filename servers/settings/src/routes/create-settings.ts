@@ -34,4 +34,20 @@ router.post(
   },
 );
 
+router.post(
+  '/v1/settings/:id/create',
+
+  async (req: Request, res: Response) => {
+    const settings = await Settings.create(req.body);
+
+    res.status(201).send({
+      status: true,
+      message: 'Settings created successfully',
+      data: settings,
+      err: false,
+    });
+    return res.status(500).send({ err: true, data: {}, status: false, message: 'error in creating settings' });
+  },
+);
+
 export { router as createSettingsRouter };

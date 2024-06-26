@@ -8,14 +8,16 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
-const portionSchema = z.object({
-  name: z.string(),
-  price: z.coerce.number(),
-  discount: z.coerce.number().optional(),
-  default: z.boolean(),
-  portionType: z.string().optional(),
-  id: z.string(),
-});
+const portionSchema = z
+  .object({
+    name: z.string().optional(),
+    price: z.coerce.number().optional(),
+    discount: z.coerce.number().optional(),
+    default: z.boolean().optional(),
+    portionType: z.string().optional(),
+    id: z.string(),
+  })
+  .optional();
 
 const filtersSchema = z.object({
   dishes: z.array(ObjectIdSchema).optional(),

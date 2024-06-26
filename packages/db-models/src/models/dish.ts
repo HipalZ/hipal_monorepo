@@ -43,7 +43,7 @@ const portionSchema = new mongoose.Schema<PortionType>(
     },
     default: {
       type: Boolean,
-      required: true,
+      required: false,
     },
     portionType: {
       type: String,
