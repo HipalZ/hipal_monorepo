@@ -6,7 +6,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: 'true'
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    cert-manager.io/issuer: letsencrypt-nginx-wcard
+    cert-manager.io/issuer: letsencrypt-nginx
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
     nginx.ingress.kubernetes.io/enable-cors: 'true'
     nginx.ingress.kubernetes.io/cors-allow-origin: 'https://hipalz.com, https://hibiz.hipalz.com, https://hiclient.hipalz.com'
@@ -16,7 +16,9 @@ spec:
   tls:
     - hosts:
         - api.hipalz.com
-      secretName: hipalz.com
+        - hiclient.hipalz.com
+        - hibiz.hipalz.com
+      secretName: letsencrypt-nginx
   rules:
     - host: api.hipalz.com
       http:
@@ -77,7 +79,7 @@ spec:
                 name: payments-server-prod
                 port:
                   number: 80
-    - host: table.prod.hipalz.com
+    - host: hiclient.hipalz.com
       http:
         paths:
           - path: /
@@ -87,17 +89,17 @@ spec:
                 name: client-hitable-prod
                 port:
                   number: 80
-    - host: kitchen.prod.hipalz.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: client-hikitchen-prod
-                port:
-                  number: 80
-    - host: biz.prod.hipalz.com
+    # - host: kitchen.prod.hipalz.com
+    #   http:
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: client-hikitchen-prod
+    #             port:
+    #               number: 80
+    - host: hibiz.hipalz.com
       http:
         paths:
           - path: /
