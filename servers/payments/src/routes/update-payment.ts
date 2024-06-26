@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import moment from 'moment';
 
 import { ClientRoles, requireAuthorization } from '@hi/common';
-import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, UserReward, UserRewardHistory } from '@hi/db-models';
+import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, Reviews, UserReward, UserRewardHistory } from '@hi/db-models';
 import { paramsSchema, PaymentSchema } from '@hi/db-models/src/validators';
 
 import { runInTransaction } from '@hi/utils';
@@ -300,6 +300,9 @@ router.put(
   }),
   async (req: Request, res: Response) => {
     const { alertId } = req.params;
+    const alert = await PaymentAlert.findById(alertId);
+    const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
+    const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
 
     const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true }, { new: true }).populate('order_id');
 

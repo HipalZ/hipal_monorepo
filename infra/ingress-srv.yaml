@@ -9,7 +9,7 @@ metadata:
     cert-manager.io/issuer: letsencrypt-nginx-wcard
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
     nginx.ingress.kubernetes.io/enable-cors: 'true'
-    nginx.ingress.kubernetes.io/cors-allow-origin: 'https://table.test.hipalz.com, https://biz.test.hipalz.com, https://kitchen.test.hipalz.com, http://localhost:3000, http://localhost:3001, http://localhost:3002, http://localhost:3003, http://localhost:3004'
+    nginx.ingress.kubernetes.io/cors-allow-origin: 'https://table.test.hipalz.com, https://biz.test.hipalz.com, https://kitchen.test.hipalz.com, http://localhost:3000, http://localhost:3001, http://localhost:3002, http://localhost:3003, http://localhost:3004, https://hipalz-rust.vercel.app'
     nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, Authorization, x-refresh-with, h-idem-id
 spec:
   ingressClassName: nginx
