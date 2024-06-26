@@ -247,7 +247,7 @@ router.get(
           totalOnlineSale,
           totalOfflineSale,
           coinzIssued: loyaltyCoinInfo?.coinzIssued,
-          coinzRedeemed: loyaltyCoinInfo?.coinzRedeemed,
+          coinzRedeemed: totalCoins,
         },
         message: 'existing payment',
       });
