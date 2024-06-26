@@ -3,15 +3,15 @@ import { useSearch } from "@/components/store/useSearch";
 import { Transition } from "@headlessui/react";
 import { Fragment, memo, useMemo, useRef, useState } from "react";
 import { BiDish } from "react-icons/bi";
-import { HiSearch, HiX } from "react-icons/hi";
 import Image from "next/image";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { ICategory, IDish } from "@/components/types/businessData";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 export interface ICat {
     _id: string;
@@ -25,14 +25,11 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
     const [search, setSearchOpen] = useState(false);
     const router = useRouter();
-    const params = useParams();
-    const { businessId } = params as { businessId: string };
+    const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
     const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
         setSearchOpen(true);
     };
-
-  
 
 	const dishData = useMemo(() => {
         if (!categories) return [];

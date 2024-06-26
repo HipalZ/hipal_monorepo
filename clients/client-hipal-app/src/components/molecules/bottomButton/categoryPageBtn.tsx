@@ -1,16 +1,17 @@
 "use client";
 import { memo, useCallback, useState } from "react";
 import BottomButton from ".";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 const CategoryPageBtn = memo(() => {
 	const isLogin = useLogin((s) => s.isLogin);
-	const params = useParams();
-	const businessId = params?.businessId;
+	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const [inputModal, setInputModal] = useState(false);
 	const setDirection = useLogin((s) => s.setDirection);
 	const router = useRouter();
@@ -36,7 +37,7 @@ const CategoryPageBtn = memo(() => {
 	const proceedToPayment = useCallback(() => {
 		setDirection('payment');
 		if (!isLogin) {
-			router.push(`/r/${businessId}/user/signup`);
+			router.push(`/r/${customLink}/user/signup`);
 		} else {
 			openModal()
 		}
@@ -45,7 +46,7 @@ const CategoryPageBtn = memo(() => {
 	const triggerCallWaiter = useCallback(() => {
 		setDirection('category');
 		if (!isLogin) {
-			router.push(`/r/${businessId}/user/signup`);
+			router.push(`/r/${customLink}/user/signup`);
 		} else {
 			openCallWaiterModal()
 		}

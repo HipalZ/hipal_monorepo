@@ -16,7 +16,7 @@ import { paths } from "@/components/utils/paths"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import axios from "@/utils/axios"
 import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Gift from "@/assets/gift.png"
 import Hundred from "@/assets/100.png"
@@ -34,7 +34,6 @@ import useLoyaltyData from "@/components/store/useLoyaltyData"
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const router = useRouter()
-    const params = useParams();
     const userName = useLogin((s) => s.userDetails.name)
     const [HiCode, setHiCode] = useState()
     const [rewards, setRewards] = useState()

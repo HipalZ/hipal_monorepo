@@ -23,7 +23,6 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import useTableData from "@/components/store/useTableData";
 import PaymentComponent from "./selectPayment";
-import MiddlePopUp from "@/components/atoms/middlePopUp";
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -113,7 +112,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         script.onload = () => {
             const options = {
                 key: 'rzp_test_DZMxVyKgZ9crXx',
-                amount: total,
+                amount: billValue - claimedCoinz + tips,
                 currency: 'INR',
                 name: 'PALTRIBE',
                 description: 'Test Transaction',
@@ -183,9 +182,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }
 
     const verifyOrder = async () => {
-        if (otp.includes('') || otp.length < 4) {
-            return toast.error('Please enter the code')
-        }
         try {
             const config = {
                 method: 'POST',
@@ -203,7 +199,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
         } catch (err) {
             toast.error('invalid code')
-            setOtp(["", "", "", ""])
         }
     }
 
@@ -232,7 +227,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
                 setOfflineOrderId(response.data.data.order_id)
-                setSelectedPay(true)
+                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
@@ -247,7 +242,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             url: '/v1/payments/createOrder',
             data: {
                 businessId: data?.business?._id,
-                total: total,
+                total: billValue-claimedCoinz+tips,
                 currency: 'INR',
                 claimedCoins: claimedCoinz,
                 billValue: billValue,
@@ -590,7 +585,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             {renderPopUpContent()}
             {isLoading ? <LoadingSpinner /> : null}
-            <MiddlePopUp show={selectedPay} onClose={verifyOrder} onSave={verifyOrder}>
+            {/* <MiddlePopUp show={selectedPay} onClose={verifyOrder} onSave={verifyOrder}>
                 <div className="h-full p-4">
                     <center className="text-2xl">Confirmation Code</center>
                     <br />
@@ -612,7 +607,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     <br />
                     <center>Enter the code to avail get rewards🥳</center>
                 </div>
-            </MiddlePopUp>
+            </MiddlePopUp> */}
         </div>
     )
 };

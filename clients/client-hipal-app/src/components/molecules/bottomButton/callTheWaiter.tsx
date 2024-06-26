@@ -1,6 +1,6 @@
+import useBusinessDetails from '@/components/store/useBusinessDetails';
 import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
-import { useParams } from 'next/navigation';
 import React, { memo, useCallback, useState } from 'react'
 import { toast } from 'react-toastify';
 
@@ -15,8 +15,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
     const [message, setMessage] = useState('');
     const { tableName } = useTableData()
-    const params = useParams();
-    const businessId = params?.businessId;
+	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
     const [loading, setLoading] = useState<boolean>(false);
 
     const handleSelectMessage = useCallback((message: string) => {

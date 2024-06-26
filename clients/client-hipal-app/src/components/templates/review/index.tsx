@@ -3,7 +3,7 @@ import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
 import axios from '@/utils/axios'
 import Image from 'next/legacy/image'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ChangeEvent, memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
@@ -21,8 +21,8 @@ import { cn } from '@/components/utils/helpers'
 
 export default memo(function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
-	const params = useParams();
-	const businessId = params?.businessId
+	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
 	const orderId = searchParams?.get('orderId')
@@ -119,16 +119,16 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			const res = await axios(config)
 			if (res.status === 201) {
 				toast.success('Thank You for Your Feedback')
-				router.push(`/r/${businessId}/explore`)
+				router.push(`/r/${customLink}/explore`)
 			}
 		} catch (error) {
 			toast.error('Review Already Submitted')
-			router.push(`/r/${businessId}/explore`)
+			router.push(`/r/${customLink}/explore`)
 		}
 	}
 
 	const navigateToExplore = () => {
-		router.push(`/r/${businessId}/explore`)
+		router.push(`/r/${customLink}/explore`)
 	}
 
 	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {

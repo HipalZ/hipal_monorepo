@@ -3,14 +3,15 @@ import Globe from "@/assets/payment/globe.png";
 import style from "./addAmount.module.css";
 import Image from 'next/image';
 import { TfiPlus } from "react-icons/tfi";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
+import useBusinessDetails from '@/components/store/useBusinessDetails';
 
 const AddAmountModal = () => {
-    const params = useParams();
-    const businessId = params?.businessId;
+	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
+    const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
     const router = useRouter();
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState<boolean>(false);
@@ -27,9 +28,9 @@ const AddAmountModal = () => {
             return;
         }
         if (amount > 0) {
-            router.push(`/r/${businessId}/payment?amount=${amount}`);
+            router.push(`/r/${customLink}/payment?amount=${amount}`);
         }
-    }, [amount, businessId, router]);
+    }, [amount, customLink, router]);
 
     const callTheWaiter = useCallback(async () => {
         if (!tableName) {
