@@ -23,10 +23,10 @@ import useTableData from "@/components/store/useTableData";
 
 export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
- 
+
     const tableName = searchParams?.get('tableName')
-    const {setTableName} = useTableData()
-    const {setSelectedPay} = usePaymentStore()
+    const { setTableName } = useTableData()
+    const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -75,7 +75,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                     )
                 } */}
                 {
-                  <Rewards />
+                    <Rewards />
                 }
 
                 <SpecialOffers explore={data?.settings?.explore} />
@@ -83,15 +83,18 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                 {loyaltySetting?._id && (
                     <section className="py-10 h-[25rem] !mt-0 bg-black">
                         <center><h4 className="pb-4 text-2xl text-white">REWARDZ</h4></center>
-                            <SubLoyalty
-                                logo={businessDetails?.logo}
-                            />
+                        <SubLoyalty
+                            logo={businessDetails?.logo}
+                        />
 
                     </section>
                 )}
-                
-                <PopularRestaurant popular={data?.settings?.explore?.popular } />
-                
+
+                <div className="overflow-auto">
+                    <PopularRestaurant popular={data?.settings?.explore?.popular} />
+                </div>
+
+
                 <Footer
                     footerText={data?.settings?.themes?.footerText || ""}
                     instagramLink={data?.settings?.themes?.instagramLink || ""}
@@ -99,7 +102,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                     youtubeLink={data?.settings?.themes?.youtubeLink || ""}
                     linkedinLink={data?.settings?.themes?.linkedinLink || ""}
                 />
-                
+
                 <PageName />
             </div>
             <BottomButton />
