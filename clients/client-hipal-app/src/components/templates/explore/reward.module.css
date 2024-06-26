@@ -24,7 +24,6 @@
     justify-content: space-evenly;
     gap: 0.5rem;
     margin: 1.5rem 1rem 0 1rem;
-    animation: lightSpeedInLeft 1.25s ease-in-out ;
 }
 
 .reward_card_container_animation {
@@ -33,7 +32,6 @@
     justify-content: space-evenly;
     gap: 0.5rem;
     margin: 1.5rem 1rem 0 1rem;
-    animation: lightSpeedInLeft 1.25s ease-in-out ;
 }
 
 .reward_card {

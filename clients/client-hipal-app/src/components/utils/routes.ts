@@ -1,6 +1,6 @@
 const BASE_ROUTE = "r"
 
-const withBusinessId = (businessId: string, route: string) => `/${BASE_ROUTE}/${businessId}${route}`
+const withBusinessId = (customLink: string, route: string) => `/${BASE_ROUTE}/${customLink}${route}`
 
 export const PAGE_TYPES = {
 	EXPLORER: "explore",
@@ -30,60 +30,60 @@ export const PAGE_TYPES = {
 }
 
 export const routePaths = {
-	[PAGE_TYPES.EXPLORER]: (businessId: string) => withBusinessId(businessId, "/explore"),
-	[PAGE_TYPES.LOYALTY]: (businessId: string) => withBusinessId(businessId, "/loyalty"),
-	[PAGE_TYPES.LOYALTY_BY_ID]: (businessId: string, loyaltyId: string) =>
-		withBusinessId(businessId, `/loyalty/${loyaltyId}`),
-	[PAGE_TYPES.CATEGORY]: (businessId: string) => withBusinessId(businessId, "/category"),
+	[PAGE_TYPES.EXPLORER]: (customLink: string) => withBusinessId(customLink, "/explore"),
+	[PAGE_TYPES.LOYALTY]: (customLink: string) => withBusinessId(customLink, "/loyalty"),
+	[PAGE_TYPES.LOYALTY_BY_ID]: (customLink: string, loyaltyId: string) =>
+		withBusinessId(customLink, `/loyalty/${loyaltyId}`),
+	[PAGE_TYPES.CATEGORY]: (customLink: string) => withBusinessId(customLink, "/category"),
 
-	[PAGE_TYPES.CATEGORY_BY_ID]: (businessId: string, categoryId: string) =>
-		withBusinessId(businessId, `/category#${categoryId}`),
-	[PAGE_TYPES.DISH_ID]: (businessId: string, dishId: string) =>
-		withBusinessId(businessId, `/category#${dishId}`),
+	[PAGE_TYPES.CATEGORY_BY_ID]: (customLink: string, categoryId: string) =>
+		withBusinessId(customLink, `/category#${categoryId}`),
+	[PAGE_TYPES.DISH_ID]: (customLink: string, dishId: string) =>
+		withBusinessId(customLink, `/category#${dishId}`),
 
-	[PAGE_TYPES.FINAL_CART]: (businessId: string) => withBusinessId(businessId, "/finalCart"),
-	[PAGE_TYPES.LIVE_CART]: (businessId: string) => withBusinessId(businessId, "/liveCart"),
+	[PAGE_TYPES.FINAL_CART]: (customLink: string) => withBusinessId(customLink, "/finalCart"),
+	[PAGE_TYPES.LIVE_CART]: (customLink: string) => withBusinessId(customLink, "/liveCart"),
 
-	[PAGE_TYPES.SIGN_UP]: (businessId: string) => withBusinessId(businessId, "/user/signup"),
+	[PAGE_TYPES.SIGN_UP]: (customLink: string) => withBusinessId(customLink, "/user/signup"),
 
-	[PAGE_TYPES.SIGN_IN]: (businessId: string) => withBusinessId(businessId, "/user/signin"),
+	[PAGE_TYPES.SIGN_IN]: (customLink: string) => withBusinessId(customLink, "/user/signin"),
 
-	[PAGE_TYPES.OTP]: (businessId: string) => withBusinessId(businessId, "/user/otp"),
-	[PAGE_TYPES.HICODE]: (businessId: string) => withBusinessId(businessId, "/user/hicode"),
+	[PAGE_TYPES.OTP]: (customLink: string) => withBusinessId(customLink, "/user/otp"),
+	[PAGE_TYPES.HICODE]: (customLink: string) => withBusinessId(customLink, "/user/hicode"),
 
-	[PAGE_TYPES.PROFILE]: (businessId: string) => withBusinessId(businessId, "/profile/userProfile"),
+	[PAGE_TYPES.PROFILE]: (customLink: string) => withBusinessId(customLink, "/profile/userProfile"),
 
-	[PAGE_TYPES.PROFILE_EDIT]: (businessId: string) =>
-		withBusinessId(businessId, "/profile/editProfile"),
+	[PAGE_TYPES.PROFILE_EDIT]: (customLink: string) =>
+		withBusinessId(customLink, "/profile/editProfile"),
 
-	[PAGE_TYPES.PROFILE_LIKES]: (businessId: string) =>
-		withBusinessId(businessId, "/profile/profileLikePage"),
+	[PAGE_TYPES.PROFILE_LIKES]: (customLink: string) =>
+		withBusinessId(customLink, "/profile/profileLikePage"),
 
-	[PAGE_TYPES.ORDER_HISTORY]: (businessId: string) => withBusinessId(businessId, "/orderHistory"),
+	[PAGE_TYPES.ORDER_HISTORY]: (customLink: string) => withBusinessId(customLink, "/orderHistory"),
 
-	[PAGE_TYPES.BILL_HISTORY]: (businessId: string) => withBusinessId(businessId, "/bill"),
+	[PAGE_TYPES.BILL_HISTORY]: (customLink: string) => withBusinessId(customLink, "/bill"),
 
-	[PAGE_TYPES.REVIEW_HISTORY]: (businessId: string) => withBusinessId(businessId, "/reviewHistory"),
+	[PAGE_TYPES.REVIEW_HISTORY]: (customLink: string) => withBusinessId(customLink, "/reviewHistory"),
 
-	[PAGE_TYPES.REVIEW]: (businessId: string) => withBusinessId(businessId, "/review"),
+	[PAGE_TYPES.REVIEW]: (customLink: string) => withBusinessId(customLink, "/review"),
 
-	[PAGE_TYPES.SCAN]: (businessId: string) => withBusinessId(businessId, "/scan"),
+	[PAGE_TYPES.SCAN]: (customLink: string) => withBusinessId(customLink, "/scan"),
 
-	[PAGE_TYPES.PAYMENT]: (businessId: string) => withBusinessId(businessId, "/payment"),
-	[PAGE_TYPES.MODE]: (businessId: string) => withBusinessId(businessId, "/mode"),
+	[PAGE_TYPES.PAYMENT]: (customLink: string) => withBusinessId(customLink, "/payment"),
+	[PAGE_TYPES.MODE]: (customLink: string) => withBusinessId(customLink, "/mode"),
 
-	[PAGE_TYPES.SEARCH]: (businessId: string) => withBusinessId(businessId, "/search"),
+	[PAGE_TYPES.SEARCH]: (customLink: string) => withBusinessId(customLink, "/search"),
 
-	status: (businessId: string) => withBusinessId(businessId, "/status"),
-	payment: (businessId: string) => withBusinessId(businessId, "/payment"),
-	login: (businessId: string) => withBusinessId(businessId, "/user/login"),
+	status: (customLink: string) => withBusinessId(customLink, "/status"),
+	payment: (customLink: string) => withBusinessId(customLink, "/payment"),
+	login: (customLink: string) => withBusinessId(customLink, "/user/login"),
 } as {
-	[s: string]: (businessId: string, dishIdOrCategoryId?: string) => string
+	[s: string]: (customLink: string, dishIdOrCategoryId?: string) => string
 
-	status: (businessId: string) => string
-	payment: (businessId: string) => string
-	login: (businessId: string) => string
-	mode: (businessId: string) => string
+	status: (customLink: string) => string
+	payment: (customLink: string) => string
+	login: (customLink: string) => string
+	mode: (customLink: string) => string
 }
 
 export const FLOW_TYPES = {

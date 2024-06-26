@@ -1,4 +1,4 @@
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { HiX } from 'react-icons/hi';
 
@@ -9,8 +9,8 @@ export default function MiddlePopUp({ children, show, onClose, onSave }: { child
   return (
     <Transition appear show={show} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={(e) => closeModalNothing(e)}>
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 px-6 backdrop-blur-sm">
-          <Transition.Child
+        <div className="fixed inset-0 flex items-center justify-center px-6 bg-black bg-opacity-70 backdrop-blur-sm">
+          <TransitionChild
             as={Fragment}
             enter="transition ease-out duration-200 transform"
             enterFrom="opacity-0"
@@ -19,18 +19,18 @@ export default function MiddlePopUp({ children, show, onClose, onSave }: { child
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Panel className="bg-base-100 relative w-full max-w-md rounded-[1.5rem] shadow-md ">
+            <DialogPanel className="bg-base-100 relative w-full max-w-md rounded-[1.5rem] shadow-md ">
               {children}
               <div onClick={onClose} className="on_active_bounce absolute -top-10 left-[48%] z-50 flex -translate-x-1/2 -translate-y-1/2 transform items-center justify-center">
-                <HiX className="cursor-pointer rounded-full bg-white p-2 text-4xl text-black" />
+                <HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer" />
               </div>
-              <div onClick={onSave} className="mb-4 flex justify-center">
+              <div onClick={onSave} className="flex justify-center mb-4">
                 <button className="on_active_bounce bg-primary text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem]">
                   Save
                 </button>
               </div>
-            </Dialog.Panel>
-          </Transition.Child>
+            </DialogPanel>
+          </TransitionChild>
         </div>
       </Dialog>
     </Transition>

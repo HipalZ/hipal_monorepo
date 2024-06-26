@@ -4,7 +4,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import axios from "@/utils/axios";
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 import Welcome from "@/assets/otp_image.png"
 import { BiArrowBack, BiEditAlt } from "react-icons/bi"
 import Sunlight from "@/assets/Ellipse 1-min.png"
@@ -31,6 +31,7 @@ function OtpPage() {
 	const [logo, setLogo] = useState(businessLogo)
 	const setAccessToken = useUserToken((s) => s.setAccessToken)
 	const setRefreshToken = useUserToken((s) => s.setRefreshToken)
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const inputRefs = [
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
@@ -44,6 +45,7 @@ function OtpPage() {
 	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
 	const direction = useLogin((s) => s.direction)
 	const [loading, setLoading] = useState<boolean>(false);
+	
 
 	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
 		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
@@ -54,7 +56,7 @@ function OtpPage() {
 		if (index < inputRefs.length - 1 && e.target.value !== "") {
 			inputRefs[index + 1]?.current?.focus()
 		}
-
+		
 		setOtp(newOtp)
 	}
 
@@ -132,17 +134,17 @@ function OtpPage() {
 			setLoading(false)
 		}
 	}
-	const goNext =  () => {
+	const goNext =  useCallback(() => {
 		if (direction === "loyalty") {
 			 router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
 		} else {
-			 router.push(routePaths[PAGE_TYPES.CATEGORY](`${businessId}`))
+			 router.push(`/r/${customLink}/category?direction=${direction}`)
 		}
-	}
+	},[router,direction,customLink])
 
-	const goBack = () => {
+	const goBack = useCallback(() => {
 		router.back()
-	}
+	},[router])
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()

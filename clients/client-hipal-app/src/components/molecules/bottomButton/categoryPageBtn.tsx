@@ -7,11 +7,13 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import useTableData from "@/components/store/useTableData";
 
 const CategoryPageBtn = memo(() => {
 	const isLogin = useLogin((s) => s.isLogin);
-	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
-	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
+	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
+	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
+	const tableName = useTableData((s) => s.tableName)
 	const [inputModal, setInputModal] = useState(false);
 	const setDirection = useLogin((s) => s.setDirection);
 	const router = useRouter();
@@ -35,9 +37,13 @@ const CategoryPageBtn = memo(() => {
 	}, [setCallWaiterModal]);
 
 	const proceedToPayment = useCallback(() => {
+		if (!tableName) {
+			return router.push(`/scan`);
+		}
 		setDirection('payment');
 		if (!isLogin) {
-			router.push(`/r/${customLink}/user/signup`);
+			return router.push(`/r/${customLink}/user/signup`);
+			
 		} else {
 			openModal()
 		}
@@ -45,8 +51,13 @@ const CategoryPageBtn = memo(() => {
 
 	const triggerCallWaiter = useCallback(() => {
 		setDirection('category');
+		if (!tableName) {
+			return router.push(`/scan`);
+			
+		}
 		if (!isLogin) {
-			router.push(`/r/${customLink}/user/signup`);
+			return router.push(`/r/${customLink}/user/signup`);
+			
 		} else {
 			openCallWaiterModal()
 		}
@@ -57,26 +68,26 @@ const CategoryPageBtn = memo(() => {
 			<BottomButton>
 				<section className="flex items-center justify-between gap-4">
 					<button onClick={triggerCallWaiter} className="w-full px-2 py-3 text-sm border rounded-full border-primary">
-						{isLogin ? 'Call Captain' : 'Scan to Call Waiter'}
+						{!isLogin ? 'Login to Call Captain' : !tableName ? 'Scan to Call Captain' : 'Call captain'}
 					</button>
 					<button onClick={proceedToPayment} className="w-full px-2 py-3 text-sm rounded-full bg-primary text-base-100">
-						{isLogin ? 'Pay Bill' : 'Scan to Pay'}
+						{!isLogin ? 'Login to Pay' : !tableName ? 'Scan to Pay' : 'Pay bill'}
 					</button>
 				</section>
 			</BottomButton>
-			
+
 			{inputModal &&
 				<BottomPopUp show={inputModal} onClose={closeModal}>
 					<AddAmountModal />
 				</BottomPopUp>
 			}
-			
+
 			{callWaiterModal &&
 				<BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
 					<CallTheWaiterComponent onClose={closeCallWaiterModal} />
 				</BottomPopUp>
 			}
-			
+
 		</>
 	);
 })

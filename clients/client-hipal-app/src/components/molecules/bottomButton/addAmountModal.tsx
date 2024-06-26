@@ -110,7 +110,12 @@ const AddAmountModal = () => {
                             )}
                         </button>
                         <button onClick={proceedToPayment} className='w-full px-4 py-3 rounded-full bg-primary text-base-100'>
-                            Next
+                        {loading ? (
+                                <span className="loader_spinner !border-t-primary"></span>
+                            ) : (
+                                'Next'
+                            )}
+                            
                         </button>
                     </div>
                 </section>

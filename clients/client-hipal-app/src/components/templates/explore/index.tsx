@@ -20,6 +20,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData"
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
+import { useLogin } from "@/components/store/useLogin";
 
 export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
@@ -29,6 +30,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
     const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const isLogin = useLogin((s) => s.isLogin)
 
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
@@ -75,7 +77,9 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                     )
                 } */}
                 {
-                    <Rewards />
+                    isLogin && (
+                        <Rewards />
+                    )
                 }
 
                 <SpecialOffers explore={data?.settings?.explore} />

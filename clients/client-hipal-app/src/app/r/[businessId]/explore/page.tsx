@@ -3,7 +3,6 @@ import Explore from "@/components/templates/explore";
 
 export async function generateStaticParams() {
   const businessIds = await fetchAllBusinessIds();
-  console.log('explore',businessIds)
   return businessIds.map((businessId: string) => ({
     businessId: businessId,
   }));
@@ -16,6 +15,5 @@ export async function generateMetadata() {
 }
 export default async function Page({ params }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
-  console.log('explore data',data)
   return <Explore data={data} />;
 }

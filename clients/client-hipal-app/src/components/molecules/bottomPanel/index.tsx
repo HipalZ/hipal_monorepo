@@ -2,7 +2,7 @@ import { handleDishQuantity } from "@/components/organisms/dishDescription/dishQ
 import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras"
 import { useBottomPanel } from "@/components/store/useBottomPanel"
 import { useCart } from "@/components/store/useCart"
-import { Dialog, Transition } from "@headlessui/react"
+import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react"
 import { Fragment, memo } from "react"
 import { RxCross2 } from "react-icons/rx"
 import ChoosePortions from "../choosePortions"
@@ -50,7 +50,7 @@ function BottomPanel({ dishData }:{dishData: IDish}) {
 	return (
 			<Transition show={isBottomPanelOpened(dishData?._id)} as={Fragment}>
 				<Dialog as="div" className="relative !z-[99999999]" onClose={(e) => closeModalNothing(e)}>
-					<Transition.Child
+					<TransitionChild
 						as={Fragment}
 						enter="ease-out duration-300"
 						enterFrom="opacity-0"
@@ -60,11 +60,11 @@ function BottomPanel({ dishData }:{dishData: IDish}) {
 						leaveTo="opacity-0"
 					>
 						<div className="fixed inset-0 backdrop-blur-sm bg-base-content bg-opacity-30" />
-					</Transition.Child>
+					</TransitionChild>
 					<div className="fixed inset-x-0 bottom-0 h-screen mx-auto mt-10 overflow-y-auto ">
 						<div className="w-screen h-56" onClick={closeNRemoveCartDish}></div>
 						<div className="flex min-h-full text-center ">
-							<Transition.Child
+							<TransitionChild
 								as={Fragment}
 								enter="transition ease-out duration-200"
 								enterFrom="opacity-0 translate-y-8"
@@ -73,7 +73,7 @@ function BottomPanel({ dishData }:{dishData: IDish}) {
 								leaveFrom="opacity-100 translate-y-0"
 								leaveTo="opacity-0 translate-y-8"
 							>
-								<Dialog.Panel className="rounded-t-2xl relative top-0 w-full max-w-md py-3 overflow-auto text-left align-middle transition-all transform bg-base-100 shadow-xl shadow-base-100 min-h-[60vh] mx-auto">
+								<DialogPanel className="rounded-t-2xl relative top-0 w-full max-w-md py-3 overflow-auto text-left align-middle transition-all transform bg-base-100 shadow-xl shadow-base-100 min-h-[60vh] mx-auto">
 									<div className="flex flex-col mt-4 mb-12 ">
 										<div className="absolute top-6 right-4">
 											<div
@@ -93,8 +93,8 @@ function BottomPanel({ dishData }:{dishData: IDish}) {
 											</div>
 										</div>
 									</div>
-								</Dialog.Panel>
-							</Transition.Child>
+								</DialogPanel>
+							</TransitionChild>
 							<AddDishToCartButton onClick={closeModal}>
 								<div className="flex flex-row space-x-2 capitalize">
 									<span className="my-auto">Add Dish to the cart</span>

@@ -4,10 +4,12 @@ import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@/components/utils/rou
 import { useCallback, useMemo } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { _useAllBusiness } from "./useAllBusiness";
+import useBusinessDetails from "./useBusinessDetails";
 
 function useRoutingFlow() {
   const pathname = usePathname();
-  const { businessId, dishId } = useParams<{ businessId: string, dishId: string }>();
+  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+  const { dishId } = useParams<{ customLink: string, dishId: string }>();
   const businessData = _useAllBusiness((s) => s.data);
 
   /**
@@ -26,22 +28,22 @@ function useRoutingFlow() {
     const currentPath = pathname;
 
     for (const key in routePaths) {
-      if (routePaths[key](businessId, dishId) === currentPath) return key;
+      if (routePaths[key](customLink, dishId) === currentPath) return key;
     }
 
     return PAGE_TYPES.EXPLORER;
-  }, [businessId, pathname, dishId]);
+  }, [customLink, pathname, dishId]);
 
   const getNextPath = useCallback(
     (dishIdOrCategoryId?: string) =>
-      `${FLOW[businessFlowType][pathKey]?.to(businessId, dishIdOrCategoryId)}`,
-    [businessFlowType, businessId, pathKey]
+      `${FLOW[businessFlowType][pathKey]?.to(customLink, dishIdOrCategoryId)}`,
+    [businessFlowType, customLink, pathKey]
   );
 
   const getPreviousPath = useCallback(
     (dishIdOrCategoryId?: string) =>
-      `${FLOW[businessFlowType][pathKey]?.from(businessId, dishIdOrCategoryId)}`,
-    [businessFlowType, businessId, pathKey]
+      `${FLOW[businessFlowType][pathKey]?.from(customLink, dishIdOrCategoryId)}`,
+    [businessFlowType, customLink, pathKey]
   );
 
   return { getNextPath, getPreviousPath };

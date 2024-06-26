@@ -1,5 +1,5 @@
 import {  Fragment } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
+import { Dialog, Transition,TransitionChild ,DialogPanel} from '@headlessui/react'
 import { HiX } from 'react-icons/hi'
 
 export default function BottomPopUp({
@@ -22,7 +22,7 @@ export default function BottomPopUp({
 				onClose={(e) => closeModalNothing(e)}
 			>
 				<div className='fixed inset-0 flex items-end justify-center bg-black backdrop-blur-sm bg-opacity-70'>
-					<Transition.Child
+					<TransitionChild
 						as={Fragment}
 						enter='transition ease-out duration-200 transform'
 						enterFrom='opacity-0 translate-y-full'
@@ -31,7 +31,7 @@ export default function BottomPopUp({
 						leaveFrom='opacity-100 translate-y-0'
 						leaveTo='opacity-0 translate-y-full'
 					>
-						<Dialog.Panel className='relative w-full max-w-md shadow-md bg-base-100 rounded-t-[1.5rem]'>
+						<DialogPanel className='relative w-full max-w-md shadow-md bg-base-100 rounded-t-[1.5rem]'>
 							<div className='absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-12 left-[45%]'>
 								<HiX
 									className='p-2 text-4xl text-black bg-white rounded-full cursor-pointer'
@@ -39,8 +39,8 @@ export default function BottomPopUp({
 								/>
 							</div>
 							{children}
-						</Dialog.Panel>
-					</Transition.Child>
+						</DialogPanel>
+					</TransitionChild>
 				</div>
 			</Dialog>
 		</Transition>

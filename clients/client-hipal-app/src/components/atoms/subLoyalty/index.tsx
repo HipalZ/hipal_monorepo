@@ -6,6 +6,9 @@ import Stairs from "@/assets/backgroundStairs.png"
 import SignUpBonusBackground from "@/assets/bonuscard/signupBonus.svg"
 import Wallet from "@/assets/bonuscard/wallet.png"
 import Coin from "@/assets/bonuscard/coin.png"
+import { useLogin } from "@/components/store/useLogin";
+import Link from "next/link";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 interface ILoyaltyCard {
 	logo: string
 }
@@ -14,10 +17,12 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 	const { loyaltySetting } = useLoyaltyData()
 	const ref = useRef(null);
 	const isInView = useInView(ref, { once: true });
+	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
+	const login = useLogin((s) => s.isLogin)
 
 	return (
 		<section className="relative flex items-center justify-center gap-4 mt-4 overflow-hidden">
-			<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
+			<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[190px] h-[16.5rem] rounded-2xl">
 				<div className="text-xl font-semibold text-white">
 					{loyaltySetting.setReward}% Coinzback
 				</div>
@@ -55,12 +60,25 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 					<div className="bottom_shadow" />
 				</center>
 				<div className="h-full w-[0.625rem] text-sm absolute top-[30%] right-4 text-white animate-pulse" >✨</div>
-				<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
-					claim Now
-				</button>
+				{
+					login &&
+					<Link href={`/r/${customLink}/loyalty`}>
+						<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+							claim Now
+						</button>
+					</Link>
+				}
+				{
+					!login &&
+					<Link href={`/r/${customLink}/user/signup`}>
+						<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+							claim Now
+						</button>
+					</Link>
+				}
 			</center>
 			{
-				loyaltySetting?.signUpBonus &&
+				loyaltySetting?.signUpBonus && !login &&
 				<center ref={ref} className="w-full relative bg-[#E63C45] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
 					<div className="pt-4 text-xl font-semibold leading-8 text-white">
 						Signup bonus
@@ -77,9 +95,11 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 					<figure className="absolute bottom-6 z-1">
 						<Image src={Wallet} alt="Wallet" />
 					</figure>
-					<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
-						Get Now
-					</button>
+					<Link href={`/r/${customLink}/user/signup`}>
+						<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+							Get Now
+						</button>
+					</Link>
 				</center>
 			}
 		</section>
