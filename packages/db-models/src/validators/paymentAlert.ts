@@ -24,6 +24,7 @@ export const PaymentAlertSchema = z.object({
   completionCode: z.number().optional(),
   name: z.string().optional(),
   tableName: z.string(),
+  waiterName: z.string().optional(),
   isRejected: z.boolean().default(false).optional(),
   date: z.number().default(Date.now()),
 });

@@ -914,7 +914,9 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
   const subTotal = billValue - claimedCoins;
 
   const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
-  console.log('coinsToBeAdded', coinsToBeAdded);
+  if (coinsToBeAdded < 0) {
+    return 0;
+  }
 
   return Math.floor(coinsToBeAdded);
 };
@@ -1010,46 +1012,48 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
         ],
         { session },
       );
-      if (claimCoins > 0) {
-        await removeCoins(
+      if (payload.payment.entity.notes.loyaltyId) {
+        if (claimCoins > 0) {
+          await removeCoins(
+            Number(payload.payment.entity.notes.claimedCoins),
+            payload.payment.entity.notes.tableName || '',
+            getOrder?.phone || '',
+            Number(payload.payment.entity.notes.total),
+            payload.payment.entity.notes.loyaltyId || '',
+            Number(payload.payment.entity.notes.billValue),
+            session,
+          );
+        }
+
+        const cashBack = await calculatedCashbackCoins(
+          payload.payment.entity.notes.businessId,
+          Number(payload.payment.entity.notes.billValue),
           Number(payload.payment.entity.notes.claimedCoins),
-          payload.payment.entity.notes.tableName || '',
+        );
+
+        await addCoins(
+          cashBack,
           getOrder?.phone || '',
+          payload.payment.entity.notes.tableName || '',
+          payload.payment.entity.notes.businessId || '',
           Number(payload.payment.entity.notes.total),
           payload.payment.entity.notes.loyaltyId || '',
           Number(payload.payment.entity.notes.billValue),
           session,
         );
-      }
 
-      const cashBack = await calculatedCashbackCoins(
-        payload.payment.entity.notes.businessId,
-        Number(payload.payment.entity.notes.billValue),
-        Number(payload.payment.entity.notes.claimedCoins),
-      );
+        await LoyaltyCoinsInfo.findOneAndUpdate(
+          { businessId: payload.payment.entity.notes.businessId },
 
-      await addCoins(
-        cashBack,
-        getOrder?.phone || '',
-        payload.payment.entity.notes.tableName || '',
-        payload.payment.entity.notes.businessId || '',
-        Number(payload.payment.entity.notes.total),
-        payload.payment.entity.notes.loyaltyId || '',
-        Number(payload.payment.entity.notes.billValue),
-        session,
-      );
-
-      await LoyaltyCoinsInfo.findOneAndUpdate(
-        { businessId: payload.payment.entity.notes.businessId },
-
-        {
-          $inc: {
-            coinzIssued: cashBack,
-            coinzRedeemed: claimCoins,
+          {
+            $inc: {
+              coinzIssued: cashBack,
+              coinzRedeemed: claimCoins,
+            },
           },
-        },
-        { upsert: true, session },
-      );
+          { upsert: true, session },
+        );
+      }
     }
   });
 

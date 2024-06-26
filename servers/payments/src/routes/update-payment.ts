@@ -205,7 +205,9 @@ router.put(
       }
 
       if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
-        const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment }, { new: true, session }).populate('order_id');
+        const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session }).populate(
+          'order_id',
+        );
         res.status(200).send({ message: 'Order accepted successfully', err: false, data: updateAlert });
         return;
       }
@@ -279,7 +281,7 @@ router.put(
         const pinCode = Math.floor(1000 + Math.random() * 9000);
         const updateAlert = await PaymentAlert.findByIdAndUpdate(
           alertId,
-          { isAccepted: true, completionCode: pinCode, comment },
+          { isAccepted: true, completionCode: pinCode, comment, waiterName },
           { new: true, session },
         ).populate('order_id');
 
@@ -300,11 +302,14 @@ router.put(
   }),
   async (req: Request, res: Response) => {
     const { alertId } = req.params;
+    const { waiterName } = req.body;
     const alert = await PaymentAlert.findById(alertId);
     const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
     const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
 
-    const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true }, { new: true }).populate('order_id');
+    const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true, waiterName }, { new: true }).populate(
+      'order_id',
+    );
 
     res.status(200).send({ message: 'Order rejected successfully', err: false, data: updateAlert });
   },
