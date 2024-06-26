@@ -35,10 +35,10 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	const [showSuggestions, setShowSuggestions] = useState(false)
 	const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
 	const [staffs, setStaffs] = useState<User[]>([])
-	const [foodTaste, setFoodTaste] = useState(null);
-	const [ambience, setAmbience] = useState(null);
-	const [hygiene, setHygiene] = useState(null);
-	const [service, setService] = useState(null);
+	const [foodTaste, setFoodTaste] = useState(false);
+	const [ambience, setAmbience] = useState(false);
+	const [hygiene, setHygiene] = useState(false);
+	const [service, setService] = useState(false);
 	const [openComment, setOpenComment] = useState(false);
 
 	const improvementAreas = [
