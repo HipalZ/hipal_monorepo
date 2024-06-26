@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-hitable-test
+  name: client-hitable-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client-hitable-test
+      app: client-hitable-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: client-hitable-test
+        app: client-hitable-prod
     spec:
       containers:
         - name: client-hitable-prod
@@ -35,23 +35,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-hikitchen-test
+  name: client-hikitchen-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client-hikitchen-test
+      app: client-hikitchen-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: client-hikitchen-test
+        app: client-hikitchen-prod
     spec:
       containers:
-        - name: client-hikitchen-test
-          image: registry.digitalocean.com/hipalz-repo/client-hikitchen-test:latest
+        - name: client-hikitchen-prod
+          image: registry.digitalocean.com/hipalz-repo/client-hikitchen-prod:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -68,23 +68,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-hibiz-test
+  name: client-hibiz-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client-hibiz-test
+      app: client-hibiz-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: client-hibiz-test
+        app: client-hibiz-prod
     spec:
       containers:
-        - name: client-hibiz-test
-          image: registry.digitalocean.com/hipalz-repo/client-hibiz-test:latest
+        - name: client-hibiz-prod
+          image: registry.digitalocean.com/hipalz-repo/client-hibiz-prod:latest
           imagePullPolicy: Always
           ports:
             - name: http

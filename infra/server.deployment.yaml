@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dishes-server-test
+  name: dishes-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dishes-server-test
+      app: dishes-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: dishes-server-test
+        app: dishes-server-prod
     spec:
       containers:
-        - name: dishes-server-test
-          image: registry.digitalocean.com/hipalz-repo/dishes-test-server:latest
+        - name: dishes-server-prod
+          image: registry.digitalocean.com/hipalz-repo/dishes-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -29,23 +29,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zones-server-test
+  name: zones-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: zones-server-test
+      app: zones-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: zones-server-test
+        app: zones-server-prod
     spec:
       containers:
-        - name: zones-server-test
-          image: registry.digitalocean.com/hipalz-repo/zones-test-server:latest
+        - name: zones-server-prod
+          image: registry.digitalocean.com/hipalz-repo/zones-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -56,23 +56,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: categories-server-test
+  name: categories-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: categories-server-test
+      app: categories-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: categories-server-test
+        app: categories-server-prod
     spec:
       containers:
-        - name: categories-server-test
-          image: registry.digitalocean.com/hipalz-repo/categories-test-server:latest
+        - name: categories-server-prod
+          image: registry.digitalocean.com/hipalz-repo/categories-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -83,23 +83,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: settings-server-test
+  name: settings-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: settings-server-test
+      app: settings-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: settings-server-test
+        app: settings-server-prod
     spec:
       containers:
-        - name: settings-server-test
-          image: registry.digitalocean.com/hipalz-repo/settings-test-server:latest
+        - name: settings-server-prod
+          image: registry.digitalocean.com/hipalz-repo/settings-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -110,23 +110,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payments-server-test
+  name: payments-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payments-server-test
+      app: payments-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: payments-server-test
+        app: payments-server-prod
     spec:
       containers:
-        - name: payments-server-test
-          image: registry.digitalocean.com/hipalz-repo/payments-test-server:latest
+        - name: payments-server-prod
+          image: registry.digitalocean.com/hipalz-repo/payments-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -137,23 +137,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kitchens-server-test
+  name: kitchens-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kitchens-server-test
+      app: kitchens-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: kitchens-server-test
+        app: kitchens-server-prod
     spec:
       containers:
-        - name: kitchens-server-test
-          image: registry.digitalocean.com/hipalz-repo/kitchens-test-server:latest
+        - name: kitchens-server-prod
+          image: registry.digitalocean.com/hipalz-repo/kitchens-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -164,23 +164,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: users-server-test
+  name: users-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: users-server-test
+      app: users-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: users-server-test
+        app: users-server-prod
     spec:
       containers:
-        - name: users-server-test
-          image: registry.digitalocean.com/hipalz-repo/users-test-server:latest
+        - name: users-server-prod
+          image: registry.digitalocean.com/hipalz-repo/users-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -191,23 +191,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: businesses-server-test
+  name: businesses-server-prod
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: businesses-server-test
+      app: businesses-server-prod
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: businesses-server-test
+        app: businesses-server-prod
     spec:
       containers:
-        - name: businesses-server-test
-          image: registry.digitalocean.com/hipalz-repo/businesses-test-server:latest
+        - name: businesses-server-prod
+          image: registry.digitalocean.com/hipalz-repo/businesses-prod-server:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
