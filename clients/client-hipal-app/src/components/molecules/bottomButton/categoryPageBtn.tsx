@@ -8,6 +8,9 @@ import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
+import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
+import { BsBagHeart } from "react-icons/bs";
+import { useCart } from "@/components/store/useCart";
 
 const CategoryPageBtn = memo(() => {
 	const isLogin = useLogin((s) => s.isLogin);
@@ -18,6 +21,7 @@ const CategoryPageBtn = memo(() => {
 	const setDirection = useLogin((s) => s.setDirection);
 	const router = useRouter();
 	const [callWaiterModal, setCallWaiterModal] = useState(false);
+	const { setShowCart, showCart } = useCart()
 
 	const closeModal = useCallback(() => {
 		setInputModal(false);
@@ -43,7 +47,7 @@ const CategoryPageBtn = memo(() => {
 		setDirection('payment');
 		if (!isLogin) {
 			return router.push(`/r/${customLink}/user/signup`);
-			
+
 		} else {
 			openModal()
 		}
@@ -53,26 +57,36 @@ const CategoryPageBtn = memo(() => {
 		setDirection('category');
 		if (!tableName) {
 			return router.push(`/scan`);
-			
+
 		}
 		if (!isLogin) {
 			return router.push(`/r/${customLink}/user/signup`);
-			
+
 		} else {
 			openCallWaiterModal()
 		}
 	}, [setDirection, isLogin, businessId, router]);
 
+	const showingCart = useCallback(() => {
+		setShowCart(!showCart);
+	}, [showCart, setShowCart]);
+
 	return (
 		<>
 			<BottomButton>
-				<section className="flex items-center justify-between gap-4">
-					<button onClick={triggerCallWaiter} className="w-full px-2 py-3 text-sm border rounded-full border-primary">
+				<section className="relative flex items-center justify-between gap-4">
+					<center onClick={triggerCallWaiter} className="w-full px-2 text-sm font-thin text-base-100">
+						<FaConciergeBell size={22} className="mr-2" />
 						{!isLogin ? 'Login to Call Captain' : !tableName ? 'Scan to Call Captain' : 'Call captain'}
+					</center>
+					<button onClick={showingCart} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-1/2 border rounded-full left-1/2 border-primary bg-base-100">
+						<BsBagHeart size={24} />
 					</button>
-					<button onClick={proceedToPayment} className="w-full px-2 py-3 text-sm rounded-full bg-primary text-base-100">
+					<small className="w-full -mb-6 font-thin text-base-100">view List</small>
+					<center onClick={proceedToPayment} className="w-full px-2 text-sm font-thin text-base-100">
+						<FaMoneyBillWave size={22} />
 						{!isLogin ? 'Login to Pay' : !tableName ? 'Scan to Pay' : 'Pay bill'}
-					</button>
+					</center>
 				</section>
 			</BottomButton>
 

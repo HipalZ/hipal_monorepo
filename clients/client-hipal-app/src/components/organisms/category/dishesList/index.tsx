@@ -56,6 +56,8 @@ function DishesList(props: IDishesProps) {
 		setActiveParentCategory(parentCategoryId || categoryId);
 	};
 
+	console.log('categories', categories);
+
 	if (!categories) {
 		return <div className="my-5 prose text-center"><h4>No Dishes found.</h4></div>;
 	}

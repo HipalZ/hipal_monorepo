@@ -39,7 +39,7 @@ function BottomButton({
   return (
     <>
       {children ? (
-        <center className="fixed bottom-0 z-20 p-4 bg-base-100 w-full max-w-[30rem]">
+        <center className="fixed bottom-0 z-20 p-2 w-full max-w-[30rem] bg-primary">
           {children}
         </center>
       ) : (
@@ -60,7 +60,7 @@ function BottomButton({
               </Link>
               :
               <center onClick={openModal} className="text-sm">
-                <MdOutlineAccountBalanceWallet size={22} />	Pay Bill
+                <MdOutlineAccountBalanceWallet size={22} />	Pay Now
               </center>
           }
           <Link href={`/r/${customLink}/category`}>

@@ -91,7 +91,7 @@ function Header({
 					} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
 				`}
 			>
-				<div className="relative flex flex-row w-full px-6 mx-auto space-x-2 ">
+				<div className="relative flex w-full">
 					{/* Back Button */}
 					<div className={`flex w-full`}>
 						<button
@@ -124,7 +124,7 @@ function Header({
 						</button>
 
 						{!state.showSearchBox && title ? (
-							<div className="my-auto prose capitalize">
+							<div className={`my-auto prose capitalize ${data.roundedHeader && "ml-4" }`}>
 								<CustomTag>
 									{typeof title === "function"
 										? title({
