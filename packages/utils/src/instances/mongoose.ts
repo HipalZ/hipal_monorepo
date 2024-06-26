@@ -2,7 +2,7 @@ import mongoose, { ConnectOptions } from 'mongoose';
 
 const db_name = process.env.MONGO_DB;
 const db_uri = process.env.MONGO_URI || `mongodb://localhost:27017/${db_name}`;
-
+console.log('db_uri:', db_uri);
 const options: ConnectOptions = {
   dbName: db_name,
 };
@@ -28,7 +28,7 @@ const connectDB = async () => {
       console.error('Mongoose connection is disconnected.');
     });
 
-    return conn;                             
+    return conn;
   } catch (e) {
     console.error(e);
   }

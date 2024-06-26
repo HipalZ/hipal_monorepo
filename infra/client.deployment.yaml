@@ -17,8 +17,8 @@ spec:
         app: client-hitable-test
     spec:
       containers:
-        - name: client-hitable-test
-          image: registry.digitalocean.com/hipalz-repo/client-hitable-test:latest
+        - name: client-hitable-prod
+          image: registry.digitalocean.com/hipalz-repo/client-hitable-prod:latest
           imagePullPolicy: Always
           ports:
             - name: http

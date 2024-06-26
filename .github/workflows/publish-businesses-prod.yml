@@ -2,7 +2,7 @@ name: Build and Push businesses Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['prod']
     paths:
       - 'Dockerfile'
       - 'package.json'
@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: businesses-test-server
+  DOCKER_REPOSITORY: businesses-prod-server
 
 jobs:
   build-and-push:

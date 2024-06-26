@@ -1,16 +1,16 @@
-name: Build and Push kitchens Server Image
+name: Build and Push dishes Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['prod']
     paths:
       - 'Dockerfile'
       - 'package.json'
-      - 'servers/kitchens/**'
+      - 'servers/dishes/**'
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: kitchens-test-server
+  DOCKER_REPOSITORY: dishes-prod-server
 
 jobs:
   build-and-push:
@@ -27,5 +27,5 @@ jobs:
       - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
           IMAGE_TAG=latest
-          docker build --target kitchens-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
+          docker build --target dishes-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG

@@ -9,7 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "dotenv -e .env tsx watch src/index.ts",
     "dev:local": "dotenv -e .env.local tsx watch src/index.ts",
-    "start:development": "dotenv -e .env tsx src/index.ts"
+    "start:development": "dotenv -e .env tsx src/index.ts",
+    "start:production": "dotenv -e .env.prod tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
