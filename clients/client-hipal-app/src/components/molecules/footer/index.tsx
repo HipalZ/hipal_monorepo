@@ -13,7 +13,7 @@ interface IFooter{
 const Footer=(props:IFooter) =>{
 	const { footerText, instagramLink, facebookLink, linkedinLink, youtubeLink } = props;
 	return (
-			<div className="!-mt-8">
+			<div>
 				{footerText && (
 					<div className="px-4 text-lg text-base-100-content">
 						{footerText}

@@ -77,7 +77,6 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                     className="w-full px-2 text-sm bg-transparent focus:outline-none"
                     value={searchText}
                     onChange={handleSearchTextChange}
-                    onBlur={closeSearchBox}
                 />
                 
             </div>

@@ -13,8 +13,7 @@ import { IoFastFoodSharp } from "react-icons/io5"
 function FoodDescription({ dishData }: { dishData: IDish }) {
 	const isAvailable = dishData?.availability
 	return (
-		<>
-			<div className="flex flex-col !mt-0 space-y-4 ">
+			<div className="flex flex-col !mt-0 space-y-4 no-scrollbar">
 				<div className="flex flex-col">
 					<div className="flex flex-row flex-wrap flex-1 w-full">
 						{dishData?.dishType && (
@@ -103,7 +102,6 @@ function FoodDescription({ dishData }: { dishData: IDish }) {
 					</div>
 				)}
 			</div>
-		</>
 	)
 }
 

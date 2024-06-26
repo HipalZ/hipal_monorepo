@@ -14,7 +14,7 @@ export default function DishPopup({ dishData }:{dishData: IDish}) {
 	return (
 		<div className="relative max-h-[70vh] overflow-y-auto" onClick={(e) => handleInsideClick(e)}>
 			{!isEmpty(dishData?.images) ? (
-				<div className="">
+				<div className="rounded-full">
 					<WallpaperCarousel wallpapers={dishData?.images} isAvailable={isAvailable} />
 				</div>
 			) : !isAvailable ? (

@@ -32,16 +32,16 @@ function SubTypes(props: ISubTypes) {
 	}, [allCategoriesTypes?.sub, parentCategory])
 
 	return (
-		<>
+		<section className="overflow-x-auto">
 			{!!subTypes && (
 				<div
 					ref={subTypeContainerRef}
-					className="-webkit-flex snap-proximity snap-x"
+					className="flex flex-nowrap -webkit-flex snap-proximity snap-x"
 				>
 					{Object.values(subTypes).map((item: ICategory, index: number) => (
 						<div
 							id={"subType" + item?._id}
-							className="relative p-4 ml-4 snap-center"
+							className="relative px-2 py-4 snap-center"
 							key={item.name + index}
 						>
 							<Link
@@ -52,13 +52,13 @@ function SubTypes(props: ISubTypes) {
 								}}
 							>
 								<button
-									className={` ${isActiveCategory === item?._id ? "scale-125 bg-primary/10" : ""
-										} flex border border-primary rounded-full items-center justify-between px-2 py-1`}
+									className={` ${isActiveCategory === item?._id ? "scale-110 bg-primary/10" : ""
+										} flex w-full text-nowrap border border-primary rounded-full items-center justify-between px-2 py-1`}
 								>
 									{!!item.coverImage ? (
 										<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
 											<Image
-												src={Coinz}
+												src={item.coverImage}
 												alt="dish"
 												quality={95}
 												width={35}
@@ -87,7 +87,7 @@ function SubTypes(props: ISubTypes) {
 					))}
 				</div>
 			)}
-		</>
+		</section>
 	)
 }
 export default memo(SubTypes)
