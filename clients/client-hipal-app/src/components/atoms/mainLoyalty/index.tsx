@@ -34,7 +34,6 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
 
-
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {
@@ -95,7 +94,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 								cardPattern === "love" ||
 								cardPattern === "flower" ||
 								cardPattern === "bud"
-								? "125px 125px"
+								? ""
 								: "cover",
 						backgroundPosition:
 							cardPattern === "beans" ||
@@ -140,7 +139,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 							whiteSpace: "nowrap",
 							color: `${fontColor}`,
 						}}
-						className="absolute flex self-start ml-5 text-sm font-normal bottom-4"
+						className="absolute flex self-start ml-5 text-lg font-normal bottom-4"
 					>
 						{userName ? userName : "Name"}
 					</h1>

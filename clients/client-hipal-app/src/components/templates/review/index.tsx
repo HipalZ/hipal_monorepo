@@ -35,10 +35,10 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	const [showSuggestions, setShowSuggestions] = useState(false)
 	const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
 	const [staffs, setStaffs] = useState<User[]>([])
-	const [foodTaste, setFoodTaste] = useState(false);
-	const [ambience, setAmbience] = useState(false);
-	const [hygiene, setHygiene] = useState(false);
-	const [service, setService] = useState(false);
+	const [foodTaste, setFoodTaste] = useState(null);
+	const [ambience, setAmbience] = useState(null);
+	const [hygiene, setHygiene] = useState(null);
+	const [service, setService] = useState(null);
 	const [openComment, setOpenComment] = useState(false);
 
 	const improvementAreas = [
@@ -119,16 +119,16 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			const res = await axios(config)
 			if (res.status === 201) {
 				toast.success('Thank You for Your Feedback')
-				router.push(`/r/${customLink}/explore`)
+				router.push(`/r/${customLink}/loyalty`)
 			}
 		} catch (error) {
 			toast.error('Review Already Submitted')
-			router.push(`/r/${customLink}/explore`)
+			router.push(`/r/${customLink}/loyalty`)
 		}
 	}
 
-	const navigateToExplore = () => {
-		router.push(`/r/${customLink}/explore`)
+	const navigateToLoyalty = () => {
+		router.push(`/r/${customLink}/loyalty`)
 	}
 
 	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -223,7 +223,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						</div>
 					</center>
 					<center
-						onClick={navigateToExplore}
+						onClick={navigateToLoyalty}
 						className='pb-1 mb-8 underline'
 					>
 						Skip
@@ -293,7 +293,6 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 							</div>
 						</section>
 					)}
-
 					<MiddlePopUp onSave={handleSaveStaff} show={showSuggestions} onClose={() => setShowSuggestions(!showSuggestions)}>
 						<ul
 							className='w-full h-[60vh] mt-0 overflow-auto border border-gray-300'

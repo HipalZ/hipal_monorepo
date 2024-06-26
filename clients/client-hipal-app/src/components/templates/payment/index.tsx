@@ -6,7 +6,7 @@ import celebration from '@/assets/img/celebration-emoji.png'
 import { IoMdCard } from "react-icons/io";
 import { MdKeyboardArrowRight, MdOutlineChevronLeft } from "react-icons/md";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import BottomButton from "@/components/molecules/bottomButton";
 import { IBusinessData } from "@/components/types/businessData";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,7 +27,6 @@ import PaymentComponent from "./selectPayment";
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
 const Payment = ({ data }: { data: IBusinessData }) => {
-    const [otp, setOtp] = useState(["", "", "", ""])
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -38,9 +37,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { userDetails } = useLogin()
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
-        setTips, tips, selectedPay, setSelectedPay } = usePaymentStore()
-    const { tableName } = useTableData()
-    const [offlineOrderId, setOfflineOrderId] = useState('')
+        setTips, tips, selectedPay } = usePaymentStore()
+    const { tableName, setTableName } = useTableData()
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -58,28 +56,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     }, [])
 
     const { loyaltySetting } = useLoyaltyData()
-
-
-    const inputRefs = [
-        useRef<HTMLInputElement>(null),
-        useRef<HTMLInputElement>(null),
-        useRef<HTMLInputElement>(null),
-        useRef<HTMLInputElement>(null),
-    ]
-
-    const handleConfirmCode = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
-
-        const newOtp = [...otp]
-        newOtp[index] = e.target.value
-
-        if (index < inputRefs.length - 1 && e.target.value !== "") {
-            inputRefs[index + 1]?.current?.focus()
-        }
-
-        setOtp(newOtp)
-    }
-
     const handlePaymentSuccess = (response: any) => {
         sendPaymentResponse(response);
         setRazorPaySignature(response.razorpay_signature);
@@ -91,7 +67,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setRazorPaySignature('');
         setRazorPayOrderId('');
         setRazorPayPaymentId('');
-        setOfflineOrderId('');
         toast.error('Payment failed');
     };
     const handlePaymentFailure = (response: any) => {
@@ -99,7 +74,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         console.error(response);
     };
 
-    const creatingRazorPayOptions = async (total: number, orderId: string) => {
+    const creatingRazorPayOptions = async (orderId: string) => {
         if (!orderId) {
             return;
         }
@@ -157,12 +132,15 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const res = await axios.post('/v1/payments/validPayment', {
                 response,
             })
+            const total = billValue - claimedCoinz + tips;
+            const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
             if (res.status === 200) {
-                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${res?.data?.data}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${total}&claim=${coinsObtained}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
                 setRazorPayPaymentId('')
+                setTableName('')
             } else {
                 toast.error('Payment failed')
             }
@@ -179,27 +157,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setCustomTip('')
         setShowInput(false)
         setIsTipActive(false)
-    }
-
-    const verifyOrder = async () => {
-        try {
-            const config = {
-                method: 'POST',
-                url: '/v1/payments/verifyOrder',
-                data: {
-                    order_id: offlineOrderId,
-                    completionCode: otp.join(''),
-                },
-            }
-            const response = await axios(config)
-            if (response?.status === 200) {
-                toast.success(response.data.message)
-                setSelectedPay(false)
-                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${response?.data?.data?.order_id}`)
-            }
-        } catch (err) {
-            toast.error('invalid code')
-        }
     }
 
     const handleCreateOfflineOrder = async () => {
@@ -226,7 +183,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const response = await axios(config)
             if (response?.data?.data?.order_id) {
                 // gives a string which is orderId
-                setOfflineOrderId(response.data.data.order_id)
+                setTableName('')
                 router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${response?.data?.data?.order_id}`)
             }
 
@@ -277,7 +234,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         try {
             const orderId = razorPayOrderId || await createRazorPayOrder(total);
             if (orderId) {
-                await creatingRazorPayOptions(total, orderId);
+                await creatingRazorPayOptions(orderId);
             }
         } catch (error) {
             toast.error('Something went wrong! Please try again later.');
@@ -330,10 +287,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         } catch (err) {
             console.log(err)
         }
-    }
-
-    const navigateTermsAgreement = () => {
-        router.push('/terms&Conditions')
     }
 
     const openModal = async () => {
@@ -480,17 +433,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             &nbsp;&nbsp;Special discount for Special members !!!
                         </h6>
                     </div>
-                    {/* <center className="text-2xl">
-                        Enter the Amount
-                </center>
-                    <input
-                        type='text'
-                        onChange={handleBillAmount}
-                        value={billValue || ''}
-                        placeholder='Enter amount'
-                        maxLength={6}
-                        className='w-[90%] border border-[#000] pl-4 min-h-[3rem] font-semibold text-[1rem] rounded-[1rem] my-auto !py-2 mx-4 mt-4'
-                    /> */}
                     <article
                         onClick={openModal}
                         className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'
@@ -585,29 +527,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             {renderPopUpContent()}
             {isLoading ? <LoadingSpinner /> : null}
-            {/* <MiddlePopUp show={selectedPay} onClose={verifyOrder} onSave={verifyOrder}>
-                <div className="h-full p-4">
-                    <center className="text-2xl">Confirmation Code</center>
-                    <br />
-                    <center>
-                        {otp.map((_, index) => (
-                            <input
-                                type="tel"
-                                key={index.toString()}
-                                value={otp[index]}
-                                onChange={(e) => handleConfirmCode(e, index)}
-                                max={1}
-                                min={0}
-                                ref={inputRefs[index]}
-                                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none `}
-                                required
-                            />
-                        ))}
-                    </center>
-                    <br />
-                    <center>Enter the code to avail get rewards🥳</center>
-                </div>
-            </MiddlePopUp> */}
         </div>
     )
 };

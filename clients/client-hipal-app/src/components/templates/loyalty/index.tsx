@@ -18,25 +18,30 @@ import axios from "@/utils/axios"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import Gift from "@/assets/gift.png"
-import Hundred from "@/assets/100.png"
-import Cal from "@/assets/cal.png"
-import Cracker from "@/assets/crack.png"
 import MainLoyalty from "@/components/atoms/mainLoyalty"
 import DishData from "@/components/atoms/dishDescription"
 import { useQuery } from "@tanstack/react-query"
 import { IBusinessData } from "@/components/types/businessData"
 import PlaceholderImg from "@/components/atoms/placeholder"
-import RedeemButton from "@/components/atoms/redeemButton"
+import BottomButton from "@/components/molecules/bottomButton";
 import { PatternKeys } from "@/components/utils/helpers"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import useLoyaltyData from "@/components/store/useLoyaltyData"
+import { GoArrowUpRight } from "react-icons/go"
+import CouponzLoyalty from "@/components/atoms/couponzLoyalty"
+
+interface IuserTotal {
+    totalWin?: number;
+    totalSave?: number;
+    vipLevel?: string;
+}
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const router = useRouter()
     const userName = useLogin((s) => s.userDetails.name)
     const [HiCode, setHiCode] = useState()
     const [rewards, setRewards] = useState()
+    const [userTotalHistory, setUserTotalHistory] = useState<IuserTotal>({});
     const { setRewardHistory } = useRewardHistory()
     const { userDetails } = useLogin()
     const setUserReward = useUserReward((s) => s.setUserReward)
@@ -47,7 +52,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting)
 
     useEffect(() => {
-        const patterns = (cardPattern:PatternKeys, fontColor:string) => {
+        const patterns = (cardPattern: PatternKeys, fontColor: string) => {
             const defaultColor = "#FAE8CA"
             fontColor = fontColor || defaultColor
 
@@ -62,41 +67,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
             }
             return src[cardPattern]
         }
-        patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor ||'#FAE8CA')
+        patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor || '#FAE8CA')
         setImage(patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor))
-    }, [data?.loyalty, data?.loyalty?.cardPattern,  data?.loyalty?.fontColor])
-
-    const findPattern = (pattern: string) => {
-        const value = srcColor.find((item) => item.src.hasOwnProperty(pattern))
-        return value?.src
-    }
-    const srcColor = [
-        {
-            src: { wave: waveToDataUrl(data?.loyalty?.cardColor, "white").wave },
-        },
-        {
-            src: {
-                triangle: triangleToDataurl("white").triangle,
-            },
-        },
-        {
-            src: {
-                beans: beans(data?.loyalty?.fontColor).beans,
-            },
-        },
-        {
-            src: { bud: bud(data?.loyalty?.fontColor).bud },
-        },
-        {
-            src: { bowl: bowl(data?.loyalty?.fontColor).bowl },
-        },
-        {
-            src: { love: love(data?.loyalty?.fontColor).love },
-        },
-        {
-            src: { flower: flower(data?.loyalty?.fontColor).flower },
-        },
-    ]
+    }, [data?.loyalty, data?.loyalty?.cardPattern, data?.loyalty?.fontColor])
 
     const getUserReward = async () => {
         if (
@@ -111,12 +84,29 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         }
         try {
             const response = await axios(config)
+            console.log(response?.data?.data);
             if (response?.data?.data) {
                 setHiCode(response?.data?.data?.password)
                 setRewards(response?.data?.data?.rewards)
                 setUserReward(response?.data?.data)
             }
             return response?.data?.data
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    const getUserTotalRewards = async () => {
+        try {
+
+            const config = {
+                url: `/v1/users/:id/loyaltyUserHistiry?userPhone=${userDetails?.phone}&loyaltyId=${loyaltySetting?.loyaltyId}`,
+                method: 'GET'
+            }
+            const response = await axios(config)
+            console.log('rrr', response.data.data);
+            setUserTotalHistory(response.data.data)
+            return response.data.data
         } catch (err) {
             console.log(err)
         }
@@ -164,12 +154,18 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         return () => clearTimeout(timer)
     }, [])
 
+    useQuery({
+        queryKey: ["userTotalRewards", userDetails?.phone, loyaltySetting?.loyaltyId],
+        queryFn: getUserTotalRewards,
+        enabled: !!loyaltySetting?.loyaltyId && !!userDetails?.phone
+    })
+
     return (
         <>
-            <div className="relative flex flex-col w-full pt-4 pb-[5rem] bg-base-100">
+            <div className="relative flex flex-col w-full pt-4 pb-[5rem] bg-base-100 mb-20">
                 <div className="relative overflow-hidden">
                     <div
-                        className="mx-6 pb-[7rem]"
+                        className="mx-6"
                         style={{
                             zIndex: 10,
                         }}
@@ -179,171 +175,162 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             <button
                                 type="button"
                                 onClick={() => getLink(data?.loyalty?.loyaltyId)}
-                                className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-2xl"
+                                className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-full text-xs"
                             >
                                 Get History
                             </button>
                         </div>
                         <br />
-                        {data?.business?.businessName ? (
-                            <h3 className="flex justify-start my-0 mt-4 text-xl font-semibold capitalize text-base-content">
-                                {data?.business?.businessName}
-                            </h3>
-                        ):null}
-                        <div className="flex space-x-2">
-                            <div className="text-3xl">Yummy coinz card</div>
-                            <Image src={Gift} alt="gift" />
-                        </div>
-                        <div className="flex items-center mt-8 space-x-6 text-center justify-evenly">
-                            <div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
-                                <div className="text-2xl font-bold">{data?.loyalty?.setClaimAmount}%</div>
-                                <div className="text-xs">Redemption on all Bills</div>
-                            </div>
-                            <div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
-                                <div className="text-2xl font-bold">{data?.loyalty?.setReward}%</div>
-                                <div className="text-xs">on every payment</div>
-                            </div>
-                            <div className="w-[8rem] max-w-[10rem] h-[5rem] max-h-[10rem] p-2 rounded-md bg-primary text-primary-content">
-                                <div className="text-2xl font-bold">{data?.loyalty?.expiryDate}</div>
-                                <div className="text-xs">Valid for whole {data?.loyalty?.expiryDate} days</div>
-                            </div>
+                        <div className="bg-primary h-[17rem] -mx-6 rounded-t-3xl pt-4">
+                            <center>
+                                <Image src={data?.business?.logo || ''} alt="logo" width={95} height={95} />
+                                <h3 className="mt-4 text-3xl font-semibold capitalize text-base-100">
+                                    {data?.business?.businessName}
+                                </h3>
+                            </center>
+                            <br />
+                            <section className="flex text-center justify-around text-base-100">
+                                <article className="border-r-2 border-base-100 pr-5">
+                                    <h1 className="text-3xl">{userTotalHistory?.totalWin || 0}</h1>
+                                    <p>Total win</p>
+                                </article>
+                                <article className="border-r-2 border-base-100 pr-5">
+                                    <h1 className="text-3xl">{userTotalHistory?.totalSave || 0}</h1>
+                                    <p>Total saved</p>
+                                </article>
+                                <article>
+                                    <h1 className="text-3xl">Silver</h1>
+                                    <p>VIP Level</p>
+                                </article>
+                            </section>
                         </div>
                     </div>
-                    <div className="px-4 overflow-hidden">
-                        <div className="absolute w-full scale-125 bg-base-200 h-[8rem] -ml-[2.75rem] rotate-12 mt-[3.4rem]" />
-                    </div>
-
-                    <div className="w-full px-6 pt-[6rem] mt-[6rem] bg-base-200">
-                        <div
-                            onClick={() => setIsHiCodeModalOpen(true)}
-                            style={{
-                                backgroundImage: `url(${image})`,
-                                backgroundColor: data?.loyalty?.cardColor || "primary",
-                                backgroundSize: `${data?.loyalty?.cardPattern === "beans" ||
+                    <div className="bg-base-200 h-[20rem]">
+                        &nbsp;
+                        <center className="text-3xl">My Wallet</center>
+                        <div className="px-4 overflow-hidden" />
+                        <div className="w-full px-6 bg-base-100">
+                            <div
+                                onClick={() => setIsHiCodeModalOpen(true)}
+                                style={{
+                                    backgroundImage: `url(${image})`,
+                                    backgroundColor: data?.loyalty?.cardColor || "primary",
+                                    backgroundSize: `${data?.loyalty?.cardPattern === "beans" ||
                                         data?.loyalty?.cardPattern === "bowl" ||
                                         data?.loyalty?.cardPattern === "love" ||
                                         data?.loyalty?.cardPattern === "flower" ||
                                         data?.loyalty?.cardPattern === "bud"
-                                        ? "125px 75px"
+                                        ? ""
                                         : "cover"
-                                    }`,
-                                backgroundPosition: `${data?.loyalty?.cardPattern === "beans" ||
+                                        }`,
+                                    backgroundPosition: `${data?.loyalty?.cardPattern === "beans" ||
                                         data?.loyalty?.cardPattern === "bowl" ||
                                         data?.loyalty?.cardPattern === "love" ||
                                         data?.loyalty?.cardPattern === "flower" ||
                                         data?.loyalty?.cardPattern === "bud"
                                         ? "right 5% top 50%"
                                         : ""
-                                    }`,
-                                backgroundRepeat: "no-repeat",
-                            }}
-                            className={`'justify-between' ${animate ? "backInUp" : "tada"}  ${data?.loyalty?.cardColor ? data?.loyalty?.cardColor : "bg-primary"
-                                } text-base-content flex flex-col absolute top-0 rounded-2xl w-[70%] mt-[20.5rem] left-0 right-0 m-auto h-[10rem] border border-1 mb-14 
-							transition-transform duration-500`}
-                        >
-                            <>
-                                <div
-                                    style={{
-                                        maxWidth: "calc(20%)",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                    className="mx-[1rem] mt-[1rem] w-[50px] h-[50px]"
-                                >
-                                    {
-                                        data?.business?.logo ?
-                                            <Image
-                                                src={data?.business?.logo}
-                                                alt="logo"
-                                                height={100}
-                                                width={100}
-                                            /> :
-                                            <PlaceholderImg />
-                                    }
-                                </div>
-                                <h1
-                                    style={{
-                                        backfaceVisibility: "hidden",
-                                        WebkitBackfaceVisibility: "hidden",
-                                        color: `${data?.loyalty?.fontColor}`,
-                                    }}
-                                    className={`${data?.loyalty?.fontColor ? "" : "text-primary-content"
-                                        } flex self-center text-3xl font-semibold`}
-                                >
-                                    {rewards}{" "}
-                                    <span
-                                        style={{ color: `${data?.loyalty?.fontColor}` }}
-                                        className={`${data?.loyalty?.fontColor ? `text-[${data?.loyalty?.fontColor}]` : "text-primary-content"
-                                            } text-sm flex self-center ml-2 `}
+                                        }`,
+                                    backgroundRepeat: "no-repeat",
+                                }}
+                                className={`'justify-between' ${animate ? "backInUp" : "tada"} ${data?.loyalty?.cardColor ? data?.loyalty?.cardColor : "bg-primary"
+                                    } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] mt-[28rem] left-0 right-0 m-auto h-[10rem] border border-1 mb-14 
+							transition-transform duration-500 -skew-y-6`}
+                            >
+                                <>
+                                    <div
+                                        style={{
+                                            maxWidth: "calc(20%)",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                        className="mx-[1rem] mt-[1rem] w-[50px] h-[50px]"
                                     >
-                                        Coins
+                                        {
+                                            data?.business?.logo ?
+                                                <Image
+                                                    src={data?.business?.logo}
+                                                    alt="logo"
+                                                    height={100}
+                                                    width={100}
+                                                /> :
+                                                <PlaceholderImg />
+                                        }
+                                    </div>
+                                    <h1
+                                        style={{
+                                            backfaceVisibility: "hidden",
+                                            WebkitBackfaceVisibility: "hidden",
+                                            color: `${data?.loyalty?.fontColor}`,
+                                        }}
+                                        className={`${data?.loyalty?.fontColor ? "" : "text-primary-content"
+                                            } flex self-center text-3xl font-semibold`}
+                                    >
+                                        {rewards}{" "}
+                                        <span
+                                            style={{ color: `${data?.loyalty?.fontColor}` }}
+                                            className={`${data?.loyalty?.fontColor ? `text-[${data?.loyalty?.fontColor}]` : "text-primary-content"
+                                                } text-sm flex self-center ml-2 `}
+                                        >
+                                            Coins
                                     </span>
-                                </h1>
-                                <h1
-                                    style={{
-                                        backfaceVisibility: "hidden",
-                                        WebkitBackfaceVisibility: "hidden",
-                                        color: `${data?.loyalty?.fontColor}`,
-                                    }}
-                                    className={`${data?.loyalty?.fontColor ? `text-[${data?.loyalty?.fontColor}]` : "text-primary-content"
-                                        } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
-                                >
-                                    {userName}
-                                </h1>
-                            </>
-                        </div>
-                        <div className="pt-4 pb-12 mt-6 text-xl text-center">
-                            <div>We reward you for your</div>
-                            <div>love for {data?.business?.businessName}</div>
-                        </div>
-                    </div>
-
-                    <div className="pt-8 pb-4 text-xl text-center">It&#39;s Reward time</div>
-                    <div className="space-y-4">
-                        <div className="flex flex-row items-center justify-between p-4 mx-6 bg-base-200/70 rounded-xl">
-                            <div className="w-[60%]">
-                                <div className="pb-2 text-xl font-semibold text-accent">
-                                    {data?.loyalty?.setReward}% off Every time
-                                </div>
-                                <div className="text-xs text-base-content opacity-70">
-                                    Get {data?.loyalty?.setReward}% off on every time you pay the bill and will be
-                                    added in your wallet for next use
-                                </div>
-                            </div>
-                            <div className="w-[30%]">
-                                <Image width={100} height={100} src={Cracker} alt="gift" />
-                            </div>
-                        </div>
-                        <div className="flex flex-row items-center justify-between p-4 mx-6 bg-base-200/70 rounded-xl">
-                            <div className="w-[70%]">
-                                <div className="pb-2 text-xl font-semibold text-accent">
-                                    {data?.loyalty?.setClaimAmount}% Redemption
-                                </div>
-                                <div className="text-xs text-base-content opacity-70">
-                                    Redeem {data?.loyalty?.setClaimAmount}% of yummy coinz collected on every bill
-                                </div>
-                            </div>
-                            <div className="w-[30%]">
-                                <Image width={100} height={100} src={Hundred} alt="gift" />
-                            </div>
-                        </div>
-                        <div className="flex flex-row items-center justify-between p-4 mx-6 bg-base-200/70 rounded-xl">
-                            <div className="w-[60%]">
-                                <div className="pb-2 text-xl font-semibold text-accent">{data?.loyalty?.expiryDate} Days</div>
-                                <div className="text-xs text-base-content opacity-70">
-                                    All your redeemed coinZ are safe to use for 1 year from the time of redemption
-                                </div>
-                            </div>
-                            <div className="w-[30%]">
-                                <Image width={100} height={100} src={Cal} alt="gift" />
+                                    </h1>
+                                    <h1
+                                        style={{
+                                            backfaceVisibility: "hidden",
+                                            WebkitBackfaceVisibility: "hidden",
+                                            color: `${data?.loyalty?.fontColor}`,
+                                        }}
+                                        className={`${data?.loyalty?.fontColor ? `text-[${data?.loyalty?.fontColor}]` : "text-primary-content"
+                                            } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
+                                    >
+                                        {userName}
+                                    </h1>
+                                </>
                             </div>
                         </div>
                     </div>
+                    <section className="pt-8 pb-4 text-3xl text-center mb-4">Couponz</section>
+                    <section className="mx-6 flex flex-nowrap overflow-x-auto h-[12rem] w-full space-x-4 ">
+                        <CouponzLoyalty
+                            cardColor="#4d72f5"
+                            textColor="#D9D9D9"
+                            textContent="Birthday coupon for special"
+                        />
+                        <CouponzLoyalty
+                            cardColor="#8452ef"
+                            textColor="#D9D9D9"
+                            textContent="Off on your breakfast"
+                        />
+                        <CouponzLoyalty
+                            cardColor="#ffbc97"
+                            textColor="#9A3700"
+                            textContent="Valentine days"
+                        />
+                    </section>
+                    <section className="p-4 mt-4">
+                        <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <h1 className="text-primary text-lg font-semibold">My History and usage</h1>
+                                <p className="text-primary text-sm opacity-75">Check your coinz history</p>
+                            </div>
+                            <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                        </article>
+                        &nbsp;
+                        <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <h1 className="text-primary text-lg font-semibold">Terms & Conditions</h1>
+                                <p className="text-primary text-sm opacity-75">Read the policies of rewardz at {businessDetails?.businessName}</p>
+                            </div>
+                            <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                        </article>
+                    </section>
                 </div>
             </div>
-            <RedeemButton setIsHiCodeModalOpen={setIsHiCodeModalOpen} themes={data?.settings?.themes}/>
+            <BottomButton />
             {isHiCodeModalOpen && (
                 <DishData show={isHiCodeModalOpen} onClose={() => setIsHiCodeModalOpen(false)}>
                     <MainLoyalty
+                        logo={businessDetails?.logo}
                         hiCode={HiCode}
                         cardColor={data?.loyalty?.cardColor}
                         fontColor={data?.loyalty?.fontColor}
