@@ -155,13 +155,13 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         <div className="flex items-center justify-between">
                             <span className="flex items-center space-x-2">
                                 <BackButton />
-                                <Image src={avatar} alt="avatar" className="sm:w-10 sm:h-10 lg:h-12 lg:w-12 rounded-full" />
-                                <b>Hey {userDetails?.name} !!</b>
+                                <Image src={avatar} alt="avatar" className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12" />
+                                <b>Hey {userDetails && userDetails?.name?.length > 10 ? `${userDetails?.name?.substring(0, 10)}...` : userDetails?.name ?? 'Guest'} !!</b>
                             </span>
                             <Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
                                 <button
                                     type="button"
-                                    className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-full text-xs"
+                                    className="px-4 py-2 text-xs border rounded-full on_active_bounce bg-base-100 text-primary border-primary"
                                 >
                                     Get History
                             </button>
@@ -172,7 +172,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             <div>
                                 <Image src={hipalzCoinz} alt="reviewHand" />
                             </div>
-                            <div className='text-xs mr-2'>
+                            <div className='mr-2 text-xs'>
                                 <RollingNumber number={Number(claim) || 0} />
                                 <span className="text-xl">Coinz Earned</span>
                             </div>
@@ -185,12 +185,12 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                                 </h3>
                             </center>
                             <br />
-                            <section className="flex text-center justify-around text-base-100">
-                                <article className="border-r-2 border-base-100 pr-5">
+                            <section className="flex justify-around text-center text-base-100">
+                                <article className="pr-5 border-r-2 border-base-100">
                                     <h1 className="text-3xl">{userTotalHistory?.totalWin || 0}</h1>
                                     <p>Total win</p>
                                 </article>
-                                <article className="border-r-2 border-base-100 pr-5">
+                                <article className="pr-5 border-r-2 border-base-100">
                                     <h1 className="text-3xl">{userTotalHistory?.totalSave || 0}</h1>
                                     <p>Total saved</p>
                                 </article>
@@ -285,7 +285,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             </div>
                         </div>
                     </div>
-                    <section className="pt-8 pb-4 text-3xl text-center mb-4">Couponz</section>
+                    <section className="pt-8 pb-4 mb-4 text-3xl text-center">Couponz</section>
                     <section className="mx-6 flex flex-nowrap overflow-x-auto h-[12rem] space-x-4">
                         <CouponzLoyalty
                             cardColor="#4D72F5"
@@ -305,22 +305,22 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                     </section>
                     <section className="p-4 mt-4">
                         <Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
-                            <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                            <article className="flex items-center justify-between p-4 bg-base-200 rounded-2xl">
                                 <div>
-                                    <h1 className="text-primary text-lg font-semibold">My History and usage</h1>
-                                    <p className="text-primary text-sm opacity-75">Check your coinz history</p>
+                                    <h1 className="text-lg font-semibold text-primary">My History and usage</h1>
+                                    <p className="text-sm opacity-75 text-primary">Check your coinz history</p>
                                 </div>
-                                <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                                <span className="p-2 text-3xl rounded-full bg-primary"><GoArrowUpRight color="#fff" /></span>
                             </article>
                         </Link>
                         &nbsp;
                         <Link href={`/terms`}>
-                            <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                            <article className="flex items-center justify-between p-4 bg-base-200 rounded-2xl">
                                 <div>
-                                    <h1 className="text-primary text-lg font-semibold">Terms & Conditions</h1>
-                                    <p className="text-primary text-sm opacity-75">Read the policies of rewardz at {businessDetails?.businessName}</p>
+                                    <h1 className="text-lg font-semibold text-primary">Terms & Conditions</h1>
+                                    <p className="text-sm opacity-75 text-primary">Read the policies of rewardz at {businessDetails?.businessName}</p>
                                 </div>
-                                <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                                <span className="p-2 text-3xl rounded-full bg-primary"><GoArrowUpRight color="#fff" /></span>
                             </article>
                         </Link>
                     </section>

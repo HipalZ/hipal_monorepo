@@ -169,9 +169,9 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	return (
 		<>
 			<div className='p-4 animate-fade-up animate-once '>
-				<figure className='z-10 rounded-full flex items-center space-x-2'>
+				<figure className='z-10 flex items-center space-x-2 rounded-full'>
 					<Image src={logo} alt='logo' height={38} width={38} />
-					<span>{businessName}</span>
+					<span className='text-2xl capitalize'>{businessName}</span>
 				</figure>
 				<section
 					style={{
@@ -183,17 +183,17 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					}}
 					className='flex flex-col items-center justify-center'
 				>
-					<article className='text-center'>
-						<Image
+					{<article className='text-center'>
+						{mode==="online" && <Image
 							src={success}
 							alt='success'
 							priority={true}
 							width={100}
 							height={100}
 							className='animate-pulse'
-						/>
-						<h1 className='text-xl'>Payment Success!</h1>
-					</article>
+						/>}
+						{mode==="online" ? <h1 className='text-xl'>Payment Success!</h1> : <h1 className='text-xl'>Your Payable Amount</h1>}
+					</article>}
 					<br />
 					<div className='text-center'>
 						<h1 className='text-3xl font-semibold'>₹ {amount}</h1>
@@ -202,7 +202,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					{mode === "offline" ? <center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center> : null}
 					{Number(claim) > 0 && <center className="flex items-center justify-center my-4 space-x-4">
 						<Image src={reviewHand} alt="review-hand" />
-						<h1 className="text-primary w-32"><span className="text-3xl">🎉</span> You Won <span className="text-3xl text-primary">{claim}</span> coinz</h1>
+						<h1 className="w-32 text-primary"><span className="text-3xl">🎉</span> You Won <span className="text-3xl text-primary">{Math.round(Number(claim))}</span> coinz</h1>
 					</center>}
 				</section>
 				&nbsp;
@@ -253,7 +253,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						<section className="border border-1 rounded-lg border-[#FFC814] bg-white">
 							{improvementAreas.length > 0 &&
 								improvementAreas.map((each) => (
-									<article key={each.name} className="m-5 flex justify-between">
+									<article key={each.name} className="flex justify-between m-5">
 										<h1 className="text-sm">{each.name}</h1>
 										<div>
 											<span
@@ -292,7 +292,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						{
 							selectedStaff && selectedStaff.length > 0 && selectedStaff?.map((staff) => (
 								<div key={staff} className="flex ">
-									<span className="px-4 bg-white text-black rounded-md my-2">{staff}</span>
+									<span className="px-4 my-2 text-black bg-white rounded-md">{staff}</span>
 									<RxCrossCircled onClick={() => handleRemoveStaff(staff)} />
 								</div>
 							)
@@ -319,7 +319,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 							className='w-full h-[60vh] mt-0 overflow-auto border border-gray-300'
 							style={{ zIndex: 2 }}
 						>
-							<center className="text-xl font-semibold my-4">Staff members</center>
+							<center className="my-4 text-xl font-semibold">Staff members</center>
 							{staffs?.map((staff, index) => (
 								<div key={staff?.name + index}>
 									{isPending && <center>Loading staff...</center>}
