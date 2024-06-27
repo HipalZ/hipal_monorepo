@@ -18,8 +18,9 @@ import reviewHand from '@/assets/img/review-hand.png'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
 import { RxCrossCircled } from 'react-icons/rx'
 import { cn } from '@/components/utils/helpers'
+import Link from 'next/link'
 interface Payload {
-	businessId: string; 
+	businessId: string;
 	reviewerName: string | undefined;
 	reviewerPhone: string;
 	reviewRating: number;
@@ -35,10 +36,11 @@ interface Payload {
 
 export default memo(function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
-	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
-	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
+	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
+	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
+	const roundedOffClaim = Math.round(Number(claim) / 10) * 10
 	const orderId = searchParams?.get('orderId')
 	const mode = searchParams?.get('mode')
 	const amount = parseInt(searchParams?.get('amount') || '0')
@@ -110,7 +112,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	}
 
 	const result = async () => {
-		let payload:Payload = {
+		let payload: Payload = {
 			businessId: businessId,
 			reviewerName: userDetails?.name,
 			reviewerPhone: `91${userDetails?.phone}`,
@@ -120,17 +122,17 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			order_id: orderId?.toString(),
 			staffs: selectedStaff,
 		};
-		
+
 		if (foodTaste === true || foodTaste === false) {
 			payload.foodTaste = foodTaste;
 		}
-		if(ambience === true || ambience === false){
+		if (ambience === true || ambience === false) {
 			payload.ambience = ambience;
 		}
-		if(hygiene === true || hygiene === false){
+		if (hygiene === true || hygiene === false) {
 			payload.hygiene = hygiene;
 		}
-		if(service === true || service === false){
+		if (service === true || service === false) {
 			payload.service = service;
 		}
 		try {
@@ -142,16 +144,11 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			const res = await axios(config)
 			if (res.status === 201) {
 				toast.success('Thank You for Your Feedback')
-				router.push(`/r/${customLink}/loyalty`)
+				router.push(`/r/${customLink}/loyalty?claim=${roundedOffClaim}`)
 			}
 		} catch (error) {
 			toast.error(error?.response?.data?.message)
-			router.push(`/r/${customLink}/loyalty`)
 		}
-	}
-
-	const navigateToLoyalty = () => {
-		router.push(`/r/${customLink}/loyalty`)
 	}
 
 	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -202,7 +199,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						<h1 className='text-3xl font-semibold'>₹ {amount}</h1>
 						&nbsp;
 					</div>
-					{mode === "offline" ? <center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center>:null}
+					{mode === "offline" ? <center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center> : null}
 					{Number(claim) > 0 && <center className="flex items-center justify-center my-4 space-x-4">
 						<Image src={reviewHand} alt="review-hand" />
 						<h1 className="text-primary w-32"><span className="text-3xl">🎉</span> You Won <span className="text-3xl text-primary">{claim}</span> coinz</h1>
@@ -245,12 +242,13 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						</label>
 						</div>
 					</center>
-					<center
-						onClick={navigateToLoyalty}
-						className='pb-1 mb-8 underline'
-					>
-						Skip
-				</center>
+					<Link href={`/r/${customLink}/loyalty?claim=${roundedOffClaim}`}>
+						<center
+							className='pb-1 mb-8 underline'
+						>
+							Skip
+						</center>
+					</Link>
 					{rating && (
 						<section className="border border-1 rounded-lg border-[#FFC814] bg-white">
 							{improvementAreas.length > 0 &&

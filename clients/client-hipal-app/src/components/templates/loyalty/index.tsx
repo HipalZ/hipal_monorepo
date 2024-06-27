@@ -10,13 +10,11 @@ import {
     waveToDataUrl,
 } from "@/components/atoms/card/pathPattern"
 import { useLogin } from "@/components/store/useLogin"
-import { useRewardHistory } from "@/components/store/useRewardHistory"
 import useUserReward from "@/components/store/useUserReward"
 import { paths } from "@/components/utils/paths"
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import axios from "@/utils/axios"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import MainLoyalty from "@/components/atoms/mainLoyalty"
 import DishData from "@/components/atoms/dishDescription"
@@ -30,6 +28,9 @@ import useLoyaltyData from "@/components/store/useLoyaltyData"
 import { GoArrowUpRight } from "react-icons/go"
 import CouponzLoyalty from "@/components/atoms/couponzLoyalty"
 import Link from "next/link"
+import avatar from "@/assets/img/avatar.png";
+import hipalzCoinz from '@/assets/img/hipalzCoinz.png'
+import RollingNumber from "@/components/rollingNumbers"
 
 interface IuserTotal {
     totalWin?: number;
@@ -38,12 +39,10 @@ interface IuserTotal {
 }
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
-    const router = useRouter()
     const userName = useLogin((s) => s.userDetails.name)
     const [HiCode, setHiCode] = useState()
     const [rewards, setRewards] = useState()
     const [userTotalHistory, setUserTotalHistory] = useState<IuserTotal>({});
-    const { setRewardHistory } = useRewardHistory()
     const { userDetails } = useLogin()
     const setUserReward = useUserReward((s) => s.setUserReward)
     const [image, setImage] = useState<string>("")
@@ -51,6 +50,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const [animate, setAnimate] = useState(false)
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting)
+    const searchParams = useSearchParams()
+    const claim = searchParams?.get('claim')
+    const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink)
 
     useEffect(() => {
         const patterns = (cardPattern: PatternKeys, fontColor: string) => {
@@ -105,45 +107,11 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                 method: 'GET'
             }
             const response = await axios(config)
-            console.log('rrr', response.data.data);
             setUserTotalHistory(response.data.data)
             return response.data.data
         } catch (err) {
             console.log(err)
         }
-    }
-
-    const getUserRewardHistory = async () => {
-        if (
-            userDetails.phone === "NaN" ||
-            Number(userDetails.phone) === 0 ||
-            data?.loyalty?.loyaltyId === undefined
-        )
-            return
-        const config2 = {
-            method: "GET",
-            url: paths.getUserRewardHistory(Number(userDetails.phone), data?.loyalty?.loyaltyId),
-        }
-        try {
-            const response = await axios(config2)
-            if (response?.data?.data) {
-                setRewardHistory(response?.data?.data)
-            }
-            return response?.data?.data
-        } catch (err) {
-            console.log(err)
-        }
-    }
-
-    useQuery({
-        queryKey: ["userRewardHistory", Number(userDetails.phone), data?.loyalty?.loyaltyId],
-        queryFn: getUserReward,
-        enabled: !!data?.loyalty?.loyaltyId,
-    })
-
-    const getLink = (loyaltyId: string) => {
-        getUserRewardHistory()
-        return router.push(routePaths[PAGE_TYPES.LOYALTY_BY_ID](businessDetails._id, loyaltyId))
     }
 
     useEffect(() => {
@@ -154,6 +122,24 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 
         return () => clearTimeout(timer)
     }, [])
+
+    useEffect(() => {
+        let audio: HTMLAudioElement
+        audio = new Audio("/sounds/Money.mp3")
+        audio.play()
+        return () => {
+            if (audio) {
+                audio.pause()
+                audio.currentTime = 0
+            }
+        }
+    }, [])
+
+    useQuery({
+        queryKey: ["userRewardHistory", Number(userDetails.phone), data?.loyalty?.loyaltyId],
+        queryFn: getUserReward,
+        enabled: !!data?.loyalty?.loyaltyId,
+    })
 
     useQuery({
         queryKey: ["userTotalRewards", userDetails?.phone, loyaltySetting?.loyaltyId],
@@ -172,17 +158,31 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         }}
                     >
                         <div className="flex items-center justify-between">
-                            <BackButton />
-                            <button
-                                type="button"
-                                onClick={() => getLink(data?.loyalty?.loyaltyId)}
-                                className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-full text-xs"
-                            >
-                                Get History
+                            <span className="flex items-center space-x-2">
+                                <BackButton />
+                                <Image src={avatar} alt="avatar" className="sm:w-10 sm:h-10 lg:h-12 lg:w-12 rounded-full" />
+                                <b>Hey {userDetails?.name} !!</b>
+                            </span>
+                            <Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
+                                <button
+                                    type="button"
+                                    className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-full text-xs"
+                                >
+                                    Get History
                             </button>
+                            </Link>
                         </div>
                         <br />
-                        <div className="bg-primary h-[17rem] -mx-6 rounded-t-3xl pt-4">
+                        <div className="h-[12rem] mx-4 border border-1 flex justify-between items-center mb-4">
+                            <div>
+                                <Image src={hipalzCoinz} alt="reviewHand" />
+                            </div>
+                            <div className='text-xs'>
+                                <RollingNumber number={Number(claim) || 0} />
+                                <span className="text-xl">Coinz Earned</span>
+                            </div>
+                        </div>
+                        <div className="bg-primary/90 h-[17rem] -mx-6 rounded-t-3xl pt-4">
                             <center>
                                 <Image src={data?.business?.logo || ''} alt="logo" width={95} height={95} />
                                 <h3 className="mt-4 text-3xl font-semibold capitalize text-base-100">
@@ -235,7 +235,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                                     backgroundRepeat: "no-repeat",
                                 }}
                                 className={`'justify-between' ${animate ? "backInUp" : "tada"} ${data?.loyalty?.cardColor ? data?.loyalty?.cardColor : "bg-primary"
-                                    } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] mt-[28rem] left-0 right-0 m-auto h-[10rem] border border-1 mb-14 
+                                    } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] mt-[40rem] left-0 right-0 m-auto h-[10rem] border border-1 mb-14 
 							transition-transform duration-500 -skew-y-6`}
                             >
                                 <>
@@ -291,7 +291,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         </div>
                     </div>
                     <section className="pt-8 pb-4 text-3xl text-center mb-4">Couponz</section>
-                    <section className="mx-6 flex flex-nowrap overflow-x-auto h-[12rem] w-full space-x-4 ">
+                    <section className="mx-6 flex flex-nowrap overflow-x-auto h-[12rem] space-x-4">
                         <CouponzLoyalty
                             cardColor="#4D72F5"
                             textColor="#D9D9D9"
@@ -309,22 +309,24 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                         />
                     </section>
                     <section className="p-4 mt-4">
-                        <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
-                            <div>
-                                <h1 className="text-primary text-lg font-semibold">My History and usage</h1>
-                                <p className="text-primary text-sm opacity-75">Check your coinz history</p>
-                            </div>
-                            <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
-                        </article>
+                        <Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
+                            <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-primary text-lg font-semibold">My History and usage</h1>
+                                    <p className="text-primary text-sm opacity-75">Check your coinz history</p>
+                                </div>
+                                <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                            </article>
+                        </Link>
                         &nbsp;
                         <Link href={`/terms`}>
-                        <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
-                            <div>
-                                <h1 className="text-primary text-lg font-semibold">Terms & Conditions</h1>
-                                <p className="text-primary text-sm opacity-75">Read the policies of rewardz at {businessDetails?.businessName}</p>
-                            </div>
-                            <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
-                        </article>
+                            <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-primary text-lg font-semibold">Terms & Conditions</h1>
+                                    <p className="text-primary text-sm opacity-75">Read the policies of rewardz at {businessDetails?.businessName}</p>
+                                </div>
+                                <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
+                            </article>
                         </Link>
                     </section>
                 </div>

@@ -297,14 +297,17 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
+    const [maxCoinz , setMaxCoinz] = useState(0)
     const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
         const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
         const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
         const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
         if (userEnteredValue > coinsToSet) {
             setClaimedCoinz(coinsToSet);
+            setMaxCoinz(coinsToSet)
         } else {
             setClaimedCoinz(userEnteredValue);
+            setMaxCoinz(userEnteredValue)
         }
     };
 
@@ -409,6 +412,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 userCoinz={userCoinz}
                 handleCoins={handleCoins}
                 handleApplyCoinz={handleApplyCoinz}
+                maxCoinz={maxCoinz}
             />
             {isLoading ? <LoadingSpinner /> : null}
         </div>

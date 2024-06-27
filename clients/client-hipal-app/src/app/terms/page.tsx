@@ -13,13 +13,13 @@ import { IBiz } from '@/components/types/businessData'
 
 interface IData {
     logo:string;
-    businessName:string;
+    registeredName:string;
     location:string;
     phone:string;
 }
 const Terms= ()=> {
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
-	const { logo, businessName, location, phone } = businessDetails as IBiz
+	const { logo, registeredName, address, phoneNumber } = businessDetails as IBiz
     const router = useRouter()
 	const onBack = () => {
 		router.back()
@@ -85,9 +85,9 @@ const Terms= ()=> {
 			<h3 className={styles.subheading}>1. General</h3>
 			<p className={styles.paragraph}>
 				These Terms of Payment govern all transactions between you ( The customer ) using the menu
-				and Merchant {businessName} also using the Hipal software and
+				and Merchant <b>{registeredName}</b> also using the Hipal software and
 				services. It is to be clearly noted that Hipal is technology and general service provider to
-				its Merchant {businessName} and is not responsible for activities
+				its Merchant <b>{registeredName}</b> and is not responsible for activities
 				between Merchant and their customer and any business that uses the HiPal
 			</p>
 			<h3 className={styles.subheading}>2. Prices and Payment</h3>
@@ -108,7 +108,7 @@ const Terms= ()=> {
 			<h3 className={styles.subheading}>5. Refunds and Disputes</h3>
 			<p className={styles.paragraph}>
 				All refund requests and disputes related to purchases from the Merchant should be directed
-				to the Merchant {businessName} in the first instance, The Merchant is
+				to the Merchant {registeredName} in the first instance, The Merchant is
 				solely responsible for handling all customer service issues related to goods, services, and
 				charges Customers can reach out to Merchant directly or through the contact number given
 				here to share their concerns. Merchant will address the issue the problem as soon as
@@ -132,7 +132,7 @@ const Terms= ()=> {
 			<h3 className={styles.subheading}>4. Refunds and Disputes</h3>
 			<p className={styles.paragraph}>
 				All refund requests and disputes related to purchases from the Merchant should be directed
-				to the Merchant {businessName} in the first instance, The Merchant is
+				to the Merchant {registeredName} in the first instance, The Merchant is
 				solely responsible for handling all customer service issues related to goods, services, and
 				charges Customers can reach out to Merchant directly or through the contact number given
 				here to share their concerns. Merchant will address the issue the problem as soon as
@@ -148,14 +148,14 @@ const Terms= ()=> {
 				<div className='flex flex-row items-start justify-start'>
 					<span className='text-lg whitespace-nowrap'>Call us :</span>
 
-					<span className='mt-[0.5rem] ml-4 text-xs'> {phone}</span>
+					<span className='mt-[0.5rem] ml-4 text-xs'> {phoneNumber}</span>
 				</div>
 			</div>
-			<div className='flex flex-col pb-12'>
-				<div className='flex flex-row items-start justify-center'>
+			<div className='flex flex-col pb-6'>
+				<div className='flex flex-row items-start justify-start'>
 					<span className='text-lg whitespace-nowrap'>Visit us :</span>
 
-					<span className='mt-[0.5rem] ml-4 text-xs'> {location}</span>
+					<span className='mt-[0.5rem] ml-4 text-xs'> {address}</span>
 				</div>
 			</div>
 			<h1 className={styles.heading}>Privacy Policy Paltribe solutions Pvt </h1>

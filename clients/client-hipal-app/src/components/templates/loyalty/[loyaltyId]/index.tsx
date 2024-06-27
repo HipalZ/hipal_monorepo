@@ -12,22 +12,40 @@ import {
 } from "@/components/atoms/card/pathPattern"
 import wallet from "@/assets/svg/wallet.svg"
 import Image from "next/image"
-import { useRewardHistory } from "@/components/store/useRewardHistory"
 import type { IBusinessData, UserData } from "@/components/types/businessData"
-import { useParams } from "next/navigation"
 import { PatternKeys } from "@/components/utils/helpers"
+import { paths } from "@/components/utils/paths"
+import { useLogin } from "@/components/store/useLogin"
+import axios from "@/utils/axios"
+import { useQuery } from "@tanstack/react-query"
 
 const LoyaltyId = ({data}:{data:IBusinessData}) => {
-	const params = useParams()
-	const loyaltyId = params?.loyaltyId || ''
-	const items = useRewardHistory((s) => s.rewardHistory?.items)
-	const [itemData, setItemData] = useState<UserData | undefined>(items)
+	const { userDetails } = useLogin()
+	const [itemData, setItemData] = useState<UserData[]>([])
 	const [image, setImage] = useState<any>("")
 	const [claimImage, setClaimImage] = useState("")
 
-	useEffect(() => {
-		setItemData(items)
-	}, [items, loyaltyId])
+	const getUserHistory = async () => {
+        if (
+            userDetails.phone === "NaN" ||
+            Number(userDetails.phone) === 0 ||
+            data?.loyalty?.loyaltyId === undefined
+        )
+            return
+        const config2 = {
+            method: "GET",
+            url: paths.getUserRewardHistory(Number(userDetails.phone), data?.loyalty?.loyaltyId),
+        }
+        try {
+            const response = await axios(config2)
+            if (response?.data?.data?.items) {
+                setItemData(response?.data?.data?.items)
+            }
+            return response?.data?.data?.items
+        } catch (err) {
+            console.log(err)
+        }
+    }
 
 	useEffect(() => {
 		if (data?.loyalty?.loyaltyId) {
@@ -52,6 +70,12 @@ const LoyaltyId = ({data}:{data:IBusinessData}) => {
 			)
 		}
 	}, [data?.loyalty, data?.loyalty?.cardPattern, data?.loyalty?.fontColor])
+
+	useQuery({
+		queryKey: ["userHistory", data?.loyalty?.loyaltyId , userDetails.phone],
+		queryFn: getUserHistory,
+		enabled: !!data?.loyalty?.loyaltyId && !!userDetails.phone,
+	})
 
 	return (
 		<div className="relative flex flex-col w-full pb-16 mt-6 syne-font">

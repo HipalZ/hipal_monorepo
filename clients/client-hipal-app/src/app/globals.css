@@ -640,3 +640,16 @@ input[type='password'] {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+#counter {
+	height: 5em; 
+	overflow: hidden;
+	display: flex;
+}
+
+.digits {
+	list-style-type: none;
+	font-size: 5em;
+	line-height: 1em;
+	transition: margin-top 2s ease;
+}

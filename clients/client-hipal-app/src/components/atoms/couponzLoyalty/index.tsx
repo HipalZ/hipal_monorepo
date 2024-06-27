@@ -1,10 +1,12 @@
+import { memo } from "react";
+
 interface ICouponzLoyaltyProps {
     cardColor: string;
     textColor: string;
     textContent: string;
 }
 
-const CouponzLoyalty = ({ cardColor, textColor, textContent }: ICouponzLoyaltyProps) => {
+const CouponzLoyalty = memo(({ cardColor, textColor, textContent }: ICouponzLoyaltyProps) => {
     const defaultCardStyle: React.CSSProperties = {
         backgroundColor: cardColor,
         height: '12rem',
@@ -14,7 +16,7 @@ const CouponzLoyalty = ({ cardColor, textColor, textContent }: ICouponzLoyaltyPr
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        color: 'white'
+        color: 'white',
     };
     
     const defaultButtonStyle: React.CSSProperties = {
@@ -34,6 +36,6 @@ const CouponzLoyalty = ({ cardColor, textColor, textContent }: ICouponzLoyaltyPr
             <button style={defaultButtonStyle}>Coming Soon</button>
         </article>
     );
-};
+});
 
 export default CouponzLoyalty;

@@ -71,13 +71,11 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
             <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
                 <HeroSection data={data} />
-              
                 {
                     isLogin && (
                         <Rewards />
                     )
                 }
-
                 <SpecialOffers explore={data?.settings?.explore} />
 
                 {loyaltySetting?._id && (
