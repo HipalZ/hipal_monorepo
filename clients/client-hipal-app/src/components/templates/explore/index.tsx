@@ -21,17 +21,19 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { useLogin } from "@/components/store/useLogin";
+import { useCart } from "@/components/store/useCart";
 
 export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
 
     const tableName = searchParams?.get('tableName')
- 
-    const { setTableName } = useTableData()
+
+    const { setTableName, tableName: storeTableName } = useTableData()
     const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const isLogin = useLogin((s) => s.isLogin)
+    const setCart = useCart((s) => s.setCart)
 
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
@@ -60,8 +62,11 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (data?.business) {
             setBusinessDetails(data.business);
         }
-        if(tableName !== null){
+        if (tableName !== null) {
             setTableName(tableName)
+        }
+        if (storeTableName !== tableName) {
+            setCart({})
         }
         setSelectedPay(false)
     }, [])
@@ -102,7 +107,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
                 <PageName />
             </div>
-            
+
             <BottomButton />
 
             {!isModalOpen && (

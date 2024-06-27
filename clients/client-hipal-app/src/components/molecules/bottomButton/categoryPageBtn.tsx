@@ -11,9 +11,11 @@ import useTableData from "@/components/store/useTableData";
 import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
 import { BsBagHeart } from "react-icons/bs";
 import { useCart } from "@/components/store/useCart";
+import { HiX } from "react-icons/hi";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CategoryPageBtn = memo(() => {
-	const { isLogin, isPayment, direction } = useLogin();
+	const { isLogin, isPayment } = useLogin();
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const tableName = useTableData((s) => s.tableName)
@@ -43,6 +45,7 @@ const CategoryPageBtn = memo(() => {
 
 	const proceedToPayment = useCallback(() => {
 		setDirection('category');
+		setIsPayment(true)
 		if (!tableName) {
 			return router.push(`/scan`);
 		}
@@ -73,7 +76,7 @@ const CategoryPageBtn = memo(() => {
 	}, [showCart, setShowCart]);
 
 	useEffect(() => {
-		if (isPayment && direction === 'category') {
+		if (isPayment) {
 			openModal()
 		}
 	}, [])
@@ -84,15 +87,42 @@ const CategoryPageBtn = memo(() => {
 				<section className="relative flex items-center justify-between gap-4">
 					<center onClick={triggerCallWaiter} className="w-full px-2 text-sm font-thin text-base-100">
 						<FaConciergeBell size={22} className="mr-2" />
-						{!isLogin ? 'Login to Call Captain' : !tableName ? 'Scan to Call Captain' : 'Call captain'}
+						{!tableName ? 'Scan to Call Captain' : 'Call captain'}
 					</center>
-					<button onClick={showingCart} className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
-						<BsBagHeart size={30} />
+					<button
+						onClick={showingCart}
+						className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
+					>
+						<AnimatePresence initial={false} mode='wait'>
+							{showCart ? (
+								<motion.div
+									key="close"
+									initial={{ opacity: 0, scale: 0.5 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.5 }}
+									transition={{ duration: 0.15 }}
+								>
+									<HiX size={30} className="text-primary" />
+								</motion.div>
+							) : (
+								<motion.div
+									key="bag"
+									initial={{ opacity: 0, scale: 0.5 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.5 }}
+									transition={{ duration: 0.15 }}
+								>
+									<BsBagHeart size={30} />
+								</motion.div>
+							)}
+						</AnimatePresence>
 					</button>
-					<small className="w-full -mb-6 font-thin text-base-100">view List</small>
+					<small className="w-full -mb-6 font-thin text-base-100">{
+						showCart ? 'Menu' : 'Cart'
+					}</small>
 					<center onClick={proceedToPayment} className="w-full px-2 text-sm font-thin text-base-100">
 						<FaMoneyBillWave size={22} />
-						{!isLogin ? 'Login to Pay' : !tableName ? 'Scan to Pay' : 'Pay bill'}
+						{!tableName ? 'Scan to Pay' : 'Pay bill'}
 					</center>
 				</section>
 			</BottomButton>
@@ -108,7 +138,6 @@ const CategoryPageBtn = memo(() => {
 					<CallTheWaiterComponent onClose={closeCallWaiterModal} />
 				</BottomPopUp>
 			}
-
 		</>
 	);
 })
