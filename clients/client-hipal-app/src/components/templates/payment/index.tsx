@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { MdOutlineChevronLeft } from "react-icons/md";
 import { ChangeEvent, memo, useEffect, useState } from "react";
 import { IBusinessData } from "@/components/types/businessData";
@@ -53,7 +53,7 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
     loading: () => <SkeletonLoader height={50} />,
 });
 
-export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
+export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
 const Payment = ({ data }: { data: IBusinessData }) => {
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
@@ -107,7 +107,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (!orderId) {
             return;
         }
-    
+        console.log('envvv',process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID)
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
@@ -115,7 +115,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     
         script.onload = () => {
             const options = {
-                key: 'rzp_test_DZMxVyKgZ9crXx',
+                key: process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID,
                 amount: billValue - claimedCoinz + tips,
                 currency: 'INR',
                 name: 'PALTRIBE',
@@ -306,10 +306,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsLoading(true);
 
         try {
-            const orderId = razorPayOrderId || await createRazorPayOrder(total);
-            if (orderId) {
+            const orderId = await createRazorPayOrder(total);
                 await creatingRazorPayOptions(orderId);
-            }
         } catch (error) {
             toast.error('Something went wrong! Please try again later.');
             setRazorPayPaymentId('');
