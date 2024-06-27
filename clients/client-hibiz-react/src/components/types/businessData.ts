@@ -60,7 +60,6 @@ export interface IBusinessData {
   };
 }
 
-
 export type IBusinessDetails = {
   name: string;
   registerName: string;
@@ -69,7 +68,6 @@ export type IBusinessDetails = {
   url: string;
   logo: string;
 };
-
 
 export interface Order {
   _id: string;
@@ -94,7 +92,7 @@ export interface Alert {
   errorDescription: null | string;
   _id: string;
   businessId: string;
-  comment: null | string;
+  comment: string;
   status: string;
   tableName: string;
   alertType: string;
@@ -104,7 +102,7 @@ export interface Alert {
   message: string;
   coinsApplied: boolean;
   date: number;
-  name:string;
+  name: string;
 }
 
 export interface ISalesLite {
@@ -134,6 +132,7 @@ export interface OrderDetails {
 }
 
 export interface HistoryData {
+  comment: boolean;
   _id: string;
   businessId: string;
   date: number;
@@ -165,5 +164,3 @@ export interface NavigatorWithNetworkInformation extends Navigator {
   mozConnection?: NetworkInformation;
   webkitConnection?: NetworkInformation;
 }
-
-
