@@ -106,7 +106,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                                 isLoading ?(
                                     <span className="loader_spinner !border-t-primary"></span>
                                 ) : (
-                                    'Pay offline'
+                                    'Pay Cash'
                                 )}
                             
                         </button>
@@ -126,7 +126,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                                 isLoading ? (
                                     <span className="loader_spinner !border-t-primary"></span>
                                 ) : (
-                                    'Pay online'
+                                    'Pay Online'
                                 )}
                         </button>
                     </article>

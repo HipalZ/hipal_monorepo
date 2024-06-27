@@ -18,7 +18,7 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 
 	return (
 		<div className="relative flex flex-col px-8">
-			<figure className="absolute z-10 -top-[3rem] left-4">
+			<figure className="absolute z-10 -top-[3rem] left-4 bg-base-100 rounded-full">
 				{data.business?.logo ? (
 					<Image
 						src={logo}

@@ -87,8 +87,8 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 			<div className="p-2 font-bold bg-primary text-base-100 rounded-t-3xl">
 			  <center className="m-2 text-xl font-medium capitalize">{group?.parentCategoryName}</center>
 			</div>
-			{group.categories.map((category, index) => {
-			  if (category.dishes.length === 0) return null;
+			{group?.categories?.map((category, index) => {
+			  if (category?.dishes?.length === 0) return null;
 			  return (
 				<section
 				  className={`min-h-60 ${isTopScrollWithSubTypes ? 'scroll-mt-[15rem]' : 'scroll-mt-[13.2rem]'} bg-base-100 w-full pb-4`}

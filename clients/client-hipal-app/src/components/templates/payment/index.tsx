@@ -77,7 +77,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (!tableName) {
             return router.push(`/r/${businessDetails.customLink}/explore`)
         }
-    }, [tableName])
+    }, [])
 
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
@@ -130,7 +130,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 order_id: orderId,
                 handler: (response) => {
                     handlePaymentSuccess(response);
-                    // window.onbeforeunload = null; // Remove the event listener on success
                     window.onpopstate = null;
                 },
                 prefill: {

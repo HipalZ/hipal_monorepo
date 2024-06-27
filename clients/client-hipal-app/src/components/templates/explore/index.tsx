@@ -27,26 +27,21 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
     const searchParams = useSearchParams()
 
     const tableName = searchParams?.get('tableName')
-
     const { setTableName, tableName: storeTableName } = useTableData()
     const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const isLogin = useLogin((s) => s.isLogin)
     const setCart = useCart((s) => s.setCart)
-
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
-
     const openModal = () => {
         setTimeout(() => setIsModalOpen(true), 5000)
     }
-
     const closeModal = () => {
         setIsModalOpen(false)
     }
     const srcColor = useMemo(() => createSrcColor(loyaltySetting), [loyaltySetting]);
-
     const findPattern = useCallback((pattern: PatternKeys) => {
         const value = srcColor.find((item) => pattern in item.src);
         return value?.src[pattern as keyof typeof value.src];
