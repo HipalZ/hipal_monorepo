@@ -54,6 +54,7 @@ export const useBusinessDetails = create(
         phone: "",
         __v: 0,
         id: "",
+        phoneNumber:'',
       },
       setBusinessDetails: (businessDetails: IBiz) => set({ businessDetails: businessDetails }),
     }),

@@ -13,7 +13,6 @@ export interface IBiz {
 	customLink: string;
 	logo: string;
 	address: string;
-	phoneNumber:number;
 	staff: string[];
 	_id: string;
 	close: string;
@@ -47,6 +46,7 @@ export interface IBiz {
 	withPopCorn: boolean;
 	location: string;
 	phone: string;
+	phoneNumber:string
 	__v: number;
 	id: string;
   }
