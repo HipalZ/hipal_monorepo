@@ -23,7 +23,7 @@ function BottomButton({
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
   const { isLogin, direction, setIsPayment, isPayment } = useLogin()
-  
+
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false)
@@ -40,7 +40,7 @@ function BottomButton({
   }, [setInputModal, tableName]);
 
   useEffect(() => {
-    if (isPayment && isLogin) {
+    if (isPayment && isLogin && tableName) {
       openModal()
     }
   }, [])
@@ -54,12 +54,14 @@ function BottomButton({
       ) : (
         <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
           <center className="relative flex items-center justify-between px-6">
-            <Link href={`/r/${customLink}/loyalty`}>
-              <center className="px-2 font-light text-base-100">
-                <RiCouponFill size={22} />
-                Rewards
-              </center>
-            </Link>
+            {
+              <Link href={`/r/${customLink}/${isLogin ? 'loyalty' : 'user/signup'}`}>
+                <center className="px-2 font-light text-base-100">
+                  <RiCouponFill size={22} />
+                  Rewards
+                </center>
+              </Link>
+            }
             {
               tableName && (
                 <button onClick={openModal} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">

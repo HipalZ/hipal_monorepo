@@ -7,7 +7,6 @@ import { paths } from "@components/utils/paths"
 import axios from "@utils/axios"
 import { isEmpty } from "lodash-es"
 import dynamic from "next/dynamic"
-
 import { useRouter } from "next/router"
 import type { NextRequest, NextResponse } from "next/server"
 import { memo, useEffect } from "react"
