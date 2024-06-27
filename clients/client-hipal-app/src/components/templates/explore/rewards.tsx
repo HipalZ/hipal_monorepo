@@ -6,7 +6,8 @@ import Wallet from '@/assets/payment/Waller.png'
 import Couponz from '@/assets/payment/Couponz.png'
 import Backgrid from '@/assets/payment/backgrid'
 import Image from 'next/image'
-import useLoyaltyData from '@/components/store/useLoyaltyData'
+import useBusinessDetails from '@/components/store/useBusinessDetails'
+import { useRouter } from 'next/navigation'
 
 const RewardCard = ({ bgColor, title, imgSrc, imgAlt, buttonContent, gridColor, onClick }) => (
     <center className={`${styles.reward_card} ${bgColor}`} >
@@ -21,25 +22,25 @@ const RewardCard = ({ bgColor, title, imgSrc, imgAlt, buttonContent, gridColor, 
     </center>
 )
 
-
 const Rewards = memo(() => {
     const userDetails = useLogin((s) => s.userDetails)
-    const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting)
+    const customLink = useBusinessDetails((s) => s.businessDetails.customLink)
+    const router = useRouter()
     const handleRewardClick = useCallback(() => {
-        console.log('reward')
-    },[])
+        router.push(`/r/${customLink}/loyalty`)
+    }, [])
 
     const handleWalletClick = useCallback(() => {
-        console.log('wallet')
-    },[])
+        router.push(`/r/${customLink}/loyalty`)
+    }, [])
 
     const handleCouponClick = useCallback(() => {
         console.log('coupon')
-    },[])
+    }, [])
 
     return (
-        <div className='h-[18rem] bg-primary/80'>
-            <h3 className='pt-6 pl-4 text-xl text-base-100'>
+        <div className='h-[18rem]'>
+            <h3 className='pt-6 pl-4 text-xl text-Primary'>
                 👋 Hi {userDetails.name}
             </h3>
             <section className={styles.reward_card_container}>
@@ -57,7 +58,7 @@ const Rewards = memo(() => {
                     title="Wallet"
                     imgSrc={Wallet}
                     imgAlt="wallet"
-                    buttonContent={`🪙${loyaltySetting?.setReward}`}
+                    buttonContent={`🪙${userDetails?.reward}`}
                     gridColor="#ffffff60"
                     onClick={handleWalletClick}
                 />

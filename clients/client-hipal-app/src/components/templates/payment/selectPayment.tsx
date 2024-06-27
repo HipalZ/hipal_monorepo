@@ -1,8 +1,6 @@
 import React, { memo, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { SlCreditCard } from 'react-icons/sl';
-import { MdCurrencyRupee } from 'react-icons/md';
-import BottomButton from '@/components/molecules/bottomButton';
+
 import QRcodeImg from "@/assets/payment/mobileqr.png"
 import HandPay from "@/assets/payment/handcash.png"
 import online from "@/assets/payment/mobilepay.png"
@@ -29,7 +27,7 @@ interface PaymentComponentProps {
     selectedPay: boolean;
 }
 
-const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, claimedCoinz, tips, handleCreateOrder, selectedMode, setSelectedMode, selectedPay }) => {
+const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, handleCreateOrder, setSelectedMode }) => {
 
     const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
 
@@ -89,8 +87,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                     How do you want to settle ?
                 </center>
             </div>
-            <section className='absolute bottom-0 flex w-[92%] gap-4 mx-4'>
-                <article className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} w-full max-w-[11.625rem] h-[15.65rem] relative bg-white rounded-2xl overflow-hidden`}>
+            <section className='absolute bottom-6 flex w-[92%] gap-4 mx-4'>
+                <article className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} w-full max-w-[11.625rem] h-[15.65rem] relative bg-base-200 rounded-2xl overflow-hidden`}>
                     <center style={{
                         backgroundImage: `url(${HandPay.src})`,
                         backgroundSize: 'contain',
@@ -105,7 +103,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                         Pay offline
                     </button>
                 </article>
-                <article className='w-full max-w-[11.625rem] h-[15.65rem] relative bg-white rounded-2xl overflow-hidden'>
+                <article className='w-full max-w-[11.625rem] h-[15.65rem] relative bg-base-200 rounded-2xl overflow-hidden'>
                     <center style={{
                         backgroundImage: `url(${online.src})`,
                         backgroundSize: 'contain',
@@ -124,47 +122,4 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
     );
 });
 
-export default PaymentComponent;
-// <article
-// onClick={() => handleMode('ONLINE')}
-// className={`${data?.business?.isPaymentIntegrated ? '' : 'opacity-50 pointer-events-none'} flex items-center py-4 space-x-2 border-2 hover:border-primary rounded-2xl`}
-// >
-// <input
-//     type="radio"
-//     name="paymentMode"
-//     checked={selectedMode === 'ONLINE'}
-//     value="ONLINE"
-//     onChange={() => handleMode('ONLINE')}
-//     className='mx-4'
-//     disabled={!data?.business?.isPaymentIntegrated}
-// />
-// <span className='rounded-full bg-base-200'>
-//     <SlCreditCard size={30} />
-// </span>
-// <h1>
-//     <span className='text-base font-semibold'>Pay Online</span>
-//     <br />
-//     <span>UPI | Debit card | Credit Card</span>
-// </h1>
-// </article>
-// <article
-// onClick={() => handleMode('OFFLINE')}
-// className='flex items-center py-4 space-x-2 border-2 hover:border-primary rounded-2xl'
-// >
-// <input
-//     type="radio"
-//     name="paymentMode"
-//     checked={selectedMode === 'OFFLINE'}
-//     value="OFFLINE"
-//     onChange={() => handleMode('OFFLINE')}
-//     className='mx-4'
-// />
-// <span className='rounded-full bg-base-200'>
-//     <MdCurrencyRupee size={20} />
-// </span>
-// <h1>
-//     <span className='text-base font-semibold'>Pay Offline</span>
-//     <br />
-//     <span>Cash</span>
-// </h1>
-// </article>
+export default memo(PaymentComponent);

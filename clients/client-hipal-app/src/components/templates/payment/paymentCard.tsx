@@ -12,7 +12,6 @@ interface IPaymentCard {
 const PaymentCard = (props: IPaymentCard) => {
     const { claimedCoinz, billValue, logo} = props;
     return (
-        <>
             <article className='relative h-[10rem] flex flex-col items-center justify-center mx-4 mt-10 space-y-2 text-xl rounded-3xl bg-primary text-base-100'>
                 <div
                     style={{
@@ -46,7 +45,6 @@ const PaymentCard = (props: IPaymentCard) => {
                 {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
                 <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {billValue}</h4>
             </article>
-        </>
     )
 };
 

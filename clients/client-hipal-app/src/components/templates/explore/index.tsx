@@ -59,8 +59,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (data?.business) {
             setBusinessDetails(data.business);
         }
-        console.log('tableName', tableName);
-        if(tableName !==null){
+        if(tableName !== null){
             setTableName(tableName)
         }
         setSelectedPay(false)
@@ -72,13 +71,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
             <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
                 <HeroSection data={data} />
-                {/* {
-                    data?.settings?.explore?.highlights && (
-                        <div className="-my-2">
-                            <StoriesComponent highlights={data?.settings?.explore?.highlights} />
-                        </div>
-                    )
-                } */}
+              
                 {
                     isLogin && (
                         <Rewards />
@@ -88,8 +81,8 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                 <SpecialOffers explore={data?.settings?.explore} />
 
                 {loyaltySetting?._id && (
-                    <section className="py-10 h-[25rem] !mt-0 bg-black">
-                        <center><h4 className="pb-4 text-2xl text-white">REWARDZ</h4></center>
+                    <section className="py-10 h-[25rem] !mt-0 bg-base-200">
+                        <center><h4 className="pb-4 text-2xl font-bold text-base-content">REWARDZ</h4></center>
                         <SubLoyalty
                             logo={businessDetails?.logo}
                         />

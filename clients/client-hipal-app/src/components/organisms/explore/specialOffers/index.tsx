@@ -33,9 +33,9 @@ export default memo(function SpecialOffers(props: ISpecialOffers) {
 
 
 	return (
-		<div id="specialOffers" className="py-1 bg-base-200">
+		<div id="specialOffers" className="py-1">
 			<div className="relative">
-				<Section title="In Spotlight" tag={"h3"}>
+				<Section title="Banners" tag={"h3"}>
 					<div className="flex flex-row px-4 space-x-4 overflow-auto snap-proximity snap-x scroll-smooth">
 						{explore?.specialOffers.map((offer) => (
 							<div key={offer._id} className="snap-center snap-center:scale-110">

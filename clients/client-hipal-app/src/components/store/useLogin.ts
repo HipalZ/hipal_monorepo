@@ -8,7 +8,6 @@ interface IUserData {
 	email?: string
 	phone: string
 	role: string
-	id: string
 	userDescription?: string
 	reward?: number
 	count?: number

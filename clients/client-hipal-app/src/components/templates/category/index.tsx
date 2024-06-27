@@ -1,20 +1,42 @@
 "use client"
-import CategoryHeader from '@/components/organisms/category/categoryHeader.client'
-import PageName from '@/components/molecules/pageName'
-import Footer from '@/components/molecules/footer'
-import DishesList from '@/components/organisms/category/dishesList'
-import CategoryPageBtn from '@/components/molecules/bottomButton/categoryPageBtn'
-import TopBackground from '@/components/molecules/topBackground'
 import { IBusinessData } from '@/components/types/businessData'
 import { memo } from 'react'
 import { useCart } from '@/components/store/useCart'
-import { GiKnifeFork } from 'react-icons/gi'
-import FoodType, { FOOD_TYPES } from '@/components/atoms/foodType'
+import dynamic from 'next/dynamic'
+import SkeletonLoader from '@/components/atoms/loader/skeletonLoader'
+
+const CategoryHeader = dynamic(() => import('@/components/organisms/category/categoryHeader.client'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+  const PageName = dynamic(() => import('@/components/molecules/pageName'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+  const Footer = dynamic(() => import('@/components/molecules/footer'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+  const DishesList = dynamic(() => import('@/components/organisms/category/dishesList'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+  const CategoryPageBtn = dynamic(() => import('@/components/molecules/bottomButton/categoryPageBtn'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+  const TopBackground = dynamic(() => import('@/components/molecules/topBackground'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
+
+const Cart = dynamic(() => import('@/components/organisms/cart'), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+  });
 
 const Category = memo(({ data }: { data: IBusinessData }) => {
-    const { cart, showCart, increaseQuantity, decreaseQuantity, removeDish } = useCart();
-    console.log(cart);
-
+    const { showCart } = useCart();
     return (
         <>
             {
@@ -39,47 +61,7 @@ const Category = memo(({ data }: { data: IBusinessData }) => {
             }
             <CategoryPageBtn />
 
-            {
-                showCart && (
-                    <div className="flex flex-col items-center justify-center overflow-auto">
-                        <TopBackground themes={data?.settings?.themes} />
-                        <h3 className='pt-4 text-2xl text-primary'>Wishlist</h3>
-                        {Object.keys(cart).length === 0 ? (
-                            <div className="flex flex-col items-center justify-center">
-                                <div className="flex items-center justify-center w-20 h-20 rounded-full bg-base-100">
-                                    <GiKnifeFork className="text-4xl text-primary-100" />
-                                </div>
-                                <div className="mt-4 text-2xl font-bold">Your cart is empty</div>
-                            </div>
-                        ) : (
-                            <div className="w-full px-4">
-                                {Object.values(cart).map((cartItem) => (
-                                    <div key={cartItem.dishId} className="flex items-center justify-between p-4 border-b">
-                                        <div className="flex flex-col w-[70%]">
-                                            <FoodType type={cartItem.dishData.dishType as FOOD_TYPES} />
-                                            <span className="text-lg font-semibold">{cartItem.dishData.name}</span>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <img src={cartItem.dishData.images[0]} alt={cartItem.dishData.name} className="object-cover w-20 h-20 rounded-md" />
-                                            <div className="flex items-center ml-4">
-                                                {cartItem.variants.length > 1 ? (
-                                                    <>
-                                                        <button onClick={() => decreaseQuantity(cartItem.dishId)} className="px-2 py-1 bg-gray-200 rounded">-</button>
-                                                        <span className="mx-2">{cartItem.variants.length}</span>
-                                                        <button onClick={() => increaseQuantity(cartItem.dishId)} className="px-2 py-1 bg-gray-200 rounded">+</button>
-                                                    </>
-                                                ) : (
-                                                    <button onClick={() => removeDish(cartItem.dishId)} className="px-2 py-1 text-white bg-red-500 rounded">Delete</button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )
-            }
+            {showCart && <Cart data={data} />}
         </>
     );
 });

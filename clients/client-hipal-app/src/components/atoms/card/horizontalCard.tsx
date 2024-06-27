@@ -154,7 +154,7 @@ function HorizontalCard({
 					)}
 				</div>
 			</div>
-			<div>{isDishInCart && <RecommendedDishes dishData={dishData} openModal={openModal} />}</div>
+			{/* <div>{isDishInCart && <RecommendedDishes dishData={dishData} openModal={openModal} />}</div> */}
 		</section>
 	)
 }

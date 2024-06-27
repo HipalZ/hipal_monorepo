@@ -15,8 +15,9 @@ interface IDishesProps {
 
 }
 
-const DishesList = (props: IDishesProps) =>{
+const DishesList = (props: IDishesProps) => {
 	const { allCategoriesTypes, categories } = props
+	console.log(allCategoriesTypes);
 	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
 	let { isActiveDishType } = useActiveClass()
 	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory)
@@ -42,7 +43,7 @@ const DishesList = (props: IDishesProps) =>{
 			}
 		}),
 	})), [categories, isActiveDishType]);
-	
+
 	const activeDishTypes = useDishTypes((s) => s.activeDishTypes)
 	const subTypes = useMemo(() => {
 		if (!!activeDishTypes.activeMainType === false) return null
@@ -67,6 +68,7 @@ const DishesList = (props: IDishesProps) =>{
 				filteredDishes
 					.filter((item: ICategory) => item?.visibility)
 					.map((category, index) => {
+						if (category.dishes.length === 0) return
 						return (
 							<section
 								className={`min-h-60  ${isTopScrollWithSubTypes ? "scroll-mt-[15rem]" : "scroll-mt-[11.2rem]"
@@ -77,38 +79,23 @@ const DishesList = (props: IDishesProps) =>{
 							>
 								<div
 									className={`${category.dishes.length === 0 ? "" : "border-t-2 border-primary"
-										} z-40 flex flex-row px-6 pb-2 font-bold prose bg-base-200/50 text-base-content`}
+										} z-40 px-6 pb-2 font-bold rounded-t-3xl bg-primary text-base-100`}
 								>
-									<div className="my-auto ">
-										{category.dishes.length === 0 ? (
-											<h3 className="my-4 text-lg font-medium capitalize text-primary">
-												{category?.name || ""}
-											</h3>
-										) : (
-											<h3 className="my-4 text-xl font-medium capitalize text-primary">
-												{category?.name || ""}
-											</h3>
-										)}
-
-										{category.dishes.length === 0 ? (
-											<div className="flex mb-2 ml-2 -mt-4">
-												<div className="mt-2">
-													<GiKnifeFork />
-												</div>
-												<div className="ml-2 mt-[0.125rem]">
-													No items found, Try change the filter !
-												</div>
-											</div>
-										) : (
-											""
-										)}
-									</div>
-
-									<div className="my-auto ml-auto">
-										<h4 className="my-4 text-lg font-medium text-primary">
-											{category?.dishes?.length}
-										</h4>
-									</div>
+									<center className="my-4 text-xl font-medium capitalize text-base-100">
+										{category?.parentCategory || ""}
+									</center>
+									
+								</div>
+								<div
+									className={`${category.dishes.length === 0 ? "" : "border-t-2 border-primary"
+										} z-40 flex flex-row justify-between px-6 pb-2 font-bold prose bg-base-200/50 text-base-content`}
+								>
+									<h3 className="my-4 text-xl font-medium capitalize text-primary">
+										{category?.name || ""}
+									</h3>
+									<h4 className="my-4 text-lg font-medium text-primary">
+										{category?.dishes?.length}
+									</h4>
 								</div>
 								<div className="flex flex-col divide-y divide-base-content/20">
 									{category?.dishes.length > 0 &&

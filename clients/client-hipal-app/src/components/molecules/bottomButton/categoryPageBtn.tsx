@@ -21,11 +21,10 @@ const CategoryPageBtn = memo(() => {
 	const setDirection = useLogin((s) => s.setDirection);
 	const router = useRouter();
 	const [callWaiterModal, setCallWaiterModal] = useState(false);
-	const { setShowCart, showCart } = useCart()
+	const { setShowCart, showCart,cart } = useCart()
 
 	const closeModal = useCallback(() => {
 		setInputModal(false);
-		setCallWaiterModal(false);
 	}, [setInputModal]);
 
 	const openModal = useCallback(() => {

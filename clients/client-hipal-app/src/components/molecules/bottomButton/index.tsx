@@ -11,6 +11,8 @@ import useTableData from "@/components/store/useTableData";
 import { toast } from "react-toastify";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useRouter } from "next/navigation";
+import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
+import { BsBagHeart } from "react-icons/bs";
 
 function BottomButton({
   children
@@ -28,9 +30,9 @@ function BottomButton({
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
-    if (tableName === "") {
-      toast.error("Please scan a table first");
-      router.push(`/scan`);
+   
+    if (!isLogin) {
+      router.push(`/r/${customLink}/user/signup`);
       return;
     }
     setInputModal(true);
@@ -43,32 +45,36 @@ function BottomButton({
           {children}
         </center>
       ) : (
-        <center className="fixed bottom-0 z-20 text-center flex items-center justify-between py-4 px-6 bg-base-100 w-full max-w-[30rem]">
-          <center className="text-sm">
-            <AiFillHome size={22} />	Home
-          </center>
-          {!isLogin ?
-            <center onClick={openModal} className="text-sm">
-              <MdOutlineAccountBalanceWallet size={22} />	Pay Bill
+        <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
+          <center className="relative flex items-center justify-between px-6">
+            <center className="px-2 text-sm font-thin text-base-100">
+              <AiFillHome size={22} />
+              Home
             </center>
-            :
-            !tableName ?
-              <Link href={`/scan`}>
-                <center className="text-sm">
-                  <LuScanLine size={22} />	Scan
-                </center>
-              </Link>
-              :
-              <center onClick={openModal} className="text-sm">
-                <MdOutlineAccountBalanceWallet size={22} />	Pay Now
+            {
+              tableName && (
+                <button onClick={openModal} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
+                  <MdOutlineAccountBalanceWallet size={36} />
+                </button>
+              )
+            }{
+              !tableName && (
+                <Link href="/scan">
+                  <button className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
+                    <LuScanLine size={36} />
+                  </button>
+                </Link>
+              )
+            }
+            <small className="w-full -mb-6 font-thin text-base-100">{!tableName ? "Scan":"Pay"}</small>
+            <Link href={`/r/${customLink}/category`}>
+              <center className="w-full px-2 text-sm font-thin text-base-100">
+                <MdOutlineMenuBook size={22} />
+                Menu
               </center>
-          }
-          <Link href={`/r/${customLink}/category`}>
-            <center className="flex items-center justify-center w-full px-10 py-3 text-sm rounded-full on_active_bounce text-base-100 bg-primary">
-              <MdOutlineMenuBook size={22} /> &nbsp;	Menu
-            </center>
-          </Link>
-        </center>
+            </Link>
+          </center>
+        </section>
       )}
       {inputModal &&
         <BottomPopUp show={inputModal} onClose={closeModal}>
