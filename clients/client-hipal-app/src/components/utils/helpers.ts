@@ -153,3 +153,13 @@ export function timestampToDateTime(timestamp: number): string {
   
 	return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
   }
+
+  export const calculateReward = (exist: number, reward: number, limit: number) => {
+	console.log('exist', exist, 'reward', reward, 'limit', limit);
+	let total = exist + reward;
+  
+	const sum = Math.min(total, limit);
+  
+	const finalReward = sum - exist;
+	return { finalReward, curentBalance: sum };
+  };

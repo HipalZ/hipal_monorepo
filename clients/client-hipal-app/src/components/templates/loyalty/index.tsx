@@ -156,7 +156,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             <span className="flex items-center space-x-2">
                                 <BackButton />
                                 <Image src={avatar} alt="avatar" className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12" />
-                                <b>Hey {userDetails && userDetails?.name?.length > 10 ? `${userDetails?.name?.substring(0, 10)}...` : userDetails?.name ?? 'Guest'} !!</b>
+                                <b>Hey {userDetails?.name ? (userDetails.name.length > 10 ? `${userDetails.name.substring(0, 10)}...` : userDetails.name) : 'Guest'} !!</b>
                             </span>
                             <Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
                                 <button

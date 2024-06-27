@@ -20,6 +20,8 @@ import BillSummary from "./billSummary";
 import PaymentCard from "./paymentCard";
 import UseCoinzPopup from "./useCoinzPopup";
 import { useQuery } from "@tanstack/react-query";
+import { calculateReward } from "@/components/utils/helpers";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -35,6 +37,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
         setTips, tips, selectedPay } = usePaymentStore()
+    const {businessDetails} = useBusinessDetails()
     const { tableName, setTableName } = useTableData()
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -70,17 +73,16 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setRazorPayOrderId(response.error.metadata.order_id);
         console.error(response);
     };
-
     const creatingRazorPayOptions = async (orderId: string) => {
         if (!orderId) {
             return;
         }
-
+    
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
         document.body.appendChild(script);
-
+    
         script.onload = () => {
             const options = {
                 key: 'rzp_test_DZMxVyKgZ9crXx',
@@ -92,7 +94,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 order_id: orderId,
                 handler: (response) => {
                     handlePaymentSuccess(response);
-                    window.onbeforeunload = null; // Remove the event listener on dismiss
+                    // window.onbeforeunload = null; // Remove the event listener on success
                     window.onpopstate = null; 
                 },
                 prefill: {
@@ -105,11 +107,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     remember_customer: true,
                     escape: false,
                     backdropclose: false,
-                    handleback:false,
+                    handleback: false,
                     ondismiss: () => {
                         handlePaymentDismiss();
                         window.onbeforeunload = null; // Remove the event listener on dismiss
-                    window.onpopstate = null; 
+                        window.onpopstate = null; 
                     },
                 },
                 notes: {
@@ -126,28 +128,40 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     color: '#3399cc',
                 },
             };
-
+    
             const rzp1 = new (window as any).Razorpay(options);
-        
-        // Add event listener to prevent back navigation
-        history.pushState(null, '', location.href); // Push initial state with an empty string for title
-        window.onbeforeunload = (event) => {
-            event.preventDefault();
-            event.returnValue = 'Are you sure you want to leave? Your payment process might be interrupted.';
-        };
-        window.onpopstate = (event) => {
-            event.preventDefault();
-            history.pushState(null, '', location.href); // Push state again to prevent back
-        };
-
-        rzp1.open();
-        rzp1.on('payment.failed', (response) => {
-            handlePaymentFailure(response);
-            window.onbeforeunload = null;
-            window.onpopstate = null; // Remove the event listener on payment failure
-        });
+            
+            // Add event listener to prevent back navigation
+            history.pushState(null, '', location.href); // Push initial state with an empty string for title
+            window.onbeforeunload = (event) => {
+                event.preventDefault();
+                event.returnValue = ''; // Custom message is no longer supported in most browsers
+                // Redirect to a specific URL
+                window.location.href = `/r/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                toast.error('Add the coinz to get the rewards')
             };
+            window.onpopstate = (event) => {
+                event.preventDefault();
+                // Redirect to a specific URL
+                window.location.href = `/r/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                toast.error('Add the coinz to get the rewards')
+            };
+    
+            rzp1.open();
+            
+            // Remove the event listener when the user starts the payment process
+            document.addEventListener('rzp_payment_start', () => {
+                window.onbeforeunload = null;
+            });
+    
+            rzp1.on('payment.failed', (response) => {
+                handlePaymentFailure(response);
+                window.onbeforeunload = null;
+                window.onpopstate = null; // Remove the event listener on payment failure
+            });
+        };
     };
+    
 
     // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
@@ -158,8 +172,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             })
             const total = billValue - claimedCoinz + tips;
             const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
+            const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
+            const finalReward = calculateReward(existingCoins,coinsObtained , loyaltySetting?.rewardLimit)
             if (res.status === 200) {
-                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=online&claim=${coinsObtained}&orderId=${res?.data?.data}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
@@ -208,9 +224,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             if (response?.data?.data?.order_id) {
                 const total = billValue - claimedCoinz + tips;
                 const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
+                const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
+                const finalReward = calculateReward(existingCoins,coinsObtained , loyaltySetting?.rewardLimit)
                 // gives a string which is orderId
                 setTableName('')
-                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=offline&claim=${coinsObtained}&orderId=${response?.data?.data?.order_id}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
