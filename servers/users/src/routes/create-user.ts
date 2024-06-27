@@ -149,7 +149,7 @@ router.post(
     if (!phone || !role) {
       return res.status(400).send({
         status: false,
-        message: 'Phone and role required',
+        message: 'Phone and role required !',
         data: {},
         err: true,
       });
@@ -158,21 +158,21 @@ router.post(
     let existingUser;
     existingUser = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
 
-    // try {
-    //   const options = {
-    //     method: 'POST',
-    //     url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
-    //     headers: {
-    //       accept: 'application/json',
-    //       'content-type': 'application/json',
-    //       authkey: '387796AmyGlDBq63b2d75aP1',
-    //     },
-    //   };
-    //   await axios(options);
-    // } catch (e: any) {
-    //   console.log(e);
-    //   return res.status(500).send({ status: false, message: e.message });
-    // }
+    try {
+      const options = {
+        method: 'POST',
+        url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+      await axios(options);
+    } catch (e: any) {
+      console.log(e);
+      return res.status(500).send({ status: false, message: e.message });
+    }
 
     if (existingUser) {
       const accessTokenExistingUser = createAccessToken(existingUser);
