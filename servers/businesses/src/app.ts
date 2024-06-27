@@ -33,6 +33,7 @@ const excludedPaths = [
   '/v1/businesses/get/allbusiness',
   '/v1/businesses/:id',
   '/v1/businesses/get/Single/:id',
+  '/v1/businesses/n'
 ]; // Add more paths as needed
 
 // Convert paths with dynamic segments into regular expressions

@@ -75,7 +75,7 @@ const CategoryPageBtn = memo(() => {
 	}, [showCart, setShowCart]);
 
 	useEffect(() => {
-		if (isPayment && isLogin) {
+		if (isPayment && isLogin && tableName) {
 			openModal()
 		}
 	}, [])

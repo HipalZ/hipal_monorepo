@@ -66,12 +66,18 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const { userDetails } = useLogin()
     const { billValue, setBillValue, setUserCoinz,
         userCoinz, claimedCoinz, setClaimedCoinz,
-        setTips, tips, selectedPay } = usePaymentStore()
-    const {businessDetails} = useBusinessDetails()
+        setTips, tips } = usePaymentStore()
+    const { businessDetails } = useBusinessDetails()
     const { tableName, setTableName } = useTableData()
     const router = useRouter()
     const searchParams = useSearchParams()
     const { loyaltySetting } = useLoyaltyData()
+
+    useEffect(() => {
+        if (!tableName) {
+            return router.push(`/r/${businessDetails.customLink}/explore`)
+        }
+    }, [tableName])
 
     const { setRazorPayPaymentId, razorPayOrderId,
         setRazorPayOrderId, setRazorPaySignature, } =
@@ -112,7 +118,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
         document.body.appendChild(script);
-    
+
         script.onload = () => {
             const options = {
                 key: process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID,
@@ -125,7 +131,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 handler: (response) => {
                     handlePaymentSuccess(response);
                     // window.onbeforeunload = null; // Remove the event listener on success
-                    window.onpopstate = null; 
+                    window.onpopstate = null;
                 },
                 prefill: {
                     name: userDetails.name,
@@ -141,7 +147,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     ondismiss: () => {
                         handlePaymentDismiss();
                         window.onbeforeunload = null; // Remove the event listener on dismiss
-                        window.onpopstate = null; 
+                        window.onpopstate = null;
                     },
                 },
                 notes: {
@@ -158,9 +164,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     color: '#3399cc',
                 },
             };
-    
+
             const rzp1 = new (window as any).Razorpay(options);
-            
+
             // Add event listener to prevent back navigation
             history.pushState(null, '', location.href); // Push initial state with an empty string for title
             window.onbeforeunload = (event) => {
@@ -176,14 +182,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 window.location.href = `/r/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
                 toast.error('Add the coinz to get the rewards')
             };
-    
+
             rzp1.open();
-            
+
             // Remove the event listener when the user starts the payment process
             document.addEventListener('rzp_payment_start', () => {
                 window.onbeforeunload = null;
             });
-    
+
             rzp1.on('payment.failed', (response) => {
                 handlePaymentFailure(response);
                 window.onbeforeunload = null;
@@ -191,7 +197,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             });
         };
     };
-    
+
 
     // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
@@ -201,9 +207,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 response,
             })
             const total = billValue - claimedCoinz + tips;
-            const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
+            const coinsObtained = total * (loyaltySetting?.setReward / 100);
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
-            const finalReward = calculateReward(existingCoins,coinsObtained , loyaltySetting?.rewardLimit)
+            const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             if (res.status === 200) {
                 router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
@@ -224,7 +230,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const clearTheTip = () => {
         setTips(0)
         setSelectedTip('')
-        setCustomTip('')    
+        setCustomTip('')
         setShowInput(false)
         setIsTipActive(false)
     }
@@ -234,6 +240,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             toast.error('Please scan to start')
             return router.push(`/scan`)
         }
+        if (isLoading) {
+            return toast.error('Please wait for the previous transaction to complete')
+        }
+
+        setIsLoading(true);
         try {
             const config = {
                 method: 'POST',
@@ -253,9 +264,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const response = await axios(config)
             if (response?.data?.data?.order_id) {
                 const total = billValue - claimedCoinz + tips;
-                const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
+                const coinsObtained = total * (loyaltySetting?.setReward / 100);
                 const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
-                const finalReward = calculateReward(existingCoins,coinsObtained , loyaltySetting?.rewardLimit)
+                const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
                 // gives a string which is orderId
                 setTableName('')
                 router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
@@ -301,6 +312,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (mode.toLowerCase() === 'offline') {
             await handleCreateOfflineOrder();
             return;
+        }
+
+        if (isLoading) {
+            return toast.error('Please wait for the previous transaction to complete')
         }
 
         setIsLoading(true);
@@ -370,7 +385,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
-    const [maxCoinz , setMaxCoinz] = useState(0)
+    const [maxCoinz, setMaxCoinz] = useState(0)
     const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
         const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
         const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
@@ -474,9 +489,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                     </BottomButton>
                 </> :
                 <PaymentComponent data={data} tips={tips}
-                    billValue={billValue} claimedCoinz={claimedCoinz}
+                    billValue={billValue}
                     handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
-                    setSelectedMode={setSelectedMode} selectedPay={selectedPay} />
+                    setSelectedMode={setSelectedMode} isLoading={isLoading} />
             }
             <AvailableCoinz
                 isModalOpen={isModalOpen}
