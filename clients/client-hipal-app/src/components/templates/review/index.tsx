@@ -18,6 +18,20 @@ import reviewHand from '@/assets/img/review-hand.png'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
 import { RxCrossCircled } from 'react-icons/rx'
 import { cn } from '@/components/utils/helpers'
+interface Payload {
+	businessId: string; 
+	reviewerName: string | undefined;
+	reviewerPhone: string;
+	reviewRating: number;
+	description: string;
+	date: number;
+	order_id: string | undefined;
+	staffs: string[];
+	foodTaste?: boolean | null;
+	ambience?: boolean | null;
+	hygiene?: boolean | null;
+	service?: boolean | null;
+}
 
 export default memo(function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
@@ -26,7 +40,8 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
 	const orderId = searchParams?.get('orderId')
-	const amount = searchParams?.get('amount')
+	const mode = searchParams?.get('mode')
+	const amount = parseInt(searchParams?.get('amount') || '0')
 	const businessName = useBusinessDetails((s) => s.businessDetails?.businessName);
 	const logo = useBusinessDetails((s) => s.businessDetails?.logo);
 
@@ -53,7 +68,6 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	};
 
 	const handleSelectStaff = (staff) => {
-		console.log('staff', staff);
 		if (!selectedStaff.includes(staff)) {
 			setSelectedStaff([...selectedStaff, staff]);
 		}
@@ -96,33 +110,42 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	}
 
 	const result = async () => {
+		let payload:Payload = {
+			businessId: businessId,
+			reviewerName: userDetails?.name,
+			reviewerPhone: `91${userDetails?.phone}`,
+			reviewRating: Number(rating),
+			description: description,
+			date: Date.now(),
+			order_id: orderId?.toString(),
+			staffs: selectedStaff,
+		};
+		
+		if (foodTaste === true || foodTaste === false) {
+			payload.foodTaste = foodTaste;
+		}
+		if(ambience === true || ambience === false){
+			payload.ambience = ambience;
+		}
+		if(hygiene === true || hygiene === false){
+			payload.hygiene = hygiene;
+		}
+		if(service === true || service === false){
+			payload.service = service;
+		}
 		try {
 			const config = {
 				method: 'POST',
 				url: '/v1/payments/reviews',
-				data: {
-					businessId: businessId,
-					reviewerName: userDetails?.name,
-					reviewerPhone: `91${userDetails?.phone}`,
-					reviewRating: Number(rating),
-					description: description,
-					date: Date.now(),
-					order_id: orderId?.toString(),
-					staffs: selectedStaff,
-					foodTaste,
-					ambience,
-					hygiene,
-					service,
-				},
+				data: payload,
 			}
-
 			const res = await axios(config)
 			if (res.status === 201) {
 				toast.success('Thank You for Your Feedback')
 				router.push(`/r/${customLink}/loyalty`)
 			}
 		} catch (error) {
-			toast.error('Review Already Submitted')
+			toast.error(error?.response?.data?.message)
 			router.push(`/r/${customLink}/loyalty`)
 		}
 	}
@@ -176,17 +199,17 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					</article>
 					<br />
 					<div className='text-center'>
-						<h1 className='text-xl font-semibold'>₹ {amount}</h1>
+						<h1 className='text-3xl font-semibold'>₹ {amount}</h1>
 						&nbsp;
 					</div>
-					<center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center>
-					{Number(claim) > 0 && <center className="flex items-center justify-center my-4">
+					{mode === "offline" ? <center className="text-[0.6rem] bg-base-200 p-2 rounded-full my-2">⚠ You choose offline, your pay will be confirmed by captain</center>:null}
+					{Number(claim) > 0 && <center className="flex items-center justify-center my-4 space-x-4">
 						<Image src={reviewHand} alt="review-hand" />
-						<h1 className="text-primary w-32">🎉 You Won <span className="text-3xl text-primary">{claim}</span> coinz</h1>
+						<h1 className="text-primary w-32"><span className="text-3xl">🎉</span> You Won <span className="text-3xl text-primary">{claim}</span> coinz</h1>
 					</center>}
 				</section>
 				&nbsp;
-			<div className="bg-base-200 -mx-4 px-4 pt-4">
+			<div className="bg-base-200 -mx-4 px-4 pt-4 pb-[10rem]">
 					<h1 className='flex items-center justify-center text-xl font-semibold'>
 						<Image
 							src={reviewIcon}
@@ -315,11 +338,11 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 							))}
 						</ul>
 					</MiddlePopUp>
-					<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem]  -mx-4">
-						<figure className='h-16 pt-4'>
+					<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] -mx-4 py-3">
+						<figure className='h-12'>
 							<Image src={HiLogoText} alt='HiLogo' priority={true} />
 						</figure>
-						<h6 className='text-[0.75rem] text-white w-20 pt-4'>Powered by HipalZ</h6>
+						<h6 className='text-[0.75rem] text-white w-20'>Powered by HipalZ</h6>
 					</center>
 					{rating && rating.length > 0 ? (
 						<article className="flex justify-center">

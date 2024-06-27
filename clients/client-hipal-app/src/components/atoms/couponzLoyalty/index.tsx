@@ -1,24 +1,39 @@
-import { cn } from "@/components/utils/helpers";
-
-interface ICouponzLoyalty {
-
+interface ICouponzLoyaltyProps {
+    cardColor: string;
+    textColor: string;
+    textContent: string;
 }
 
-const CouponzLoyalty = ({ cardColor, textColor, textContent }) => {
-    const defaultCardColor = "text-white h-[11rem] w-[10rem] p-3 rounded-2xl shrink-0 flex flex-col justify-between"
-    const defaultButtonColor = "bg-white rounded-3xl font-normal px-2 mt-auto mb-2"
+const CouponzLoyalty = ({ cardColor, textColor, textContent }: ICouponzLoyaltyProps) => {
+    const defaultCardStyle: React.CSSProperties = {
+        backgroundColor: cardColor,
+        height: '12rem',
+        width: '10rem',
+        padding: '1rem',
+        borderRadius: '1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        color: 'white'
+    };
+    
+    const defaultButtonStyle: React.CSSProperties = {
+        backgroundColor: 'white',
+        borderRadius: '1.5rem',
+        fontWeight: 'normal',
+        marginTop: 'auto',
+        color: cardColor
+    };
 
     return (
-        <>
-            <article className={cn(defaultCardColor, `bg-[${cardColor}]`)}>
-                <div>
-                    <span className="bg-white p-2 rounded-2xl">🎁</span>&nbsp;&nbsp;&nbsp;<span className="text-3xl">50%</span>
-                    <p className={cn("my-4", `text-[${textColor}]`)}>{textContent}</p>
-                </div>
-                <button className={cn(defaultButtonColor, `text-[${cardColor}]`)}>Coming Soon</button>
-            </article>
-        </>
-    )
+        <article style={defaultCardStyle}>
+            <div>
+                <span className="bg-white p-2 rounded-2xl">🎁</span>&nbsp;&nbsp;&nbsp;<span className="text-3xl">50%</span>
+                <p style={{ color: textColor, margin: '1rem 0' }}>{textContent}</p>
+            </div>
+            <button style={defaultButtonStyle}>Coming Soon</button>
+        </article>
+    );
 };
 
 export default CouponzLoyalty;

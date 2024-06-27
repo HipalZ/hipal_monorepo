@@ -8,8 +8,9 @@ import { toast } from 'react-toastify';
 import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
+import { cn } from '@/components/utils/helpers';
 
-const AddAmountModal = () => {
+const AddAmountModal = memo(() => {
 	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
     const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
     const router = useRouter();
@@ -27,6 +28,7 @@ const AddAmountModal = () => {
             toast.error('Please enter amount');
             return;
         }
+        setLoading(true);
         if (amount > 0) {
             router.push(`/r/${customLink}/payment?amount=${amount}`);
         }
@@ -109,19 +111,22 @@ const AddAmountModal = () => {
                                 'Call Captain'
                             )}
                         </button>
-                        <button onClick={proceedToPayment} className='w-full px-4 py-3 rounded-full bg-primary text-base-100'>
-                        {loading ? (
+                        <button 
+                            disabled={loading} 
+                            onClick={proceedToPayment} 
+                            className={cn('w-full px-4 py-3 rounded-full text-base-100', loading ? 'opacity-50 pointer-events-none bg-gray-400' : 'bg-primary')}
+                        >
+                            {loading ? (
                                 <span className="loader_spinner !border-t-primary"></span>
                             ) : (
                                 'Next'
                             )}
-                            
                         </button>
                     </div>
                 </section>
             </section>
         </section>
     );
-}
+})
 
-export default memo(AddAmountModal);
+export default AddAmountModal

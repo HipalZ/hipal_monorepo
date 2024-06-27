@@ -18,13 +18,13 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
                 <h1 className='text-xl font-semibold'>
                     Available Coins : {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
                 </h1>
-                <h6 className='my-1 text-sm opacity-50'>Enter No. of coins</h6>
+                <h6 className='my-1 text-sm opacity-50'>You can apply upto {userCoinz}</h6>
                 <br />
                 <input
                     onChange={(e) => handleApplyCoinz(e, userCoinz)}
                     type='text'
                     value={claimedCoinz || ''}
-                    placeholder='Enter amount'
+                    placeholder='Enter coinz to apply'
                     min={0}
                     max={userCoinz}
                     className='border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 '

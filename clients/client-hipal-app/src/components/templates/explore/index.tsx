@@ -59,7 +59,10 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (data?.business) {
             setBusinessDetails(data.business);
         }
-        setTableName(tableName || '')
+        console.log('tableName', tableName);
+        if(tableName !==null){
+            setTableName(tableName)
+        }
         setSelectedPay(false)
     }, [])
 

@@ -19,6 +19,7 @@ import AvailableCoinz from "./availableCoinz";
 import BillSummary from "./billSummary";
 import PaymentCard from "./paymentCard";
 import UseCoinzPopup from "./useCoinzPopup";
+import { useQuery } from "@tanstack/react-query";
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -131,7 +132,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const total = billValue - claimedCoinz + tips;
             const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
             if (res.status === 200) {
-                router.push(`/r/${data?.business?._id}/review?amount=${total}&claim=${coinsObtained}&orderId=${res?.data?.data}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=online&claim=${coinsObtained}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
@@ -178,9 +179,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             const response = await axios(config)
             if (response?.data?.data?.order_id) {
+                const total = billValue - claimedCoinz + tips;
+                const coinsObtained = total * (loyaltySetting?.setClaimAmount / 100);
                 // gives a string which is orderId
                 setTableName('')
-                router.push(`/r/${data?.business?._id}/review?amount=${billValue - claimedCoinz + tips}&claim=${claimedCoinz}&orderId=${response?.data?.data?.order_id}`)
+                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=offline&claim=${coinsObtained}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
@@ -280,13 +283,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             }
             const response = await axios(config)
             setUserCoinz(response?.data?.data?.rewards)
+            return response?.data?.data?.rewards
         } catch (err) {
             console.log(err)
         }
     }
 
     const openModal = async () => {
-        await handleUserCoinz()
         setIsModalOpen(true)
     }
 
@@ -298,7 +301,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
         const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
         const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
-
         if (userEnteredValue > coinsToSet) {
             setClaimedCoinz(coinsToSet);
         } else {
@@ -337,6 +339,12 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setBillValue(Number(searchParams?.get("amount")))
     }, [])
 
+    useQuery({
+        queryKey: ['getUserReward', userDetails.phone, data?.loyalty?.loyaltyId],
+        queryFn: handleUserCoinz,
+        enabled: !!userDetails.phone && !!data?.loyalty?.loyaltyId,
+    })
+
     return (
         <div>
             <section className='z-20 w-full px-4 pt-4 pb-2 bg-base-100'>
@@ -359,17 +367,17 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             </section>
             {selectedMode === "INVOICE" ?
                 <>
-                   <PaymentCard 
+                    <PaymentCard
                         claimedCoinz={claimedCoinz}
                         billValue={billValue}
                         logo={data?.business?.logo}
-                   />
-                    <UseCoinzPopup 
+                    />
+                    <UseCoinzPopup
                         openModal={openModal}
                         userCoinz={userCoinz}
                         claimedCoinz={claimedCoinz}
                     />
-                    <BillSummary 
+                    <BillSummary
                         billValue={billValue}
                         claimedCoinz={claimedCoinz}
                         tips={tips}

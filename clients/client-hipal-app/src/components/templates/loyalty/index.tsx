@@ -29,6 +29,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails"
 import useLoyaltyData from "@/components/store/useLoyaltyData"
 import { GoArrowUpRight } from "react-icons/go"
 import CouponzLoyalty from "@/components/atoms/couponzLoyalty"
+import Link from "next/link"
 
 interface IuserTotal {
     totalWin?: number;
@@ -292,7 +293,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                     <section className="pt-8 pb-4 text-3xl text-center mb-4">Couponz</section>
                     <section className="mx-6 flex flex-nowrap overflow-x-auto h-[12rem] w-full space-x-4 ">
                         <CouponzLoyalty
-                            cardColor="#4d72f5"
+                            cardColor="#4D72F5"
                             textColor="#D9D9D9"
                             textContent="Birthday coupon for special"
                         />
@@ -316,6 +317,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
                         </article>
                         &nbsp;
+                        <Link href={`/terms`}>
                         <article className="bg-base-200 p-4 rounded-2xl flex items-center justify-between">
                             <div>
                                 <h1 className="text-primary text-lg font-semibold">Terms & Conditions</h1>
@@ -323,6 +325,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             </div>
                             <span className="text-3xl bg-primary p-2 rounded-full"><GoArrowUpRight color="#fff" /></span>
                         </article>
+                        </Link>
                     </section>
                 </div>
             </div>
