@@ -21,6 +21,10 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                             &nbsp;&nbsp;Special discount for Special members !!!
                         </h6>
             </div>
+            <h1 className="mx-4 font-semibold">Rewardz</h1>
+            <article className="">
+
+            </article>
             <article
                 onClick={openModal}
                 className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'

@@ -90,7 +90,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 description: 'Test Transaction',
                 image: 'https://example.com/your_logo',
                 order_id: orderId,
-                handler: handlePaymentSuccess,
+                handler: (response) => {
+                    handlePaymentSuccess(response);
+                    window.onbeforeunload = null; // Remove the event listener on dismiss
+                    window.onpopstate = null; 
+                },
                 prefill: {
                     name: userDetails.name,
                     email: userDetails.email,
@@ -99,7 +103,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 modal: {
                     subscription_card_change: true,
                     remember_customer: true,
-                    ondismiss: handlePaymentDismiss,
+                    escape: false,
+                    backdropclose: false,
+                    handleback:false,
+                    ondismiss: () => {
+                        handlePaymentDismiss();
+                        window.onbeforeunload = null; // Remove the event listener on dismiss
+                    window.onpopstate = null; 
+                    },
                 },
                 notes: {
                     address: 'Paltribe solutions',
@@ -117,9 +128,25 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             };
 
             const rzp1 = new (window as any).Razorpay(options);
-            rzp1.open();
-            rzp1.on('payment.failed', handlePaymentFailure);
+        
+        // Add event listener to prevent back navigation
+        history.pushState(null, '', location.href); // Push initial state with an empty string for title
+        window.onbeforeunload = (event) => {
+            event.preventDefault();
+            event.returnValue = 'Are you sure you want to leave? Your payment process might be interrupted.';
         };
+        window.onpopstate = (event) => {
+            event.preventDefault();
+            history.pushState(null, '', location.href); // Push state again to prevent back
+        };
+
+        rzp1.open();
+        rzp1.on('payment.failed', (response) => {
+            handlePaymentFailure(response);
+            window.onbeforeunload = null;
+            window.onpopstate = null; // Remove the event listener on payment failure
+        });
+            };
     };
 
     // verification signature and user reward api

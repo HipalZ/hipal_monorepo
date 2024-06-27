@@ -227,7 +227,7 @@ export interface UserData {
 	rewards: number
 	currentBalance: number
 	status: string
-	date: string
+	date: number
 	time: string
 	businessName: string
 	waiterName: string

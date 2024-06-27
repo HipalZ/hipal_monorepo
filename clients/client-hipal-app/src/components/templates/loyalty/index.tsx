@@ -32,19 +32,14 @@ import avatar from "@/assets/img/avatar.png";
 import hipalzCoinz from '@/assets/img/hipalzCoinz.png'
 import RollingNumber from "@/components/rollingNumbers"
 
-interface IuserTotal {
-    totalWin?: number;
-    totalSave?: number;
-    vipLevel?: string;
-}
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     const userName = useLogin((s) => s.userDetails.name)
     const [HiCode, setHiCode] = useState()
     const [rewards, setRewards] = useState()
-    const [userTotalHistory, setUserTotalHistory] = useState<IuserTotal>({});
     const { userDetails } = useLogin()
     const setUserReward = useUserReward((s) => s.setUserReward)
+    const {setUserTotalHistory, userTotalHistory} = useUserReward()
     const [image, setImage] = useState<string>("")
     const [isHiCodeModalOpen, setIsHiCodeModalOpen] = useState(false)
     const [animate, setAnimate] = useState(false)
@@ -173,15 +168,15 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                             </Link>
                         </div>
                         <br />
-                        <div className="h-[12rem] mx-4 border border-1 flex justify-between items-center mb-4">
+                        {Number(claim) >0 ? <div className="h-[12rem] mx-4 flex justify-between items-center">
                             <div>
                                 <Image src={hipalzCoinz} alt="reviewHand" />
                             </div>
-                            <div className='text-xs'>
+                            <div className='text-xs mr-2'>
                                 <RollingNumber number={Number(claim) || 0} />
                                 <span className="text-xl">Coinz Earned</span>
                             </div>
-                        </div>
+                        </div> : null}
                         <div className="bg-primary/90 h-[17rem] -mx-6 rounded-t-3xl pt-4">
                             <center>
                                 <Image src={data?.business?.logo || ''} alt="logo" width={95} height={95} />
@@ -235,7 +230,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                                     backgroundRepeat: "no-repeat",
                                 }}
                                 className={`'justify-between' ${animate ? "backInUp" : "tada"} ${data?.loyalty?.cardColor ? data?.loyalty?.cardColor : "bg-primary"
-                                    } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] mt-[40rem] left-0 right-0 m-auto h-[10rem] border border-1 mb-14 
+                                    } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] left-0 right-0 m-auto h-[10rem] border border-1 mb-14  ${Number(claim) > 0 ? 'mt-[40rem]': 'mt-[28rem]'} 
 							transition-transform duration-500 -skew-y-6`}
                             >
                                 <>

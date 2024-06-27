@@ -23,7 +23,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
                 <br />
                 <input
                     onChange={(e) => handleApplyCoinz(e, userCoinz)}
-                    type='text'
+                    type='tel'
                     value={claimedCoinz || ''}
                     placeholder={`Enter the coinz to apply`}
                     min={0}
