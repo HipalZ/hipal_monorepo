@@ -6,10 +6,12 @@ import React, { memo, useCallback, useState } from 'react'
 import { toast } from 'react-toastify';
 
 const messages = [
+    "Need Bill",
     "Bring Water bottles",
     "Bring Menu",
     "Bring Tissue Paper",
     "Please settle my table",
+    "Other"
 ];
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {

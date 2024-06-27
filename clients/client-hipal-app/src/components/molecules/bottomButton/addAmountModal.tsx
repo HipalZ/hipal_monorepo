@@ -9,6 +9,7 @@ import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
 import { cn } from '@/components/utils/helpers';
+import { useLogin } from '@/components/store/useLogin';
 
 const AddAmountModal = memo(() => {
 	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
@@ -16,6 +17,7 @@ const AddAmountModal = memo(() => {
     const router = useRouter();
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState<boolean>(false);
+    const setIsPayment = useLogin((s) => s.setIsPayment);
 
     const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -30,6 +32,7 @@ const AddAmountModal = memo(() => {
         }
         setLoading(true);
         if (amount > 0) {
+            setIsPayment(false)
             router.push(`/r/${customLink}/payment?amount=${amount}`);
         }
     }, [amount, customLink, router]);
@@ -92,7 +95,7 @@ const AddAmountModal = memo(() => {
                 <TfiPlus className={`${style.plus_pay_left}`} size={24} />
 
                 <section className='absolute mx-6 space-y-4 -bottom-[16rem] w-[88%]'>
-                    <p className='-mb-4 text-primary'>Add bill amount</p>
+                    <p className='text-primary'>Add bill amount</p>
                     <input
                         placeholder='Enter Amount'
                         value={amount || ''}

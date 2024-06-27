@@ -2,6 +2,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { isEmpty } from "lodash-es";
 import Image from "next/image";
+import { memo } from "react";
 
 interface IPaymentCard {
     claimedCoinz: number,
@@ -9,7 +10,7 @@ interface IPaymentCard {
     logo: string | undefined
 }
 
-const PaymentCard = (props: IPaymentCard) => {
+const PaymentCard = memo((props: IPaymentCard) => {
     const { claimedCoinz, billValue, logo} = props;
     return (
             <article className='relative h-[10rem] flex flex-col items-center justify-center mx-4 mt-10 space-y-2 text-xl rounded-3xl bg-primary text-base-100'>
@@ -46,6 +47,6 @@ const PaymentCard = (props: IPaymentCard) => {
                 <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {billValue}</h4>
             </article>
     )
-};
+});
 
 export default PaymentCard;

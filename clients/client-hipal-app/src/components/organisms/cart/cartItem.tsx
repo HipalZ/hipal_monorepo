@@ -23,7 +23,7 @@ const CartItem = ({ cartItem }) => {
                 )}
                 <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs ">
                     {cartItem.variants.length > 1 ? (
-                        <div className='flex items-center justify-between bg-base-100 text-primary rounded-xl'>
+                        <div className='flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary'>
                             <button onClick={() => decreaseQuantity(cartItem.dishId)} className="px-2 py-1">-</button>
                             <span className="mx-2">{cartItem.variants.length}</span>
                             <button onClick={() => increaseQuantity(cartItem.dishId)} className="px-2 py-1">+</button>

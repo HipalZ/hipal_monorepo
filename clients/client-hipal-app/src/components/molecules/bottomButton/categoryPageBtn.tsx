@@ -24,7 +24,7 @@ const CategoryPageBtn = memo(() => {
 	const setIsPayment = useLogin((s) => s.setIsPayment);
 	const router = useRouter();
 	const [callWaiterModal, setCallWaiterModal] = useState(false);
-	const { setShowCart, showCart } = useCart()
+	const { setShowCart, showCart ,cart} = useCart()
 
 	const closeModal = useCallback(() => {
 		setInputModal(false);
@@ -55,11 +55,10 @@ const CategoryPageBtn = memo(() => {
 		} else {
 			openModal()
 		}
-	}, [setDirection, isLogin, businessId, router]);
+	}, [setDirection, isLogin, businessId, router,customLink]);
 
 	const triggerCallWaiter = useCallback(() => {
 		setDirection('category');
-		setIsPayment(true);
 		if (!tableName) {
 			return router.push(`/scan`);
 		}
@@ -69,14 +68,14 @@ const CategoryPageBtn = memo(() => {
 		} else {
 			openCallWaiterModal()
 		}
-	}, [setDirection, isLogin, businessId, router]);
+	}, [setDirection, isLogin, businessId, router,customLink]);
 
 	const showingCart = useCallback(() => {
 		setShowCart(!showCart);
 	}, [showCart, setShowCart]);
 
 	useEffect(() => {
-		if (isPayment) {
+		if (isPayment && isLogin) {
 			openModal()
 		}
 	}, [])
@@ -85,44 +84,57 @@ const CategoryPageBtn = memo(() => {
 		<>
 			<BottomButton>
 				<section className="relative flex items-center justify-between gap-4">
-					<center onClick={triggerCallWaiter} className="w-full px-2 text-sm font-thin text-base-100">
+					<center onClick={triggerCallWaiter} className="w-full px-2 font-light text-base-100">
 						<FaConciergeBell size={22} className="mr-2" />
-						{!tableName ? 'Scan to Call Captain' : 'Call captain'}
+						Call captain
 					</center>
 					<button
 						onClick={showingCart}
 						className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
 					>
 						<AnimatePresence initial={false} mode='wait'>
-							{showCart ? (
-								<motion.div
-									key="close"
-									initial={{ opacity: 0, scale: 0.5 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 0.5 }}
-									transition={{ duration: 0.15 }}
-								>
-									<HiX size={30} className="text-primary" />
-								</motion.div>
-							) : (
-								<motion.div
-									key="bag"
-									initial={{ opacity: 0, scale: 0.5 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 0.5 }}
-									transition={{ duration: 0.15 }}
-								>
-									<BsBagHeart size={30} />
-								</motion.div>
-							)}
-						</AnimatePresence>
+                            {showCart ? (
+                                <motion.div
+                                    key="close"
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.5 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    <HiX size={30} className="text-primary" />
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="bag"
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.5 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    <div className="relative">
+                                        <BsBagHeart size={30} />
+                                        {Object.values(cart).length > 0 && (
+                                            <motion.span
+                                                className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-4"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                exit={{ scale: 0 }}
+                                                transition={{ duration: 0.5 }}
+                                            >
+                                                {Object.values(cart).length}
+                                            </motion.span>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 					</button>
-					<small className="w-full -mb-6 font-thin text-base-100">{
+					<span className="w-full -mb-5 font-thin text-base-100">{
 						showCart ? 'Menu' : 'Cart'
-					}</small>
-					<center onClick={proceedToPayment} className="w-full px-2 text-sm font-thin text-base-100">
+					}</span>
+					<center onClick={proceedToPayment} className="w-full px-2 font-light text-base-100">
 						<FaMoneyBillWave size={22} />
-						{!tableName ? 'Scan to Pay' : 'Pay bill'}
+					Pay bill
 					</center>
 				</section>
 			</BottomButton>

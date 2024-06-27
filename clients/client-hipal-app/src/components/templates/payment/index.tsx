@@ -1,7 +1,6 @@
 "use client"
 import { MdOutlineChevronLeft } from "react-icons/md";
-import { ChangeEvent, useEffect, useState } from "react";
-import BottomButton from "@/components/molecules/bottomButton";
+import { ChangeEvent, memo, useEffect, useState } from "react";
 import { IBusinessData } from "@/components/types/businessData";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
@@ -12,16 +11,47 @@ import confetti from "canvas-confetti";
 import usePayment from "@/components/store/usePayment";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import LoadingSpinner from "@/components/atoms/loadingSpinner";
 import useTableData from "@/components/store/useTableData";
-import PaymentComponent from "./selectPayment";
-import AvailableCoinz from "./availableCoinz";
-import BillSummary from "./billSummary";
-import PaymentCard from "./paymentCard";
-import UseCoinzPopup from "./useCoinzPopup";
 import { useQuery } from "@tanstack/react-query";
 import { calculateReward } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+
+const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={50} />,
+});
+
+const LoadingSpinner = dynamic(() => import("@/components/atoms/loadingSpinner"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={50} />,
+});
+
+const PaymentComponent = dynamic(() => import("./selectPayment"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+});
+
+const AvailableCoinz = dynamic(() => import("./availableCoinz"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={250} />,
+});
+
+const BillSummary = dynamic(() => import("./billSummary"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+});
+
+const PaymentCard = dynamic(() => import("./paymentCard"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={200} />,
+});
+
+const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={50} />,
+});
 
 export type PageStates = 'INVOICE' | 'MODE' | 'ONLINE' | 'OFFLINE'
 
@@ -194,7 +224,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const clearTheTip = () => {
         setTips(0)
         setSelectedTip('')
-        setCustomTip('')
+        setCustomTip('')    
         setShowInput(false)
         setIsTipActive(false)
     }
@@ -464,4 +494,4 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     )
 };
 
-export default Payment;
+export default memo(Payment);

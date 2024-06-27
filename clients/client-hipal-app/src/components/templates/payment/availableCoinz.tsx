@@ -1,5 +1,6 @@
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import BottomButton from '@/components/molecules/bottomButton'
+import { memo } from "react";
 
 interface IAvailableCoinz {
     isModalOpen: boolean,
@@ -11,7 +12,7 @@ interface IAvailableCoinz {
     maxCoinz
 }
 
-const AvailableCoinz = (props: IAvailableCoinz) => {
+const AvailableCoinz = memo((props: IAvailableCoinz) => {
     const { isModalOpen, closeModal, userCoinz, claimedCoinz, handleApplyCoinz, handleCoins, maxCoinz } = props;
     return (
         <BottomPopUp show={isModalOpen} onClose={closeModal}>
@@ -19,7 +20,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
                 <h1 className='text-xl font-semibold'>
                     Available Coins : {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
                 </h1>
-                {claimedCoinz > 0 ? <p className="text-xs mt-1">Max Coinz can claim upto  {claimedCoinz}</p>: null}
+                {claimedCoinz > 0 ? <p className="mt-1 text-xs">Max Coinz can claim upto  {claimedCoinz}</p>: null}
                 <br />
                 <input
                     onChange={(e) => handleApplyCoinz(e, userCoinz)}
@@ -38,6 +39,6 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
             </BottomButton>
         </BottomPopUp>
     )
-};
+});
 
 export default AvailableCoinz;
