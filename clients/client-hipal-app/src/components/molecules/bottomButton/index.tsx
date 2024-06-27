@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { MdOutlineAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
 import { AiFillHome } from "react-icons/ai";
 import Link from "next/link";
@@ -8,11 +8,8 @@ import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import { toast } from "react-toastify";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useRouter } from "next/navigation";
-import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
-import { BsBagHeart } from "react-icons/bs";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function BottomButton({
   children
@@ -20,28 +17,37 @@ function BottomButton({
   children?: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
-  const isLogin = useLogin((s) => s.isLogin);
   const [inputModal, setInputModal] = useState(false);
   const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
   const tableName = useTableData((s) => s.tableName);
-
+  const setDirection = useLogin((s) => s.setDirection);
+  const {isLogin,direction,setIsPayment,isPayment} = useLogin()
   const closeModal = useCallback(() => {
     setInputModal(false);
+    setIsPayment(false)
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
-   
     if (!isLogin) {
+      setDirection("explore")
+      setIsPayment(true)
       router.push(`/r/${customLink}/user/signup`);
       return;
     }
+    setIsPayment(false)
     setInputModal(true);
   }, [setInputModal, tableName]);
+
+  useEffect(() => {
+    if (direction === "explore" && isPayment) {
+      openModal()
+    }
+  },[])
 
   return (
     <>
       {children ? (
-        <center className="fixed bottom-0 z-20 p-2 w-full max-w-[30rem] bg-primary">
+        <center className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
           {children}
         </center>
       ) : (
@@ -66,7 +72,7 @@ function BottomButton({
                 </Link>
               )
             }
-            <small className="w-full -mb-6 font-thin text-base-100">{!tableName ? "Scan":"Pay"}</small>
+            <small className="w-full -mb-6 font-thin text-base-100">{!tableName ? "Scan" : "Pay"}</small>
             <Link href={`/r/${customLink}/category`}>
               <center className="w-full px-2 text-sm font-thin text-base-100">
                 <MdOutlineMenuBook size={22} />
@@ -76,6 +82,7 @@ function BottomButton({
           </center>
         </section>
       )}
+     
       {inputModal &&
         <BottomPopUp show={inputModal} onClose={closeModal}>
           <AddAmountModal />

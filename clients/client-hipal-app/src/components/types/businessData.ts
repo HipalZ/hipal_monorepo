@@ -1,6 +1,5 @@
 import type { ICart } from "@/components/store/useCart"
 import { ILoyaltySetting } from "../store/useLoyaltyData"
-import { ICat } from "../molecules/searchPanel";
 
 export interface IBiz {
 	businessName: string;
@@ -135,7 +134,7 @@ export interface IDish {
 	discount: null
 	avgTime: null
 	dishType: string
-	categories:ICat[]
+	categories:ICategory[]
 	portions: IPortion[]
 	extras: IExtras[]
 	filters: {

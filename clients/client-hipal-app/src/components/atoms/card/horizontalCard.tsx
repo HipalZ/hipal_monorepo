@@ -1,6 +1,6 @@
 import DishTag from "@/components/atoms/dishTag"
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
-import type {  IDish } from "@/components/types/businessData"
+import type {  ICategory, IDish } from "@/components/types/businessData"
 import { getPrice } from "@/components/utils/helpers"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
@@ -13,7 +13,6 @@ import NotAvailable from "../notAvailable"
 import { useCart } from "@/components/store/useCart"
 import RecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 import PlaceholderImg from "../placeholder"
-import { ICat } from "@/components/molecules/searchPanel"
 
 function HorizontalCard({
 	dishData,
@@ -26,7 +25,7 @@ function HorizontalCard({
 	noAddBtn?: boolean
 	noDescription?: boolean
 	isTopScrollWithSubTypes?: boolean
-	redirection?: (id: string, categories: ICat[]) => void
+	redirection?: (id: string, categories: ICategory[]) => void
 }) {
 	const coverImage = dishData?.images?.[0]
 	const isAvailable = dishData?.availability
@@ -49,7 +48,7 @@ function HorizontalCard({
 			id={`${dishData?._id}`}
 			className={`
   ${isAvailable ? "mx-6" : "opacity-80 px-6"}
-  ${!isTopScrollWithSubTypes ? "scroll-mt-[15rem]" : "scroll-mt-[11.2rem]"}
+  ${!isTopScrollWithSubTypes ? "scroll-mt-[15rem]" : "scroll-mt-[13.2rem]"}
 `}
 		>
 			<div className="flex flex-row py-6 space-x-12 prose">

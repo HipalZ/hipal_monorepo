@@ -26,8 +26,8 @@ interface IUseLogin {
 	errorMsg: string
 	direction: string
 	role: IRole
-	// from page
 	fromPage: string,
+	isPayment: boolean
 	setUserDetails: (d: IUserData) => void
 	setRole: (d: IRole) => void
 	setIsLogin: (d: boolean) => void
@@ -37,6 +37,7 @@ interface IUseLogin {
 	setFromPage: (d: string) => void
 	isLoginCred: () => boolean
 	sendOtp: () => Promise<any>
+	setIsPayment: (d: boolean) => void
 }
 
 export const useLogin = create(
@@ -64,6 +65,7 @@ export const useLogin = create(
 			},
 			direction: "",
 			fromPage: '',
+			isPayment: false,
 			setUserDetails: (d: IUserData) => set({ userDetails: d }),
 			setIsLogin: (d: boolean) => set({ isLogin: d }),
 			setHiCode: (d: string) => set({ hiCode: d }),
@@ -71,9 +73,8 @@ export const useLogin = create(
 			setDirection: (d: string) => set({ direction: d }),
 			setFromPage: (d: string) => set({ fromPage: d }),
 			setRole: (d: IRole) => set({ role: d }),
-
+			setIsPayment: (d: boolean) => set({ isPayment: d }),
 			isLoginCred: () => get()?.userDetails.phone?.length === 10,
-
 			sendOtp: async () => {
 				toast.success("otp send successfully")
 				let config = {

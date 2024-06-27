@@ -31,7 +31,7 @@ function OtpPage() {
 	const [logo, setLogo] = useState(businessLogo)
 	const setAccessToken = useUserToken((s) => s.setAccessToken)
 	const setRefreshToken = useUserToken((s) => s.setRefreshToken)
-	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
+	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const inputRefs = [
 		useRef<HTMLInputElement>(null),
 		useRef<HTMLInputElement>(null),
@@ -44,8 +44,9 @@ function OtpPage() {
 	const sendOtp = useLogin((s) => s.sendOtp)
 	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
 	const direction = useLogin((s) => s.direction)
+	const isPayment = useLogin((s) => s.isPayment)
 	const [loading, setLoading] = useState<boolean>(false);
-	
+
 
 	const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
 		if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return
@@ -56,7 +57,7 @@ function OtpPage() {
 		if (index < inputRefs.length - 1 && e.target.value !== "") {
 			inputRefs[index + 1]?.current?.focus()
 		}
-		
+
 		setOtp(newOtp)
 	}
 
@@ -109,8 +110,8 @@ function OtpPage() {
 				setRefreshToken(data.refreshToken)
 				setUserDetails(data?.user)
 				setIsLogin(true)
-				if (data?.reward > 0 && data?.count === 1) {
-					setCoinz(data.reward)
+				if (data.user?.reward > 0 && data.user?.count === 1) {
+					setCoinz(data.user.reward)
 					setIsModalOpen(true)
 					triggerConfettiBlast()
 					setTimeout(triggerConfettiBlast, 1000)
@@ -134,17 +135,21 @@ function OtpPage() {
 			setLoading(false)
 		}
 	}
-	const goNext =  useCallback(() => {
+	const goNext = useCallback(() => {
 		if (direction === "loyalty") {
-			 router.push(routePaths[PAGE_TYPES.LOYALTY](`${businessId}`))
+			return router.push(routePaths[PAGE_TYPES.LOYALTY](`${customLink}`))
+		} else if (direction === "category") {
+			return router.push(`/r/${customLink}/category?pay=${isPayment}`)
+		} else if (direction === "explore") {
+			return router.push(`/r/${customLink}/explore?pay=${isPayment}`)
 		} else {
-			 router.push(`/r/${customLink}/category?direction=${direction}`)
+			return router.push(`/r/${customLink}/explore?pay=${isPayment}`)
 		}
-	},[router,direction,customLink])
+	}, [router, direction, customLink])
 
 	const goBack = useCallback(() => {
 		router.back()
-	},[router])
+	}, [router])
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()

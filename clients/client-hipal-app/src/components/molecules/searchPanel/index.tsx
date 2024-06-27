@@ -13,10 +13,7 @@ import { useActiveClass } from "@/components/store/useActiveClass";
 import { ICategory, IDish } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 
-export interface ICat {
-    _id: string;
-    name: string;
-}
+
 
 // NOTE: A `relative` tag must be added to the parent of this component
 function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchBox: () => void; categories: ICategory[], primaryColor: string}) {
@@ -59,7 +56,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
 
     const present = filterCategory?.[0];
 
-    const redirectToDish = (dishId: string, category: ICat[]) => {
+    const redirectToDish = (dishId: string, category: ICategory[]) => {
         setActiveCategory(category?.[0]?._id);
         setSearchOpen(!search);
         router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId));

@@ -26,6 +26,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
     const searchParams = useSearchParams()
 
     const tableName = searchParams?.get('tableName')
+ 
     const { setTableName } = useTableData()
     const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
@@ -84,14 +85,12 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
                         <SubLoyalty
                             logo={businessDetails?.logo}
                         />
-
                     </section>
                 )}
 
                 <div className="overflow-auto">
                     <PopularRestaurant popular={data?.settings?.explore?.popular} />
                 </div>
-
 
                 <Footer
                     footerText={data?.settings?.themes?.footerText || ""}
@@ -103,6 +102,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
                 <PageName />
             </div>
+            
             <BottomButton />
 
             {!isModalOpen && (

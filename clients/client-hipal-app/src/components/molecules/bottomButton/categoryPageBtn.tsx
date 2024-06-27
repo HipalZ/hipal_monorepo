@@ -1,5 +1,5 @@
 "use client";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import BottomButton from ".";
 import { useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
@@ -13,18 +13,20 @@ import { BsBagHeart } from "react-icons/bs";
 import { useCart } from "@/components/store/useCart";
 
 const CategoryPageBtn = memo(() => {
-	const isLogin = useLogin((s) => s.isLogin);
+	const { isLogin, isPayment, direction } = useLogin();
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const tableName = useTableData((s) => s.tableName)
 	const [inputModal, setInputModal] = useState(false);
 	const setDirection = useLogin((s) => s.setDirection);
+	const setIsPayment = useLogin((s) => s.setIsPayment);
 	const router = useRouter();
 	const [callWaiterModal, setCallWaiterModal] = useState(false);
-	const { setShowCart, showCart,cart } = useCart()
+	const { setShowCart, showCart } = useCart()
 
 	const closeModal = useCallback(() => {
 		setInputModal(false);
+		setIsPayment(false)
 	}, [setInputModal]);
 
 	const openModal = useCallback(() => {
@@ -40,10 +42,10 @@ const CategoryPageBtn = memo(() => {
 	}, [setCallWaiterModal]);
 
 	const proceedToPayment = useCallback(() => {
+		setDirection('category');
 		if (!tableName) {
 			return router.push(`/scan`);
 		}
-		setDirection('payment');
 		if (!isLogin) {
 			return router.push(`/r/${customLink}/user/signup`);
 
@@ -54,9 +56,9 @@ const CategoryPageBtn = memo(() => {
 
 	const triggerCallWaiter = useCallback(() => {
 		setDirection('category');
+		setIsPayment(true);
 		if (!tableName) {
 			return router.push(`/scan`);
-
 		}
 		if (!isLogin) {
 			return router.push(`/r/${customLink}/user/signup`);
@@ -70,6 +72,12 @@ const CategoryPageBtn = memo(() => {
 		setShowCart(!showCart);
 	}, [showCart, setShowCart]);
 
+	useEffect(() => {
+		if (isPayment && direction === 'category') {
+			openModal()
+		}
+	}, [])
+
 	return (
 		<>
 			<BottomButton>
@@ -78,8 +86,8 @@ const CategoryPageBtn = memo(() => {
 						<FaConciergeBell size={22} className="mr-2" />
 						{!isLogin ? 'Login to Call Captain' : !tableName ? 'Scan to Call Captain' : 'Call captain'}
 					</center>
-					<button onClick={showingCart} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-1/2 border rounded-full left-1/2 border-primary bg-base-100">
-						<BsBagHeart size={24} />
+					<button onClick={showingCart} className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
+						<BsBagHeart size={30} />
 					</button>
 					<small className="w-full -mb-6 font-thin text-base-100">view List</small>
 					<center onClick={proceedToPayment} className="w-full px-2 text-sm font-thin text-base-100">
