@@ -206,7 +206,7 @@ router.post(
   // validateRequest,
   async (req: Request, res: Response) => {
     let { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = req.body;
-
+    const loyaltyUser= await UserReward.findOne({ userPhone:phone, loyaltyId }).select('rewards');
     let existingUser;
     existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
     if (!existingUser) {
@@ -255,7 +255,7 @@ router.post(
       return res.status(200).send({
         status: true,
         message: 'User logged in successfully',
-        data: { user: modifyUser, accessToken, refreshToken },
+        data: { user: modifyUser, accessToken, refreshToken,rewards:loyaltyUser?.rewards || 0 },
         err: false,
       });
     }
@@ -266,7 +266,7 @@ router.post(
     return res.status(200).send({
       status: true,
       message: 'User logged in successfully',
-      data: { user: existingUser, accessToken, refreshToken },
+      data: { user: existingUser, accessToken, refreshToken,rewards:loyaltyUser?.rewards || 0 },
       err: false,
     });
   },
