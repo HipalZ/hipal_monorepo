@@ -17,7 +17,6 @@ interface IDishesProps {
 
 const DishesList: React.FC<IDishesProps> = (props) => {
 	const { allCategoriesTypes, categories } = props;
-	console.log(allCategoriesTypes, categories)
 	const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
 	const { isActiveDishType } = useActiveClass();
 	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory);

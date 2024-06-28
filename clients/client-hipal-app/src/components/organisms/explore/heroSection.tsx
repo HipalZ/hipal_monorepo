@@ -1,20 +1,16 @@
 import ReadMore from "@/components/atoms/readMore"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { memo, useEffect } from "react"
+import { memo } from "react"
 import PlaceholderImg from "@/components/atoms/placeholder"
-import { updateTheme } from "@/components/utils/themes"
-import { IBiz, IBusinessData, IThemes } from "@/components/types/businessData"
+import { IBiz, IBusinessData } from "@/components/types/businessData"
 
 interface IHeroSection {
 	data: IBusinessData
 }
 export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 	const { businessName, logo, tags, description } = data.business as IBiz
-	const themes = data.settings?.themes as IThemes
-	useEffect(() => {
-		updateTheme(themes)
-	}, [themes])
+	
 
 	return (
 		<div className="relative flex flex-col px-8">

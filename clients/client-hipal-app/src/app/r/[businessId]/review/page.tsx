@@ -1,5 +1,6 @@
 import { businessApis, fetchAllBusinessIds } from "@/apis/explore";
 import Review from "@/components/templates/review";
+import { updateTheme } from "@/components/utils/themes";
 
 export async function generateStaticParams() {
   const businessIds = await fetchAllBusinessIds();
@@ -17,5 +18,6 @@ export async function generateMetadata() {
 
 export default async function Page({ params }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
+  updateTheme(data?.settings?.themes);
   return <Review data={data} />;
 }

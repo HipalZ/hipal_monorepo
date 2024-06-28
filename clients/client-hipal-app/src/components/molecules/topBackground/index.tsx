@@ -4,19 +4,14 @@ import PlaceholderImg from "@/components/atoms/placeholder"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"
 import { IThemes } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
-import { updateTheme } from "@/components/utils/themes"
 import Image from "next/image"
-import { memo, useEffect } from "react"
+import { memo } from "react"
 
 function TopBackground({ themes,halfTop = false }: { themes: IThemes | undefined ;halfTop?:boolean }) {
 	const { getPreviousPath } = useRoutingFlow()
 	const onBackURL = `${getPreviousPath()}`
 
-	useEffect(() => {
-		if (themes) {
-			updateTheme(themes)
-		}
-	}, [themes])
+	
 
 	return (
 		<div className={`relative ${halfTop ? "h-[10vh]":"h-[20vh]"}  w-full overflow-hidden`}>

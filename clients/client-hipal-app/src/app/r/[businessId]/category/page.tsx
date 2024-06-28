@@ -1,6 +1,7 @@
 import { categoryApis } from "@/apis/category";
 import { fetchAllBusinessIds } from "@/apis/explore";
 import Category from "@/components/templates/category";
+import { updateTheme } from "@/components/utils/themes";
 
 export async function generateStaticParams() {
     const businessIds = await fetchAllBusinessIds();
@@ -23,6 +24,7 @@ export async function generateMetadata() {
 
 export default async function Page({ params }: { params: { businessId: string } }) {
     const data = await fetchData(params.businessId);
+    updateTheme(data?.settings?.themes);
     return <Category data={data} />;
 }
 

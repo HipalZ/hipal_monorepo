@@ -37,7 +37,6 @@ const Cart = dynamic(() => import('@/components/organisms/cart'), {
 
 const Category = memo(({ data }: { data: IBusinessData }) => {
     const { showCart } = useCart();
-    console.log('dda',data);
     return (
         <>
             {

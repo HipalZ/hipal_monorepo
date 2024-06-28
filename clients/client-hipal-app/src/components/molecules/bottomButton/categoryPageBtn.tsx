@@ -49,7 +49,7 @@ const CategoryPageBtn = memo(() => {
 		if (!tableName) {
 			return router.push(`/scan`);
 		}
-		if (!isLogin) {
+		if (!isLogin) { 
 			return router.push(`/r/${customLink}/user/signup`);
 
 		} else {

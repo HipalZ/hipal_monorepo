@@ -22,6 +22,7 @@ import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { useLogin } from "@/components/store/useLogin";
 import { useCart } from "@/components/store/useCart";
+import { updateTheme } from "@/components/utils/themes";
 
 export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
@@ -63,6 +64,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (storeTableName !== tableName) {
             setCart({})
         }
+        updateTheme(data?.settings?.themes);
         setSelectedPay(false)
     }, [])
 

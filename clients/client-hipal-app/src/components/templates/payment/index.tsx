@@ -113,7 +113,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (!orderId) {
             return;
         }
-        console.log('envvv', process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID)
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
