@@ -1,15 +1,13 @@
-import express, { Request, Response } from 'express';
-
-import moment from 'moment';
-
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Dues, LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, Reviews, UserReward, UserRewardHistory } from '@hi/db-models';
 import { paramsSchema, PaymentSchema } from '@hi/db-models/src/validators';
-
 import { runInTransaction } from '@hi/utils';
+import express, { Request, Response } from 'express';
+import moment from 'moment';
 import { ClientSession } from 'mongoose';
 import type { z } from 'zod';
 import { validateRequest } from 'zod-express-middleware';
+
 const router = express.Router();
 const updatedPaymentSchema = PaymentSchema.partial();
 const updatedDuesSchema = PaymentSchema.partial();
@@ -149,18 +147,20 @@ const addCoins = async (
       },
       { new: true, session },
     ).select('userName userPhone rewards');
-    await addRewardHistory(
-      'plus',
-      tableName,
-      loyaltyId,
-      total,
-      updatedReward?.userName || '',
-      userPhone,
-      coinsCalculated.finalReward,
-      updatedReward?.rewards || 0,
-      billValue,
-      session,
-    );
+    if (coinsCalculated.finalReward > 0) {
+      await addRewardHistory(
+        'plus',
+        tableName,
+        loyaltyId,
+        total,
+        updatedReward?.userName || '',
+        userPhone,
+        coinsCalculated.finalReward,
+        updatedReward?.rewards || 0,
+        billValue,
+        session,
+      );
+    }
 
     return null;
   }
