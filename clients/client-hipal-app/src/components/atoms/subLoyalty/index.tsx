@@ -78,32 +78,32 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 				}
 			</center>
 			{
-				loyaltySetting?.signUpBonus &&
-				<center ref={ref} className="w-full relative bg-[#E63C45] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
-					<div className="pt-4 text-xl font-semibold leading-8 text-white">
-						Signup bonus
-					</div>
-					<div className="px-4 text-sm font-semibold text-white">
-						Win {loyaltySetting.signUpBonus} Coinz on your signup
-					</div>
-					<figure className="absolute bottom-0 z-0 animate-pulse">
-						<Image src={SignUpBonusBackground} alt="signup bonus" />
-					</figure>
-					<figure className="absolute z-0 top-[5rem] left-10 card_up_down">
-						<Image width={100} height={100} src={Coin} alt="Coin" />
-					</figure>
-					<figure className="absolute bottom-6 z-1">
-						<Image src={Wallet} alt="Wallet" />
-					</figure>
-					{
-						!login &&
-						<Link href={`/r/${customLink}/user/signup`}>
-							<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
-								Get Now
-							</button>
-						</Link>
-					}
-				</center>
+				loyaltySetting?.signUpBonus && loyaltySetting?.signUpBonus > 0 ?
+					<center ref={ref} className="w-full relative bg-[#E63C45] overflow-hidden max-w-[170px] h-[16.5rem] rounded-2xl">
+						<div className="pt-4 text-xl font-semibold leading-8 text-white">
+							Signup bonus
+						</div>
+						<div className="px-4 text-sm font-semibold text-white">
+							Win {loyaltySetting.signUpBonus} Coinz on your signup
+						</div>
+						<figure className="absolute bottom-0 z-0 animate-pulse">
+							<Image src={SignUpBonusBackground} alt="signup bonus" />
+						</figure>
+						<figure className="absolute z-0 top-[5rem] left-10 card_up_down">
+							<Image width={100} height={100} src={Coin} alt="Coin" />
+						</figure>
+						<figure className="absolute bottom-6 z-1">
+							<Image src={Wallet} alt="Wallet" />
+						</figure>
+						{
+							!login &&
+							<Link href={`/r/${customLink}/user/signup`}>
+								<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+									Get Now
+								</button>
+							</Link>
+						}
+					</center> : null
 			}
 		</section>
 	)
