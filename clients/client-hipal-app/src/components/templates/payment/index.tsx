@@ -113,7 +113,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (!orderId) {
             return;
         }
-        console.log('envvv',process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID)
+        console.log('envvv', process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID)
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
@@ -321,7 +321,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 
         try {
             const orderId = await createRazorPayOrder(total);
-                await creatingRazorPayOptions(orderId);
+            await creatingRazorPayOptions(orderId);
         } catch (error) {
             toast.error('Something went wrong! Please try again later.');
             setRazorPayPaymentId('');
@@ -462,11 +462,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         billValue={billValue}
                         logo={data?.business?.logo}
                     />
-                    <UseCoinzPopup
-                        openModal={openModal}
-                        userCoinz={userCoinz}
-                        claimedCoinz={claimedCoinz}
-                    />
+                    {
+                        userCoinz > 0 &&
+                        <UseCoinzPopup
+                            openModal={openModal}
+                            userCoinz={userCoinz}
+                            claimedCoinz={claimedCoinz}
+                        />
+                    }
                     <BillSummary
                         billValue={billValue}
                         claimedCoinz={claimedCoinz}

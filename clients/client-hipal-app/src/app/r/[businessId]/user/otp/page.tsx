@@ -43,8 +43,7 @@ function OtpPage() {
 	const businessId = params ? params.businessId : undefined;
 	const sendOtp = useLogin((s) => s.sendOtp)
 	const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting)
-	const direction = useLogin((s) => s.direction)
-	const isPayment = useLogin((s) => s.isPayment)
+	const {direction,isPayment,setUserCoinZ} = useLogin()
 	const [loading, setLoading] = useState<boolean>(false);
 
 
@@ -109,6 +108,7 @@ function OtpPage() {
 				setAccessToken(data.accessToken)
 				setRefreshToken(data.refreshToken)
 				setUserDetails(data?.user)
+				setUserCoinZ(data?.rewards)
 				setIsLogin(true)
 				if (data.user?.reward > 0 && data.user?.count === 1) {
 					setCoinz(data.user.reward)

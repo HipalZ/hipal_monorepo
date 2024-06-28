@@ -23,7 +23,7 @@ const RewardCard = ({ bgColor, title, imgSrc, imgAlt, buttonContent, gridColor, 
 )
 
 const Rewards = memo(() => {
-    const userDetails = useLogin((s) => s.userDetails)
+    const {userDetails,userCoinZ} = useLogin()
     const customLink = useBusinessDetails((s) => s.businessDetails.customLink)
     const router = useRouter()
     const handleRewardClick = useCallback(() => {
@@ -58,7 +58,7 @@ const Rewards = memo(() => {
                     title="Wallet"
                     imgSrc={Wallet}
                     imgAlt="wallet"
-                    buttonContent={`🪙${userDetails?.reward}`}
+                    buttonContent={`🪙${userCoinZ}`}
                     gridColor="#ffffff60"
                     onClick={handleWalletClick}
                 />

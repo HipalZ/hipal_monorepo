@@ -13,7 +13,7 @@ interface IAvailableCoinz {
 }
 
 const AvailableCoinz = memo((props: IAvailableCoinz) => {
-    const { isModalOpen, closeModal, userCoinz, claimedCoinz, handleApplyCoinz, handleCoins, maxCoinz } = props;
+    const { isModalOpen, closeModal, userCoinz, claimedCoinz, handleApplyCoinz, handleCoins } = props;
     return (
         <BottomPopUp show={isModalOpen} onClose={closeModal}>
             <div className='h-[15rem] p-6'>
@@ -25,7 +25,7 @@ const AvailableCoinz = memo((props: IAvailableCoinz) => {
                 <input
                     onChange={(e) => handleApplyCoinz(e, userCoinz)}
                     type='tel'
-                    value={claimedCoinz || ''}
+                    value={claimedCoinz}
                     placeholder={`Enter the coinz to apply`}
                     min={0}
                     max={userCoinz}

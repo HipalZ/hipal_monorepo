@@ -1,7 +1,7 @@
 import axios from "@/utils/axios";
 import { paths } from "@/components/utils/paths";
 import { isEmpty } from "lodash-es";
-import { IBusinessData, ICategory } from "@/components/types/businessData";
+import { IBusinessData } from "@/components/types/businessData";
 import { redirect } from 'next/navigation';
 
 async function fetchCategoryPageData(businessId:string) {
@@ -17,70 +17,85 @@ async function fetchCategoryPageData(businessId:string) {
     const settings = (await axios(paths.settings(bizId))) || {}
     const dishesData = (await axios(paths.dishesData(bizId))) || {}
     const _categoryData = (await axios(paths.categoryByBusiness(bizId))) || {}
-
     const data = {} as IBusinessData
+		data["settings"] = settings?.data?.[0] || {}
+		// data['businessesData'] = businessesData?.data || {}
+		data["dishesData"] = dishesData?.data || {}
+		// data['categoryData'] = categoryData || {}
+		const sortCategories = () => {
+			const hashedCategories = new Map()
 
-    data["settings"] = settings?.data?.data?.[0] || {}
-    data["dishesData"] = dishesData?.data?.data || {}
+			_categoryData?.data?.data.forEach((category) => {
+				hashedCategories.set(category?._id, category)
+			})
 
-    const sortCategories = () => {
-        const hashedCategories = new Map()
+			const categoryOrder = data.settings?.categoryOrder || []
 
-        _categoryData?.data?.data.forEach((category:ICategory) => {
-            hashedCategories.set(category?._id, category)
-        })
+			const sortedCategories = new Map()
 
-        const categoryOrder = data.settings?.categoryOrder || []
+			for (let categoryId of categoryOrder) {
+				if (hashedCategories?.has(categoryId)) {
+					sortedCategories.set(categoryId, hashedCategories?.get(categoryId))
+				}
+			}
 
-        const sortedCategories = new Map()
+			const sortedCats = Array.from(sortedCategories.values())
 
-        for (let categoryId of categoryOrder) {
-            if (hashedCategories?.has(categoryId)) {
-                sortedCategories.set(categoryId, hashedCategories?.get(categoryId))
-            }
-        }
+			if (isEmpty(sortedCats)) return _categoryData?.data
 
-        const sortedCats = Array.from(sortedCategories.values())
+			return sortedCats
+		}
+		const categoryData = sortCategories()
+		const allCategoriesTypes = () => {
+			const mainType = {}
+			const subTypes = {}
 
-        if (isEmpty(sortedCats)) return _categoryData?.data?.data
+			categoryData?.data.forEach((category) => {
+				if (!category?.visibility) return
 
-        return sortedCats
-    }
-    
-    const categoryData = sortCategories()
-    const allCategoriesTypes = () => {
-        const mainType = {} as Record<string, ICategory>
-        type ICategorySubTypes = Record<string, Record<string, ICategory>>;
-        const subTypes = {} as ICategorySubTypes
+				if (category?.hierarchy === "PARENT") {
+					mainType[category?._id] = category
+				} else if (!isEmpty(category?.dishes)) {
+					subTypes[category?.parentCategoryId] = {
+						...subTypes[category?.parentCategoryId],
+						[category._id]: category,
+					}
+				}
+			})
 
-        categoryData.forEach((category:ICategory) => {
-            if (!category?.visibility) return
+			// Removing empty main categories
+			Object.keys(mainType).forEach((key) => {
+				if (!subTypes?.[mainType?.[key]?._id] && isEmpty(mainType?.[key]?.dishes))
+					delete mainType[key]
+			})
 
-            if (category?.hierarchy === "PARENT" && !isEmpty(category?.dishes)) {
-                mainType[category?._id] = category
-                return
-            } else if (!isEmpty(category?.dishes)) {
-                subTypes[category?.parentCategoryId || ''] = {
-                    ...subTypes[category?.parentCategoryId || ''],
-                    [category._id]: category,
-                }
-            }
-        })
+			return {
+				main: mainType,
+				sub: subTypes,
+			}
+		}
 
-        // Removing empty main categories
-        Object.keys(mainType).forEach((key) => {
-            if (!subTypes?.[mainType?.[key]?._id] && isEmpty(mainType?.[key]?.dishes))
-                delete mainType[key]
-        })
+		data["allCategoriesTypes"] = allCategoriesTypes()
 
-        return {
-            main: mainType,
-            sub: subTypes,
-        }
-    }
-    //@ts-ignore
-    data["allCategoriesTypes"] = allCategoriesTypes()
-    data["categories"] = categoryData
+		const categories = () => {
+			let result = [] as any
+
+			categoryData?.data?.forEach((category) => {
+				const newCategory = JSON.parse(JSON.stringify(category))
+				newCategory.dishes = []
+
+				for (let dishId of category.dishes) {
+					const newDish = dishesData?.data.find((d) => d._id === dishId._id)
+
+					if (!!newDish) newCategory.dishes = [...newCategory.dishes, newDish]
+				}
+
+				if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory]
+			})
+
+			return result
+		}
+		data["categories"] = categories()
     return data
 }
 
