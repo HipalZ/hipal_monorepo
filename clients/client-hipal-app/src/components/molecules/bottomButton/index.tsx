@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { MdOutlineAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
 import { AiFillHome } from "react-icons/ai";
 import Link from "next/link";
@@ -8,9 +8,9 @@ import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import { toast } from "react-toastify";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { RiCouponFill } from "react-icons/ri";
 
 function BottomButton({
   children
@@ -18,58 +18,76 @@ function BottomButton({
   children?: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
-  const isLogin = useLogin((s) => s.isLogin);
   const [inputModal, setInputModal] = useState(false);
   const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
   const tableName = useTableData((s) => s.tableName);
+  const setDirection = useLogin((s) => s.setDirection);
+  const { isLogin, direction, setIsPayment, isPayment } = useLogin()
 
   const closeModal = useCallback(() => {
     setInputModal(false);
+    setIsPayment(false)
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
-    if (tableName === "") {
-      toast.error("Please scan a table first");
-      router.push(`/scan`);
+    if (!isLogin) {
+      setDirection("explore")
+      setIsPayment(true)
+      router.push(`/r/${customLink}/user/signup`);
       return;
     }
     setInputModal(true);
   }, [setInputModal, tableName]);
 
+  useEffect(() => {
+    if (isPayment && isLogin && tableName) {
+      openModal()
+    }
+  }, [])
+
   return (
     <>
       {children ? (
-        <center className="fixed bottom-0 z-20 p-4 bg-base-100 w-full max-w-[30rem]">
+        <center className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
           {children}
         </center>
       ) : (
-        <center className="fixed bottom-0 z-20 text-center flex items-center justify-between py-4 px-6 bg-base-100 w-full max-w-[30rem]">
-          <center className="text-sm">
-            <AiFillHome size={22} />	Home
-          </center>
-          {!isLogin ?
-            <center onClick={openModal} className="text-sm">
-              <MdOutlineAccountBalanceWallet size={22} />	Pay Bill
-            </center>
-            :
-            !tableName ?
-              <Link href={`/scan`}>
-                <center className="text-sm">
-                  <LuScanLine size={22} />	Scan
+        <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
+          <center className="relative flex items-center justify-between px-6">
+            {
+              <Link href={`/r/${customLink}/${isLogin ? 'loyalty' : 'user/signup'}`}>
+                <center className="px-2 font-light text-base-100">
+                  <RiCouponFill size={22} />
+                  Rewards
                 </center>
               </Link>
-              :
-              <center onClick={openModal} className="text-sm">
-                <MdOutlineAccountBalanceWallet size={22} />	Pay Bill
+            }
+            {
+              tableName && (
+                <button onClick={openModal} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
+                  <MdOutlineAccountBalanceWallet size={36} />
+                </button>
+              )
+            }{
+              !tableName && (
+                <Link href="/scan">
+                  <button className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[75%] border rounded-full left-1/2 border-primary bg-base-100">
+                    <LuScanLine size={36} />
+                  </button>
+                </Link>
+              )
+            }
+            <span className="w-full mr-6 -mb-5 font-light text-base-100">{!tableName ? "Scan" : "Pay Bill"}</span>
+            <Link href={`/r/${customLink}/category`}>
+              <center className="w-full px-2 font-light text-base-100">
+                <MdOutlineMenuBook size={22} />
+                Menu
               </center>
-          }
-          <Link href={`/r/${customLink}/category`}>
-            <center className="flex items-center justify-center w-full px-10 py-3 text-sm rounded-full on_active_bounce text-base-100 bg-primary">
-              <MdOutlineMenuBook size={22} /> &nbsp;	Menu
-            </center>
-          </Link>
-        </center>
+            </Link>
+          </center>
+        </section>
       )}
+
       {inputModal &&
         <BottomPopUp show={inputModal} onClose={closeModal}>
           <AddAmountModal />

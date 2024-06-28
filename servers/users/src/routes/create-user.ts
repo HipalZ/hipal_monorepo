@@ -149,7 +149,7 @@ router.post(
     if (!phone || !role) {
       return res.status(400).send({
         status: false,
-        message: 'Phone and role required',
+        message: 'Phone and role required !',
         data: {},
         err: true,
       });

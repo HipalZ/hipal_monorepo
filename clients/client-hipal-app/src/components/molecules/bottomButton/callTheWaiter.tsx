@@ -1,14 +1,17 @@
 import useBusinessDetails from '@/components/store/useBusinessDetails';
+import { useCart } from '@/components/store/useCart';
 import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
 import React, { memo, useCallback, useState } from 'react'
 import { toast } from 'react-toastify';
 
 const messages = [
+    "Need Bill",
     "Bring Water bottles",
     "Bring Menu",
     "Bring Tissue Paper",
     "Please settle my table",
+    "Other"
 ];
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
@@ -17,6 +20,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
     const { tableName } = useTableData()
 	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
     const [loading, setLoading] = useState<boolean>(false);
+    const cart = useCart((s) => s.cart);
 
     const handleSelectMessage = useCallback((message: string) => {
         setMessage(message);
@@ -45,7 +49,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             };
             const response = await axios(config);
             if (response.status === 200) {
-                toast.success('Waiter will be there soon. Thank you!!');
+                toast.success('Captain will be there soon. Thank you!!');
                 onClose();
             }
         } catch (err: any) {
@@ -53,7 +57,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             if (errors && Array.isArray(errors)) {
                 errors.forEach((error) => {
                     console.log(error.message);
-                    toast.error('Please Scan the table to call waiter');
+                    toast.error('Please Scan the table to call Captain');
                 });
             }
         } finally {

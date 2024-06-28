@@ -1,3 +1,4 @@
+"use client"
 import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType"
 import Section from "@/components/molecules/section"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
@@ -12,6 +13,7 @@ import DishQuantityButton from "../dishQuantityButton"
 import PlaceholderImg from "@/components/atoms/placeholder"
 function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal: (str:IDish) => void }) {
 	const { dishesData } = _useAllBusiness((s) => s.data)
+	console.log('recommendations',dishesData);
 	const recommendations = useMemo(() => {
 		const recommendationList = dishData?.filters?.dishes
 
@@ -21,9 +23,11 @@ function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal
 			const dishData = dishesData?.find((dish) => dish._id === id)
 			return dishData
 		})
-	}, [dishData?.filters?.dishes, dishesData])
+	}, [dishData?.filters?.dishes, dishesData])	
 
-	if (recommendations?.length === 0) return null
+	console.log('recommendations', recommendations,dishesData);
+
+	// if (recommendations?.length === 0) return null
 
 	return (
 		<div className="-mt-6">
@@ -69,7 +73,7 @@ function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal
 														<Image
 															src={dishData?.images[0]}
 															layout="object-fit"
-															quality={75}
+															quality={95}
 															objectFit="cover"
 															alt={dishData?.name}
 															placeholder="blur"

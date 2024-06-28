@@ -54,12 +54,12 @@ function SignUp() {
 				setUserDetails((error as any).response.data.data?.user)
 				router.push(`${routePaths[PAGE_TYPES.OTP](businessId ?? "")}`)
 			}
-		} 
+		}
 	}
 
 	const goBack = useCallback(() => {
-		router.back()
-	}, [router])
+		router.push(`/r/${businessData?.customLink}/explore`)
+	}, [router, businessData.customLink])
 
 	return (
 		<section className="relative bg-black">

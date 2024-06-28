@@ -8,7 +8,7 @@ import { updateTheme } from "@/components/utils/themes"
 import Image from "next/image"
 import { memo, useEffect } from "react"
 
-function TopBackground({ themes }: { themes: IThemes | undefined }) {
+function TopBackground({ themes,halfTop = false }: { themes: IThemes | undefined ;halfTop?:boolean }) {
 	const { getPreviousPath } = useRoutingFlow()
 	const onBackURL = `${getPreviousPath()}`
 
@@ -19,7 +19,7 @@ function TopBackground({ themes }: { themes: IThemes | undefined }) {
 	}, [themes])
 
 	return (
-		<div className="relative h-[20vh] w-full overflow-hidden ">
+		<div className={`relative ${halfTop ? "h-[10vh]":"h-[20vh]"}  w-full overflow-hidden`}>
 			{themes?.miniBanner ? (
 				<Image
 					src={themes?.miniBanner || ""}

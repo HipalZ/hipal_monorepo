@@ -9,18 +9,17 @@ import { IBiz, IBusinessData, IThemes } from "@/components/types/businessData"
 interface IHeroSection {
 	data: IBusinessData
 }
-export default memo(function HeroSection({data}: IHeroSection): JSX.Element {
-	const {businessName,logo,tags,description} = data.business as IBiz
+export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
+	const { businessName, logo, tags, description } = data.business as IBiz
 	const themes = data.settings?.themes as IThemes
-	useEffect(()=>{
-        updateTheme(themes)
-    },[themes])
-	
+	useEffect(() => {
+		updateTheme(themes)
+	}, [themes])
+
 	return (
-		<div className="relative flex flex-col px-4">
-			<figure className="absolute z-10 -top-[3rem]">
-				
-			{data.business?.logo ? (
+		<div className="relative flex flex-col px-8">
+			<figure className="absolute z-10 -top-[3rem] left-4 bg-base-100 rounded-full">
+				{data.business?.logo ? (
 					<Image
 						src={logo}
 						height={100}
@@ -37,12 +36,12 @@ export default memo(function HeroSection({data}: IHeroSection): JSX.Element {
 				)}
 			</figure>
 			<div className="pt-10 space-y-2">
-					{businessName && (
-						<h4 className="mt-4 text-2xl font-semibold capitalize">{businessName}</h4>
-					)}
-					<h3 className="flex text-sm font-bold line-clamp-2 divide-base-content">
-						{Array.isArray(tags) ? tags.join(" | ") : tags}
-					</h3>
+				{businessName && (
+					<h4 className="mt-4 text-2xl font-semibold capitalize">{businessName}</h4>
+				)}
+				<h3 className="flex text-sm font-bold line-clamp-2 divide-base-content">
+					{Array.isArray(tags) ? tags.join(" | ") : tags}
+				</h3>
 			</div>
 			<div className="mt-auto">
 				<div

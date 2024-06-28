@@ -13,6 +13,7 @@ export interface ILoyaltySetting {
 	setClaimAmount: number
 	logo?: string
 	signUpBonus: number
+	rewardLimit:number
 }
 
 export const useLoyaltyData = create(
@@ -33,6 +34,7 @@ export const useLoyaltyData = create(
 				logo: "",
 				signUpBonus: 0,
 				expiryDate: "",
+				rewardLimit: 0,
 			},
 			setLoyaltySetting: (loyaltySetting: ILoyaltySetting) =>
 				set({ loyaltySetting: loyaltySetting }),

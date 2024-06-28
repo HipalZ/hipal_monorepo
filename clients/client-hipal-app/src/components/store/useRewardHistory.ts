@@ -23,7 +23,7 @@ export const useRewardHistory = create<IuserRewardHistoryState>((set) => ({
 			rewards: 0,
 			currentBalance: 0,
 			status: "",
-			date: "",
+			date: 0,
 			time: "",
 			businessName: "",
 			waiterName: "",

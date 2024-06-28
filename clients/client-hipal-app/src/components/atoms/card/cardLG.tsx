@@ -13,8 +13,8 @@ function CardLG({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard))
 	return (
 		<>
 			<Card src={src} size={"lg"}>
-				<h6 className="px-6 pt-2 truncate">sankalesh ashok harak iti mama naam sheyam</h6>
-				<h6 className="px-6 text-xs line-clamp-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.</h6>
+				<h6 className="px-6 pt-2 truncate">Spotlight Best cuisines</h6>
+				<h6 className="px-6 text-xs line-clamp-2"></h6>
 			</Card>
 		</>
 	)

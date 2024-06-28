@@ -21,29 +21,27 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { useLogin } from "@/components/store/useLogin";
+import { useCart } from "@/components/store/useCart";
 
 export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
     const searchParams = useSearchParams()
 
     const tableName = searchParams?.get('tableName')
-    const { setTableName } = useTableData()
+    const { setTableName, tableName: storeTableName } = useTableData()
     const { setSelectedPay } = usePaymentStore()
     const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
     const [isModalOpen, setIsModalOpen] = useState(false)
     const isLogin = useLogin((s) => s.isLogin)
-
+    const setCart = useCart((s) => s.setCart)
     const businessDetails = useBusinessDetails((s) => s.businessDetails)
     const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails)
-
     const openModal = () => {
         setTimeout(() => setIsModalOpen(true), 5000)
     }
-
     const closeModal = () => {
         setIsModalOpen(false)
     }
     const srcColor = useMemo(() => createSrcColor(loyaltySetting), [loyaltySetting]);
-
     const findPattern = useCallback((pattern: PatternKeys) => {
         const value = srcColor.find((item) => pattern in item.src);
         return value?.src[pattern as keyof typeof value.src];
@@ -59,7 +57,12 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (data?.business) {
             setBusinessDetails(data.business);
         }
-        setTableName(tableName || '')
+        if (tableName !== null) {
+            setTableName(tableName)
+        }
+        if (storeTableName !== tableName) {
+            setCart({})
+        }
         setSelectedPay(false)
     }, [])
 
@@ -69,35 +72,25 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
             <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
                 <HeroSection data={data} />
-                {/* {
-                    data?.settings?.explore?.highlights && (
-                        <div className="-my-2">
-                            <StoriesComponent highlights={data?.settings?.explore?.highlights} />
-                        </div>
-                    )
-                } */}
                 {
                     isLogin && (
                         <Rewards />
                     )
                 }
-
                 <SpecialOffers explore={data?.settings?.explore} />
 
                 {loyaltySetting?._id && (
-                    <section className="py-10 h-[25rem] !mt-0 bg-black">
-                        <center><h4 className="pb-4 text-2xl text-white">REWARDZ</h4></center>
+                    <section className="py-10 h-[25rem] !mt-0 bg-base-200">
+                        <center><h4 className="pb-4 text-2xl font-bold text-base-content">REWARDZ</h4></center>
                         <SubLoyalty
                             logo={businessDetails?.logo}
                         />
-
                     </section>
                 )}
 
                 <div className="overflow-auto">
                     <PopularRestaurant popular={data?.settings?.explore?.popular} />
                 </div>
-
 
                 <Footer
                     footerText={data?.settings?.themes?.footerText || ""}
@@ -109,6 +102,7 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
 
                 <PageName />
             </div>
+
             <BottomButton />
 
             {!isModalOpen && (

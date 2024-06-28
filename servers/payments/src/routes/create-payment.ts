@@ -1,5 +1,3 @@
-import express, { Request, Response } from 'express';
-
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import {
   Dues,
@@ -26,19 +24,18 @@ import {
   ReviewsSchema,
   validatePaymentSchema,
 } from '@hi/db-models/src/validators';
+import { TempBillSchema } from '@hi/db-models/src/validators/bill';
+import { runInTransaction } from '@hi/utils';
 import axios from 'axios';
 import { createHmac } from 'crypto';
-
-import { z } from 'zod';
-import { validateRequest } from 'zod-express-middleware';
-
-import { runInTransaction } from '@hi/utils';
+import express, { Request, Response } from 'express';
 import { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
-const { validateWebhookSignature } = require('../utils/razorpay-utils');
-
-import { TempBillSchema } from '@hi/db-models/src/validators/bill';
+import { z } from 'zod';
+import { validateRequest } from 'zod-express-middleware';
 import { razorpayWrapper } from '../razorpay-wrapper';
+
+const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
 const router = express.Router();
 
@@ -889,18 +886,20 @@ const addCoins = async (
       },
       { new: true, session },
     ).select('userName userPhone rewards');
-    await addRewardHistory(
-      'plus',
-      tableName,
-      loyaltyId,
-      total,
-      updatedReward?.userName || '',
-      userPhone,
-      coinsCalculated.finalReward,
-      updatedReward?.rewards || 0,
-      billValue,
-      session,
-    );
+    if (coinsCalculated.finalReward > 0) {
+      await addRewardHistory(
+        'plus',
+        tableName,
+        loyaltyId,
+        total,
+        updatedReward?.userName || '',
+        userPhone,
+        coinsCalculated.finalReward,
+        updatedReward?.rewards || 0,
+        billValue,
+        session,
+      );
+    }
 
     return null;
   }
