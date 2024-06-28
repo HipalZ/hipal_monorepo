@@ -200,7 +200,8 @@ const BillPopUp = memo(() => {
           </div>
           <div className="m-6 flex flex-col rounded-2xl bg-gray-300 p-4">
             <h1 id="discount-reason">
-              User {viewData?.order_id?.name} discount applied ₹ {viewData?.order_id?.claimedCoins} transaction id {viewData?._id}
+              User {viewData?.order_id?.name} has paid ₹ {viewData?.order_id?.total} discount applied ₹ {viewData?.order_id?.claimedCoins} transaction
+              id {viewData?._id}
             </h1>
             <br />
             <div className="flex self-end">

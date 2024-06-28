@@ -60,7 +60,8 @@ const PaymentModal = (props: PaymentModalProps) => {
       <h1 className="mx-6 font-semibold">Used reason</h1>
       <div className="m-6 flex flex-col rounded-2xl bg-gray-300 p-4">
         <h1 id="discount-reason">
-          User {salesData?.order_id?.name} discount applied ₹ {salesData?.order_id?.claimedCoins} transaction id {salesData?._id}
+          User {salesData?.order_id?.name} has paid ₹ {salesData?.order_id?.total} discount applied ₹ {salesData?.order_id?.claimedCoins} transaction
+          id {salesData?._id}
         </h1>
         <br />
       </div>
