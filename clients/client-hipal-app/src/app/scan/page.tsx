@@ -10,14 +10,13 @@ export default function Scan() {
     const readerRef = useRef<HTMLDivElement | null>(null);
     const [decodedText, setDecodedText] = useState<string>('');
     const [html5Qrcode, setHtml5Qrcode] = useState<Html5Qrcode | null>(null);
-    const [scannerStarted, setScannerStarted] = useState<boolean>(false);
 
     const gotoExplore = () => {
         router.back();
     };
 
     useEffect(() => {
-        if (decodedText && html5Qrcode && !scannerStarted) {
+        if (decodedText && html5Qrcode) {
             try {
                 console.log('Stopping scanner and redirecting to:', decodedText);
                 html5Qrcode.stop().then(() => {
@@ -27,10 +26,12 @@ export default function Scan() {
                 console.error('Redirection error:', error);
             }
         }
-    }, [decodedText, router, html5Qrcode,scannerStarted]);
+    }, [decodedText, router, html5Qrcode]);
 
     useEffect(() => {
         const readerElement = readerRef.current;
+        let scannerStarted = false;
+
         if (readerElement) {
             const qrScanner = new Html5Qrcode(readerElement.id);
             setHtml5Qrcode(qrScanner);
@@ -38,7 +39,6 @@ export default function Scan() {
             const qrCodeSuccessCallback = (decodedText: string, decodedResult: any) => {
                 if (decodedText) {
                     setDecodedText(decodedText);
-                    setScannerStarted(false);
                 }
             };
 
@@ -55,14 +55,14 @@ export default function Scan() {
                     if (videoElem) {
                         (videoElem as HTMLVideoElement).style.borderRadius = '15px';
                     }
-                    setScannerStarted(true);
+                    scannerStarted = true;
                 })
                 .catch((err) => {
                     console.error('Scanner start error:', err);
                 });
 
             return () => {
-                if (scannerStarted && qrScanner) {
+                if (scannerStarted) {
                     qrScanner.stop().catch((err) => {
                         console.error('Error stopping scanner on cleanup:', err);
                     });
@@ -72,7 +72,7 @@ export default function Scan() {
                 }
             };
         }
-    }, [scannerStarted]);
+    }, []);
 
     return (
         <div className='bg-[#fbfbfb]'>
