@@ -36,6 +36,11 @@ jobs:
           sudo mv doctl /usr/local/bin
           doctl version
 
+      - name: Authenticate doctl
+        run: |
+          echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | doctl auth init -t -
+          doctl account get
+
       - name: Login to DigitalOcean Container Registry
         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u doctl --password-stdin
 
