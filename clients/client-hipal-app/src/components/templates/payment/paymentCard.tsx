@@ -32,7 +32,6 @@ const PaymentCard = memo((props: IPaymentCard) => {
                             height={100}
                             width={100}
                             quality={95}
-                            objectFit='cover'
                             alt='logo-business'
                             className='object-center w-1/2 p-2 border rounded-lg shadow-sm aspect-square bg-base-200'
                             placeholder='blur'

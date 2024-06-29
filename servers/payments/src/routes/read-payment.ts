@@ -1,8 +1,7 @@
-import express, { Request, Response } from 'express';
-
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Dues, LoyaltyCoinsInfo, Order, Payment, PaymentAlert, PaymentMode, Reviews, ReviewsCustomer, TempBill } from '@hi/db-models';
 import { paramsSchema, PaymentType } from '@hi/db-models/src/validators';
+import express, { Request, Response } from 'express';
 import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
 import { validateRequest } from 'zod-express-middleware';
@@ -126,6 +125,7 @@ router.get(
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
         isAccepted: true,
+        isRejected: false,
         date: {
           $gte: startOfToday.getTime(),
           $lte: endOfToday.getTime(),
@@ -150,6 +150,7 @@ router.get(
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
         isAccepted: true,
+        isRejected: false,
         date: {
           $gte: fromDate,
           $lte: toDate,

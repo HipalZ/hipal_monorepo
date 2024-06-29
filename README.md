@@ -54,6 +54,9 @@ kubectl create secret generic "digitalocean-dns" \
 
 secret/digitalocean-dns created
 
+<<<<<<< HEAD
 Test
 sss
+=======
+>>>>>>> 9b2e2a2 (feat: imp changes)
 ````

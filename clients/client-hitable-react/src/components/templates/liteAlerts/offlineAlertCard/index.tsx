@@ -1,114 +1,135 @@
-import { Alert } from "@/components/types/hiClientzData";
-import { CiGlobe } from "react-icons/ci";
 import callwaiter from '@/assets/img/callwaiter.png';
-import { useLiteStore } from "@/components/store/useLiteStore";
-import { timestampToDateTime } from "@/components/utils/helpers";
-import { PiCoinsFill } from "react-icons/pi";
-import { IoCloseCircleSharp } from "react-icons/io5";
-import axios from "@/components/utils/axios";
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import { Alert } from '@/components/types/hiClientzData';
+import axios from '@/components/utils/axios';
+import { timestampToDateTime } from '@/components/utils/helpers';
+import { CiGlobe } from 'react-icons/ci';
+import { IoCloseCircleSharp } from 'react-icons/io5';
+import { PiCoinsFill } from 'react-icons/pi';
 
 interface IOfflineProp {
-    offlineAlertData: Alert[];
+  offlineAlertData: Alert[];
 }
 
 const OfflineAlertCard = (props: IOfflineProp) => {
-    const { offlineAlertData } = props;
-    const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore()
+  const { offlineAlertData } = props;
+  const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore();
+  const { captainData } = useHiClientZ();
 
-    const handleViewMore = (alert: Alert) => {
-        setViewData(alert)
-        setClickViewMore(!clickViewMore);
+  const handleViewMore = (alert: Alert) => {
+    setViewData(alert);
+    setClickViewMore(!clickViewMore);
+  };
+
+  const handleRemoveAlert = async (id: string) => {
+    try {
+      const config = {
+        method: 'PUT',
+        url: `/v1/payments/:pid/order/${id}`,
+        data: {
+          waiterName: captainData?.name,
+        },
+      };
+      const response = await axios(config);
+      console.log('off', response);
+      if (response.status === 200) {
+        removeOfflineAlert(id);
+        removeOfflineCount();
+      }
+    } catch (err) {
+      console.log(err);
+      return {};
     }
+  };
 
-    const handleRemoveAlert = async (id: string) => {
-        try {
-            const config = {
-                method: "PUT",
-                url: `/v1/payments/:pid/order/${id}`,
-            };
-            const response = await axios(config);
-            console.log('off', response);
-            if (response.status === 200) {
-                removeOfflineAlert(id);
-                removeOfflineCount();
-            }
-        } catch (err) {
-            console.log(err);
-            return {};
-        }
-    }
-
-    return (
-        <main className="lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 pb-[5rem]">
-            {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? offlineAlertData.map((alert: Alert) => {
-                return (
-                    <section key={alert?._id}>
-                        {alert?.alertType === "WAITER" ? <div className="bg-white h-[7rem] rounded-xl mx-4 p-4 my-4">
-                            <section className="flex justify-between mb-2 relative">
-                                <article className="flex items-center bg-[#ffe9cf] px-2 w-[8rem] rounded-full">
-                                    <img src={callwaiter} alt="callwaiter" />
-                                    &nbsp;&nbsp;
-                                    <h1 className="text-xs">Call the waiter</h1>
-                                </article>
-                                <article>
-                                    <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
-                                </article>
-                                <IoCloseCircleSharp onClick={() => handleRemoveAlert(alert?._id)} size={24} className="inline absolute -right-6 -top-6 text-red-400" />
-                            </section>
-                            <div className="flex justify-between">
-                                <section>
-                                    <article className="space-y-1 ml-2">
-                                        <h1 className="text-base">User Name:{alert?.name || 'HI'}</h1>
-                                        <p>{alert?.message}</p>
-                                    </article>
-                                </section>
-                                <section className="text-right">
-                                    <h1>{alert?.tableName}</h1>
-                                </section>
-                            </div>
-                        </div>
-                            : <div className="bg-white h-[10.5rem] rounded-xl mx-4 p-4 my-4">
-                                <section className="flex justify-between mb-2">
-                                    <article className="flex items-center bg-[#ffe9cf] px-2 w-[8.5rem] rounded-full">
-                                        <span><CiGlobe /></span>
-                                &nbsp;
-                                <h1 className="text-xs">Confirm On floor</h1>
-                                    </article>
-                                    <article>
-                                        <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
-                                    </article>
-                                </section>
-                                <div className="flex justify-between">
-                                    <section>
-                                        <article className="space-y-1 ml-2">
-                                            <h1 className="text-base">Bill value : ₹ {alert?.order_id?.billValue}</h1>
-                                            <h1 className="text-base">Discount : ₹ {alert?.order_id?.claimedCoins}</h1>
-                                            <h6 className="text-xs">Tips : ₹ {alert?.order_id?.tips}</h6>
-                                        </article>
-                                        {alert?.coinsApplied ? <article className="flex justify-start items-center bg-gray-200 my-2 rounded-full w-fit px-3 py-">
-                                            <span><PiCoinsFill size={20} /></span>
-                                        &nbsp;
-                                        <h1 className="text-xs">{alert?.order_id?.claimedCoins} Used</h1>
-                                        </article> : null}
-                                    </section>
-                                    <section className="text-right">
-                                        <article className="space-y-1">
-                                            <h1 className="text-base text-gray-700">{alert?.order_id?.tableName}</h1>
-                                            <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
-                                        </article>
-                                        <button onClick={() => handleViewMore(alert)} className="bg-black text-white py-1 px-6 mt-6 rounded-full">
-                                            <h1 className="text-xs">View</h1>
-                                        </button>
-                                    </section>
-                                </div>
-                            </div>}
+  return (
+    <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? (
+        offlineAlertData.map((alert: Alert) => {
+          return (
+            <section key={alert?._id}>
+              {alert?.alertType === 'WAITER' ? (
+                <div className="mx-4 my-4 h-[7rem] rounded-xl bg-white p-4">
+                  <section className="relative mb-2 flex justify-between">
+                    <article className="flex w-[8rem] items-center rounded-full bg-[#ffe9cf] px-2">
+                      <img src={callwaiter} alt="callwaiter" loading="lazy" />
+                      &nbsp;&nbsp;
+                      <h1 className="text-xs">Call the waiter</h1>
+                    </article>
+                    <article>
+                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
+                    </article>
+                    <IoCloseCircleSharp
+                      onClick={() => handleRemoveAlert(alert?._id)}
+                      size={24}
+                      className="absolute -right-6 -top-6 inline text-red-400"
+                    />
+                  </section>
+                  <div className="flex justify-between">
+                    <section>
+                      <article className="ml-2 space-y-1">
+                        <h1 className="text-base">User Name:{alert?.name || 'HI'}</h1>
+                        <p>{alert?.message}</p>
+                      </article>
                     </section>
-                )
-            }) : <div className="text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                    No Data Found
-        </div>}
-        </main>
-    )
+                    <section className="text-right">
+                      <h1>{alert?.tableName}</h1>
+                    </section>
+                  </div>
+                </div>
+              ) : (
+                <div className="mx-4 my-4 h-[10.5rem] rounded-xl bg-white p-4">
+                  <section className="mb-2 flex justify-between">
+                    <article className="flex w-[8.5rem] items-center rounded-full bg-[#ffe9cf] px-2">
+                      <span>
+                        <CiGlobe />
+                      </span>
+                      &nbsp;
+                      <h1 className="text-xs">Confirm On floor</h1>
+                    </article>
+                    <article>
+                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
+                    </article>
+                  </section>
+                  <div className="flex justify-between">
+                    <section>
+                      <article className="ml-2 space-y-1">
+                        <h1 className="text-base">Bill value : ₹ {alert?.order_id?.billValue}</h1>
+                        <h1 className="text-base">Discount : ₹ {alert?.order_id?.claimedCoins}</h1>
+                        <h6 className="text-xs">Tips : ₹ {alert?.order_id?.tips}</h6>
+                      </article>
+                      {alert?.coinsApplied ? (
+                        <article className="py- my-2 flex w-fit items-center justify-start rounded-full bg-gray-200 px-3">
+                          <span>
+                            <PiCoinsFill size={20} />
+                          </span>
+                          &nbsp;
+                          <h1 className="text-xs">{alert?.order_id?.claimedCoins} Used</h1>
+                        </article>
+                      ) : null}
+                    </section>
+                    <section className="text-right">
+                      <p>User : {alert?.order_id?.name?.length > 10 ? `${alert.order_id.name.substring(0, 10)}...` : alert?.order_id?.name}</p>
+                      <article className="space-y-1">
+                        <h1 className="text-base text-gray-700">{alert?.order_id?.tableName}</h1>
+                        <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
+                      </article>
+                      <button onClick={() => handleViewMore(alert)} className="mt-6 rounded-full bg-black px-6 py-1 text-white">
+                        <h1 className="text-xs">View</h1>
+                      </button>
+                    </section>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })
+      ) : (
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl">No Data Found</div>
+      )}
+    </main>
+  );
 };
 
 export default OfflineAlertCard;
