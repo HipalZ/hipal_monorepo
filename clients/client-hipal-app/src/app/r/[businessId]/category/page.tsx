@@ -24,7 +24,6 @@ export async function generateMetadata() {
 
 export default async function Page({ params }: { params: { businessId: string } }) {
     const data = await fetchData(params.businessId);
-    updateTheme(data?.settings?.themes);
     return <Category data={data} />;
 }
 

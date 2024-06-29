@@ -16,6 +16,5 @@ export async function generateMetadata() {
 }
 export default async function Page({ params }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
-  updateTheme(data?.settings?.themes);
   return <Explore data={data} />;
 }
