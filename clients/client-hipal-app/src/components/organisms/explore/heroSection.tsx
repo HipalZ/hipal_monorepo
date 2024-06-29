@@ -14,19 +14,21 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 
 	return (
 		<div className="relative flex flex-col px-8">
-			<figure className="absolute z-10 -top-[3rem] left-4 bg-base-100 rounded-full">
+			<figure className="absolute z-10 -top-[3rem] left-4 bg-base-200 rounded-full">
 				{data.business?.logo ? (
-					<Image
+					<figure className="p-2">
+						<Image
 						src={logo}
-						height={100}
-						width={100}
+						height={80}
+						width={80}
 						quality={75}
 						objectFit="cover"
 						alt="logo-business"
-						className="object-center w-1/3 border rounded-full shadow-sm aspect-square"
+						className="object-center w-1/3 p-1 border rounded-full shadow-sm aspect-square"
 						placeholder="blur"
 						blurDataURL={getRandomBlurImg(100, 100)}
 					/>
+					</figure>
 				) : (
 					<PlaceholderImg />
 				)}

@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const withMT = require("@material-tailwind/react/utils/withMT");
-const { color } = require('framer-motion');
+const { color } = require("framer-motion");
 
 module.exports = {
 	content: [
@@ -19,8 +19,20 @@ module.exports = {
 			colors: {
 				primary: "var(--p)",
 				"base-100": "var(--b1)",
+				"primary-content": "var(--pc)",
+				secondary: "var(--s)",
+				"secondary-content": "var(--sc)",
 				accent: "var(--a)",
-			  },
+				"accent-content": "var(--ac)",
+				neutral: "var(--n)",
+				"neutral-content": "var(--nc)",
+				"base-200": "var(--b2)",
+				"base-300": "var(--b3)",
+				"base-content": "var(--bc)",
+				info: "#E6E6E6",
+				success: "#2FBD4E",
+				"success-content": "#fff",
+			},
 		},
 	},
 	daisyui: {

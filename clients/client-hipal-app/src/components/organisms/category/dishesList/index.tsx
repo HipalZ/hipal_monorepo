@@ -96,11 +96,11 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 				  key={category._id + `${index}`}
 				  onTouchStart={() => handleTouchStart(category._id, category?.parentCategoryId || '')}
 				>
-				  <div className={`${category.dishes.length === 0 ? '' : 'border-t-2 border-primary'} z-40 flex flex-row justify-between px-6 pb-2 font-bold prose bg-base-200/50 text-base-content`}>
+				  <div className={`${category.dishes.length === 0 ? '' : 'border-t-2 border-primary'} z-40 flex flex-row justify-between px-6 pb-2 font-bold prose bg-base-200`}>
 					<h3 className="my-4 text-xl font-medium capitalize text-primary">{category?.name || ''}</h3>
 					<h4 className="my-4 text-lg font-medium text-primary">{category?.dishes?.length}</h4>
 				  </div>
-				  <div className="flex flex-col divide-y divide-base-content/20">
+				  <div className="flex flex-col divide-y divide-base-base-300">
 					{category?.dishes.length > 0 &&
 					  category?.dishes.map((dishData:IDish, dishIndex) => (
 						dishData?.visibility && (

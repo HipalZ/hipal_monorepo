@@ -18,9 +18,9 @@ export const updateTheme = (data: ThemeData | undefined): void => {
 		!isEmpty(data?.primaryColor)
 	) {
 		const convertedColors = convertToHsl({
-			primary: data?.secondaryColor || "#161616",
-			accent: data?.accentColor || "#161616",
-			"base-100": data?.primaryColor || "#F9F0E4",
+			primary: data?.secondaryColor || "",
+			accent: data?.accentColor || "",
+			"base-100": data?.primaryColor || "",
 		});
 		console.log({ convertedColors });
 
