@@ -1,8 +1,7 @@
 import PopUp from '@/components/atom/popUp';
 import useTimings from '@/components/store/useTimings';
 import { endOfDay, endOfMonth, startOfDay, startOfMonth, subDays } from 'date-fns';
-import type React from 'react';
-import { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -55,7 +54,7 @@ const DateRangePicker: React.FC = memo(() => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between space-x-2 bg-white px-6 pt-4">
+    <div className="flex items-center justify-between space-x-2 px-6 pt-4">
       <div className="sticky top-0">
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button

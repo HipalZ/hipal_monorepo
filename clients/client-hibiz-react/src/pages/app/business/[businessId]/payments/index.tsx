@@ -1,17 +1,17 @@
-import  { useState, lazy, Suspense, memo } from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
-import DateRangePicker from '@/components/molecules/dateRangePicker';
-import useTimings from '@/components/store/useTimings';
-import Header from '@/components/molecules/header';
 import Hi from '@/assets/svg/hi.svg';
+import DateRangePicker from '@/components/molecules/dateRangePicker';
+import Header from '@/components/molecules/header';
+import useTimings from '@/components/store/useTimings';
 import { cn } from '@/components/utils/helper';
+import { lazy, memo, Suspense, useState } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
 import './payment.css';
 
 // Lazy load the Overview and PaymentSales components
 const Overview = lazy(() => import('@/components/templates/payment/overview'));
 const PaymentSales = lazy(() => import('@/components/templates/payment/sales'));
 
-const Payments = () => {
+const Payments = memo(() => {
   const { inTime, outTime, selectedRange } = useTimings();
   console.log(inTime, outTime, selectedRange);
 
@@ -19,19 +19,13 @@ const Payments = () => {
 
   return (
     <main>
-      <article className="pb-4 linear_gradient_background">
-        <Header
-          title="Payments"
-          leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
-          rightImage={Hi}
-          isIconBusinessShow={false}
-        />
+      <article className="linear_gradient_background pb-4">
+        <Header title="Payments" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
       </article>
-      <section className="flex justify-around mt-6 mb-2 text-lg">
+      <section className="mb-2 mt-6 flex justify-around text-lg">
         <button
           className={cn({
-            'border-b-2 border-black scale-125': selectedTab === 'Overview',
+            'scale-125 border-b-2 border-black': selectedTab === 'Overview',
           })}
           onClick={() => setSelectedTab('Overview')}
         >
@@ -39,7 +33,7 @@ const Payments = () => {
         </button>
         <button
           className={cn({
-            'border-b-2 border-black scale-125': selectedTab === 'Sales',
+            'scale-125 border-b-2 border-black': selectedTab === 'Sales',
           })}
           onClick={() => setSelectedTab('Sales')}
         >
@@ -53,6 +47,6 @@ const Payments = () => {
       </Suspense>
     </main>
   );
-};
+});
 
-export default memo(Payments);
+export default Payments;
