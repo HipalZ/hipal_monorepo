@@ -94,7 +94,7 @@ const BillPopUp = memo(() => {
   const ConfirmPopUp = () => {
     const numberString = viewData?.completionCode?.toString() || '';
     return (
-      <section style={{ maxHeight: '90%', overflowY: 'auto' }} className="mt-10 flex flex-col items-center justify-center">
+      <section style={{ maxHeight: '80%', overflowY: 'auto' }} className="mt-10 flex flex-col items-center justify-center">
         <h6>Confirmed by</h6>
         <br />
         <h6 className="rounded-full bg-gray-300 p-3 text-white">
@@ -206,8 +206,8 @@ const BillPopUp = memo(() => {
           </div>
           <div className="m-6 flex flex-col rounded-2xl bg-gray-300 p-4">
             <h1 id="discount-reason">
-              User {viewData?.order_id?.name} has paid ₹ {viewData?.order_id?.total} discount applied ₹ {viewData?.order_id?.claimedCoins} transaction
-              id {viewData?._id}
+              User {viewData?.order_id?.name} has paid ₹ {viewData?.order_id?.total} & discount applied ₹ {viewData?.order_id?.claimedCoins} and
+              transaction id {viewData?._id} {viewData?.alertType === 'ONLINE' ? '' : `settled by ${captainData?.name || 'Captain'}`}
             </h1>
             <br />
             <div className="flex self-end">
@@ -226,8 +226,8 @@ const BillPopUp = memo(() => {
               <button>Add Comment</button>
             </div>
           ) : null}
-          {!clickComment && selectedNavItem === 'on floor' ? (
-            <div className="mx-6">
+          {clickComment && selectedNavItem === 'on floor' ? (
+            <div className="mx-6 mb-20">
               <textarea
                 onChange={handleAddComment}
                 id="floating_outlined3"

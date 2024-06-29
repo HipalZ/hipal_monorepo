@@ -14,11 +14,10 @@ import { toast } from 'react-toastify';
 import './login.css';
 //tes
 const Login = () => {
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
   // store
-  const { setCaptainData, setAccessToken, setRefreshToken } = useHiClientZ();
+  const { setCaptainData, setAccessToken, setRefreshToken, phoneNumber, setPhoneNumber } = useHiClientZ();
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
 

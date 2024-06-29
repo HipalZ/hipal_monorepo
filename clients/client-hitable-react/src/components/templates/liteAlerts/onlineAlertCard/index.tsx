@@ -13,7 +13,7 @@ interface IOnlineProp {
 }
 
 const OnlineAlertCard = memo((props: IOnlineProp) => {
-  const { selectedNavItem, onlineAlertData } = props;
+  const { onlineAlertData } = props;
   const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore();
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
@@ -44,41 +44,29 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
     <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
         onlineAlertData.map((alert: Alert) => {
-          if (alert?.alertType === 'WAITER') {
-            return null;
-          }
           return (
             <section
               key={alert?._id}
-              className={cn('relative h-full', 'mx-4 my-4 rounded-xl p-4', selectedNavItem === 'online' ? 'bg-white' : 'bg-gray-300')}
+              className={cn('relative mx-4 my-4 h-full rounded-xl bg-white p-4', alert?.status === 'FAIL' ? ' bg-red-100' : 'bg-green-100')}
             >
-              <section className="mb-2 flex justify-between">
-                <article
-                  className={cn('flex w-[8rem] items-center rounded-full px-2', alert?.alertType === 'ONLINE' ? ' bg-green-100' : 'bg-red-100')}
-                >
-                  {alert?.alertType === 'ONLINE' ? (
-                    <span>
-                      <CiGlobe />
-                    </span>
-                  ) : (
-                    <span>
-                      <PiCoinsFill />
-                    </span>
-                  )}
+              <section className="mb-2 flex items-center justify-between">
+                <article className={cn('flex w-[8rem] items-center rounded-full px-2')}>
+                  <span>
+                    <CiGlobe />
+                  </span>
                   &nbsp;
-                  <h1 className="text-xs">Received {alert?.alertType.toLowerCase()}</h1>
+                  <h1 className="text-xs font-semibold">
+                    {alert?.status === 'FAIL' ? `Failed ${alert?.alertType.toLowerCase()}` : `Received ${alert?.alertType.toLowerCase()}`}
+                  </h1>
                 </article>
                 <article>
                   <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
                 </article>
-
-                {selectedNavItem === 'online' ? (
-                  <IoCloseCircleSharp
-                    onClick={() => handleRemoveAlert(alert?._id)}
-                    size={24}
-                    className="absolute -right-2 -top-2 inline text-red-400"
-                  />
-                ) : null}
+                <IoCloseCircleSharp
+                  onClick={() => handleRemoveAlert(alert?._id)}
+                  size={28}
+                  className="absolute -right-2 -top-2 inline text-red-400"
+                />
               </section>
               <div className="flex justify-between">
                 <section>
@@ -100,11 +88,11 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
                 <section className="text-right">
                   <p>User : {alert?.order_id?.name?.length > 10 ? `${alert.order_id.name.substring(0, 10)}...` : alert?.order_id?.name}</p>
                   <article className="space-y-1">
-                    <h1 className="text-base text-gray-700">{alert?.tableName}</h1>
+                    <h1 className="text-base text-gray-700">Table : {alert?.tableName}</h1>
                     <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                   </article>
-                  <button onClick={() => handleViewMore(alert)} className="mt-6 rounded-full bg-black px-6 py-2 text-white">
-                    <h1 className="text-xs">{selectedNavItem === 'online' ? 'More' : 'View'}</h1>
+                  <button onClick={() => handleViewMore(alert)} className="mt-2 rounded-full bg-black px-6 py-2 text-white">
+                    <h1 className="text-xs">More</h1>
                   </button>
                 </section>
               </div>
