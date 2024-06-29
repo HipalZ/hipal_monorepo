@@ -54,4 +54,5 @@ kubectl create secret generic "digitalocean-dns" \
 
 secret/digitalocean-dns created
 
-themes done guys
+themes done guy
+````
