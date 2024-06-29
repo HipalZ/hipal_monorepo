@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router'; // Corrected from 'next/navigation' to 'next/router'
 import { Html5Qrcode } from 'html5-qrcode';
