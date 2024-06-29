@@ -1,6 +1,7 @@
 import avatar from '@/assets/img/avatar.png';
 import success from '@/assets/svg/successIcon.svg';
 import LoadingSpinner from '@/components/atoms/loadingSpinner';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import axios from '@/components/utils/axios';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
@@ -17,6 +18,7 @@ const BillPopUp = memo(() => {
   const [clickComment, setClickComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
+  const { captainData } = useHiClientZ();
 
   const copyText = () => {
     const text = document.querySelector('#discount-reason')?.textContent || '';
@@ -38,6 +40,9 @@ const BillPopUp = memo(() => {
       const config = {
         method: 'PUT',
         url: `/v1/payments/:pid/rejectOrder/${id}`,
+        data: {
+          waiterName: captainData?.name,
+        },
       };
       await axios(config);
       toast.success('order reject successfully');
@@ -60,6 +65,7 @@ const BillPopUp = memo(() => {
         url: `/v1/payments/:pid/order/${id}`,
         data: {
           comment: comment,
+          waiterName: captainData?.name,
         },
       };
       const response = await axios(config);

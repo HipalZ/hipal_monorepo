@@ -1,7 +1,7 @@
 import axiosConstructor from 'axios';
 import { useUserToken } from '@/components/store/useUserToken';
 
-const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV as string;
+const env =  process.env.NEXT_PUBLIC_APP_ENV as string;
 
 const axios = axiosConstructor.create({
   baseURL:process.env.NEXT_API_URL || process.env.NEXT_PUBLIC_API_URL as string,
@@ -14,7 +14,7 @@ axios.interceptors.request.use(
     //   return;
     // }
     console.log('env',env, process.env.NEXT_API_URL, process.env.NEXT_PUBLIC_API_URL)
-    if(env !== "production" && env !== "test" && env !== "local"){
+    if( env === "local"){
       // Modify the baseURL based on the request URL
       if (config.url.startsWith('/v1/businesses')) {
         config.baseURL = 'http://localhost:8001';
