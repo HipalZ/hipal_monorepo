@@ -194,7 +194,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						priority={true}
 						width={125}
 						height={125}
-						className='animate-pulse'
+						className='animate-pulse m-auto'
 					/>}
 					{mode === "online" ? <h1 className='text-xl'>Payment Success!</h1> : <h1 className='text-xl'>Waiting for confirmation</h1>}
 				</article>}
