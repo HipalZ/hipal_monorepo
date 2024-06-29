@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/router'; // Corrected from 'next/navigation' to 'next/router'
+import { useRouter } from 'next/navigation'; // Corrected from 'next/navigation' to 'next/router'
 import { Html5Qrcode } from 'html5-qrcode';
 import Image from 'next/image';
 import HipalLogo from '@/assets/HIPAL_LOGO.svg';
