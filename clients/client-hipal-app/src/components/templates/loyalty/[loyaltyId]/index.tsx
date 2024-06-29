@@ -11,9 +11,13 @@ import avatar from "@/assets/img/avatar.png";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
+import line from "@/assets/svg/Line.svg";
+import ellipse from "@/assets/svg/ellipse.svg";
 
-const BackButton = dynamic(() => import('@/components/atoms/backButton'));
-const BottomButton = dynamic(() => import('@/components/molecules/bottomButton'));
+const BackButton = dynamic(() => import("@/components/atoms/backButton"));
+const BottomButton = dynamic(
+	() => import("@/components/molecules/bottomButton"),
+);
 
 const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 	const [loading, setLoading] = useState(false);
@@ -24,7 +28,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 	const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
 	const [hasMoreData, setHasMoreData] = useState(true);
 
-	const getUserHistory = async (pageNumber:Number) => {
+	const getUserHistory = async (pageNumber: Number) => {
 		if (
 			userDetails.phone === "NaN" ||
 			Number(userDetails.phone) === 0 ||
@@ -34,17 +38,19 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 		setLoading(true);
 		const config2 = {
 			method: "GET",
-			url:`/v1/users/:businessId/getUserRewardHistory?userPhone=${Number(userDetails.phone)}&loyaltyId=${data?.loyalty?.loyaltyId}&pageNumber=${pageNumber}`
+			url: `/v1/users/:businessId/getUserRewardHistory?userPhone=${Number(
+				userDetails.phone,
+			)}&loyaltyId=${data?.loyalty?.loyaltyId}&pageNumber=${pageNumber}`,
 		};
 		try {
 			const response = await axios(config2);
-            const newData = response?.data?.data?.items || [];
-            if (newData.length === 0) {
-                setHasMoreData(false); 
-            } else {
-                setItemData(prevData => [...prevData, ...newData]);
-            }
-            return newData;
+			const newData = response?.data?.data?.items || [];
+			if (newData.length === 0) {
+				setHasMoreData(false);
+			} else {
+				setItemData((prevData) => [...prevData, ...newData]);
+			}
+			return newData;
 		} catch (err) {
 			console.log(err);
 		} finally {
@@ -55,7 +61,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 	const handleClick = useCallback((newPage: number) => {
 		if (newPage < 1) return;
 		setPageNumber(newPage);
-	},[]);
+	}, []);
 
 	useQuery({
 		queryKey: [
@@ -91,7 +97,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 					</Link>
 				</div>
 				&nbsp;
-				<div className="bg-primary/90 h-[7rem] flex justify-between items-center -mx-6 rounded-t-3xl pt-4 mb-4 px-10 h-[7rem]">
+				<section className="relative bg-primary h-[7rem] flex justify-between items-center -mx-6 rounded-t-3xl pt-4 mb-4 px-10 overflow-hidden">
 					<h3 className="mt-4 text-3xl font-thin capitalize text-base-100">
 						{data?.business?.businessName}
 					</h3>
@@ -103,7 +109,20 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 							height={64}
 						/>
 					</figure>
-				</div>
+					<div className="overflow-hidden absolute top-0 left-0 w-full h-full">
+						<article className="absolute right-0 transform translate-x-1/4">
+							<Image src={line} alt="line" layout="fixed" objectFit="cover" />
+						</article>
+						<article className="absolute left-0 mt-8 transform translate-y-1/2">
+							<Image
+								src={ellipse}
+								alt="ellipse"
+								layout="fixed"
+								objectFit="cover"
+							/>
+						</article>
+					</div>
+				</section>
 				<br />
 				<section className="flex text-center justify-around text-primary mb-8">
 					<article className="border-r-2 border-primary pr-5">
@@ -124,7 +143,10 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 				<div>
 					{itemData?.map((item) => {
 						return (
-							<section className="bg-base-200 my-2 flex justify-between items-center px-2 py-3 rounded-lg">
+							<section
+								key={item?._id}
+								className="bg-base-200 my-2 flex justify-between items-center px-2 py-3 rounded-lg"
+							>
 								<article className="flex space-x-0">
 									<figure className="w-[4rem] shrink-0 ">
 										<Image
@@ -154,25 +176,27 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						);
 					})}
 					{!hasMoreData && (
-                        <div className="text-center text-gray-500 my-4">
-                            No more data available.
-                        </div>
-                    )}
+						<div className="text-center text-gray-500 my-4">
+							No more data available.
+						</div>
+					)}
 					<button
-                        onClick={() => handleClick(pageNumber + 1)}
-                        disabled={loading || !hasMoreData}
-                        type="button"
-                        className="w-full mt-4 bg-primary rounded-full on_active_bounce btn"
-                    >
-                        {loading ? (
-                            <span className="loader_spinner !border-t-base-100 "></span>
-                        ) : (
-                            hasMoreData ? "Load More" : "No More Data"
-                        )}
-                    </button>
+						onClick={() => handleClick(pageNumber + 1)}
+						disabled={loading || !hasMoreData}
+						type="button"
+						className="w-full mt-4 bg-primary rounded-full on_active_bounce btn"
+					>
+						{loading ? (
+							<span className="loader_spinner !border-t-base-100"></span>
+						) : hasMoreData ? (
+							"Load More"
+						) : (
+							"No More Data"
+						)}
+					</button>
 				</div>
 			</div>
-			<BottomButton/>
+			<BottomButton />
 		</div>
 	);
 };
