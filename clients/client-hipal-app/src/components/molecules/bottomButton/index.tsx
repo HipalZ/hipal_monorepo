@@ -68,7 +68,8 @@ function BottomButton({
                   <MdOutlineAccountBalanceWallet size={36} />
                 </button>
               )
-            }{
+            }
+            {
               !tableName && (
                 <Link href="/scan">
                   <button className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[75%] border rounded-full left-1/2 border-primary bg-base-100">

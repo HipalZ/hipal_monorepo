@@ -14,7 +14,7 @@ const ReadMore = ({ text, className }: { text: string; className?: string }) => 
 			}`}
 			onClick={toggleReadMore}
 		>
-			{text} sankalesh
+			{text}
 		</p>
 	)
 }

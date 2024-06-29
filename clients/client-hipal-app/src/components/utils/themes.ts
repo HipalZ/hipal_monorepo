@@ -1,3 +1,4 @@
+"use client"
 import isEmpty from "lodash-es/isEmpty";
 import { convertToHsl } from "./helpers";
 
