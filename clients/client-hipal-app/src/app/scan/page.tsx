@@ -9,6 +9,7 @@ export default function Scan() {
     const router = useRouter();
     const readerRef = useRef<HTMLDivElement | null>(null);
     const [decodedText, setDecodedText] = useState<string>('');
+    const [html5Qrcode, setHtml5Qrcode] = useState<Html5Qrcode | null>(null);
 
     const gotoExplore = () => {
         router.back();
@@ -23,17 +24,18 @@ export default function Scan() {
                 console.error('Redirection error:', error);
             }
         }
-    }, [decodedText]);
+    }, [decodedText, router]);
 
     useEffect(() => {
         let scannerStarted = false;
         const readerElement = readerRef.current;
         if (readerElement) {
-            const html5Qrcode = new Html5Qrcode(readerElement.id);
+            const qrScanner = new Html5Qrcode(readerElement.id);
+            setHtml5Qrcode(qrScanner);
 
             const qrCodeSuccessCallback = (decodedText: string, decodedResult: any) => {
                 if (decodedText) {
-                    html5Qrcode.stop().catch((error) => console.error('Error stopping scanner:', error));
+                    qrScanner.stop().catch((error) => console.error('Error stopping scanner:', error));
                     setDecodedText(decodedText);
                 }
             };
@@ -44,7 +46,7 @@ export default function Scan() {
 
             const config = { fps: 10, qrbox: { width: 250, height: 250 } }; // Reduced fps to avoid overload
 
-            html5Qrcode
+            qrScanner
                 .start({ facingMode: 'environment' }, config, qrCodeSuccessCallback, qrCodeErrorCallback)
                 .then(() => {
                     const videoElem = document.querySelector('#reader video');
@@ -58,8 +60,8 @@ export default function Scan() {
                 });
 
             return () => {
-                if (scannerStarted) {
-                    html5Qrcode.stop().catch((err) => {
+                if (scannerStarted && qrScanner) {
+                    qrScanner.stop().catch((err) => {
                         console.error('Error stopping scanner on cleanup:', err);
                     });
                 }

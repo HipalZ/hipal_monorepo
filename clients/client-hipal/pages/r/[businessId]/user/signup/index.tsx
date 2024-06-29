@@ -106,7 +106,10 @@ function SignUp() {
 						required
 					/>
 				</section>
-				<button type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn">
+				<button
+					type="submit"
+					className="w-full mt-4 bg-black rounded-full on_active_bounce btn text-white"
+				>
 					get started
 				</button>
 				<center className="mx-12 mt-4 text-xs">

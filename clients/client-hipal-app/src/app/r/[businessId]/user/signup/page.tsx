@@ -105,9 +105,9 @@ function SignUp() {
 						required
 					/>
 				</section>
-				<button disabled={loader} type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn">
+				<button disabled={loader} type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn text-white">
 					{loader ? (
-						<span className="loader_spinner !border-t-base-100 "></span>
+						<span className="loader_spinner text-white !border-t-base-100 "></span>
 					) : (
 						'Get Started'
 					)}
