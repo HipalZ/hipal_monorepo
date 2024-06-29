@@ -17,12 +17,14 @@ export default function Scan() {
     };
 
     useEffect(() => {
-        if (decodedText && html5Qrcode && scannerStarted) { // Check if scannerStarted is true before stopping
+        if (decodedText && html5Qrcode && scannerStarted) {
             console.log('Stopping scanner and redirecting to:', decodedText);
-            html5Qrcode.stop().then(() => {
-                setScannerStarted(false); // Update scanner status
-                router.push(decodedText);
-            }).catch((error) => console.error('Error stopping scanner:', error));
+            setTimeout(() => {
+                html5Qrcode.stop().then(() => {
+                    setScannerStarted(false);
+                    router.push(decodedText);
+                }).catch((error) => console.error('Error stopping scanner:', error));
+            }, 1000); // Delay stopping the scanner by 1 second
         }
     }, [decodedText, router, html5Qrcode, scannerStarted]);
 
