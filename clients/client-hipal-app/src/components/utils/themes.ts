@@ -7,8 +7,7 @@ interface ThemeData {
   accentColor?: string;
 }
 
-export const updateTheme = (data: ThemeData): void => {
-  console.log("data", data);
+export const updateTheme = (data: ThemeData | undefined): void => {
   if (typeof document === "undefined") return;
 
   if (
@@ -17,9 +16,9 @@ export const updateTheme = (data: ThemeData): void => {
     !isEmpty(data?.primaryColor)
   ) {
     const convertedColors = convertToHsl({
-      primary: data.secondaryColor || "",
-      accent: data.accentColor || "",
-      "base-100": data.primaryColor || "",
+      primary: data?.secondaryColor || "#161616",
+      accent: data?.accentColor || "#161616",
+      "base-100": data?.primaryColor || "#F9F0E4",
     });
 
     Object.keys(convertedColors).forEach((key) => {
