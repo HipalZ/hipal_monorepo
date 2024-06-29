@@ -2,7 +2,7 @@
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
 import axios from '@/utils/axios'
-import Image from 'next/legacy/image'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChangeEvent, memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
@@ -20,6 +20,8 @@ import { RxCrossCircled } from 'react-icons/rx'
 import { cn } from '@/components/utils/helpers'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import poweredBy from '@/assets/img/powered_hipalz.png'
+
 const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
 
 interface Payload {
@@ -344,9 +346,8 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 				}
 				<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] -mx-4 py-3">
 					<figure className='h-12'>
-						<Image src={HiLogoText} alt='HiLogo' priority={true} />
+						<Image src={poweredBy} alt='HiLogo' priority={true} />
 					</figure>
-					<h6 className='text-[0.75rem] text-white w-20'>Powered by HipalZ</h6>
 				</center>
 				{rating && rating.length > 0 ? (
 					<article className="flex justify-center">

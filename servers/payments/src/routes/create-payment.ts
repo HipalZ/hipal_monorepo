@@ -720,6 +720,8 @@ router.post(
       tableName: tableName,
       coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
       message: `Paid ${total}`,
+      date: Date.now(),
+
       // comment : payload.payment.entity.notes.comment
     });
 
@@ -901,9 +903,9 @@ const addCoins = async (
       );
     }
 
-    return null;
+    return coinsCalculated.finalReward || 0;
   }
-  return null;
+  return 0;
 };
 
 const calculatedCashbackCoins = async (businessId: string, billValue: number, claimedCoins: number) => {
@@ -961,7 +963,8 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
               status: 'FAIL',
               tableName: payload.payment.entity.notes.tableName,
               coinsApplied: claimCoins > 0 ? true : false,
-              isAccepted: true,
+              isAccepted: false,
+              date: Date.now(),
 
               message: `Fail ${payload.payment.entity.notes.total}`,
               // comment : payload.payment.entity.notes.comment
@@ -1033,7 +1036,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
           Number(payload.payment.entity.notes.claimedCoins),
         );
 
-        await addCoins(
+        const cashBackCoins = await addCoins(
           cashBack,
           getOrder?.phone || '',
           payload.payment.entity.notes.tableName || '',
