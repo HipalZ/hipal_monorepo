@@ -10,24 +10,26 @@ export default function Scan() {
     const readerRef = useRef<HTMLDivElement | null>(null);
     const [decodedText, setDecodedText] = useState<string>('');
     const [html5Qrcode, setHtml5Qrcode] = useState<Html5Qrcode | null>(null);
+    const [scannerStarted, setScannerStarted] = useState<boolean>(false);
 
     const gotoExplore = () => {
         router.back();
     };
 
     useEffect(() => {
-        if (decodedText) {
+        if (decodedText && html5Qrcode) {
             try {
-                console.log('Redirecting to:', decodedText);
-                router.push(decodedText);
+                console.log('Stopping scanner and redirecting to:', decodedText);
+                html5Qrcode.stop().then(() => {
+                    router.push(decodedText);
+                }).catch((error) => console.error('Error stopping scanner:', error));
             } catch (error) {
                 console.error('Redirection error:', error);
             }
         }
-    }, [decodedText, router]);
+    }, [decodedText, router, html5Qrcode]);
 
     useEffect(() => {
-        let scannerStarted = false;
         const readerElement = readerRef.current;
         if (readerElement) {
             const qrScanner = new Html5Qrcode(readerElement.id);
@@ -35,7 +37,6 @@ export default function Scan() {
 
             const qrCodeSuccessCallback = (decodedText: string, decodedResult: any) => {
                 if (decodedText) {
-                    qrScanner.stop().catch((error) => console.error('Error stopping scanner:', error));
                     setDecodedText(decodedText);
                 }
             };
@@ -53,7 +54,7 @@ export default function Scan() {
                     if (videoElem) {
                         (videoElem as HTMLVideoElement).style.borderRadius = '15px';
                     }
-                    scannerStarted = true;
+                    setScannerStarted(true);
                 })
                 .catch((err) => {
                     console.error('Scanner start error:', err);
@@ -70,7 +71,7 @@ export default function Scan() {
                 }
             };
         }
-    }, []);
+    }, [scannerStarted]);
 
     return (
         <div className='bg-[#fbfbfb]'>
