@@ -268,7 +268,7 @@ function OtpPage() {
 							</span>
 						</article>
 					</Link>
-					<button disabled={loading} type="submit" className="w-full bg-black rounded-full btn">
+					<button disabled={loading} type="submit" className="w-full bg-black rounded-full btn text-white">
 						{loading ? (
 							<span className="loader_spinner !border-t-base-100 "></span>
 						) :
