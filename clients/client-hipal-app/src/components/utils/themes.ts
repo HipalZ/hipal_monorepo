@@ -11,7 +11,7 @@ interface ThemeData {
 
 export const updateTheme = (data: ThemeData | undefined): void => {
 	if (typeof document === "undefined") return;
-
+ 
 	if (
 		!isEmpty(data?.secondaryColor) &&
 		!isEmpty(data?.accentColor) &&
