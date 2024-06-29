@@ -17,7 +17,7 @@ export default function Scan() {
     };
 
     useEffect(() => {
-        if (decodedText && html5Qrcode) {
+        if (decodedText && html5Qrcode && !scannerStarted) {
             try {
                 console.log('Stopping scanner and redirecting to:', decodedText);
                 html5Qrcode.stop().then(() => {
@@ -27,7 +27,7 @@ export default function Scan() {
                 console.error('Redirection error:', error);
             }
         }
-    }, [decodedText, router, html5Qrcode]);
+    }, [decodedText, router, html5Qrcode,scannerStarted]);
 
     useEffect(() => {
         const readerElement = readerRef.current;
@@ -38,6 +38,7 @@ export default function Scan() {
             const qrCodeSuccessCallback = (decodedText: string, decodedResult: any) => {
                 if (decodedText) {
                     setDecodedText(decodedText);
+                    setScannerStarted(false);
                 }
             };
 
