@@ -32,7 +32,7 @@ function HorizontalCard({
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [selectedDish, setSelectedDish] = useState({} as IDish)
 	const cart = useCart((s) => s.cart)
-	const isDishInCart = cart.hasOwnProperty(dishData._id)
+
 	const openModal = (dishData:any) => {
 		setSelectedDish(dishData)
 		setIsModalOpen(true)
@@ -124,7 +124,6 @@ function HorizontalCard({
 							<div className="mt-6" />
 						)}
 					</div>
-
 					{!noAddBtn && (
 							<div
 								className={

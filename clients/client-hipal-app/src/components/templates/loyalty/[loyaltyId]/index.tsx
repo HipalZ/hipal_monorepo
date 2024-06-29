@@ -1,19 +1,8 @@
 "use client";
-import BackButton from "@/components/atoms/backButton";
-import React, { useEffect, useState } from "react";
-import {
-	beans,
-	bowl,
-	bud,
-	flower,
-	love,
-	triangleToDataurl,
-	waveToDataUrl,
-} from "@/components/atoms/card/pathPattern";
+import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
-import { PatternKeys, timestampToDateTime } from "@/components/utils/helpers";
-import { paths } from "@/components/utils/paths";
+import { timestampToDateTime } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import axios from "@/utils/axios";
 import { useQuery } from "@tanstack/react-query";
@@ -21,7 +10,10 @@ import useUserReward from "@/components/store/useUserReward";
 import avatar from "@/assets/img/avatar.png";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import BottomButton from "@/components/molecules/bottomButton";
+import dynamic from "next/dynamic";
+
+const BackButton = dynamic(() => import('@/components/atoms/backButton'));
+const BottomButton = dynamic(() => import('@/components/molecules/bottomButton'));
 
 const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 	const [loading, setLoading] = useState(false);
@@ -60,10 +52,10 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 		}
 	};
 
-	const handleClick = (newPage: number) => {
+	const handleClick = useCallback((newPage: number) => {
 		if (newPage < 1) return;
 		setPageNumber(newPage);
-	};
+	},[]);
 
 	useQuery({
 		queryKey: [
@@ -180,7 +172,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
                     </button>
 				</div>
 			</div>
-			<BottomButton />
+			<BottomButton/>
 		</div>
 	);
 };
