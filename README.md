@@ -56,6 +56,4 @@ secret/digitalocean-dns created
 
 best
 `
-
-aaa
 ````
