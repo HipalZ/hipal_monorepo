@@ -53,3 +53,5 @@ kubectl create secret generic "digitalocean-dns" \
   --from-literal=access-token="$DO_API_TOKEN"
 
 secret/digitalocean-dns created
+
+themes

@@ -1,4 +1,3 @@
-"use client"
 import isEmpty from "lodash-es/isEmpty";
 import { convertToHsl } from "./helpers";
 
@@ -21,6 +20,7 @@ export const updateTheme = (data: ThemeData | undefined): void => {
       accent: data?.accentColor || "#161616",
       "base-100": data?.primaryColor || "#F9F0E4",
     });
+    console.log({convertedColors});
 
     Object.keys(convertedColors).forEach((key) => {
       document.documentElement.style.setProperty(`${key}`, convertedColors[key]);

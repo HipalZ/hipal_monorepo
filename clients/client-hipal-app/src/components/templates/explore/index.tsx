@@ -64,9 +64,15 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
         if (storeTableName !== tableName) {
             setCart({})
         }
-        updateTheme(data?.settings?.themes);
+
         setSelectedPay(false)
     }, [])
+    
+    useEffect(() => {
+        if (data?.settings?.themes) {
+            updateTheme(data?.settings?.themes)
+        }
+    }, [data])
 
     return (
         <div className="relative flex flex-col w-full pb-16 ">
