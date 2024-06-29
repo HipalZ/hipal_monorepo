@@ -1,6 +1,5 @@
 import { fetchAllBusinessIds, loyaltyApis } from "@/apis/loyalty";
 import LoyaltyCardPage from "@/components/templates/loyalty";
-import { updateTheme } from "@/components/utils/themes";
 
 export async function generateStaticParams() {
   const businessIds = await fetchAllBusinessIds();
@@ -19,6 +18,5 @@ export async function generateMetadata() {
 export default async function Page({ params }: { params: { businessId: string } }) {
   
   const data = await loyaltyApis.all(params.businessId);
-  updateTheme(data?.settings?.themes);
   return <LoyaltyCardPage data={data} />;
 }
