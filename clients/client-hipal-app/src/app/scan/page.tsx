@@ -15,10 +15,15 @@ export default function Scan() {
 	}
 
 	useEffect(() => {
-		if (decodedText) {
-			router.push(decodedText)
-		}
-	}, [decodedText])
+        if (decodedText) {
+            try {
+                console.log('Redirecting to:', decodedText);
+                router.push(decodedText);
+            } catch (error) {
+                console.error('Redirection error:', error);
+            }
+        }
+    }, [decodedText, router]);
 
 	useEffect(() => {
 		let scannerStarted = false
