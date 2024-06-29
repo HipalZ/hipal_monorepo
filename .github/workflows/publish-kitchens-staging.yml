@@ -21,25 +21,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Cache doctl binary
-        id: cache-doctl
-        uses: actions/cache@v2
-        with:
-          path: /usr/local/bin/doctl
-          key: ${{ runner.os }}-doctl-${{ hashFiles('doctl-1.64.0-linux-amd64.tar.gz') }}
-
       - name: Install doctl
-        if: steps.cache-doctl.outputs.cache-hit != 'true'
         run: |
-          wget https://github.com/digitalocean/doctl/releases/download/v1.64.0/doctl-1.64.0-linux-amd64.tar.gz
-          tar xf doctl-1.64.0-linux-amd64.tar.gz
-          sudo mv doctl /usr/local/bin
+          sudo snap install doctl
           doctl version
-
-      - name: Authenticate doctl
-        run: |
-          echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | doctl auth init -t -
-          doctl account get
 
       - name: Login to DigitalOcean Container Registry
         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u doctl --password-stdin
@@ -50,15 +35,15 @@ jobs:
           docker build --target kitchens-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v1
-        with:
-          version: 'v1.22.0'
-
-      - name: Configure DigitalOcean kubeconfig
-        run: doctl kubernetes cluster kubeconfig save ${{secrets.TEST_CLUSTER_ID}}
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | doctl auth init
+          doctl kubernetes cluster kubeconfig show ${{ secrets.TEST_CLUSTER_ID }} > $HOME/.kube/config
         env:
           DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: Restart deployment
-        run: kubectl rollout restart deployment kitchens-test-server -n hipalz
+        run: |
+          kubectl rollout restart deployment kitchens-server-test -n hipalz
+        env:
+          KUBECONFIG: $HOME/.kube/config
