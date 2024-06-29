@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const withMT = require("@material-tailwind/react/utils/withMT");
+const { color } = require('framer-motion');
 
 module.exports = {
 	content: [
@@ -15,6 +16,11 @@ module.exports = {
 			fontFamily: {
 				Montserrat: ["Montserrat", "sans-serif"],
 			},
+			colors: {
+				primary: "var(--p)",
+				"base-100": "var(--b1)",
+				accent: "var(--a)",
+			  },
 		},
 	},
 	daisyui: {

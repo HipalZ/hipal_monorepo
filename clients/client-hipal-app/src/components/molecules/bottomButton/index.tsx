@@ -1,7 +1,6 @@
 "use client";
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { MdOutlineAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
-import { AiFillHome } from "react-icons/ai";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
 import { LuScanLine } from "react-icons/lu";
@@ -9,7 +8,7 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { RiCouponFill } from "react-icons/ri";
 
 function BottomButton({
@@ -22,7 +21,7 @@ function BottomButton({
   const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
-  const { isLogin, direction, setIsPayment, isPayment } = useLogin()
+  const { isLogin, setIsPayment, isPayment } = useLogin()
 
   const closeModal = useCallback(() => {
     setInputModal(false);

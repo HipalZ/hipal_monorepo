@@ -26,7 +26,7 @@ export const updateTheme = (data: ThemeData | undefined): void => {
 
 		Object.keys(convertedColors).forEach((key) => {
 			console.log(key, convertedColors[key]);
-			document.documentElement.style.setProperty(`${key}`, convertedColors[key])
+			document.documentElement.style.setProperty(`${key}`, `hsl(${convertedColors[key]})`)
 		})
 	}
 }
