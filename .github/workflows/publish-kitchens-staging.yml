@@ -29,3 +29,16 @@ jobs:
           IMAGE_TAG=latest
           docker build --target kitchens-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.22.0'
+
+      - name: Configure DigitalOcean kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{secrets.TEST_CLUSTER_ID}}
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Restart deployment
+        run: kubectl rollout restart deployment kitchens-test-server -n hipalz
