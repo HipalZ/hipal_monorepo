@@ -1,9 +1,10 @@
+import Scan from '@/components/templates/scan'
 import React, { memo } from 'react'
 
-const Scan = memo(() => {
+const Scanner = memo(() => {
   return (
-    <div>Scan</div>
+    <Scan/>
   )
 })
 
-export default Scan
+export default Scanner
