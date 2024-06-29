@@ -26,7 +26,7 @@ function Card({
 
 	const defaultClasses = {
 		mainCard:
-			"py-1 prose relative overflow-hidden rounded-2xl mt-2 mb-6 bg-base-100 border-0 capitalize",
+			"py-1 prose relative overflow-hidden rounded-2xl mb-6 bg-base-100 border-0 capitalize",
 		imageSize: "",
 		innerContent: ` px-3 w-full rounded-md capitalize font-normal truncate text-black flex  text-sm overflow-hidden `,
 		outerContent: "w-full z-10 flex flex-row bg-base-200",

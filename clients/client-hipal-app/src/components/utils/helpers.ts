@@ -205,7 +205,6 @@ const generateForegroundColorFrom = (color: string): string => {
 
 export function convertToHsl(input: InputObject): ResultObject | InputObject {
 	const resultObj: ResultObject = {};
-	console.log('input', input);
 
 	if (typeof input === 'object' && input !== null) {
 		Object.entries(input).forEach(([rule, value]) => {

@@ -4,25 +4,27 @@ import { CiEdit } from "react-icons/ci";
 import { memo, useCallback, useState } from "react";
 import AddAmountModal from "@/components/molecules/bottomButton/addAmountModal";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
+import { useLogin } from "@/components/store/useLogin";
+import { RiCouponFill } from "react-icons/ri";
 
 interface IUseCoinzPopup {
-    claimedCoinz: number,
     openModal: () => void,
-    userCoinz: number
 }
 
 const UseCoinzPopup = (props: IUseCoinzPopup) => {
-    const { claimedCoinz, openModal, userCoinz } = props;
+    const { openModal } = props;
     const [editBillModal, setEditBillModal] = useState(false);
-    
+    const loyaltySetting = useLoyaltyData(s => s.loyaltySetting)
+    const userCoinZ = useLogin(s => s.userCoinZ)
     const openBillModal = useCallback(() => {
         setEditBillModal(true);
     }, [setEditBillModal]);
-    
+
     const closeBillModal = useCallback(() => {
         setEditBillModal(false);
     }, [setEditBillModal]);
-    
+
     return (
         <>
             <center className="flex items-center justify-center my-2">
@@ -33,29 +35,40 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                     </span>
                 </button>
             </center>
-            <h1 className="mx-4 font-semibold">Rewardz</h1>
+            <h1 className="mx-4 text-xl font-semibold">Rewardz</h1>
             <article
                 onClick={openModal}
-                className='animation-shake flex justify-between items-center border border-primary h-[90px] mx-4 rounded-3xl p-6 mt-4'
+                className='animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200'
             >
                 <div className='flex items-center'>
                     <IoMdCard size={30} className='-rotate-45 ' />
                     &nbsp; &nbsp;
                     <div>
                         <h6>Use Coinz</h6>
-                        <h6>{claimedCoinz} coinz applied</h6>
+                        <h6 className="text-xs">You can use {loyaltySetting.setReward} % of <span className="font-bold">{userCoinZ} coinz</span> </h6>
                     </div>
                 </div>
                 <div className='flex items-center space-x-4'>
-                    <h6>
-                        {userCoinz - claimedCoinz}
-                    </h6>
-                    <MdKeyboardArrowRight size={30} />
+                    Apply
+                </div>
+            </article>
+            <article
+                className='animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200'
+            >
+                <div className='flex items-center'>
+                    <RiCouponFill size={30} className='-rotate-45 ' />
+                    &nbsp; &nbsp;
+                    <div>
+                        <h6>Use Coinz</h6>
+                        <h6 className="text-xs">You can use <span className="font-bold">5 Couponz </span> </h6>
+                    </div>
+                </div>
+                <div className='flex items-center space-x-4 text-sm'>
+                    Coming Soon
                 </div>
             </article>
             {
                 editBillModal && (
-
                     <BottomPopUp show={editBillModal} onClose={closeBillModal}>
                         <AddAmountModal />
                     </BottomPopUp>

@@ -51,12 +51,12 @@ function SubTypes(props: ISubTypes) {
 									setActiveParentCategory(item?.parentCategoryId ? item?.parentCategoryId : "")
 								}}
 							>
-								<button
+								<article
 									className={` ${isActiveCategory === item?._id ? "scale-110 bg-primary/10" : ""
-										} flex w-full text-nowrap border border-primary rounded-full items-center justify-between px-2 py-1`}
+										} flex w-full border border-primary rounded-full items-center justify-between px-2 py-1`}
 								>
 									{!!item.coverImage ? (
-										<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
+										<figure className="w-[1.75rem] h-[1.75rem] mr-1 rounded-full overflow-hidden">
 											<Image
 												src={item.coverImage}
 												alt="dish"
@@ -75,11 +75,11 @@ function SubTypes(props: ISubTypes) {
 										)}
 									<h6
 										className={` ${isActiveCategory === item?._id ? "text-primary " : ""
-											} text-sm`}
+											} text-sm w-full whitespace-nowrap text-nowrap`}
 									>
 										{item?.name}
 									</h6>
-								</button>
+								</article>
 
 
 							</Link>

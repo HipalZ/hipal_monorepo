@@ -83,14 +83,14 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						<Image
 							src={avatar}
 							alt="avatar"
-							className="sm:w-10 sm:h-10 lg:h-12 lg:w-12 rounded-full"
+							className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
 						/>
 						<b>Hey {userDetails?.name} !!</b>
 					</span>
 					<Link href={`/r/${customLink}/loyalty/`}>
 						<button
 							type="button"
-							className="px-4 py-2 border on_active_bounce bg-base-100 text-primary border-primary rounded-full text-xs"
+							className="px-4 py-2 text-xs border rounded-full on_active_bounce bg-base-100 text-primary border-primary"
 						>
 							My Wallet
 						</button>
@@ -109,7 +109,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 							height={64}
 						/>
 					</figure>
-					<div className="overflow-hidden absolute top-0 left-0 w-full h-full">
+					<div className="absolute top-0 left-0 w-full h-full overflow-hidden">
 						<article className="absolute right-0 transform translate-x-1/4">
 							<Image src={line} alt="line" layout="fixed" objectFit="cover" />
 						</article>
@@ -124,12 +124,12 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 					</div>
 				</section>
 				<br />
-				<section className="flex text-center justify-around text-primary mb-8">
-					<article className="border-r-2 border-primary pr-5">
+				<section className="flex justify-around mb-8 text-center text-primary">
+					<article className="pr-5 border-r-2 border-primary">
 						<h1 className="text-3xl">{userTotalHistory?.totalWin || 0}</h1>
 						<p>Total win</p>
 					</article>
-					<article className="border-r-2 border-primary pr-5">
+					<article className="pr-5 border-r-2 border-primary">
 						<h1 className="text-3xl">{userTotalHistory?.totalSave || 0}</h1>
 						<p>Total saved</p>
 					</article>
@@ -138,15 +138,12 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						<p>VIP Level</p>
 					</article>
 				</section>
-				<center className="font-semibold text-2xl">My History</center>
+				<center className="text-2xl font-semibold">My History</center>
 				<br />
 				<div>
 					{itemData?.map((item) => {
 						return (
-							<section
-								key={item?._id}
-								className="bg-base-200 my-2 flex justify-between items-center px-2 py-3 rounded-lg"
-							>
+							<section className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200">
 								<article className="flex space-x-0">
 									<figure className="w-[4rem] shrink-0 ">
 										<Image
@@ -176,7 +173,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						);
 					})}
 					{!hasMoreData && (
-						<div className="text-center text-gray-500 my-4">
+						<div className="my-4 text-center text-gray-500">
 							No more data available.
 						</div>
 					)}
@@ -184,7 +181,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						onClick={() => handleClick(pageNumber + 1)}
 						disabled={loading || !hasMoreData}
 						type="button"
-						className="w-full mt-4 bg-primary rounded-full on_active_bounce btn"
+						className="w-full mt-4 rounded-full bg-primary on_active_bounce btn"
 					>
 						{loading ? (
 							<span className="loader_spinner !border-t-base-100"></span>

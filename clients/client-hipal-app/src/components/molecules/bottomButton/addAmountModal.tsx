@@ -10,10 +10,13 @@ import axios from '@/utils/axios';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
 import { cn } from '@/components/utils/helpers';
 import { useLogin } from '@/components/store/useLogin';
+import PlaceholderImg from '@/components/atoms/placeholder';
+import { getRandomBlurImg } from '@/components/utils/images';
+import Link from 'next/link';
 
 const AddAmountModal = memo(() => {
-	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
-    const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
+    const businessId = useBusinessDetails((s) => s.businessDetails?._id)
+    const business = useBusinessDetails((s) => s.businessDetails)
     const router = useRouter();
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState<boolean>(false);
@@ -33,9 +36,9 @@ const AddAmountModal = memo(() => {
         setLoading(true);
         if (amount > 0) {
             setIsPayment(false)
-            router.push(`/r/${customLink}/payment?amount=${amount}`);
+            router.push(`/r/${business.customLink}/payment?amount=${amount}`);
         }
-    }, [amount, customLink, router]);
+    }, [amount, business.customLink, router]);
 
     const callTheWaiter = useCallback(async () => {
         if (!tableName) {
@@ -79,10 +82,31 @@ const AddAmountModal = memo(() => {
     }, [businessId, tableName]);
     return (
         <section className='h-[80vh] overflow-y-auto overflow-x-hidden'>
-            <header>
-                <center className='pt-4 text-xl font-semibold'>
-                    HiPay
-                </center>
+            <header className='bg-white h-[4.25rem] flex items-center'>
+                {business.logo ? (
+                    <figure className="h-[5rem] p-4 w-[5rem]">
+                        <Image
+                            src={business.logo}
+                            height={80}
+                            width={80}
+                            quality={95}
+                            objectFit="cover"
+                            alt="logo-business"
+                            className="object-center border rounded-full shadow-sm aspect-square"
+                            placeholder="blur"
+                            blurDataURL={getRandomBlurImg(100, 100)}
+                        />
+                    </figure>
+                ) : (
+                    <PlaceholderImg />
+                )}
+                <div >
+                    paying :  <br />
+                    <span className='font-bold text-primary'>
+
+                        {business.businessName}
+                    </span>
+                </div>
             </header>
             <section className='relative mt-[30vh]'>
                 <div className={`${style.top_ring}`} />
@@ -114,9 +138,9 @@ const AddAmountModal = memo(() => {
                                 'Call Captain'
                             )}
                         </button>
-                        <button 
-                            disabled={loading} 
-                            onClick={proceedToPayment} 
+                        <button
+                            disabled={loading}
+                            onClick={proceedToPayment}
                             className={cn('w-full px-4 py-3 rounded-full text-base-100', loading ? 'opacity-50 pointer-events-none bg-gray-400' : 'bg-primary')}
                         >
                             {loading ? (

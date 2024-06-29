@@ -20,7 +20,7 @@ const BillSummary = memo((props:IBillSummary) => {
     const { billValue, claimedCoinz, tips, isTipActive, setIsTipActive, clearTheTip, handleTipSelect, selectedTip, customTip, showInput, handleCustomTip, handleSaveTip } = props;
     return (
         <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
-            <h6 className="mx-6 mt-4 text-base">Bill Detailz</h6>
+            <h6 className="mx-6 mt-4 text-xl">Bill Detailz</h6>
             <div className='relative mx-6 text-[1.25rem] text-base-content border border-primary py-4 rounded-2xl'>
                 <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-content leading-[1.25rem]'>
                     <h1>Total bill amount</h1>
@@ -80,7 +80,7 @@ const BillSummary = memo((props:IBillSummary) => {
                     </button>
                         </div>
                     )}
-                    <div className="flex justify-between text-lg mt-4 mx-2">
+                    <div className="flex justify-between mx-2 mt-4 text-lg">
                         <h1 className="font-bold">To Pay <span className="text-sm">(rounded off)</span></h1>
                         <span className="font-bold"> ₹ {billValue - claimedCoinz + tips}</span>
                     </div>

@@ -1,7 +1,3 @@
-import PlaceholderImg from "@/components/atoms/placeholder";
-import { getRandomBlurImg } from "@/components/utils/images";
-import { isEmpty } from "lodash-es";
-import Image from "next/image";
 import { memo } from "react";
 
 interface IPaymentCard {
@@ -11,40 +7,24 @@ interface IPaymentCard {
 }
 
 const PaymentCard = memo((props: IPaymentCard) => {
-    const { claimedCoinz, billValue, logo} = props;
+    const { claimedCoinz, billValue } = props;
     return (
-            <article className='relative h-[10rem] flex flex-col items-center justify-center mx-4 mt-10 space-y-2 text-xl rounded-3xl bg-primary text-base-100'>
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '0',
-                        transform: 'translate(-50%, -50%)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        aspectRatio: '1',
-                    }}
-                >
-                    {!isEmpty(logo) ? (
-                        <Image
-                            src={logo || ''}
-                            height={100}
-                            width={100}
-                            quality={95}
-                            alt='logo-business'
-                            className='object-center w-1/2 p-2 border rounded-lg shadow-sm aspect-square bg-base-200'
-                            placeholder='blur'
-                            blurDataURL={getRandomBlurImg(100, 100)}
-                        />
-                    ) : (
-                            <PlaceholderImg />
-                        )}
-                </div>
-                <br />
-                {claimedCoinz > 0 ? <h4 className='text-4xl'>₹ {billValue - claimedCoinz}</h4> : null}
-                <h4 className={`${claimedCoinz > 0 ? 'line-through' : ''}`}>₹ {billValue}</h4>
-            </article>
+        <center className={`relative text-xl rounded-b-3xl bg-primary pt-4 text-base-100 ${claimedCoinz > 0 ? "h-[12rem]":"h-[6rem]"}`}>
+            <h4>You Pay</h4>
+            <h4 className={`${claimedCoinz > 0 ? 'line-through' : 'text-4xl font-bold'}`}>₹ {billValue}</h4>
+            {claimedCoinz > 0 ? <h4 className='text-4xl font-bold'>₹ {billValue - claimedCoinz}</h4> : null}
+            {
+                claimedCoinz > 0 ? <center className="relative text-sm bg-base-100 w-[16rem] text-base-content py-2 rounded-full mt-6">
+                    <center className="absolute top-0 z-50 w-5 h-5 transform -translate-x-1/2 -translate-y-1/2 bg-base-100 left-[50%] rotate-45">
+
+                    </center>
+                    <button>
+                        🥳 Woah ! You are saving ${claimedCoinz}
+                    </button>
+                </center> : null
+            }
+
+        </center>
     )
 });
 
