@@ -9,7 +9,6 @@ import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
 import pendingStatus from '@/assets/payment/pendingStatus.png'
 import coinsReview from "@/assets/payment/reviewCoinz.png"
-import HiLogoText from '@/assets/img/Hipal_logo_with_white_text.png'
 import { useQuery } from '@tanstack/react-query'
 import { IBusinessData, User } from '@/components/types/businessData'
 import { updateTheme } from '@/components/utils/themes'
@@ -174,7 +173,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	return (
 		<div className='p-4 animate-fade-up animate-once'>
 			<figure className='z-10 flex items-center space-x-4 rounded-full'>
-				<Image src={logo} alt='logo' height={38} width={38} className='w-52'/>
+				<Image src={logo} alt='logo' height={38} width={38}/>
 				<span className='text-2xl capitalize'>{businessName}</span>
 			</figure>
 			&nbsp;
@@ -346,7 +345,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 				}
 				<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] -mx-4 py-3">
 					<figure className='h-12'>
-						<Image src={poweredBy} alt='HiLogo' priority={true} />
+						<Image src={poweredBy} alt='HiLogo' loading='lazy' />
 					</figure>
 				</center>
 				{rating && rating.length > 0 ? (
