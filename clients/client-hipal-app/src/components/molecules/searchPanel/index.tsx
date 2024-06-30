@@ -12,6 +12,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { ICategory, IDish } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { RxCross2 } from "react-icons/rx";
 
 
 
@@ -63,19 +64,19 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
     };
 
     return (
-        <div className="flex w-full" ref={panel}>
+        <div className="flex w-full m-auto ml-2" ref={panel}>
             <div
-                className="border-primary bg-base-100 h-8 w-[96%] px-2 overflow-hidden border rounded-lg z-50 "
+                className="border-primary bg-base-100 h-8 w-[96%] px-2 overflow-hidden border rounded-lg z-50 flex m-auto"
             >
                 <input
                     autoFocus
-                    type="search"
+                    type="text"
                     placeholder="Search"
                     className="w-full py-1 text-sm bg-transparent focus:outline-none"
                     value={searchText}
                     onChange={handleSearchTextChange}
                 />
-                
+                <RxCross2 size={24} className="mt-1" onClick={closeSearchBox}/>
             </div>
             {search && (
                 <Transition
@@ -89,7 +90,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                     leaveTo="opacity-0 -translate-y-1"
                 >
                     <div
-                        className="!z-50 pb-14"
+                        className="!z-50 pb-14 bg-primary"
                         style={{
                             position: "absolute",
                             top: "2.5rem",
@@ -97,7 +98,6 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                             width: "100%",
                             height: "100vh",
                             overflowY: "auto",
-                            background: `${primaryColor}`,
                         }}
                     >
                         {dishData.length > 0 ? (

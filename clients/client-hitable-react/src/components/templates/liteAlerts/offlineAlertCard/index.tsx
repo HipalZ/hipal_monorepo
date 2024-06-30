@@ -69,12 +69,12 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                   <div className="flex justify-between">
                     <section>
                       <article className="ml-2 space-y-1">
-                        <h1 className="text-base">User Name:{alert?.name || 'HI'}</h1>
+                        <h1 className="text-base">User : {alert?.name || 'HI'}</h1>
                         <p>{alert?.message}</p>
                       </article>
                     </section>
                     <section className="text-right">
-                      <h1>{alert?.tableName}</h1>
+                      <h1>Table: {alert?.tableName}</h1>
                     </section>
                   </div>
                 </div>
