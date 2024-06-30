@@ -90,7 +90,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                     leaveTo="opacity-0 -translate-y-1"
                 >
                     <div
-                        className="!z-50 pb-14 bg-primary"
+                        className="!z-50 pb-14 bg-base-200"
                         style={{
                             position: "absolute",
                             top: "2.5rem",
@@ -108,7 +108,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                                             <p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">{present.name}</p>
                                             <p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">Category</p>
                                         </div>
-                                        <div className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden ">
+                                        <div className="absolute top-0 right-0 mr-[1.813rem] mt-10 overflow-hidden flex flex-col items-center">
                                             {!!present?.coverImage ? (
                                                 <Image
                                                     src={present?.coverImage}
@@ -128,7 +128,6 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
 											<p className="text-[0.813rem] underline">View</p>
                                         </div>
                                     </Link>
-
                                     <hr className="mt-[5rem] opacity-25" />
                                     <div className="">
                                         {dishData?.map((dish, index) => (
