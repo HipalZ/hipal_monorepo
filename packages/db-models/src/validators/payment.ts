@@ -11,7 +11,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 export const PaymentSchema = z.object({
   businessId: ObjectIdSchema,
-  total: z.coerce.number().positive(),
+  total: z.coerce.number().optional(),
   billValue: z.coerce.number().positive(),
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),

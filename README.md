@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-# testini
+# testinig
 
 First, run the development server:
 
@@ -54,7 +54,11 @@ kubectl create secret generic "digitalocean-dns" \
 
 secret/digitalocean-dns created
 
-themes done guy
+Test
+sss
+`
 ````
 
+
 solved revi
+

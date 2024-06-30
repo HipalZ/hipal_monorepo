@@ -2,7 +2,7 @@ name: Build and Push kitchens Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['prod']
     paths:
       - 'Dockerfile'
       - 'package.json'
@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: kitchens-test-server
+  DOCKER_REPOSITORY: kitchens-prod-server
 
 jobs:
   build-and-push:
@@ -21,11 +21,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install doctl
-        run: |
-          sudo snap install doctl
-          doctl version
-
       - name: Login to DigitalOcean Container Registry
         run: echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | docker login ${{ env.DIGITALOCEAN_REGISTRY }} -u doctl --password-stdin
 
@@ -34,16 +29,3 @@ jobs:
           IMAGE_TAG=latest
           docker build --target kitchens-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
-
-      - name: Setup kubeconfig
-        run: |
-          echo "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}" | doctl auth init
-          doctl kubernetes cluster kubeconfig show ${{ secrets.TEST_CLUSTER_ID }} > $HOME/.kube/config
-        env:
-          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Restart deployment
-        run: |
-          kubectl rollout restart deployment kitchens-server-test -n hipalz
-        env:
-          KUBECONFIG: $HOME/.kube/config

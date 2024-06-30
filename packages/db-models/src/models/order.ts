@@ -4,7 +4,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const orderSchema = new mongoose.Schema<OrderType>({
   businessId: { type: ObjectId, required: true, ref: 'Business', index: true },
-  total: { type: Number, required: true },
+  total: { type: Number, required: true, default: 0 },
   currency: { type: String, required: true },
   billValue: { type: Number, required: true },
   receipt: { type: String, required: true },

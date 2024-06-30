@@ -6,104 +6,106 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: 'true'
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    cert-manager.io/issuer: letsencrypt-nginx-wcard
+    cert-manager.io/issuer: letsencrypt-nginx
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
     nginx.ingress.kubernetes.io/enable-cors: 'true'
-    nginx.ingress.kubernetes.io/cors-allow-origin: 'https://table.test.hipalz.com, https://biz.test.hipalz.com, https://kitchen.test.hipalz.com, http://localhost:3000, http://localhost:3001, http://localhost:3002, http://localhost:3003, http://localhost:3004, https://hipalz-rust.vercel.app, https://hipal-test.hipalz.com'
+    nginx.ingress.kubernetes.io/cors-allow-origin: 'https://hipalz.com, https://hibiz.hipalz.com, https://hiclient.hipalz.com'
     nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, Authorization, x-refresh-with, h-idem-id
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api.test.hipalz.com
-      secretName: test.hipalz.com
+        - api.hipalz.com
+        - hiclient.hipalz.com
+        - hibiz.hipalz.com
+      secretName: letsencrypt-nginx
   rules:
-    - host: api.test.hipalz.com
+    - host: api.hipalz.com
       http:
         paths:
           - path: /v1/users/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: users-server-test
+                name: users-server-prod
                 port:
                   number: 80
           - path: /v1/businesses/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: businesses-server-test
+                name: businesses-server-prod
                 port:
                   number: 80
           - path: /v1/categories/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: categories-server-test
+                name: categories-server-prod
                 port:
                   number: 80
           - path: /v1/dishes/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: dishes-server-test
+                name: dishes-server-prod
                 port:
                   number: 80
           - path: /v1/settings/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: settings-server-test
+                name: settings-server-prod
                 port:
                   number: 80
           - path: /v1/kitchens/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: kitchens-server-test
+                name: kitchens-server-prod
                 port:
                   number: 80
           - path: /v1/zones/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: zones-server-test
+                name: zones-server-prod
                 port:
                   number: 80
           - path: /v1/payments/?(.*)
             pathType: Prefix
             backend:
               service:
-                name: payments-server-test
+                name: payments-server-prod
                 port:
                   number: 80
-    - host: table.test.hipalz.com
+    - host: hiclient.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-hitable-test
+                name: client-hitable-prod
                 port:
                   number: 80
-    - host: kitchen.test.hipalz.com
+    # - host: kitchen.prod.hipalz.com
+    #   http:
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: client-hikitchen-prod
+    #             port:
+    #               number: 80
+    - host: hibiz.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-hikitchen-test
-                port:
-                  number: 80
-    - host: biz.test.hipalz.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: client-hibiz-test
+                name: client-hibiz-prod
                 port:
                   number: 80

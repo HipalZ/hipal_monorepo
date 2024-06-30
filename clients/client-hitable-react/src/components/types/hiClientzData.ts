@@ -52,6 +52,7 @@ export interface Order {
 }
 
 export interface Alert {
+  posDiscount: number;
   isRejected: boolean;
   waiterName: string;
   completionCode: null | string;

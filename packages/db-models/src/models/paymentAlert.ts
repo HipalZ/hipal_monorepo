@@ -17,6 +17,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>({
   errorReason: { type: String, default: null },
   tableName: { type: String, required: true },
   errorDescription: { type: String, default: null },
+  posDiscount: { type: Number, default: 0 },
   waiterName: { type: String, default: null },
   coinsApplied: { type: Boolean, default: false },
   date: { type: Number, default: Date.now() },

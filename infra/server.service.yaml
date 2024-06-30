@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: dishes-server-test
+  name: dishes-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -10,13 +10,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: dishes-server-test
+    app: dishes-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: zones-server-test
+  name: zones-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -24,13 +24,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: zones-server-test
+    app: zones-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: categories-server-test
+  name: categories-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -38,13 +38,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: categories-server-test
+    app: categories-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: settings-server-test
+  name: settings-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -52,13 +52,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: settings-server-test
+    app: settings-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: payments-server-test
+  name: payments-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -66,13 +66,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: payments-server-test
+    app: payments-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: kitchens-server-test
+  name: kitchens-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -80,13 +80,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: kitchens-server-test
+    app: kitchens-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: users-server-test
+  name: users-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -94,13 +94,13 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: users-server-test
+    app: users-server-prod
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: businesses-server-test
+  name: businesses-server-prod
   namespace: hipalz
 spec:
   ports:
@@ -108,4 +108,4 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: businesses-server-test
+    app: businesses-server-prod
