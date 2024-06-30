@@ -12,6 +12,7 @@ import { useLogin } from "@/components/store/useLogin";
 import { useCart } from "@/components/store/useCart";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { updateTheme } from "@/components/utils/themes";
 
 // Dynamically import components
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), { loading: () => <SkeletonLoader height={50} /> });
@@ -74,6 +75,10 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
     useEffect(() => {
         setBusinessData(data);
     }, [data]);
+
+    useEffect(()=>{
+        updateTheme(data?.settings?.themes)
+    },[data?.settings?.themes])
 
     return (
         <div className="relative flex flex-col w-full pb-16 ">

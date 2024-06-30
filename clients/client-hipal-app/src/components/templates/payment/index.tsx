@@ -513,7 +513,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 <PaymentComponent data={data} tips={tips}
                     billValue={billValue}
                     handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
-                    setSelectedMode={setSelectedMode} isLoading={isLoading} />
+                    setSelectedMode={setSelectedMode} isLoading={isLoading} 
+                    total={billValue - claimedCoinz + tips}
+                    />
             }
             <AvailableCoinz
                 isModalOpen={isModalOpen}

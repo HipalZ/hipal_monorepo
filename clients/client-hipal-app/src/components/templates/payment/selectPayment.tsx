@@ -7,6 +7,7 @@ import online from "@/assets/payment/mobilepay.png"
 import background from "@/assets/payment/background-rainbow.png"
 import Grid from '@/assets/payment/grid.png';
 import { PageStates } from '.';
+import { toast } from 'react-toastify';
 
 interface Business {
     isPaymentIntegrated: boolean;
@@ -24,9 +25,10 @@ interface PaymentComponentProps {
     selectedMode: PageStates;
     setSelectedMode: (mode: PageStates) => void;
     isLoading: boolean;
+    total:number;
 }
 
-const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, handleCreateOrder, setSelectedMode,isLoading }) => {
+const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, total,handleCreateOrder, setSelectedMode,isLoading }) => {
 
     const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
 
@@ -42,13 +44,16 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
         return () => clearInterval(interval);
     }, []);
 
-    console.log('isLoading', isLoading);
-
     const createOrder = (amount: number, mode: PageStates) => {
         setSelectedMode(mode)
         handleCreateOrder(amount, mode)
     };
-
+    const handleOnlineMode = (billValue:number) =>{
+        if(total<=0){
+            return toast.error('You cannot pay 0 amount through online Please pay by cash mode')
+        }
+        createOrder(billValue, 'ONLINE')
+    }
     return (
         <section className='h-[85vh]'>
             <div style={{
@@ -111,7 +116,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                             
                         </button>
                     </article>
-                    <article onClick={() => createOrder(billValue, 'ONLINE')} className='w-full max-w-[12.625rem] h-[15.65rem] relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl'>
+                    <article onClick={()=>handleOnlineMode(billValue)} className='w-full max-w-[12.625rem] h-[15.65rem] relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl'>
                         <center style={{
                             backgroundImage: `url(${online.src})`,
                             backgroundSize: 'contain',

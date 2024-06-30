@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const orderSchema = z.object({
   businessId: z.string().min(1),
-  total: z.coerce.number().positive(),
+  total: z.coerce.number().optional(),
   billValue: z.coerce.number().positive().optional(),
   claimedCoins: z.coerce.number().default(0).optional(),
   tips: z.coerce.number().optional(),
