@@ -79,8 +79,8 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                   </div>
                 </div>
               ) : (
-                <div className="mx-4 my-4 h-[10.5rem] rounded-xl bg-white p-4">
-                  <section className="mb-2 flex justify-between">
+                <div className="mx-4 my-4 rounded-xl bg-white p-4">
+                  <section className="mb-2 flex items-center justify-between">
                     <article className="flex w-[8.5rem] items-center rounded-full bg-[#ffe9cf] px-2">
                       <span>
                         <CiGlobe />
@@ -112,7 +112,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                     <section className="text-right">
                       <p>User : {alert?.order_id?.name?.length > 10 ? `${alert.order_id.name.substring(0, 10)}...` : alert?.order_id?.name}</p>
                       <article className="space-y-1">
-                        <h1 className="text-base text-gray-700">{alert?.order_id?.tableName}</h1>
+                        <h1 className="text-base text-gray-700">Table: {alert?.order_id?.tableName}</h1>
                         <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                       </article>
                       <button onClick={() => handleViewMore(alert)} className="mt-6 rounded-full bg-black px-6 py-1 text-white">

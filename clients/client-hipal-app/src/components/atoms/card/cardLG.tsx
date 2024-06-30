@@ -1,5 +1,4 @@
-import { memo, useEffect } from "react"
-import { MdExplore } from "react-icons/md"
+import { memo } from "react"
 import Card, { ICard } from "."
 
 interface ICardLG {
@@ -11,12 +10,10 @@ interface ICardLG {
 
 function CardLG({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard)) {
 	return (
-		<>
-			<Card src={src} size={"lg"}>
-				<h6 className="px-6 pt-2 truncate">Spotlight Best cuisines</h6>
-				<h6 className="px-6 text-xs line-clamp-2"></h6>
-			</Card>
-		</>
+		<Card src={src} size={"lg"}>
+			<h6 className="px-6 pt-2 truncate">Spotlight Best cuisines</h6>
+			<h6 className="px-6 text-xs line-clamp-2"></h6>
+		</Card>
 	)
 }
 

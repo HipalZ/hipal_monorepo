@@ -5,10 +5,48 @@ import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png';
 import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png';
 import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
+import axios from '@/components/utils/axios';
 import '@/pages/l/[businessId]/login/login.css';
-import { memo } from 'react';
+import { memo, startTransition } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Login = memo(() => {
+  const navigate = useNavigate();
+  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
+  const result = async () => {
+    try {
+      const config = {
+        method: 'POST',
+        url: '/v1/users/chef/Login?withBusinessId=false',
+        data: {
+          phone: phoneNumber,
+        },
+      };
+
+      const response = await axios(config);
+      console.log('res', response);
+
+      if (response.status === 200) {
+        toast.success(`Hi ${response?.data?.data?.name}`);
+        startTransition(() => {
+          navigate(`/l/${response?.data?.data?.customRole?.[0].businessId}/login`);
+        });
+      }
+
+      //   router.push(`${singleRoute[PAGE_TYPES.LOGIN](`${response?.data?.customRole?.[0].businessId}`)}`);
+      // }
+    } catch (err) {
+      console.log(err);
+      toast.error('User not registered as staff!');
+    }
+  };
+  //methods
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneNumber(e.target.value);
+  };
+
   return (
     <center>
       <section className="relative max-w-[30rem]">
@@ -43,7 +81,35 @@ const Login = memo(() => {
       </section>
       <div className="text-2xl">Welcome to HipalZ</div>
       &nbsp;
-      <center className="text-base">up to date </center>
+      <section className="relative mb-[5.89rem] ml-0 mr-0 mt-[2.5rem] max-w-[30rem] space-y-6 px-[2rem]">
+        <div className="relative">
+          <input
+            onChange={handlePhoneNumberChange}
+            type="text"
+            value={phoneNumber}
+            maxLength={10}
+            minLength={10}
+            id="floating_outlined3"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            placeholder=" "
+            required
+          />
+          <label
+            htmlFor="floating_outlined3"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
+          >
+            Your Phone Number
+          </label>
+        </div>
+      </section>
+      <article className="mb-5 flex justify-center">
+        <button
+          onClick={result}
+          className="on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+        >
+          Get Started
+        </button>
+      </article>
     </center>
   );
 });

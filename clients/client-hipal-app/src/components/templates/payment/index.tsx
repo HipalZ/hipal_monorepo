@@ -17,6 +17,11 @@ import { calculateReward } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import PlaceholderImg from "@/components/atoms/placeholder";
+import Image from "next/image";
+import { getRandomBlurImg } from "@/components/utils/images";
+import PayLoader from "./payLoader";
+import ErrorPayment from "./errorPay";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -113,7 +118,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (!orderId) {
             return;
         }
-        console.log('envvv', process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID)
         const script = document.createElement('script');
         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
@@ -439,23 +443,39 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 
     return (
         <div>
-            <section className='z-20 w-full px-4 pt-4 pb-2 bg-base-100'>
-                <article>
-                    <span className='float-start'>
-                        <button
-                            onClick={handleBack}
-                            type='button'
-                            className='flex flex-row w-10 h-10 mr-auto rounded-full bg-black/40 on_active_bounce'
-                        >
-                            <div className='flex flex-row m-auto'>
+            <section className='z-20 w-full bg-base-100'>
+                <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
+                    {businessDetails.logo ? (
+                        <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
+                            <button
+                                onClick={handleBack}
+                                type='button'
+                                className='h-10 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
+                            >
                                 <MdOutlineChevronLeft className='text-3xl text-white ' />
-                            </div>
-                        </button>
-                    </span>
-                </article>
-                <center className='absolute mt-2 ml-8 text-xl font-semibold left-1/3'>HiPay</center>
-                <br />
-                <br />
+                            </button>
+                            <Image
+                                src={businessDetails.logo}
+                                height={80}
+                                width={80}
+                                quality={95}
+                                objectFit="cover"
+                                alt="logo-businessDetails"
+                                className="object-center border rounded-full shadow-sm aspect-square"
+                                placeholder="blur"
+                                blurDataURL={getRandomBlurImg(100, 100)}
+                            />
+                        </figure>
+                    ) : (
+                        <PlaceholderImg />
+                    )}
+                    <div >
+                        paying :  <br />
+                        <span className='font-bold text-primary'>
+                            {businessDetails.businessName}
+                        </span>
+                    </div>
+                </header>
             </section>
             {selectedMode === "INVOICE" ?
                 <>
@@ -468,8 +488,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         userCoinz > 0 &&
                         <UseCoinzPopup
                             openModal={openModal}
-                            userCoinz={userCoinz}
-                            claimedCoinz={claimedCoinz}
                         />
                     }
                     <BillSummary
@@ -506,7 +524,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 handleApplyCoinz={handleApplyCoinz}
                 maxCoinz={maxCoinz}
             />
-            {isLoading ? <LoadingSpinner /> : null}
+            {isLoading ? <PayLoader /> : null}
         </div>
     )
 };

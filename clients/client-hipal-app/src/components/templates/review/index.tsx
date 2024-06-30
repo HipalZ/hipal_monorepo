@@ -2,24 +2,27 @@
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
 import axios from '@/utils/axios'
-import Image from 'next/legacy/image'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ChangeEvent, memo, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
 import pendingStatus from '@/assets/payment/pendingStatus.png'
 import coinsReview from "@/assets/payment/reviewCoinz.png"
-import HiLogoText from '@/assets/img/Hipal_logo_with_white_text.png'
 import { useQuery } from '@tanstack/react-query'
 import { IBusinessData, User } from '@/components/types/businessData'
 import { updateTheme } from '@/components/utils/themes'
 import { toast } from 'react-toastify'
 import { MdOutlineMessage, MdOutlinePerson } from 'react-icons/md'
-import MiddlePopUp from '@/components/atoms/middlePopUp'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
 import { RxCrossCircled } from 'react-icons/rx'
 import { cn } from '@/components/utils/helpers'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import poweredBy from '@/assets/img/powered_hipalz.png'
+
+const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
+
 interface Payload {
 	businessId: string;
 	reviewerName: string | undefined;
@@ -169,10 +172,11 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 
 	return (
 		<div className='p-4 animate-fade-up animate-once'>
-			<figure className='z-10 flex items-center space-x-2 rounded-full'>
-				<Image src={logo} alt='logo' height={38} width={38} />
+			<figure className='z-10 flex items-center space-x-4 rounded-full'>
+				<Image src={logo} alt='logo' height={38} width={38}/>
 				<span className='text-2xl capitalize'>{businessName}</span>
 			</figure>
+			&nbsp;
 			<section
 				style={{
 					opacity: rating ? 0 : 1,
@@ -190,7 +194,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						priority={true}
 						width={125}
 						height={125}
-						className='animate-pulse'
+						className='animate-pulse m-auto'
 					/>}
 					{mode === "online" ? <h1 className='text-xl'>Payment Success!</h1> : <h1 className='text-xl'>Waiting for confirmation</h1>}
 				</article>}
@@ -200,7 +204,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					&nbsp;
 				</div>
 				{mode === "offline" ? <center className="text-[0.825rem] bg-base-200 p-2 rounded-full my-2">⚠ You <span className='text-base font-bold'> choose offline</span> , your pay will be confirmed by captain</center> : null}
-				{Number(claim) > 0 && <center className="flex items-center justify-center my-4 space-x-4">
+				{Math.round(Number(claim)) > 0 && <center className="flex items-center justify-center my-4 space-x-4">
 					<Image width={137} height={137} src={coinsReview} alt="review-hand" />
 					<h1 className="w-32 text-primary"><span className="text-xl">🎉</span> You Won <span className="text-4xl font-bold text-primary">{Math.round(Number(claim))}</span> coinz</h1>
 				</center>}
@@ -318,7 +322,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 					showSuggestions &&
 					<MiddlePopUp onSave={handleSaveStaff} show={showSuggestions} onClose={() => setShowSuggestions(!showSuggestions)}>
 						<ul
-							className='w-full h-[60vh] mt-0 overflow-auto border border-gray-300'
+							className='w-full h-[60vh] mt-0 overflow-auto'
 							style={{ zIndex: 2 }}
 						>
 							<center className="my-4 text-xl font-semibold">Staff members</center>
@@ -341,9 +345,8 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 				}
 				<center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] -mx-4 py-3">
 					<figure className='h-12'>
-						<Image src={HiLogoText} alt='HiLogo' priority={true} />
+						<Image src={poweredBy} alt='HiLogo' loading='lazy' />
 					</figure>
-					<h6 className='text-[0.75rem] text-white w-20'>Powered by HipalZ</h6>
 				</center>
 				{rating && rating.length > 0 ? (
 					<article className="flex justify-center">

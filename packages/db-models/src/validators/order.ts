@@ -9,7 +9,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 export const OrderSchema = z.object({
-  total: z.coerce.number(),
+  total: z.coerce.number().optional(),
   currency: z.string(),
   receipt: z.string(),
   name: z.string(),

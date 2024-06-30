@@ -15,11 +15,10 @@ const Footer=(props:IFooter) =>{
 	return (
 			<div>
 				{footerText && (
-					<div className="px-4 text-lg text-base-100-content">
+					<div className="px-4 text-lg text-base-100-content text-justify">
 						{footerText}
 					</div>
 				)}
-
 				<div className="flex flex-row px-2 space-x-2 ">
 					{instagramLink && (
 						<a
@@ -30,7 +29,6 @@ const Footer=(props:IFooter) =>{
 							<IoLogoInstagram className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-
 					{facebookLink && (
 						<a
 							href={facebookLink}
@@ -40,7 +38,6 @@ const Footer=(props:IFooter) =>{
 							<IoLogoFacebook className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-
 					{youtubeLink && (
 						<a
 							href={youtubeLink}
@@ -50,7 +47,6 @@ const Footer=(props:IFooter) =>{
 							<IoLogoYoutube className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-
 					{linkedinLink && (
 						<a
 							href={linkedinLink}
@@ -61,7 +57,6 @@ const Footer=(props:IFooter) =>{
 						</a>
 					)}
 				</div>
-				
 			</div>
 	)
 }

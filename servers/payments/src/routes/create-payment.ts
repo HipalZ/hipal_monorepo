@@ -39,6 +39,14 @@ const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
 const router = express.Router();
 
+const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money: number) => {
+  let subTotal = (total_bill * 100) / 105;
+  let discount = (paid_Money - 1.05 * subTotal) / 1.05;
+  let finalDiscount = Math.floor(Math.abs(discount));
+
+  return finalDiscount;
+};
+
 // router.post(
 //   '/v1/payments',
 //   validateRequest({
@@ -712,6 +720,10 @@ router.post(
       businessId,
       order_id: uniqueOrderId,
     });
+    let posDiscount = 0;
+    if (Number(claimedCoins) > 0) {
+      posDiscount = calculateDiscount(Number(billValue), Number(claimedCoins), Number(total));
+    }
     await PaymentAlert.create({
       businessId: businessId,
       alertType: 'OFFLINE',
@@ -720,6 +732,9 @@ router.post(
       tableName: tableName,
       coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
       message: `Paid ${total}`,
+      date: Date.now(),
+      posDiscount: posDiscount,
+
       // comment : payload.payment.entity.notes.comment
     });
 
@@ -901,9 +916,9 @@ const addCoins = async (
       );
     }
 
-    return null;
+    return coinsCalculated.finalReward || 0;
   }
-  return null;
+  return 0;
 };
 
 const calculatedCashbackCoins = async (businessId: string, billValue: number, claimedCoins: number) => {
@@ -961,7 +976,8 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
               status: 'FAIL',
               tableName: payload.payment.entity.notes.tableName,
               coinsApplied: claimCoins > 0 ? true : false,
-              isAccepted: true,
+              isAccepted: false,
+              date: Date.now(),
 
               message: `Fail ${payload.payment.entity.notes.total}`,
               // comment : payload.payment.entity.notes.comment
@@ -998,6 +1014,10 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
 
       const claimCoins = Number(payload.payment.entity.notes.claimedCoins);
       await PaymentAlert.updateMany({ tableName: getOrder?.tableName }, { isAccepted: true }, { session });
+      let posDiscount = 0;
+      if (claimCoins > 0) {
+        posDiscount = calculateDiscount(Number(payload.payment.entity.notes.billValue), claimCoins, Number(payload.payment.entity.notes.total));
+      }
       await PaymentAlert.create(
         [
           {
@@ -1010,6 +1030,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
             message: `Paid ${payload.payment.entity.notes.total}`,
             tableName: payload.payment.entity.notes.tableName,
             isAccepted: false,
+            posDiscount: posDiscount,
           },
         ],
         { session },
@@ -1033,7 +1054,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
           Number(payload.payment.entity.notes.claimedCoins),
         );
 
-        await addCoins(
+        const cashBackCoins = await addCoins(
           cashBack,
           getOrder?.phone || '',
           payload.payment.entity.notes.tableName || '',

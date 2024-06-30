@@ -270,7 +270,7 @@ function OtpPage() {
 					</Link>
 					<button disabled={loading} type="submit" className="w-full bg-black rounded-full btn text-white">
 						{loading ? (
-							<span className="loader_spinner !border-t-base-100 "></span>
+							<span className="loader_spinner !border-t-base-100  text-white"></span>
 						) :
 							userDetails.name !== "" ? "sign in" : "Sign up"
 						}

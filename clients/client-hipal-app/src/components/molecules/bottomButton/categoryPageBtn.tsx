@@ -49,7 +49,7 @@ const CategoryPageBtn = memo(() => {
 		if (!tableName) {
 			return router.push(`/scan`);
 		}
-		if (!isLogin) {
+		if (!isLogin) { 
 			return router.push(`/r/${customLink}/user/signup`);
 
 		} else {
@@ -115,7 +115,7 @@ const CategoryPageBtn = memo(() => {
                                         <BsBagHeart size={30} />
                                         {Object.values(cart).length > 0 && (
                                             <motion.span
-                                                className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-4"
+                                                className="absolute py-1 px-2 text-xs font-bold text-white bg-red-600 rounded-full -top-6 right-0"
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
                                                 exit={{ scale: 0 }}

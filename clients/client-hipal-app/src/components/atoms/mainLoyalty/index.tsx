@@ -94,7 +94,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 								cardPattern === "love" ||
 								cardPattern === "flower" ||
 								cardPattern === "bud"
-								? ""
+								? "100px 75px"
 								: "cover",
 						backgroundPosition:
 							cardPattern === "beans" ||

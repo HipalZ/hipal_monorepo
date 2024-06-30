@@ -24,6 +24,8 @@
     justify-content: space-evenly;
     gap: 0.5rem;
     margin: 1.5rem 1rem 0 1rem;
+    overflow-x: auto;
+
 }
 
 .reward_card_container_animation {

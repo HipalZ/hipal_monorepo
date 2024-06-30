@@ -1,13 +1,13 @@
-declare module 'daisyui/src/colors/functions' {
-    interface ColorOptions {
-      primary: string;
-      secondary: string;
-      'base-100': string;
-    }
+// declare module 'daisyui/src/colors/functions' {
+//     interface ColorOptions {
+//       primary: string;
+//       secondary: string;
+//       'base-100': string;
+//     }
   
-    interface ConvertedColors {
-      [key: string]: string;
-    }
+//     interface ConvertedColors {
+//       [key: string]: string;
+//     }
   
-    export function convertToHsl(colors: ColorOptions): ConvertedColors;
-  }
+//     export function convertToHsl(colors: ColorOptions): ConvertedColors;
+//   }

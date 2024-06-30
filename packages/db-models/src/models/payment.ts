@@ -88,6 +88,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     total: {
       required: true,
       type: Number,
+      default: 0,
     },
 
     customerName: {

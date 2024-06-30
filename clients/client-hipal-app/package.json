@@ -2,7 +2,7 @@
   "name": "client-hipal-app",
   "version": "0.1.0",
   "scripts": {
-    "dev": "dotenv -e ./.env.local next --host -p 3002",
+    "dev": "dotenv -e ./.env.local next --host ",
     "dev:test": "dotenv -e ./.env.test next --host",
     "bundle:development": "dotenv -e .env pnpm run bundle",
     "build": "next build",
@@ -25,7 +25,6 @@
     "axios": "^1.7.2",
     "canvas-confetti": "^1.9.3",
     "color": "^4.2.3",
-    "daisyui": "^2.52.0",
     "env-cmd": "^10.1.0",
     "framer-motion": "^9.1.7",
     "html5-qrcode": "^2.3.8",

@@ -1,38 +1,38 @@
 export type NavItemTypes = 'online' | 'on floor' | 'history' | 'sales';
 
 export interface HiClientzData {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    customRole: CustomRole[];
-    password: string;
-    role: string[];
-    createdAt: string;
-    updatedAt: string;
-    __v: number;
-  }
-  
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  customRole: CustomRole[];
+  password: string;
+  role: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 export interface CustomRole {
-    businessId: Business;
-    customRoleId: string;
-    role: string;
-    accessControl: AccessControl;
-    bookMark: boolean;
-    _id: string;
-  }
-  
+  businessId: Business;
+  customRoleId: string;
+  role: string;
+  accessControl: AccessControl;
+  bookMark: boolean;
+  _id: string;
+}
+
 export interface Business {
-    _id: string;
-    businessName: string;
-    logo: string;
-    address: string;
-  }
-  
+  _id: string;
+  businessName: string;
+  logo: string;
+  address: string;
+}
+
 export interface AccessControl {
-    hibiz: boolean;
-    _id: string;
-  }
+  hibiz: boolean;
+  _id: string;
+}
 
 export interface Order {
   _id: string;
@@ -52,6 +52,8 @@ export interface Order {
 }
 
 export interface Alert {
+  isRejected: boolean;
+  waiterName: string;
   completionCode: null | string;
   errorReason: null | string;
   errorDescription: null | string;
@@ -67,7 +69,7 @@ export interface Alert {
   message: string;
   coinsApplied: boolean;
   date: number;
-  name:string;
+  name: string;
 }
 
 export interface ISalesLite {

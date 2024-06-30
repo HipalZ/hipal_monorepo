@@ -1,25 +1,25 @@
-import { ICartDish, ICartExtra, ICart, ICartVariant } from "../store/useCart";
-import { IBusinessData, IStatus } from "../types/hiTableData";
-import axios from "./axios";
 import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge'
+import { twMerge } from 'tailwind-merge';
+import { ICart, ICartDish, ICartExtra, ICartVariant } from '../store/useCart';
+import { IBusinessData, IStatus } from '../types/hiTableData';
+import axios from './axios';
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
     // return 'FREE'
-    return "";
+    return '';
   }
 
   return `₹${price}`;
 };
 
 export const getTimeIn12HrFormat = (time: string) => {
-  if (!time || !time.includes(":")) return "";
+  if (!time || !time.includes(':')) return '';
 
-  const [hours, minutes] = time.split(":");
+  const [hours, minutes] = time.split(':');
   const hour = parseInt(hours, 10);
 
-  const amPm = hour >= 12 ? "PM" : "AM";
+  const amPm = hour >= 12 ? 'PM' : 'AM';
   const hour12 = hour % 12 || 12;
 
   return `${hour12}:${minutes} ${amPm}`;
@@ -36,10 +36,7 @@ export const getPriceOfExtra = (extra: ICartExtra) => {
   return extraPrice;
 };
 
-export function getDishPriceByVarient(
-  variant: ICartVariant,
-  cartDish: ICartDish
-) {
+export function getDishPriceByVarient(variant: ICartVariant, cartDish: ICartDish) {
   const dishPrice = cartDish?.dishData?.price;
   const { extra } = variant;
   let price = 0;
@@ -52,9 +49,7 @@ export function getDishPriceByVarient(
 
 export const getDishPrice = (cartDish: ICartDish) => {
   let dishPrice = 0;
-  cartDish.variants.map(
-    (variant) => (dishPrice += getDishPriceByVarient(variant, cartDish))
-  );
+  cartDish.variants.map((variant) => (dishPrice += getDishPriceByVarient(variant, cartDish)));
   return dishPrice;
 };
 
@@ -66,7 +61,6 @@ export const getGrandTotalPrice = (cart: ICart) => {
   }
   return grandTotal;
 };
-
 
 function isEmpty(obj: any): boolean {
   return obj == null || Object.keys(obj).length === 0;
@@ -81,11 +75,7 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
     let dishPriceByVariants = 0;
     const cartDish = cart[dishId];
 
-    if (
-      cartDish?.variants?.length > 0 &&
-      Object.keys(cartDish?.variants?.[0]?.extra || {})?.length > 0 &&
-      cartDish?.variants?.[0]?.portion
-    ) {
+    if (cartDish?.variants?.length > 0 && Object.keys(cartDish?.variants?.[0]?.extra || {})?.length > 0 && cartDish?.variants?.[0]?.portion) {
       cart?.[dishId]?.variants?.forEach((variant) => {
         const { portion, extra } = variant;
         if (isEmpty(portion) && isEmpty(extra)) {
@@ -103,22 +93,14 @@ export function getGrandTotal(cart: any, data: IBusinessData) {
       dishPriceByVariants = cartDish?.variants?.length || 1;
     }
 
-    total +=
-      dishPriceByVariants *
-      (data?.dishesData?.find((d) => d._id === dishId)?.price || 1);
+    total += dishPriceByVariants * (data?.dishesData?.find((d) => d._id === dishId)?.price || 1);
   });
   return total;
 }
 
-export const addInstruction = (
-  cart,
-  tableId,
-  dishId,
-  variantId,
-  instruction
-) => {
+export const addInstruction = (cart, tableId, dishId, variantId, instruction) => {
   // Check if the table exists in the cart
-  console.log("cart", cart, tableId, dishId, variantId, instruction);
+  console.log('cart', cart, tableId, dishId, variantId, instruction);
   if (!cart[tableId]) {
     console.warn(`Table with ID ${tableId} not found in cart`);
     return cart;
@@ -175,7 +157,7 @@ export const getCompletedTableApi = async (businessId: string) => {
     const res = await axios.get(url);
     return res.data.data;
   } catch (error) {
-    console.error("Error fetching Table report:", error);
+    console.error('Error fetching Table report:', error);
   }
 };
 
@@ -234,42 +216,47 @@ export const getUpdatedCart = (kot: IStatus, isDeleted: boolean) => {
 export function timestampToTime(timestamp: Date) {
   const date = new Date(timestamp * 1000);
   const hours = date.getHours();
-  const minutes = "0" + date.getMinutes();
+  const minutes = '0' + date.getMinutes();
 
   // Will display time in HH:MM:SS format
-  const formattedTime = hours + ":" + minutes.substr(-2);
+  const formattedTime = hours + ':' + minutes.substr(-2);
 
   return formattedTime;
 }
 
 export function timestampToDateTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const day = date.getDate();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const month = monthNames[date.getMonth()];
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const date = new Date(timestamp + IST_OFFSET);
+  const hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
+  const day = date.getUTCDate();
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const month = monthNames[date.getUTCMonth()];
 
   // Determine the day suffix
   let daySuffix;
   switch (day) {
-    case 1: case 21: case 31:
-      daySuffix = "st";
+    case 1:
+    case 21:
+    case 31:
+      daySuffix = 'st';
       break;
-    case 2: case 22:
-      daySuffix = "nd";
+    case 2:
+    case 22:
+      daySuffix = 'nd';
       break;
-    case 3: case 23:
-      daySuffix = "rd";
+    case 3:
+    case 23:
+      daySuffix = 'rd';
       break;
     default:
-      daySuffix = "th";
+      daySuffix = 'th';
   }
 
   // Convert to 12-hour format
   const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
   const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
-  const amPm = hours < 12 ? "AM" : "PM";
+  const amPm = hours < 12 ? 'AM' : 'PM';
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
