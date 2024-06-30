@@ -77,6 +77,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { loyaltySetting } = useLoyaltyData()
+    const [maxCoinz, setMaxCoinz] = useState(0)
 
     useEffect(() => {
         if (!tableName) {
@@ -390,18 +391,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
-    const [maxCoinz, setMaxCoinz] = useState(0)
-    const handleApplyCoinz = (event: ChangeEvent<HTMLInputElement>, userCoinz: number) => {
-        const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ''));
-        const canClaimCoinz = Math.round(billValue * (data?.loyalty?.setClaimAmount / 100) || 0);
-        const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
-        if (userEnteredValue > coinsToSet) {
-            setClaimedCoinz(coinsToSet);
-            setMaxCoinz(coinsToSet)
-        } else {
-            setClaimedCoinz(userEnteredValue);
-            setMaxCoinz(userEnteredValue)
-        }
+    const handleApplyCoinz = (finalValue:number) => {
+        setClaimedCoinz(finalValue)
+        handleCoins(finalValue)
     };
 
     const handleBack = () => {
@@ -411,7 +403,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         router.push(`${routePaths[PAGE_TYPES.CATEGORY](data?.business?._id || '')}`)
     }
 
-    const handleCoins = async () => {
+    const handleCoins = async (claimedCoinz:number) => {
         // if has claim coinz then celebrate
         setIsModalOpen(false)
         if (claimedCoinz !== null && claimedCoinz > 0) {
@@ -522,9 +514,11 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 closeModal={closeModal}
                 claimedCoinz={claimedCoinz}
                 userCoinz={userCoinz}
-                handleCoins={handleCoins}
                 handleApplyCoinz={handleApplyCoinz}
                 maxCoinz={maxCoinz}
+                setMaxCoinz={setMaxCoinz}
+                billValue={billValue}
+                setClaimAmount={data?.loyalty?.setClaimAmount}
             />
             {isLoading ? <PayLoader /> : null}
         </div>

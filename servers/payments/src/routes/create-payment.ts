@@ -38,7 +38,7 @@ import { razorpayWrapper } from '../razorpay-wrapper';
 const { validateWebhookSignature } = require('../utils/razorpay-utils');
 
 const router = express.Router();
-
+//te
 const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money: number) => {
   let subTotal = (total_bill * 100) / 105;
   let discount = (paid_Money - 1.05 * subTotal) / 1.05;
