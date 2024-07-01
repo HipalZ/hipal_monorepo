@@ -1,19 +1,16 @@
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
-import Pages from 'vite-plugin-pages';
-
-const ReactCompilerConfig = {
-  compilationMode: 'annotation',
-};
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import Pages from "vite-plugin-pages";
+import { join } from "node:path";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
-  envDir: 'env',
+  envDir: "env",
 
   plugins: [
     react(),
     Pages({
-      importMode: 'async', // This setting will dynamically import pages
+      importMode: "async", // This setting will dynamically import pages
     }),
     // babel({
     //   babelConfig: {
@@ -47,10 +44,16 @@ export default defineConfig({
     //     display: 'standalone',
     //   },
     // }),
+    nodePolyfills(),
   ],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      "@": join(__dirname, "src"),
+      styles: join(__dirname, "src/assets/styles"),
+      "@@": join(__dirname, "public"),
     },
+  },
+  esbuild: {
+    exclude: ["@hi/common"],
   },
 });

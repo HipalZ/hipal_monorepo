@@ -24,6 +24,7 @@
     "clsx": "^2.1.1",
     "cssnano": "^7.0.1",
     "daisyui": "^4.11.1",
+    "hono": "^4.4.3",
     "date-fns": "^3.6.0",
     "eslint-plugin-react-compiler": "0.0.0-experimental-51a85ea-20240601",
     "exceljs": "^4.4.0",
@@ -48,7 +49,8 @@
     "vite-plugin-babel": "^1.2.0",
     "vite-plugin-pages": "^0.32.2",
     "xlsx": "^0.18.5",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "@hi/common": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",

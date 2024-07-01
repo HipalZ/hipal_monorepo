@@ -16,158 +16,137 @@ import hipalHandLogo from "@/assets/login/hand.png";
 import { IoWarning } from "react-icons/io5";
 import { TbHomePlus } from "react-icons/tb";
 import "./business.css";
+import { apiRpc } from "@hi/common";
 
 const Business = memo(() => {
-	const setBusinessData = useBusinessData((s) => s.setBusinessData);
-	const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
-	const user = useOwnerLogin((s) => s.user);
-	
-	const navigate = useNavigate();
-	const filteredBusinesses = businesses?.filter(
-		(business: IBusinessData) =>
-			business?.staff?.includes(user._id) ||
-			business._id === user?.customRole?.[0]?.businessId,
-	);
+  const setBusinessData = useBusinessData((s) => s.setBusinessData);
+  const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
+  const user = useOwnerLogin((s) => s.user);
 
-	const handleRoute = async (businessId: string) => {
-		try {
-			const response = await axios.get(
-				`${paths.getSingleBusiness(businessId)}`,
-			);
-			const data = await response.data.data;
-			setBusinessData(data);
-			startTransition(() => {
-				navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](businessId));
-			});
-		} catch (error) {
-			console.error(error);
-		}
-	};
+  const navigate = useNavigate();
+  const filteredBusinesses = businesses?.filter(
+    (business: IBusinessData) => business?.staff?.includes(user._id) || business._id === user?.customRole?.[0]?.businessId,
+  );
 
+  const handleRoute = async (businessId: string) => {
+    try {
+      const response = await axios.get(`${paths.getSingleBusiness(businessId)}`);
+      const data = await response.data.data;
+      setBusinessData(data);
+      startTransition(() => {
+        navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](businessId));
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
-	const getBusiness = async () => {
-		try {
-			if (user.role === "RESTAURANT_MANAGER") {
-				const response = await axios.get(
-					`${paths.getSingleBusiness(user?.customRole?.[0]?.businessId)}`,
-				);
-				setBusinesses([response.data.data]);
-				return;
-			}
-			const response = await axios.get(`/v1/businesses?id=${user._id}`);
-			if (response.data.data === undefined || response.data.data.length === 0) {
-				localStorage.removeItem("ownerLogin");
-				toast.error("connection refused please login");
-				startTransition(() => {
-					navigate("/");
-				});
-			}
-			setBusinesses(response.data.data);
-			return [response.data.data]; 
-		} catch (error) {
-			console.log(error);
-		}
-	};
+  const getBusiness = async () => {
+    try {
+      if (user.role === "RESTAURANT_MANAGER") {
+        const response = await axios.get(`${paths.getSingleBusiness(user?.customRole?.[0]?.businessId)}`);
+        setBusinesses([response.data.data]);
+        return;
+      }
+      const response = await axios.get(`/v1/businesses?id=${user._id}`);
+      if (response.data.data === undefined || response.data.data.length === 0) {
+        localStorage.removeItem("ownerLogin");
+        toast.error("connection refused please login");
+        startTransition(() => {
+          navigate("/");
+        });
+      }
+      setBusinesses(response.data.data);
+      return [response.data.data];
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-	function addBusiness() {
-		startTransition(() => {
-			navigate("/app/business/add");
-		});
-	}
+  function addBusiness() {
+    startTransition(() => {
+      navigate("/app/business/add");
+    });
+  }
 
-	const {
-		isLoading: isLoad,
-		error,
-		data: allBizData,
-	} = useQuery({
-		queryKey: ["getBiz", user._id],
-		queryFn: getBusiness,
-		enabled: !!user._id,
-	});
+  const {
+    isLoading: isLoad,
+    error,
+    data: allBizData,
+  } = useQuery({
+    queryKey: ["getBiz", user._id],
+    queryFn: getBusiness,
+    enabled: !!user._id,
+  });
 
+  const { data: sample } = useQuery({
+    queryKey: [],
+    queryFn: () =>
+      apiRpc.business.$post({
+        json: {
+          name: "test",
+        },
+      }),
+  });
+  console.log({ sample });
+  return (
+    <main className="h-screen">
+      <div className="business_gradient">
+        <section className="sticky top-0 z-10 w-full px-0 pb-4">
+          <Header
+            leftIcon={<FaArrowLeft />}
+            centerImage={HipeopleLogo}
+            rightImage={HipeopleLogo}
+            isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+          />
+        </section>
+        <section className="business_gradient_hero_section">
+          <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">{user?.name?.charAt(0)}</div>
+          <article className="pl-4">
+            <div className="flex items-center text-2xl text-[#000000] w-full h-[1.25rem]">
+              <img width={16} height={16} src={hipalHandLogo} alt="hipalHandLogo" />
+              <span className="ml-2 font-bold">Hi</span>
+            </div>
+            <div className="text-base font-medium text-[#000000] leading-8">{user.name}</div>
+          </article>
+        </section>
+      </div>
+      <div className="parent_business_cards">
+        {filteredBusinesses?.map((ele: IBusinessData) => (
+          <section
+            onClick={() => handleRoute(ele._id)}
+            key={ele._id}
+            className={`${ele?.status ? "pointer-events-auto" : "pointer-events-none opacity-75"} child_business_card`}
+          >
+            <div className="text-xl capitalize">
+              {ele?.status && (
+                <div className="flex items-center text-sm text-red-500">
+                  <IoWarning /> Under verification
+                </div>
+              )}
+              {ele?.status && (
+                <div className="flex items-center text-sm text-[#1877F2]">
+                  <TbHomePlus /> Branch @Old Tree Cafe...
+                </div>
+              )}
+              <div>{ele?.businessName}</div>
+            </div>
+            <div className="pb-6 aspect-square w-[4rem] h-[4rem] rounded-full overflow-hidden">
+              {ele?.logo && (
+                <img src={ele?.logo} width={66} height={66} alt="Business_logo" loading="lazy" className="aspect-square w-[4rem] h-[4rem]" />
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
+      {/* {user.role !== "RESTAURANT_MANAGER" && ( */}
+      <button type="button" onClick={addBusiness} className=" bottom_btn on_active_bounce">
+        + Add Business
+      </button>
 
-	return (
-		<main className="h-screen">
-			<div className="business_gradient">
-				<section className="sticky top-0 z-10 w-full px-0 pb-4">
-					<Header
-						leftIcon={<FaArrowLeft />}
-						centerImage={HipeopleLogo}
-						rightImage={HipeopleLogo}
-						isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
-					/>
-				</section>
-				<section className="business_gradient_hero_section">
-					<div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">
-						{user?.name?.charAt(0)}
-					</div>
-					<article className="pl-4">
-						<div className="flex items-center text-2xl text-[#000000] w-full h-[1.25rem]">
-							<img
-								width={16}
-								height={16}
-								src={hipalHandLogo}
-								alt="hipalHandLogo"
-							/>
-							<span className="ml-2 font-bold">Hi</span>
-						</div>
-						<div className="text-base font-medium text-[#000000] leading-8">
-							{user.name}
-						</div>
-					</article>
-				</section>
-			</div>
-			<div className="parent_business_cards">
-				{filteredBusinesses?.map((ele: IBusinessData) => (
-					<section
-						onClick={() => handleRoute(ele._id)}
-						key={ele._id}
-						className={`${
-							ele?.status
-								? "pointer-events-auto"
-								: "pointer-events-none opacity-75"
-						} child_business_card`}
-					>
-						<div className="text-xl capitalize">
-							{
-								ele?.status && (
-									<div className="flex items-center text-sm text-red-500"><IoWarning /> Under verification</div>
-								)
-							}
-							{
-								ele?.status && (
-									<div className="flex items-center text-sm text-[#1877F2]"><TbHomePlus /> Branch @Old Tree Cafe...</div>
-								)
-							}
-							<div>{ele?.businessName}</div>
-						</div>
-						<div className="pb-6 aspect-square w-[4rem] h-[4rem] rounded-full overflow-hidden">
-							{ele?.logo && (
-								<img
-									src={ele?.logo}
-									width={66}
-									height={66}
-									alt="Business_logo"
-									loading="lazy"
-									className="aspect-square w-[4rem] h-[4rem]"
-								/>
-							)}
-						</div>
-					</section>
-				))}
-			</div>
-			{/* {user.role !== "RESTAURANT_MANAGER" && ( */}
-				<button
-					type="button"
-					onClick={addBusiness}
-					className=" bottom_btn on_active_bounce"
-				>
-					+ Add Business
-				</button>
-			
-			{isLoad && <LoadingSpinner />}
-		</main>
-	);
+      {isLoad && <LoadingSpinner />}
+    </main>
+  );
 });
 
 export default Business;

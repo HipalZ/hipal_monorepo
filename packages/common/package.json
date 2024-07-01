@@ -17,6 +17,7 @@
     "jsonwebtoken": "^8.5.1"
   },
   "devDependencies": {
+    "@hipal/server": "workspace:*",
     "prettier": "^3.3.1"
   }
 }
