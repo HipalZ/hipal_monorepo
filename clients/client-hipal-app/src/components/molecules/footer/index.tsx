@@ -1,4 +1,5 @@
 "use client"
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import Link from "next/link";
 import { memo } from "react"
 import { IoLogoLinkedin, IoLogoYoutube } from "react-icons/io"
@@ -13,6 +14,7 @@ interface IFooter{
 }
 const Footer=(props:IFooter) =>{
 	const { footerText, instagramLink, facebookLink, linkedinLink, youtubeLink } = props;
+	const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
 	return (
 			<div>
 				{footerText && (
@@ -60,7 +62,7 @@ const Footer=(props:IFooter) =>{
 				</section>
 				<center className="pb-4 mt-4 bg-base-300">
 
-				<Link className="text-sm" href={`/terms`}>
+				<Link className="text-sm" href={`/${customLink}/terms`}>
 					View Terms and Conditions
 				</Link>
 				</center>
