@@ -68,3 +68,5 @@ color solved
 changes ui
 
 routes changed from r to customlink
+
+home icon change and bookmark back button remove

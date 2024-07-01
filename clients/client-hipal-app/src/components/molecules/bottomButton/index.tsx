@@ -10,6 +10,7 @@ import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { usePathname, useRouter } from "next/navigation";
 import { RiCouponFill } from "react-icons/ri";
+import { HiOutlineHome } from "react-icons/hi";
 
 function BottomButton({
   children
@@ -58,7 +59,7 @@ function BottomButton({
             {isLoyaltyPage ? (
               <Link href={`/${customLink}/explore`}>
                 <center className="px-2 font-light text-base-100">
-                  <RiCouponFill size={22} />
+                  <HiOutlineHome size={22} />
                   Home
                 </center>
               </Link>
