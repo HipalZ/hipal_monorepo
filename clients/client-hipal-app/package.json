@@ -26,6 +26,7 @@
     "canvas-confetti": "^1.9.3",
     "color": "^4.2.3",
     "env-cmd": "^10.1.0",
+    "hono": "^4.4.3",
     "framer-motion": "^9.1.7",
     "html5-qrcode": "^2.3.8",
     "lodash-es": "^4.17.21",
@@ -46,7 +47,8 @@
     "run": "^1.5.0",
     "styled-jsx": "^5.1.1",
     "tailwind-merge": "^2.3.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "@hi/common": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
