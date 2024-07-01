@@ -1,5 +1,6 @@
 import DiscountDishCard from "@/components/molecules/discountDishCard"
 import Section from "@/components/molecules/section"
+import useBusinessDetails from "@/components/store/useBusinessDetails"
 import { IDish } from "@/components/types/businessData"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { Splide, SplideSlide } from "@splidejs/react-splide"
@@ -9,11 +10,11 @@ interface IPopularRestProps {
 	popular: any
 }
 function PopularRestaurant(props: IPopularRestProps) {
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const { popular } = props
 	const router = useRouter()
-	const { businessId } = useParams<{ businessId: string }>() ?? { businessId: '' };
 	const handleRecommendedDishClick = (id: string) => {
-		router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, id))
+		router.push(routePaths[PAGE_TYPES.DISH_ID](customLink, id))
 	}
 
 	return (

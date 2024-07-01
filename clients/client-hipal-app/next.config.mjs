@@ -26,7 +26,7 @@ const nextConfig = {
 	  return [
 		{
 		  source: '/n/:businessId',
-		  destination: '/r/:businessId/explore',
+		  destination: '/:businessId/explore',
 		  permanent: true,
 		},
 	  ];

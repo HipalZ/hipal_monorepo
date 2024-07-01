@@ -47,10 +47,10 @@ const CategoryPageBtn = memo(() => {
 		setDirection('category');
 		setIsPayment(true)
 		if (!tableName) {
-			return router.push(`/scan`);
+			return router.push(`/${customLink}/scan`);
 		}
 		if (!isLogin) { 
-			return router.push(`/r/${customLink}/user/signup`);
+			return router.push(`/${customLink}/user/signup`);
 
 		} else {
 			openModal()
@@ -60,10 +60,10 @@ const CategoryPageBtn = memo(() => {
 	const triggerCallWaiter = useCallback(() => {
 		setDirection('category');
 		if (!tableName) {
-			return router.push(`/scan`);
+			return router.push(`/${customLink}/scan`);
 		}
 		if (!isLogin) {
-			return router.push(`/r/${customLink}/user/signup`);
+			return router.push(`/${customLink}/user/signup`);
 
 		} else {
 			openCallWaiterModal()

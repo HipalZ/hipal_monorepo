@@ -34,7 +34,7 @@ function BottomButton({
     if (!isLogin) {
       setDirection("explore")
       setIsPayment(true)
-      router.push(`/r/${customLink}/user/signup`);
+      router.push(`/${customLink}/user/signup`);
       return;
     }
     setInputModal(true);
@@ -56,7 +56,7 @@ function BottomButton({
         <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
           <center className="relative flex items-center justify-between px-6">
             {isLoyaltyPage ? (
-              <Link href={`/r/${customLink}/explore`}>
+              <Link href={`/${customLink}/explore`}>
                 <center className="px-2 font-light text-base-100">
                   <RiCouponFill size={22} />
                   Home
@@ -64,7 +64,7 @@ function BottomButton({
               </Link>
             ) 
             :(
-              <Link href={`/r/${customLink}/${isLogin ? 'loyalty' : 'user/signup'}`}>
+              <Link href={`/${customLink}/${isLogin ? 'loyalty' : 'user/signup'}`}>
                 <center className="px-2 font-light text-base-100">
                   <RiCouponFill size={22} />
                   Rewards
@@ -80,7 +80,7 @@ function BottomButton({
             }
             {
               !tableName && (
-                <Link href="/scan">
+                <Link href={`/${customLink}/scan`}>
                   <button className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[75%] border rounded-full left-1/2 border-primary bg-base-100">
                     <LuScanLine size={36} />
                   </button>
@@ -88,7 +88,7 @@ function BottomButton({
               )
             }
             <span className="w-full mr-76 -ml-4 -mb-5 font-light text-base-100">{!tableName ? "Scan" : "Pay Bill"}</span>
-            <Link href={`/r/${customLink}/category`}>
+            <Link href={`/${customLink}/category`}>
               <center className="w-full px-2 font-light text-base-100">
                 <MdOutlineMenuBook size={22} />
                 Menu

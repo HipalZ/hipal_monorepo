@@ -137,13 +137,13 @@ function OtpPage() {
 	}
 	const goNext = useCallback(() => {
 		if (direction === "loyalty") {
-			return router.push(routePaths[PAGE_TYPES.LOYALTY](`${customLink}`))
+			return router.push(routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`))
 		} else if (direction === "category") {
-			return router.push(`/r/${customLink}/category?pay=${isPayment}`)
+			return router.push(`/${customLink}/category?pay=${isPayment}`)
 		} else if (direction === "explore") {
-			return router.push(`/r/${customLink}/explore?pay=${isPayment}`)
+			return router.push(`/${customLink}/explore?pay=${isPayment}`)
 		} else {
-			return router.push(`/r/${customLink}/explore?pay=${isPayment}`)
+			return router.push(`/${customLink}/explore?pay=${isPayment}`)
 		}
 	}, [router, direction, customLink])
 
@@ -258,7 +258,7 @@ function OtpPage() {
 							</div>
 						</div>
 					)}
-					<Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${businessId}`)}`}>
+					<Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${customLink}`)}`}>
 						<article className="flex items-center !mb-2 !mt-4">
 							<small>
 								Sent to <span className="text-[#3E3CFF] underline">{userDetails.phone}</span>{" "}

@@ -15,15 +15,14 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { RxCross2 } from "react-icons/rx";
 
 
-
 // NOTE: A `relative` tag must be added to the parent of this component
-function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchBox: () => void; categories: ICategory[], primaryColor: string}) {
+const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
     const panel = useRef(null);
     const { searchText, setSearchText } = useSearch();
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
     const [search, setSearchOpen] = useState(false);
     const router = useRouter();
-    const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
+    const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
     const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
         setSearchOpen(true);
@@ -60,7 +59,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
     const redirectToDish = (dishId: string, category: ICategory[]) => {
         setActiveCategory(category?.[0]?._id);
         setSearchOpen(!search);
-        router.push(routePaths[PAGE_TYPES.DISH_ID](businessId, dishId));
+        router.push(routePaths[PAGE_TYPES.DISH_ID](customLink, dishId));
     };
 
     return (
@@ -103,7 +102,7 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
                         {dishData.length > 0 ? (
                             present ? (
                                 <div className="">
-                                    <Link href={`${routePaths.category(businessId)}#${present?._id}`} passHref>
+                                    <Link href={`${routePaths.category(customLink)}#${present?._id}`} passHref>
                                         <div onClick={() => setSearchOpen(!search)} className="mt-14 ">
                                             <p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">{present.name}</p>
                                             <p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">Category</p>
@@ -167,6 +166,6 @@ function SearchPanel({ closeSearchBox, categories,primaryColor }: { closeSearchB
             )}
         </div>
     );
-}
+})
 
-export default memo(SearchPanel);
+export default SearchPanel

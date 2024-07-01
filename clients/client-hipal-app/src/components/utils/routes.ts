@@ -1,6 +1,4 @@
-const BASE_ROUTE = "r"
-
-const withBusinessId = (customLink: string, route: string) => `/${BASE_ROUTE}/${customLink}${route}`
+const withBusinessId = (customLink: string, route: string) => `/${customLink}${route}`
 
 export const PAGE_TYPES = {
 	EXPLORER: "explore",

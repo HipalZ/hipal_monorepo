@@ -39,7 +39,7 @@ const Rewards = memo(() => {
 				👋 Hi {userDetails.name}
 			</h3>
 			<section className={styles.reward_card_container}>
-				<Link href={`/r/${customLink}/loyalty`} className="w-full">
+				<Link href={`/${customLink}/loyalty`} className="w-full">
 					<RewardCard
 						bgColor="bg-[#F5D14E]"
 						title="Reward"
@@ -49,7 +49,7 @@ const Rewards = memo(() => {
 						gridColor="#000"
 					/>
 				</Link>
-				<Link href={`/r/${customLink}/loyalty`} className="w-full">
+				<Link href={`/${customLink}/loyalty`} className="w-full">
 					<RewardCard
 						bgColor="bg-[#5227CA]"
 						title="Wallet"
@@ -59,7 +59,7 @@ const Rewards = memo(() => {
 						gridColor="#ffffff60"
 					/>
 				</Link>
-				<Link href={`/r/${customLink}/loyalty`} className="w-full">
+				<Link href={`/${customLink}/loyalty`} className="w-full">
 					<RewardCard
 						bgColor="bg-[#CA2727]"
 						title="CouponZ"

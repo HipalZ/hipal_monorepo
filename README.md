@@ -65,4 +65,6 @@ search resolved bug
 
 color solved
 
-//
+changes ui
+
+routes changed from r to customlink

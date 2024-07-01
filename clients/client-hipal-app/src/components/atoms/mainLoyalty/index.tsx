@@ -31,6 +31,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const [cardPattern, setCardPattern] = useState("")
 	const userName = useLogin((s) => s.userDetails.name)
 	const isLogin = useLogin((s) => s.isLogin)
+	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
 
@@ -38,10 +39,10 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const goToLoyalty = (str: string) => {
 		if (!isLogin) {
 			setDirection(str)
-			router.push(routePaths[PAGE_TYPES.SIGN_UP](loyaltySetting.businessId || businessDetails._id))
+			router.push(routePaths[PAGE_TYPES.SIGN_UP](customLink))
 		} else {
 			setDirection("")
-			router.push(routePaths[PAGE_TYPES.LOYALTY](loyaltySetting.businessId || businessDetails._id))
+			router.push(routePaths[PAGE_TYPES.LOYALTY](customLink))
 		}
 	}
 

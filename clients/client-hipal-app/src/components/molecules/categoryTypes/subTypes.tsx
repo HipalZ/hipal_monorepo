@@ -56,7 +56,7 @@ function SubTypes(props: ISubTypes) {
 										} flex w-full border border-primary rounded-full items-center justify-between px-2 py-1`}
 								>
 									{!!item.coverImage ? (
-										<figure className="w-[1.75rem] mr-1 rounded-full overflow-hidden">
+										<figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
 											<Image
 												src={item.coverImage}
 												alt="dish"
