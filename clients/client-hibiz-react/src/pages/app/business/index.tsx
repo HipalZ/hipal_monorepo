@@ -82,13 +82,15 @@ const Business = memo(() => {
   const { data: sample } = useQuery({
     queryKey: [],
     queryFn: () =>
-      apiRpc.business.$post({
-        json: {
-          name: "test",
-        },
-      }),
+      apiRpc.business
+        .$post({
+          json: {
+            name: "test",
+          },
+        })
+        .then((res) => res.json()),
   });
-  console.log({ sample });
+  console.log({ sample: sample });
   return (
     <main className="h-screen">
       <div className="business_gradient">

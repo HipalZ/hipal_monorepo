@@ -6,6 +6,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
     "@types/cookie-session": "^2.0.44",
     "@hi/db-models": "workspace:*",
