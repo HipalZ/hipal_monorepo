@@ -11,12 +11,6 @@ import PlaceholderImg from '@/components/atoms/placeholder'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
 import { IBiz } from '@/components/types/businessData'
 
-interface IData {
-    logo:string;
-    registeredName:string;
-    location:string;
-    phone:string;
-}
 const Terms= ()=> {
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
 	const { logo, registeredName, address, phoneNumber } = businessDetails as IBiz

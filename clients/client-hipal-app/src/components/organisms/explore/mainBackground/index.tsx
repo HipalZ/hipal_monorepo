@@ -5,10 +5,12 @@ import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
 import { IExplore } from "@/components/types/businessData";
 import { useLogin } from "@/components/store/useLogin";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
-function MainBackground(props: { explore: IExplore | undefined }) {
+const MainBackground = memo((props: { explore: IExplore | undefined }) =>{
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const explore = props.explore ?? {
 		wallpaper: img.src,
 		phone: '',
@@ -22,14 +24,13 @@ function MainBackground(props: { explore: IExplore | undefined }) {
 		openTill: ''
 	};
 
-	const { businessId } = useParams<{ businessId: string }>() ?? { businessId: '' };
 	const router = useRouter()
 
 	const { isLogin } = useLogin()
 
 	const goToLoginPage = useCallback(() => {
-		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](businessId)}`)
-	}, [businessId, router])
+		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](customLink)}`)
+	}, [customLink, router])
 
 	return (
 		<div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
@@ -67,6 +68,6 @@ function MainBackground(props: { explore: IExplore | undefined }) {
 			</div>
 		</div>
 	)
-}
+})
 
-export default memo(MainBackground)
+export default MainBackground

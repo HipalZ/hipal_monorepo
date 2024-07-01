@@ -181,7 +181,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 								</b>
 							</span>
 							<Link
-								href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}
+								href={`/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}
 							>
 								<button
 									type="button"
@@ -364,7 +364,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 						/>
 					</section>
 					<section className="p-4 mt-4">
-						<Link href={`/r/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
+						<Link href={`/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
 							<article className="flex items-center justify-between p-4 bg-base-200 rounded-2xl">
 								<div>
 									<h1 className="text-lg font-semibold text-primary">
@@ -380,7 +380,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 							</article>
 						</Link>
 						&nbsp;
-						<Link href={`/terms`}>
+						<Link href={`/${customLink}/terms`}>
 							<article className="flex items-center justify-between p-4 bg-base-200 rounded-2xl">
 								<div>
 									<h1 className="text-lg font-semibold text-primary">

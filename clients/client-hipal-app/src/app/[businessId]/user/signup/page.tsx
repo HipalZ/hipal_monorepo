@@ -7,18 +7,17 @@ import Welcome from "@/assets/login-background.png"
 import { BiArrowBack } from "react-icons/bi"
 import HipalLogo from "@/assets/hipalNewLogo.svg"
 import { useLogin } from "@/components/store/useLogin"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import axios from "@/utils/axios"
 
-function SignUp() {
+const SignUp = memo(() =>{
 	const [logo, setLogo] = useState<string>('')
 	const [phone, setPhone] = useState("")
 	const { setUserDetails } = useLogin()
 	const businessData = useBusinessDetails((s) => s.businessDetails)
+	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const router = useRouter()
-	const params = useParams<{ businessId: string }>();
-	const businessId = params ? params.businessId : undefined;
 	const [loader, setLoader] = useState<boolean>(false)
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -46,20 +45,20 @@ function SignUp() {
 			const res = await axios(config)
 			if (res.status === 201) {
 				setUserDetails(res.data.data?.user)
-				await router.push(`${routePaths[PAGE_TYPES.OTP](businessId ?? "")}`)
 				setLoader(false)
+				router.push(`${routePaths[PAGE_TYPES.OTP](customLink ?? "")}`)
 			}
 		} catch (error) {
 			if ((error as any).response?.status === 409) {
 				setUserDetails((error as any).response.data.data?.user)
-				router.push(`${routePaths[PAGE_TYPES.OTP](businessId ?? "")}`)
+				router.push(`${routePaths[PAGE_TYPES.OTP](customLink ?? "")}`)
 			}
 		}
 	}
 
 	const goBack = useCallback(() => {
-		router.push(`/r/${businessData?.customLink}/explore`)
-	}, [router, businessData.customLink])
+		router.push(`/${customLink}/explore`)
+	}, [router, customLink])
 
 	return (
 		<section className="relative bg-black">
@@ -119,6 +118,6 @@ function SignUp() {
 			</form>
 		</section>
 	)
-}
+})
 
-export default memo(SignUp)
+export default SignUp

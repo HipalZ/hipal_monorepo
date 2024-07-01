@@ -62,7 +62,7 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 				<div className="h-full w-[0.625rem] text-sm absolute top-[30%] right-4 text-white animate-pulse" >✨</div>
 				{
 					login &&
-					<Link href={`/r/${customLink}/loyalty`}>
+					<Link href={`/${customLink}/loyalty`}>
 						<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
 							claim Now
 						</button>
@@ -70,7 +70,7 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 				}
 				{
 					!login &&
-					<Link href={`/r/${customLink}/user/signup`}>
+					<Link href={`/${customLink}/user/signup`}>
 						<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
 							claim Now
 						</button>
@@ -97,7 +97,7 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 						</figure>
 						{
 							!login &&
-							<Link href={`/r/${customLink}/user/signup`}>
+							<Link href={`/${customLink}/user/signup`}>
 								<button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
 									Get Now
 								</button>

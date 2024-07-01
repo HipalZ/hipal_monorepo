@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use client"
 import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useCallback, useMemo } from "react";

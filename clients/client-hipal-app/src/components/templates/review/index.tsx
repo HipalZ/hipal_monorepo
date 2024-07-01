@@ -148,7 +148,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			const res = await axios(config)
 			if (res.status === 201) {
 				toast.success('Thank You for Your Feedback')
-				router.push(`/r/${customLink}/loyalty?claim=${roundedOffClaim}`)
+				router.push(`/${customLink}/loyalty?claim=${roundedOffClaim}`)
 			}
 		} catch (error) {
 			toast.error(error?.response?.data?.message)
@@ -174,7 +174,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 		<div className='p-4 animate-fade-up animate-once'>
 			<figure className='z-10 flex items-center space-x-4 rounded-full'>
 				<Image src={logo} alt='logo' height={38} width={38}/>
-				<span className='text-2xl capitalize'>{businessName}</span>
+				<span className='text-xl capitalize'>{businessName}</span>
 			</figure>
 			&nbsp;
 			<section
@@ -246,7 +246,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						</label>
 					</div>
 				</center>
-				<Link href={`/r/${customLink}/loyalty?claim=${roundedOffClaim}`}>
+				<Link href={`/${customLink}/loyalty?claim=${roundedOffClaim}`}>
 					<center
 						className='pb-1 mb-8 underline'
 					>

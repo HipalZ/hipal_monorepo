@@ -87,7 +87,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						/>
 						<b>Hey {userDetails?.name} !!</b>
 					</span>
-					<Link href={`/r/${customLink}/loyalty/`}>
+					<Link href={`/${customLink}/loyalty/`}>
 						<button
 							type="button"
 							className="px-4 py-2 text-xs border rounded-full on_active_bounce bg-base-100 text-primary border-primary"
