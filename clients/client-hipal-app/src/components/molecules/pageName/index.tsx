@@ -5,9 +5,13 @@ import { memo } from "react"
 
 
 function PageComponent() {
+	const onBoardBusiness = () => {
+		window.open("https://wa.me/9177914130", "_blank");
+	}
 	return (
 		<div>
 			<Image
+				onClick={onBoardBusiness}
 				src={Footer}
 				quality={95}
 				width={480}
