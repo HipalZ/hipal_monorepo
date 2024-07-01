@@ -18,7 +18,7 @@ function PopularRestaurant(props: IPopularRestProps) {
 
 	return (
 		<Section title="Uniquely Yours" tag="h3">
-			<div className="">
+			<div>
 				<Splide
 					aria-labelledby="Special offers"
 					options={{
@@ -30,7 +30,7 @@ function PopularRestaurant(props: IPopularRestProps) {
 						perMove: 1,
 						autoWidth: true,
 						classes: {
-							pagination: "splide__pagination hidden",
+							pagination: "splide__pagination",
 						},
 					}}
 				>

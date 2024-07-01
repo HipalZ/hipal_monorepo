@@ -171,7 +171,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 									className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
 								/>
 								<b>
-									Hey{" "}
+									Hi{" "}
 									{userDetails?.name
 										? userDetails.name.length > 10
 											? `${userDetails.name.substring(0, 10)}...`
@@ -213,6 +213,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 									alt="logo"
 									width={95}
 									height={95}
+									className="rounded-full"
 								/>
 								<h3 className="mt-4 text-3xl font-semibold capitalize text-base-100">
 									{data?.business?.businessName}
@@ -224,19 +225,19 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 							<br />
 							<section className="flex justify-around text-center text-base-100">
 								<article className="pr-5 border-r-2 border-base-100">
-									<h1 className="text-3xl">
+									<h1 className="text-lg">
 										{userTotalHistory?.totalWin || 0}
 									</h1>
 									<p>Total win</p>
 								</article>
 								<article className="pr-5 border-r-2 border-base-100">
-									<h1 className="text-3xl">
+									<h1 className="text-lg">
 										{userTotalHistory?.totalSave || 0}
 									</h1>
 									<p>Total saved</p>
 								</article>
 								<article>
-									<h1 className="text-3xl">Silver</h1>
+									<h1 className="text-lg">Silver</h1>
 									<p>VIP Level</p>
 								</article>
 							</section>

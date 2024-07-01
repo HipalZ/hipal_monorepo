@@ -40,7 +40,6 @@ function Card({
 			outerContent: "px-3 py-1 bg-base-200",
 		},
 	}
-
 	return (
 		<button
 			className={`${defaultClasses.mainCard} ${classes[size].mainCard} ${appendCardClassNames}`}
@@ -65,28 +64,10 @@ function Card({
 					</>
 				)}
 			</div>
-
-			<div className="absolute bottom-0 w-full bg-white h-[5.5rem] text-left">
+				/** after getting the heading and description bg-base-200 has to be added **/
+			<div className={`${isOuterContent ? 'bg-base-200':''} absolute bottom-0 w-full h-[5.5rem] text-left`}>
 				{children}
 			</div>
-
-			{/* {!isOuterContent ? (
-				<>
-					<div
-						className={`${defaultClasses.innerContent} ${classes[size].innerContent} ${appendTextClassNames}`}
-					>
-						{children}
-					</div>
-				</>
-			) : (
-				<>
-					<div
-						className={`${defaultClasses.outerContent} ${classes[size].outerContent} ${appendTextClassNames}`}
-					>
-						{children}
-					</div>
-				</>
-			)} */}
 		</button>
 	)
 }

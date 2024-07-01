@@ -19,7 +19,7 @@ const Footer=(props:IFooter) =>{
 						{footerText}
 					</div>
 				)}
-				<div className="flex flex-row px-2 space-x-2 ">
+				<div className="flex flex-row px-2 space-x-2 mt-4">
 					{instagramLink && (
 						<a
 							href={instagramLink}

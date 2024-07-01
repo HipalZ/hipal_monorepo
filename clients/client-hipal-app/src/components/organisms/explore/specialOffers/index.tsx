@@ -42,6 +42,7 @@ export default memo(function SpecialOffers(props: ISpecialOffers) {
 									<CardLG
 										src={offer?.wallpaper || getRandomImg()}
 										text={offer?.offerName || ""}
+										isOuterContent={!!offer?.offerName}
 									/>
 							</div>
 						))}
