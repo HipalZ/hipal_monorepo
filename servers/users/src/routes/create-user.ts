@@ -1,6 +1,6 @@
 // import { BadRequestError, NotFoundError, validateRequest } from "@hipal/common";
 import { Admin, LoyaltyCoinsInfo, LoyaltySettings, UrlModel, User, UserReward, UserRewardHistory } from '@hi/db-models';
-import { staffValidator, UrlAttrs, UserAttrs } from '@hi/db-models/src/validators';
+import { ownerLoginValidator, staffValidator, UrlAttrs, UserAttrs } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
@@ -1226,6 +1226,216 @@ router.post(
       data: response.data,
       err: false,
     });
+  },
+);
+
+////////////////////////////////////////////
+
+router.post(
+  '/v1/users/ownerSignUp',
+  validateRequest({
+    body: ownerLoginValidator,
+  }),
+
+  async <T, K>(req: Request<T, K, z.infer<typeof ownerLoginValidator>>, res: Response) => {
+    const { name, phone, otp } = req.body;
+    const { verifyOtp } = req.query;
+
+    if (!phone || !name || !verifyOtp) {
+      return res.status(400).send({
+        status: false,
+        message: ' phone, name and verifyOtp required',
+        err: true,
+        data: {},
+      });
+    }
+
+    let existingUser;
+
+    existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
+    if (existingUser) {
+      const accessToken = createAccessToken(existingUser);
+      const refreshToken = createRefreshToken(existingUser);
+      return res.status(409).send({
+        status: false,
+        message: 'User already exist',
+        data: { user: existingUser, accessToken, refreshToken },
+        err: false,
+      });
+    }
+
+    if (verifyOtp === 'false') {
+      const options = {
+        method: 'POST',
+        url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+      const response = await axios(options);
+
+      return res.status(200).send({
+        status: true,
+        message: 'Otp sent successfully',
+        data: response.data,
+      });
+    }
+
+    if (verifyOtp == 'true') {
+      const options = {
+        method: 'GET',
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+
+      const response = await axios(options);
+
+      if (response.status !== 200) {
+        return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
+      }
+
+      const user = await User.create({ name, phone, role: 'RESTAURANT_OWNER' });
+
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+      res.status(200).send({
+        data: { user, accessToken, refreshToken },
+        err: false,
+        status: true,
+        message: 'Login SuccessFully !!!',
+      });
+    }
+  },
+);
+
+router.post(
+  '/v1/users/resendOtp',
+
+  async (req: Request, res: Response) => {
+    const { phone } = req.body;
+
+    const options = {
+      method: 'POST',
+      url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        authkey: '387796AmyGlDBq63b2d75aP1',
+      },
+    };
+    const response = await axios(options);
+
+    return res.status(200).send({
+      status: true,
+      message: 'Otp sent successfully',
+      data: response.data,
+    });
+  },
+);
+
+router.post(
+  '/v1/users/setPassword/:id',
+
+  async (req: Request, res: Response) => {
+    const { password } = req.body;
+    const { id } = req.params;
+    if (!password) {
+      return res.status(400).send({
+        status: false,
+        message: 'Password required',
+        err: true,
+        data: {},
+      });
+    }
+
+    const hashPass = await hashPassword(password);
+
+    const user = await User.findByIdAndUpdate(id, { password: hashPass }, { new: true });
+
+    return res.send({
+      status: true,
+      message: 'Password set successfully',
+      data: user,
+      err: false,
+    });
+  },
+);
+
+router.post(
+  '/v1/users/ownerSignIn',
+  validateRequest({
+    body: ownerLoginValidator,
+  }),
+
+  async <T, K>(req: Request<T, K, z.infer<typeof ownerLoginValidator>>, res: Response) => {
+    const { password, phone, otp } = req.body;
+    const { verifyOtp } = req.query;
+    if (!password || !phone || !verifyOtp) {
+      return res.status(400).send({
+        status: false,
+        message: 'Password,verifyOtp,phone required',
+        data: {},
+        err: false,
+      });
+    }
+
+    if (verifyOtp == 'false') {
+      let existingUser;
+
+      existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
+      let comparePass = verifyPassword(password, existingUser?.password || '');
+
+      if (!comparePass) {
+        return res.status(400).send({
+          status: false,
+          message: 'Password is incorrect',
+          data: {},
+          err: false,
+        });
+      }
+
+      const accessToken = createAccessToken(existingUser);
+      const refreshToken = createRefreshToken(existingUser);
+      return res.status(200).send({
+        status: false,
+        message: 'Login SuccessFully !!!',
+        data: { user: existingUser, accessToken, refreshToken },
+        err: false,
+      });
+    }
+
+    if (verifyOtp == 'true') {
+      const options = {
+        method: 'GET',
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+
+      const response = await axios(options);
+
+      if (response.status !== 200) {
+        return res.status(400).send({ err: true, status: false, message: 'Please enter valid Otp !!' });
+      }
+
+      const user = await User.findOne({ phone, role: 'RESTAURANT_OWNER' });
+
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+      res.status(200).send({
+        data: { user, accessToken, refreshToken },
+        err: false,
+        status: true,
+        message: 'Login SuccessFully !!!',
+      });
+    }
   },
 );
 

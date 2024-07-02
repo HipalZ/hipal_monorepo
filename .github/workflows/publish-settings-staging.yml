@@ -1,16 +1,16 @@
-name: Build and Push dishes Server Image
+name: Build and Push settings Server Image
 
 on:
   push:
-    branches: ['prod']
+    branches: ['test']
     paths:
       - 'Dockerfile'
       - 'package.json'
-      - 'servers/dishes/**'
+      - 'servers/settings/**'
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: dishes-prod-server
+  DOCKER_REPOSITORY: settings-test-server
 
 jobs:
   build-and-push:
@@ -27,5 +27,5 @@ jobs:
       - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
           IMAGE_TAG=latest
-          docker build --target dishes-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
+          docker build --target settings-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG

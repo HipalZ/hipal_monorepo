@@ -30,7 +30,7 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 		<div className="relative flex flex-col px-8">
 			<figure className="absolute z-10 -top-[3rem] left-4 bg-base-200 rounded-full">
 				{data.business?.logo ? (
-					<figure className="p-2">
+					<figure className="px-2 pt-2">
 						<Image
 							src={logo}
 							height={80}
@@ -38,7 +38,7 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 							quality={75}
 							objectFit="cover"
 							alt="logo-business"
-							className="object-center w-1/3 p-1 border rounded-full shadow-sm aspect-square"
+							className="object-center w-1/3 border rounded-full shadow-sm aspect-square"
 							placeholder="blur"
 							blurDataURL={getRandomBlurImg(100, 100)}
 						/>

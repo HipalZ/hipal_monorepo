@@ -160,8 +160,7 @@ export const calculateReward = (exist: number, reward: number, limit: number) =>
 	let total = exist + reward;
 
 	const sum = Math.min(total, limit);
-
-	const finalReward = sum - exist;
+	const finalReward = Math.round(Number(sum - exist) / 10) * 10;
 	return { finalReward, curentBalance: sum };
 };
 

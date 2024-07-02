@@ -31,7 +31,6 @@ function Header({
 	categories?:ICategory[]
 	primaryColor?: string
 }) {
-	//TODO : add the bookmark
 	const router = useRouter()
 	const [state, setState] = useState({
 		showSearchBox: title ? false : true,
@@ -134,7 +133,7 @@ function Header({
 								</CustomTag>
 							</div>
 						) : (
-							<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []} primaryColor={primaryColor || ""}/>
+							<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []}/>
 						)}
 					</div>
 

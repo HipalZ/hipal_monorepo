@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { memo, useEffect, useState } from "react";
 import Mixed from "@/assets/svg/Mixed.svg";
+import { useCart } from "@/components/store/useCart";
+import { cn } from "@/components/utils/helpers";
 
 export type FOOD_TYPES = "veg" | "nonveg" | "vegan" | "egg" | "other" | "mixed";
 
 function FoodType({ type }: { type: FOOD_TYPES }) {
   const [currentType, setCurrentType] = useState<FOOD_TYPES>("other");
-
+  const {showCart} = useCart();
   const classes: Record<FOOD_TYPES, { border: string; circle: string; text: string }> = {
     veg: {
       border: "border-green-500",
@@ -51,8 +53,8 @@ function FoodType({ type }: { type: FOOD_TYPES }) {
 
   if (type.toLowerCase() === "mixed") {
     return (
-      <div className="flex flex-row -mt-2 -mb-8">
-        <Image src={Mixed} width={20} height={4} alt="mixed" />
+      <div className={cn("flex flex-row",!showCart ? "-mt-2 -mb-8" : '')}>
+        <Image src={Mixed} width={20} height={4} alt="mixed" loading="lazy"/>
       </div>
     );
   }

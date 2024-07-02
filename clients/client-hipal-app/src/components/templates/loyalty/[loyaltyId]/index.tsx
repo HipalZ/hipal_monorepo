@@ -87,7 +87,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						/>
 						<b>Hey {userDetails?.name} !!</b>
 					</span>
-					<Link href={`/r/${customLink}/loyalty/`}>
+					<Link href={`/${customLink}/loyalty/`}>
 						<button
 							type="button"
 							className="px-4 py-2 text-xs border rounded-full on_active_bounce bg-base-100 text-primary border-primary"
@@ -126,15 +126,15 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 				<br />
 				<section className="flex justify-around mb-8 text-center text-primary">
 					<article className="pr-5 border-r-2 border-primary">
-						<h1 className="text-3xl">{userTotalHistory?.totalWin || 0}</h1>
+						<h1 className="text-lg">{userTotalHistory?.totalWin || 0}</h1>
 						<p>Total win</p>
 					</article>
 					<article className="pr-5 border-r-2 border-primary">
-						<h1 className="text-3xl">{userTotalHistory?.totalSave || 0}</h1>
+						<h1 className="text-lg">{userTotalHistory?.totalSave || 0}</h1>
 						<p>Total saved</p>
 					</article>
 					<article>
-						<h1 className="text-3xl">Silver</h1>
+						<h1 className="text-lg">Silver</h1>
 						<p>VIP Level</p>
 					</article>
 				</section>
@@ -181,7 +181,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 						onClick={() => handleClick(pageNumber + 1)}
 						disabled={loading || !hasMoreData}
 						type="button"
-						className="w-full mt-4 rounded-full bg-primary on_active_bounce btn"
+						className="w-full mt-4 rounded-full bg-primary on_active_bounce btn text-base-200"
 					>
 						{loading ? (
 							<span className="loader_spinner !border-t-base-100"></span>

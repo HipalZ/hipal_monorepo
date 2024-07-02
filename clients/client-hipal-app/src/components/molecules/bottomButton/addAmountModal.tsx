@@ -36,7 +36,7 @@ const AddAmountModal = memo(() => {
         setLoading(true);
         if (amount > 0) {
             setIsPayment(false)
-            router.push(`/r/${business.customLink}/payment?amount=${amount}`);
+            router.push(`/${business.customLink}/payment?amount=${amount}`);
         }
     }, [amount, business.customLink, router]);
 

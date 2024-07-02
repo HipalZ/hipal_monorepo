@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useState } from 'react';
 import Image from 'next/image';
-
 import QRcodeImg from "@/assets/payment/mobileqr.png"
 import HandPay from "@/assets/payment/handcash.png"
 import online from "@/assets/payment/mobilepay.png"

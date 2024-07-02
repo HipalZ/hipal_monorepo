@@ -81,7 +81,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
 
     useEffect(() => {
         if (!tableName) {
-            return router.push(`/r/${businessDetails.customLink}/explore`)
+            return router.push(`/${businessDetails?.customLink}/explore`)
         }
     }, [])
 
@@ -177,13 +177,13 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 event.preventDefault();
                 event.returnValue = ''; // Custom message is no longer supported in most browsers
                 // Redirect to a specific URL
-                window.location.href = `/r/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                window.location.href = `/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
                 toast.error('Add the coinz to get the rewards')
             };
             window.onpopstate = (event) => {
                 event.preventDefault();
                 // Redirect to a specific URL
-                window.location.href = `/r/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                window.location.href = `/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
                 toast.error('Add the coinz to get the rewards')
             };
 
@@ -215,7 +215,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
             const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             if (res.status === 200) {
-                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
+                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
@@ -242,7 +242,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const handleCreateOfflineOrder = async () => {
         if (tableName === '') {
             toast.error('Please scan to start')
-            return router.push(`/scan`)
+            return router.push(`/${businessDetails?.customLink}/scan`)
         }
         if (isLoading) {
             return toast.error('Please wait for the previous transaction to complete')
@@ -273,7 +273,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
                 // gives a string which is orderId
                 setTableName('')
-                router.push(`/r/${data?.business?._id}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
+                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
@@ -313,7 +313,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
         if (tableName === '') {
             toast.error('Please scan to start')
-            return router.push(`/scan`)
+            return router.push(`/${businessDetails?.customLink}/scan`)
         }
         if (mode.toLowerCase() === 'offline') {
             await handleCreateOfflineOrder();
@@ -400,7 +400,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         if (selectedMode === 'MODE') {
             return setSelectedMode('INVOICE')
         }
-        router.push(`${routePaths[PAGE_TYPES.CATEGORY](data?.business?._id || '')}`)
+        router.push(`${routePaths[PAGE_TYPES.CATEGORY](businessDetails?.customLink || '')}`)
     }
 
     const handleCoins = async (claimedCoinz:number) => {

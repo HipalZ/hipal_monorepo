@@ -36,7 +36,7 @@ function DiscountDishCard({
 				)}
 			</div>
 			{/* Bottom Section */}
-			<div className="flex mt-2 overflow-hidden text-sm text-center truncate w-28">
+			<div className="flex mt-2 overflow-hidden text-sm text-center truncate w-32">
 				{dishData?.name}
 			</div>
 		</center>
