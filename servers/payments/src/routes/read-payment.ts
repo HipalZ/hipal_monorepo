@@ -126,10 +126,10 @@ router.get(
         businessId,
         isAccepted: true,
         isRejected: false,
-        date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
-        },
+        // date: {
+        //   $gte: startOfToday.getTime(),
+        //   $lte: endOfToday.getTime(),
+        // },
       })
         .sort({ _id: -1 })
         .skip(skip)
@@ -151,10 +151,10 @@ router.get(
         businessId,
         isAccepted: true,
         isRejected: false,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
+        // date: {
+        //   $gte: fromDate,
+        //   $lte: toDate,
+        // },
       })
         .sort({ _id: -1 })
         .skip(skip)
@@ -185,10 +185,10 @@ router.get(
     if (!from && !to) {
       const existingPayments = await Payment.find({
         businessId,
-        date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
-        },
+        // date: {
+        //   $gte: startOfToday.getTime(),
+        //   $lte: endOfToday.getTime(),
+        // },
       }).select('total claimedCoins paymentMode');
       const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
@@ -222,10 +222,10 @@ router.get(
       }
       const existingPayments = await Payment.find({
         businessId,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
+        // date: {
+        //   $gte: fromDate,
+        //   $lte: toDate,
+        // },
       }).select('total claimedCoins paymentMode');
       const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);

@@ -104,39 +104,11 @@ const addSignUpBonus = async (
 
     await data.save();
     return 1;
-  } else if (existingReward) {
-    if (!existingReward?.scanCount || existingReward?.scanCount == 0) {
-      let userReward = await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { rewards: bonus, scanCount: 1 } }, { new: true });
-      await LoyaltyCoinsInfo.findOneAndUpdate(
-        { businessId: loyaltyId },
+  } else {
+    await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 1 } }, { new: true });
 
-        {
-          $inc: {
-            coinzIssued: bonus,
-          },
-        },
-      );
-      const data = new UserRewardHistory({
-        userName: userReward?.userName || name,
-        userPhone: userReward?.userPhone || phone,
-
-        status: 'plus',
-        rewards: bonus,
-
-        currentBalance: userReward?.rewards || bonus,
-
-        loyaltyId,
-      });
-
-      await data.save();
-      return 1;
-    } else {
-      await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 1 } }, { new: true });
-
-      return 1;
-    }
+    return 1;
   }
-  return 1;
 };
 
 router.post(
@@ -262,6 +234,7 @@ router.post(
 
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
+    const loyaltyUser = await UserReward.findOne({ userPhone: phone, loyaltyId }).select('rewards');
 
     return res.status(200).send({
       status: true,
