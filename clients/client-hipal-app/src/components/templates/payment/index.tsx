@@ -279,7 +279,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         } catch (err: any) {
             console.log(err)
             toast.error(err.response?.data?.message || 'Something went wrong')
-        }finally{
+        } finally {
             setIsLoading(false)
         }
     }
@@ -391,7 +391,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
-    const handleApplyCoinz = (finalValue:number) => {
+    const handleApplyCoinz = (finalValue: number) => {
         setClaimedCoinz(finalValue)
         handleCoins(finalValue)
     };
@@ -403,7 +403,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         router.push(`${routePaths[PAGE_TYPES.CATEGORY](businessDetails?.customLink || '')}`)
     }
 
-    const handleCoins = async (claimedCoinz:number) => {
+    const handleCoins = async (claimedCoinz: number) => {
         // if has claim coinz then celebrate
         setIsModalOpen(false)
         if (claimedCoinz !== null && claimedCoinz > 0) {
@@ -480,6 +480,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         userCoinz > 0 &&
                         <UseCoinzPopup
                             openModal={openModal}
+                            claimedCoinz={claimedCoinz}
+                            userCoinz={userCoinz}
                         />
                     }
                     <BillSummary
@@ -505,9 +507,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 <PaymentComponent data={data} tips={tips}
                     billValue={billValue}
                     handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
-                    setSelectedMode={setSelectedMode} isLoading={isLoading} 
+                    setSelectedMode={setSelectedMode} isLoading={isLoading}
                     total={billValue - claimedCoinz + tips}
-                    />
+                />
             }
             <AvailableCoinz
                 isModalOpen={isModalOpen}
