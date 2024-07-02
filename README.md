@@ -77,3 +77,5 @@ loaders payment
 create order offline toast
 
 terms and conditions update
+
+wallet
