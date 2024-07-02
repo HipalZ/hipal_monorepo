@@ -27,7 +27,7 @@ export const PaymentAlertSchema = z.object({
   posDiscount: z.number().default(0).optional(),
   waiterName: z.string().optional(),
   isRejected: z.boolean().default(false).optional(),
-  date: z.number().default(Date.now()),
+  date: z.number(),
 });
 
 export type PaymentAlertType = z.infer<typeof PaymentAlertSchema>;

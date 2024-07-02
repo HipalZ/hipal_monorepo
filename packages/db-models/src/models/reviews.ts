@@ -1,5 +1,4 @@
 import mongoose, { Model } from 'mongoose';
-
 import { ReviewsType } from '../validators';
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
@@ -31,17 +30,17 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     foodTaste: {
       type: Boolean,
     },
-    ambience:{
-      type:Boolean
+    ambience: {
+      type: Boolean,
     },
     hygiene: {
       type: Boolean,
     },
-    service:{
-      type:Boolean
+    service: {
+      type: Boolean,
     },
-    staffs:{
-      type:[String]
+    staffs: {
+      type: [String],
     },
     date: {
       required: true,

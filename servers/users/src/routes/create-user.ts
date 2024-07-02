@@ -106,7 +106,6 @@ const addSignUpBonus = async (
     return 1;
   } else {
     await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 2 } }, { new: true });
-
     return 1;
   }
 };
@@ -227,7 +226,7 @@ router.post(
       return res.status(200).send({
         status: true,
         message: 'User logged in successfully',
-        data: { user: modifyUser, accessToken, refreshToken, rewards: loyaltyUser?.rewards || 0 },
+        data: { user: modifyUser, accessToken, refreshToken, rewards: userReward?.rewards || 0 },
         err: false,
       });
     }
@@ -239,7 +238,7 @@ router.post(
     return res.status(200).send({
       status: true,
       message: 'User logged in successfully',
-      data: { user: existingUser, accessToken, refreshToken, rewards: loyaltyUser?.rewards || 0 },
+      data: { user: existingUser, accessToken, refreshToken, rewards: 0 },
       err: false,
     });
   },

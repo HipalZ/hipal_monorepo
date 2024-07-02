@@ -126,10 +126,10 @@ router.get(
         businessId,
         isAccepted: true,
         isRejected: false,
-        // date: {
-        //   $gte: startOfToday.getTime(),
-        //   $lte: endOfToday.getTime(),
-        // },
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
       })
         .sort({ _id: -1 })
         .skip(skip)
@@ -151,10 +151,10 @@ router.get(
         businessId,
         isAccepted: true,
         isRejected: false,
-        // date: {
-        //   $gte: fromDate,
-        //   $lte: toDate,
-        // },
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
       })
         .sort({ _id: -1 })
         .skip(skip)
@@ -185,12 +185,12 @@ router.get(
     if (!from && !to) {
       const existingPayments = await Payment.find({
         businessId,
-        // date: {
-        //   $gte: startOfToday.getTime(),
-        //   $lte: endOfToday.getTime(),
-        // },
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
       }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment?.total ?? 0), 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
       const totalOnlineSale = existingPayments.reduce(
@@ -222,16 +222,16 @@ router.get(
       }
       const existingPayments = await Payment.find({
         businessId,
-        // date: {
-        //   $gte: fromDate,
-        //   $lte: toDate,
-        // },
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
       }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
       const totalOnlineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total : 0),
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total ?? 0 : 0),
         0,
       );
 
@@ -282,7 +282,7 @@ router.get(
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
       return res.status(200).send({
         err: false,
@@ -308,7 +308,7 @@ router.get(
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
       return res.status(200).send({
         err: false,
