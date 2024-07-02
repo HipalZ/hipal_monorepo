@@ -5,18 +5,18 @@ import { memo, useCallback, useState } from "react";
 import AddAmountModal from "@/components/molecules/bottomButton/addAmountModal";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import { useLogin } from "@/components/store/useLogin";
 import { RiCouponFill } from "react-icons/ri";
 
 interface IUseCoinzPopup {
     openModal: () => void,
+    claimedCoinz: number,
+    userCoinz: number
 }
 
 const UseCoinzPopup = (props: IUseCoinzPopup) => {
-    const { openModal } = props;
+    const { openModal, claimedCoinz, userCoinz } = props;
     const [editBillModal, setEditBillModal] = useState(false);
     const loyaltySetting = useLoyaltyData(s => s.loyaltySetting)
-    const userCoinZ = useLogin(s => s.userCoinZ)
     const openBillModal = useCallback(() => {
         setEditBillModal(true);
     }, [setEditBillModal]);
@@ -45,7 +45,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                     &nbsp; &nbsp;
                     <div>
                         <h6>Use Coinz</h6>
-                        <h6 className="text-xs">You can use {loyaltySetting.setReward} % of <span className="font-bold">{userCoinZ} coinz</span> </h6>
+                        <h6 className="text-xs">You can use {loyaltySetting.setClaimAmount} % of <span className="font-bold">{claimedCoinz ? userCoinz - claimedCoinz : userCoinz} coinz</span> </h6>
                     </div>
                 </div>
                 <div className='flex items-center space-x-4'>
@@ -59,7 +59,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                     <RiCouponFill size={30} className='-rotate-45 ' />
                     &nbsp; &nbsp;
                     <div>
-                        <h6>Use Coinz</h6>
+                        <h6>Use Couponz</h6>
                         <h6 className="text-xs">You can use <span className="font-bold">5 Couponz </span> </h6>
                     </div>
                 </div>
