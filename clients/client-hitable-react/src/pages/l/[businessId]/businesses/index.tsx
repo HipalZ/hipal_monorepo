@@ -3,7 +3,8 @@ import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg';
 import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg';
 import { FooterSection } from '@/components/atoms/footerSection';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
-import ProfileHeader from '@/components/templates/liteAlerts/profileHeader';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import ProfileHeader from '@/components/liteAlerts/profileHeader';
 import { CustomRole } from '@/components/types/hiClientzData';
 import { memo, startTransition } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -14,13 +15,15 @@ const Businesses = memo(() => {
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const location = useLocation();
+  const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
   const inBusinesses = location.pathname.includes('businesses');
-  const handleUpdateDefault = (e, id: string) => {
+  const handleUpdateDefault = (e:Event) => {
     e.stopPropagation();
   };
 
   const exploreBusiness = (biz: CustomRole) => {
     setSelectedBiz(biz);
+    setTriggerSound(true);
     startTransition(() => {
       navigate(`/l/${businessId}/viewInBiz`);
     });

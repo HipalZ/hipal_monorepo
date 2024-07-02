@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 
 const Login = memo(() => {
   const navigate = useNavigate();
-  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
+  const { phoneNumber, setPhoneNumber } = useHiClientZ();
   const result = async () => {
     try {
       const config = {
@@ -105,13 +105,13 @@ const Login = memo(() => {
       <article className="mb-5 flex justify-center">
         <button
           onClick={result}
-          className="on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+          className="text-white on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
         >
           Get Started
         </button>
       </article>
     </center>
-  );
+  )
 });
 
 export default Login;

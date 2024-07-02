@@ -1,4 +1,4 @@
-import dummyLogo from '@/assets/img/dummyLogo.png';
+import hipalLogo from '@/assets/img/liteLoginIcon4.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { memo } from 'react';
@@ -22,7 +22,7 @@ const HeaderAlerts = memo(() => {
         <figure className="w-[3rem]">
           <img
             className="border-1 rounded-full border border-black"
-            src={selectedBiz?.businessId?.logo || dummyLogo}
+            src={selectedBiz?.businessId?.logo || hipalLogo}
             alt="logo"
             width={47}
             height={47}

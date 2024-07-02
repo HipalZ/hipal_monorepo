@@ -6,9 +6,10 @@ import { ChangeEvent, memo, useState } from 'react';
 import { MdOutlineCall, MdOutlineMessage } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import PopUp from '../popUp';
+import LoadingSpinner from '../loadingSpinner';
 
 const BillPopUp = memo(() => {
-  const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData, setViewData, removeOfflineAlert } = useLiteStore();
+  const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore();
   const [showTick, setShowTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
@@ -105,6 +106,7 @@ const BillPopUp = memo(() => {
   };
 
   return (
+    <>
     <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>
       <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
         <div className="mx-6 mt-10 flex justify-between">
@@ -244,6 +246,8 @@ const BillPopUp = memo(() => {
         )}
       </section>
     </PopUp>
+    {isLoading ? <LoadingSpinner/> : null}
+    </>
   );
 });
 

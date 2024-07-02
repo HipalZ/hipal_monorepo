@@ -8,6 +8,7 @@ import MainRouter from './routes';
 
 function App() {
   const { selectedBiz } = useHiClientZ();
+  const triggerSound = useLiteStore((s)=>s.triggerSound);
   const businessId = selectedBiz?.businessId?._id;
   const {
     setLoading,
@@ -52,7 +53,7 @@ function App() {
       // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
-        autoplay: true,
+        autoplay: triggerSound,
         loop: true,
       });
       sound.play();
@@ -72,7 +73,7 @@ function App() {
       // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
-        autoplay: true,
+        autoplay: triggerSound,
         loop: true,
       });
       sound.play();
@@ -88,7 +89,6 @@ function App() {
     const checkOnlineStatus = () => {
       const online = navigator.onLine;
       setIsOnline(online);
-      console.log(`Network status: ${online ? 'Online' : 'Offline'}`);
     };
     const handleConnectionChange = () => {
       if ('connection' in navigator) {
@@ -122,21 +122,21 @@ function App() {
     queryKey: ['onlineAlerts', businessId],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 17000, // 15 seconds
+    refetchInterval: 17000, // 17 seconds
   });
 
   const { refetch: refetchOfflineAlerts } = useQuery({
     queryKey: ['offlineAlerts', businessId],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 19000, // 15 seconds
+    refetchInterval: 19000, // 19 seconds
   });
 
   return (
     <>
       {!isOnline && <div className="bg-red-500 text-center text-white">Please check your internet connection</div>}
       {isOnline && isSlow && <div className="bg-[#ef9b0f] text-center text-white">⚠ Your connection is too slow</div>}
-      <MainRouter />;
+      <MainRouter />
     </>
   );
 }

@@ -132,7 +132,7 @@ const Login = () => {
       <article className="mb-5 flex justify-center">
         <button
           onClick={handleLogin}
-          className="on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+          className="on_active_bounce text-white fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
         >
           Get Started
         </button>

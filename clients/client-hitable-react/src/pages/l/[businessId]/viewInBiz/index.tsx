@@ -1,4 +1,4 @@
-import dummyLogo from '@/assets/img/dummyLogo.png';
+import hipalLogo from '@/assets/img/liteLoginIcon4.png';
 import logo from '@/assets/img/Hilogo.png';
 // import HiClientZAnimation from '@/components/atoms/hiClientzAnimation';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
@@ -33,7 +33,7 @@ const ViewInBiz = () => {
           <span className="wave-hand text-[2rem]">👋</span>
           <h1 className="text-3xl font-semibold">{captainData?.name}</h1>
           &nbsp;
-          <img className="border-1 rounded-full border border-black" src={dummyLogo} alt="logo" width={125} height={125} />
+          <img className="border-1 rounded-full border border-black" src={hipalLogo} alt="logo" width={125} height={125} />
           <h6 className="mb-2 mt-4 text-xl font-semibold">{selectedBiz?.businessId?.businessName}</h6>
           <p className="w-[18rem] text-center">{selectedBiz?.businessId?.address}</p>
         </article>

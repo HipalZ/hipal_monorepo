@@ -3,13 +3,13 @@ import { RiMoneyRupeeCircleLine } from "react-icons/ri";
 import { memo } from "react";
 import { GiTakeMyMoney } from "react-icons/gi";
 import { MdOutlineHistory } from "react-icons/md";
-import HeaderAlerts from "@/components/templates/liteAlerts/headerAlerts";
+import HeaderAlerts from "@/components/liteAlerts/headerAlerts";
 import { IconType } from "react-icons";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import SalesLite from "@/components/atoms/salesLite";
-import OnlineAlerts from "@/components/templates/liteAlerts/onlineAlerts";
-import OfflineAlerts from "@/components/templates/liteAlerts/offlineAlerts";
-import History from "@/components/templates/liteAlerts/history";
+import OnlineAlerts from "@/components/liteAlerts/onlineAlerts";
+import OfflineAlerts from "@/components/liteAlerts/offlineAlerts";
+import History from "@/components/liteAlerts/history";
 import { NavItemTypes } from "@/components/types/hiClientzData";
 import BillPopUp from "@/components/atoms/billPopUp";
 

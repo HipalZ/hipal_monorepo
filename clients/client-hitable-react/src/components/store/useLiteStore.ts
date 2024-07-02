@@ -57,6 +57,9 @@ interface ILiteStore {
   removeOfflineCount : () => void;
   removeOnlineCount : () => void;
 
+  // state to trigger sound
+  triggerSound : boolean;
+  setTriggerSound : (value : boolean) => void;
 }
 
 
@@ -95,4 +98,6 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   setOfflineCount : (value) => set({offlineCount : value}),
   removeOfflineCount : () => set((state) => ({offlineCount : state.offlineCount - 1})),
   removeOnlineCount : () => set((state) => ({onlineCount : state.onlineCount - 1})),
+  triggerSound : false,
+  setTriggerSound : (value) => set({triggerSound : value}),
 }));
