@@ -1,6 +1,7 @@
 import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Dues, LoyaltyCoinsInfo, Order, Payment, PaymentAlert, PaymentMode, Reviews, ReviewsCustomer, TempBill } from '@hi/db-models';
 import { paramsSchema, PaymentType } from '@hi/db-models/src/validators';
+import dayjs from 'dayjs';
 import express, { Request, Response } from 'express';
 import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
@@ -274,8 +275,8 @@ router.get(
       const existingPayments = await Payment.find({
         businessId,
         date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
+          $gte: dayjs().startOf('day').toDate(),
+          $lte: dayjs().endOf('day').toDate(),
         },
       })
         .sort({ _id: -1 })
@@ -300,8 +301,8 @@ router.get(
       const existingPayments = await Payment.find({
         businessId,
         date: {
-          $gte: fromDate,
-          $lte: toDate,
+          $gte: dayjs(fromDate).startOf('day').toDate(),
+          $lte: dayjs(toDate).endOf('day').toDate(),
         },
       })
         .sort({ _id: -1 })
