@@ -75,3 +75,5 @@ home icon change and bookmark back button remove
 
 loaders payment 
 create order offline toast
+
+terms and conditions update
