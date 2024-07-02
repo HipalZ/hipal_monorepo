@@ -1,12 +1,21 @@
-import { z } from "zod";
+import { Z } from '@upstash/redis/zmscore-9faf292c';
+import { z } from 'zod';
 
 const envSchema = z.object({
   //   APP_DOMAIN: z.string(),
   //   APP_FRONTEND_DOMAIN: z.string(),
 
   // ** MONGO DB
-  //   MONGO_URI: z.string(),
-  //   MONGO_DB: z.string(),
+  MONGO_URI: z.string(),
+  MONGO_DB: z.string(),
+
+  //   #JWT
+  JWT_SECRET: z.string(),
+
+  //#RAZORPAY_SECRET
+  RAZORPAY_SECRET: z.string(),
+  RAZORPAY_WEBHOOK_SECRET: z.string(),
+  RAZORPAY_KEY_ID: z.string(),
 
   // ** PG DB
   //   PG_DB_HOST: z.string(),
@@ -32,6 +41,8 @@ const envSchema = z.object({
   APP_NAME: z.string(),
   TIMEOUT: z.string(),
 
+  // API_VERSION
+  API_VERSION: z.string(),
   // * SESSION
   //   JWT_SECRET: z.string(),
   //   JWT_EXPIRES_IN: z.string(),
@@ -51,8 +62,8 @@ envSchema.parse(process.env);
 
 declare global {
   namespace NodeJS {
-    interface ProcessEnv extends Omit<z.infer<typeof envSchema>, "NODE_ENV"> {
-      NODE_ENV: "development" | "production" | "test";
+    interface ProcessEnv extends Omit<z.infer<typeof envSchema>, 'NODE_ENV'> {
+      NODE_ENV: 'development' | 'production' | 'test';
     }
   }
 }
