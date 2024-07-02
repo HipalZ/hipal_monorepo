@@ -89,7 +89,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                       <h1 className="text-xs">Confirm On floor</h1>
                     </article>
                     <article>
-                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
+                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                     </article>
                   </section>
                   <div className="flex justify-between">

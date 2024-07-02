@@ -198,7 +198,7 @@ router.get(
           $lte: endOfToday.getTime(),
         },
       }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
       const totalOnlineSale = existingPayments.reduce(
@@ -235,11 +235,11 @@ router.get(
           $lte: toDate,
         },
       }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
       const totalOnlineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total : 0),
+        (acc, payment: PaymentType) => acc + (payment?.paymentMode === 'online' ? payment.total ?? 0 : 0),
         0,
       );
 
@@ -265,10 +265,6 @@ router.get(
   },
 );
 
-const d = {
-  $gte: dayjs().utc().set('hour', 0).set('minute', 0).set('second', 0).toDate(),
-  $lte: dayjs().utc().endOf('day').toDate(),
-};
 router.get(
   '/v1/payments/:id/bills',
   validateRequest({
@@ -278,52 +274,60 @@ router.get(
     const { businessId, from, to } = req.query;
     const fromDate = Number(from);
     const toDate = Number(to);
-    let PAGE_SIZE = 1000;
+    let PAGE_SIZE = 20;
     let pageNumber: any = req?.query?.pageNumber || 1;
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
-    const d = {
-      $gte: dayjs(from as string)
-        .utc()
-        .add(1, 'day')
-        .set('hour', 0)
-        .set('minute', 0)
-        .set('second', 0)
-        .toDate(),
-      $lte: dayjs(to as string)
-        .utc()
-        .add(1, 'day')
-        .endOf('day')
-        .toDate(),
-    };
-    console.log({ d });
+    if (!from && !to) {
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: startOfToday.getTime(),
+          $lte: endOfToday.getTime(),
+        },
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
-    if (fromDate > toDate) {
-      return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+      return res.status(200).send({
+        err: false,
+        data: {
+          existingPayments,
+          totalSale,
+        },
+        message: 'existing payment',
+      });
     }
-    const existingPayments = await Payment.find({
-      businessId,
-      createdAt: {
-        $gte: d.$gte,
-        $lte: d.$lte,
-      },
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(PAGE_SIZE)
-      .populate('order_id');
+    if (from && to) {
+      if (fromDate > toDate) {
+        return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+      }
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate('order_id');
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
-    console.log(existingPayments.length);
-    const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
-
-    return res.status(200).send({
-      err: false,
-      data: {
-        totalSale,
-        existingPayments,
-      },
-      message: 'existing payment',
-    });
+      return res.status(200).send({
+        err: false,
+        data: {
+          totalSale,
+          existingPayments,
+        },
+        message: 'existing payment',
+      });
+    }
+    return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
   },
 );
 

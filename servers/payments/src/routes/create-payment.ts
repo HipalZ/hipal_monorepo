@@ -42,7 +42,7 @@ const router = express.Router();
 const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money: number) => {
   let subTotal = (total_bill * 100) / 105;
   let discount = (paid_Money - 1.05 * subTotal) / 1.05;
-  let finalDiscount = Math.floor(Math.abs(discount));
+  let finalDiscount = Math.round(Math.abs(discount));
 
   return finalDiscount;
 };
@@ -679,6 +679,7 @@ router.post(
             tableName,
             order_id: response.id,
             tips: tips,
+            date: Date.now(),
           },
         ],
         { session },
@@ -700,8 +701,7 @@ router.post(
 
     const uniqueOrderId = nanoid(15);
 
-    const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
-    console.log('orderAlreadyExist', orderAlreadyExist);
+    const orderAlreadyExist = await PaymentAlert.findOne({ tableName, businessId, alertType: 'OFFLINE', isAccepted: false });
 
     if (orderAlreadyExist) {
       return res.status(400).send({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
@@ -719,6 +719,7 @@ router.post(
       billValue,
       businessId,
       order_id: uniqueOrderId,
+      date: Date.now(),
     });
     let posDiscount = 0;
     if (Number(claimedCoins) > 0) {
@@ -800,6 +801,7 @@ const addRewardHistory = async (
         loyaltyId,
         total,
         subTotal: billValue,
+        date: Date.now(),
       },
     ],
     { session },
@@ -833,6 +835,7 @@ const removeRewardHistory = async (
         loyaltyId,
         total,
         subTotal: billValue,
+        date: Date.now(),
       },
     ],
     { session },
@@ -1007,6 +1010,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
             razorpayOrderId: payload.payment.entity.order_id,
             razorpayAcquirerData: payload.payment.entity.acquirer_data,
             razorpayEventId: razorpayEventId,
+            date: Date.now(),
           },
         ],
         { session },
@@ -1031,6 +1035,7 @@ router.post('/v1/payments/razorpay-webhook', async (req: Request, res: Response)
             tableName: payload.payment.entity.notes.tableName,
             isAccepted: false,
             posDiscount: posDiscount,
+            date: Date.now(),
           },
         ],
         { session },

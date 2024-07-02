@@ -21,7 +21,7 @@ export const OrderSchema = z.object({
   businessId: ObjectIdSchema,
   order_id: z.string(),
   tableName: z.string().optional(),
-  date: z.coerce.number().default(Date.now()),
+  date: z.coerce.number(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

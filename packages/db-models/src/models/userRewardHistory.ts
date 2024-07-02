@@ -17,7 +17,6 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     status: String,
     date: {
       type: Number,
-      default: Date.now(),
     },
     businessName: {
       type: String,

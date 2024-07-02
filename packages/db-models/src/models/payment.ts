@@ -82,7 +82,6 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     date: {
       required: false,
       type: Number,
-      default: Date.now(),
     },
 
     total: {

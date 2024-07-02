@@ -43,15 +43,9 @@ const HistoryCard = memo((props: IOnlineProp) => {
                     <h1 className="text-xs">Received {alert?.alertType.toLowerCase()}</h1>
                   )}
                 </article>
-                {alert?.isRejected ? (
-                  <article>
-                    <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
-                  </article>
-                ) : (
-                  <article>
-                    <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
-                  </article>
-                )}
+                <article>
+                  <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
+                </article>
               </section>
               <div className="flex justify-between">
                 <section>
