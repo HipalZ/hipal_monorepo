@@ -2,10 +2,17 @@ import { ClientRoles, requireAuthorization } from '@hi/common';
 import { Dues, LoyaltyCoinsInfo, Order, Payment, PaymentAlert, PaymentMode, Reviews, ReviewsCustomer, TempBill } from '@hi/db-models';
 import { paramsSchema, PaymentType } from '@hi/db-models/src/validators';
 import dayjs from 'dayjs';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
+import tz from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import express, { Request, Response } from 'express';
 import moment from 'moment';
 import momentTimeZone from 'moment-timezone';
 import { validateRequest } from 'zod-express-middleware';
+
+dayjs.extend(utc);
+dayjs.extend(dayOfYear);
+dayjs.extend(tz);
 
 const router = express.Router();
 
@@ -258,6 +265,10 @@ router.get(
   },
 );
 
+const d = {
+  $gte: dayjs().utc().set('hour', 0).set('minute', 0).set('second', 0).toDate(),
+  $lte: dayjs().utc().endOf('day').toDate(),
+};
 router.get(
   '/v1/payments/:id/bills',
   validateRequest({
@@ -267,60 +278,52 @@ router.get(
     const { businessId, from, to } = req.query;
     const fromDate = Number(from);
     const toDate = Number(to);
-    let PAGE_SIZE = 20;
+    let PAGE_SIZE = 1000;
     let pageNumber: any = req?.query?.pageNumber || 1;
     const skip: number = (parseInt(pageNumber) - 1) * PAGE_SIZE;
 
-    if (!from && !to) {
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: dayjs().startOf('day').toDate(),
-          $lte: dayjs().endOf('day').toDate(),
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+    const d = {
+      $gte: dayjs(from as string)
+        .utc()
+        .add(1, 'day')
+        .set('hour', 0)
+        .set('minute', 0)
+        .set('second', 0)
+        .toDate(),
+      $lte: dayjs(to as string)
+        .utc()
+        .add(1, 'day')
+        .endOf('day')
+        .toDate(),
+    };
+    console.log({ d });
 
-      return res.status(200).send({
-        err: false,
-        data: {
-          existingPayments,
-          totalSale,
-        },
-        message: 'existing payment',
-      });
+    if (fromDate > toDate) {
+      return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
     }
-    if (from && to) {
-      if (fromDate > toDate) {
-        return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
-      }
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: dayjs(fromDate).startOf('day').toDate(),
-          $lte: dayjs(toDate).endOf('day').toDate(),
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+    const existingPayments = await Payment.find({
+      businessId,
+      createdAt: {
+        $gte: d.$gte,
+        $lte: d.$lte,
+      },
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(PAGE_SIZE)
+      .populate('order_id');
 
-      return res.status(200).send({
-        err: false,
-        data: {
-          totalSale,
-          existingPayments,
-        },
-        message: 'existing payment',
-      });
-    }
-    return res.status(400).send({ err: true, data: {}, message: 'invalid date format' });
+    console.log(existingPayments.length);
+    const totalSale = existingPayments.reduce((acc, payment) => acc + payment.total, 0);
+
+    return res.status(200).send({
+      err: false,
+      data: {
+        totalSale,
+        existingPayments,
+      },
+      message: 'existing payment',
+    });
   },
 );
 
@@ -3035,3 +3038,2918 @@ router.get(
   },
 );
 export { router as readPaymentsRouter };
+
+const data = [
+  {
+    _id: {
+      $oid: '667d98681ebb2de62f90ad7d',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 90,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-2',
+    order_id: {
+      $oid: '667d98621ebb2de62f90ad78',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrD2XQn2QTZ2t',
+    razorpayOrderId: 'order_ORrCy1lf25ZQgr',
+    claimedCoins: 10,
+    razorpayAcquirerData: {
+      rrn: '580747062095',
+      upi_transaction_id: 'C80EF6DD05A4E5F03577D21793B4A7FA',
+    },
+    razorpayEventId: 'ORrD4HEkltnvN0',
+    createdAt: {
+      $date: '2024-06-27T16:50:48.013Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T16:50:48.013Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667d9ce71ebb2de62f90ae5f',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 720,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 900,
+    tableName: 'xrty-T-2',
+    order_id: {
+      $oid: '667d9ca71ebb2de62f90ae4d',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrXJdaZbB6rzv',
+    razorpayOrderId: 'order_ORrWDEoRfa69LX',
+    claimedCoins: 180,
+    razorpayAcquirerData: {
+      rrn: '642377045600',
+      upi_transaction_id: 'FBBCCA798F646523E20B02F56D278D98',
+    },
+    razorpayEventId: 'ORrXL3kkaGT0hT',
+    createdAt: {
+      $date: '2024-06-27T17:09:59.521Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:09:59.521Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667d9ea11ebb2de62f90aece',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 1200,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1200,
+    tableName: '12333',
+    order_id: {
+      $oid: '667d9e9b7000d8c407f33768',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrf6lMRgo6Eyn',
+    razorpayOrderId: 'order_ORrf1bFQCCO6z7',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '825605346653',
+      upi_transaction_id: '382687D93A52A802BA9A79EEB01470C0',
+    },
+    razorpayEventId: 'ORrf83z5jD65C8',
+    createdAt: {
+      $date: '2024-06-27T17:17:21.899Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:17:21.899Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667d9fa61ebb2de62f90af23',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 6000,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 6000,
+    tableName: 'xrty-T-3',
+    order_id: {
+      $oid: '667d9f9e1ebb2de62f90af1b',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrjgpVNCYvsAB',
+    razorpayOrderId: 'order_ORrjZTfhgZ6cqC',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '961784424545',
+      upi_transaction_id: '0A75D6DE9B36B3773BAE79C545A33221',
+    },
+    razorpayEventId: 'ORrjiFZIXK3Jn6',
+    createdAt: {
+      $date: '2024-06-27T17:21:42.387Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:21:42.387Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667da1781ebb2de62f90af9d',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 800,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 900,
+    tableName: 'xrty-T-3',
+    order_id: {
+      $oid: '667da16d1ebb2de62f90af98',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrrtyYY8gmd2D',
+    razorpayOrderId: 'order_ORrriwj9GbWRnw',
+    claimedCoins: 100,
+    razorpayAcquirerData: {
+      rrn: '863880827502',
+      upi_transaction_id: 'B36A2BC7B630296C2D61994A6D23BD8E',
+    },
+    razorpayEventId: 'ORrrvXCrSdRdhy',
+    createdAt: {
+      $date: '2024-06-27T17:29:28.992Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:29:28.992Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667da1fb1ebb2de62f90afc2',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 752,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 752,
+    tableName: '008',
+    order_id: {
+      $oid: '667da1f37000d8c407f3376b',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORruCIo4V6wXH9',
+    razorpayOrderId: 'order_ORru61UPeF6JEx',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '312856177594',
+      upi_transaction_id: '6641A5D5258D4958410B9A767AB34D6F',
+    },
+    razorpayEventId: 'ORruE4vlcn32Ah',
+    createdAt: {
+      $date: '2024-06-27T17:31:39.541Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:31:39.541Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667da21b1ebb2de62f90afd9',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 100,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-3',
+    order_id: {
+      $oid: '667da2091ebb2de62f90afd2',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrulAKG2vsfd9',
+    razorpayOrderId: 'order_ORruTMe5ZBrcA4',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '138893585772',
+      upi_transaction_id: '47B12061CF9CF7D55A26773884FC08E4',
+    },
+    razorpayEventId: 'ORrumbHCVrUHB8',
+    createdAt: {
+      $date: '2024-06-27T17:32:11.032Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:32:11.032Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667da2511ebb2de62f90aff6',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 666,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 666,
+    tableName: 'xrty-T-3',
+    order_id: {
+      $oid: '667da23f1ebb2de62f90afef',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORrviEJldxVGAv',
+    razorpayOrderId: 'order_ORrvR4WqrktZuA',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '915805342578',
+      upi_transaction_id: 'C0058881B0C2FB84747BCA2344C55B83',
+    },
+    razorpayEventId: 'ORrvjbLv764Znx',
+    createdAt: {
+      $date: '2024-06-27T17:33:05.218Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:33:05.218Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667da4d61ebb2de62f90b044',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 100,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-3',
+    order_id: {
+      $oid: '667da3461ebb2de62f90b019',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORs74o5qh3X2tf',
+    razorpayOrderId: 'order_ORs03pOOa2kTnj',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '902653750363',
+      upi_transaction_id: 'F37111CFB9FE2E3C13925681D9831227',
+    },
+    razorpayEventId: 'ORs767w913Ov63',
+    createdAt: {
+      $date: '2024-06-27T17:43:50.516Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T17:43:50.516Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667daa3b1ebb2de62f90b087',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 602,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 752,
+    tableName: '17272',
+    order_id: {
+      $oid: '667daa3138afe75014654b83',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORsVNLGicKksNF',
+    razorpayOrderId: 'order_ORsVGkiPUXg3BU',
+    claimedCoins: 150,
+    razorpayAcquirerData: {
+      rrn: '231195038733',
+      upi_transaction_id: 'D8A25398D9AEE4529A67B3D060F8CCB8',
+    },
+    razorpayEventId: 'ORsVOrqpuMrLyF',
+    createdAt: {
+      $date: '2024-06-27T18:06:51.156Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:06:51.156Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dab6b1ebb2de62f90b099',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 4800,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 5000,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dab6238afe75014654b86',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORsajfPdsglHdt',
+    razorpayOrderId: 'order_ORsaditXFuKY0t',
+    claimedCoins: 200,
+    razorpayAcquirerData: {
+      rrn: '802244655107',
+      upi_transaction_id: '1ED9EB825FA44231C18AB530668D8B95',
+    },
+    razorpayEventId: 'ORsal78QOyqhUv',
+    createdAt: {
+      $date: '2024-06-27T18:11:55.229Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:11:55.229Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667daf1a1ebb2de62f90b0ab',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 7900,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 8000,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667daf0f38afe75014654b9d',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORsrKvkht8OPsV',
+    razorpayOrderId: 'order_ORsrDtSuw0S5Kk',
+    claimedCoins: 100,
+    razorpayAcquirerData: {
+      rrn: '755129959439',
+      upi_transaction_id: 'D6EC55D51E03DD4614E6825E46CEC6D1',
+    },
+    razorpayEventId: 'ORsrMLOnqLzXvB',
+    createdAt: {
+      $date: '2024-06-27T18:27:38.366Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:27:38.366Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667daf9a1ebb2de62f90b0bd',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 8902,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 9000,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667daf8f38afe75014654ba0',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORstaeeVU3OUDV',
+    razorpayOrderId: 'order_ORstSsmUjxinPg',
+    claimedCoins: 98,
+    razorpayAcquirerData: {
+      rrn: '395809025657',
+      upi_transaction_id: '8449F8A7A1E9F9FF67AD59D6A7A9608D',
+    },
+    razorpayEventId: 'ORstc9VwaaQglb',
+    createdAt: {
+      $date: '2024-06-27T18:29:46.484Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:29:46.484Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db0c71ebb2de62f90b0cf',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 9000,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 9000,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db0bd38afe75014654ba3',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORsysq0zVmPbB0',
+    razorpayOrderId: 'order_ORsyn5D3f0OKA1',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '922727317090',
+      upi_transaction_id: '02F9BD9CF75711BACC6BD7F30BEC03E6',
+    },
+    razorpayEventId: 'ORsyuGqBzMOBte',
+    createdAt: {
+      $date: '2024-06-27T18:34:47.054Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:34:47.054Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db1c31ebb2de62f90b0dd',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 5000,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 5000,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db1ba38afe75014654ba6',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORt3KljjZtcbYl',
+    razorpayOrderId: 'order_ORt3FBl4NVt7fy',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '775917752178',
+      upi_transaction_id: '26E138B97916FAD7BF21260B570A3E18',
+    },
+    razorpayEventId: 'ORt3MOoh3L4tR5',
+    createdAt: {
+      $date: '2024-06-27T18:38:59.979Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:38:59.979Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db2b41ebb2de62f90b0eb',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 55555,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 55555,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db2ad38afe75014654ba9',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORt7Zo7979iTNo',
+    razorpayOrderId: 'order_ORt7VhSQURm5Fl',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '140494312972',
+      upi_transaction_id: '7CF720DD43453728DE9082548B2D3B04',
+    },
+    razorpayEventId: 'ORt7bFAVCHHjEV',
+    createdAt: {
+      $date: '2024-06-27T18:43:00.757Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:43:00.757Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db30d1ebb2de62f90b0f9',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 5555,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 5555,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db2f438afe75014654bac',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORt98IvnjYby73',
+    razorpayOrderId: 'order_ORt8lBjGfK3aKy',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '915938605355',
+      upi_transaction_id: 'B78111151133682F0AE6A7C13D1C13E7',
+    },
+    razorpayEventId: 'ORt9APKKTcBwoc',
+    createdAt: {
+      $date: '2024-06-27T18:44:29.784Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:44:29.784Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db35a1ebb2de62f90b107',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 7878,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 7878,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db35038afe75014654baf',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtAUglZydtSTN',
+    razorpayOrderId: 'order_ORtAOC7KbdP2rq',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '209266773151',
+      upi_transaction_id: '7DB3924D634B0D95CF8EE4E1CB97A861',
+    },
+    razorpayEventId: 'ORtAW3eHYiGkrN',
+    createdAt: {
+      $date: '2024-06-27T18:45:46.291Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:45:46.291Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db4021ebb2de62f90b115',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 8888,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 8888,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db3ef38afe75014654bb2',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtDS1WlDnSAsZ',
+    razorpayOrderId: 'order_ORtDC0IhtLoIho',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '149525709614',
+      upi_transaction_id: 'C95FFAFC32A6BFBCB3DDADC3EE163054',
+    },
+    razorpayEventId: 'ORtDTOBohck2Ap',
+    createdAt: {
+      $date: '2024-06-27T18:48:34.253Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:48:34.253Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db4591ebb2de62f90b123',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 8959,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 8959,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db45138afe75014654bb5',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtEzZ5axd2ZJ2',
+    razorpayOrderId: 'order_ORtEutnBi4xQtd',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '171474213792',
+      upi_transaction_id: 'F595C6E765DEF786D55F3F1372A9BA92',
+    },
+    razorpayEventId: 'ORtF0xmmuyNlm2',
+    createdAt: {
+      $date: '2024-06-27T18:50:01.800Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:50:01.800Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db4d81ebb2de62f90b131',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 7858,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 7858,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db48d38afe75014654bb8',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtHDn9WkzyQzE',
+    razorpayOrderId: 'order_ORtFyFXCcuSHlh',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '242992203305',
+      upi_transaction_id: 'A96ABE7E5CA9C22D04D3D37491363CE6',
+    },
+    razorpayEventId: 'ORtHFKNGdENfMz',
+    createdAt: {
+      $date: '2024-06-27T18:52:08.567Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:52:08.567Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db6a51ebb2de62f90b13f',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 8509,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 8509,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db4fc38afe75014654bbb',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtPKSWPHD97Dm',
+    razorpayOrderId: 'order_ORtHvBnsE6OAUK',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '790945464327',
+      upi_transaction_id: 'BDAF5E43C81C7D453C6381B5A7EAACBA',
+    },
+    razorpayEventId: 'ORtPLqE3qv6NUv',
+    createdAt: {
+      $date: '2024-06-27T18:59:49.077Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T18:59:49.077Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db7191ebb2de62f90b14d',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 7412,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 7412,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db70338afe75014654bbe',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtRO3uID3yQth',
+    razorpayOrderId: 'order_ORtR3wPqdXDHIp',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '239202099586',
+      upi_transaction_id: '0AC0CB4A0842CC4602FCD23523CE858A',
+    },
+    razorpayEventId: 'ORtRPU7OCw7j23',
+    createdAt: {
+      $date: '2024-06-27T19:01:45.903Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:01:45.903Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db7441ebb2de62f90b15b',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 4522,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 4522,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db73438afe75014654bc1',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtS8B5Ez2ZSf5',
+    razorpayOrderId: 'order_ORtRvYPXL0scHF',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '655214981970',
+      upi_transaction_id: '1DB3F9E63DCF6404696D580EAE469178',
+    },
+    razorpayEventId: 'ORtS9jymng4IFf',
+    createdAt: {
+      $date: '2024-06-27T19:02:28.383Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:02:28.383Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667db8871ebb2de62f90b16d',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 6143,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 6263,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667db84a38afe75014654bc7',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtXpG9xgPFoPY',
+    razorpayOrderId: 'order_ORtWp5HsOC9ALq',
+    claimedCoins: 120,
+    razorpayAcquirerData: {
+      rrn: '688299021299',
+      upi_transaction_id: '593A7E08EEAF5331C789205826061EB4',
+    },
+    razorpayEventId: 'ORtXqc6wv1zGh5',
+    createdAt: {
+      $date: '2024-06-27T19:07:51.518Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:07:51.518Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dbde81ebb2de62f90b1fb',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 80,
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-1',
+    tips: 0,
+    razorpayPaymentId: 'pay_ORtw3lNedj18su',
+    razorpayOrderId: 'order_ORl4Fg4l2T0wxI',
+    claimedCoins: 20,
+    razorpayAcquirerData: {
+      rrn: '819939604042',
+      upi_transaction_id: 'D48C0288D3DA48312D60E5358AF7606E',
+    },
+    razorpayEventId: 'ORtw5s6Al0G3J7',
+    createdAt: {
+      $date: '2024-06-27T19:30:48.894Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:30:48.894Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dbed61ebb2de62f90b23b',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 100,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667dbeac1ebb2de62f90b22c',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORu0FUy6KuF2wF',
+    razorpayOrderId: 'order_ORtzXBPEQV7UVG',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '841170328550',
+      upi_transaction_id: 'FA24735B0F08C87B59B2FA260CCA60AA',
+    },
+    razorpayEventId: 'ORu0H59EpXouta',
+    createdAt: {
+      $date: '2024-06-27T19:34:46.432Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:34:46.432Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dbf811ebb2de62f90b266',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 780,
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 780,
+    tableName: 'xrty-T-1',
+    tips: 0,
+    razorpayPaymentId: 'pay_ORu3GG6Jnf1cLh',
+    razorpayOrderId: 'order_ORnCBQbwnVGkUJ',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '853032759548',
+      upi_transaction_id: '908B8878C6E9DBED87030251FDEFB2F4',
+    },
+    razorpayEventId: 'ORu3HvDKrCWJbJ',
+    createdAt: {
+      $date: '2024-06-27T19:37:37.369Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:37:37.369Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dbfef1ebb2de62f90b282',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 100,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667dbfe61ebb2de62f90b27d',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORu5CqtCFDJQqw',
+    razorpayOrderId: 'order_ORu54XuapqmaAw',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '495903984544',
+      upi_transaction_id: 'F651016ECB6D08377CB88948ADBE5533',
+    },
+    razorpayEventId: 'ORu5EDNHmJfZA3',
+    createdAt: {
+      $date: '2024-06-27T19:39:27.685Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:39:27.685Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc0351ebb2de62f90b29f',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 258,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 258,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667dc02d1ebb2de62f90b29a',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORu6RO4QvqWQ5H',
+    razorpayOrderId: 'order_ORu6KECdrWInjJ',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '676068306880',
+      upi_transaction_id: 'B019BCBD63D2CA903DD67448590AF154',
+    },
+    razorpayEventId: 'ORu6SfqzwNWBck',
+    createdAt: {
+      $date: '2024-06-27T19:40:37.760Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:40:37.760Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc0951ebb2de62f90b2c1',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719412843704',
+    },
+    total: 568,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 568,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667dc08e1ebb2de62f90b2bb',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORu881d9D2E0CX',
+    razorpayOrderId: 'order_ORu81M01hvmzlJ',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '762394705885',
+      upi_transaction_id: '32FF2CE6D49BF3F80BE0ADBA9C34576A',
+    },
+    razorpayEventId: 'ORu89JF3hTKMba',
+    createdAt: {
+      $date: '2024-06-27T19:42:13.638Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:42:13.638Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc3fe3caf1231355ddbf4',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 1000,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1000,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc3db3caf1231355ddbed',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORuNXMRXj2mEGH',
+    razorpayOrderId: 'order_ORuMwrXN20PGRw',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '826499059460',
+      upi_transaction_id: '2852008AE92D42B17C0A64F9CA5FE24C',
+    },
+    razorpayEventId: 'ORuNYgbSQTYqHD',
+    createdAt: {
+      $date: '2024-06-27T19:56:46.172Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:56:46.172Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc44e3caf1231355ddc17',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 544,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 544,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc4473caf1231355ddc10',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORuOwnamn5AlFl',
+    razorpayOrderId: 'order_ORuOqslLoak7rd',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '482758834937',
+      upi_transaction_id: '88BCF6BFCA78082773F1E64FC8E03749',
+    },
+    razorpayEventId: 'ORuOyEMdEIQ1nA',
+    createdAt: {
+      $date: '2024-06-27T19:58:06.371Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T19:58:06.371Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc4f23caf1231355ddc47',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 90000,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 90000,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc4a23caf1231355ddc35',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORuRpw0Xp3BEIe',
+    razorpayOrderId: 'order_ORuQSIqLC3aYaM',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '694788444152',
+      upi_transaction_id: '1EB4B1024C8F2C4C1778E33F9C3F0F98',
+    },
+    razorpayEventId: 'ORuRrNUn9v3F7p',
+    createdAt: {
+      $date: '2024-06-27T20:00:50.486Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T20:00:50.486Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc5f13caf1231355ddc83',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 70000,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 70000,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc5873caf1231355ddc73',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORuWKhYA5fo7In',
+    razorpayOrderId: 'order_ORuUUXYOTPvUif',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '839296475261',
+      upi_transaction_id: 'F75E83DCD59F8E323F9162C4CAFDE760',
+    },
+    razorpayEventId: 'ORuWLwlRmMsK3B',
+    createdAt: {
+      $date: '2024-06-27T20:05:05.685Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T20:05:05.685Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc7323caf1231355ddcc6',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 777,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 777,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc72d3caf1231355ddcc1',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORubz27h2yGtgv',
+    razorpayOrderId: 'order_ORubuFi2Lhv89s',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '286303985168',
+      upi_transaction_id: '5C35DE07A41CD0437793305500886A63',
+    },
+    razorpayEventId: 'ORuc0RVTyxqAdr',
+    createdAt: {
+      $date: '2024-06-27T20:10:26.777Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T20:10:26.777Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dc7c73caf1231355ddcf0',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719517967448',
+    },
+    total: 100,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 100,
+    tableName: '2222',
+    order_id: {
+      $oid: '667dc7bf3caf1231355ddcec',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORuea9PwP8vrqK',
+    razorpayOrderId: 'order_ORueU4tgVEQAvu',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '996726799695',
+      upi_transaction_id: 'EBD5F5C85E297CC99D7730FA4D47A34E',
+    },
+    razorpayEventId: 'ORuecJTF0yIi7L',
+    createdAt: {
+      $date: '2024-06-27T20:12:55.064Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T20:12:55.064Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd4031bce82fe37454060',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 2,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 2,
+    tableName: 'xrty-T-1',
+    order_id: {
+      $oid: '667dd3e41bce82fe3745405b',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvXJS6zokyZMu',
+    razorpayOrderId: 'order_ORvXBJNqgmiguV',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418008944336',
+    },
+    razorpayEventId: 'ORvXi4yjCWqRdz',
+    createdAt: {
+      $date: '2024-06-27T21:05:07.203Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:05:07.203Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd4651bce82fe37454077',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 3,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 3,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dd4501bce82fe37454072',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvZCuoWXJwlwD',
+    razorpayOrderId: 'order_ORvZ4lnCYBBvky',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418014820608',
+      upi_transaction_id: 'ICId7e924bb793b488395ed2e6ccd726abc',
+    },
+    razorpayEventId: 'ORvZRN6V8T8onI',
+    createdAt: {
+      $date: '2024-06-27T21:06:45.406Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:06:45.406Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd4951bce82fe37454088',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 3,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 3,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dd4731bce82fe37454084',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvZuRUMHVXhMj',
+    razorpayOrderId: 'order_ORvZgjvDtDRa0E',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418080925069',
+      upi_transaction_id: 'ICIaec39f8dc36c4cb7913a9f9ca7999df4',
+    },
+    razorpayEventId: 'ORvaIJMG3rgW6z',
+    createdAt: {
+      $date: '2024-06-27T21:07:33.716Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:07:33.716Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd5561bce82fe374540b7',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 16,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 20,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667dd5021bce82fe374540a0',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvdRHwEEOlnLi',
+    razorpayOrderId: 'order_ORvcDfoLzgSBtz',
+    claimedCoins: 4,
+    razorpayAcquirerData: {
+      rrn: '418077318392',
+    },
+    razorpayEventId: 'ORvdgWXbQx9hkU',
+    createdAt: {
+      $date: '2024-06-27T21:10:46.310Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:10:46.310Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd6451bce82fe37454111',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrttgfy-T-2',
+    order_id: {
+      $oid: '667dd6281bce82fe37454108',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvhbkeywnyUIk',
+    razorpayOrderId: 'order_ORvhO7rfAOtD84',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418029030537',
+      upi_transaction_id: 'ICI717ff411bce140ae93f813398743de20',
+    },
+    razorpayEventId: 'ORvhtOASNniplZ',
+    createdAt: {
+      $date: '2024-06-27T21:14:45.456Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:14:45.456Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd6b11bce82fe3745413a',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667dd6921bce82fe37454131',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvjVsEgTVbyT6',
+    razorpayOrderId: 'order_ORvjFH0UdgwTX7',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418089285419',
+      upi_transaction_id: 'YBL40f64a2d3dfa44f78acf140ed66492a9',
+    },
+    razorpayEventId: 'ORvjnpXyEygYzK',
+    createdAt: {
+      $date: '2024-06-27T21:16:33.890Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:16:33.890Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd84f1bce82fe374541bf',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dd8201bce82fe374541af',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvqtZvEBVokl5',
+    razorpayOrderId: 'order_ORvqGZHi0tg5h5',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418070718628',
+      upi_transaction_id: 'SBI22c3eed820e94f4ea890db14d9a6d581',
+    },
+    razorpayEventId: 'ORvr5ivACdwDb5',
+    createdAt: {
+      $date: '2024-06-27T21:23:27.803Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:23:27.803Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd8cf1bce82fe37454211',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 2,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 2,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dd8ae1bce82fe374541ff',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORvszb2Azrj61K',
+    razorpayOrderId: 'order_ORvskpwVkib21I',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '454601336684',
+      upi_transaction_id: 'ICI3efead63455246c7bf6a31316f005743',
+    },
+    razorpayEventId: 'ORvtLKoA6AjLHy',
+    createdAt: {
+      $date: '2024-06-27T21:25:35.706Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:25:35.706Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dd9e41bce82fe37454275',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 50,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 50,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dd9ca1bce82fe37454264',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    createdAt: {
+      $date: '2024-06-27T21:30:12.188Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:30:12.188Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddb3c1bce82fe374542c5',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrttgfy-T-2',
+    order_id: {
+      $oid: '667ddaec1bce82fe374542c1',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORw3zpgtcT8JSw',
+    razorpayOrderId: 'order_ORw2roWHanm7Lz',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '454600421358',
+      upi_transaction_id: 'ICI3798320b79b04204a793d953c16ef53d',
+    },
+    razorpayEventId: 'ORw4GuJKhUzm9d',
+    createdAt: {
+      $date: '2024-06-27T21:35:56.637Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:35:56.637Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddbaf1bce82fe374542d7',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667ddb981bce82fe374542d3',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORw5ye5NkmdEaL',
+    razorpayOrderId: 'order_ORw5t370KqUeIL',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418070736143',
+      upi_transaction_id: 'SBIf2aa678041bf46d0a522cf2372528e1a',
+    },
+    razorpayEventId: 'ORw6IUF1Ou35Lc',
+    createdAt: {
+      $date: '2024-06-27T21:37:51.619Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:37:51.619Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddbf61bce82fe374542e9',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667ddbd11bce82fe374542e5',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORw78X89makyTO',
+    razorpayOrderId: 'order_ORw6tVn3QVdjTg',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418010915205',
+      upi_transaction_id: 'ICI6d4a3f03cafa496a8beb97189630ae73',
+    },
+    razorpayEventId: 'ORw7YMxB2kMeae',
+    createdAt: {
+      $date: '2024-06-27T21:39:02.988Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:39:02.988Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddc551bce82fe37454301',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667ddc401bce82fe374542f7',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORw8xEivaENtjc',
+    razorpayOrderId: 'order_ORw8rL7fhOEq5e',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418070771858',
+      upi_transaction_id: 'SBI7a02185baa624895822e6c22642d93df',
+    },
+    razorpayEventId: 'ORw9DZvryKWmdR',
+    createdAt: {
+      $date: '2024-06-27T21:40:37.391Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:40:37.391Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddc821bce82fe37454313',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 2,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 2,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667ddc6d1bce82fe3745430e',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORw9j48P0CXLQK',
+    razorpayOrderId: 'order_ORw9eFVc5XKCcU',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418068730113',
+      upi_transaction_id: 'ICI903804887c934f659a555d960f8e5b3b',
+    },
+    razorpayEventId: 'ORwA0PzQZp65G3',
+    createdAt: {
+      $date: '2024-06-27T21:41:22.167Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:41:22.167Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddcdb1bce82fe37454324',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667ddc9c1bce82fe37454320',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwB9AKW2gIH5o',
+    razorpayOrderId: 'order_ORwATfGIpvHHIb',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418094305322',
+      upi_transaction_id: 'ACDGz1BnJWazLZMyWyL09xL',
+    },
+    razorpayEventId: 'ORwBZYViRhceKC',
+    createdAt: {
+      $date: '2024-06-27T21:42:51.139Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:42:51.139Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667dde761bce82fe3745434a',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 5,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'card',
+    paymentMode: 'online',
+    billValue: 5,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667ddd441bce82fe37454332',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwISX76qFk5dZ',
+    razorpayOrderId: 'order_ORwDRAk1ufT3BW',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      auth_code: '295006',
+      rrn: '417921664918',
+    },
+    razorpayEventId: 'ORwIoaPZK8tGoA',
+    createdAt: {
+      $date: '2024-06-27T21:49:42.718Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:49:42.718Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667ddf3b1bce82fe37454364',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'Rishabh',
+    customerPhone: '9177914130',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrffgty-T-3',
+    order_id: {
+      $oid: '667dde961bce82fe37454357',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwLqqC1qkUiRh',
+    razorpayOrderId: 'order_ORwJNnEsIdx8ZF',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418058055313',
+      upi_transaction_id: 'AXIe961898f1b9a42d482c411c1a7ab342f',
+    },
+    razorpayEventId: 'ORwMHB3sTJncT6',
+    createdAt: {
+      $date: '2024-06-27T21:52:59.307Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:52:59.307Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667de0461bce82fe37454383',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrttgfy-T-2',
+    order_id: {
+      $oid: '667ddfcc1bce82fe37454376',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwQkmKSiv5xI2',
+    razorpayOrderId: 'order_ORwOqCzfu2Wr68',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '454642135686',
+      upi_transaction_id: 'ICIf4790d4503224c94aeaaca68a5cae0e1',
+    },
+    razorpayEventId: 'ORwQylsDTEdb82',
+    createdAt: {
+      $date: '2024-06-27T21:57:26.239Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T21:57:26.239Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667de2301bce82fe3745439e',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrddty-T-1',
+    order_id: {
+      $oid: '667de1bb1bce82fe37454391',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwYTBoh8wgpFJ',
+    razorpayOrderId: 'order_ORwXXz6VHFqWkt',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '454605125268',
+    },
+    razorpayEventId: 'ORwZcHgUcqqhRu',
+    createdAt: {
+      $date: '2024-06-27T22:05:36.983Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T22:05:36.983Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667de3e31bce82fe374543c5',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719522262339',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'xrttgfy-T-2',
+    order_id: {
+      $oid: '667de3761bce82fe374543b4',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_ORwgzwVE988YdO',
+    razorpayOrderId: 'order_ORwfLpilLyJDC4',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '454637723521',
+      upi_transaction_id: 'ICI957253979b2040528b00bbfd01dec45b',
+    },
+    razorpayEventId: 'ORwhGHqZdM0rPN',
+    createdAt: {
+      $date: '2024-06-27T22:12:51.257Z',
+    },
+    updatedAt: {
+      $date: '2024-06-27T22:12:51.257Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667e7a918abe22656ffb8582',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719556810735',
+    },
+    total: 2,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 2,
+    tableName: '17',
+    order_id: {
+      $oid: '667e53521bce82fe3745441e',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    createdAt: {
+      $date: '2024-06-28T08:55:45.605Z',
+    },
+    updatedAt: {
+      $date: '2024-06-28T08:55:45.605Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667fd185c9f091d99d1450b3',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719648362488',
+    },
+    total: 12,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 12,
+    tableName: '1234',
+    order_id: {
+      $oid: '667fd1788abe22656ffb85e2',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    createdAt: {
+      $date: '2024-06-29T09:19:01.034Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T09:19:01.034Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667fe45241373907e052f751',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719656893887',
+    },
+    total: 1,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: '5252',
+    order_id: {
+      $oid: '667fe42a41373907e052f74d',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSXwr6GYJq4ZkY',
+    razorpayOrderId: 'order_OSXwAqFKAOrNhz',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '970256949946',
+      upi_transaction_id: '4B68FB1F5B0142CD13B68B138113AEBB',
+    },
+    razorpayEventId: 'OSXwscNOBtXPSS',
+    createdAt: {
+      $date: '2024-06-29T10:39:14.812Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T10:39:14.812Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667fe4c041373907e052f77b',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719656893887',
+    },
+    total: 10,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 10,
+    tableName: '5252',
+    order_id: {
+      $oid: '667fe4b541373907e052f772',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-06-29T10:41:04.295Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T10:41:04.295Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667fe85ec268add05de85568',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719658433369',
+    },
+    total: 1,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: '9877',
+    order_id: {
+      $oid: '667fe852c268add05de85564',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSYF5dSo87B8gb',
+    razorpayOrderId: 'order_OSYEu0XxMoHhn8',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '172724650542',
+      upi_transaction_id: '1BB097DE509C0800EF8417398B030516',
+    },
+    razorpayEventId: 'OSYF6z53bhaVPe',
+    createdAt: {
+      $date: '2024-06-29T10:56:30.332Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T10:56:30.332Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '667fee3a8abe22656ffb864a',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719556810735',
+    },
+    total: 7,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 7,
+    tableName: '1234',
+    order_id: {
+      $oid: '667fed568abe22656ffb8638',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    createdAt: {
+      $date: '2024-06-29T11:21:30.172Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T11:21:30.172Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '668004d3e1aaf4971d890417',
+    },
+    businessId: {
+      $oid: '64b630b09f464445c1fbd169',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 1,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: '12454',
+    order_id: {
+      $oid: '668004c7e1aaf4971d890413',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaJKy4RjL6ERF',
+    razorpayOrderId: 'order_OSaJ9SpIiQQChd',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '865102193125',
+      upi_transaction_id: 'FA5EC7A97CDF5FC300DA3750BEBE558E',
+    },
+    razorpayEventId: 'OSaJMMrTAqUnNG',
+    createdAt: {
+      $date: '2024-06-29T12:57:55.341Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T12:57:55.341Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '66800577e1aaf4971d890435',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 4,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 4,
+    tableName: '12454',
+    order_id: {
+      $oid: '66800572e1aaf4971d890431',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaMEGPRIx3qu5',
+    razorpayOrderId: 'order_OSaM9hBMmqf5W0',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '520435725838',
+      upi_transaction_id: 'A112D89F83D87F8AD3A01F76FB49EA72',
+    },
+    razorpayEventId: 'OSaMFot4MgbKQD',
+    createdAt: {
+      $date: '2024-06-29T13:00:39.731Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:00:39.731Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '668005bde1aaf4971d890455',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 14,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 14,
+    tableName: '12454',
+    order_id: {
+      $oid: '668005b7e1aaf4971d890451',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaNSY0exQbN8y',
+    razorpayOrderId: 'order_OSaNNnM2zEMRjp',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '259659394938',
+      upi_transaction_id: 'C01A7CCDE47416AEE83960B2B8AA4E66',
+    },
+    razorpayEventId: 'OSaNTvWb9RfaUF',
+    createdAt: {
+      $date: '2024-06-29T13:01:49.475Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:01:49.475Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '668005e0e1aaf4971d89046d',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 5,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 5,
+    tableName: '12454',
+    order_id: {
+      $oid: '668005dce1aaf4971d890469',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaO4ovWMH62Zg',
+    razorpayOrderId: 'order_OSaO1Shq9q6R91',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '787017431678',
+      upi_transaction_id: 'F08B28698647321AF2072EDD0311A35A',
+    },
+    razorpayEventId: 'OSaO6Esb4305ML',
+    createdAt: {
+      $date: '2024-06-29T13:02:24.568Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:02:24.568Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680060de1aaf4971d890483',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 7,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 7,
+    tableName: '124545',
+    order_id: {
+      $oid: '66800608e1aaf4971d89047f',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaOrGXiMTHxp6',
+    razorpayOrderId: 'order_OSaOnZPFMDNwZB',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '882008717147',
+      upi_transaction_id: '02EB3CD244734E008C6CD0034EA87344',
+    },
+    razorpayEventId: 'OSaOsrHjjdMPuG',
+    createdAt: {
+      $date: '2024-06-29T13:03:09.107Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:03:09.107Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680066de1aaf4971d8904a5',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 4,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 4,
+    tableName: '124544',
+    order_id: {
+      $oid: '6680062ce1aaf4971d890492',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaQYqPCubPPmn',
+    razorpayOrderId: 'order_OSaPQpfWY5kSQn',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '598537073604',
+      upi_transaction_id: '584499A561739441489A729236A0C85F',
+    },
+    razorpayEventId: 'OSaQaQsLd5mYYv',
+    createdAt: {
+      $date: '2024-06-29T13:04:45.839Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:04:45.839Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '66800760e1aaf4971d8904e3',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 5,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 5,
+    tableName: '124544',
+    order_id: {
+      $oid: '6680075be1aaf4971d8904df',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaUqcMvnQxiCn',
+    razorpayOrderId: 'order_OSaUmLQ3xfg9b0',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '211665731256',
+      upi_transaction_id: '3568798C824B729317DCD65A2552F419',
+    },
+    razorpayEventId: 'OSaUrrqrPLtAgr',
+    createdAt: {
+      $date: '2024-06-29T13:08:48.989Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T13:08:48.989Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '66805720ebdd4df83490dc9c',
+    },
+    businessId: {
+      $oid: '64b630b09f464445c1fbd169',
+    },
+    date: {
+      $numberLong: '1719668775229',
+    },
+    total: 2,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 2,
+    tableName: '2929',
+    order_id: {
+      $oid: '66805715ebdd4df83490dc98',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSgIGxbVmhoN0Z',
+    razorpayOrderId: 'order_OSgI6y4aDdINpa',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '689519557183',
+      upi_transaction_id: 'E70A32970594F5D51A4FFDA1873AF5CA',
+    },
+    razorpayEventId: 'OSgIIJr0mCvNfx',
+    createdAt: {
+      $date: '2024-06-29T18:49:04.262Z',
+    },
+    updatedAt: {
+      $date: '2024-06-29T18:49:04.262Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680da8d8abe22656ffb870d',
+    },
+    businessId: {
+      $oid: '64b630b09f464445c1fbd169',
+    },
+    date: {
+      $numberLong: '1719556810735',
+    },
+    total: 8,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 10,
+    tableName: 'T-1',
+    order_id: {
+      $oid: '6680da5d8abe22656ffb8701',
+    },
+    tips: 0,
+    claimedCoins: 2,
+    waiterName: 'RajKumar',
+    createdAt: {
+      $date: '2024-06-30T04:09:49.297Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T04:09:49.297Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680dc398abe22656ffb8766',
+    },
+    businessId: {
+      $oid: '64b630b09f464445c1fbd169',
+    },
+    date: {
+      $numberLong: '1719556810735',
+    },
+    total: 1,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 1,
+    tableName: 'T-1',
+    order_id: {
+      $oid: '6680dbf18abe22656ffb875b',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSpxAf869YTcII',
+    razorpayOrderId: 'order_OSpwr1jyJR4dZw',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '418288977501',
+    },
+    razorpayEventId: 'OSpy78SLu7Nyew',
+    createdAt: {
+      $date: '2024-06-30T04:16:57.308Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T04:16:57.308Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680ea202fbf0c541e9a649e',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 752,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 752,
+    tableName: '098651',
+    order_id: {
+      $oid: '6680ea1a2fbf0c541e9a649a',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSqypiwCa62uJ4',
+    razorpayOrderId: 'order_OSqykVEtlqKkbm',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '309900904288',
+      upi_transaction_id: '7BE7D70F5F3000D008C3A5F15BD0ADF0',
+    },
+    razorpayEventId: 'OSqyr0vkXXRZXy',
+    createdAt: {
+      $date: '2024-06-30T05:16:16.795Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:16:16.795Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680ea2d2fbf0c541e9a64ae',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 585,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 585,
+    tableName: '0988764',
+    order_id: {
+      $oid: '6680e4acab30feba9dc59d55',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-06-30T05:16:29.532Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:16:29.532Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680ea762fbf0c541e9a64ca',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 522,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 522,
+    tableName: '0988',
+    order_id: {
+      $oid: '6680ea032fbf0c541e9a6495',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-06-30T05:17:42.892Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:17:42.892Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680eacb2fbf0c541e9a64ec',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 606,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 758,
+    tableName: '098876',
+    order_id: {
+      $oid: '6680e389ab30feba9dc59d50',
+    },
+    tips: 0,
+    claimedCoins: 152,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-06-30T05:19:07.670Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:19:07.670Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680ead12fbf0c541e9a64ff',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 44,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 55,
+    tableName: '0987655',
+    order_id: {
+      $oid: '6680e135ab30feba9dc59d4b',
+    },
+    tips: 0,
+    claimedCoins: 11,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-06-30T05:19:13.509Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:19:13.509Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '6680ec9d2fbf0c541e9a6572',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719723686425',
+    },
+    total: 475,
+    customerName: 'babu',
+    customerPhone: '9588413799',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 500,
+    tableName: '9875651',
+    order_id: {
+      $oid: '6680ec822fbf0c541e9a656e',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSrA3TLBzIf3Fz',
+    razorpayOrderId: 'order_OSr9aXIH6FsNNQ',
+    claimedCoins: 25,
+    razorpayAcquirerData: {
+      rrn: '800951145824',
+      upi_transaction_id: '777C0A331EBA71999F8550011DA20BAE',
+    },
+    razorpayEventId: 'OSrA4td3GVAC2u',
+    createdAt: {
+      $date: '2024-06-30T05:26:53.957Z',
+    },
+    updatedAt: {
+      $date: '2024-06-30T05:26:53.957Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '66840e790b81d662ac23f0c7',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    total: 123,
+    customerName: 'vamsi',
+    customerPhone: '7702605494',
+    mode: 'offline',
+    paymentMode: 'offline',
+    billValue: 123,
+    tableName: 'vamsi2',
+    order_id: {
+      $oid: '66840e180b81d662ac23f0b3',
+    },
+    tips: 0,
+    claimedCoins: 0,
+    waiterName: 'test-user',
+    createdAt: {
+      $date: '2024-07-02T16:35:56.154Z',
+    },
+    updatedAt: {
+      $date: '2024-07-02T14:28:09.552Z',
+    },
+    __v: 0,
+  },
+  {
+    _id: {
+      $oid: '66842262f98d5843d03df6d6',
+    },
+    businessId: {
+      $oid: '665ee8043cd15d770f104f99',
+    },
+    date: {
+      $numberLong: '1719665746987',
+    },
+    total: 66,
+    customerName: 'sankalesh',
+    customerPhone: '8668229890',
+    mode: 'upi',
+    paymentMode: 'online',
+    billValue: 7,
+    tableName: '124545',
+    order_id: {
+      $oid: '66800608e1aaf4971d89047f',
+    },
+    tips: 0,
+    razorpayPaymentId: 'pay_OSaOrGXiMTHxp6',
+    razorpayOrderId: 'order_OSaOnZPFMDNwZB',
+    claimedCoins: 0,
+    razorpayAcquirerData: {
+      rrn: '882008717147',
+      upi_transaction_id: '02EB3CD244734E008C6CD0034EA87344',
+    },
+    razorpayEventId: 'OSaOsrHjjdMPuG',
+    __v: 0,
+  },
+];
+
+// console.log(
+//   data
+//     .filter((d) => dayjs(d.createdAt?.$date).utc().format('YYYY-MM-DD') === dayjs('2024-07-02').format('YYYY-MM-DD'))
+//     .filter((d) => d.businessId.$oid === '665ee8043cd15d770f104f99')
+//     .map((d) => dayjs(d.createdAt?.$date).format('YYYY-MM-DD HH:mm:ss')),
+// );
+// console.log(data.map((d) => console.log(d.createdAt)));
