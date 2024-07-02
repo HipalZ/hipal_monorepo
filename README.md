@@ -77,3 +77,5 @@ home icon change and bookmark back button remove
 
 popo
 loaders payment 
+loaders payment 
+create order offline toast
