@@ -76,3 +76,4 @@ home icon change and bookmark back button remove
 
 
 popo
+loaders payment 

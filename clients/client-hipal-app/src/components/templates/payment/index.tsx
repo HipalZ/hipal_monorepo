@@ -28,11 +28,6 @@ const BottomButton = dynamic(() => import("@/components/molecules/bottomButton")
     loading: () => <SkeletonLoader height={50} />,
 });
 
-const LoadingSpinner = dynamic(() => import("@/components/atoms/loadingSpinner"), {
-    ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
-});
-
 const PaymentComponent = dynamic(() => import("./selectPayment"), {
     ssr: false,
     loading: () => <SkeletonLoader height={200} />,
@@ -60,7 +55,7 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
-const Payment = ({ data }: { data: IBusinessData }) => {
+const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -78,6 +73,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const searchParams = useSearchParams()
     const { loyaltySetting } = useLoyaltyData()
     const [maxCoinz, setMaxCoinz] = useState(0)
+    const [showError, setShowError] = useState(false)
 
     useEffect(() => {
         if (!tableName) {
@@ -85,7 +81,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
     }, [])
 
-    const { setRazorPayPaymentId, razorPayOrderId,
+    const { setRazorPayPaymentId,
         setRazorPayOrderId, setRazorPaySignature, } =
         usePayment()
 
@@ -109,11 +105,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setRazorPaySignature('');
         setRazorPayOrderId('');
         setRazorPayPaymentId('');
+        setShowError(true)
         toast.error('Payment failed');
+        setTimeout(()=>{
+            setShowError(false)
+        }, 2000)
     };
     const handlePaymentFailure = (response: any) => {
         setRazorPayOrderId(response.error.metadata.order_id);
-        console.error(response);
     };
     const creatingRazorPayOptions = async (orderId: string) => {
         if (!orderId) {
@@ -434,6 +433,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     })
 
     return (
+        <>
+        {isLoading ? (<PayLoader/>) : showError ? (<ErrorPayment/>) :(
         <div>
             <section className='z-20 w-full bg-base-100'>
                 <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
@@ -442,7 +443,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             <button
                                 onClick={handleBack}
                                 type='button'
-                                className='h-10 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
+                                className='h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
                             >
                                 <MdOutlineChevronLeft className='text-3xl text-white ' />
                             </button>
@@ -462,7 +463,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         <PlaceholderImg />
                     )}
                     <div >
-                        paying :  <br />
+                        Paying:  <br />
                         <span className='font-bold text-primary'>
                             {businessDetails.businessName}
                         </span>
@@ -522,9 +523,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 billValue={billValue}
                 setClaimAmount={data?.loyalty?.setClaimAmount}
             />
-            {isLoading ? <PayLoader /> : null}
-        </div>
+        </div>)}
+        </>
     )
 };
 
-export default memo(Payment);
+const Payment = memo(PaymentMemo)
+export default Payment
