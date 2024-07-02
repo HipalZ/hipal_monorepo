@@ -271,6 +271,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
                 const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
                 // gives a string which is orderId
+                toast.success('We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.')
                 setTableName('')
                 router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
             }
