@@ -105,7 +105,7 @@ const addSignUpBonus = async (
     await data.save();
     return 1;
   } else {
-    await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 1 } }, { new: true });
+    await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 2 } }, { new: true });
 
     return 1;
   }
