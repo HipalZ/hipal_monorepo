@@ -81,3 +81,5 @@ terms and conditions update
 wallet
 
 history
+
+t7c refund policy

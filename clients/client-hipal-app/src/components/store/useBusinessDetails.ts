@@ -12,6 +12,7 @@ export const useBusinessDetails = create(
         businessName: "",
         registeredName: "",
         businessType: "",
+        email: "",
         gstRegistered: false,
         multipleOutlets: false,
         description: "",

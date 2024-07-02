@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { memo } from 'react'
 import Image from 'next/image'
 import Logo from '@/assets/hipalNewLogo.svg'
 import { isEmpty } from 'lodash-es'
@@ -42,10 +42,10 @@ const Terms = () => {
 				)}
 			</div>
 
-			<h1 className={styles.heading}>{businessDetails?.businessName} - Terms of Use</h1>
+			<h1 className={styles.heading}><b><b>{businessDetails?.businessName}</b></b> - Terms of Use</h1>
 			<h3 className={styles.subheading}>1. Introduction</h3>
 			<p className={styles.paragraph}>
-				Welcome to {businessDetails?.businessName} a brand of {businessDetails?.registeredName} ,
+				Welcome to <b><b>{businessDetails?.businessName}</b></b> a brand of <b>{businessDetails?.registeredName}</b> ,
 				a service powered by Hipalz technology provided by Paltribe Solutions Pvt Ltd.
 				These terms govern your use of our services, which include digital menu displays, customer data collection,
 				discounts, loyalty programs, user preference management, and bill settlements. Our offerings extend to food delivery,
@@ -75,32 +75,35 @@ const Terms = () => {
 			</p>
 			<h3 className={styles.subheading}>6. Payments and Financial Transactions</h3>
 			<p className={styles.paragraph}>
-				{businessDetails?.businessName} uses Hipalz to facilitate transactions. {businessDetails?.businessName} is responsible for all financial service issues, including disputes and billing inaccuracies.
+				<b>{businessDetails?.businessName}</b> uses Hipalz to facilitate transactions. <b>{businessDetails?.businessName}</b> is responsible for all financial service issues, including disputes and billing inaccuracies.
 			</p>
 			<h3 className={styles.subheading}>7. Service Fulfillment</h3>
 			<p className={styles.paragraph}>
-				While Hipalz provides the technology, {businessDetails?.businessName} manages all direct services related to food, products, and consultations. Any issues should be directly addressed by {businessDetails?.businessName}
+				While Hipalz provides the technology, <b>{businessDetails?.businessName}</b> manages all direct services related to food, products, and consultations. Any issues should be directly addressed by <b>{businessDetails?.businessName}</b>
 			</p>
 			<h3 className={styles.subheading}>8. Data Usage and Privacy</h3>
 			<p className={styles.paragraph}>
-				{businessDetails?.businessName} and Hipalz collect and use personal information (name, contact details, DOB, and more) to enhance user experience, provide personalized services, and for marketing. By using our services, you consent to the collection and use of your data as described.
+				<b>{businessDetails?.businessName}</b> and Hipalz collect and use personal information (name, contact details, DOB, and more) to enhance user experience, provide personalized services, and for marketing. By using our services, you consent to the collection and use of your data as described.
 			</p>
 			<h3 className={styles.subheading}>9. User Consent for Data Sharing</h3>
 			<p className={styles.paragraph}>
-				Your personal information may be shared between {businessDetails?.businessName} and Hipalz to improve services and offer personalized promotions. We commit to protecting your privacy and using information only as stated.
+				Your personal information may be shared between <b>{businessDetails?.businessName}</b> and Hipalz to improve services and offer personalized promotions. We commit to protecting your privacy and using information only as stated.
 			</p>
 			<h3 className={styles.subheading}>10. Contact Information</h3>
 			<p className={styles.paragraph}>
-				<ol className={styles.unorderedlist}>For questions or concerns related to {businessDetails?.businessName} services, please contact:
-					<br/>
+				<ol className={styles.unorderedlist}>For questions or concerns related to <b>{businessDetails?.businessName}</b> services, please contact:
+					<br />
 					<li>
-						Company Name: {businessDetails?.registeredName}
+						Company Name: <b>{businessDetails?.registeredName}</b>
 					</li>
 					<li>
-						Brand Name: {businessDetails?.businessName}
+						Brand Name: <b>{businessDetails?.businessName}</b>
 					</li>
 					<li>
 						Phone Number: {businessDetails?.phoneNumber}
+					</li>
+					<li>
+						Contact : {businessDetails?.email}
 					</li>
 					<li>
 						Address: {businessDetails?.address}
@@ -339,32 +342,50 @@ const Terms = () => {
 				Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective
 				when they are posted on this page.
 			</p>
+			<h1 className={styles.heading}>
+				Refund Policy
+			</h1>
+			<p className={styles.paragraph}>
+				<b>{businessDetails?.businessName}</b> is committed to ensuring satisfaction for all our customers. If you are not satisfied with a purchase or service provided by <b>{businessDetails?.businessName}</b> and we find your point fair and acceptable, here are the terms applicable to refunds:
+
+				Products and Services: Eligible for a refund if a cancellation request is made within the time of interaction or exchange of the purchase or if there are significant discrepancies in the service delivered or product received.
+
+				Cancellation: Orders can be canceled within a specified time frame, typically before the service provision starts or product dispatch. Refunds for canceled orders will be processed within 7-10 business days.
+
+				Issues and Disputes: Any issues or discrepancies related to payments, product quality, or service delivery must be reported to <b>{businessDetails?.businessName}</b> as soon as possible, wherein if the product or service was consumed within store /outlet should reported immediately for other take home service it can be within 48 hours of the transaction or service delivery date.
+
+				Processing Refunds: Refunds will be processed using the original method of payment. If a refund is issued, it will typically appear on your account statement within 7-10 business days.
+
+				Please note that certain conditions and exceptions may apply. For specific details related to refund eligibility and process, please contact our customer service team mentioned in the contact us form
+			</p>
 			<h1 className={styles.heading}>Contact Paltribe Solutions Pvt</h1>
 			<p className={styles.paragraph}>
 				If you have any questions about this Privacy Policy, You can contact us:
 			</p>
-			<ul>
-				<li>By email: info@paltribe.in</li>
-			</ul>
 			<h3 className={styles.subheading}>7. Contact Information</h3>
 			<p className={styles.paragraph}>
 				<ol className={styles.unorderedlist}>
 					For support related to Hipalz technology, contact:
 					<li>
-						Company Name: Paltribe Solutions Pvt Ltd
+						Company Name: <b>Paltribe Solutions Pvt Ltd</b>
 					</li>
 					<li>
-						Brand Name: Hipalz
+						Brand Name: <b>Hipalz</b>
 					</li>
+					<li>By email: info@paltribe.in</li>
 					<li>
-						Phone Number: 7386142525
+						Phone Number: <b>7386142525</b>
 					</li>
 					<li>
 						Address: 929, 2nd floor, Sudheekshas, Defence Colony Rd, Hill Top Colony, Sainikpuri, Secunderabad, Hyderabad, Telangana 500056
 					</li>
 				</ol>
 			</p>
+			&nbsp;
+			&nbsp;
 		</div>
 	)
 }
-export default Terms
+
+const MemoTerms = memo(Terms)
+export default MemoTerms
