@@ -79,3 +79,5 @@ create order offline toast
 terms and conditions update
 
 wallet
+
+history
