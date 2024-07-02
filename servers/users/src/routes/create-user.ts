@@ -205,7 +205,7 @@ router.post(
   // validateRequest,
   async (req: Request, res: Response) => {
     let { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = req.body;
-    const loyaltyUser = await UserReward.findOne({ userPhone: phone, loyaltyId }).select('rewards');
+
     let existingUser;
     existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
     if (!existingUser) {
@@ -244,6 +244,7 @@ router.post(
         userPhone: phone,
         loyaltyId,
       });
+      const loyaltyUser = await UserReward.findOne({ userPhone: phone, loyaltyId }).select('rewards');
       const accessToken = createAccessToken(existingUser);
       const refreshToken = createRefreshToken(existingUser);
       const modifyUser = {
