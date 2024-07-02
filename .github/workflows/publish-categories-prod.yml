@@ -1,16 +1,16 @@
-name: Build and Push payments Server Image
+name: Build and Push categories Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['prod']
     paths:
       - 'Dockerfile'
       - 'package.json'
-      - 'servers/payments/**'
+      - 'servers/categories/**'
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: payments-test-server
+  DOCKER_REPOSITORY: categories-prod-server
 
 jobs:
   build-and-push:
@@ -27,5 +27,5 @@ jobs:
       - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
           IMAGE_TAG=latest
-          docker build --target payments-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
+          docker build --target categories-server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
