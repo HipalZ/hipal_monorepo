@@ -21,7 +21,7 @@ export const useLoyaltyData = create(
 		loyaltySetting: ILoyaltySetting
 		setLoyaltySetting: (loyaltySetting: ILoyaltySetting) => void
 	}>(
-		(set, get) => ({
+		(set) => ({
 			loyaltySetting: {
 				loyaltyId: "",
 				businessId: "",
@@ -41,6 +41,7 @@ export const useLoyaltyData = create(
 		}),
 		{
 			name: "userLoyaltyData",
+			getStorage: () => localStorage,
 		},
 	),
 )

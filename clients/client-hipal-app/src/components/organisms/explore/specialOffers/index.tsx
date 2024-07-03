@@ -13,7 +13,7 @@ interface ISpecialOffers {
 	explore: IExplore | undefined
 
 }
-export default memo(function SpecialOffers(props: ISpecialOffers) {
+function SpecialOffers(props: ISpecialOffers) {
 	const explore = props.explore ?? {
 		wallpaper: img.src,
 		phone: '',
@@ -54,4 +54,7 @@ export default memo(function SpecialOffers(props: ISpecialOffers) {
 			</div> 
 		</div>
 	)
-})
+}
+
+const MemoSpecialOffers = memo(SpecialOffers)
+export default MemoSpecialOffers

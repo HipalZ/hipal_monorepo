@@ -1,7 +1,8 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import arrowLine from "@/assets/svg/arrow_line.svg"
 import hipalPro from "@/assets/svg/pro_hipal.svg"
+
 const BusinessThriveMobile = () => {
 	return (
 		<>
@@ -48,4 +49,5 @@ const BusinessThriveMobile = () => {
 	)
 }
 
-export default BusinessThriveMobile
+const MemoBusinessThriveMobile = memo(BusinessThriveMobile)
+export default MemoBusinessThriveMobile

@@ -60,7 +60,8 @@ function DishQuantityButton({
 	)
 }
 
-export default memo(DishQuantityButton)
+const MemoDishQuantityButton = memo(DishQuantityButton)
+export default MemoDishQuantityButton
 
 export function handleDishQuantity(
 	cart: object,

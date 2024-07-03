@@ -27,7 +27,7 @@ interface PaymentComponentProps {
     total:number;
 }
 
-const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, total,handleCreateOrder, setSelectedMode,isLoading }) => {
+const PaymentComponent: React.FC<PaymentComponentProps> = ({ data, billValue, total,handleCreateOrder, setSelectedMode,isLoading }) => {
 
     const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
 
@@ -138,6 +138,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
             </section>
         </section>
     );
-});
+}
 
-export default memo(PaymentComponent);
+
+const MemoPaymentComponent = memo(PaymentComponent);
+export default MemoPaymentComponent

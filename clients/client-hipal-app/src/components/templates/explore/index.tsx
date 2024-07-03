@@ -1,6 +1,6 @@
 "use client";
 import { PatternKeys, createSrcColor } from "@/components/utils/helpers";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { IBusinessData } from "@/components/types/businessData";
 import useBusinessDetails from "../../store/useBusinessDetails";
@@ -31,7 +31,7 @@ const Rewards = dynamic(() => import("../explore/rewards"), { loading: () => <Sk
 const SpecialOffers = dynamic(() => import("@/components/organisms/explore/specialOffers"), { loading: () => <SkeletonLoader height={200} /> });
 const SubLoyalty = dynamic(() => import("@/components/atoms/subLoyalty"), { loading: () => <SkeletonLoader height={50} /> });
 
-export default function Explore({ data }: { data: IBusinessData }): JSX.Element {
+function Explore({ data }: { data: IBusinessData }): JSX.Element {
   const searchParams = useSearchParams();
 
   const tableName = searchParams?.get("tableName");
@@ -147,3 +147,6 @@ export default function Explore({ data }: { data: IBusinessData }): JSX.Element 
     </div>
   );
 }
+
+const MemoExplore = memo(Explore);
+export default MemoExplore

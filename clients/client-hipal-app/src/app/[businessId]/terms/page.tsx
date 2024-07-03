@@ -6,7 +6,6 @@ import { isEmpty } from 'lodash-es'
 import { useRouter } from 'next/navigation'
 import { HiChevronLeft } from 'react-icons/hi'
 import { getRandomBlurImg } from '@/components/utils/images'
-import styles from './terms.module.css'
 import PlaceholderImg from '@/components/atoms/placeholder'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
 import { IBiz } from '@/components/types/businessData'
@@ -20,7 +19,7 @@ const Terms= ()=> {
 	}
 
 	return (
-		<div className={styles.container}>
+		<div className="container">
 			<div className='relative'>
 				<HiChevronLeft className='mt-6 ml-2 text-3xl' onClick={onBack} />
 			</div>
@@ -42,65 +41,65 @@ const Terms= ()=> {
 				)}
 			</div>
 
-			<h1 className={styles.heading}>HiPal - Terms of Use</h1>
-			<h3 className={styles.subheading}>1. Introduction</h3>
-			<p className={styles.paragraph}>
+			<h1 className="heading">HiPal - Terms of Use</h1>
+			<h3 className="subheading">1. Introduction</h3>
+			<p className="paragraph">
 				Welcome to HiPal, a service provided by Paltribe Solutions PVT Ltd. (&quot;Paltribe&quot;,
 				&quot;us&quot;, &quot;we&quot;, &quot;our&quot;) These Terms of Use govern your use of our
 				technology solutions, including but not limited to point o sales, content management, staff
 				management, and direct delivery services (collectively, the &quot;Services&quot;) .
 			</p>
 
-			<h3 className={styles.subheading}>2. Acceptance of Terms</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">2. Acceptance of Terms</h3>
+			<p className="paragraph">
 				By using the Services in any manner, you are agreeing to be bound by these Terms of Use. If
 				you do not agree with these Terms of Use, you may not access or use our Services
 			</p>
-			<h3 className={styles.subheading}>3. Changes to Terms</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">3. Changes to Terms</h3>
+			<p className="paragraph">
 				We reserve the right to modify these Terms of Use at any time. Your continued use of our
 				Services following the posting of any changes to these Terms of Use constitutes acceptance
 				of those changes
 			</p>
-			<h3 className={styles.subheading}>4. Services</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">4. Services</h3>
+			<p className="paragraph">
 				We provide technology solutions to digitalize various aspects of your business: While we
 				strive to maintain high-quality Services, they are provided on an &quot;as is&apos;
 				&apos;&quot; and &quot;as available&quot; basis, without any to warranties of any kind,
 				either express or implied.
 			</p>
-			<h3 className={styles.subheading}>5. User Responsibility</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">5. User Responsibility</h3>
+			<p className="paragraph">
 				It is your responsibility to ensure that the information you provide to us is accurate and
 				kept up-to- date: You are responsible for maintaining the confidentiality of any login
 				information and are fully responsible for all activities that occur under your account
 			</p>
-			<h1 className={styles.heading}>HiPal - Terms of Payment</h1>
-			<h3 className={styles.subheading}>1. General</h3>
-			<p className={styles.paragraph}>
+			<h1 className="heading">HiPal - Terms of Payment</h1>
+			<h3 className="subheading">1. General</h3>
+			<p className="paragraph">
 				These Terms of Payment govern all transactions between you ( The customer ) using the menu
 				and Merchant <b>{registeredName}</b> also using the Hipal software and
 				services. It is to be clearly noted that Hipal is technology and general service provider to
 				its Merchant <b>{registeredName}</b> and is not responsible for activities
 				between Merchant and their customer and any business that uses the HiPal
 			</p>
-			<h3 className={styles.subheading}>2. Prices and Payment</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">2. Prices and Payment</h3>
+			<p className="paragraph">
 				All payments for goods or services purchased from the Merchant shall be made in accordance
 				with the Merchants payment terms
 			</p>
-			<h3 className={styles.subheading}>3. Methods of Payment</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">3. Methods of Payment</h3>
+			<p className="paragraph">
 				The Merchant accepts various methods of payment, as indicated at the time of purchase
 			</p>
-			<h3 className={styles.subheading}>4. Payment Processing</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">4. Payment Processing</h3>
+			<p className="paragraph">
 				All payments made through our services are processed by third-party payment processors. By
 				using any of our Services, you agree to abide by the terms and conditions of these
 				processors.
 			</p>
-			<h3 className={styles.subheading}>5. Refunds and Disputes</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">5. Refunds and Disputes</h3>
+			<p className="paragraph">
 				All refund requests and disputes related to purchases from the Merchant should be directed
 				to the Merchant {registeredName} in the first instance, The Merchant is
 				solely responsible for handling all customer service issues related to goods, services, and
@@ -108,23 +107,23 @@ const Terms= ()=> {
 				here to share their concerns. Merchant will address the issue the problem as soon as
 				possible and will try refund the money to customer within 7 working days
 			</p>
-			<h1 className={styles.heading}>Sub-merchant - Terms of Payment</h1>
-			<h3 className={styles.subheading}>1. General</h3>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Sub-merchant - Terms of Payment</h1>
+			<h3 className="subheading">1. General</h3>
+			<p className="paragraph">
 				These Terms of Payment govern all transactions between you and any business that uses the
 				HiPal service (the &quot;Merchant&quot;).
 			</p>
-			<h3 className={styles.subheading}>2. Payment Terms</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">2. Payment Terms</h3>
+			<p className="paragraph">
 				All payments for goods or services purchased from the Merchant shall be made in accordance
 				with the Merchants payment terms.
 			</p>
-			<h3 className={styles.subheading}>3. Methods of Payment</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">3. Methods of Payment</h3>
+			<p className="paragraph">
 				The Merchant accepts various methods of payment, as indicated at the time of purchase.
 			</p>
-			<h3 className={styles.subheading}>4. Refunds and Disputes</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">4. Refunds and Disputes</h3>
+			<p className="paragraph">
 				All refund requests and disputes related to purchases from the Merchant should be directed
 				to the Merchant {registeredName} in the first instance, The Merchant is
 				solely responsible for handling all customer service issues related to goods, services, and
@@ -132,12 +131,12 @@ const Terms= ()=> {
 				here to share their concerns. Merchant will address the issue the problem as soon as
 				possible and will try refund the money to customer within 7 working days
 			</p>
-			<h3 className={styles.subheading}>5. Limitation of Liability</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">5. Limitation of Liability</h3>
+			<p className="paragraph">
 				Paltribe Solutions PVT Ltd and HiPal are not liable for any loss or damage arising from your
 				transactions with the Merchant
 			</p>
-			<h3 className={styles.subheading}>6. Contact us</h3>
+			<h3 className="subheading">6. Contact us</h3>
 			<div className='flex flex-col'>
 				<div className='flex flex-row items-start justify-start'>
 					<span className='text-lg whitespace-nowrap'>Call us :</span>
@@ -152,23 +151,23 @@ const Terms= ()=> {
 					<span className='mt-[0.5rem] ml-4 text-xs'> {address}</span>
 				</div>
 			</div>
-			<h1 className={styles.heading}>Privacy Policy Paltribe solutions Pvt </h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Privacy Policy Paltribe solutions Pvt </h1>
+			<p className="paragraph">
 				Last updated: September 1st 2023 This Privacy Policy describes Our policies and procedures
 				on the collection, use and disclosure of Your information when You use the Service and tells
 				You about Your privacy rights and how the law protects You. We use Your Personal data to
 				provide and improve the Service. By using the Service, You agree to the collection and use
 				of information in accordance with this Privacy Policy.
 			</p>
-			<h1 className={styles.heading}>Interpretation and Definitions </h1>
-			<h3 className={styles.subheading}>Interpretation</h3>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Interpretation and Definitions </h1>
+			<h3 className="subheading">Interpretation</h3>
+			<p className="paragraph">
 				The words of which the initial letter is capitalised have meanings defined under the
 				following conditions. The following definitions shall have the same meaning regardless of
 				whether they appear in singular or in plural.
 			</p>
-			<h3 className={styles.subheading}>Definitions</h3>
-			<p className={styles.paragraph}>For the purposes of this Privacy Policy:</p>
+			<h3 className="subheading">Definitions</h3>
+			<p className="paragraph">For the purposes of this Privacy Policy:</p>
 			<ul>
 				<li>
 					Account means a unique account created for You to access our Service or parts of our
@@ -215,10 +214,10 @@ const Terms= ()=> {
 				</li>
 			</ul>
 
-			<h1 className={styles.heading}>Collecting and Using Your Personal Data</h1>
-			<h3 className={styles.subheading}>Types of Data Collected</h3>
-			<h4 className={styles.subheading}>Personal Data</h4>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Collecting and Using Your Personal Data</h1>
+			<h3 className="subheading">Types of Data Collected</h3>
+			<h4 className="subheading">Personal Data</h4>
+			<p className="paragraph">
 				While using Our Service, We may ask You to provide Us with certain personally identifiable
 				information that can be used to contact or identify You. Personally identifiable information
 				may include, but is not limited to:
@@ -232,8 +231,8 @@ const Terms= ()=> {
 				<li>DOB</li>
 				<li>Bills and eating patterns.</li>
 			</ul>
-			<h4 className={styles.subheading}>Usage Data</h4>
-			<p className={styles.paragraph}>
+			<h4 className="subheading">Usage Data</h4>
+			<p className="paragraph">
 				Usage Data is collected automatically when using the Service. Usage Data may include
 				information such as Your Device&apos;s Internet Protocol address (e.g. IP address), browser
 				type, browser version, the pages of our Service that You visit, the time and date of Your
@@ -245,8 +244,8 @@ const Terms= ()=> {
 				diagnostic data. We may also collect information that Your browser sends whenever You visit
 				our Service or when You access the Service by or through a mobile device.
 			</p>
-			<h4 className={styles.subheading}>Tracking Technologies and Cookies</h4>
-			<p className={styles.paragraph}>
+			<h4 className="subheading">Tracking Technologies and Cookies</h4>
+			<p className="paragraph">
 				We use Cookies and similar tracking technologies to track the activity on Our Service and
 				store certain information. Tracking technologies used are beacons, tags, and scripts to
 				collect and track information and to improve and analyze Our Service. The technologies We
@@ -268,12 +267,12 @@ const Terms= ()=> {
 					popularity of a certain section and verifying system and server integrity).
 				</li>
 			</ul>
-			<p className={styles.paragraph}>
+			<p className="paragraph">
 				Cookies can be &quot;Persistent&quot; or &quot;Session&quot; Cookies. Persistent Cookies
 				remain on Your personal computer or mobile device when You go offline, while Session Cookies
 				are deleted as soon as You close Your web browser.
 			</p>
-			<p className={styles.paragraph}>
+			<p className="paragraph">
 				We use both Session and Persistent Cookies for the purposes set out below:
 			</p>
 			<ul>
@@ -296,12 +295,12 @@ const Terms= ()=> {
 					You use the Website.
 				</li>
 			</ul>
-			<p className={styles.paragraph}>
+			<p className="paragraph">
 				For more information about the cookies we use and your choices regarding cookies, please
 				visit our Cookies Policy or the Cookies section of our Privacy Policy.
 			</p>
-			<h1 className={styles.heading}>Use of Your Personal Data</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Use of Your Personal Data</h1>
+			<p className="paragraph">
 				The Company may use Personal Data for the following purposes:
 			</p>
 			<ul>
@@ -342,7 +341,7 @@ const Terms= ()=> {
 					to evaluate and improve our Service, products, services, marketing and your experience.
 				</li>
 			</ul>
-			<p className={styles.paragraph}>
+			<p className="paragraph">
 				We may share Your personal information in the following situations:
 			</p>
 			<ul>
@@ -375,8 +374,8 @@ const Terms= ()=> {
 					Your consent.
 				</li>
 			</ul>
-			<h1 className={styles.heading}>Retention of Your Personal Data</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Retention of Your Personal Data</h1>
+			<p className="paragraph">
 				The Company will retain Your Personal Data only for as long as is necessary for the purposes
 				set out in this Privacy Policy. We will retain and use Your Personal Data to the extent
 				necessary to comply with our legal obligations (for example, if we are required to retain
@@ -386,8 +385,8 @@ const Terms= ()=> {
 				data is used to strengthen the security or to improve the functionality of Our Service, or
 				We are legally obligated to retain this data for longer time periods.
 			</p>
-			<h1 className={styles.heading}>Transfer of Your Personal Data</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Transfer of Your Personal Data</h1>
+			<p className="paragraph">
 				Your information, including Personal Data, is processed at the Company&apos;s operating
 				offices and in any other places where the parties involved in the processing are located. It
 				means that this information may be transferred to — and maintained on — computers located
@@ -399,21 +398,21 @@ const Terms= ()=> {
 				Data will take place to an organization or a country unless there are adequate controls in
 				place including the security of Your data and other personal information.
 			</p>
-			<h1 className={styles.heading}>Disclosure of Your Personal Data</h1>
-			<h3 className={styles.subheading}>Business Transactions</h3>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Disclosure of Your Personal Data</h1>
+			<h3 className="subheading">Business Transactions</h3>
+			<p className="paragraph">
 				If the Company is involved in a merger, acquisition or asset sale, Your Personal Data may be
 				transferred. We will provide notice before Your Personal Data is transferred and becomes
 				subject to a different Privacy Policy.
 			</p>
-			<h3 className={styles.subheading}>Law enforcement</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">Law enforcement</h3>
+			<p className="paragraph">
 				Under certain circumstances, the Company may be required to disclose Your Personal Data if
 				required to do so by law or in response to valid requests by public authorities (e.g. a
 				court or a government agency).
 			</p>
-			<h3 className={styles.subheading}>Other legal requirements</h3>
-			<p className={styles.paragraph}>
+			<h3 className="subheading">Other legal requirements</h3>
+			<p className="paragraph">
 				The Company may disclose Your Personal Data in the good faith belief that such action is
 				necessary to:
 			</p>
@@ -424,15 +423,15 @@ const Terms= ()=> {
 				<li>Protect the personal safety of Users of the Service or the public</li>
 				<li>Protect against legal liability</li>
 			</ul>
-			<h1 className={styles.heading}>Security of Your Personal Data</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Security of Your Personal Data</h1>
+			<p className="paragraph">
 				The security of Your Personal Data is important to Us, but remember that no method of
 				transmission over the Internet, or method of electronic storage is 100% secure. While We
 				strive to use commercially acceptable means to protect Your Personal Data, We cannot
 				guarantee its absolute security.
 			</p>
-			<h1 className={styles.heading}>Children&apos;s Privacy</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Children&apos;s Privacy</h1>
+			<p className="paragraph">
 				Our Service does not address anyone under the age of 13. We do not knowingly collect
 				personally identifiable information from anyone under the age of 13. If You are a parent or
 				guardian and You are aware that Your child has provided Us with Personal Data, please
@@ -442,8 +441,8 @@ const Terms= ()=> {
 				information and Your country requires consent from a parent, We may require Your
 				parent&apos;s consent before We collect and use that information.
 			</p>
-			<h1 className={styles.heading}>Changes to this Privacy Policy</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Changes to this Privacy Policy</h1>
+			<p className="paragraph">
 				We may update Our Privacy Policy from time to time. We will notify You of any changes by
 				posting the new Privacy Policy on this page. We will let You know via email and/or a
 				prominent notice on Our Service, prior to the change becoming effective and update the Last
@@ -451,8 +450,8 @@ const Terms= ()=> {
 				Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective
 				when they are posted on this page.
 			</p>
-			<h1 className={styles.heading}>Contact Paltribe Solutions Pvt</h1>
-			<p className={styles.paragraph}>
+			<h1 className="heading">Contact Paltribe Solutions Pvt</h1>
+			<p className="paragraph">
 				If you have any questions about this Privacy Policy, You can contact us:
 			</p>
 			<ul>

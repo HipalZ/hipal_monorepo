@@ -5,6 +5,7 @@ import { IDish } from "@/components/types/businessData"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { Splide, SplideSlide } from "@splidejs/react-splide"
 import { useParams, useRouter } from "next/navigation"
+import { memo } from "react"
 
 interface IPopularRestProps {
 	popular: any
@@ -56,4 +57,5 @@ function PopularRestaurant(props: IPopularRestProps) {
 	)
 }
 
-export default PopularRestaurant
+const MemoPopularRestaurant = memo(PopularRestaurant)
+export default MemoPopularRestaurant

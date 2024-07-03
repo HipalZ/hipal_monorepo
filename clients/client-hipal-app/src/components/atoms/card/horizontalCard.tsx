@@ -11,10 +11,9 @@ import DishData from "../dishDescription"
 import DishPopup from "../dishPopup"
 import NotAvailable from "../notAvailable"
 import { useCart } from "@/components/store/useCart"
-import RecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 import PlaceholderImg from "../placeholder"
 
-function HorizontalCard({
+const HorizontalCard = ({
 	dishData,
 	noAddBtn,
 	noDescription,
@@ -26,7 +25,7 @@ function HorizontalCard({
 	noDescription?: boolean
 	isTopScrollWithSubTypes?: boolean
 	redirection?: (id: string, categories: ICategory[]) => void
-}) {
+}) =>{
 	const coverImage = dishData?.images?.[0]
 	const isAvailable = dishData?.availability
 	const [isModalOpen, setIsModalOpen] = useState(false)
@@ -157,4 +156,5 @@ function HorizontalCard({
 	)
 }
 
-export default memo(HorizontalCard)
+const MemoHorizontalCard = memo(HorizontalCard)
+export default MemoHorizontalCard

@@ -6,7 +6,7 @@ interface IPaymentCard {
     logo: string | undefined
 }
 
-const PaymentCard = memo((props: IPaymentCard) => {
+const PaymentCard = (props: IPaymentCard) => {
     const { claimedCoinz, billValue } = props;
     return (
         <center className={`relative text-xl rounded-b-3xl bg-primary pt-4 text-base-100 ${claimedCoinz > 0 ? "h-[12rem]":"h-[6rem]"}`}>
@@ -26,6 +26,7 @@ const PaymentCard = memo((props: IPaymentCard) => {
 
         </center>
     )
-});
+}
 
-export default PaymentCard;
+const MemoPaymentCard = memo(PaymentCard)
+export default MemoPaymentCard;

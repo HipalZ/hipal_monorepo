@@ -37,4 +37,5 @@ const Cart = memo(({ data }:{data:IBusinessData}) => {
 	);
 });
 
-export default Cart;
+const MemoCart = memo(Cart);
+export default MemoCart;

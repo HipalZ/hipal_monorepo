@@ -93,6 +93,7 @@ export const useLogin = create(
 		}),
 		{
 			name: "useLogin",
+			getStorage: () => localStorage,
 		},
 	),
 )

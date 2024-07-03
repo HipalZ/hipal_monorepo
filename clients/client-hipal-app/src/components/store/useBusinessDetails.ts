@@ -60,6 +60,7 @@ export const useBusinessDetails = create(
     }),
     {
       name: "useBusinessDetails",
+      getStorage: () => localStorage,
     }
   )
 );

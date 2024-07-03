@@ -1,7 +1,7 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react"
-import { Fragment } from "react"
+import { Fragment, memo } from "react"
 
-export default function QuickFilterPopup({
+function QuickFilterPopup({
 	children,
 	show,
 	onClose,
@@ -36,3 +36,6 @@ export default function QuickFilterPopup({
 			</Transition>
 	)
 }
+
+const MemoQuickFilterPopup = memo(QuickFilterPopup)
+export default MemoQuickFilterPopup

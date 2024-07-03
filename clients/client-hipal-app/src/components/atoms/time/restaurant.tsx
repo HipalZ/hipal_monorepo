@@ -28,4 +28,5 @@ function RestaurantTime(props: IProps) {
 	)
 }
 
-export default memo(RestaurantTime)
+const RestaurantTimeMemo = memo(RestaurantTime)
+export default RestaurantTimeMemo

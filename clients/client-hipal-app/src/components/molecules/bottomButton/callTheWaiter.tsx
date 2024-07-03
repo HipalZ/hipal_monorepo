@@ -93,4 +93,5 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
     )
 }
 
-export default memo(CallTheWaiterComponent)
+const MemoCallTheWaiterComponent = memo(CallTheWaiterComponent)
+export default MemoCallTheWaiterComponent

@@ -29,7 +29,7 @@ const RewardCard = ({
 	</center>
 );
 
-const Rewards = memo(() => {
+const Rewards = () => {
 	const { userDetails, userCoinZ } = useLogin();
 	const customLink = useBusinessDetails((s) => s.businessDetails.customLink);
 
@@ -72,6 +72,7 @@ const Rewards = memo(() => {
 			</section>
 		</div>
 	);
-});
+}
 
-export default memo(Rewards);
+const MemoRewards = memo(Rewards);
+export default MemoRewards

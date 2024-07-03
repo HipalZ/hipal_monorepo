@@ -3,7 +3,7 @@ import { _useAllBusiness } from '@/components/store/useAllBusiness';
 import { IBusinessData } from '@/components/types/businessData';
 import { updateTheme } from '@/components/utils/themes';
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 type Props = { children?: React.ReactNode; };
 
 const ProgressProvider = ({ children }: Props) => {
@@ -27,4 +27,5 @@ const ProgressProvider = ({ children }: Props) => {
   );
 };
 
-export default ProgressProvider;
+const MemoProgressProvider = memo(ProgressProvider);
+export default MemoProgressProvider;

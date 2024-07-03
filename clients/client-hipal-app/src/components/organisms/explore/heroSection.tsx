@@ -10,7 +10,7 @@ import { MdOutlineCall } from "react-icons/md"
 interface IHeroSection {
 	data: IBusinessData
 }
-export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
+function HeroSection({ data }: IHeroSection): JSX.Element {
 	const { businessName, logo, tags, description } = data.business as IBiz
 	const { location, phone } = data.settings?.explore as IExplore
 
@@ -79,4 +79,7 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 			</div>
 		</div>
 	)
-})
+}
+
+const MemoHeroSection = memo(HeroSection)
+export default MemoHeroSection

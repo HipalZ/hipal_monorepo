@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, memo } from "react"
 import Image from "next/image"
 
 import businessThrive1 from "@/assets/img/businessThrive1.png"
@@ -10,7 +10,6 @@ const images = [businessThrive1, businessThrive2, businessThrive3, businessThriv
 
 const ImageSlider = () => {
 	const [activeIndex, setActiveIndex] = useState(0)
-	const sliderRef = useRef(null)
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -62,4 +61,5 @@ const ImageSlider = () => {
 	)
 }
 
-export default ImageSlider
+const MemoImageSlider = memo(ImageSlider)
+export default MemoImageSlider

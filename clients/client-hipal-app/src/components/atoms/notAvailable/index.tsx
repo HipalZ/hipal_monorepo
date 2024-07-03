@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { MdOutlineNoFood } from "react-icons/md"
 
 function NotAvailable({ className }: { className?: string }) {
@@ -10,4 +11,6 @@ function NotAvailable({ className }: { className?: string }) {
 	)
 }
 
-export default NotAvailable
+const MemoNotAvailable = memo(NotAvailable)
+
+export default MemoNotAvailable

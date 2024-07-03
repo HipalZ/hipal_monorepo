@@ -1,8 +1,8 @@
-import React, { Fragment } from "react"
+import React, { Fragment, memo } from "react"
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react"
 import { HiX } from "react-icons/hi"
 
-export default function DishData({
+function DishData({
 	children,
 	show,
 	onClose,
@@ -47,3 +47,6 @@ export default function DishData({
 		</Transition>
 	)
 }
+
+const MemoDishData = memo(DishData)
+export default MemoDishData

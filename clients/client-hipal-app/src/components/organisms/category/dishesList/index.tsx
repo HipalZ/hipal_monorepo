@@ -1,7 +1,7 @@
 "use client"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
 import { useDishTypes } from "@/components/store/useDishTypes"
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 
 import { ICategories, ICategory, ICategorySubTypes, ICategoryTypes, IDish } from "@/components/types/businessData"
@@ -119,4 +119,5 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 	);
 };
 
-export default DishesList;
+const MemoDishesList = memo(DishesList);
+export default MemoDishesList;

@@ -2,6 +2,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import HipalLogo from "@/assets/svg/Hipal_logo.svg"
 import { IoIosArrowBack } from "react-icons/io"
+import { memo } from "react"
 
 function ProfileHeader() {
 	const router = useRouter()
@@ -27,4 +28,5 @@ function ProfileHeader() {
 	)
 }
 
-export default ProfileHeader
+const MemoProfileHeader = memo(ProfileHeader)
+export default MemoProfileHeader

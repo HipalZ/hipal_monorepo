@@ -14,6 +14,7 @@ const useTableData = create(
         }),
         {
             name: 'table-store',
+            getStorage: () => localStorage,
         }
     )
 );

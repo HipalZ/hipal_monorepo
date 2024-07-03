@@ -1,5 +1,5 @@
 import useLoyaltyData from "@/components/store/useLoyaltyData"
-import { useRef } from "react"
+import { memo, useRef } from "react"
 import Image from "next/image"
 import { useInView } from "framer-motion";
 import Stairs from "@/assets/backgroundStairs.png"
@@ -109,4 +109,5 @@ const SubLoyalty = ({ logo }: ILoyaltyCard): JSX.Element => {
 	)
 }
 
-export default SubLoyalty
+const MemoSubLoyalty = memo(SubLoyalty)
+export default MemoSubLoyalty

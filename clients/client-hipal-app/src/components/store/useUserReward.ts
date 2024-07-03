@@ -43,6 +43,7 @@ export const useUserReward = create(
 		}),
 		{
 			name: "userReward",
+			getStorage: () => localStorage,
 		},
 	),
 )

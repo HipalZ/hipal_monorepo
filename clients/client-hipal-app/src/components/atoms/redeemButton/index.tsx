@@ -1,4 +1,5 @@
 import { IThemes } from "@/components/types/businessData";
+import { memo } from "react";
 
 type Props = {
     setIsHiCodeModalOpen: (value: boolean) => void;
@@ -21,4 +22,5 @@ const RedeemButton = (props: Props) => {
     )
 };
 
-export default RedeemButton;
+const MemoRedeemButton = memo(RedeemButton);
+export default MemoRedeemButton;

@@ -38,7 +38,7 @@ interface Payload {
 	service?: boolean | null;
 }
 
-export default memo(function Review({ data }: { data: IBusinessData }) {
+function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
@@ -363,4 +363,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			</div>
 		</div>
 	)
-})
+}
+
+const MemoReview = memo(Review)
+export default MemoReview

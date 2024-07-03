@@ -3,6 +3,7 @@ import Image from "next/legacy/image"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType"
 import { IDish } from "@/components/types/businessData"
+import { memo } from "react"
 
 function DiscountDishCard({
 	dishData,
@@ -43,4 +44,5 @@ function DiscountDishCard({
 	)
 }
 
-export default DiscountDishCard
+const MemoizedDiscountDishCard = memo(DiscountDishCard)
+export default MemoizedDiscountDishCard

@@ -12,7 +12,6 @@ import { cn } from '@/components/utils/helpers';
 import { useLogin } from '@/components/store/useLogin';
 import PlaceholderImg from '@/components/atoms/placeholder';
 import { getRandomBlurImg } from '@/components/utils/images';
-import Link from 'next/link';
 
 const AddAmountModal = memo(() => {
     const businessId = useBusinessDetails((s) => s.businessDetails?._id)
@@ -156,4 +155,5 @@ const AddAmountModal = memo(() => {
     );
 })
 
-export default AddAmountModal
+const MemoAddAmountModal = memo(AddAmountModal)
+export default MemoAddAmountModal

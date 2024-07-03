@@ -14,7 +14,7 @@ import { useCart } from "@/components/store/useCart";
 import { HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
 
-const CategoryPageBtn = memo(() => {
+const CategoryPageBtn = () => {
 	const { isLogin, isPayment } = useLogin();
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
@@ -152,6 +152,7 @@ const CategoryPageBtn = memo(() => {
 			}
 		</>
 	);
-})
+}
 
-export default CategoryPageBtn
+const MemoCategoryPageBtn = memo(CategoryPageBtn)
+export default MemoCategoryPageBtn

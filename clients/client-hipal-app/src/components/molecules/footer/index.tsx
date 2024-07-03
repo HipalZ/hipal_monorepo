@@ -68,4 +68,5 @@ const Footer=(props:IFooter) =>{
 	)
 }
 
-export default memo(Footer)
+const MemoFooter = memo(Footer)
+export default MemoFooter

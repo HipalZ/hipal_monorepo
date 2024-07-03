@@ -121,4 +121,5 @@ const QuickFilter = () => {
 	)
 }
 
-export default memo(QuickFilter)
+const MemoQuickFilter = memo(QuickFilter)
+export default MemoQuickFilter

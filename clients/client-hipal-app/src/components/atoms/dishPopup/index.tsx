@@ -4,8 +4,9 @@ import { isEmpty } from "lodash-es"
 import NotAvailable from "../notAvailable"
 import PlaceholderImg from "../placeholder"
 import { IDish } from "@/components/types/businessData"
+import { memo } from "react"
 
-export default function DishPopup({ dishData }:{dishData: IDish}) {
+function DishPopup({ dishData }:{dishData: IDish}) {
 	const isAvailable = dishData?.availability
 	const handleInsideClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		e.stopPropagation()
@@ -29,3 +30,6 @@ export default function DishPopup({ dishData }:{dishData: IDish}) {
 		</div>
 	)
 }
+
+const MemoDishPopup = memo(DishPopup)
+export default MemoDishPopup

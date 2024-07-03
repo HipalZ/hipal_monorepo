@@ -44,4 +44,5 @@ function DishesTypes({
 	)
 }
 
-export default memo(DishesTypes)
+const MemoDishesTypes = memo(DishesTypes)
+export default MemoDishesTypes

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -15,4 +15,5 @@ const SkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
   );
 };
 
-export default SkeletonLoader
+const MemoSkeletonLoader = memo(SkeletonLoader);
+export default MemoSkeletonLoader

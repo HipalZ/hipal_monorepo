@@ -176,4 +176,5 @@ function Header({
 	}
 }
 
-export default memo(Header)
+const MemoHeader = memo(Header)
+export default MemoHeader

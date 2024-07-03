@@ -35,4 +35,5 @@ function TopBackground({ themes,halfTop = false }: { themes: IThemes | undefined
 	)
 }
 
-export default memo(TopBackground)
+const MemoTopBackground = memo(TopBackground)
+export default MemoTopBackground

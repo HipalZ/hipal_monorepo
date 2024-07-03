@@ -16,7 +16,7 @@ interface IStoriesComponent{
 		stories: string[]
 		_id: string
 }
-export default memo(function StoriesComponent({highlights}:{highlights:IStoriesComponent[]}) {
+function StoriesComponent({highlights}:{highlights:IStoriesComponent[]}) {
 	// const data = _useAllBusiness((s) => s.data)
 	const setIsStoryOn = useStory((s) => s.setIsStoryOn)
 	const isStoryOn = useStory((s) => s.isStoryOn)
@@ -136,7 +136,7 @@ export default memo(function StoriesComponent({highlights}:{highlights:IStoriesC
 			</AnimatePresence>
 		</Section>
 	)
-})
+}
 
 function Story({ action, isPaused, imgUrl, handleClose }) {
 	useEffect(() => {
@@ -190,3 +190,6 @@ function Story({ action, isPaused, imgUrl, handleClose }) {
 		</div>
 	)
 }
+
+const MemoStoriesComponent = memo(StoriesComponent)
+export default MemoStoriesComponent

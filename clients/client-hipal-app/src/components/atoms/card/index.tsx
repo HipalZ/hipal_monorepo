@@ -13,7 +13,7 @@ export interface ICard extends React.HTMLAttributes<HTMLButtonElement> {
 	children: React.ReactNode
 }
 
-function Card({
+const Card = ({
 	size,
 	src,
 	innerContentTop,
@@ -22,7 +22,7 @@ function Card({
 	appendTextClassNames,
 	children,
 	...props
-}: ICard) {
+}: ICard) =>{
 
 	const defaultClasses = {
 		mainCard:
@@ -72,4 +72,5 @@ function Card({
 	)
 }
 
-export default memo(Card)
+const CardMemo = memo(Card)
+export default CardMemo

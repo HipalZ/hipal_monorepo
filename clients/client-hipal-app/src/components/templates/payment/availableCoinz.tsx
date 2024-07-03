@@ -14,7 +14,7 @@ interface IAvailableCoinz {
     setClaimAmount: number
 }
 
-const AvailableCoinz = memo((props: IAvailableCoinz) => {
+const AvailableCoinz = (props: IAvailableCoinz) => {
     const { isModalOpen, closeModal, userCoinz, claimedCoinz, handleApplyCoinz ,billValue, setMaxCoinz, setClaimAmount} = props;
     const [tempClaimedCoinz, setTempClaimedCoinz] = useState(claimedCoinz);
 
@@ -60,6 +60,7 @@ const AvailableCoinz = memo((props: IAvailableCoinz) => {
             </BottomButton>
         </BottomPopUp>
     )
-});
+}
 
-export default AvailableCoinz;
+const MemoAvailableCoinz = memo(AvailableCoinz);
+export default MemoAvailableCoinz;

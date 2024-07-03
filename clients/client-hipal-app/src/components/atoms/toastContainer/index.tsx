@@ -1,4 +1,5 @@
 "use client"
+import { memo } from "react";
 import { ToastContainer, Zoom } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 const ToastContainers = () => {
@@ -16,4 +17,5 @@ const ToastContainers = () => {
   )
 };
 
-export default ToastContainers;
+const MemoToastContainers = memo(ToastContainers)
+export default MemoToastContainers;

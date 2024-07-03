@@ -35,7 +35,7 @@ const Cart = dynamic(() => import('@/components/organisms/cart'), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
-const Category = memo(({ data }: { data: IBusinessData }) => {
+const Category = ({ data }: { data: IBusinessData }) => {
   const { showCart } = useCart();
   return (
     <>
@@ -64,6 +64,7 @@ const Category = memo(({ data }: { data: IBusinessData }) => {
       {showCart && <Cart data={data} />}
     </>
   );
-});
+}
 
-export default Category;
+const MemoCategory = memo(Category);
+export default MemoCategory;

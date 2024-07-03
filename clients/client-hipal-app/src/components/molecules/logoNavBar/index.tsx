@@ -1,5 +1,5 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import HipalLogo from "@/assets/svg/Hipal_logo.svg"
 
 const LogoNavBar = () => {
@@ -33,4 +33,5 @@ const LogoNavBar = () => {
 	)
 }
 
-export default LogoNavBar
+const MemoLogoNavBar = memo(LogoNavBar)
+export default MemoLogoNavBar

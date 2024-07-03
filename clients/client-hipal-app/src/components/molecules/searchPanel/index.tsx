@@ -14,9 +14,8 @@ import { ICategory, IDish } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { RxCross2 } from "react-icons/rx";
 
-
 // NOTE: A `relative` tag must be added to the parent of this component
-const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
+const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
     const panel = useRef(null);
     const { searchText, setSearchText } = useSearch();
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
@@ -166,6 +165,7 @@ const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () =
             )}
         </div>
     );
-})
+}
 
-export default SearchPanel
+const MemoizedSearchPanel = memo(SearchPanel)
+export default MemoizedSearchPanel

@@ -9,8 +9,8 @@ import Image from "next/image"
 import { memo, useMemo } from "react"
 import { ImSpoonKnife } from "react-icons/im"
 import DishQuantityButton from "../dishQuantityButton"
-
 import PlaceholderImg from "@/components/atoms/placeholder"
+
 function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal: (str:IDish) => void }) {
 	const { dishesData } = _useAllBusiness((s) => s.data)
 	console.log('recommendations',dishesData);
@@ -107,4 +107,5 @@ function RecommendedDishes({ dishData, openModal }: { dishData: IDish; openModal
 	)
 }
 
-export default memo(RecommendedDishes)
+const MemoRecommendedDishes = memo(RecommendedDishes)
+export default MemoRecommendedDishes

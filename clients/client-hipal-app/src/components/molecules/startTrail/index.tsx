@@ -1,5 +1,5 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import arrow from "@/assets/svg/arrow.svg"
 
 const StartTrail = () => {
@@ -36,4 +36,5 @@ const StartTrail = () => {
 	)
 }
 
-export default StartTrail
+const MemoStartTrail = memo(StartTrail)
+export default MemoStartTrail

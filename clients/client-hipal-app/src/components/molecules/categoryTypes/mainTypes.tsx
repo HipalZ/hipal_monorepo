@@ -100,4 +100,5 @@ function MainTypes(props: IMainTypes) {
 	) : null
 }
 
-export default memo(MainTypes)
+const MainTypesMemo = memo(MainTypes)
+export default MainTypesMemo

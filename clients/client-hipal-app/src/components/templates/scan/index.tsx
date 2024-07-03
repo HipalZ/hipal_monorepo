@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation"; // Corrected from 'next/navigation' to 'next/router'
 import { Html5Qrcode } from "html5-qrcode";
 import Image from "next/image";
 import HipalLogo from "@/assets/img/HipalZ_logo_title.png";
 import poweredBy from '@/assets/img/powered_hipalz.png'
 
-export default function Scan() {
+function Scan() {
 	const router = useRouter();
 	const readerRef = useRef<HTMLDivElement | null>(null);
 	const [decodedText, setDecodedText] = useState<string>("");
@@ -111,3 +111,6 @@ export default function Scan() {
 		</div>
 	);
 }
+
+const MemoScan = memo(Scan);
+export default MemoScan;

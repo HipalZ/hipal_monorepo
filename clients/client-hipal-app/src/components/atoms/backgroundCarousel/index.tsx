@@ -9,7 +9,7 @@ interface WallpaperCarouselProps {
   isAvailable: boolean;
 }
 
-function WallpaperCarousel({ wallpapers, isAvailable }: WallpaperCarouselProps) {
+const WallpaperCarousel = ({ wallpapers, isAvailable }: WallpaperCarouselProps)=> {
   return (
     <Splide
       aria-label="My Favorite Images"
@@ -86,4 +86,5 @@ function WallpaperCarousel({ wallpapers, isAvailable }: WallpaperCarouselProps) 
   );
 }
 
-export default memo(WallpaperCarousel);
+const MemoWallpaperCarousel = memo(WallpaperCarousel)
+export default MemoWallpaperCarousel

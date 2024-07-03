@@ -4,7 +4,7 @@ import Link from "next/link"
 import { routePaths } from "@/components/utils/routes"
 import { useParams } from "next/navigation"
 
-const FinalCartBtn = memo(()=> {
+const FinalCartBtn = ()=> {
 	const params = useParams()
 	const { businessId } = params as { businessId: string }
 	return (
@@ -18,6 +18,7 @@ const FinalCartBtn = memo(()=> {
 			</Link>
 		</div>
 	)
-})
+}
 
-export default FinalCartBtn
+const MemoFinalCartBtn = memo(FinalCartBtn)
+export default MemoFinalCartBtn

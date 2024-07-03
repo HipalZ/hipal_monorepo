@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 
-const MainBackground = memo((props: { explore: IExplore | undefined }) =>{
+const MainBackground = (props: { explore: IExplore | undefined }) =>{
 	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const explore = props.explore ?? {
 		wallpaper: img.src,
@@ -68,6 +68,7 @@ const MainBackground = memo((props: { explore: IExplore | undefined }) =>{
 			</div>
 		</div>
 	)
-})
+}
 
-export default MainBackground
+const MemoMainBackground = memo(MainBackground)
+export default MemoMainBackground

@@ -8,7 +8,7 @@ interface ICardLG {
 	link?: null | string
 }
 
-function CardLG({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard)) {
+const CardLG = ({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard)) =>{
 	/** after getting the heading and description text and description has to be added **/
 	return (
 		<Card src={src} size={"lg"}>
@@ -18,4 +18,5 @@ function CardLG({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard))
 	)
 }
 
-export default memo(CardLG)
+const MemoCardLG = memo(CardLG)
+export default MemoCardLG

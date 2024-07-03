@@ -15,7 +15,7 @@ import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import MainLoyalty from "@/components/atoms/mainLoyalty";
 import DishData from "@/components/atoms/dishDescription";
 import { useQuery } from "@tanstack/react-query";
@@ -418,4 +418,5 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 	);
 }
 
-export default LoyaltyCardPage;
+const MemoLoyaltyCardPage = memo(LoyaltyCardPage);
+export default MemoLoyaltyCardPage;

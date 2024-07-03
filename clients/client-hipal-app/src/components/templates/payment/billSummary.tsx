@@ -16,7 +16,7 @@ interface IBillSummary{
     handleSaveTip: () => void
 }
 
-const BillSummary = memo((props:IBillSummary) => {
+const BillSummary = (props:IBillSummary) => {
     const { billValue, claimedCoinz, tips, isTipActive, setIsTipActive, clearTheTip, handleTipSelect, selectedTip, customTip, showInput, handleCustomTip, handleSaveTip } = props;
     return (
         <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
@@ -88,6 +88,7 @@ const BillSummary = memo((props:IBillSummary) => {
             </div>
         </div>
     )
-});
+}
 
-export default BillSummary;
+const MemoBillSummary = memo(BillSummary);
+export default MemoBillSummary;

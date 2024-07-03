@@ -78,4 +78,5 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
     )
 };
 
-export default memo(UseCoinzPopup);
+const MemoUseCoinzPopup = memo(UseCoinzPopup);
+export default MemoUseCoinzPopup

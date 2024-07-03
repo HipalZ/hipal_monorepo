@@ -24,4 +24,5 @@ function Section({
 	)
 }
 
-export default memo(Section)
+const MemoSection = memo(Section)
+export default MemoSection

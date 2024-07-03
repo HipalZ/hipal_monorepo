@@ -90,4 +90,6 @@ function SubTypes(props: ISubTypes) {
 		</section>
 	)
 }
-export default memo(SubTypes)
+
+const MemoSubTypes = memo(SubTypes)
+export default MemoSubTypes

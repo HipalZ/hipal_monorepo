@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { HiChevronRight } from "react-icons/hi"
 const GetStartedButton = () => {
 	return (
@@ -17,4 +17,5 @@ const GetStartedButton = () => {
 	)
 }
 
-export default GetStartedButton
+const MemoGetStartedButton = memo(GetStartedButton)
+export default MemoGetStartedButton

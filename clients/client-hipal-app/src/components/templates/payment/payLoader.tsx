@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import hipalLoader from "@/assets/hipalLoader.png"
 import Image from 'next/image'
 
@@ -19,4 +19,5 @@ const PayLoader = () => {
   )
 }
 
-export default PayLoader
+const MemoPayLoader = memo(PayLoader)
+export default MemoPayLoader

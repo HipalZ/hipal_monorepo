@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { useCart } from "@/components/store/useCart";
 import Image from "next/image";
 import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType";
@@ -92,4 +92,5 @@ const CartItem = ({ cartItem }) => {
 	);
 };
 
-export default CartItem;
+const MemoizedCartItem = memo(CartItem);
+export default MemoizedCartItem;

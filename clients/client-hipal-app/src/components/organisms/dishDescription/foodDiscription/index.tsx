@@ -105,4 +105,5 @@ function FoodDescription({ dishData }: { dishData: IDish }) {
 	)
 }
 
-export default memo(FoodDescription)
+const MemoFoodDescription = memo(FoodDescription)
+export default MemoFoodDescription

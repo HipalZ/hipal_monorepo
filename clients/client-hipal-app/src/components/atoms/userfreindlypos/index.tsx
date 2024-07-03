@@ -1,6 +1,6 @@
 import div1 from "@public/homePageImages/div-2.png"
 import i10 from "@public/homePageImages/user.jpeg"
-import React from "react"
+import React, { memo } from "react"
 import Image from "next/legacy/image"
 import { GoArrowRight } from "react-icons/go"
 
@@ -38,4 +38,5 @@ function UserFreindlyPOS() {
 	)
 }
 
-export default UserFreindlyPOS
+const MemoUserFriendlyPOS = memo(UserFreindlyPOS)
+export default MemoUserFriendlyPOS

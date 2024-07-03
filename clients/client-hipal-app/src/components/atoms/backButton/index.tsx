@@ -39,4 +39,5 @@ function BackButton({ onBackURL, ...props }: BackButtonProps) {
 	)
 }
 
-export default memo(BackButton)
+const MemoBackButton = memo(BackButton)
+export default memo(MemoBackButton)

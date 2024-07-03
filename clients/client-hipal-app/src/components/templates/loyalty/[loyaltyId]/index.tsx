@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import Image from "next/image";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { timestampToDateTime } from "@/components/utils/helpers";
@@ -198,4 +198,5 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 	);
 };
 
-export default LoyaltyId;
+const MemoizedLoyaltyId = memo(LoyaltyId);
+export default MemoizedLoyaltyId;

@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { BiDish } from "react-icons/bi"
 
 function PlaceholderImg({ className }: { className?: string }) {
@@ -8,4 +9,5 @@ function PlaceholderImg({ className }: { className?: string }) {
 	)
 }
 
-export default PlaceholderImg
+const MemoPlaceholderImg = memo(PlaceholderImg)
+export default MemoPlaceholderImg

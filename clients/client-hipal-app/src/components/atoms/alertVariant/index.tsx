@@ -1,4 +1,5 @@
 import { Alert } from "@material-tailwind/react"
+import { memo } from "react"
 
 function Icon() {
 	return (
@@ -17,7 +18,7 @@ function Icon() {
 	)
 }
 
-export function AlertVariant() {
+const AlertVariant = () =>{
 	return (
 		<Alert
 			icon={<Icon />}
@@ -31,3 +32,6 @@ export function AlertVariant() {
 		</Alert>
 	)
 }
+
+const MemoAlertVariant = memo(AlertVariant)
+export default MemoAlertVariant

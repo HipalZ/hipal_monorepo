@@ -28,6 +28,7 @@ export const useActiveClass = create(
 		}),
 		{
 			name: "activecategory",
+			getStorage: () => localStorage,
 		},
 	),
 )

@@ -1,5 +1,5 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import hand from "@/assets/svg/hand.svg"
 import iphone from "@/assets/svg/iphone.svg"
 import tiltedHand from "@/assets/img/tilted_hand_lg.png"
@@ -39,4 +39,5 @@ const IphoneBackground = () => {
 	)
 }
 
-export default IphoneBackground
+const MemoIphoneBackground = memo(IphoneBackground)
+export default MemoIphoneBackground

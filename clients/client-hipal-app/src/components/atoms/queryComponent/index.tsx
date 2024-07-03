@@ -1,6 +1,6 @@
 "use client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode } from "react";
+import { ReactNode, memo } from "react";
 
 interface QueryComponentProps {
   children: ReactNode;
@@ -16,4 +16,5 @@ const QueryComponent = ({ children }: QueryComponentProps) => {
   );
 };
 
-export default QueryComponent;
+const MemoQueryComponent = memo(QueryComponent);
+export default MemoQueryComponent;

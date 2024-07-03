@@ -1,8 +1,8 @@
-import {  Fragment } from 'react'
+import {  Fragment, memo } from 'react'
 import { Dialog, Transition,TransitionChild ,DialogPanel} from '@headlessui/react'
 import { HiX } from 'react-icons/hi'
 
-export default function BottomPopUp({
+const BottomPopUp = ({
 	children,
 	show,
 	onClose,
@@ -10,7 +10,7 @@ export default function BottomPopUp({
 	children: React.ReactNode
 	show: boolean
 	onClose: () => void
-}) {
+}) =>{
 	const closeModalNothing = (e: any) => {
 		// e.preventDefault()
 	}
@@ -46,3 +46,6 @@ export default function BottomPopUp({
 		</Transition>
 	)
 }
+
+const MemoBottomPopUp = memo(BottomPopUp)
+export default MemoBottomPopUp

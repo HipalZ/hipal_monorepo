@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import TitleTransition from "../titleTransition"
 import GetStartedButton from "@/components/atoms/getStartedButton"
 import IphoneBackground from "../iphoneBackground"
@@ -25,4 +25,5 @@ const TopSection = () => {
 	)
 }
 
-export default TopSection
+const MemoTopSection = memo(TopSection)
+export default MemoTopSection
