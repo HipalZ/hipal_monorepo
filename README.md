@@ -83,3 +83,5 @@ wallet
 history
 
 t7c refund policy
+
+loading before review

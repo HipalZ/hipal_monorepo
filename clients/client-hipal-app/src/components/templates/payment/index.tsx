@@ -94,8 +94,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         setCustomTip('')
     }, [])
 
-    const handlePaymentSuccess = (response: any) => {
-        sendPaymentResponse(response);
+    const handlePaymentSuccess = async(response: any) => {
+        setIsLoading(true)
+        await sendPaymentResponse(response);
         setRazorPaySignature(response.razorpay_signature);
         setRazorPayOrderId(response.razorpay_order_id);
         setRazorPayPaymentId(response.razorpay_payment_id);
@@ -201,8 +202,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         };
     };
 
-
-    // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
         setIsLoading(true)
         try {
@@ -214,19 +213,17 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
             const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             if (res.status === 200) {
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
                 setRazorPayPaymentId('')
                 setTableName('')
+                return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
             } else {
                 toast.error('Payment failed')
             }
         } catch (error) {
             console.log(error)
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -273,14 +270,12 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 // gives a string which is orderId
                 toast.success('We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.')
                 setTableName('')
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
+                return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
             console.log(err)
             toast.error(err.response?.data?.message || 'Something went wrong')
-        } finally {
-            setIsLoading(false)
         }
     }
 
