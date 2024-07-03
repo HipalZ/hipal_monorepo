@@ -61,9 +61,13 @@ const SignUp = () =>{
 	}, [router, customLink])
 
     const handlePhoneNumber = useCallback((e) => {
-        const value = e.target.value
-        setPhone(value)
-    },[])
+        const value = e.target.value;
+        if (value.length <= 10) {
+            setPhone(value);
+        } else {
+            setPhone(value.slice(0, 10));
+        }
+    }, []);
 
 	return (
 		<section className="relative bg-black">
@@ -100,12 +104,10 @@ const SignUp = () =>{
 					<input
 						onChange={handlePhoneNumber}
 						value={phone}
-						type="tel"
+						type="number"
 						id="floating_outlined2"
-						className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
 						placeholder="Enter phone number"
-						maxLength={10}
-						minLength={10}
 						required
 					/>
 				</section>
