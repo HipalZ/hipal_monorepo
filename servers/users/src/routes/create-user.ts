@@ -100,6 +100,7 @@ const addSignUpBonus = async (
       rewards: bonus,
       currentBalance: bonus,
       loyaltyId,
+      date: Date.now(),
     });
 
     await data.save();
@@ -215,7 +216,7 @@ router.post(
         userPhone: phone,
         loyaltyId,
       });
-      const loyaltyUser = await UserReward.findOne({ userPhone: phone, loyaltyId }).select('rewards');
+
       const accessToken = createAccessToken(existingUser);
       const refreshToken = createRefreshToken(existingUser);
       const modifyUser = {
@@ -233,7 +234,6 @@ router.post(
 
     const accessToken = createAccessToken(existingUser);
     const refreshToken = createRefreshToken(existingUser);
-    const loyaltyUser = await UserReward.findOne({ userPhone: phone, loyaltyId }).select('rewards');
 
     return res.status(200).send({
       status: true,
