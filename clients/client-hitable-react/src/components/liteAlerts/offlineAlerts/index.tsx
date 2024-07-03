@@ -7,7 +7,7 @@ import { CiFilter } from 'react-icons/ci';
 import { HiSearch } from 'react-icons/hi';
 import OfflineAlertCard from '../offlineAlertCard';
 
-const OfflineAlerts = memo(() => {
+const OfflineAlerts = () => {
   const { offlineAlertData } = useLiteStore();
   const { searchText } = useSearch();
   const [showSearchBox, setShowSearchBox] = useState(false);
@@ -95,6 +95,7 @@ const OfflineAlerts = memo(() => {
       <OfflineAlertCard offlineAlertData={sortedAndFilteredData} />
     </>
   );
-});
+}
 
-export default OfflineAlerts;
+const OfflineAlertsMemo = memo(OfflineAlerts);
+export default OfflineAlertsMemo;

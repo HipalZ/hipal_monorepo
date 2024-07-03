@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface IDishWithParent {
-    [x: string]: any;
+    _id: string;
     id: string;
     name: string;
     parentCategoryName: string;
@@ -44,6 +44,7 @@ export const useSearch = create(persist<IUseSearch>(
     }),
     {
         name: 'search-store',
+        getStorage: () => localStorage,
     }
 ));
 

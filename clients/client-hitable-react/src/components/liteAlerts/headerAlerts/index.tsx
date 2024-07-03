@@ -6,7 +6,7 @@ import { HiOutlineRefresh } from 'react-icons/hi';
 import ProfileHeader from '../profileHeader';
 import './index.css';
 
-const HeaderAlerts = memo(() => {
+const HeaderAlerts = () => {
   const { selectedBiz } = useHiClientZ();
   const { selectedNavItem, refetchOfflineAlerts, refetchOnlineAlerts, loading } = useLiteStore();
   const refetchData = () => {
@@ -43,6 +43,7 @@ const HeaderAlerts = memo(() => {
       </div>
     </header>
   );
-});
+};
 
-export default HeaderAlerts;
+const HeaderAlertsMemo = memo(HeaderAlerts);
+export default HeaderAlertsMemo;

@@ -7,12 +7,11 @@ import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import axios from '@/components/utils/axios';
-import '@/pages/l/[businessId]/login/login.css';
 import { memo, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-const Login = memo(() => {
+const LoginMemo = () => {
   const navigate = useNavigate();
   const { phoneNumber, setPhoneNumber } = useHiClientZ();
   const result = async () => {
@@ -34,9 +33,6 @@ const Login = memo(() => {
           navigate(`/l/${response?.data?.data?.customRole?.[0].businessId}/login`);
         });
       }
-
-      //   router.push(`${singleRoute[PAGE_TYPES.LOGIN](`${response?.data?.customRole?.[0].businessId}`)}`);
-      // }
     } catch (err) {
       console.log(err);
       toast.error('User not registered as staff!');
@@ -112,6 +108,7 @@ const Login = memo(() => {
       </article>
     </center>
   )
-});
+}
 
+const Login = memo(LoginMemo);
 export default Login;

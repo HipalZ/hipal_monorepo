@@ -5,10 +5,10 @@ import axios from "@/components/utils/axios";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react"
 import { CiGlobe } from "react-icons/ci";
-import DateRangePicker from "../dateRangePicker";
+import DateRangePickerMemo from "../dateRangePicker";
 import './index.css'
 
-const SalesLite = memo(() => {
+const SalesLite = () => {
     const { selectedBiz } = useHiClientZ();
     const businessId = selectedBiz?.businessId?._id;
     const {salesData, setSalesData, setLoading} = useLiteStore();
@@ -43,7 +43,7 @@ const SalesLite = memo(() => {
 
     return (
         <>
-            <DateRangePicker/>
+            <DateRangePickerMemo/>
             <section className="payment_layout">
                 <article className="card_payment_overview">
                     <div className="sales_payment_background_effect1" />
@@ -114,6 +114,7 @@ const SalesLite = memo(() => {
         </>
 
     )
-})
+}
 
-export default SalesLite
+const SalesLiteMemo = memo(SalesLite)
+export default SalesLiteMemo

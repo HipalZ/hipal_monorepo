@@ -7,7 +7,7 @@ import OnlineAlertCard from "../onlineAlertCard";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useSearch } from "@/components/store/useSearch";
 
-const OnlineAlerts = memo(() => {
+const OnlineAlerts = () => {
     const { selectedNavItem, onlineAlertData } = useLiteStore();
     const { searchText } = useSearch();
     const [showSearchBox, setShowSearchBox] = useState(false);
@@ -90,6 +90,7 @@ const OnlineAlerts = memo(() => {
             <OnlineAlertCard selectedNavItem={selectedNavItem} onlineAlertData={sortedAndFilteredData} />
         </>
     );
-});
+}
 
-export default OnlineAlerts;
+const OnlineAlertsMemo = memo(OnlineAlerts);
+export default OnlineAlertsMemo;

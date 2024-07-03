@@ -4,6 +4,7 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import { Alert } from '@/components/types/hiClientzData';
 import axios from '@/components/utils/axios';
 import { timestampToDateTime } from '@/components/utils/helpers';
+import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import { IoCloseCircleSharp } from 'react-icons/io5';
 import { PiCoinsFill } from 'react-icons/pi';
@@ -132,4 +133,6 @@ const OfflineAlertCard = (props: IOfflineProp) => {
   );
 };
 
-export default OfflineAlertCard;
+const OfflineAlertCardMemo = memo(OfflineAlertCard);
+
+export default OfflineAlertCardMemo;

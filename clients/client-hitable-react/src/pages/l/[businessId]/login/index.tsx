@@ -8,12 +8,11 @@ import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import axios from '@/components/utils/axios';
-import { startTransition, useState } from 'react';
+import { memo, startTransition, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import './login.css';
 //tes
-const Login = () => {
+const LoginMemo = () => {
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
   // store
@@ -141,4 +140,5 @@ const Login = () => {
   );
 };
 
+const Login = memo(LoginMemo);
 export default Login;

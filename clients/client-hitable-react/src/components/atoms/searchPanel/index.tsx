@@ -6,7 +6,7 @@ import { RxCross2 } from 'react-icons/rx';
 interface ISearch {
   closeSearchBox?: () => void;
 }
-const SearchPanel = memo(({ closeSearchBox }: ISearch)=> {
+const SearchPanel = ({ closeSearchBox }: ISearch)=> {
   const panel = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const { searchText, setSearchText } = useSearch();
@@ -62,6 +62,7 @@ const SearchPanel = memo(({ closeSearchBox }: ISearch)=> {
       </div>
     </div>
   );
-})
+}
 
-export default SearchPanel
+const SearchPanelMemo = memo(SearchPanel);
+export default SearchPanelMemo

@@ -12,7 +12,7 @@ interface IOnlineProp {
   onlineAlertData: Alert[];
 }
 
-const OnlineAlertCard = memo((props: IOnlineProp) => {
+const OnlineAlertCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
   const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore();
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
@@ -104,6 +104,7 @@ const OnlineAlertCard = memo((props: IOnlineProp) => {
       )}
     </main>
   );
-});
+}
 
-export default OnlineAlertCard;
+const OnlineAlertCardMemo = memo(OnlineAlertCard);
+export default OnlineAlertCardMemo;

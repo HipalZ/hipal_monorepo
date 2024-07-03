@@ -1,4 +1,4 @@
-import DateRangePicker from '@/components/atoms/dateRangePicker';
+import DateRangePickerMemo from '@/components/atoms/dateRangePicker';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import useTimings from '@/components/store/useTimings';
@@ -8,7 +8,7 @@ import { memo, useCallback, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
 import HistoryCard from './historyCard';
 
-const History = memo(() => {
+const History = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const { selectedBiz } = useHiClientZ();
   const { historyData, setHistoryData } = useLiteStore();
@@ -51,7 +51,7 @@ const History = memo(() => {
       <div className="flex h-[2rem] items-center justify-between px-4 py-8">
         <h1 className="text-lg font-semibold">History</h1>
       </div>
-      <DateRangePicker />
+      <DateRangePickerMemo />
       <HistoryCard onlineAlertData={historyData} />
       <div className="fixed bottom-[5rem] left-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">
         {historyData && historyData.length >= 0 && (
@@ -69,6 +69,7 @@ const History = memo(() => {
       <br />
     </>
   );
-});
+}
 
-export default History;
+const HistoryMemo = memo(History);
+export default HistoryMemo;

@@ -1,11 +1,11 @@
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 import { HiX } from "react-icons/hi";
 import { CiGlobe } from "react-icons/ci";
 import { cn } from "@/components/utils/helpers";
 import { useLiteStore } from "@/components/store/useLiteStore";
 
-export default function PopUp({
+function PopUp({
   children,
   show,
   onClose,
@@ -58,3 +58,6 @@ export default function PopUp({
     </Transition>
   );
 }
+
+const PopUpMemo = memo(PopUp);
+export default PopUpMemo;

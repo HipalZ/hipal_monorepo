@@ -1,7 +1,7 @@
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
-export default function MiddlePopUp({
+const MiddlePopUp = ({
   children,
   show,
   onClose,
@@ -9,7 +9,7 @@ export default function MiddlePopUp({
   children: React.ReactNode;
   show: boolean;
   onClose: () => void;
-}) {
+}) =>{
   const closeModalNothing = () => {
     // e.preventDefault()
   };
@@ -44,3 +44,6 @@ export default function MiddlePopUp({
     </Transition>
   );
 }
+
+const MiddlePopUpMemo = memo(MiddlePopUp);
+export default MiddlePopUpMemo;

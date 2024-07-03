@@ -1,4 +1,6 @@
-function LoadingSpinner() {
+import { memo } from "react";
+
+const LoadingSpinner = () =>{
 	return (
 		<div role="status" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 opacity-50">
 			<div className="flex flex-col bg-transparent text-center">
@@ -23,4 +25,6 @@ function LoadingSpinner() {
 		</div>
 	);
 }
-export default LoadingSpinner;
+
+const SpinnerMemo = memo(LoadingSpinner);
+export default SpinnerMemo;

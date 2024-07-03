@@ -8,7 +8,7 @@ interface IOnlineProp {
   onlineAlertData: Alert[];
 }
 
-const HistoryCard = memo((props: IOnlineProp) => {
+const HistoryCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
   const { setViewData } = useLiteStore();
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
@@ -90,6 +90,7 @@ const HistoryCard = memo((props: IOnlineProp) => {
       )}
     </main>
   );
-});
+}
 
-export default HistoryCard;
+const HistoryCardMemo = memo(HistoryCard);
+export default HistoryCardMemo;

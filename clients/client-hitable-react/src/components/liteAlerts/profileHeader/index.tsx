@@ -5,7 +5,7 @@ import { cn } from '@/components/utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
-const ProfileHeader = memo((props: { position: boolean }) => {
+const ProfileHeader = (props: { position: boolean }) => {
     const { position } = props;
     const navigate = useNavigate()
     const params = useParams();
@@ -61,6 +61,7 @@ const ProfileHeader = memo((props: { position: boolean }) => {
             </MenuItems>
         </Menu>
     )
-});
+}
 
-export default ProfileHeader;
+const MemoProfileHeader = memo(ProfileHeader);
+export default MemoProfileHeader;

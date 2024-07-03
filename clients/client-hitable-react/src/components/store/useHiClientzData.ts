@@ -34,6 +34,7 @@ export const useHiClientZ = create(
     }),
     {
       name: 'hiClientZ-store',
+      getStorage: () => localStorage,
     },
   ),
 );

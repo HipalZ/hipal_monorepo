@@ -1,5 +1,5 @@
 import { PAGE_TYPES, singleRoute } from "@/components/utils/routes";
-import { startTransition } from "react";
+import { memo, startTransition } from "react";
 import { BiLogOut } from "react-icons/bi";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -24,4 +24,6 @@ const Logout = () => {
   );
 };
 
-export default Logout;
+const LogOutMemo = memo(Logout);
+
+export default LogOutMemo;

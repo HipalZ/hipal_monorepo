@@ -4,6 +4,7 @@ import { IoLogoInstagram } from "react-icons/io5";
 import { SiTelegram } from "react-icons/si";
 import HipalLogo from "@/assets/img/HipalFooterLogo.png";
 import './index.css'
+import { memo } from "react";
 
 const social = [
     {
@@ -23,7 +24,7 @@ const social = [
     }
 ]
 
-export const FooterSection = () => {
+const FooterSectionMemo = () => {
     return (
         <article className='footer-home-section'>
             <section className="text-white">
@@ -48,3 +49,6 @@ export const FooterSection = () => {
         </article>
     )
 }
+
+const FooterSection = memo(FooterSectionMemo);
+export default FooterSection;

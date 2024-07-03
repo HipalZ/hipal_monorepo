@@ -11,7 +11,7 @@ import OnlineAlerts from "@/components/liteAlerts/onlineAlerts";
 import OfflineAlerts from "@/components/liteAlerts/offlineAlerts";
 import History from "@/components/liteAlerts/history";
 import { NavItemTypes } from "@/components/types/hiClientzData";
-import BillPopUp from "@/components/atoms/billPopUp";
+import BillPopUpMemo from "@/components/atoms/billPopUp";
 
 
 // Button variants for smooth color transitions
@@ -22,7 +22,7 @@ const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
     { type: 'sales', icon: RiMoneyRupeeCircleLine },
 ];
 
-const Alerts = memo(() => {
+const AlertsMemo = () => {
     const { selectedNavItem, setSelectedNavItem, onlineCount, offlineCount } = useLiteStore();
     const handleNavItemClick = (type: NavItemTypes) => {
         setSelectedNavItem(type);
@@ -46,7 +46,7 @@ const Alerts = memo(() => {
                 {selectedNavItem === 'on floor' && <OfflineAlerts />}
                 {selectedNavItem === 'history' && <History />}
                 {selectedNavItem === 'sales' && <SalesLite />}
-                <BillPopUp />
+                <BillPopUpMemo />
                 <div className="fixed bottom-0 h-[4.5rem] bg-white w-full shadow-2xl flex justify-around items-center">
                     {navItems.map(({ type, icon: Icon }) => (
                         <button
@@ -75,6 +75,7 @@ const Alerts = memo(() => {
             </section>
         </main>
     )
-});
+}
 
+const Alerts = memo(AlertsMemo);
 export default Alerts;

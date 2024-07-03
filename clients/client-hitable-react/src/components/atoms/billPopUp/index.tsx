@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import PopUp from '../popUp';
 import LoadingSpinner from '../loadingSpinner';
 
-const BillPopUp = memo(() => {
+const BillPopUpMemo = () => {
   const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore();
   const [showTick, setShowTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
@@ -249,6 +249,7 @@ const BillPopUp = memo(() => {
     {isLoading ? <LoadingSpinner/> : null}
     </>
   );
-});
+}
 
+const BillPopUp = memo(BillPopUpMemo);
 export default BillPopUp;

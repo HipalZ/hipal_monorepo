@@ -1,7 +1,7 @@
 import promoAvatar from '@/assets/img/promoCardAvatar.png';
 import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg';
 import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg';
-import { FooterSection } from '@/components/atoms/footerSection';
+import FooterSectionMemo from '@/components/atoms/footerSection';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import ProfileHeader from '@/components/liteAlerts/profileHeader';
@@ -9,7 +9,7 @@ import { CustomRole } from '@/components/types/hiClientzData';
 import { memo, startTransition } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-const Businesses = memo(() => {
+const BusinessesMemo = memo(() => {
   // store
   const { captainData, setSelectedBiz } = useHiClientZ();
   const navigate = useNavigate();
@@ -66,9 +66,10 @@ const Businesses = memo(() => {
           );
         })}
       </section>
-      <FooterSection />
+      <FooterSectionMemo />
     </main>
   );
 });
 
+const Businesses = memo(BusinessesMemo);
 export default Businesses;

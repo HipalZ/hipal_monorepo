@@ -1,11 +1,10 @@
 import hipalLogo from '@/assets/img/liteLoginIcon4.png';
 import logo from '@/assets/img/Hilogo.png';
-// import HiClientZAnimation from '@/components/atoms/hiClientzAnimation';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { startTransition } from 'react';
+import { memo, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ViewInBiz = () => {
+const ViewInBizMemo = () => {
   const { selectedBiz, captainData } = useHiClientZ();
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ const ViewInBiz = () => {
 
   return (
     <>
-      {/* <HiClientZAnimation/> */}
       <main className="relative flex h-screen flex-col">
         <article className="absolute left-1/2 my-10 flex -translate-x-1/2 -translate-y-1/2 transform justify-center">
           <img src={logo} alt="a" width={32} height={20} />
@@ -49,5 +47,5 @@ const ViewInBiz = () => {
     </>
   );
 };
-
+const ViewInBiz = memo(ViewInBizMemo);
 export default ViewInBiz;
