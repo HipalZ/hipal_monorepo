@@ -93,3 +93,5 @@ hitable
 coinz round off
 
 review round off claim
+
+signup page
