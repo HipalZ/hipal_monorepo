@@ -33,7 +33,7 @@ const ViewInBiz = () => {
           <span className="wave-hand text-[2rem]">👋</span>
           <h1 className="text-3xl font-semibold">{captainData?.name}</h1>
           &nbsp;
-          <img className="border-1 rounded-full border border-black" src={dummyLogo} alt="logo" width={125} height={125} />
+          <img className="border-1 rounded-full border border-black" src={selectedBiz?.businessId?.logo} alt="logo" width={125} height={125} />
           <h6 className="mb-2 mt-4 text-xl font-semibold">{selectedBiz?.businessId?.businessName}</h6>
           <p className="w-[18rem] text-center">{selectedBiz?.businessId?.address}</p>
         </article>
