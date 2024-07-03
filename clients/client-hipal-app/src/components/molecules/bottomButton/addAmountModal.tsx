@@ -12,7 +12,6 @@ import { cn } from '@/components/utils/helpers';
 import { useLogin } from '@/components/store/useLogin';
 import PlaceholderImg from '@/components/atoms/placeholder';
 import { getRandomBlurImg } from '@/components/utils/images';
-import Link from 'next/link';
 
 const AddAmountModal = memo(() => {
     const businessId = useBusinessDetails((s) => s.businessDetails?._id)
@@ -21,7 +20,7 @@ const AddAmountModal = memo(() => {
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState<boolean>(false);
     const setIsPayment = useLogin((s) => s.setIsPayment);
-
+    const name = useLogin((s)=>s?.userDetails?.name)
     const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setAmount(value === "" ? 0 : parseInt(value));
@@ -59,7 +58,8 @@ const AddAmountModal = memo(() => {
                     tableName: tableName,
                     message: 'Please settle my table',
                     alertType: 'WAITER',
-                    status: 'WAITER'
+                    status: 'WAITER',
+                    name:name
                 }
             };
             const response = await axios(config);

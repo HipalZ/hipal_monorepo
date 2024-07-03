@@ -3,16 +3,16 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import axios from '@/components/utils/axios';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
 import { ChangeEvent, memo, useState } from 'react';
-import { MdOutlineCall, MdOutlineMessage } from 'react-icons/md';
+import { MdOutlineCall } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import PopUp from '../popUp';
+import LoadingSpinner from '../loadingSpinner';
 
 const BillPopUp = memo(() => {
-  const { selectedNavItem, clickedConfirm, setClickedConfirm, viewData, setViewData, removeOfflineAlert } = useLiteStore();
+  const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore();
   const [showTick, setShowTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
-  const [clickComment, setClickComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
   const { captainData } = useHiClientZ();
@@ -90,12 +90,6 @@ const BillPopUp = memo(() => {
     return `${firstPart}****${lastPart}`;
   };
 
-  const handleComment = () => {
-    console.log('comment');
-
-    setClickComment(!clickComment);
-  };
-
   const handleAddComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setComment(e.target.value);
   };
@@ -106,23 +100,11 @@ const BillPopUp = memo(() => {
 
   return (
     <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>
-      <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
+      {isLoading ? <LoadingSpinner/> : <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
         <div className="mx-6 mt-10 flex justify-between">
           <h1 className="text-base text-gray-500">{timestampToDateTime(viewData?.date)}</h1>
           <p>{viewData?._id?.slice(-6)}</p>
         </div>
-        {viewData?.alertType !== 'ONLINE' && viewData?.alertType !== 'WAITER' && viewData?.completionCode !== null ? (
-          <center className="mt-4">
-            {viewData?.completionCode
-              ?.toString()
-              ?.split('')
-              .map((digit, index) => (
-                <span key={index} className="mx-2 bg-gray-500 px-2 py-2 text-white">
-                  {digit}
-                </span>
-              ))}
-          </center>
-        ) : null}
         &nbsp;
         <div className="mx-6 mb-2 grid grid-cols-2">
           <h1>Paid Amount</h1>
@@ -189,19 +171,14 @@ const BillPopUp = memo(() => {
             </span>
           </div>
         </div>
+        {selectedNavItem === 'on floor'  ? <label className='mx-6'>Add Comment (optional)</label> : null}
         {selectedNavItem === 'on floor' ? (
-          <div onClick={handleComment} className="m-6 flex h-[2rem] w-[10.5rem] items-center space-x-2 rounded-2xl bg-black p-4 text-white">
-            <MdOutlineMessage />
-            <button>Add Comment</button>
-          </div>
-        ) : null}
-        {clickComment && selectedNavItem === 'on floor' ? (
-          <div className="mx-6 mb-20">
+          <div className="mx-6 mb-20 mt-4">
             <textarea
               onChange={handleAddComment}
               id="floating_outlined3"
               className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
-              placeholder=" "
+              placeholder="Enter Comment here..."
               required
               style={{
                 resize: 'none',
@@ -242,7 +219,7 @@ const BillPopUp = memo(() => {
             </div>
           </div>
         )}
-      </section>
+      </section>}
     </PopUp>
   );
 });

@@ -70,7 +70,7 @@ export default memo(function HeroSection({ data }: IHeroSection): JSX.Element {
 					{Array.isArray(tags) ? tags.join(" | ") : tags}
 				</h3>
 			</div>
-			<div className="mt-auto">
+			<div className="mt-2">
 				<div
 					className="mt-auto text-xs font-light"
 				>

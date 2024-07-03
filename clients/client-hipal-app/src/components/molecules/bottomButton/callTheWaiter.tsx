@@ -1,5 +1,5 @@
 import useBusinessDetails from '@/components/store/useBusinessDetails';
-import { useCart } from '@/components/store/useCart';
+import { useLogin } from '@/components/store/useLogin';
 import useTableData from '@/components/store/useTableData';
 import axios from '@/utils/axios';
 import React, { memo, useCallback, useState } from 'react'
@@ -20,8 +20,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
     const { tableName } = useTableData()
 	const businessId = useBusinessDetails((s)=>s.businessDetails?._id)
     const [loading, setLoading] = useState<boolean>(false);
-    const cart = useCart((s) => s.cart);
-
+    const name = useLogin((s)=>s?.userDetails?.name)
     const handleSelectMessage = useCallback((message: string) => {
         setMessage(message);
     }, []);
@@ -44,7 +43,8 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
                     tableName: tableName,
                     message: message,
                     alertType: 'WAITER',
-                    status: 'WAITER'
+                    status: 'WAITER',
+                    name:name
                 }
             };
             const response = await axios(config);
