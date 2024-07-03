@@ -1,5 +1,5 @@
 import { memo, startTransition } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useNavigate  } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
 interface HeaderProps {
@@ -12,29 +12,12 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = memo(
-	({ leftIcon, centerImage, isIconBusinessShow, title, onBack }) => {
+	({ leftIcon, centerImage, isIconBusinessShow, title }) => {
 		const navigate = useNavigate();
-		const location = useLocation();
+		console.log("center", centerImage);
 
 		const handleBackClick = () => {
-			if (onBack) {
-				onBack();
-			} else if (new URLSearchParams(location.search).get("tab")) {
-				startTransition(() => {
-					return navigate({
-						pathname: "/",
-						search: new URLSearchParams({
-							businessId: new URLSearchParams(location.search).get(
-								"businessId"
-							),
-						}).toString(),
-					});
-				});
-			} else {
-				startTransition(() => {
-					navigate(-1);
-				});
-			}
+			navigate(-1);
 		};
 
 		const profile = () => {
@@ -42,23 +25,6 @@ const Header: React.FC<HeaderProps> = memo(
 				navigate(`/app/business/profile`);
 			});
 		};
-
-		let wordAfterBusinessId = location.pathname.split("/")[3];
-		if (wordAfterBusinessId === "taxesandcharges") {
-			wordAfterBusinessId = "taxes and Charges";
-		} else if (wordAfterBusinessId === "zone") {
-			wordAfterBusinessId = "Dine In";
-		} else if (wordAfterBusinessId === "editZone") {
-			wordAfterBusinessId = "Dine In";
-		} else if (wordAfterBusinessId === "addKitchen") {
-			wordAfterBusinessId = "Dine In";
-		} else if (wordAfterBusinessId === "editKitchen") {
-			wordAfterBusinessId = "Dine In";
-		} else if (wordAfterBusinessId === "passwordManager") {
-			wordAfterBusinessId = "Settings";
-		} else {
-			wordAfterBusinessId = title || "";
-		}
 
 		const logoutUser = () => {
 			localStorage.clear();
@@ -82,7 +48,7 @@ const Header: React.FC<HeaderProps> = memo(
 						</div>
 					)}
 					<span className="ml-2 text-2xl font-medium capitalize">
-						{wordAfterBusinessId || title}
+						{ title}
 					</span>
 				</div>
 				<div>
@@ -97,4 +63,6 @@ const Header: React.FC<HeaderProps> = memo(
 	},
 );
 
-export default Header;
+const MemoizedHeader = memo(Header);
+
+export default MemoizedHeader;

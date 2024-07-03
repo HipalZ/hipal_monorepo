@@ -1,8 +1,10 @@
-import Staff from '@/components/templates/staff';
-import { memo } from 'react';
+import Staff from "@/components/templates/staff";
+import { memo } from "react";
 
-const StaffPage = memo(() => {
+const StaffPage = () => {
   return <Staff />;
-});
+};
 
-export default StaffPage;
+const MemoStaffPage = memo(StaffPage);
+
+export default MemoStaffPage;

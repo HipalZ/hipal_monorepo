@@ -1,6 +1,6 @@
 // store/useUserToken.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface userToken {
   accessToken: string;
@@ -12,17 +12,18 @@ interface userToken {
 export const useUserToken = create(
   persist<userToken>(
     (set) => ({
-      accessToken: '',
+      accessToken: "",
       setAccessToken: (data: string) => {
         set({ accessToken: data });
       },
-      refreshToken: '',
+      refreshToken: "",
       setRefreshToken: (data: string) => {
         set({ refreshToken: data });
       },
     }),
     {
-      name: 'HiBiz-token-data',
+      name: "HiBiz-token-data",
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

@@ -1,8 +1,15 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 const AddName = () => {
-  const { setStep, step, businessName, setBusinessName, setCustomLink, customLink } = useBusinessCtrl();
+  const { setStep, step, businessName, setBusinessName, setCustomLink, customLink } = useBusinessCtrl((s) => ({
+    setStep: s.setStep,
+    step: s.step,
+    businessName: s.businessName,
+    setBusinessName: s.setBusinessName,
+    setCustomLink: s.setCustomLink,
+    customLink: s.customLink,
+  }));
 
   const [validCustomLink, setValidCustomLink] = useState(false);
   const [validBusinessName, setValidBusinessName] = useState(false);
@@ -13,16 +20,16 @@ const AddName = () => {
 
   const addCustomLink = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomLink(e.target.value);
-  }
+  };
 
   const goNext = useCallback(() => {
     if (businessName === "") {
       setValidBusinessName(true);
-      return
+      return;
     }
     if (customLink === "") {
       setValidCustomLink(true);
-      return
+      return;
     }
     setStep(step + 1);
   }, [setStep, step, businessName, customLink]);
@@ -39,11 +46,7 @@ const AddName = () => {
           onChange={addBusinessName}
           required
         />
-        {
-          validBusinessName && (
-            <span className="text-red-500">Please enter a valid name</span>
-          )
-        }
+        {validBusinessName && <span className="text-red-500">Please enter a valid name</span>}
       </section>
       <section className="mx-6 mt-8 space-y-2">
         <h5 className="text-lg">Your customized Link*</h5>
@@ -58,22 +61,16 @@ const AddName = () => {
             onChange={addCustomLink}
             required
           />
-          <span className="absolute text-[#2900FF] bg-[#E4E0F9] py-3 px-4 transform -translate-y-1/2 right-0 top-1/2 rounded-r-2xl">
-            .hipal.life
-          </span>
+          <span className="absolute text-[#2900FF] bg-[#E4E0F9] py-3 px-4 transform -translate-y-1/2 right-0 top-1/2 rounded-r-2xl">.hipal.life</span>
         </div>
-        {
-          validCustomLink && (
-            <span className="text-red-500">Please enter a valid link</span>
-          )
-
-        }
+        {validCustomLink && <span className="text-red-500">Please enter a valid link</span>}
       </section>
-      <button onClick={goNext} className="bottom_btn">
+      <button type="button" onClick={goNext} className="bottom_btn">
         Next
       </button>
     </main>
-  )
-}
+  );
+};
 
-export default AddName
+const MemoiseAddName = memo(AddName);
+export default MemoiseAddName;

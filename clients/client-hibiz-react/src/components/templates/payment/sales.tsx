@@ -1,22 +1,22 @@
-import Online from '@/assets/online.png';
-import axios from '@/axios';
-import PopUp from '@/components/atom/popUp';
-import useTimings from '@/components/store/useTimings';
-import { Alert, HistoryData } from '@/components/types/businessData';
-import { cn } from '@/components/utils/helper';
-import { useQuery } from '@tanstack/react-query';
-import { memo, useCallback, useState } from 'react';
-import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
-import { useParams } from 'react-router-dom';
-import PaymentModal from './paymentModal';
+import Online from "@/assets/online.png";
+import axios from "@/axios";
+import PopUp from "@/components/atom/popUp";
+import useTimings from "@/components/store/useTimings";
+import type { Alert, HistoryData } from "@/components/types/businessData";
+import { cn } from "@/components/utils/helper";
+import { useQuery } from "@tanstack/react-query";
+import { memo, useCallback, useState } from "react";
+import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
+import { useParams } from "react-router-dom";
+import PaymentModal from "./paymentModal";
 
-const PaymentSales = memo(() => {
+const PaymentSales = () => {
   const [open, setOpen] = useState(false);
   const [salesData, setSalesData] = useState<HistoryData>({});
   const [pageNumber, setPageNumber] = useState(1);
   const [totalSales, setTotalSales] = useState(0);
   const [historyData, setHistoryData] = useState<HistoryData[]>([]);
-  const { timeStampStart, timeStampEnd } = useTimings();
+  const { timeStampStart, timeStampEnd } = useTimings((s) => ({ timeStampStart: s.timeStampStart, timeStampEnd: s.timeStampEnd }));
   const params = useParams();
   const businessId = params?.businessId;
 
@@ -27,14 +27,14 @@ const PaymentSales = memo(() => {
 
   const closeModel = useCallback(() => {
     setOpen(false);
-  }, [setOpen, open]);
+  }, [open]);
 
   const openModel = useCallback(
     (data: Alert) => {
       setOpen(true);
       setSalesData(data);
     },
-    [setOpen, open],
+    [open],
   );
 
   // number privacy
@@ -48,7 +48,7 @@ const PaymentSales = memo(() => {
   const handleHistoryData = async () => {
     try {
       const config = {
-        method: 'GET',
+        method: "GET",
         url: `/v1/payments/:id/bills?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
       };
       const response = await axios(config);
@@ -61,10 +61,10 @@ const PaymentSales = memo(() => {
     }
   };
 
-  const defaultClass = 'text-base w-10 h-10 flex justify-center items-center bg-[#dad1f8] text-black border rounded-full border-[#2B354D]';
+  const defaultClass = "text-base w-10 h-10 flex justify-center items-center bg-[#dad1f8] text-black border rounded-full border-[#2B354D]";
 
   useQuery({
-    queryKey: ['historyAlerts', businessId, timeStampStart, timeStampEnd, pageNumber],
+    queryKey: ["historyAlerts", businessId, timeStampStart, timeStampEnd, pageNumber],
     queryFn: handleHistoryData,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd && !!pageNumber,
   });
@@ -75,8 +75,8 @@ const PaymentSales = memo(() => {
         <div className="sales_payment_background_effect1" />
         <div className="sales_payment_background_effect2" />
         <div className="sales_payment_background_effect3" />
-        <div className="absolute left-6 top-6 opacity-50">Today's Sales</div>
-        <h1 className="absolute left-6 top-12 text-3xl">₹ {totalSales?.toLocaleString('en-IN')}</h1>
+        <div className="absolute opacity-50 left-6 top-6">Today's Sales</div>
+        <h1 className="absolute text-3xl left-6 top-12">₹ {totalSales?.toLocaleString("en-IN")}</h1>
         <p className="absolute bottom-6 left-6">
           <span className="opacity-50">Last Synced</span> recently
         </p>
@@ -112,14 +112,15 @@ const PaymentSales = memo(() => {
                 </section>
                 <section className="flex gap-4">
                   <button
+                    type="button"
                     className={cn(
-                      'flex items-center justify-center space-x-2 rounded-2xl px-2 py-1',
-                      data?.mode === 'online' ? 'bg-green-200 text-green-700' : 'bg-orange-200 text-orange-500',
+                      "flex items-center justify-center space-x-2 rounded-2xl px-2 py-1",
+                      data?.mode === "online" ? "bg-green-200 text-green-700" : "bg-orange-200 text-orange-500",
                     )}
                   >
                     <small>{data?.mode} Payment</small>
                   </button>
-                  <button className="flex items-center justify-center space-x-2 rounded-2xl bg-[#e7fedc] px-2 py-1 text-[#23B371]">
+                  <button type="button" className="flex items-center justify-center space-x-2 rounded-2xl bg-[#e7fedc] px-2 py-1 text-[#23B371]">
                     <small>{data?.order_id?.claimedCoins} Coinz used </small>
                   </button>
                 </section>
@@ -127,7 +128,7 @@ const PaymentSales = memo(() => {
             );
           })
         ) : (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl">No Data Found</div>
+          <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">No Data Found</div>
         )}
       </section>
       {open && (
@@ -150,6 +151,8 @@ const PaymentSales = memo(() => {
       </div>
     </main>
   );
-});
+};
 
-export default PaymentSales;
+const MemoizedPaymentSales = memo(PaymentSales);
+
+export default MemoizedPaymentSales;

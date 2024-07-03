@@ -5,12 +5,10 @@ import { Suspense, lazy, memo } from "react";
 
 const BusinessData = lazy(() => import("@/components/templates/businessData"));
 
-const Business = memo(() => {
-	return (
-		<Suspense fallback={<LoadingSpinner />}>
-				<BusinessData />
-		</Suspense>
-	);
-});
+const Business = () => {
+  return <BusinessData />;
+};
 
-export default Business;
+const MemoBusiness = memo(Business);
+
+export default MemoBusiness;

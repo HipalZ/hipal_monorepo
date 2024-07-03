@@ -4,22 +4,20 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
 import {
-	ILiteVersionCardButton,
+	type ILiteVersionCardButton,
 	liteVersionCardButtons,
 } from "@/components/types/businessId";
-import { memo, startTransition, useCallback, useEffect } from "react";
+import { memo, startTransition, useCallback } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Stairs from "@/assets/Stairs.png";
 
-const BusinessData = memo(() => {
-	const { setSelectedIcon } = useSelectedIcon();
-	const location = useLocation();
+const BusinessData = () => {
+	const setSelectedIcon  = useSelectedIcon(s=>s.setSelectedIcon);
 	const user = useOwnerLogin((s) => s.user);
 	const navigate = useNavigate();
 	const { businessId } = useParams<{ businessId: string }>();
 	const businessData = useBusinessData((s) => s.businessData);
-	
 
 	const handleClick = useCallback(
 		(text: string) => {
@@ -34,16 +32,6 @@ const BusinessData = memo(() => {
 		[businessId, navigate],
 	);
 
-	useEffect(() => {
-		const params = new URLSearchParams(location.search);
-		if (params.get("tab") !== "home") {
-			params.set("tab", "home");
-			startTransition(() => {
-				navigate({ search: params.toString() }, { replace: true });
-			});
-		}
-	}, [location, navigate]);
-
 	const handleBack = useCallback(() => {
 		startTransition(() => {
 			navigate(`/app/business/`);
@@ -55,14 +43,13 @@ const BusinessData = memo(() => {
 			navigate(`/app/business/${businessId}/businessControl`);
 		});
 	}, [navigate]);
-
 	return (
 		<main className="relative">
 			<section className=" linear_gradient_background">
 				<Header
 					onBack={handleBack}
 					leftIcon={<FaArrowLeft />}
-					rightImage={HipeopleLogo}
+					centerImage={HipeopleLogo}
 					isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
 				/>
 				<center className="pb-4 -mt-8 space-y-2">
@@ -82,11 +69,11 @@ const BusinessData = memo(() => {
 			<section className="mx-4">
 				
 			{
-				businessData?.withPopCorn && <section onClick={goToBusinessControl} className="business_Control">
+				!businessData?.withPopCorn && <section onClick={goToBusinessControl} className="business_Control">
 					<article className="business_Control_article">
 						<h3 className="text-lg font-semibold">Business Control</h3>
 						<p>All Controls in one panel</p>
-						<button className="px-6 py-2 mt-4 text-white bg-black rounded-3xl">
+						<button type="button" className="px-6 py-2 mt-4 text-white bg-black rounded-3xl">
 							Settings
 						</button>
 					</article>
@@ -97,7 +84,7 @@ const BusinessData = memo(() => {
 			}
 			</section>
 			{
-				businessData?.withPopCorn && (
+				!businessData?.withPopCorn && (
 					<>
 						<h3 className="px-4 pt-4 text-2xl">
 							Shortcuts
@@ -126,6 +113,6 @@ const BusinessData = memo(() => {
 			}
 		</main>
 	);
-});
-
-export default BusinessData;
+};
+const MemoizedBusinessData = memo(BusinessData);
+export default MemoizedBusinessData;

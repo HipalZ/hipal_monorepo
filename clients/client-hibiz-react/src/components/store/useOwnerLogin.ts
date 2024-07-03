@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface User {
   name: string;
@@ -71,6 +71,7 @@ export const useOwnerLogin = create(
     }),
     {
       name: 'ownerLogin',
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

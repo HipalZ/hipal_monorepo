@@ -1,57 +1,46 @@
-import HipalLogo from "@/assets/hipal.png";
 import Hipal from "../../components/templates/signupPage/hipal";
 import SignUpPage from "../../components/templates/signupPage/signUp";
 import Otp from "../../components/templates/signupPage/otp";
 import useLoginStore from "@/components/store/useLogin";
 import Password from "../../components/templates/signupPage/password";
-import "./signUp.css";
 import Congratulation from "../../components/templates/signupPage/congratulation";
-
-export const SectionWithLogo = ({
-	children,
-}: { children: React.ReactNode }): JSX.Element => {
-	return (
-		<section className="gradient">
-			<article className="mid_section">{children}</article>
-			<center className="absolute left-0 right-0 m-auto bottom-4">
-				<img width={131} height={41} src={HipalLogo} alt="Hipal Logo" />
-			</center>
-		</section>
-	);
-};
+import SectionWithLogo from "@/components/atom/sectionWithLogo";
+import { memo } from "react";
 
 const SignUp = () => {
-	const { step } = useLoginStore();
+  const step = useLoginStore((s) => s.step);
 
-	return (
-		<>
-			{step === 1 && <Hipal />}
+  return (
+    <>
+      {step === 1 && <Hipal />}
 
-			{step === 2 && (
-				<SectionWithLogo>
-					<SignUpPage />
-				</SectionWithLogo>
-			)}
+      {step === 2 && (
+        <SectionWithLogo>
+          <SignUpPage />
+        </SectionWithLogo>
+      )}
 
-			{step === 3 && (
-				<SectionWithLogo>
-					<Otp />
-				</SectionWithLogo>
-			)}
+      {step === 3 && (
+        <SectionWithLogo>
+          <Otp />
+        </SectionWithLogo>
+      )}
 
-			{step === 4 && (
-				<SectionWithLogo>
-					<Password />
-				</SectionWithLogo>
-			)}
+      {step === 4 && (
+        <SectionWithLogo>
+          <Password />
+        </SectionWithLogo>
+      )}
 
-			{step === 5 && (
-				<SectionWithLogo>
-				<Congratulation/>
-				</SectionWithLogo>
-			)}
-		</>
-	);
+      {step === 5 && (
+        <SectionWithLogo>
+          <Congratulation />
+        </SectionWithLogo>
+      )}
+    </>
+  );
 };
 
-export default SignUp;
+const MemoSignUp = memo(SignUp);
+
+export default MemoSignUp;

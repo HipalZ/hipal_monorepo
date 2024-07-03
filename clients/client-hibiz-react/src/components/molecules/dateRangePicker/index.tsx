@@ -1,7 +1,7 @@
 import PopUp from '@/components/atom/popUp';
 import useTimings from '@/components/store/useTimings';
 import { endOfDay, endOfMonth, startOfDay, startOfMonth, subDays } from 'date-fns';
-import React, { memo, useEffect, useState } from 'react';
+import  { memo, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -54,7 +54,7 @@ const DateRangePicker: React.FC = memo(() => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between space-x-2 px-6 pt-4">
+    <div className="flex items-center justify-between px-6 pt-4 space-x-2">
       <div className="sticky top-0">
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
@@ -87,13 +87,13 @@ const DateRangePicker: React.FC = memo(() => {
           </button>
         </div>
       </div>
-      <div className="date-picker-container mx-6">
+      <div className="mx-6 date-picker-container">
         {isCustomDate && (
           <PopUp show={isCustomDate} onClose={() => setIsCustomDate(false)}>
-            <div className="date-picker-container item-center flex justify-center p-2">
+            <div className="flex justify-center p-2 date-picker-container item-center">
               <DatePicker
                 selected={startDate}
-                onChange={(dates: any) => {
+                onChange={(dates:any) => {
                   if (Array.isArray(dates) && dates.length === 2) {
                     const [start, end] = dates;
                     fetchReportForRange(start, end);
@@ -114,4 +114,5 @@ const DateRangePicker: React.FC = memo(() => {
   );
 });
 
-export default DateRangePicker;
+const MemoizedDateRangePicker = memo(DateRangePicker);
+export default MemoizedDateRangePicker;

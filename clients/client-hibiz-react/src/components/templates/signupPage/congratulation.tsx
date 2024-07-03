@@ -15,7 +15,7 @@ const Congratulation = () => {
 				🥳Congratulationz !!!
 			</h3>
 			<h3 className="flex mb-6 leading-8"> We are your partnerz in growth</h3>
-            <button className="action_btn">
+            <button type="button" className="action_btn">
 				Register my biz
 			</button>
         </>

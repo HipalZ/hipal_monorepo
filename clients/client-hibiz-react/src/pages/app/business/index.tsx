@@ -15,10 +15,9 @@ import { toast } from "react-toastify";
 import hipalHandLogo from "@/assets/login/hand.png";
 import { IoWarning } from "react-icons/io5";
 import { TbHomePlus } from "react-icons/tb";
-import "./business.css";
 import { apiRpc } from "@hi/common";
 
-const Business = memo(() => {
+const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
   const user = useOwnerLogin((s) => s.user);
@@ -90,7 +89,7 @@ const Business = memo(() => {
         })
         .then((res) => res.json()),
   });
-  console.log({ sample: sample });
+  
   return (
     <main className="h-screen">
       <div className="business_gradient">
@@ -141,7 +140,6 @@ const Business = memo(() => {
           </section>
         ))}
       </div>
-      {/* {user.role !== "RESTAURANT_MANAGER" && ( */}
       <button type="button" onClick={addBusiness} className=" bottom_btn on_active_bounce">
         + Add Business
       </button>
@@ -149,6 +147,7 @@ const Business = memo(() => {
       {isLoad && <LoadingSpinner />}
     </main>
   );
-});
+};
 
-export default Business;
+const MemoizedBusiness = memo(Business);
+export default MemoizedBusiness;

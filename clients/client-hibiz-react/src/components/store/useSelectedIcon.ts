@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 export const useSelectedIcon = create(
   persist<{
@@ -16,6 +16,7 @@ export const useSelectedIcon = create(
     }),
     {
       name: 'useSelectedIcon',
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

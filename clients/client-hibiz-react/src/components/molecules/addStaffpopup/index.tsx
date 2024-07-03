@@ -161,7 +161,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
       <div className="min-h-auto h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#f1f1f1] pb-[7rem] pt-4">
         <div className="px-4 text-xl font-semibold ">Add Staff</div>
         <div className="px-2 text-sm">
-          <div className="mt-2 space-y-2 px-4">
+          <div className="px-4 mt-2 space-y-2">
             <span className="font-medium">Name of the Staff {errors.name && <span className="text-red-500">*</span>}</span>
             <input
               onChange={(e) => setName(e.target.value)}
@@ -173,7 +173,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
             />
           </div>
 
-          <div className="mt-4 space-y-2 px-4">
+          <div className="px-4 mt-4 space-y-2">
             <span className="font-medium">Email {errors.name && <span className="text-red-500">*</span>}</span>
             <input
               onChange={(e) => setEmail(e.target.value)}
@@ -184,7 +184,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               placeholder="Enter Email"
             />
           </div>
-          <div className="mt-4 space-y-2 px-4">
+          <div className="px-4 mt-4 space-y-2">
             <span className="font-medium">Phone {errors.name && <span className="text-red-500">*</span>}</span>
             <input
               maxLength={10}
@@ -201,7 +201,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               placeholder="Enter Phone"
             />
           </div>
-          <div className="mt-4 space-y-2 rounded-md px-4">
+          <div className="px-4 mt-4 space-y-2 rounded-md">
             <span className="font-medium">Role {errors.name && <span className="text-red-500">*</span>}</span>
             <select
               onChange={(e) => {
@@ -224,7 +224,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
             <div className="space-y-4">
               <div className="rounded-md border border-[#cacaca] bg-white p-4">
                 <div style={style}>
-                  <div className="flex-col-1 space-y-2 text-sm">
+                  <div className="space-y-2 text-sm flex-col-1">
                     <div className="font-semibold">Hi-Biz</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -244,7 +244,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
                     <div key={serviceKey} style={style} className="pb-4">
                       <label>{hibizSubServices[serviceKey].label}</label>
                       <input
-                        className="h-5 w-5 rounded-md outline-none focus:ring-0"
+                        className="w-5 h-5 rounded-md outline-none focus:ring-0"
                         type="checkbox"
                         checked={hibizSubServices[serviceKey].value}
                         onChange={() => {
@@ -262,7 +262,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
               </div>
               <div className="rounded-md border border-[#cacaca] bg-white p-4 opacity-50">
                 <div style={style}>
-                  <div className="flex-col-1 space-y-2 text-sm">
+                  <div className="space-y-2 text-sm flex-col-1">
                     <div className="font-semibold">Hi-Table</div>
                     <div className="opacity-60">Owners App</div>
                   </div>
@@ -290,4 +290,7 @@ const AddStaffPopup: React.FC<IAddStaff> = ({ businessId, onClose, staffDetails,
     </>
   );
 };
-export default memo(AddStaffPopup);
+
+const MemoizedAddStaffPopup = memo(AddStaffPopup);
+
+export default MemoizedAddStaffPopup;

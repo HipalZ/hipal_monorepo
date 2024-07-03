@@ -240,6 +240,387 @@ input[type="color" i] {
   width: auto;
 }
 
+
+/* login page css */
+.hipalz_logo {
+  width: 100px;
+  height: 36px;
+}
+.gradient {
+  background: linear-gradient(166.62deg, #FFFADC -1.39%, #FFBACC 100%),
+              linear-gradient(270deg, #ADDFFF 0%, #7266FF 100%);
+  background-blend-mode: multiply; 
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.mid_section {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 30rem;
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0px 16px 4px rgba(0, 0, 0, 0.25);
+}
+
+.action_btn{
+  width: 100%;
+  background-color: #000000;
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 2rem;
+  margin-top: 1.5rem;
+  cursor: pointer;
+}
+
+/* business css */
+.business_gradient {
+  position: relative;
+  background: linear-gradient(85.13deg, #D8E6FB 7.62%, #F3D0F9 159.52%);
+  mix-blend-mode: multiply;
+  border-radius: 0 0 2rem 2rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
+.business_gradient_hero_section {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  color: white;
+  padding: 0.5rem 1.5rem 1rem;
+}
+
+.parent_business_cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap:0 1rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+.child_business_card {
+  background: #F9F9F9;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+  transition: all 0.3s;
+}
+
+/* add business css */
+.add_business_type_cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  gap:1.5rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
+/* business control */
+.business_control_background {
+  background-color: #f5f5f5;
+  height: 100%;
+  min-height: 100vh;
+}
+
+.card-background {
+  position: relative;
+  background-color: #F6E9E2;
+  overflow: hidden;
+  height: 7rem;
+  margin: 1rem auto;
+  width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 1.25rem;
+}
+
+.card {
+  width: 60%;
+  padding: 1rem;
+}
+
+.big-card {
+  display: none;
+}
+
+.image-class {
+  width: 40%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0 1rem 1rem 0;
+}
+
+.card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.explore_page_container {
+  padding-bottom: 5rem;
+}
+
+.explore_page {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+}
+
+.explore_page_selection{
+  display: flex;
+  flex-direction: column;
+  padding : 1rem 0;
+  margin-top: 1.5rem;
+  background-color: #fff;
+  width: 100%;
+}
+.business_control_services_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr));
+  gap:1rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+  padding-top: 1rem;
+}
+
+.business_control_services {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: #FFFFFF;
+  border-radius: 1.25rem;
+  box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.25);
+}
+
+
+@media (min-width: 1024px) {
+  .business_control_background {
+      background-color: #fff;
+  }
+
+  .card-background {
+      height: 12rem;
+      max-height: 12rem;
+      width: 100%;
+      max-width: 69rem;
+      margin: 2rem 0;
+  }
+
+  .card {
+      display: none;
+  }
+
+  .big-card {
+      display: block;
+      width: 60%;
+      padding: 2.5rem 1rem 2.5rem 3rem;
+  }
+
+  .big-card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+  }
+
+  .image-class {
+      width: 40%;
+      height: 100%;
+  }
+
+  .explore_page_container {
+      display: flex;
+  }
+
+  .explore_page {
+      position: absolute;
+      left: 10%;
+      top: 40%;
+      transform: translate(40%, -20%);
+  }
+  .explore_page_selection {
+      width: 50%;
+  }
+}
+
+/* payment module css */
+.payment_layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.card_payment {
+ background: linear-gradient(269.39deg, #57AEFE 49.47%, #6B71FF 95.75%);
+ margin: 1rem;
+ border-radius: 1.25rem;
+ height: 9rem;
+ position: relative;
+ color: white;
+ width: 90%;
+ overflow: hidden;
+ max-width: 30rem;
+}
+
+.card_payment_overview {
+ background: linear-gradient(313.39deg, #4E62FF 32.64%, #B494FF 103.13%);
+ margin: 1.5rem auto;
+ border-radius: 1.25rem;
+ height: 9rem;
+ position: relative;
+ color: white;
+ width: 92%;
+ overflow: hidden;
+ max-width: 30rem;
+}
+
+.payment_card_ui {
+  background-color: #fff;
+  border-radius: 1.25rem;
+  width: 90%;
+  max-width: 28rem;
+  margin: 1.5rem auto 0 auto;
+  border: #f4f4f4 1px solid;
+  padding: 1rem;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.sales_payment_background_effect1 {
+  position: absolute;
+  top: -2rem;
+  left: 0;
+  width: 103.51px;
+  height: 211.87px;
+  border-radius: 50%;
+  z-index: 0;
+  border: 1px #ffffff solid;
+  background: linear-gradient(176.7deg, rgba(255, 255, 255, 0.2) 9.96%, rgba(255, 255, 255, 0) 76.98%);
+  rotate: -45deg;
+  border-image-source: linear-gradient(178.28deg, #FFFFFF -41.65%, rgba(255, 255, 255, 0) 77.4%);
+}
+
+.sales_payment_background_effect2 {
+     position: absolute;
+     top: -2rem;
+     left: 12.5rem;
+     width: 2.7rem;
+     height: 5.5rem;
+     border-radius: 50%;
+     z-index: 0;
+     background: linear-gradient(176.7deg, rgba(255, 255, 255, 0.2) 9.96%, rgba(255, 255, 255, 0) 76.98%);
+     rotate: 120deg;
+     border: 0.4px solid;
+     border-image-source: linear-gradient(178.28deg, #FFFFFF -41.65%, rgba(255, 255, 255, 0) 77.4%);
+  }
+
+ .sales_payment_background_effect3 {
+     position: absolute;
+     top: 0;
+     right: 0;
+     width: 63.86px;
+     height: 130.72px;
+     border-radius: 50%;
+     z-index: 0;
+     background: linear-gradient(176.7deg, rgba(255, 255, 255, 0.2) 9.96%, rgba(255, 255, 255, 0) 76.98%);
+     rotate: 30deg;
+     border: 1px solid;
+     border-image-source: linear-gradient(178.28deg, #FFFFFF -41.65%, rgba(255, 255, 255, 0) 77.4%);
+  }
+
+  .online_card1{
+      background: #EDFBE7;
+      width: 100%;
+      border-radius: 1.25rem;
+      position: relative;
+      max-width: 14rem;
+      color: #334C38;
+      padding: 1rem;
+  }
+
+  .online_card2{
+      background: #FFE9CF;
+      width: 100%;
+      border-radius: 1.25rem;
+      position: relative;
+      max-width: 14rem;
+      color: #C7781B;
+      padding: 1rem;
+  }
+
+  .sales_payment_background_effect4{
+      position: absolute;
+      top: -2rem;
+      left:2.75rem;
+      width: 63.86px;
+      height: 130.72px;
+      border-radius: 50%;
+      z-index: 1;
+      background: #000;
+      background: linear-gradient(176.7deg, rgba(147, 226, 113, 0.2) 9.96%, rgba(237, 251, 231, 0.2) 76.98%);
+      rotate: -89.13deg;
+      border: 0.4px solid;
+      border-image-source: linear-gradient(178.28deg, #FFFFFF -41.65%, rgba(255, 255, 255, 0) 77.4%);
+  }
+
+  .sales_payment_background_effect5{
+      position: absolute;
+      top: -2rem;
+      left:2.75rem;
+      width: 63.86px;
+      height: 130.72px;
+      border-radius: 50%;
+      z-index: 1;
+      background: #000;
+      background: linear-gradient(176.7deg, rgba(255, 187, 107, 0.2) 9.96%, rgba(255, 233, 207, 0.2) 76.98%);
+      rotate: -89.13deg;
+      border: 0.4px solid;
+      border-image-source: linear-gradient(178.28deg, #FFFFFF -41.65%, rgba(255, 255, 255, 0) 77.4%);
+  }
+
+  @media (min-width: 768px) {
+      .payment_layout {
+          flex-direction: row;
+          align-items: end;
+      }
+      .card_payment_overview{
+          margin: 2rem 0 0 0;
+      }
+      .online_card1{
+          width: 10rem;
+          height: 9rem;
+      }
+      .online_card2{
+          width: 10rem;
+          height: 9rem;
+      }
+  }
+
+
+@media screen and (min-width: 768px) {
+  .hipalz_logo {
+      width: 150px;
+      height: 54px;
+  }
+}
+@media screen and (min-width: 1024px) {
+  .hipalz_logo {
+      width: 200px;
+      height: 72px;
+  }
+}
+
 @media (min-width: 768px) {
   .masonry-layout {
     column-count: 2;
