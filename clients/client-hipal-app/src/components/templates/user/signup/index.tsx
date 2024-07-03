@@ -20,8 +20,7 @@ const SignUp = () =>{
 	const router = useRouter()
 	const [loader, setLoader] = useState<boolean>(false)
 
-	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-		e.preventDefault()
+	const handleSubmit = async () => {
 		if (loader) return toast.error("Please wait for a moment")
 
 		setLoader(true)
@@ -83,8 +82,7 @@ const SignUp = () =>{
 				className="fixed inset-0 z-0 bg-black bg-center bg-no-repeat bg-contain"
 				style={{ backgroundImage: `url(${Welcome.src})` }}
 			></section>
-			<form
-				onSubmit={handleSubmit}
+			<section
 				className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl"
 			>
 				{businessData?.logo && (
@@ -106,12 +104,13 @@ const SignUp = () =>{
 						value={phone}
 						type="number"
 						id="floating_outlined2"
-                        className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+                        className="w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent
+                            border-black focus:ring-black border-black focus:ring-black"
 						placeholder="Enter phone number"
 						required
 					/>
 				</section>
-				<button disabled={loader} type="submit" className="w-full mt-4 bg-black rounded-full on_active_bounce btn text-white">
+				<button onClick={handleSubmit} disabled={loader} type="button" className="w-full mt-4 bg-black rounded-full on_active_bounce btn text-white">
 					{loader ? (
 						<span className="loader_spinner text-white !border-t-base-100 "></span>
 					) : (
@@ -122,7 +121,7 @@ const SignUp = () =>{
 					By continuing you are agreeing to the{" "}
 					<small className="text-[#2364E6]">Terms of Service and Privacy Policy.</small>
 				</center>
-			</form>
+			</section>
 		</section>
 	)
 }

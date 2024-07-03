@@ -149,11 +149,6 @@ function OtpPage() {
 		router.back()
 	}, [router])
 
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault()
-		verifyOtp()
-	}
-
 	useEffect(() => {
 		let audio: HTMLAudioElement
 		if (isModalOpen) {
@@ -203,9 +198,8 @@ function OtpPage() {
 					<b className="text-4xl wave-hand">👋</b>
 				</section>
 			)}
-			<form
+			<section
 				className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-xl"
-				onSubmit={handleSubmit}
 			>
 				{businessLogo && (
 					<section className="bg-inherit w-[5rem] float-right h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden">
@@ -268,7 +262,7 @@ function OtpPage() {
 							</span>
 						</article>
 					</Link>
-					<button disabled={loading} type="submit" className="w-full bg-black rounded-full btn text-white">
+					<button onClick={verifyOtp} disabled={loading} type="button" className="w-full bg-black rounded-full btn text-white">
 						{loading ? (
 							<span className="loader_spinner !border-t-base-100  text-white"></span>
 						) :
@@ -288,7 +282,7 @@ function OtpPage() {
 						</button>
 					</small>
 				</section>
-			</form>
+			</section>
 			{isModalOpen && (
 				<section
 					id="my_modal_1"
