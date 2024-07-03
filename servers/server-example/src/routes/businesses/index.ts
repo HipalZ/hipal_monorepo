@@ -1,6 +1,7 @@
 // books.ts
-import { Business, LoyaltySettings, Role, User } from '@hi/db-models';
-import { BusinessSchema, paramsSchema, type BusinessType } from '@hi/db-models/src/validators';
+import { Business, LoyaltySettings, Role } from '@hi/db-models';
+import type { BusinessType } from '@hi/db-models/src/validators';
+import { BusinessSchema, paramsSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -33,7 +34,7 @@ const businessesRouter = new Hono()
       err: false,
     });
   })
-  .get('/businesses/get/Single/:businessId', zValidator('query', paramsSchema), async (c) => {
+  .get('/get/Single/:businessId', zValidator('query', paramsSchema), async (c) => {
     const { businessId } = c.req.query();
 
     const existingBusiness = await Business.findById(businessId);
@@ -44,7 +45,7 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/businesses/n/:customLink', async (c) => {
+  .get('/n/:customLink', async (c) => {
     let { customLink } = c.req.param();
 
     customLink = customLink.trim();
@@ -57,7 +58,7 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/businesses/:id/loyalty', async (c) => {
+  .get('/:id/loyalty', async (c) => {
     const { id } = c.req.param();
 
     const exitingSettings =
@@ -65,13 +66,15 @@ const businessesRouter = new Hono()
         businessId: id,
       })) || {};
 
+    console.log('exitingSettings', exitingSettings);
+
     return c.json({
       data: exitingSettings,
       status: 200,
       error: false,
     });
   })
-  .get('/businesses/:id/users', async (c) => {
+  .get('/:id/users', async (c) => {
     const { id } = c.req.param();
     const existingRoles = await Role.find({
       businessId: id,

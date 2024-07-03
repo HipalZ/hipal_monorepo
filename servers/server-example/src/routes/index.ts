@@ -11,7 +11,7 @@ const app = new Hono();
 export const routes = app
   .route(`/${api_version}/example`, exampleRouter)
   .route(`/${api_version}/businesses`, businessRouter)
-  .route(`${api_version}/dishes`, dishesRouter)
-  .route(`${api_version}/categories`, categoryRouter);
+  .route(`/${api_version}/dishes`, dishesRouter)
+  .route(`/${api_version}/categories`, categoryRouter);
 
 export type AppType = typeof routes;
