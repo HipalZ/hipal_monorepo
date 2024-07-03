@@ -1093,7 +1093,7 @@ router.post(
   }),
   async (req: Request, res: Response) => {
     const { businessId, tableName, message, name, phone } = req.body;
-
+    //
     const alert = await PaymentAlert.create({
       businessId: businessId,
       alertType: 'WAITER',
