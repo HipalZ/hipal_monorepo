@@ -100,3 +100,4 @@ input number
 
 removed form tag
 
+changed rzorpay logo name

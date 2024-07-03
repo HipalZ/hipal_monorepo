@@ -129,9 +129,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 key: process.env.NEXT_PUBLIC_RAZOR_PAY_KEY_ID,
                 amount: billValue - claimedCoinz + tips,
                 currency: 'INR',
-                name: 'PALTRIBE',
-                description: 'Test Transaction',
-                image: 'https://example.com/your_logo',
+                name: businessDetails?.businessName,
+                description: 'Transaction',
+                image: businessDetails?.logo,
                 order_id: orderId,
                 handler: (response) => {
                     handlePaymentSuccess(response);
