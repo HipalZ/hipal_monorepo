@@ -13,6 +13,7 @@ export const paramsSchema = z
     zoneId: objectIdSchema.optional(),
     orderId: objectIdSchema.optional(),
     alertId: objectIdSchema.optional(),
+    pageNumber: z.string().optional(),
   })
   .refine(
     (data) => {

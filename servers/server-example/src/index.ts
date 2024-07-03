@@ -1,4 +1,3 @@
-import { User } from '@hi/db-models';
 import { connectDB } from '@hi/utils';
 import { redisClient } from '@hipal/server-instances';
 import { RedisStore } from '@hono-rate-limiter/redis';
@@ -13,6 +12,7 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
 import { timeout } from 'hono/timeout';
+import { razorpayWrapper } from '../razorpay_wrapper';
 import { routes } from './routes';
 import { customTimeoutException } from './utils';
 import './utils/env';
@@ -33,6 +33,16 @@ const app = new Hono({
 //     process.exit(1);
 //   }
 // };
+
+if (!Bun.env.RAZORPAY_KEY_ID) {
+  throw new Error('RAZORPAY_KEY_ID must be defined');
+}
+
+if (!Bun.env.RAZORPAY_SECRET) {
+  throw new Error('RAZORPAY_SECRET must be defined');
+}
+
+razorpayWrapper.create(Bun.env.RAZORPAY_KEY_ID, Bun.env.RAZORPAY_SECRET);
 
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
@@ -74,4 +84,4 @@ export default {
   fetch: app.fetch,
 };
 
-export { type AppType } from './routes';
+export { AppType, type } from './routes';

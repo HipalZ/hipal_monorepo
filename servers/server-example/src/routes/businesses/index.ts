@@ -35,7 +35,7 @@ const businessesRouter = new Hono()
     });
   })
   .get('/get/Single/:businessId', zValidator('query', paramsSchema), async (c) => {
-    const { businessId } = c.req.query();
+    const { businessId } = c.req.param();
 
     const existingBusiness = await Business.findById(businessId);
 
@@ -82,6 +82,15 @@ const businessesRouter = new Hono()
 
     return c.json({
       data: existingRoles,
+      status: 200,
+      error: false,
+    });
+  })
+  .get('/get/allbusiness', async (c) => {
+    const existingBusinesses = await Business.find({});
+
+    return c.json({
+      data: existingBusinesses,
       status: 200,
       error: false,
     });
