@@ -3,12 +3,12 @@ import Hand from "@/assets/login/hand.png";
 import { PiSealWarningBold } from "react-icons/pi";
 import useLoginStore from "@/components/store/useLogin";
 import { useNavigate } from "react-router-dom";
-import axios from "@/axios";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useUserToken } from "@/components/store/useUserToken";
 import toast from "react-hot-toast";
+import { apiRpc } from "@hi/common";
 
 const Login: React.FC = () => {
   const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));
@@ -28,7 +28,6 @@ const Login: React.FC = () => {
     const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phone);
   }, [phone]);
-
   const handleSubmit = async () => {
     const isPhoneValid = validPhoneNumber();
 
@@ -37,22 +36,20 @@ const Login: React.FC = () => {
       return;
     }
     try {
-      const config = {
-        method: "POST",
-        url: "/v1/users/Owner/Login",
-        data: {
+      const response = await apiRpc.users.Owner.Login.$post({
+        json: {
           phone: phone,
           password: password,
         },
-      };
+      });
 
-      const user = await axios(config);
-      if (user?.data) {
-        setAccessToken(user.data.data.accessToken);
-        setRefreshToken(user.data.data.refreshToken);
-        setUser(user.data.data.existingUser);
-      }
-      if (user?.status === 200) {
+      const user = await response.json();
+      console.log('res', user);
+
+      if (response.status === 200) {
+        setAccessToken(user.data.accessToken);
+        setRefreshToken(user.data.refreshToken);
+        setUser(user.data.existingUser);
         toast.success("Login Successfully");
         setIsLogin(true);
         startTransition(() => {
