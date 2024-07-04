@@ -5,7 +5,7 @@ import FooterSectionMemo from '@/components/atoms/footerSection';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import ProfileHeader from '@/components/liteAlerts/profileHeader';
-import { CustomRole } from '@/components/types/hiClientzData';
+import type { CustomRole } from '@/components/types/hiClientzData';
 import { memo, startTransition } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -37,7 +37,7 @@ const BusinessesMemo = memo(() => {
       </header>
       <article style={{ backgroundColor: '#4C4DDC' }} className="flex h-[6rem] w-full items-center overflow-hidden">
         <img src={promoAvatar} alt="promoAvatar" width={70} loading="lazy" />
-        <h1 className="mr-4 text-right text-base text-white">Welcoming to an amazing journey of connecting with your clients like never before</h1>
+        <h1 className="mr-4 text-base text-right text-white">Welcoming to an amazing journey of connecting with your clients like never before</h1>
       </article>
       <br />
       <h1 className="mx-5 mb-4 text-2xl text-black">You are added to</h1>
@@ -51,10 +51,10 @@ const BusinessesMemo = memo(() => {
               style={{ backgroundColor: '#f2f2f2' }}
             >
               <article className="flex items-center">
-                <img src={biz?.businessId?.logo} alt="logo" width={65} height={65} className="border-1 rounded-full border border-black" />
+                <img src={biz?.businessId?.logo} alt="logo" width={65} height={65} className="border border-black rounded-full border-1" />
                 <div className="ml-4">
                   <h1 className="text-xl font-medium">{biz?.businessId?.businessName}</h1>
-                  <p title={biz?.businessId?.address} className="w-48 truncate text-base font-medium">
+                  <p title={biz?.businessId?.address} className="w-48 text-base font-medium truncate">
                     {biz?.businessId?.address}
                   </p>
                 </div>

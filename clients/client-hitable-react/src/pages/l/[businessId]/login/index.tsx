@@ -65,14 +65,14 @@ const LoginMemo = () => {
             <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
           </div>
         </div>
-        <div className="absolute top-1/2 mx-8 flex justify-between">
+        <div className="absolute flex justify-between mx-8 top-1/2">
           <section>
             <img src={liteLoginIcon1} alt="liteLoginIcon1" width={55} height={55} loading="lazy" className="liteLoginIcon1" />
           </section>
           <section className="-mt-5">
             <img src={liteLoginIcon2} alt="liteLoginIcon2" width={38} height={38} loading="lazy" className="liteLoginIcon2" />
           </section>
-          <section className="mt-5 w-10">
+          <section className="w-10 mt-5">
             <img src={liteLoginIcon3} alt="liteLoginIcon3" width={43} height={43} loading="lazy" className="liteLoginIcon3" />
           </section>
           <section className="mx-4">
@@ -98,7 +98,7 @@ const LoginMemo = () => {
             maxLength={10}
             minLength={10}
             id="floating_outlined3"
-            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
             placeholder=" "
             required
           />
@@ -114,7 +114,7 @@ const LoginMemo = () => {
             onChange={handlePasswordChange}
             type="password"
             id="floating_outlined4"
-            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
             placeholder=" "
             maxLength={4}
             minLength={4}
@@ -128,8 +128,9 @@ const LoginMemo = () => {
           </label>
         </div>
       </section>
-      <article className="mb-5 flex justify-center">
+      <article className="flex justify-center mb-5">
         <button
+        type='button'
           onClick={handleLogin}
           className="on_active_bounce text-white fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
         >
