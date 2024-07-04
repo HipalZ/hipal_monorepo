@@ -84,4 +84,4 @@ export default {
   fetch: app.fetch,
 };
 
-export { AppType, type } from './routes';
+export { routes } from './routes';
