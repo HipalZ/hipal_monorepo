@@ -1,19 +1,21 @@
 // books.ts
-import { LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, UserReward, UserRewardHistory } from '@hi/db-models';
+import { LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, Reviews, UserReward, UserRewardHistory } from '@hi/db-models';
 import type { PaymentType } from '@hi/db-models/src/validators';
 import {
   orderSchema,
   paramsSchema,
+  PaymentAlertSchema,
   RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
+  ReviewsSchema,
   validatePaymentSchema,
 } from '@hi/db-models/src/validators';
 import { runInTransaction } from '@hi/utils';
 import { zValidator } from '@hono/zod-validator';
-import { createHmac } from 'crypto';
 import { Hono } from 'hono';
 import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
+import { createHmac } from 'node:crypto';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
 const { validateWebhookSignature } = require('../../utils');
 //dates
@@ -254,6 +256,40 @@ const dishesRouter = new Hono()
       return;
     });
   })
+  .post('/reviews', zValidator('json', ReviewsSchema), async (c) => {
+    const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+    const { businessId, reviewerPhone, reviewRating, order_id } = requestData || {};
+
+    if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
+      return c.json({
+        err: true,
+        data: {},
+        message: 'businessId, reviewerPhone, reviewRating, order_id is required',
+      });
+    }
+
+    const review = await Reviews.findOne({ order_id: order_id });
+
+    if (review) {
+      return c.json({
+        err: true,
+        message: 'Review already added',
+        data: {},
+      });
+    }
+
+    const addReview = await Reviews.create(requestData);
+
+    if (!addReview) {
+      return c.json({
+        err: true,
+        message: 'Review not added',
+        data: {},
+      });
+    }
+
+    return c.json({ err: false, message: '', data: addReview._id, id: addReview._id });
+  })
   .post('/createOfflineOrder', zValidator('json', orderSchema), async (c) => {
     const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
     const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
@@ -460,7 +496,20 @@ const dishesRouter = new Hono()
 
     return c.json({ err: false, message: 'Webhook processed successfully', data: {} });
   })
-  .post('/offlinePayment', zValidator('json', validatePaymentSchema), async (c) => {})
+  .post('/createWaiterAlert', zValidator('json', PaymentAlertSchema), async (c) => {
+    const requestData = await c.req.json();
+    const { businessId, tableName, message, name, phone } = requestData;
+
+    const alert = await PaymentAlert.create({
+      businessId: businessId,
+      alertType: 'WAITER',
+      name: name,
+      status: 'SUCCESS',
+      tableName: tableName,
+      message: message,
+    });
+    return c.json({ message: 'Order verified successfully', err: false, data: alert });
+  })
   .get(
     '/:id/orders',
 
@@ -499,6 +548,122 @@ const dishesRouter = new Hono()
       status: 200,
       err: false,
     });
+  })
+  .put('/:pid/order/:alertId', zValidator('param', paramsSchema), async (c) => {
+    const { alertId } = c.req.param();
+    const requestData = await c.req.json();
+    const { comment, waiterName } = requestData;
+
+    await runInTransaction(async (session: ClientSession) => {
+      const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
+        '_id alertType isAccepted order_id businessId',
+      );
+      if (!alert) {
+        c.json({ message: 'Alert not found', err: true, data: {} });
+        return;
+      }
+
+      if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
+        const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session }).populate(
+          'order_id',
+        );
+        c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        return;
+      }
+
+      if (alert.alertType === 'OFFLINE') {
+        if (alert && !alert.isAccepted) {
+          const order = await Order.findById(alert.order_id, null, { session });
+
+          await Payment.create(
+            [
+              {
+                businessId: alert.businessId,
+                order_id: order?._id,
+                total: order?.total,
+                mode: 'offline',
+                status: 'SUCCESS',
+                paymentMode: 'offline',
+                customerName: order?.name,
+                claimedCoins: order?.claimedCoins,
+                customerPhone: order?.phone,
+                billValue: order?.billValue,
+                tips: order?.tips,
+                tableName: order?.tableName,
+                waiterName,
+              },
+            ],
+            { session },
+          );
+
+          if (order?.claimedCoins && order?.claimedCoins > 0) {
+            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+            await removeCoins(
+              Number(order?.claimedCoins),
+              order.tableName || '',
+              order?.phone || '',
+              Number(order?.total),
+              existingLoyalty?.loyaltyId as string,
+              Number(order?.billValue),
+              session,
+            );
+          }
+
+          if (order) {
+            const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
+            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+            await addCoins(
+              cashBack,
+              order?.phone || '',
+              order.tableName || '',
+              order.businessId.toString(),
+              Number(order.total),
+              existingLoyalty?.loyaltyId as string,
+              Number(order.billValue),
+              session,
+            );
+
+            await LoyaltyCoinsInfo.findOneAndUpdate(
+              { businessId: order.businessId.toString() },
+
+              {
+                $inc: {
+                  coinzIssued: cashBack,
+                  coinzRedeemed: Number(order.claimedCoins),
+                },
+              },
+              { upsert: true, session },
+            );
+          }
+        }
+
+        const pinCode = Math.floor(1000 + Math.random() * 9000);
+        const updateAlert = await PaymentAlert.findByIdAndUpdate(
+          alertId,
+          { isAccepted: true, completionCode: pinCode, comment, waiterName },
+          { new: true, session },
+        ).populate('order_id');
+
+        c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        return;
+      }
+      c.json({ message: 'Invalid alert type', err: true, data: {} });
+      return;
+    });
+  })
+  .put('/:pid/rejectOrder/:alertId', zValidator('param', paramsSchema), async (c) => {
+    const { alertId } = c.req.param();
+    const requestData = await c.req.json();
+    const { waiterName } = requestData;
+    const alert = await PaymentAlert.findById(alertId);
+    const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
+    const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
+
+    const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true, waiterName }, { new: true }).populate(
+      'order_id',
+    );
+
+    return c.json({ message: 'Order rejected successfully', err: false, data: updateAlert });
   })
   .get('/:id/paymentAlertHistory', zValidator('query', paramsSchema), async (c) => {
     const { businessId, from, to } = c.req.query();
