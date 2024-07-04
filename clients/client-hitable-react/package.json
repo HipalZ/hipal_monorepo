@@ -3,17 +3,17 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --host --port 3001",
+    "dev": "dotenv -e ./env/.env.local vite --port 3005",
     "dev:test": "dotenv -e ./env/.env.test vite --host",
-    "bundle:development": "dotenv -e .env pnpm run bundle",
+    "bundle:development": "dotenv -e .env bun run bundle",
+    "bundle": "vite build",
     "build": "vite build",
-    "serve": "vite preview --host --port 3005",
+    "serve": "vite preview --port 3005",
     "lint": "eslint . --ext .ts,.tsx",
-    "build:test": "dotenv -e ./env/.env.test pnpm run build",
-    "bundle:test": "dotenv -e ./env/.env.test pnpm run bundle",
-    "build:production": "dotenv -e ./env/.env.production pnpm run build",
-    "bundle:production": "dotenv -e ./env/.env.production pnpm run bundle",
-    "bundle": "vite build"
+    "build:test": "dotenv -e ./env/.env.test bun run build",
+    "bundle:test": "dotenv -e ./env/.env.test bun run bundle",
+    "build:production": "dotenv -e ./env/.env.production bun run build",
+    "bundle:production": "dotenv -e ./env/.env.production bun run bundle"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.4",

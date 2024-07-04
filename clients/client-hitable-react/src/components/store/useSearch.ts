@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
+import {shallow} from 'zustand/shallow';
 import { persist } from 'zustand/middleware';
 
 interface IDishWithParent {
@@ -19,7 +20,7 @@ interface IUseSearch {
     setSearchHistory: (newDish: IDishWithParent) => void;
 }
 
-export const useSearch = create(persist<IUseSearch>(
+const useShallowSearch = createWithEqualityFn(persist<IUseSearch>(
     (set) => ({
         searchText: '',
         setSearchText: (d: string) => set({ searchText: d }),
@@ -46,5 +47,8 @@ export const useSearch = create(persist<IUseSearch>(
         name: 'search-store',
         getStorage: () => localStorage,
     }
-));
+),shallow);
 
+export const useSearch = <T>(selector: (state: IUseSearch) => T) => {
+    return useShallowSearch(selector, shallow)
+}

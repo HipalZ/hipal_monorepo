@@ -1,6 +1,7 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
+import {shallow} from 'zustand/shallow';
 
-interface State {
+interface ITimings {
   inTime: string;
   outTime: string;
   timeStampStart: number;
@@ -23,7 +24,7 @@ interface State {
   setRating: (rating: string) => void;
 }
 
-const useTimings = create<State>((set) => ({
+const useShallowTimings = createWithEqualityFn<ITimings>((set) => ({
   inTime: '',
   outTime: '',
   timeStampStart: 0,
@@ -44,6 +45,10 @@ const useTimings = create<State>((set) => ({
   setDayOut: (dayOut) => set({ dayOut }),
   setStatus: (status) => set({ status }),
   setRating: (rating) => set({ rating }),
-}));
+}),shallow);
 
-export default useTimings;
+const useTimings = <T>(selector: (state: ITimings) => T) => {
+  return useShallowTimings(selector, shallow)
+}
+
+export default useTimings

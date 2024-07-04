@@ -7,7 +7,7 @@ import axios from './components/utils/axios';
 import MainRouter from './routes';
 
 function App() {
-  const { selectedBiz } = useHiClientZ();
+  const selectedBiz = useHiClientZ((state) => state.selectedBiz);
   const triggerSound = useLiteStore((s)=>s.triggerSound);
   const businessId = selectedBiz?.businessId?._id;
   const {
