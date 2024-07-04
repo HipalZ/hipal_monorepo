@@ -70,4 +70,20 @@ changes ui
 routes changed from r to customlink
 
 home icon change and bookmark back button remove
+//
 
+
+loaders payment 
+create order offline toast
+
+terms and conditions update
+
+wallet
+
+history
+
+t7c refund policy
+
+loading before review
+
+loading bug resolve

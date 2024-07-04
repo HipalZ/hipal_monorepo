@@ -28,11 +28,6 @@ const BottomButton = dynamic(() => import("@/components/molecules/bottomButton")
     loading: () => <SkeletonLoader height={50} />,
 });
 
-const LoadingSpinner = dynamic(() => import("@/components/atoms/loadingSpinner"), {
-    ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
-});
-
 const PaymentComponent = dynamic(() => import("./selectPayment"), {
     ssr: false,
     loading: () => <SkeletonLoader height={200} />,
@@ -60,7 +55,7 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
-const Payment = ({ data }: { data: IBusinessData }) => {
+const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -78,6 +73,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     const searchParams = useSearchParams()
     const { loyaltySetting } = useLoyaltyData()
     const [maxCoinz, setMaxCoinz] = useState(0)
+    const [showError, setShowError] = useState(false)
 
     useEffect(() => {
         if (!tableName) {
@@ -85,7 +81,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         }
     }, [])
 
-    const { setRazorPayPaymentId, razorPayOrderId,
+    const { setRazorPayPaymentId,
         setRazorPayOrderId, setRazorPaySignature, } =
         usePayment()
 
@@ -98,8 +94,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setCustomTip('')
     }, [])
 
-    const handlePaymentSuccess = (response: any) => {
-        sendPaymentResponse(response);
+    const handlePaymentSuccess = async(response: any) => {
+        setIsLoading(true)
+        await sendPaymentResponse(response);
         setRazorPaySignature(response.razorpay_signature);
         setRazorPayOrderId(response.razorpay_order_id);
         setRazorPayPaymentId(response.razorpay_payment_id);
@@ -109,11 +106,14 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setRazorPaySignature('');
         setRazorPayOrderId('');
         setRazorPayPaymentId('');
+        setShowError(true)
         toast.error('Payment failed');
+        setTimeout(()=>{
+            setShowError(false)
+        }, 2000)
     };
     const handlePaymentFailure = (response: any) => {
         setRazorPayOrderId(response.error.metadata.order_id);
-        console.error(response);
     };
     const creatingRazorPayOptions = async (orderId: string) => {
         if (!orderId) {
@@ -202,8 +202,6 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         };
     };
 
-
-    // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
         setIsLoading(true)
         try {
@@ -215,19 +213,17 @@ const Payment = ({ data }: { data: IBusinessData }) => {
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
             const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             if (res.status === 200) {
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
                 setRazorPayPaymentId('')
                 setTableName('')
+                return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
             } else {
                 toast.error('Payment failed')
             }
         } catch (error) {
             console.log(error)
-        } finally {
-            setIsLoading(false)
         }
     }
 
@@ -272,15 +268,15 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
                 const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
                 // gives a string which is orderId
+                toast.success('We informed staff for offline payment. Please wait for the staff to confirm the payment.')
                 setTableName('')
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
+                return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
             }
 
         } catch (err: any) {
             console.log(err)
             toast.error(err.response?.data?.message || 'Something went wrong')
-        }finally{
-            setIsLoading(false)
+            setIsLoading(false);
         }
     }
 
@@ -391,7 +387,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         setIsModalOpen(false)
     }
 
-    const handleApplyCoinz = (finalValue:number) => {
+    const handleApplyCoinz = (finalValue: number) => {
         setClaimedCoinz(finalValue)
         handleCoins(finalValue)
     };
@@ -403,7 +399,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
         router.push(`${routePaths[PAGE_TYPES.CATEGORY](businessDetails?.customLink || '')}`)
     }
 
-    const handleCoins = async (claimedCoinz:number) => {
+    const handleCoins = async (claimedCoinz: number) => {
         // if has claim coinz then celebrate
         setIsModalOpen(false)
         if (claimedCoinz !== null && claimedCoinz > 0) {
@@ -434,6 +430,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
     })
 
     return (
+        <>
+        {isLoading ? (<PayLoader/>) : showError ? (<ErrorPayment/>) :(
         <div>
             <section className='z-20 w-full bg-base-100'>
                 <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
@@ -442,7 +440,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                             <button
                                 onClick={handleBack}
                                 type='button'
-                                className='h-10 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
+                                className='h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
                             >
                                 <MdOutlineChevronLeft className='text-3xl text-white ' />
                             </button>
@@ -462,7 +460,7 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         <PlaceholderImg />
                     )}
                     <div >
-                        paying :  <br />
+                        Paying:  <br />
                         <span className='font-bold text-primary'>
                             {businessDetails.businessName}
                         </span>
@@ -480,6 +478,8 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                         userCoinz > 0 &&
                         <UseCoinzPopup
                             openModal={openModal}
+                            claimedCoinz={claimedCoinz}
+                            userCoinz={userCoinz}
                         />
                     }
                     <BillSummary
@@ -505,9 +505,9 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 <PaymentComponent data={data} tips={tips}
                     billValue={billValue}
                     handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
-                    setSelectedMode={setSelectedMode} isLoading={isLoading} 
+                    setSelectedMode={setSelectedMode} isLoading={isLoading}
                     total={billValue - claimedCoinz + tips}
-                    />
+                />
             }
             <AvailableCoinz
                 isModalOpen={isModalOpen}
@@ -520,9 +520,10 @@ const Payment = ({ data }: { data: IBusinessData }) => {
                 billValue={billValue}
                 setClaimAmount={data?.loyalty?.setClaimAmount}
             />
-            {isLoading ? <PayLoader /> : null}
-        </div>
+        </div>)}
+        </>
     )
 };
 
-export default memo(Payment);
+const Payment = memo(PaymentMemo)
+export default Payment

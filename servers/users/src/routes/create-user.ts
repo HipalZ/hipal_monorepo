@@ -100,6 +100,7 @@ const addSignUpBonus = async (
       rewards: bonus,
       currentBalance: bonus,
       loyaltyId,
+      date: Date.now(),
     });
 
     await data.save();
@@ -215,6 +216,7 @@ router.post(
         userPhone: phone,
         loyaltyId,
       });
+
       const accessToken = createAccessToken(existingUser);
       const refreshToken = createRefreshToken(existingUser);
       const modifyUser = {

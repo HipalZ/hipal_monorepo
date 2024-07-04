@@ -20,4 +20,10 @@
 
 .paragraph {
 	margin-bottom: 1rem;
+	text-align:justify;
+}
+
+.unorderedlist{
+	font-weight: 700;
+	list-style-type: disc;
 }

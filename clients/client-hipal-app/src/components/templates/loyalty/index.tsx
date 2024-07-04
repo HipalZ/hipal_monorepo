@@ -37,7 +37,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 	const userName = useLogin((s) => s.userDetails.name);
 	const [HiCode, setHiCode] = useState();
 	const [rewards, setRewards] = useState();
-	const { userDetails } = useLogin();
+	const { userDetails,setUserCoinZ } = useLogin();
 	const setUserReward = useUserReward((s) => s.setUserReward);
 	const { setUserTotalHistory, userTotalHistory } = useUserReward();
 	const [image, setImage] = useState<string>("");
@@ -88,6 +88,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 			console.log(response?.data?.data);
 			if (response?.data?.data) {
 				setHiCode(response?.data?.data?.password);
+				setUserCoinZ(response?.data?.data?.rewards);
 				setRewards(response?.data?.data?.rewards);
 				setUserReward(response?.data?.data);
 			}

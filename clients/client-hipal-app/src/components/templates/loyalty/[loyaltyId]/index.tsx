@@ -48,7 +48,13 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 			if (newData.length === 0) {
 				setHasMoreData(false);
 			} else {
-				setItemData((prevData) => [...prevData, ...newData]);
+				setItemData((prevData) => {
+					const existingIds = new Set(prevData.map(item => item.id));
+					console.log('existing ids',existingIds)
+					const uniqueNewData = newData.filter(item => !existingIds.has(item.id));
+					console.log('unique new data',uniqueNewData)
+					return [...prevData, ...uniqueNewData];
+				});
 			}
 			return newData;
 		} catch (err) {
@@ -85,7 +91,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
 							alt="avatar"
 							className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
 						/>
-						<b>Hey {userDetails?.name} !!</b>
+						<b>Hi {userDetails?.name} !!</b>
 					</span>
 					<Link href={`/${customLink}/loyalty/`}>
 						<button

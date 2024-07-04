@@ -647,18 +647,6 @@ router.post(
   async <T, K>(req: Request<T, K, z.infer<typeof orderSchema>>, res: Response) => {
     const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = req.body || {};
     await runInTransaction(async (session: ClientSession) => {
-      const existingOrder = await Order.findOne({ phone, role: 'HIPAL_CUSTOMER' }).sort({ date: -1 });
-      const currentDate = Date.now(); // Current timestamp in milliseconds
-      const providedDate = new Date(existingOrder?.date || 0).getTime();
-      const differenceInMinutes = Math.abs(currentDate - providedDate) / (1000 * 60);
-      if (existingOrder && differenceInMinutes < 2) {
-        res.status(400).send({
-          err: true,
-          message: 'Order already exists for this user. Please try again after 2 minutes.',
-          data: existingOrder,
-        });
-        return;
-      }
       const uniqueOrderId = nanoid(15);
       const response = await razorpayWrapper.client.orders.create({
         amount: total * 100,
@@ -1105,7 +1093,7 @@ router.post(
   }),
   async (req: Request, res: Response) => {
     const { businessId, tableName, message, name, phone } = req.body;
-
+    //
     const alert = await PaymentAlert.create({
       businessId: businessId,
       alertType: 'WAITER',
@@ -1113,6 +1101,7 @@ router.post(
       status: 'SUCCESS',
       tableName: tableName,
       message: message,
+      date: Date.now(),
     });
     return res.status(200).send({ message: 'Order verified successfully', err: false, data: alert });
   },

@@ -101,7 +101,7 @@ const AddAmountModal = memo(() => {
                     <PlaceholderImg />
                 )}
                 <div >
-                    paying :  <br />
+                    Paying :  <br />
                     <span className='font-bold text-primary'>
 
                         {business.businessName}

@@ -198,7 +198,7 @@ router.get(
           $lte: endOfToday.getTime(),
         },
       }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
+      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment?.total ?? 0), 0);
       const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
       const totalOnlineSale = existingPayments.reduce(
