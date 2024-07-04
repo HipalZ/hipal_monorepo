@@ -12,12 +12,12 @@ const app = new Hono();
 // ** import routes here & chain them **
 
 export const routes = app
-  .route(`/${api_version}/example`, exampleRouter)
-  .route(`/${api_version}/businesses`, businessRouter)
-  .route(`/${api_version}/dishes`, dishesRouter)
-  .route(`/${api_version}/categories`, categoryRouter)
-  .route(`/${api_version}/users`, usersRouter)
-  .route(`/${api_version}/payments`, paymentsRouter)
-  .route(`/${api_version}/settings`, settingsRouter);
+  .route('/example', exampleRouter)
+  .route('/businesses', businessRouter)
+  .route('/dishes', dishesRouter)
+  .route('/categories', categoryRouter)
+  .route('/users', usersRouter)
+  .route('/payments', paymentsRouter)
+  .route('/settings', settingsRouter);
 
 export type AppType = typeof routes;
