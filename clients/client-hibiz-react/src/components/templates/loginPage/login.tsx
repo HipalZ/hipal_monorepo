@@ -4,11 +4,11 @@ import { PiSealWarningBold } from "react-icons/pi";
 import useLoginStore from "@/components/store/useLogin";
 import { useNavigate } from "react-router-dom";
 import axios from "@/axios";
-import { toast } from "react-toastify";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useUserToken } from "@/components/store/useUserToken";
+import toast from "react-hot-toast";
 
 const Login: React.FC = () => {
   const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));

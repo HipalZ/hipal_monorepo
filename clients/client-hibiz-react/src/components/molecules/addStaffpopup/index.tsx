@@ -4,8 +4,8 @@ import ErrorComponent from '@/components/errorComponent';
 import type { UserProfile } from '@/components/types/businessData';
 import { useQuery } from '@tanstack/react-query';
 import React, { memo, useState } from 'react';
+import toast from 'react-hot-toast';
 import Switch from 'react-switch';
-import { toast } from 'react-toastify';
 
 interface IAddStaff {
   businessId: string;

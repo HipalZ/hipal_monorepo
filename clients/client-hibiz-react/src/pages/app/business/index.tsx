@@ -11,11 +11,11 @@ import { useQuery } from "@tanstack/react-query";
 import { memo, startTransition, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import hipalHandLogo from "@/assets/login/hand.png";
 import { IoWarning } from "react-icons/io5";
 import { TbHomePlus } from "react-icons/tb";
 import { apiRpc } from "@hi/common";
+import toast from "react-hot-toast";
 
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);

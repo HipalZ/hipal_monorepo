@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3005",
+    "dev": "dotenv -e ./env/.env.local vite --host",
     "dev:test": "dotenv -e ./env/.env.test vite --host",
     "bundle:development": "dotenv -e .env bun run bundle",
     "bundle": "vite build",
@@ -45,7 +45,6 @@
     "react-router-dom": "^6.23.1",
     "react-swipeable": "^7.0.1",
     "react-switch": "^7.0.0",
-    "react-toastify": "^10.0.5",
     "react-top-loading-bar": "^2.3.1",
     "tailwind-merge": "^2.3.0",
     "unimported": "^1.31.1",

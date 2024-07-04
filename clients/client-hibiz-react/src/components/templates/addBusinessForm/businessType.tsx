@@ -1,6 +1,6 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { memo, useCallback } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 export const businessTypeArray = [
   {

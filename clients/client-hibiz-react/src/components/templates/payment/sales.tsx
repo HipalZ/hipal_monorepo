@@ -10,6 +10,13 @@ import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import PaymentModal from "./paymentModal";
 
+const hideMiddleNumbers = (phone: string) => {
+  if (phone.length <= 4) return phone;
+  const firstPart = phone.slice(0, 3);
+  const lastPart = phone.slice(-3);
+  return `${firstPart}****${lastPart}`;
+};
+
 const PaymentSales = () => {
   const [open, setOpen] = useState(false);
   const [salesData, setSalesData] = useState<HistoryData>({});
@@ -38,12 +45,7 @@ const PaymentSales = () => {
   );
 
   // number privacy
-  const hideMiddleNumbers = (phone: string) => {
-    if (phone.length <= 4) return phone;
-    const firstPart = phone.slice(0, 3);
-    const lastPart = phone.slice(-3);
-    return `${firstPart}****${lastPart}`;
-  };
+ 
 
   const handleHistoryData = async () => {
     try {
