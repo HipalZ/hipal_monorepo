@@ -31,6 +31,7 @@ export const CustomRole = z.object({
 });
 
 export const UserAttrs = z.object({
+  id: z.string().optional(),
   name: z.string().max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(10).max(10),
