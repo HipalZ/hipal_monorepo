@@ -8,8 +8,12 @@ import { HiSearch } from 'react-icons/hi';
 import OfflineAlertCard from '../offlineAlertCard';
 
 const OfflineAlerts = () => {
-  const { offlineAlertData } = useLiteStore();
-  const { searchText } = useSearch();
+  const { offlineAlertData } = useLiteStore((s)=>({
+    offlineAlertData: s.offlineAlertData,
+  }));
+  const { searchText } = useSearch((s)=>({
+    searchText: s.searchText,
+  }));
   const [showSearchBox, setShowSearchBox] = useState(false);
   const [isAscending, setIsAscending] = useState(false);
 

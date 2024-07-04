@@ -10,7 +10,9 @@ interface IOnlineProp {
 
 const HistoryCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
-  const { setViewData } = useLiteStore();
+  const { setViewData } = useLiteStore((s)=>({
+    setViewData: s.setViewData,
+  }));
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 

@@ -20,7 +20,17 @@ function App() {
     setOfflineAlertData,
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
-  } = useLiteStore();
+  } = useLiteStore((s)=>({
+    setLoading : s.setLoading,
+    setOnlineCount : s.setOnlineCount,
+    onlineCount : s.onlineCount,
+    offlineCount : s.offlineCount,
+    setOfflineCount : s.setOfflineCount,
+    setOnlineAlertData : s.setOnlineAlertData,
+    setOfflineAlertData : s.setOfflineAlertData,
+    setRefetchOnlineAlerts : s.setRefetchOnlineAlerts,
+    setRefetchOfflineAlerts : s.setRefetchOfflineAlerts,
+  }));
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const fetchAlerts = async (alertType: string) => {

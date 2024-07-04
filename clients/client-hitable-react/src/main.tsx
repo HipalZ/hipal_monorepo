@@ -1,12 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ToastContainer, Zoom } from 'react-toastify';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
+import Boundary from "./components/boundary";
 import App from './App.tsx';
-
-import 'react-toastify/dist/ReactToastify.css';
-import './index.css';
+import { Toaster } from "react-hot-toast";
+import "./index.css";
 
 
 const queryClient = new QueryClient({
@@ -21,17 +20,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <Router>
-        <ToastContainer
-          position="top-right"
-          autoClose={1500}
-          transition={Zoom}
-          theme="dark"
-          hideProgressBar
-          toastClassName="custom-toast-body"
-          closeButton={false}
-          stacked
-        />
-        <App />
+        <Toaster position="top-center" />
+        <Boundary>
+          <App />
+        </Boundary>
       </Router>
     </QueryClientProvider>
   </React.StrictMode>,

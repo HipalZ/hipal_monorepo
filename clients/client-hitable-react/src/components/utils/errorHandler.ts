@@ -1,6 +1,6 @@
 import { ZodError } from 'zod';
 import { AxiosError } from 'axios';
-import { toast } from 'react-toastify';
+import toast from "react-hot-toast";
 import { fromZodError } from 'zod-validation-error';
 
 export type FormattedError = Record<string, string>;

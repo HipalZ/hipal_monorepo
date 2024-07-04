@@ -4,19 +4,27 @@ import axios from '@/components/utils/axios';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
 import { ChangeEvent, memo, useState } from 'react';
 import { MdOutlineCall, MdOutlineMessage } from 'react-icons/md';
-import { toast } from 'react-toastify';
+import toast from "react-hot-toast";
 import PopUp from '../popUp';
 import LoadingSpinner from '../loadingSpinner';
 
 const BillPopUpMemo = () => {
-  const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore();
+  const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore((s)=>(
+    {
+      selectedNavItem: s.selectedNavItem,
+      viewData: s.viewData,
+      setViewData: s.setViewData,
+      removeOfflineAlert: s.removeOfflineAlert,
+      
+    }
+  ));
   const [showTick, setShowTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
   const [clickComment, setClickComment] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
-  const { captainData } = useHiClientZ();
+  const { captainData } = useHiClientZ((s)=>({captainData: s.captainData}));
 
   const copyText = () => {
     const text = document.querySelector('#discount-reason')?.textContent || '';

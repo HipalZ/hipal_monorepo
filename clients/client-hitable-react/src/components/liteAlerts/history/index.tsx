@@ -10,9 +10,18 @@ import HistoryCard from './historyCard';
 
 const History = () => {
   const [pageNumber, setPageNumber] = useState(1);
-  const { selectedBiz } = useHiClientZ();
-  const { historyData, setHistoryData } = useLiteStore();
-  const { timeStampStart, timeStampEnd } = useTimings();
+  const { selectedBiz } = useHiClientZ((s)=>({
+    selectedBiz: s.selectedBiz,
+  }));
+  const { historyData, setHistoryData } = useLiteStore((s)=>({
+    historyData: s.historyData,
+    setHistoryData: s.setHistoryData,
+  }));
+  const { timeStampStart, timeStampEnd } = useTimings((s)=>({
+    timeStampStart: s.timeStampStart,
+    timeStampEnd: s.timeStampEnd,
+  
+  }));
   const businessId = selectedBiz?.businessId?._id;
 
   const handleClick = useCallback((newPage: number) => {

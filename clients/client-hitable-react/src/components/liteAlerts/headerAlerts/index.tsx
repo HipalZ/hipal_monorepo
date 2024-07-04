@@ -7,8 +7,15 @@ import ProfileHeader from '../profileHeader';
 import './index.css';
 
 const HeaderAlerts = () => {
-  const { selectedBiz } = useHiClientZ();
-  const { selectedNavItem, refetchOfflineAlerts, refetchOnlineAlerts, loading } = useLiteStore();
+  const { selectedBiz } = useHiClientZ((s)=>({
+    selectedBiz: s.selectedBiz,
+  }));
+  const { selectedNavItem, refetchOfflineAlerts, refetchOnlineAlerts, loading } = useLiteStore((s)=>({
+    selectedNavItem: s.selectedNavItem,
+    refetchOfflineAlerts: s.refetchOfflineAlerts,
+    refetchOnlineAlerts: s.refetchOnlineAlerts,
+    loading: s.loading,
+  }));
   const refetchData = () => {
     if (selectedNavItem === 'online') {
       refetchOnlineAlerts();

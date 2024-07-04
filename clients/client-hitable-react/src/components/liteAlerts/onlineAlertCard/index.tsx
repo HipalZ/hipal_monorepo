@@ -14,7 +14,11 @@ interface IOnlineProp {
 
 const OnlineAlertCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
-  const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore();
+  const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore((s)=>({
+    removeOnlineAlert: s.removeOnlineAlert,
+    setViewData: s.setViewData,
+    removeOnlineCount: s.removeOnlineCount,
+  }));
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 

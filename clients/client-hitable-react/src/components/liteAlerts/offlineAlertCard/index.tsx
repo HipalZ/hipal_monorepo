@@ -15,8 +15,17 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
   const { offlineAlertData } = props;
-  const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore();
-  const { captainData } = useHiClientZ();
+  const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore((s)=>({
+    removeOfflineAlert: s.removeOfflineAlert,
+    setViewData: s.setViewData,
+    clickViewMore: s.clickViewMore,
+    setClickViewMore: s.setClickViewMore,
+    removeOfflineCount: s.removeOfflineCount,
+  
+  }));
+  const { captainData } = useHiClientZ((s)=>({
+    captainData: s.captainData,
+  }));
 
   const handleViewMore = (alert: Alert) => {
     setViewData(alert);

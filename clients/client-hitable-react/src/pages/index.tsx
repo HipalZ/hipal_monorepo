@@ -9,7 +9,7 @@ import { useHiClientZ } from '@/components/store/useHiClientzData';
 import axios from '@/components/utils/axios';
 import { memo, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import toast from "react-hot-toast";
 
 const LoginMemo = () => {
   const navigate = useNavigate();

@@ -8,8 +8,13 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import { useSearch } from "@/components/store/useSearch";
 
 const OnlineAlerts = () => {
-    const { selectedNavItem, onlineAlertData } = useLiteStore();
-    const { searchText } = useSearch();
+    const { selectedNavItem, onlineAlertData } = useLiteStore((s)=>({
+        selectedNavItem: s.selectedNavItem,
+        onlineAlertData: s.onlineAlertData,
+    }));
+    const { searchText } = useSearch((s)=>({
+        searchText: s.searchText,
+    }));
     const [showSearchBox, setShowSearchBox] = useState(false);
     const [isAscending, setIsAscending] = useState(true);
 

@@ -10,7 +10,7 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import axios from '@/components/utils/axios';
 import { memo, startTransition, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import toast from "react-hot-toast";
 //tes
 const LoginMemo = () => {
   const [password, setPassword] = useState<string>('');

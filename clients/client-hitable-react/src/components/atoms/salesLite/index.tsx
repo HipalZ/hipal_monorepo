@@ -9,10 +9,19 @@ import DateRangePickerMemo from "../dateRangePicker";
 import './index.css'
 
 const SalesLite = () => {
-    const { selectedBiz } = useHiClientZ();
+    const { selectedBiz } = useHiClientZ((s)=>({
+        selectedBiz: s.selectedBiz,
+    }));
     const businessId = selectedBiz?.businessId?._id;
-    const {salesData, setSalesData, setLoading} = useLiteStore();
-    const {timeStampStart, timeStampEnd} = useTimings()
+    const {salesData, setSalesData, setLoading} = useLiteStore((s)=>({
+        salesData: s.salesData,
+        setSalesData: s.setSalesData,
+        setLoading: s.setLoading,
+    }));
+    const {timeStampStart, timeStampEnd} = useTimings((s)=>({
+        timeStampStart: s.timeStampStart,
+        timeStampEnd: s.timeStampEnd,
+    }))
     const handleHistoryData = async () => {
         setLoading(true)
         try {

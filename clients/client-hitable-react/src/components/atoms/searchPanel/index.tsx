@@ -9,7 +9,10 @@ interface ISearch {
 const SearchPanel = ({ closeSearchBox }: ISearch)=> {
   const panel = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const { searchText, setSearchText } = useSearch();
+  const { searchText, setSearchText } = useSearch((s)=>({
+    searchText: s.searchText,
+    setSearchText: s.setSearchText,
+  }));
   const [search, setSearchOpen] = useState(false);
   const togglePopover = (searchText = '') => {
     if (searchText.length > 0) {
