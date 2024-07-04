@@ -8,17 +8,21 @@ import { redirect } from 'next/navigation';
 async function fetchBusinessData(businessId: string) {
 	const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 	let bizId = businessId;
+
 	if (!objectIdRegex.test(businessId)) {
 		const response = await axios.get(`/v1/businesses/n/${businessId}`);
-		bizId = response.data.data.businessId; 
+		console.log('response', response.data.data)
+		bizId = response.data.data._id; 
 	}
 	if (!bizId) {
         redirect('/');
     }
 
 	const settings = (await axios(paths.settings(bizId))) || {}
+	
 	const businessData = await axios(paths.businessData(bizId))
 	const loyalty = await axios(paths.getLoyaltySettings(bizId)) || {}
+	
 	const data = {} as IBusinessData
 	data["settings"] = settings?.data?.data[0] || {}
 	data["business"] = businessData?.data?.data || {}

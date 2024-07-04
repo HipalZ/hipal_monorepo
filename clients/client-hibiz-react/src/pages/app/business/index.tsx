@@ -1,21 +1,21 @@
-import HipeopleLogo from "@/assets/hibizNewLogo.png";
-import axios from "@/axios";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import Header from "@/components/molecules/header";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { IBusinessData } from "@/components/types/businessData";
-import { paths } from "@/components/utils/paths";
-import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
-import { useQuery } from "@tanstack/react-query";
-import { memo, startTransition, useState } from "react";
-import { FaArrowLeft } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import hipalHandLogo from "@/assets/login/hand.png";
-import { IoWarning } from "react-icons/io5";
-import { TbHomePlus } from "react-icons/tb";
-import { apiRpc } from "@hi/common";
-import toast from "react-hot-toast";
+import HipeopleLogo from '@/assets/hibizNewLogo.png';
+import hipalHandLogo from '@/assets/login/hand.png';
+import axios from '@/axios';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
+import Header from '@/components/molecules/header';
+import useBusinessData from '@/components/store/useBusinessData';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import type { IBusinessData } from '@/components/types/businessData';
+import { paths } from '@/components/utils/paths';
+import { PAGE_TYPES, routePathsWithId } from '@/components/utils/routes';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import { memo, startTransition, useState } from 'react';
+import toast from 'react-hot-toast';
+import { FaArrowLeft } from 'react-icons/fa';
+import { IoWarning } from 'react-icons/io5';
+import { TbHomePlus } from 'react-icons/tb';
+import { useNavigate } from 'react-router-dom';
 
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
@@ -42,17 +42,17 @@ const Business = () => {
 
   const getBusiness = async () => {
     try {
-      if (user.role === "RESTAURANT_MANAGER") {
+      if (user.role === 'RESTAURANT_MANAGER') {
         const response = await axios.get(`${paths.getSingleBusiness(user?.customRole?.[0]?.businessId)}`);
         setBusinesses([response.data.data]);
         return;
       }
       const response = await axios.get(`/v1/businesses?id=${user._id}`);
       if (response.data.data === undefined || response.data.data.length === 0) {
-        localStorage.removeItem("ownerLogin");
-        toast.error("connection refused please login");
+        localStorage.removeItem('ownerLogin');
+        toast.error('connection refused please login');
         startTransition(() => {
-          navigate("/");
+          navigate('/');
         });
       }
       setBusinesses(response.data.data);
@@ -64,7 +64,7 @@ const Business = () => {
 
   function addBusiness() {
     startTransition(() => {
-      navigate("/app/business/add");
+      navigate('/app/business/add');
     });
   }
 
@@ -73,23 +73,23 @@ const Business = () => {
     error,
     data: allBizData,
   } = useQuery({
-    queryKey: ["getBiz", user._id],
+    queryKey: ['getBiz', user._id],
     queryFn: getBusiness,
     enabled: !!user._id,
   });
 
-  const { data: sample } = useQuery({
-    queryKey: [],
-    queryFn: () =>
-      apiRpc.business
-        .$post({
-          json: {
-            name: "test",
-          },
-        })
-        .then((res) => res.json()),
-  });
-  
+  // const { data: sample } = useQuery({
+  //   queryKey: [],
+  //   queryFn: () =>
+  //     apiRpc.business
+  //       .$post({
+  //         json: {
+  //           name: "test",
+  //         },
+  //       })
+  //       .then((res) => res.json()),
+  // });
+
   return (
     <main className="h-screen">
       <div className="business_gradient">
@@ -98,17 +98,17 @@ const Business = () => {
             leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
-            isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+            isIconBusinessShow={user.role !== 'RESTAURANT_MANAGER'}
           />
         </section>
         <section className="business_gradient_hero_section">
           <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">{user?.name?.charAt(0)}</div>
           <article className="pl-4">
-            <div className="flex items-center text-2xl text-[#000000] w-full h-[1.25rem]">
+            <div className="flex h-[1.25rem] w-full items-center text-2xl text-[#000000]">
               <img width={16} height={16} src={hipalHandLogo} alt="hipalHandLogo" />
               <span className="ml-2 font-bold">Hi</span>
             </div>
-            <div className="text-base font-medium text-[#000000] leading-8">{user.name}</div>
+            <div className="text-base font-medium leading-8 text-[#000000]">{user.name}</div>
           </article>
         </section>
       </div>
@@ -117,7 +117,7 @@ const Business = () => {
           <section
             onClick={() => handleRoute(ele._id)}
             key={ele._id}
-            className={`${ele?.status ? "pointer-events-auto" : "pointer-events-none opacity-75"} child_business_card`}
+            className={`${ele?.status ? 'pointer-events-auto' : 'pointer-events-none opacity-75'} child_business_card`}
           >
             <div className="text-xl capitalize">
               {ele?.status && (
@@ -132,15 +132,15 @@ const Business = () => {
               )}
               <div>{ele?.businessName}</div>
             </div>
-            <div className="pb-6 aspect-square w-[4rem] h-[4rem] rounded-full overflow-hidden">
+            <div className="aspect-square h-[4rem] w-[4rem] overflow-hidden rounded-full pb-6">
               {ele?.logo && (
-                <img src={ele?.logo} width={66} height={66} alt="Business_logo" loading="lazy" className="aspect-square w-[4rem] h-[4rem]" />
+                <img src={ele?.logo} width={66} height={66} alt="Business_logo" loading="lazy" className="aspect-square h-[4rem] w-[4rem]" />
               )}
             </div>
           </section>
         ))}
       </div>
-      <button type="button" onClick={addBusiness} className=" bottom_btn on_active_bounce">
+      <button type="button" onClick={addBusiness} className="bottom_btn on_active_bounce">
         + Add Business
       </button>
 

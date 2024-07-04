@@ -210,7 +210,7 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 
   return Math.floor(coinsToBeAdded);
 };
-const dishesRouter = new Hono()
+const paymentsRouter = new Hono()
   .post('/createOrder', zValidator('json', orderSchema), async (c) => {
     const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
     const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
@@ -496,6 +496,7 @@ const dishesRouter = new Hono()
 
     return c.json({ err: false, message: 'Webhook processed successfully', data: {} });
   })
+
   .post('/createWaiterAlert', zValidator('json', PaymentAlertSchema), async (c) => {
     const requestData = await c.req.json();
     const { businessId, tableName, message, name, phone } = requestData;
@@ -509,6 +510,17 @@ const dishesRouter = new Hono()
       message: message,
     });
     return c.json({ message: 'Order verified successfully', err: false, data: alert });
+  })
+  .get('/:id/paymentAlerts', zValidator('query', paramsSchema), async (c) => {
+    const { businessId, alertType } = c.req.query();
+
+    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
+
+    return c.json({
+      err: false,
+      data: existingPaymentAlerts,
+      message: 'existing payment alerts',
+    });
   })
   .get(
     '/:id/orders',
@@ -554,10 +566,13 @@ const dishesRouter = new Hono()
     const requestData = await c.req.json();
     const { comment, waiterName } = requestData;
 
+    console.log('alertId', alertId, 'comment', comment, 'waiterName', waiterName);
+
     await runInTransaction(async (session: ClientSession) => {
       const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
         '_id alertType isAccepted order_id businessId',
       );
+
       if (!alert) {
         c.json({ message: 'Alert not found', err: true, data: {} });
         return;
@@ -567,8 +582,7 @@ const dishesRouter = new Hono()
         const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session }).populate(
           'order_id',
         );
-        c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
-        return;
+        return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
       }
 
       if (alert.alertType === 'OFFLINE') {
@@ -876,4 +890,4 @@ const dishesRouter = new Hono()
     });
   });
 
-export default dishesRouter;
+export default paymentsRouter;
