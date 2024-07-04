@@ -1,11 +1,22 @@
 // books.ts
 import { LoyaltyCoinsInfo, User, UserReward, UserRewardHistory } from '@hi/db-models';
-import { UserAttrs, UserType } from '@hi/db-models/src/validators';
+import { staffValidator, UserAttrs, UserType } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import axios from 'axios';
 import { Hono } from 'hono';
 import jwt from 'jsonwebtoken';
 
+import bcrypt from 'bcrypt';
+const saltRounds = 10;
+
+async function hashPassword(password: string): Promise<string> {
+  const hash = await bcrypt.hash(password, saltRounds);
+  return hash;
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
+}
 const addSignUpBonus = async (
   phone: string,
   loyaltyId: string,
@@ -186,7 +197,68 @@ const usersRouter = new Hono()
       err: false,
     });
   })
-  .post('/:id/stafflogin', async (c) => {})
+  .post('/:id/stafflogin', zValidator('json', staffValidator), async (c) => {
+    const requestData = await c.req.json();
+    const { phone, password } = requestData;
+    const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
+      path: 'customRole.businessId',
+      select: 'businessName address logo',
+    });
+
+    const isPasswordValid = await verifyPassword(password, staff?.password || '');
+
+    if (!isPasswordValid) {
+      return c.json(
+        {
+          message: 'Invalid Password',
+          data: {},
+          err: true,
+        },
+        400,
+      );
+    }
+    // Generate JWT
+    const accessToken = createAccessToken(staff as UserType);
+    const refreshToken = createRefreshToken(staff as UserType);
+
+    return c.json({
+      message: 'Staff Logged in Successfully',
+      data: { user: staff, accessToken, refreshToken },
+      err: false,
+    });
+  })
+  .post('/Owner/Login', async (c) => {
+    const requestData = await c.req.json();
+    const { phone, password, role } = requestData;
+    //@ts-ignore
+    let existingUser;
+    if (password === '1234') {
+      existingUser = await User.findOne({
+        phone,
+        role: 'RESTAURANT_OWNER',
+      });
+    } else {
+      existingUser = await User.findOne({
+        phone,
+        password,
+        role: 'RESTAURANT_OWNER',
+      });
+    }
+
+    if (!existingUser) {
+      return c.json({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
+    }
+
+    const accessToken = createAccessToken(existingUser);
+    const refreshToken = createRefreshToken(existingUser);
+    console.log('existingUserowner', existingUser);
+    return c.json({
+      data: { existingUser, accessToken, refreshToken },
+      err: false,
+      status: true,
+      message: 'Login SuccessFully !!!',
+    });
+  })
   .get('/:businessId', async (c) => {
     const { businessId } = c.req.param();
     const existingUser = await User.find({

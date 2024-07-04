@@ -20,11 +20,13 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
     "clsx": "^2.1.1",
     "crypto": "^1.0.1",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.7",
     "razorpay": "^2.9.4",
+    "react-error-boundary": "^4.0.13",
     "react-hot-toast": "^2.4.1",
     "tailwind-merge": "^2.3.0",
     "tsx": "4.7.1",
