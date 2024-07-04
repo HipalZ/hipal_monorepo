@@ -13,7 +13,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { secureHeaders } from 'hono/secure-headers';
 import { timeout } from 'hono/timeout';
 import { razorpayWrapper } from '../razorpay_wrapper';
-import { routes } from './routes';
+import { AppType, routes } from './routes';
 import { customTimeoutException } from './utils';
 import './utils/env';
 
@@ -84,4 +84,4 @@ export default {
   fetch: app.fetch,
 };
 
-export { routes } from './routes';
+export type { AppType } from './routes';
