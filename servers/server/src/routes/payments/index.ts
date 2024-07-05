@@ -315,7 +315,7 @@ const paymentsRouter = new Hono()
       const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
 
       if (orderAlreadyExist) {
-        return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
+        return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} }, 400);
       }
 
       const saveOrder = await Order.create({
@@ -330,6 +330,7 @@ const paymentsRouter = new Hono()
         billValue,
         businessId,
         order_id: uniqueOrderId,
+        date: Date.now(),
       });
       let posDiscount = 0;
       if (Number(claimedCoins) > 0) {
