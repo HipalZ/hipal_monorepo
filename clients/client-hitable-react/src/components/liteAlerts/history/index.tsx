@@ -32,10 +32,6 @@ const History = () => {
 
   const handleHistoryData = async () => {
     try {
-      const config = {
-        method: 'GET',
-        url: `/v1/payments/:id/paymentAlertHistory?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
-      };
       const res = await apiRpc.payments[':id'].paymentAlertHistory.$get({
         param: { id: businessId },
         query: {
