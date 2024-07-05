@@ -7,7 +7,7 @@ const orderSchema = new mongoose.Schema<OrderType>({
   total: { type: Number, required: true, default: 0 },
   currency: { type: String, required: true },
   billValue: { type: Number, required: true },
-  receipt: { type: String, required: true },
+  receipt: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
   tips: { type: Number, default: 0 },

@@ -10,8 +10,8 @@ interface DecodedToken extends JwtPayload {
 
 export const authTokenValidator = async (c: Context, next: Next) => {
   try {
-    const accessToken = c.req.header('x-access-token');
-    const refreshToken = c.req.header('x-refresh-token');
+    const accessToken = c.req.header('x_access_token');
+    const refreshToken = c.req.header('x_refresh_token');
 
     if (!accessToken && !refreshToken) {
       return c.json({ status: false, error: true, message: 'Invalid Token!' }, 401);

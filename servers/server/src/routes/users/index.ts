@@ -145,12 +145,15 @@ const usersRouter = new Hono()
     if (existingUser) {
       const accessTokenExistingUser = createAccessToken(existingUser._id.toString(), role);
       const refreshTokenExistingUser = createRefreshToken(existingUser._id.toString(), role);
-      return c.json({
-        status: false,
-        message: 'User already exist',
-        data: { user: existingUser, accessToken: accessTokenExistingUser, refreshToken: refreshTokenExistingUser },
-        err: false,
-      });
+      return c.json(
+        {
+          status: false,
+          message: 'User already exist',
+          data: { user: existingUser, accessToken: accessTokenExistingUser, refreshToken: refreshTokenExistingUser },
+          err: false,
+        },
+        409,
+      );
     }
 
     const user = await User.create(requestData);
