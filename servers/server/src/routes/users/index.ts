@@ -319,8 +319,8 @@ const usersRouter = new Hono()
   })
   .get(
     '/:id/loyaltyUserHistiry',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator(
       'query',
       z.object({
