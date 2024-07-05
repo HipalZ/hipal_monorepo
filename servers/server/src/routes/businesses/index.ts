@@ -5,7 +5,7 @@ import { BusinessSchema, paramsSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 //@ts-ignore
-import z from 'zod';
+import { z } from 'zod';
 const businessesRouter = new Hono()
   .post('/', zValidator('json', BusinessSchema), async (c) => {
     const requestData = await c.req.json();

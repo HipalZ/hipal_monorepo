@@ -1,4 +1,4 @@
-import z from 'zod';
+import { z } from 'zod';
 
 export const acceptOrderSchema = z.object({
   comment: z.string().max(1000).optional(),

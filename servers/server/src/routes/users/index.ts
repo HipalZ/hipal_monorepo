@@ -9,9 +9,8 @@ import { Hono } from 'hono';
 import jwt from 'jsonwebtoken';
 //@ts-ignore
 import bcrypt from 'bcrypt';
-//@ts-ignore
-import { use } from 'hono/jsx';
-import z from 'zod';
+
+import { z } from 'zod';
 const saltRounds = 10;
 async function hashPassword(password: string): Promise<string> {
   const hash = await bcrypt.hash(password, saltRounds);

@@ -10,7 +10,7 @@ export const orderSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(1),
   tableName: z.string().optional(),
-  date: z.coerce.number().positive().default(Date.now()).optional(),
+  date: z.coerce.number().positive().optional(),
 });
 
 export type RazorpayOrderType = z.infer<typeof orderSchema>;
