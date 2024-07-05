@@ -2,12 +2,7 @@ import callwaiter from '@/assets/img/callwaiter.png';
 import { handleRemoveAlert } from '@/components/hooks/commonApi';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-<<<<<<< Updated upstream
-import type { Alert } from '@/components/types/hiClientzData';
-import axios from '@/components/utils/axios';
-=======
 import { Alert } from '@/components/types/hiClientzData';
->>>>>>> Stashed changes
 import { timestampToDateTime } from '@/components/utils/helpers';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
