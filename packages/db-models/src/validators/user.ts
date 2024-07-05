@@ -36,7 +36,7 @@ export const UserAttrs = z.object({
   name: z.string().max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(10).max(10),
-  role: z.array(z.string()).optional(),
+  role: z.string().optional(),
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
   businessId: ObjectIdSchema.optional(),
