@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { z } from 'zod';
+import { string, z } from 'zod';
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -39,6 +39,7 @@ export const UserAttrs = z.object({
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
   businessId: ObjectIdSchema.optional(),
+  _id: z.string().optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;

@@ -8,17 +8,33 @@ import { Hono } from 'hono';
 //@ts-ignore
 import jwt from 'jsonwebtoken';
 //@ts-ignore
-import bcrypt from 'bcrypt';
 
+//@ts-ignore
+
+import argon2 from 'argon2';
 import { z } from 'zod';
-const saltRounds = 10;
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
+
+// Hash a password
 async function hashPassword(password: string): Promise<string> {
-  const hash = await bcrypt.hash(password, saltRounds);
-  return hash;
+  try {
+    const hash = await argon2.hash(password);
+    return hash;
+  } catch (err) {
+    throw new Error('Error hashing password');
+  }
 }
+
+// Verify a password
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
+  try {
+    return await argon2.verify(hash, password);
+  } catch (err) {
+    throw new Error('Error verifying password');
+  }
 }
+
 const addSignUpBonus = async (
   phone: string,
   loyaltyId: string,
@@ -68,30 +84,24 @@ const addSignUpBonus = async (
   return 1;
 };
 
-const createAccessToken = (user: UserType) => {
+const createAccessToken = (id: string, role: string) => {
   return jwt.sign(
     {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      role: user.role || 'HIPAL_CUSTOMER',
+      id: id,
+      role: role,
     },
-    process.env.JWT_SECRET as string,
+    Bun.env.JWT_SECRET as string,
     { expiresIn: '7d' }, // Add 7 day expiration
   );
 };
 
-const createRefreshToken = (user: UserType) => {
+const createRefreshToken = (id: string, role: string) => {
   return jwt.sign(
     {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      role: user.role || 'HIPAL_CUSTOMER',
+      id: id,
+      role: role,
     },
-    process.env.JWT_SECRET as string,
+    Bun.env.JWT_SECRET as string,
     { expiresIn: '30d' }, // Add 30 day expiration
   );
 };
@@ -133,8 +143,8 @@ const usersRouter = new Hono()
     }
 
     if (existingUser) {
-      const accessTokenExistingUser = createAccessToken(existingUser);
-      const refreshTokenExistingUser = createRefreshToken(existingUser);
+      const accessTokenExistingUser = createAccessToken(existingUser._id.toString(), role);
+      const refreshTokenExistingUser = createRefreshToken(existingUser._id.toString(), role);
       return c.json({
         status: false,
         message: 'User already exist',
@@ -145,8 +155,8 @@ const usersRouter = new Hono()
 
     const user = await User.create(requestData);
 
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    const accessToken = createAccessToken(user._id.toString(), role);
+    const refreshToken = createRefreshToken(user._id.toString(), role);
 
     return c.json({
       status: true,
@@ -176,8 +186,8 @@ const usersRouter = new Hono()
       );
     }
     // Generate JWT
-    const accessToken = createAccessToken(staff as UserType);
-    const refreshToken = createRefreshToken(staff as UserType);
+    const accessToken = createAccessToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
+    const refreshToken = createRefreshToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
 
     return c.json({
       message: 'Staff Logged in Successfully',
@@ -189,27 +199,33 @@ const usersRouter = new Hono()
     const requestData = await c.req.json();
     const { phone, password, role } = requestData;
 
-    let existingUser: UserType | null = null;
     if (password === '1234') {
-      existingUser = await User.findOne({
+      const existingUser = await User.findOne({
         phone,
         role: 'RESTAURANT_OWNER',
       });
-    } else {
-      existingUser = await User.findOne({
-        phone,
-        password,
-        role: 'RESTAURANT_OWNER',
+
+      if (!existingUser) {
+        return c.json({ err: true, status: false, message: 'Phone or Password invalid...!' }, 400);
+      }
+      const accessToken = createAccessToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
+      const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
+
+      return c.json({
+        data: { existingUser, accessToken, refreshToken },
+        err: false,
+        status: true,
+        message: 'Login SuccessFully !!!',
       });
     }
+    const existingUser = await User.findOne({
+      phone,
+      password,
+      role: 'RESTAURANT_OWNER',
+    });
+    const accessToken = createAccessToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
+    const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
-    if (!existingUser) {
-      return c.json({ err: true, data: {}, status: false, message: 'Phone or Password invalid...!' });
-    }
-
-    const accessToken = createAccessToken(existingUser);
-    const refreshToken = createRefreshToken(existingUser);
-    console.log('existingUserowner', existingUser);
     return c.json({
       data: { existingUser, accessToken, refreshToken },
       err: false,
@@ -276,8 +292,8 @@ const usersRouter = new Hono()
         loyaltyId,
       });
 
-      const accessToken = createAccessToken(existingUser);
-      const refreshToken = createRefreshToken(existingUser);
+      const accessToken = createAccessToken(existingUser._id?.toString() || '', role);
+      const refreshToken = createRefreshToken(existingUser._id?.toString() || '', role);
       const modifyUser = {
         ...existingUser,
         reward: signUpBonus,
@@ -291,8 +307,8 @@ const usersRouter = new Hono()
       });
     }
 
-    const accessToken = createAccessToken(existingUser);
-    const refreshToken = createRefreshToken(existingUser);
+    const accessToken = createAccessToken(existingUser._id?.toString() || '', role);
+    const refreshToken = createRefreshToken(existingUser._id?.toString() || '', role);
 
     return c.json({
       status: true,
@@ -303,6 +319,8 @@ const usersRouter = new Hono()
   })
   .get(
     '/:id/loyaltyUserHistiry',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator(
       'query',
       z.object({

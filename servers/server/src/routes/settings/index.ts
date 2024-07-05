@@ -6,12 +6,15 @@ import { paramsSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
 
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 const settingsRouter = new Hono().get(
   '/',
 
   zValidator('query', paramsSchema),
   async (c) => {
+    console.log('settingsRouter');
     const { businessId } = c.req.query();
     const existingSettings = await Settings.find({
       businessId,

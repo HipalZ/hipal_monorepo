@@ -18,6 +18,8 @@ import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
 import { createHmac } from 'node:crypto';
 import { date } from 'zod';
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
 const { validateWebhookSignature } = require('../../utils');
 //dates
@@ -39,7 +41,6 @@ const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money:
 //calculate reward
 
 const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
-  console.log('exist', exist, 'reward', reward, 'limit', limit);
   const total = exist + reward;
 
   const sum = Math.min(total, limit);
@@ -212,145 +213,158 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
   return Math.floor(coinsToBeAdded);
 };
 const paymentsRouter = new Hono()
-  .post('/createOrder', zValidator('json', orderSchema), async (c) => {
-    const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-    const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
-    //@ts-ignore
-    const res = await runInTransaction(async (session: ClientSession) => {
-      const existingOrder = await Order.findOne({ phone, role: 'HIPAL_CUSTOMER' }).sort({ date: -1 });
-      const currentDate = Date.now(); // Current timestamp in milliseconds
-      const providedDate = new Date(existingOrder?.date || 0).getTime();
-      const differenceInMinutes = Math.abs(currentDate - providedDate) / (1000 * 60);
-      if (existingOrder && differenceInMinutes < 2) {
+  .post(
+    '/createOrder',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    zValidator('json', orderSchema),
+    async (c) => {
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
+      //@ts-ignore
+      const res = await runInTransaction(async (session: ClientSession) => {
+        const uniqueOrderId = nanoid(15);
+        const response = await razorpayWrapper.client.orders.create({
+          amount: total * 100,
+          currency: currency,
+          receipt: uniqueOrderId,
+        });
+        const saveOrder = await Order.create(
+          [
+            {
+              total,
+              currency,
+              billValue,
+              businessId,
+              receipt: uniqueOrderId,
+              name,
+              phone,
+              claimedCoins: claimedCoins || 0,
+              tableName,
+              order_id: response.id,
+              tips: tips,
+              date: Date.now(),
+            },
+          ],
+          { session },
+        );
+
+        return c.json({ err: false, message: 'Order created successfully', data: response.id });
+      });
+
+      return c.json({ err: false, message: 'Order created successfully', data: res });
+    },
+  )
+  .post(
+    '/reviews',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    zValidator('json', ReviewsSchema),
+    async (c) => {
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const { businessId, reviewerPhone, reviewRating, order_id } = requestData || {};
+
+      if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
         return c.json({
           err: true,
           data: {},
-          message: 'You have already placed an order. Please wait for 2 minutes before placing another order',
+          message: 'businessId, reviewerPhone, reviewRating, order_id is required',
         });
       }
+
+      const review = await Reviews.findOne({ order_id: order_id });
+
+      if (review) {
+        return c.json({
+          err: true,
+          message: 'Review already added',
+          data: {},
+        });
+      }
+
+      const addReview = await Reviews.create(requestData);
+
+      if (!addReview) {
+        return c.json({
+          err: true,
+          message: 'Review not added',
+          data: {},
+        });
+      }
+
+      return c.json({ err: false, message: '', data: addReview._id, id: addReview._id });
+    },
+  )
+  .post(
+    '/createOfflineOrder',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    zValidator('json', orderSchema),
+    async (c) => {
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
       const uniqueOrderId = nanoid(15);
-      const response = await razorpayWrapper.client.orders.create({
-        amount: total * 100,
-        currency: currency,
+
+      const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
+
+      if (orderAlreadyExist) {
+        return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
+      }
+
+      const saveOrder = await Order.create({
+        total,
+        currency,
         receipt: uniqueOrderId,
+        name,
+        phone,
+        claimedCoins: claimedCoins || 0,
+        tableName,
+        tips,
+        billValue,
+        businessId,
+        order_id: uniqueOrderId,
       });
-      const saveOrder = await Order.create(
-        [
-          {
-            total,
-            currency,
-            billValue,
-            businessId,
-            receipt: uniqueOrderId,
-            name,
-            phone,
-            claimedCoins: claimedCoins || 0,
-            tableName,
-            order_id: response.id,
-            tips: tips,
-            date: Date.now(),
-          },
-        ],
-        { session },
-      );
+      let posDiscount = 0;
+      if (Number(claimedCoins) > 0) {
+        posDiscount = calculateDiscount(Number(billValue), Number(claimedCoins), Number(total));
+      }
+      await PaymentAlert.create({
+        businessId: businessId,
+        alertType: 'OFFLINE',
+        order_id: saveOrder?._id,
+        status: 'SUCCESS',
+        tableName: tableName,
+        coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
+        message: `Paid ${total}`,
+        date: Date.now(),
+        posDiscount: posDiscount,
 
-      return c.json({ err: false, message: 'Order created successfully', data: response.id });
-    });
-
-    return c.json({ err: false, message: 'Order created successfully', data: res });
-  })
-  .post('/reviews', zValidator('json', ReviewsSchema), async (c) => {
-    const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-    const { businessId, reviewerPhone, reviewRating, order_id } = requestData || {};
-
-    if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
-      return c.json({
-        err: true,
-        data: {},
-        message: 'businessId, reviewerPhone, reviewRating, order_id is required',
+        // comment : payload.payment.entity.notes.comment
       });
-    }
 
-    const review = await Reviews.findOne({ order_id: order_id });
+      return c.json({ err: false, message: 'Order created successfully', data: { order_id: saveOrder._id } });
+    },
+  )
+  .post(
+    '/validPayment',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    zValidator('json', validatePaymentSchema),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { response } = requestData;
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
 
-    if (review) {
-      return c.json({
-        err: true,
-        message: 'Review already added',
-        data: {},
-      });
-    }
+      const signature = createHmac('sha256', Bun.env.RAZORPAY_SECRET as string)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest('hex');
 
-    const addReview = await Reviews.create(requestData);
-
-    if (!addReview) {
-      return c.json({
-        err: true,
-        message: 'Review not added',
-        data: {},
-      });
-    }
-
-    return c.json({ err: false, message: '', data: addReview._id, id: addReview._id });
-  })
-  .post('/createOfflineOrder', zValidator('json', orderSchema), async (c) => {
-    const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-    const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
-    const uniqueOrderId = nanoid(15);
-
-    const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
-
-    if (orderAlreadyExist) {
-      return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
-    }
-
-    const saveOrder = await Order.create({
-      total,
-      currency,
-      receipt: uniqueOrderId,
-      name,
-      phone,
-      claimedCoins: claimedCoins || 0,
-      tableName,
-      tips,
-      billValue,
-      businessId,
-      order_id: uniqueOrderId,
-    });
-    let posDiscount = 0;
-    if (Number(claimedCoins) > 0) {
-      posDiscount = calculateDiscount(Number(billValue), Number(claimedCoins), Number(total));
-    }
-    await PaymentAlert.create({
-      businessId: businessId,
-      alertType: 'OFFLINE',
-      order_id: saveOrder?._id,
-      status: 'SUCCESS',
-      tableName: tableName,
-      coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
-      message: `Paid ${total}`,
-      date: Date.now(),
-      posDiscount: posDiscount,
-
-      // comment : payload.payment.entity.notes.comment
-    });
-
-    return c.json({ err: false, message: 'Order created successfully', data: { order_id: saveOrder._id } });
-  })
-  .post('/validPayment', zValidator('json', validatePaymentSchema), async (c) => {
-    const requestData = await c.req.json();
-    const { response } = requestData;
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
-
-    const signature = createHmac('sha256', Bun.env.RAZORPAY_SECRET as string)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-
-    if (signature === razorpay_signature) {
-      return c.json({ err: false, message: 'Payment is valid', data: razorpay_order_id });
-    }
-    return c.json({ err: true, message: 'Payment is not valid' });
-  })
+      if (signature === razorpay_signature) {
+        return c.json({ err: false, message: 'Payment is valid', data: razorpay_order_id });
+      }
+      return c.json({ err: true, message: 'Payment is not valid' });
+    },
+  )
   .post('/razorpay-webhook', zValidator('json', validatePaymentSchema), async (c) => {
     //@ts-ignore
     const res = await runInTransaction(async (session: ClientSession) => {
@@ -515,17 +529,23 @@ const paymentsRouter = new Hono()
     });
     return c.json({ message: 'Order verified successfully', err: false, data: alert });
   })
-  .get('/:id/paymentAlerts', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, alertType } = c.req.query();
+  .get(
+    '/:id/paymentAlerts',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, alertType } = c.req.query();
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
+      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
 
-    return c.json({
-      err: false,
-      data: existingPaymentAlerts,
-      message: 'existing payment alerts',
-    });
-  })
+      return c.json({
+        err: false,
+        data: existingPaymentAlerts,
+        message: 'existing payment alerts',
+      });
+    },
+  )
   .get(
     '/:id/orders',
 
@@ -541,354 +561,400 @@ const paymentsRouter = new Hono()
       });
     },
   )
-  .get('/:id/orders/:orderId', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, alertType } = c.req.query();
+  .get(
+    '/:id/orders/:orderId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, alertType } = c.req.query();
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
+      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
 
-    return c.json({
-      data: existingPaymentAlerts,
-      status: 200,
-      err: false,
-    });
-  })
-  .get('/:id/offlineAlerts', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, orderId } = c.req.query();
+      return c.json({
+        data: existingPaymentAlerts,
+        status: 200,
+        err: false,
+      });
+    },
+  )
+  .get(
+    '/:id/offlineAlerts',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, orderId } = c.req.query();
 
-    const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType: ['OFFLINE', 'WAITER'], isAccepted: false })
-      .sort({ _id: -1 })
-      .populate('order_id');
+      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType: ['OFFLINE', 'WAITER'], isAccepted: false })
+        .sort({ _id: -1 })
+        .populate('order_id');
 
-    return c.json({
-      data: existingPaymentAlerts,
-      status: 200,
-      err: false,
-    });
-  })
-  .put('/:pid/order/:alertId', zValidator('param', paramsSchema), zValidator('json', acceptOrderSchema), async (c) => {
-    const { alertId } = c.req.param();
-    const requestData = await c.req.json();
-    const { comment, waiterName } = requestData;
-    //@ts-ignore
-    const res = await runInTransaction(async (session: ClientSession) => {
-      const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
-        '_id alertType isAccepted order_id businessId',
-      );
-
-      if (!alert) {
-        return c.json({ message: 'Alert not found', err: true, data: {} });
-      }
-
-      if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
-        const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isAccepted: true, comment, waiterName }, { new: true, session }).populate(
-          'order_id',
+      return c.json({
+        data: existingPaymentAlerts,
+        status: 200,
+        err: false,
+      });
+    },
+  )
+  .put(
+    '/:pid/order/:alertId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('param', paramsSchema),
+    zValidator('json', acceptOrderSchema),
+    async (c) => {
+      const { alertId } = c.req.param();
+      const requestData = await c.req.json();
+      const { comment, waiterName } = requestData;
+      //@ts-ignore
+      const res = await runInTransaction(async (session: ClientSession) => {
+        const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
+          '_id alertType isAccepted order_id businessId',
         );
-        return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
-      }
 
-      if (alert.alertType === 'OFFLINE') {
-        if (alert && !alert.isAccepted) {
-          const order = await Order.findById(alert.order_id, null, { session });
-
-          await Payment.create(
-            [
-              {
-                businessId: alert.businessId,
-                order_id: order?._id,
-                total: order?.total,
-                mode: 'offline',
-                status: 'SUCCESS',
-                paymentMode: 'offline',
-                customerName: order?.name,
-                claimedCoins: order?.claimedCoins,
-                customerPhone: order?.phone,
-                billValue: order?.billValue,
-                tips: order?.tips,
-                tableName: order?.tableName,
-                waiterName,
-              },
-            ],
-            { session },
-          );
-
-          if (order?.claimedCoins && order?.claimedCoins > 0) {
-            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
-            await removeCoins(
-              Number(order?.claimedCoins),
-              order.tableName || '',
-              order?.phone || '',
-              Number(order?.total),
-              existingLoyalty?.loyaltyId as string,
-              Number(order?.billValue),
-              session,
-            );
-          }
-
-          if (order) {
-            const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
-            const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
-            await addCoins(
-              cashBack,
-              order?.phone || '',
-              order.tableName || '',
-              order.businessId.toString(),
-              Number(order.total),
-              existingLoyalty?.loyaltyId as string,
-              Number(order.billValue),
-              session,
-            );
-
-            await LoyaltyCoinsInfo.findOneAndUpdate(
-              { businessId: order.businessId.toString() },
-
-              {
-                $inc: {
-                  coinzIssued: cashBack,
-                  coinzRedeemed: Number(order.claimedCoins),
-                },
-              },
-              { upsert: true, session },
-            );
-          }
+        if (!alert) {
+          return c.json({ message: 'Alert not found', err: true, data: {} });
         }
 
-        const pinCode = Math.floor(1000 + Math.random() * 9000);
-        const updateAlert = await PaymentAlert.findByIdAndUpdate(
-          alertId,
-          { isAccepted: true, completionCode: pinCode, comment, waiterName },
-          { new: true, session },
-        ).populate('order_id');
+        if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
+          const updateAlert = await PaymentAlert.findByIdAndUpdate(
+            alertId,
+            { isAccepted: true, comment, waiterName },
+            { new: true, session },
+          ).populate('order_id');
+          return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        }
 
-        return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        if (alert.alertType === 'OFFLINE') {
+          if (alert && !alert.isAccepted) {
+            const order = await Order.findById(alert.order_id, null, { session });
+
+            await Payment.create(
+              [
+                {
+                  businessId: alert.businessId,
+                  order_id: order?._id,
+                  total: order?.total,
+                  mode: 'offline',
+                  status: 'SUCCESS',
+                  paymentMode: 'offline',
+                  customerName: order?.name,
+                  claimedCoins: order?.claimedCoins,
+                  customerPhone: order?.phone,
+                  billValue: order?.billValue,
+                  tips: order?.tips,
+                  tableName: order?.tableName,
+                  waiterName,
+                },
+              ],
+              { session },
+            );
+
+            if (order?.claimedCoins && order?.claimedCoins > 0) {
+              const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+              await removeCoins(
+                Number(order?.claimedCoins),
+                order.tableName || '',
+                order?.phone || '',
+                Number(order?.total),
+                existingLoyalty?.loyaltyId as string,
+                Number(order?.billValue),
+                session,
+              );
+            }
+
+            if (order) {
+              const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
+              const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+              await addCoins(
+                cashBack,
+                order?.phone || '',
+                order.tableName || '',
+                order.businessId.toString(),
+                Number(order.total),
+                existingLoyalty?.loyaltyId as string,
+                Number(order.billValue),
+                session,
+              );
+
+              await LoyaltyCoinsInfo.findOneAndUpdate(
+                { businessId: order.businessId.toString() },
+
+                {
+                  $inc: {
+                    coinzIssued: cashBack,
+                    coinzRedeemed: Number(order.claimedCoins),
+                  },
+                },
+                { upsert: true, session },
+              );
+            }
+          }
+
+          const pinCode = Math.floor(1000 + Math.random() * 9000);
+          const updateAlert = await PaymentAlert.findByIdAndUpdate(
+            alertId,
+            { isAccepted: true, completionCode: pinCode, comment, waiterName },
+            { new: true, session },
+          ).populate('order_id');
+
+          return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+        }
+        return c.json({ message: 'Invalid alert type', err: true, data: {} });
+      });
+
+      return c.json({ message: 'Order accepted successfully', err: false, data: res });
+    },
+  )
+  .put(
+    '/:pid/rejectOrder/:alertId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('param', paramsSchema),
+    async (c) => {
+      const { alertId } = c.req.param();
+      const requestData = await c.req.json();
+      const { waiterName } = requestData;
+      const alert = await PaymentAlert.findById(alertId);
+      const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
+      const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
+
+      const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true, waiterName }, { new: true }).populate(
+        'order_id',
+      );
+
+      return c.json({ message: 'Order rejected successfully', err: false, data: updateAlert });
+    },
+  )
+  .get(
+    '/:id/paymentAlertHistory',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query('pageNumber') as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'from date should be less than to date',
+        });
       }
-      return c.json({ message: 'Invalid alert type', err: true, data: {} });
-    });
+      if (!from && !to) {
+        const existingPaymentAlerts = await PaymentAlert.find({
+          businessId,
+          isAccepted: true,
+          isRejected: false,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate('order_id');
 
-    return c.json({ message: 'Order accepted successfully', err: false, data: res });
-  })
-  .put('/:pid/rejectOrder/:alertId', zValidator('param', paramsSchema), async (c) => {
-    const { alertId } = c.req.param();
-    const requestData = await c.req.json();
-    const { waiterName } = requestData;
-    const alert = await PaymentAlert.findById(alertId);
-    const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
-    const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
+        return c.json({
+          data: existingPaymentAlerts,
+          status: 200,
+          err: false,
+        });
+      }
 
-    const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true, waiterName }, { new: true }).populate(
-      'order_id',
-    );
+      if (from && to) {
+        const existingPaymentAlerts = await PaymentAlert.find({
+          businessId,
+          isAccepted: true,
+          isRejected: false,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate('order_id');
 
-    return c.json({ message: 'Order rejected successfully', err: false, data: updateAlert });
-  })
-  .get('/:id/paymentAlertHistory', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, from, to } = c.req.query();
-    const fromDate = Number(from);
-    const toDate = Number(to);
-    const PAGE_SIZE = 20;
-    const pageNumber = c.req.query('pageNumber') as string;
-    const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
-    if (fromDate > toDate) {
+        return c.json({
+          data: existingPaymentAlerts,
+          status: 200,
+          err: false,
+        });
+      }
       return c.json({
         err: true,
         data: {},
-        message: 'from date should be less than to date',
+        message: 'Invalid date range',
       });
-    }
-    if (!from && !to) {
-      const existingPaymentAlerts = await PaymentAlert.find({
-        businessId,
-        isAccepted: true,
-        isRejected: false,
-        date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
+    },
+  )
+  .get(
+    '/:id/salesDashboard',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'from date should be less than to date',
+        });
+      }
 
-      return c.json({
-        data: existingPaymentAlerts,
-        status: 200,
-        err: false,
-      });
-    }
+      const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({ businessId }).select('coinzIssued coinzRedeemed');
+      if (!from && !to) {
+        const existingPayments = await Payment.find({
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        }).select('total claimedCoins paymentMode');
+        const totalSale = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment.total ?? 0), 0);
+        const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
 
-    if (from && to) {
-      const existingPaymentAlerts = await PaymentAlert.find({
-        businessId,
-        isAccepted: true,
-        isRejected: false,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
+        const totalOnlineSale = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.paymentMode === 'online' ? payment.total ?? 0 : 0),
+          0,
+        );
 
-      return c.json({
-        data: existingPaymentAlerts,
-        status: 200,
-        err: false,
-      });
-    }
-    return c.json({
-      err: true,
-      data: {},
-      message: 'Invalid date range',
-    });
-  })
-  .get('/:id/salesDashboard', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, from, to } = c.req.query();
-    const fromDate = Number(from);
-    const toDate = Number(to);
-    if (fromDate > toDate) {
+        const totalOfflineSale = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.paymentMode === 'offline' ? payment.total ?? 0 : 0),
+          0,
+        );
+
+        return c.json({
+          err: false,
+          data: {
+            totalSale,
+            totalDiscount: totalCoins,
+            totalOnlineSale,
+            totalOfflineSale,
+            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzRedeemed: totalCoins,
+          },
+          message: 'existing payment',
+        });
+      }
+      if (from && to) {
+        const existingPayments = await Payment.find({
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        }).select('total claimedCoins paymentMode');
+        const totalSale = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment.total ?? 0), 0);
+        const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
+
+        const totalOnlineSale = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.paymentMode === 'online' ? payment.total ?? 0 : 0),
+          0,
+        );
+
+        const totalOfflineSale = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.paymentMode === 'offline' ? payment.total ?? 0 : 0),
+          0,
+        );
+
+        return c.json({
+          err: false,
+          data: {
+            totalSale,
+            totalDiscount: totalCoins,
+            totalOnlineSale,
+            totalOfflineSale,
+            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzRedeemed: totalCoins,
+          },
+          message: 'existing payment',
+        });
+      }
       return c.json({
         err: true,
         data: {},
-        message: 'from date should be less than to date',
+        message: 'Invalid date range',
       });
-    }
+    },
+  )
 
-    const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({ businessId }).select('coinzIssued coinzRedeemed');
-    if (!from && !to) {
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
-        },
-      }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment.total ?? 0), 0);
-      const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
+  .get(
+    '/:id/bills',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    zValidator('query', paramsSchema),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query('pageNumber') as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      const totalOnlineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment.paymentMode === 'online' ? payment.total ?? 0 : 0),
-        0,
-      );
+      if (!from && !to) {
+        const existingPayments = await Payment.find({
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate('order_id');
+        const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
-      const totalOfflineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment.paymentMode === 'offline' ? payment.total ?? 0 : 0),
-        0,
-      );
+        return c.json({
+          err: false,
+          data: {
+            totalSale,
+            existingPayments,
+          },
+          message: 'existing payment',
+        });
+      }
+      if (from && to) {
+        const existingPayments = await Payment.find({
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate('order_id');
+        const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
 
+        return c.json({
+          err: false,
+          data: {
+            totalSale,
+            existingPayments,
+          },
+          message: 'existing payment',
+        });
+      }
       return c.json({
-        err: false,
-        data: {
-          totalSale,
-          totalDiscount: totalCoins,
-          totalOnlineSale,
-          totalOfflineSale,
-          coinzIssued: loyaltyCoinInfo?.coinzIssued,
-          coinzRedeemed: totalCoins,
-        },
-        message: 'existing payment',
+        err: true,
+        data: {},
+        message: 'Invalid date range',
       });
-    }
-    if (from && to) {
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      }).select('total claimedCoins paymentMode');
-      const totalSale = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment.total ?? 0), 0);
-      const totalCoins = existingPayments.reduce((acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0), 0);
-
-      const totalOnlineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment.paymentMode === 'online' ? payment.total ?? 0 : 0),
-        0,
-      );
-
-      const totalOfflineSale = existingPayments.reduce(
-        (acc, payment: PaymentType) => acc + (payment.paymentMode === 'offline' ? payment.total ?? 0 : 0),
-        0,
-      );
-
-      return c.json({
-        err: false,
-        data: {
-          totalSale,
-          totalDiscount: totalCoins,
-          totalOnlineSale,
-          totalOfflineSale,
-          coinzIssued: loyaltyCoinInfo?.coinzIssued,
-          coinzRedeemed: totalCoins,
-        },
-        message: 'existing payment',
-      });
-    }
-    return c.json({
-      err: true,
-      data: {},
-      message: 'Invalid date range',
-    });
-  })
-  .get('/:id/bills', zValidator('query', paramsSchema), async (c) => {
-    const { businessId, from, to } = c.req.query();
-    const fromDate = Number(from);
-    const toDate = Number(to);
-    const PAGE_SIZE = 20;
-    const pageNumber = c.req.query('pageNumber') as string;
-    const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
-
-    if (!from && !to) {
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: startOfToday.getTime(),
-          $lte: endOfToday.getTime(),
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
-
-      return c.json({
-        err: false,
-        data: {
-          totalSale,
-          existingPayments,
-        },
-        message: 'existing payment',
-      });
-    }
-    if (from && to) {
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      })
-        .sort({ _id: -1 })
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .populate('order_id');
-      const totalSale = existingPayments.reduce((acc, payment) => acc + (payment.total ?? 0), 0);
-
-      return c.json({
-        err: false,
-        data: {
-          totalSale,
-          existingPayments,
-        },
-        message: 'existing payment',
-      });
-    }
-    return c.json({
-      err: true,
-      data: {},
-      message: 'Invalid date range',
-    });
-  });
+    },
+  );
 
 export default paymentsRouter;
