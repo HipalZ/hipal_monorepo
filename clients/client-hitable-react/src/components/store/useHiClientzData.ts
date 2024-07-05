@@ -1,7 +1,6 @@
 import { CustomRole, HiClientzData } from '@/components/types/hiClientzData';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createWithEqualityFn } from 'zustand/traditional';
-import {shallow} from 'zustand/shallow';
 
 interface HiClientzStore {
   captainData: HiClientzData;
@@ -16,7 +15,7 @@ interface HiClientzStore {
   setPhoneNumber: (value: string) => void;
 }
 
-const useShallowHiClientZ = createWithEqualityFn(
+export const useHiClientZ = create(
   persist<HiClientzStore>(
     (set) => ({
       captainData: {} as HiClientzData,
@@ -38,9 +37,4 @@ const useShallowHiClientZ = createWithEqualityFn(
       getStorage: () => localStorage,
     },
   ),
-  shallow
 );
-
-export const useHiClientZ = <T>(selector: (state: HiClientzStore) => T) => {
-  return useShallowHiClientZ(selector, shallow);
-};

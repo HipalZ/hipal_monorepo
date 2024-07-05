@@ -3,13 +3,12 @@ import { Howl } from 'howler';
 import { useEffect, useState } from 'react';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
-import axios from './components/utils/axios';
 import MainRouter from './routes';
+import { apiRpc } from '@hi/common';
 
 function App() {
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
-  const triggerSound = useLiteStore((s)=>s.triggerSound);
-  const businessId = selectedBiz?.businessId?._id;
+  const triggerSound = useLiteStore((s) => s.triggerSound);
   const {
     setLoading,
     setOnlineCount,
@@ -20,35 +19,47 @@ function App() {
     setOfflineAlertData,
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
-  } = useLiteStore((s)=>({
-    setLoading : s.setLoading,
-    setOnlineCount : s.setOnlineCount,
-    onlineCount : s.onlineCount,
-    offlineCount : s.offlineCount,
-    setOfflineCount : s.setOfflineCount,
-    setOnlineAlertData : s.setOnlineAlertData,
-    setOfflineAlertData : s.setOfflineAlertData,
-    setRefetchOnlineAlerts : s.setRefetchOnlineAlerts,
-    setRefetchOfflineAlerts : s.setRefetchOfflineAlerts,
-  }));
+  } = useLiteStore();
+
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
+  const businessId = selectedBiz?.businessId?._id;
+  // const fetchAlerts = async (alertType: string) => {
+  //   const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
+  //   setLoading(true);
+  //   try {
+  //     const config = {
+  //       method: 'GET',
+  //       url: `/v1/payments/:id/${url}?businessId=${businessId}&alertType=${alertType}`,
+  //     };
+  //     const response = await axios(config);
+  //     if (response.status === 200) {
+  //       return response.data.data;
+  //     } else {
+  //       return [];
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     return [];
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchAlerts = async (alertType: string) => {
-    const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
+    const endpoint = alertType === 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
     setLoading(true);
     try {
-      const config = {
-        method: 'GET',
-        url: `/v1/payments/:id/${url}?businessId=${businessId}&alertType=${alertType}`,
-      };
-      const response = await axios(config);
-      if (response.status === 200) {
-        return response.data.data;
-      } else {
-        return [];
-      }
+      const res = await apiRpc.payments[':id'][endpoint].$get({
+        query:{
+          businessId,
+          alertType
+        }
+      })
+      const response = await res.json() || [];
+      return response.data || [];
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return [];
     } finally {
       setLoading(false);
@@ -60,7 +71,6 @@ function App() {
     setOnlineAlertData(data);
     setOnlineCount(data.length);
     if (data.length > onlineCount) {
-      // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
         autoplay: triggerSound,
@@ -80,7 +90,6 @@ function App() {
     setOfflineAlertData(data);
     setOfflineCount(data.length);
     if (data.length > offlineCount) {
-      // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
         autoplay: triggerSound,

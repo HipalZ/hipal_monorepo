@@ -1,6 +1,5 @@
-import { createWithEqualityFn } from 'zustand/traditional';
-import {shallow} from 'zustand/shallow';
 import { persist } from 'zustand/middleware';
+import { create } from 'zustand';
 
 interface IuserToken {
   accessToken: string;
@@ -9,7 +8,7 @@ interface IuserToken {
   setRefreshToken: (data: string) => void;
 }
 
-const useShallowToken = createWithEqualityFn(
+export const useUserToken = create(
   persist<IuserToken>(
     (set) => ({
       accessToken: '',
@@ -25,9 +24,5 @@ const useShallowToken = createWithEqualityFn(
       name: 'token-data',
       getStorage: () => localStorage,
     },
-  ),shallow
+  ),
 );
-
-export const useUserToken = <T>(selector: (state: IuserToken) => T) => {
-  return useShallowToken(selector, shallow)
-}

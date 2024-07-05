@@ -1,6 +1,5 @@
-import { createWithEqualityFn } from 'zustand/traditional';
-import {shallow} from 'zustand/shallow';
 import {Alert, NavItemTypes, ISalesLite} from '@/components/types/hiClientzData';
+import { create } from 'zustand';
 
 interface ILiteStore {
   // handling popup views
@@ -63,7 +62,7 @@ interface ILiteStore {
   setTriggerSound : (value : boolean) => void;
 }
 
-const useShallowLiteStore = createWithEqualityFn<ILiteStore>((set) => ({
+export const useLiteStore = create<ILiteStore>((set) => ({
   clickViewMore : false,
   setClickViewMore : (value) => set({clickViewMore : value}),
   selectedNavItem : "online",
@@ -100,8 +99,5 @@ const useShallowLiteStore = createWithEqualityFn<ILiteStore>((set) => ({
   removeOnlineCount : () => set((state) => ({onlineCount : state.onlineCount - 1})),
   triggerSound : false,
   setTriggerSound : (value) => set({triggerSound : value}),
-}),shallow);
-
-export const useLiteStore = <T>(selector: (state: ILiteStore) => T) => {
-  return useShallowLiteStore(selector, shallow);
-};
+}),
+)

@@ -37,10 +37,10 @@ function PopUp({
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 translate-y-full"
           >
-            <DialogPanel className={cn("relative w-full max-w-md shadow-md bg-base-100 rounded-t-[1.5rem]", status?.length > 0 ? ' h-[85vh]' : '')}>
+            <DialogPanel className={cn("relative w-full max-w-md shadow-md bg-white rounded-t-[1.5rem]", status?.length > 0 ? ' h-[85vh]' : '')}>
               <div className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce left-1/2", status?.length > 0 ? '' : '-top-8')}>
                 <HiX
-                  className="absolute -top-10 p-2 text-4xl text-black rounded-full cursor-pointer bg-base-100"
+                  className="absolute -top-10 p-2 text-4xl text-black rounded-full cursor-pointer bg-white"
                   onClick={onClose}
                 />
                 {status && status.length > 0 ?

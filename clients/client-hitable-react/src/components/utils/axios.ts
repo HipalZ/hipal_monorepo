@@ -13,9 +13,11 @@ axios.interceptors.request.use(
       return;
     }
 
-    const { accessToken, refreshToken } = useUserToken.getState();
-    const accessTokenLite = useHiClientZ.getState().accessToken;
-    const refreshTokenLite = useHiClientZ.getState().refreshToken;
+    const accessToken = useUserToken((s) => s.accessToken);
+    const refreshToken = useUserToken((s)=>s.refreshToken);
+    
+    const accessTokenLite = useHiClientZ((s)=>s.accessToken)
+    const refreshTokenLite = useHiClientZ((s)=>s.refreshToken)
     if (accessToken && refreshToken) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
       config.headers['x-refresh-with'] = refreshToken;

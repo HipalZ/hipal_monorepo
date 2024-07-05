@@ -3,25 +3,22 @@ import avatar from "@/assets/img/avatar.png";
 import { memo, startTransition } from 'react';
 import { cn } from '@/components/utils/helpers';
 import { useNavigate } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
 
 const ProfileHeader = (props: { position: boolean }) => {
     const { position } = props;
     const navigate = useNavigate()
-    const params = useParams();
-    const businessId = params.businessId;
     const defaultClass = "group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold"
 
     const redirectDashboard = () =>{
         startTransition(()=>{
-            navigate(`/l/${businessId}/businesses`)
+            navigate(`/businesses`)
         })
     }
 
     const handleLogout = () =>{
         localStorage.clear();
         startTransition(()=>{
-            navigate(`/l/${businessId}/login`)
+            navigate(`/`)
         })
     }
 

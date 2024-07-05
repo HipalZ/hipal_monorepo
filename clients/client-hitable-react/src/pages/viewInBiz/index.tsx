@@ -22,7 +22,7 @@ const ViewInBizMemo = () => {
 
   const navigateToBiz = () => {
     startTransition(() => {
-      navigate(`/l/${businessId}/alerts`);
+      navigate(`/${businessId}/alerts`);
     });
   };
 
@@ -45,7 +45,7 @@ const ViewInBizMemo = () => {
           <span className="wave-hand text-[2rem]">👋</span>
           <h1 className="text-3xl font-semibold">{captainData?.name}</h1>
           &nbsp;
-          <img className="border border-black rounded-full border-1" src={hipalLogo} alt="logo" width={125} height={125} />
+          <img className="border border-black rounded-full border-1" src={selectedBiz?.businessId?.logo || hipalLogo} alt="logo" width={125} height={125} />
           <h6 className="mt-4 mb-2 text-xl font-semibold">{selectedBiz?.businessId?.businessName}</h6>
           <p className="w-[18rem] text-center">{selectedBiz?.businessId?.address}</p>
         </article>

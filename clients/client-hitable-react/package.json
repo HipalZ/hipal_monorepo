@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-   "dev": "dotenv -e ./env/.env.local vite --host",
+    "dev": "dotenv -e ./env/.env.local vite --host",
     "dev:test": "dotenv -e ./env/.env.test vite --host",
     "bundle:development": "dotenv -e .env bun run bundle",
     "bundle": "vite build",

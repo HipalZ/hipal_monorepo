@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { memo, useCallback, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
 import HistoryCard from './historyCard';
+import { apiRpc } from '@hi/common';
 
 const History = () => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -35,10 +36,19 @@ const History = () => {
         method: 'GET',
         url: `/v1/payments/:id/paymentAlertHistory?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}&pageNumber=${pageNumber}`,
       };
-      const response = await axios(config);
-      if (response.status === 200) {
-        setHistoryData(response.data.data);
-        return response.data.data;
+      const res = await apiRpc.payments[':id'].paymentAlertHistory.$get({
+        param: { id: businessId },
+        query: {
+          businessId: businessId,
+          from: timeStampStart,
+          to: timeStampEnd,
+          pageNumber: pageNumber,
+        },
+      })
+      const response = await res.json();
+      if (res.status === 200) {
+        setHistoryData(response.data);
+        return response.data;
       } else {
         return [];
       }

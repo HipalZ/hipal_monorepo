@@ -6,41 +6,52 @@ import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png';
 import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
-import axios from '@/components/utils/axios';
-import { memo, startTransition } from 'react';
+import { useLiteStore } from '@/components/store/useLiteStore';
+import {apiRpc} from '@hi/common'
+import { memo, startTransition, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from "react-hot-toast";
-
+//tes
 const LoginMemo = () => {
+  const [password, setPassword] = useState<string>('');
+  const { setLoading } = useLiteStore();
+  // store
+  const { setCaptainData, setAccessToken, setRefreshToken, phoneNumber, setPhoneNumber } = useHiClientZ();
   const navigate = useNavigate();
-  const { phoneNumber, setPhoneNumber } = useHiClientZ();
-  const result = async () => {
-    try {
-      const config = {
-        method: 'POST',
-        url: '/v1/users/chef/Login?withBusinessId=false',
-        data: {
-          phone: phoneNumber,
-        },
-      };
 
-      const response = await axios(config);
-      console.log('res', response);
-
-      if (response.status === 200) {
-        toast.success(`Hi ${response?.data?.data?.name}`);
-        startTransition(() => {
-          navigate(`/l/${response?.data?.data?.customRole?.[0].businessId}/login`);
-        });
-      }
-    } catch (err) {
-      console.log(err);
-      toast.error('User not registered as staff!');
-    }
-  };
   //methods
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(e.target.value);
+  };
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
+  //apis
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await apiRpc.users[':id'].stafflogin.$post({
+        json: {
+          phone: phoneNumber,
+          password: password,
+        },
+      })
+      const response = await res.json();
+      if (res.status===200) {
+        setCaptainData(response.data.user);
+        setAccessToken(response.data.accessToken);
+        setRefreshToken(response.data.refreshToken);
+        toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
+        startTransition(() => {
+          navigate(`/businesses`);
+        });
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,8 +86,6 @@ const LoginMemo = () => {
           </section>
         </div>
       </section>
-      <div className="text-2xl">Welcome to HipalZ</div>
-      &nbsp;
       <section className="relative mb-[5.89rem] ml-0 mr-0 mt-[2.5rem] max-w-[30rem] space-y-6 px-[2rem]">
         <div className="relative">
           <input
@@ -97,18 +106,36 @@ const LoginMemo = () => {
             Your Phone Number
           </label>
         </div>
+        <div className="relative">
+          <input
+            onChange={handlePasswordChange}
+            type="password"
+            id="floating_outlined4"
+            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            placeholder=" "
+            maxLength={4}
+            minLength={4}
+            required
+          />
+          <label
+            htmlFor="floating_outlined4"
+            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
+          >
+            Your Password
+          </label>
+        </div>
       </section>
       <article className="mb-5 flex justify-center">
         <button
-          onClick={result}
-          className="text-white on_active_bounce text-base-100 fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+          onClick={handleLogin}
+          className="on_active_bounce text-white fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
         >
           Get Started
         </button>
       </article>
     </center>
-  )
-}
+  );
+};
 
 const Login = memo(LoginMemo);
 export default Login;

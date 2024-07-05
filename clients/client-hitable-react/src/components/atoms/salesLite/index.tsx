@@ -1,12 +1,12 @@
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import useTimings from "@/components/store/useTimings";
-import axios from "@/components/utils/axios";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react"
 import { CiGlobe } from "react-icons/ci";
 import DateRangePickerMemo from "../dateRangePicker";
 import './index.css'
+import { apiRpc } from "@hi/common";
 
 const SalesLite = () => {
     const { selectedBiz } = useHiClientZ((s)=>({
@@ -22,17 +22,22 @@ const SalesLite = () => {
         timeStampStart: s.timeStampStart,
         timeStampEnd: s.timeStampEnd,
     }))
-    const handleHistoryData = async () => {
+    const handleSales = async () => {
         setLoading(true)
         try {
-            const config = {
-                method: "GET",
-                url: `/v1/payments/:id/salesDashboard?businessId=${businessId}&from=${timeStampStart}&to=${timeStampEnd}`,
-            };
-            const response = await axios(config);
-            if (response.status === 200) {
-                setSalesData(response?.data?.data)
-                return response.data.data;
+            const res = await apiRpc.payments[":id"].salesDashboard.$get({
+                param: {id: businessId},
+                query: {
+                    businessId: businessId,
+                    from: timeStampStart,
+                    to: timeStampEnd,
+                }
+            })
+            const response = await res.json();
+            console.log('ress',response)
+            if (res.status === 200) {
+                setSalesData(response?.data)
+                return response.data;
             } else {
                 return {};
             }
@@ -46,7 +51,7 @@ const SalesLite = () => {
 
     useQuery({
         queryKey: ['onlineAlerts', businessId, timeStampStart, timeStampEnd],
-        queryFn: handleHistoryData,
+        queryFn: handleSales,
         enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
     });
 
