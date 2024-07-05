@@ -1,8 +1,13 @@
 import callwaiter from '@/assets/img/callwaiter.png';
+import { handleRemoveAlert } from '@/components/hooks/commonApi';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
+<<<<<<< Updated upstream
 import type { Alert } from '@/components/types/hiClientzData';
 import axios from '@/components/utils/axios';
+=======
+import { Alert } from '@/components/types/hiClientzData';
+>>>>>>> Stashed changes
 import { timestampToDateTime } from '@/components/utils/helpers';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
@@ -15,15 +20,15 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
   const { offlineAlertData } = props;
-  const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore((s)=>({
+  const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore((s) => ({
     removeOfflineAlert: s.removeOfflineAlert,
     setViewData: s.setViewData,
     clickViewMore: s.clickViewMore,
     setClickViewMore: s.setClickViewMore,
     removeOfflineCount: s.removeOfflineCount,
-  
+
   }));
-  const { captainData } = useHiClientZ((s)=>({
+  const { captainData } = useHiClientZ((s) => ({
     captainData: s.captainData,
   }));
 
@@ -32,24 +37,17 @@ const OfflineAlertCard = (props: IOfflineProp) => {
     setClickViewMore(!clickViewMore);
   };
 
-  const handleRemoveAlert = async (id: string) => {
+  const removeAlert = async (id: string) => {
     try {
-      const config = {
-        method: 'PUT',
-        url: `/v1/payments/:pid/order/${id}`,
-        data: {
-          waiterName: captainData?.name,
-        },
-      };
-      const response = await axios(config);
-      console.log('off', response);
-      if (response.status === 200) {
+      const res = await handleRemoveAlert(id, captainData?.name);
+      if (res.status === 200) {
         removeOfflineAlert(id);
         removeOfflineCount();
+      } else {
+        console.error("Failed to remove alert");
       }
-    } catch (err) {
-      console.log(err);
-      return {};
+    } catch (error) {
+      console.error("Error removing alert:", error);
     }
   };
 
@@ -71,7 +69,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                       <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                     </article>
                     <IoCloseCircleSharp
-                      onClick={() => handleRemoveAlert(alert?._id)}
+                      onClick={() => removeAlert(alert?._id)}
                       size={24}
                       className="absolute inline text-red-400 -right-6 -top-6"
                     />
@@ -79,7 +77,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                   <div className="flex justify-between">
                     <section>
                       <article className="ml-2 space-y-1">
-                        <h1 className="text-base">User : {alert?.name || 'HI'}</h1>
+                        <h1 className="text-base">User : {alert?.name || 'Customer'}</h1>
                         <p>{alert?.message}</p>
                       </article>
                     </section>
@@ -99,7 +97,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                       <h1 className="text-xs">Confirm On floor</h1>
                     </article>
                     <article>
-                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
+                      <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                     </article>
                   </section>
                   <div className="flex justify-between">

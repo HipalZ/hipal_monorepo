@@ -5,20 +5,22 @@ import { useQuery } from "@tanstack/react-query";
 import { memo } from "react"
 import { CiGlobe } from "react-icons/ci";
 import DateRangePickerMemo from "../dateRangePicker";
-import './index.css'
 import { apiRpc } from "@hi/common";
+import { ISalesLite } from "@/components/types/hiClientzData";
+import { getDate } from "@/components/utils/helpers";
+import './index.css'
 
 const SalesLite = () => {
-    const { selectedBiz } = useHiClientZ((s)=>({
+    const { selectedBiz } = useHiClientZ((s) => ({
         selectedBiz: s.selectedBiz,
     }));
     const businessId = selectedBiz?.businessId?._id;
-    const {salesData, setSalesData, setLoading} = useLiteStore((s)=>({
+    const { salesData, setSalesData, setLoading } = useLiteStore((s) => ({
         salesData: s.salesData,
         setSalesData: s.setSalesData,
         setLoading: s.setLoading,
     }));
-    const {timeStampStart, timeStampEnd} = useTimings((s)=>({
+    const { timeStampStart, timeStampEnd } = useTimings((s) => ({
         timeStampStart: s.timeStampStart,
         timeStampEnd: s.timeStampEnd,
     }))
@@ -26,25 +28,24 @@ const SalesLite = () => {
         setLoading(true)
         try {
             const res = await apiRpc.payments[":id"].salesDashboard.$get({
-                param: {id: businessId},
+                param: { id: businessId },
                 query: {
                     businessId: businessId,
-                    from: timeStampStart,
-                    to: timeStampEnd,
+                    from: timeStampStart.toString(),
+                    to: timeStampEnd.toString(),
                 }
             })
-            const response = await res.json();
-            console.log('ress',response)
+            const response = (await res.json()).data as ISalesLite
             if (res.status === 200) {
-                setSalesData(response?.data)
-                return response.data;
+                setSalesData(response)
+                return response;
             } else {
                 return {};
             }
         } catch (err) {
             console.log(err);
             return {};
-        }finally{
+        } finally {
             setLoading(false)
         }
     }
@@ -57,9 +58,12 @@ const SalesLite = () => {
 
     return (
         <>
-            <DateRangePickerMemo/>
+            <DateRangePickerMemo />
             <section className="payment_layout">
                 <article className="card_payment_overview">
+                    <center className="absolute left-1/2 top-4 -translate-x-1/2">
+                        {getDate(timeStampStart)}
+                    </center>
                     <div className="sales_payment_background_effect1" />
                     <div className="sales_payment_background_effect2" />
                     <div className="sales_payment_background_effect3" />
@@ -68,7 +72,7 @@ const SalesLite = () => {
                     </div>
                     <section>
                         <h3 className="absolute left-4 bottom-14 opacity-60">
-                            Today’s Sales
+                            Sales
                         </h3>
                         <h1 className="absolute text-3xl left-4 bottom-6">
                             ₹ {salesData?.totalSale}

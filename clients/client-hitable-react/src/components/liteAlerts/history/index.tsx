@@ -2,12 +2,12 @@ import DateRangePickerMemo from '@/components/atoms/dateRangePicker';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import useTimings from '@/components/store/useTimings';
-import axios from '@/components/utils/axios';
 import { useQuery } from '@tanstack/react-query';
 import { memo, useCallback, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
 import HistoryCard from './historyCard';
 import { apiRpc } from '@hi/common';
+import { Alert } from '@/components/types/hiClientzData';
 
 const History = () => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -36,15 +36,15 @@ const History = () => {
         param: { id: businessId },
         query: {
           businessId: businessId,
-          from: timeStampStart,
-          to: timeStampEnd,
-          pageNumber: pageNumber,
+          from: timeStampStart.toString(),
+          to: timeStampEnd.toString(),
+          pageNumber: pageNumber.toString(),
         },
       })
-      const response = await res.json();
+      const response = (await res.json()).data as Alert[];
       if (res.status === 200) {
-        setHistoryData(response.data);
-        return response.data;
+        setHistoryData(response);
+        return response;
       } else {
         return [];
       }

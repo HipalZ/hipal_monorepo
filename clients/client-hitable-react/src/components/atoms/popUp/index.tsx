@@ -4,6 +4,7 @@ import { HiX } from "react-icons/hi";
 import { CiGlobe } from "react-icons/ci";
 import { cn } from "@/components/utils/helpers";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import { GiTakeMyMoney } from "react-icons/gi";
 
 function PopUp({
   children,
@@ -44,8 +45,8 @@ function PopUp({
                   onClick={onClose}
                 />
                 {status && status.length > 0 ?
-                  <article className={cn("flex items-center p-2 rounded-full", viewData?.alertType === "ONLINE" ? 'bg-green-100 ' : 'bg-red-100')}>
-                    <span><CiGlobe size={24} /></span>&nbsp;
+                  <article className={cn("flex items-center p-2 rounded-full bg-green-100")}>
+                    <span>{viewData?.alertType === "ONLINE" ? <CiGlobe size={24} />: <GiTakeMyMoney size={24}/>}</span>&nbsp;
                     <h1 className="text-base">{status}</h1>
                   </article>
                   : null}

@@ -42,3 +42,13 @@ export function timestampToDateTime(timestamp: number): string {
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
+
+
+export const getDate = (timeStampStart: number) => {
+  const date = new Date(timeStampStart);
+  return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+  });
+}

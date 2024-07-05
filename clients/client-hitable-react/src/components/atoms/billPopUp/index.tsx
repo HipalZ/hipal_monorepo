@@ -1,36 +1,50 @@
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { ChangeEvent, memo, useState } from 'react';
+import { ChangeEvent, memo, useCallback, useState } from 'react';
 import { MdOutlineCall } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import PopUp from '../popUp';
 import LoadingSpinner from '../loadingSpinner';
 import { apiRpc } from '@hi/common';
+import { FiCopy } from "react-icons/fi";
 
 const BillPopUpMemo = () => {
-  const { selectedNavItem, viewData, setViewData, removeOfflineAlert } = useLiteStore();
-  const [showTick, setShowTick] = useState(false);
+  const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore();
+  const [textTick, setTextTick] = useState(false);
+  const [numberText, setNumberTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
   const { captainData } = useHiClientZ();
 
-  const copyText = () => {
-    const text = document.querySelector('#discount-reason')?.textContent || '';
+  const copyText = useCallback((id:string, value?:string) => {
+    let text:string;
+    if(value){
+      text = value
+    }else {
+      text = document.querySelector(id)?.textContent || '';
+    }
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        setShowTick(true);
-        setTimeout(() => {
-          setShowTick(false);
-        }, 3000);
+        if(value){
+          setNumberTick(true);
+          setTimeout(() => {
+            setNumberTick(false);
+          }, 3000);
+        }else{
+          setTextTick(true);
+          setTimeout(() => {
+            setTextTick(false);
+          }, 3000);
+        }
       })
       .catch((err) => {
         console.error('Failed to copy text: ', err);
       });
-  };
+  },[]);
 
   const handleCloseAlert = async (id: string) => {
     try {
@@ -45,9 +59,9 @@ const BillPopUpMemo = () => {
     }
   };
 
-  const handleCloseOnline = () => {
+  const handleCloseOnline = useCallback(() => {
     setClickViewMore(!clickViewMore);
-  };
+  },[]);
 
   const handleConfirmAlert = async (id: string) => {
     setIsLoading(true);
@@ -61,8 +75,8 @@ const BillPopUpMemo = () => {
       })
       const response = await res.json();
       console.log('response',response)
-      if (res.status === 200) {
-        // setViewData({ ...viewData, completionCode: response.data.data.completionCode });
+      if(res.status===200){
+        toast.success('order confirm successfully');
       }
     } catch (err) {
       console.log(err);
@@ -72,50 +86,57 @@ const BillPopUpMemo = () => {
     }
   };
 
-  const handleConfirm = (id: string) => {
+  const handleConfirm = useCallback((id: string) => {
     handleConfirmAlert(id);
     removeOfflineAlert(id);
     setClickViewMore(!clickViewMore);
-  };
+  },[]);
 
-  const hideMiddleNumbers = (phone: string) => {
-    if (phone.length <= 4) return phone;
-    const firstPart = phone.slice(0, 3);
-    const lastPart = phone.slice(-3);
+  const hideMiddleNumbers = useCallback((phone: string) => {
+    if (phone.length <= 2) return phone;
+    const firstPart = phone.slice(0, 2);
+    const lastPart = phone.slice(-1);
     return `${firstPart}****${lastPart}`;
-  };
+  },[]);
 
-  const handleAddComment = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleAddComment = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     setComment(e.target.value);
-  };
+  },[comment]);
 
-  const handleClosePopup = () => {
+  const handleClosePopup = useCallback(() => {
     setClickViewMore(!clickViewMore);
-  };
+  },[clickViewMore]);
 
   return (
     <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>
       {isLoading ? <LoadingSpinner/> : <section style={{ maxHeight: '90%', overflowY: 'auto' }}>
         <div className="mx-6 mt-10 flex justify-between">
-          <h1 className="text-base text-gray-500">{timestampToDateTime(viewData?.date)}</h1>
+          <h1 className="text-gray-500">{timestampToDateTime(viewData?.date)}</h1>
           <p>{viewData?._id?.slice(-6)}</p>
         </div>
-        &nbsp;
+        <div className='bg-[#334C38] text-white mx-4 py-3 rounded-2xl my-4'>
+          <center className='text-sm'>Bill value entered</center>
+          <center>₹ {viewData?.order_id?.billValue}</center>
+        </div>
+        {viewData?.alertType === "OFFLINE" ? <div className="mx-6 mb-2 grid grid-cols-2 font-semibold">
+          <h1>Staff</h1>
+          <p>: {captainData?.name || 'Captain'}</p>
+        </div>:null}
         <div className="mx-6 mb-2 grid grid-cols-2">
-          <h1>Paid Amount</h1>
-          <p>: ₹ {viewData?.order_id?.total}</p>
+          <h1>Discount Coinz used</h1>
+          <p>: {viewData?.order_id?.claimedCoins}</p>
         </div>
         <div className="mx-6 mb-2 grid grid-cols-2">
-          <h1>Bil value entered</h1>
-          <p>: ₹ {viewData?.order_id?.billValue}</p>
+          <h1>Bill after discount</h1>
+          <p>: ₹ {viewData?.order_id?.billValue - viewData?.order_id?.discount}</p>
         </div>
         <div className="mx-6 mb-2 grid grid-cols-2">
-          <h1>Including tips</h1>
+          <h1>Tips</h1>
           <p>: ₹ {viewData?.order_id?.tips}</p>
         </div>
-        <div className="mx-6 mb-2 grid grid-cols-2">
-          <h1>Discount</h1>
-          <p>: {viewData?.order_id?.claimedCoins} Coin used</p>
+        <div className="mx-4 mb-2 grid grid-cols-2 bg-green-100 p-2 rounded-2xl">
+          <h1>Money to collect</h1>
+          <p>: ₹ {viewData?.order_id?.total}</p>
         </div>
         <hr className="m-6 h-[0.1rem] bg-[#CACACA] text-black" />
         <div className="mx-6 mb-2 grid grid-cols-2">
@@ -128,11 +149,19 @@ const BillPopUpMemo = () => {
         </div>
         <div className="mx-6 mb-2 grid grid-cols-2">
           <h1>Number</h1>
-          <div className="flex">
+          <div className="flex" id="phone">
             <span>: {viewData?.order_id?.phone ? hideMiddleNumbers(viewData.order_id.phone) : ''}</span>&nbsp;&nbsp;
+            <div className="flex self-end mr-1">
+            <span
+              className={cn('rounded-2xl px-4 py-2', numberText ? 'bg-green-500/20 text-green-500' : 'bg-[#f3eeff] text-[#7f46ff] ')}
+              onClick={()=>copyText('#phone', viewData?.order_id?.phone)}
+              style={{ cursor: 'pointer' }}
+            >
+              <FiCopy />
+            </span>
+          </div>
             <a href={`tel:+91${viewData?.order_id?.phone}`} className="flex items-center rounded-full bg-[#f3eeff] px-2 py-1 text-[#6f2eff]">
               <MdOutlineCall size={16} />
-              <span className="text-sm">Call</span>
             </a>
           </div>
         </div>
@@ -141,7 +170,7 @@ const BillPopUpMemo = () => {
             <p>
               User : <b>{viewData?.order_id?.name}</b>
             </p>
-            <p>transaction Id : {viewData?._id}</p>
+            <p>Transaction Id : {viewData?._id}</p>
             <p>
               Total Bill : <b>₹ {viewData?.order_id?.billValue}</b>
             </p>
@@ -154,15 +183,14 @@ const BillPopUpMemo = () => {
             <p>
               Final Discount to Apply in POS: <b>₹ {viewData?.posDiscount}</b>
             </p>
-            <p>{viewData?.alertType === 'ONLINE' ? '' : `settled by : ${captainData?.name || 'Captain'}`}</p>
           </h1>
           <div className="flex self-end">
             <span
-              className={cn('rounded-2xl px-4 py-2', showTick ? 'bg-green-500/20 text-green-500' : 'bg-[#f3eeff] text-[#7f46ff] ')}
-              onClick={copyText}
+              className={cn('rounded-2xl px-4 py-2', textTick ? 'bg-green-500/20 text-green-500' : 'bg-[#f3eeff] text-[#7f46ff] ')}
+              onClick={()=>copyText('#discount-reason')}
               style={{ cursor: 'pointer' }}
             >
-              {showTick ? 'Copied' : 'Copy'}
+              {textTick ? 'Copied' : 'Copy'}
             </span>
           </div>
         </div>
@@ -172,7 +200,7 @@ const BillPopUpMemo = () => {
             <textarea
               onChange={handleAddComment}
               id="floating_outlined3"
-              className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+              className="dark:text-white focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
               placeholder="Enter Comment here..."
               required
               style={{
@@ -185,7 +213,7 @@ const BillPopUpMemo = () => {
           <div className="mb-5 flex justify-center">
             <button
               onClick={handleCloseOnline}
-              className="on_active_bounce text-base-100 fixed bottom-4 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+              className="on_active_bounce text-white fixed bottom-4 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
             >
               Close alert
             </button>
@@ -197,7 +225,7 @@ const BillPopUpMemo = () => {
                 type="button"
                 onClick={() => handleCloseAlert(viewData?._id)}
                 className={
-                  'btn btn-outline btn-black btn-md my-auto ml-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full !py-1 text-[1rem] font-semibold capitalize shadow-lg'
+                  'bg-black text-white btn btn-outline btn-black btn-md my-auto ml-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full !py-1 text-[1rem] font-semibold capitalize shadow-lg'
                 }
               >
                 Reject
@@ -206,7 +234,7 @@ const BillPopUpMemo = () => {
                 type="button"
                 onClick={() => handleConfirm(viewData._id)}
                 className={
-                  'btn btn-black btn-md my-auto mr-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full !py-1 text-[1rem]  capitalize shadow-lg'
+                  'bg-black text-white btn btn-black btn-md my-auto mr-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full !py-1 text-[1rem]  capitalize shadow-lg'
                 }
               >
                 Confirm

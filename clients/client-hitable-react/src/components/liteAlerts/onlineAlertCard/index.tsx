@@ -1,6 +1,7 @@
+import { handleRemoveAlert } from '@/components/hooks/commonApi';
+import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { Alert } from '@/components/types/hiClientzData';
-import axios from '@/components/utils/axios';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
 import { apiRpc } from '@hi/common';
 import { memo } from 'react';
@@ -15,11 +16,12 @@ interface IOnlineProp {
 
 const OnlineAlertCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
-  const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore((s)=>({
+  const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore((s) => ({
     removeOnlineAlert: s.removeOnlineAlert,
     setViewData: s.setViewData,
     removeOnlineCount: s.removeOnlineCount,
   }));
+  const captainData = useHiClientZ((s)=>s.captainData)
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
@@ -28,20 +30,17 @@ const OnlineAlertCard = (props: IOnlineProp) => {
     setClickViewMore(!clickViewMore);
   };
 
-  const handleRemoveAlert = async (id: string) => {
+  const removeAlert = async (id: string) => {
     try {
-      const config = {
-        method: 'PUT',
-        url: `/v1/payments/:pid/order/${id}`,
-      };
-      const response = await axios(config);
-      if (response.status === 200) {
+      const res = await handleRemoveAlert(id, captainData?.name);
+      if (res.status===200) {
         removeOnlineAlert(id);
         removeOnlineCount();
+      } else {
+        console.error("Failed to remove alert");
       }
-    } catch (err) {
-      console.log(err);
-      return {};
+    } catch (error) {
+      console.error("Error removing alert:", error);
     }
   };
 
@@ -65,10 +64,10 @@ const OnlineAlertCard = (props: IOnlineProp) => {
                   </h1>
                 </article>
                 <article>
-                  <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
+                  <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                 </article>
                 <IoCloseCircleSharp
-                  onClick={() => handleRemoveAlert(alert?._id)}
+                  onClick={() => removeAlert(alert?._id)}
                   size={28}
                   className="absolute inline text-red-400 -right-2 -top-2"
                 />

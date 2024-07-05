@@ -31,10 +31,10 @@ const HistoryCard = (props: IOnlineProp) => {
           return (
             <section
               key={alert?._id}
-              className={cn('relative h-full', 'mx-4 my-4 rounded-xl p-4', alert?.status === 'FAIL' ? 'bg-red-100' : 'bg-gray-300')}
+              className={cn('max-h-[15rem]','mx-4 my-4 rounded-xl p-4', alert?.status === 'FAIL' ? 'bg-red-100' : 'bg-gray-300')}
             >
               <section className="mb-2 flex items-center justify-between">
-                <article className={cn('flex w-[8rem] items-center rounded-full px-2', alert?.status === 'FAIL' ? '' : 'bg-green-100')}>
+                <article className={cn('flex w-[8rem] items-center rounded-full px-2', alert?.status === 'FAIL' ? '' : 'bg-green-100', alert?.alertType==='OFFLINE' ? 'bg-indigo-100' :'bg-green-100')}>
                   <span>
                     <PiCoinsFill />
                   </span>
@@ -45,15 +45,9 @@ const HistoryCard = (props: IOnlineProp) => {
                     <h1 className="text-xs">Received {alert?.alertType.toLowerCase()}</h1>
                   )}
                 </article>
-                {alert?.isRejected ? (
-                  <article>
-                    <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
-                  </article>
-                ) : (
-                  <article>
-                    <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.order_id?.date)}</h1>
-                  </article>
-                )}
+                <article>
+                  <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
+                </article>
               </section>
               <div className="flex justify-between">
                 <section>
@@ -84,6 +78,8 @@ const HistoryCard = (props: IOnlineProp) => {
                   </button>
                 </section>
               </div>
+              <br/>
+              <br/>
             </section>
           );
         })
