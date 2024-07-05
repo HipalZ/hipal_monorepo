@@ -306,7 +306,7 @@ const usersRouter = new Hono()
     '/:id/loyaltyUserHistiry',
     zValidator(
       'query',
-      z.Object({
+      z.object({
         userPhone: z.string(),
         loyaltyId: z.string(),
       }),
@@ -345,7 +345,7 @@ const usersRouter = new Hono()
     '/:businessId/getUserReward',
     zValidator(
       'query',
-      z.Object({
+      z.object({
         userPhone: z.string(),
         loyaltyId: z.string(),
       }),
@@ -400,7 +400,7 @@ const usersRouter = new Hono()
     '/:businessId/getUserRewardHistory',
     zValidator(
       'query',
-      z.Object({
+      z.object({
         userPhone: z.string(),
         loyaltyId: z.string(),
         from: z.string().optional(),

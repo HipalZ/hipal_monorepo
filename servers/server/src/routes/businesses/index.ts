@@ -169,7 +169,7 @@ const businessesRouter = new Hono()
     '/:businessId/loyalty',
     zValidator(
       'param',
-      z.Object({
+      z.object({
         businessId: z.string(),
       }),
     ),
