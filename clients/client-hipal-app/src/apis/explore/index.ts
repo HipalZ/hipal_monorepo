@@ -1,32 +1,24 @@
-import { IBusinessData } from "@/components/types/businessData";
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 import { set } from "lodash-es";
-import { redirect } from 'next/navigation';
+import { fetchCommonData } from "../commonApis";
+import { apiRpc } from "@hi/common";
+import { ILoyaltySetting } from "@/components/store/useLoyaltyData";
 
-async function fetchBusinessData(businessId: string) {
-	const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-	let bizId = businessId;
+async function fetchBusinessData(customLink: string) {
+	// common function has business and settings data
+	const {data, bizId} = await fetchCommonData(customLink)
 
-	if (!objectIdRegex.test(businessId)) {
-		const response = await axios.get(`/v1/businesses/n/${businessId}`);
-		console.log('response', response.data.data)
-		bizId = response.data.data._id; 
-	}
-	if (!bizId) {
-        redirect('/');
-    }
-
-	const settings = (await axios(paths.settings(bizId))) || {}
+	const loyaltyResponse =  await apiRpc.businesses[":businessId"].loyalty.$get({
+		param:{
+			businessId: bizId
+		}
 	
-	const businessData = await axios(paths.businessData(bizId))
-	const loyalty = await axios(paths.getLoyaltySettings(bizId)) || {}
-	
-	const data = {} as IBusinessData
-	data["settings"] = settings?.data?.data[0] || {}
-	data["business"] = businessData?.data?.data || {}
-	data["loyalty"] = loyalty?.data?.data || {}
+	})
+    const loyalty = await loyaltyResponse.json();
+    data["loyalty"] = loyalty?.data as unknown as ILoyaltySetting;
+
 	set(
 		data,
 		"settings.explore.openFrom",
@@ -37,6 +29,7 @@ async function fetchBusinessData(businessId: string) {
 		"settings.explore.openTill",
 		getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill || ""),
 	)
+
 	return data;
 }
 

@@ -1,19 +1,23 @@
+"use client";
 import ReadMore from "@/components/atoms/readMore"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { memo } from "react"
+import { memo, useEffect } from "react"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { IBiz, IBusinessData, IExplore } from "@/components/types/businessData"
 import { TiLocationOutline } from "react-icons/ti";
 import { MdOutlineCall } from "react-icons/md"
+import { _useAllBusiness } from "@/components/store/useAllBusiness"
+import useBusinessDetails from "@/components/store/useBusinessDetails"
 
 interface IHeroSection {
 	data: IBusinessData
 }
 function HeroSection({ data }: IHeroSection): JSX.Element {
+	const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
 	const { businessName, logo, tags, description } = data.business as IBiz
 	const { location, phone } = data.settings?.explore as IExplore
-
+	const setBusinessData = _useAllBusiness((s) => s.setData);
 	const goToLocaltion = () => {
 		if (typeof window !== "undefined") {
 			window.location.href = location
@@ -25,6 +29,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 			window.open(`tel:${phone}`)
 		}
 	}
+
+	useEffect(() => {
+		setBusinessData(data);
+		if (data?.business) {
+			setBusinessDetails(data.business);
+		  }
+	  }, [data]);
 
 	return (
 		<div className="relative flex flex-col px-8">

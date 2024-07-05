@@ -1,3 +1,4 @@
+"use client";
 import { useLogin } from "@/components/store/useLogin";
 import React, { memo } from "react";
 import styles from "./reward.module.css";
@@ -30,9 +31,14 @@ const RewardCard = ({
 );
 
 const Rewards = () => {
-	const { userDetails, userCoinZ } = useLogin();
+	const { userDetails, userCoinZ,isLogin } = useLogin((s) => ({
+		userDetails: s.userDetails,
+		userCoinZ: s.userCoinZ,
+		isLogin: s.isLogin,
+	}));
 	const customLink = useBusinessDetails((s) => s.businessDetails.customLink);
 
+	if(!isLogin)return;
 	return (
 		<div className="h-[18rem]">
 			<h3 className="pt-6 pl-4 text-xl text-Primary">

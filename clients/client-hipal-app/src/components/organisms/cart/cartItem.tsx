@@ -74,7 +74,7 @@ const CartItem = ({ cartItem }) => {
 					) : (
 						<button
 							onClick={() => removeDish(cartItem.dishId)}
-							className="px-10 py-1 bg-base-100 rounded-full"
+							className="px-10 py-1 bg-base-200 rounded-full"
 						>
 							<FaBookmark size={16} style={{ color: "var(--color-primary)" }} />
 						</button>

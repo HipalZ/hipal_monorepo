@@ -7,7 +7,7 @@ type SkeletonLoaderProps = {
   count?: number;
 };
 
-const SkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
+const MemoSkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
   return (
     <div className="p-4">
       <Skeleton count={count} height={height ?? 30} />
@@ -15,5 +15,5 @@ const SkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
   );
 };
 
-const MemoSkeletonLoader = memo(SkeletonLoader);
-export default MemoSkeletonLoader
+const SkeletonLoader = memo(MemoSkeletonLoader);
+export default SkeletonLoader

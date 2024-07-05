@@ -1,12 +1,8 @@
-import { businessApis, fetchAllBusinessIds } from "@/apis/explore";
+import { businessApis } from "@/apis/explore";
 import Explore from "@/components/templates/explore";
 
-export async function generateStaticParams() {
-  const businessIds = await fetchAllBusinessIds();
-  return businessIds.map((businessId: string) => ({
-    businessId: businessId,
-  }));
-}
+// removed getStaticPaths
+
 export async function generateMetadata() {
   return {
     title: "Explore",

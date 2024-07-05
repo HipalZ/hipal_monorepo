@@ -354,3 +354,13 @@ export function convertToHsl(input: InputObject): ResultObject | InputObject {
 	return input;
 }
 
+
+export const defaultThemes: IThemes = {
+	primaryColor: '',
+	secondaryColor: '',
+	footerText: '',
+	instagramLink: '',
+	facebookLink: '',
+	youtubeLink: '',
+	linkedinLink: '',
+  };

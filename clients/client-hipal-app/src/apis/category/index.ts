@@ -1,109 +1,109 @@
 import axios from "@/utils/axios";
 import { paths } from "@/components/utils/paths";
 import { isEmpty } from "lodash-es";
-import { IBusinessData } from "@/components/types/businessData";
-import { redirect } from 'next/navigation';
+import { apiRpc } from "@hi/common";
+import { fetchCommonData } from "../commonApis";
 
-async function fetchCategoryPageData(businessId:string) {
-    const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-	let bizId = businessId;
-	if (!objectIdRegex.test(businessId)) {
-		const response = await axios.get(`/v1/businesses/n/${businessId}`);
-		bizId = response.data.data.businessId; 
+async function fetchCategoryPageData(customLink: string) {
+	// common api has business and settings data
+	const {data, bizId} = await fetchCommonData(customLink)
+	const dishesDataResponse = await apiRpc.dishes.$get({
+		query: {
+			businessId: bizId
+		}
+	})
+
+	const dishesData = await dishesDataResponse.json()
+	data["dishesData"] = dishesData?.data || []
+
+	const categoryDataResponse = await apiRpc.categories.$get({
+		query: {
+			businessId: bizId
+		}
+	})
+
+	const _categoryData = await categoryDataResponse.json()
+
+	const sortCategories = () => {
+		const hashedCategories = new Map()
+		_categoryData?.data?.forEach((category) => {
+			hashedCategories.set(category?._id, category)
+		})
+
+		const categoryOrder = data.settings?.categoryOrder || []
+
+		const sortedCategories = new Map()
+
+		for (let categoryId of categoryOrder) {
+			if (hashedCategories?.has(categoryId)) {
+				sortedCategories.set(categoryId, hashedCategories?.get(categoryId))
+			}
+		}
+
+		const sortedCats = Array.from(sortedCategories.values())
+
+		if (isEmpty(sortedCats)) return _categoryData?.data
+		return sortedCats
 	}
-	if (!bizId) {
-        redirect('/');
-    }
-    const settings = (await axios(paths.settings(bizId))) || {}
-    const dishesData = (await axios(paths.dishesData(bizId))) || {}
-    const _categoryData = (await axios(paths.categoryByBusiness(bizId))) || {}
-    const data = {} as IBusinessData
-		data["settings"] = settings?.data?.[0] || {}
-		// data['businessesData'] = businessesData?.data || {}
-		data["dishesData"] = dishesData?.data || {}
-		// data['categoryData'] = categoryData || {}
-		const sortCategories = () => {
-			const hashedCategories = new Map()
 
-			_categoryData?.data?.data.forEach((category) => {
-				hashedCategories.set(category?._id, category)
-			})
+	const categoryData = sortCategories()
+	const allCategoriesTypes = () => {
+		const mainType = {}
+		const subTypes = {}
+		categoryData?.forEach((category) => {
+			if (!category?.visibility) return
 
-			const categoryOrder = data.settings?.categoryOrder || []
-
-			const sortedCategories = new Map()
-
-			for (let categoryId of categoryOrder) {
-				if (hashedCategories?.has(categoryId)) {
-					sortedCategories.set(categoryId, hashedCategories?.get(categoryId))
+			if (category?.hierarchy === "PARENT") {
+				mainType[category?._id] = category
+			} else if (!isEmpty(category?.dishes)) {
+				subTypes[category?.parentCategoryId] = {
+					...subTypes[category?.parentCategoryId],
+					[category._id]: category,
 				}
 			}
+		})
 
-			const sortedCats = Array.from(sortedCategories.values())
+		// Removing empty main categories
+		Object.keys(mainType).forEach((key) => {
+			if (!subTypes?.[mainType?.[key]?._id] && isEmpty(mainType?.[key]?.dishes))
+				delete mainType[key]
+		})
 
-			if (isEmpty(sortedCats)) return _categoryData?.data
-
-			return sortedCats
+		return {
+			main: mainType,
+			sub: subTypes,
 		}
-		const categoryData = sortCategories()
-		const allCategoriesTypes = () => {
-			const mainType = {}
-			const subTypes = {}
+	}
 
-			categoryData?.data.forEach((category) => {
-				if (!category?.visibility) return
+	data["allCategoriesTypes"] = allCategoriesTypes()
 
-				if (category?.hierarchy === "PARENT") {
-					mainType[category?._id] = category
-				} else if (!isEmpty(category?.dishes)) {
-					subTypes[category?.parentCategoryId] = {
-						...subTypes[category?.parentCategoryId],
-						[category._id]: category,
-					}
-				}
-			})
+	const categories = () => {
+		let result = [] as any
 
-			// Removing empty main categories
-			Object.keys(mainType).forEach((key) => {
-				if (!subTypes?.[mainType?.[key]?._id] && isEmpty(mainType?.[key]?.dishes))
-					delete mainType[key]
-			})
+		categoryData?.forEach((category) => {
+			const newCategory = JSON.parse(JSON.stringify(category))
+			newCategory.dishes = []
+			console.log('d', dishesData)
+			for (let dishId of category.dishes) {
+				const newDish = dishesData?.data.find((d) => d._id === dishId._id)
 
-			return {
-				main: mainType,
-				sub: subTypes,
+				if (!!newDish) newCategory.dishes = [...newCategory.dishes, newDish]
 			}
-		}
 
-		data["allCategoriesTypes"] = allCategoriesTypes()
+			if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory]
+		})
 
-		const categories = () => {
-			let result = [] as any
-
-			categoryData?.data?.forEach((category) => {
-				const newCategory = JSON.parse(JSON.stringify(category))
-				newCategory.dishes = []
-
-				for (let dishId of category.dishes) {
-					const newDish = dishesData?.data.find((d) => d._id === dishId._id)
-
-					if (!!newDish) newCategory.dishes = [...newCategory.dishes, newDish]
-				}
-
-				if (!isEmpty(newCategory?.dishes)) result = [...result, newCategory]
-			})
-
-			return result
-		}
-		data["categories"] = categories()
-    return data
+		return result
+	}
+	data["categories"] = categories()
+	return data
 }
 
 export const categoryApis = {
-    all: fetchCategoryPageData
+	all: fetchCategoryPageData
 };
 
 export async function fetchAllBusinessIds() {
-    const response = await axios.get(paths.listAllBusiness());
-    return response?.data?.data.map((business: { _id: string }) => business._id);
+	const response = await axios.get(paths.listAllBusiness());
+	return response?.data?.data.map((business: { _id: string }) => business._id);
 }

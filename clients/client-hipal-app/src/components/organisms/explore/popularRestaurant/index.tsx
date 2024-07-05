@@ -1,10 +1,11 @@
+"use client";
 import DiscountDishCard from "@/components/molecules/discountDishCard"
 import Section from "@/components/molecules/section"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import { IDish } from "@/components/types/businessData"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
 import { Splide, SplideSlide } from "@splidejs/react-splide"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { memo } from "react"
 
 interface IPopularRestProps {

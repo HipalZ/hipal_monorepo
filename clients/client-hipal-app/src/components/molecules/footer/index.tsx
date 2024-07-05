@@ -1,58 +1,62 @@
 "use client"
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { IThemes } from "@/components/types/businessData";
+import { updateTheme } from "@/components/utils/themes";
 import Link from "next/link";
-import { memo } from "react"
+import { memo, useEffect } from "react"
 import { IoLogoLinkedin, IoLogoYoutube } from "react-icons/io"
 import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5"
 
 interface IFooter{
-	footerText:string;
-	instagramLink:string;
-	facebookLink:string;
-	youtubeLink:string;
-	linkedinLink:string;
+	themes:IThemes;
 }
 const Footer=(props:IFooter) =>{
-	const { footerText, instagramLink, facebookLink, linkedinLink, youtubeLink } = props;
+	const { themes } = props;
+
 	const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
+
+	useEffect(() => {
+		updateTheme(themes);
+	  }, [themes]);
+
 	return (
 			<div>
-				{footerText && (
+				{themes?.footerText && (
 					<div className="px-4 text-lg text-justify text-base-100-content">
-						{footerText}
+						{themes?.footerText}
 					</div>
 				)}
 				<section className="flex flex-row px-2 space-x-2 ">
-					{instagramLink && (
+					{themes?.instagramLink && (
 						<a
-							href={instagramLink}
+							href={themes?.instagramLink}
 							aria-label="instagram"
 							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
 							<IoLogoInstagram className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-					{facebookLink && (
+					{themes?.facebookLink && (
 						<a
-							href={facebookLink}
+							href={themes?.facebookLink}
 							aria-label="facebook"
 							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
 							<IoLogoFacebook className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-					{youtubeLink && (
+					{themes?.youtubeLink && (
 						<a
-							href={youtubeLink}
+							href={themes?.youtubeLink}
 							aria-label="youtube"
 							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>
 							<IoLogoYoutube className="my-auto text-3xl text-base-content/80" />
 						</a>
 					)}
-					{linkedinLink && (
+					{themes?.linkedinLink && (
 						<a
-							href={linkedinLink}
+							href={themes?.linkedinLink}
 							aria-label="youtube"
 							className="btn btn-ghost !px-1 !py-0 my-auto"
 						>

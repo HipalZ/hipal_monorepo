@@ -1,15 +1,21 @@
+"use client";
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/legacy/image"
-import { memo, useCallback } from "react"
+import { memo, useCallback, useEffect } from "react"
 import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
 import { IExplore } from "@/components/types/businessData";
 import { useLogin } from "@/components/store/useLogin";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import useTableData from "@/components/store/useTableData";
 
-const MainBackground = (props: { explore: IExplore | undefined }) =>{
+const MainBackground = (props: { explore: IExplore | undefined }) =>{  
+	const searchParams = useSearchParams();
+
+	const tableName = searchParams?.get("tableName");
+	const { setTableName, tableName: storeTableName } = useTableData();
 	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const explore = props.explore ?? {
 		wallpaper: img.src,
@@ -27,6 +33,12 @@ const MainBackground = (props: { explore: IExplore | undefined }) =>{
 	const router = useRouter()
 
 	const { isLogin } = useLogin()
+
+	useEffect(()=>{
+		if(!!tableName){
+			setTableName(tableName)
+		}
+	},[tableName])
 
 	const goToLoginPage = useCallback(() => {
 		router.push(`${routePaths[PAGE_TYPES.SIGN_UP](customLink)}`)
