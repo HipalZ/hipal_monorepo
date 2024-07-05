@@ -28,6 +28,7 @@ const Login: React.FC = () => {
     const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phone);
   }, [phone]);
+  
   const handleSubmit = async () => {
     const isPhoneValid = validPhoneNumber();
 
@@ -44,8 +45,7 @@ const Login: React.FC = () => {
       });
 
       const user = await response.json();
-      console.log('res', user);
-
+      
       if (response.status === 200) {
         setAccessToken(user.data.accessToken);
         setRefreshToken(user.data.refreshToken);

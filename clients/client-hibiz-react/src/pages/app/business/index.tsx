@@ -1,95 +1,42 @@
-import HipeopleLogo from '@/assets/hibizNewLogo.png';
-import hipalHandLogo from '@/assets/login/hand.png';
-import axios from '@/axios';
-import LoadingSpinner from '@/components/atom/loadingSpinner';
-import Header from '@/components/molecules/header';
-import useBusinessData from '@/components/store/useBusinessData';
-import { useOwnerLogin } from '@/components/store/useOwnerLogin';
-import type { IBusinessData } from '@/components/types/businessData';
-import { paths } from '@/components/utils/paths';
-import { PAGE_TYPES, routePathsWithId } from '@/components/utils/routes';
-import { apiRpc } from '@hi/common';
-import { useQuery } from '@tanstack/react-query';
-import { memo, startTransition, useState } from 'react';
-import toast from 'react-hot-toast';
-import { FaArrowLeft } from 'react-icons/fa';
-import { IoWarning } from 'react-icons/io5';
-import { TbHomePlus } from 'react-icons/tb';
-import { useNavigate } from 'react-router-dom';
+import HipeopleLogo from "@/assets/hibizNewLogo.png";
+import hipalHandLogo from "@/assets/login/hand.png";
+import axios from "@/axios";
+import Header from "@/components/molecules/header";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useOwnerLogin } from "@/components/store/useOwnerLogin";
+import type { IBusinessData } from "@/components/types/businessData";
+import { paths } from "@/components/utils/paths";
+import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
+import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
+import { memo, startTransition } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { IoWarning } from "react-icons/io5";
+import { TbHomePlus } from "react-icons/tb";
+import { useNavigate } from "react-router-dom";
 
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
-  const [businesses, setBusinesses] = useState<IBusinessData[]>([]);
   const user = useOwnerLogin((s) => s.user);
-
   const navigate = useNavigate();
-  const filteredBusinesses = businesses?.filter(
-    (business: IBusinessData) => business?.staff?.includes(user._id) || business._id === user?.customRole?.[0]?.businessId,
-  );
-
-  const handleRoute = async (businessId: string) => {
-    try {
-      const response = await axios.get(`${paths.getSingleBusiness(businessId)}`);
-      const data = await response.data.data;
-      setBusinessData(data);
-      startTransition(() => {
-        navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](businessId));
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const getBusiness = async () => {
-    try {
-      if (user.role === 'RESTAURANT_MANAGER') {
-        const response = await axios.get(`${paths.getSingleBusiness(user?.customRole?.[0]?.businessId)}`);
-        setBusinesses([response.data.data]);
-        return;
-      }
-      const response = await axios.get(`/v1/businesses?id=${user._id}`);
-      if (response.data.data === undefined || response.data.data.length === 0) {
-        localStorage.removeItem('ownerLogin');
-        toast.error('connection refused please login');
-        startTransition(() => {
-          navigate('/');
-        });
-      }
-      setBusinesses(response.data.data);
-      return [response.data.data];
-    } catch (error) {
-      console.log(error);
-    }
+  const handleRoute = async (business: IBusinessData) => {
+    setBusinessData(business);
+    startTransition(() => {
+      navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
+    });
   };
 
   function addBusiness() {
     startTransition(() => {
-      navigate('/app/business/add');
+      navigate("/app/business/add");
     });
   }
 
-  const {
-    isLoading: isLoad,
-    error,
-    data: allBizData,
-  } = useQuery({
-    queryKey: ['getBiz', user._id],
-    queryFn: getBusiness,
+  const { data: sample, isLoading, isError, error } = useQuery({
+    queryKey: ['getBusinesses', user._id],
+    queryFn: () => apiRpc.businesses.$get({ query: { id: user._id } }).then((res) => res.json()),
     enabled: !!user._id,
   });
-
-  // const { data: sample } = useQuery({
-  //   queryKey: [],
-  //   queryFn: () =>
-  //     apiRpc.business
-  //       .$post({
-  //         json: {
-  //           name: "test",
-  //         },
-  //       })
-  //       .then((res) => res.json()),
-  // });
-
   return (
     <main className="h-screen">
       <div className="business_gradient">
@@ -98,7 +45,7 @@ const Business = () => {
             leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
-            isIconBusinessShow={user.role !== 'RESTAURANT_MANAGER'}
+            isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
           />
         </section>
         <section className="business_gradient_hero_section">
@@ -113,11 +60,11 @@ const Business = () => {
         </section>
       </div>
       <div className="parent_business_cards">
-        {filteredBusinesses?.map((ele: IBusinessData) => (
+        {sample?.data?.map((ele: IBusinessData) => (
           <section
-            onClick={() => handleRoute(ele._id)}
+            onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${ele?.status ? 'pointer-events-auto' : 'pointer-events-none opacity-75'} child_business_card`}
+            className={`${ele?.status ? "pointer-events-auto" : "pointer-events-none opacity-75"} child_business_card`}
           >
             <div className="text-xl capitalize">
               {ele?.status && (
@@ -143,8 +90,6 @@ const Business = () => {
       <button type="button" onClick={addBusiness} className="bottom_btn on_active_bounce">
         + Add Business
       </button>
-
-      {isLoad && <LoadingSpinner />}
     </main>
   );
 };

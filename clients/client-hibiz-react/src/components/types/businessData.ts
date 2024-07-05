@@ -131,7 +131,7 @@ export interface OrderDetails {
   __v: number;
 }
 
-export interface HistoryData {
+export interface IExistingPayments {
   comment: boolean;
   _id: string;
   businessId: string;
@@ -149,6 +149,10 @@ export interface HistoryData {
   createdAt: string;
   updatedAt: string;
   __v: number;
+}
+export interface HistoryData {
+  existingPayments : IExistingPayments[];
+  totalSale: number;
 }
 
 export interface NetworkInformation extends EventTarget {

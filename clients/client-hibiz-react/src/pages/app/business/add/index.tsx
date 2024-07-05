@@ -5,9 +5,9 @@ import { memo, startTransition, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
-import BusinessType from "../../../../components/templates/addBusinessForm/businessType";
-import OutletType from "../../../../components/templates/addBusinessForm/outletTypeForm";
-import AddName from "../../../../components/templates/addBusinessForm/addName";
+import BusinessType from "@/components/templates/addBusinessForm/businessType";
+import OutletType from "@/components/templates/addBusinessForm/outletTypeForm";
+import AddName from "@/components/templates/addBusinessForm/addName";
 import Congratulation from "@/components/templates/signupPage/congratulation";
 import SectionWithLogo from "@/components/atom/sectionWithLogo"
 
