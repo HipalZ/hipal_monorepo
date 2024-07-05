@@ -3,11 +3,11 @@ import { toast } from "react-toastify"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-interface IUserData {
+export interface IUserData {
 	name?: string
 	email?: string
 	phone: string
-	role: string
+	role: string[]
 	userDescription?: string
 	reward?: number
 	count?: number

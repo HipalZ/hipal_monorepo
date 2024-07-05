@@ -1,12 +1,12 @@
 import React, { memo, useState } from "react";
 import { useCart } from "@/components/store/useCart";
 import Image from "next/image";
-import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType";
+import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
 import { FaBookmark } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import DishData from "@/components/atoms/dishDescription";
 import DishPopup from "@/components/atoms/dishPopup";
-import { IDish } from "@/components/types/businessData";
+import type { IDish } from "@/components/types/businessData";
 
 const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
 
@@ -29,10 +29,10 @@ const CartItem = ({ cartItem }) => {
 		setShowDescription(false)
 	}
 	return (
-		<div className="flex items-center justify-between p-4 border-b">
+		<section className="flex items-center justify-between p-4 border-b">
 			<div className="flex flex-col w-[70%]">
 				<FoodType type={cartItem.dishData.dishType as FOOD_TYPES} />
-				<span className="text-lg font-semibold my-2">
+				<span className="my-2 text-lg font-semibold">
 					{cartItem.dishData.name}
 				</span>
 				<span
@@ -58,6 +58,7 @@ const CartItem = ({ cartItem }) => {
 					{cartItem.variants.length > 1 ? (
 						<div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
 							<button
+							type="button"
 								onClick={() => decreaseQuantity(cartItem.dishId)}
 								className="px-2 py-1"
 							>
@@ -65,6 +66,7 @@ const CartItem = ({ cartItem }) => {
 							</button>
 							<span className="mx-2">{cartItem.variants.length}</span>
 							<button
+							type="button"
 								onClick={() => increaseQuantity(cartItem.dishId)}
 								className="px-2 py-1"
 							>
@@ -73,8 +75,9 @@ const CartItem = ({ cartItem }) => {
 						</div>
 					) : (
 						<button
+						type="button"
 							onClick={() => removeDish(cartItem.dishId)}
-							className="px-10 py-1 bg-base-200 rounded-full"
+							className="px-10 py-1 rounded-full bg-base-200"
 						>
 							<FaBookmark size={16} style={{ color: "var(--color-primary)" }} />
 						</button>
@@ -88,7 +91,7 @@ const CartItem = ({ cartItem }) => {
 					</DishData>
 				)}
 			</div>
-		</div>
+		</section>
 	);
 };
 

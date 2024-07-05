@@ -4,7 +4,7 @@ import Image from "next/legacy/image"
 import { memo, useCallback, useEffect } from "react"
 import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
-import { IExplore } from "@/components/types/businessData";
+import type { IExplore } from "@/components/types/businessData";
 import { useLogin } from "@/components/store/useLogin";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";

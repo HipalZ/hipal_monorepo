@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { IBiz, IBusinessData } from "@/components/types/businessData";
+import type { IBiz, IBusinessData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;

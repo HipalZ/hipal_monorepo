@@ -4,7 +4,7 @@ import axios from "@/utils/axios";
 import { set } from "lodash-es";
 import { fetchCommonData } from "../commonApis";
 import { apiRpc } from "@hi/common";
-import { ILoyaltySetting } from "@/components/store/useLoyaltyData";
+import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
 
 async function fetchBusinessData(customLink: string) {
 	// common function has business and settings data

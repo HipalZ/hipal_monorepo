@@ -19,10 +19,10 @@ import { memo, useEffect, useState } from "react";
 import MainLoyalty from "@/components/atoms/mainLoyalty";
 import DishData from "@/components/atoms/dishDescription";
 import { useQuery } from "@tanstack/react-query";
-import { IBusinessData } from "@/components/types/businessData";
+import type { IBusinessData } from "@/components/types/businessData";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import BottomButton from "@/components/molecules/bottomButton";
-import { PatternKeys } from "@/components/utils/helpers";
+import type { PatternKeys } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { GoArrowUpRight } from "react-icons/go";
@@ -194,7 +194,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 						<br />
 						{Number(claim) > 0 ? (
 						<div className="h-[12rem] mx-4 flex justify-between items-center">
-							<div className="shine relative overflow-hidden">
+							<div className="relative overflow-hidden shine">
 								<Image src={hipalzCoinz} alt="reviewHand" />
 							</div>
 							<div className="mr-2 text-xs">
@@ -204,7 +204,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 						</div>
 						 ) : null}
 						<div className="relative bg-primary h-[17rem] -mx-6 rounded-t-3xl pt-4 overflow-hidden">
-							<article className="absolute -left-6 -top-4 -rotate-45">
+							<article className="absolute -rotate-45 -left-6 -top-4">
 								<Image src={hipalBlurred} alt="hipalBlurred" />
 							</article>
 							<center>
@@ -219,7 +219,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 									{data?.business?.businessName}
 								</h3>
 							</center>
-							<article className="absolute -right-6 top-1/4 rotate-45">
+							<article className="absolute rotate-45 -right-6 top-1/4">
 								<Image src={hipalBlurred} alt="hipalBlurred" />
 							</article>
 							<br />
@@ -250,6 +250,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 						<div className="w-full px-6 bg-base-100">
 							<div
 								onClick={() => setIsHiCodeModalOpen(true)}
+								onKeyDown={() => setIsHiCodeModalOpen(true)}
 								style={{
 									backgroundImage: `url(${image})`,
 									backgroundColor: data?.loyalty?.cardColor || "primary",
