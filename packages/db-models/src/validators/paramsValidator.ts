@@ -12,7 +12,7 @@ export const paramsSchema = z
     tableId: objectIdSchema.optional(),
     zoneId: objectIdSchema.optional(),
     orderId: objectIdSchema.optional(),
-    alertId: objectIdSchema.optional(),
+    alertId: z.string().optional(),
     pageNumber: z.string().optional(),
     alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER', 'ALL']).optional(),
     from: z.string().optional(),
