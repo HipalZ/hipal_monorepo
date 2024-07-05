@@ -150,7 +150,7 @@ const usersRouter = new Hono()
           status: false,
           message: 'User already exist',
           data: { user: existingUser, accessToken: accessTokenExistingUser, refreshToken: refreshTokenExistingUser },
-          err: false,
+          err: true,
         },
         409,
       );
@@ -161,12 +161,15 @@ const usersRouter = new Hono()
     const accessToken = createAccessToken(user._id.toString(), role);
     const refreshToken = createRefreshToken(user._id.toString(), role);
 
-    return c.json({
-      status: true,
-      message: 'User created successfully',
-      data: { user: user, accessToken, refreshToken },
-      err: false,
-    });
+    return c.json(
+      {
+        status: true,
+        message: 'User created successfully',
+        data: { user: user, accessToken, refreshToken },
+        err: false,
+      },
+      201,
+    );
   })
   .post('/:id/stafflogin', zValidator('json', staffValidator), async (c) => {
     const requestData = await c.req.json();
@@ -258,7 +261,6 @@ const usersRouter = new Hono()
     if (!existingUser) {
       return c.json(
         {
-          status: false,
           message: 'User not found',
           data: {},
           err: true,
@@ -303,7 +305,6 @@ const usersRouter = new Hono()
         count: userReward?.scanCount,
       };
       return c.json({
-        status: true,
         message: 'User logged in successfully',
         data: { user: modifyUser, accessToken, refreshToken, rewards: userReward?.rewards || 0 },
         err: false,
