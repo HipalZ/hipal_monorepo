@@ -21,7 +21,7 @@ export const PaymentSchema = z.object({
   claimedCoins: z.coerce.number().optional(),
   tips: z.coerce.number().default(0),
   order_id: ObjectIdSchema,
-  date: z.coerce.number().default(Date.now()),
+  date: z.coerce.number().optional(),
   razorpayPaymentId: z.string().optional(),
   razorpayOrderId: z.string().optional(),
   razorpayAcquirerData: z.any().optional(),

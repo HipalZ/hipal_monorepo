@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema<OrderType>({
 
   order_id: { type: String, required: true },
   tableName: { type: String, default: null },
-  date: { type: Number, required: true, default: Date.now() },
+  date: { type: Number, required: true },
 });
 
 const Order: Model<OrderType> = mongoose.model<OrderType>('Order', orderSchema);

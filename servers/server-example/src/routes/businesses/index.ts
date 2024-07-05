@@ -4,7 +4,8 @@ import type { BusinessType } from '@hi/db-models/src/validators';
 import { BusinessSchema, paramsSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-
+//@ts-ignore
+import z from 'zod';
 const businessesRouter = new Hono()
   .post('/', zValidator('json', BusinessSchema), async (c) => {
     const requestData = await c.req.json();
@@ -90,7 +91,7 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/:id', zValidator('param', BusinessSchema), async (c) => {
+  .get('/:id', zValidator('param', BusinessSchema), zValidator('query', BusinessSchema), async (c) => {
     const { id } = c.req.param();
     const { customLink, nameLogo } = c.req.query();
 
@@ -118,30 +119,29 @@ const businessesRouter = new Hono()
       err: false,
     });
   })
-  .get('/', async (c) => {
-    const { clientRole, id } = c.req.query();
+  .get(
+    '/',
+    zValidator(
+      'query',
+      z.object({
+        id: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { id } = c.req.query();
 
-    if (clientRole === 'admin') {
-      const existingBusinesses = await Business.find({});
+      const existingBusinesses = await Business.find({
+        staff: id,
+      });
 
       return c.json({
         data: existingBusinesses,
         status: 200,
         error: false,
       });
-    }
-
-    const existingBusinesses = await Business.find({
-      staff: id,
-    });
-
-    return c.json({
-      data: existingBusinesses,
-      status: 200,
-      error: false,
-    });
-  })
-  .get('/get/Single/:businessId', zValidator('query', paramsSchema), async (c) => {
+    },
+  )
+  .get('/get/Single/:businessId', zValidator('param', paramsSchema), async (c) => {
     const { businessId } = c.req.param();
 
     const existingBusiness = await Business.findById(businessId);
@@ -152,7 +152,7 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/n/:customLink', async (c) => {
+  .get('/n/:customLink', zValidator('param', paramsSchema), async (c) => {
     let { customLink } = c.req.param();
 
     customLink = customLink.trim();
@@ -165,35 +165,50 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/:id/loyalty', async (c) => {
-    const { id } = c.req.param();
+  .get(
+    '/:businessId/loyalty',
+    zValidator(
+      'param',
+      z.Object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
 
-    const exitingSettings =
-      (await LoyaltySettings.findOne({
-        businessId: id,
-      })) || {};
+      const exitingSettings =
+        (await LoyaltySettings.findOne({
+          businessId: businessId,
+        })) || {};
+      return c.json({
+        data: exitingSettings,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  // .get('/:id/users', async (c) => {
+  //   const { id } = c.req.param();
+  //   const existingRoles = await Role.find({
+  //     businessId: id,
+  //   });
 
-    console.log('exitingSettings', exitingSettings);
-
-    return c.json({
-      data: exitingSettings,
-      status: 200,
-      error: false,
-    });
-  })
-  .get('/:id/users', async (c) => {
-    const { id } = c.req.param();
-    const existingRoles = await Role.find({
-      businessId: id,
-    });
-
-    return c.json({
-      data: existingRoles,
-      status: 200,
-      error: false,
-    });
-  })
+  //   return c.json({
+  //     data: existingRoles,
+  //     status: 200,
+  //     error: false,
+  //   });
+  // })
   .get('/get/allbusiness', async (c) => {
+    const existingBusinesses = await Business.find({});
+
+    return c.json({
+      data: existingBusinesses,
+      status: 200,
+      error: false,
+    });
+  })
+  .get('/', async (c) => {
     const existingBusinesses = await Business.find({});
 
     return c.json({

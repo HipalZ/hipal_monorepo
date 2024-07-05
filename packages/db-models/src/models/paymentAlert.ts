@@ -20,7 +20,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>({
   posDiscount: { type: Number, default: 0 },
   waiterName: { type: String, default: null },
   coinsApplied: { type: Boolean, default: false },
-  date: { type: Number, default: Date.now() },
+  date: { type: Number },
 });
 
 const PaymentAlert: Model<PaymentAlertType> = mongoose.model<PaymentAlertType>('PaymentAlert', paymentAlertSchema);

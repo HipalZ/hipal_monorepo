@@ -1,7 +1,8 @@
 // books.ts
 import { LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, Reviews, UserReward, UserRewardHistory } from '@hi/db-models';
-import type { PaymentType } from '@hi/db-models/src/validators';
+import type { AcceptOrderType, PaymentType } from '@hi/db-models/src/validators';
 import {
+  acceptOrderSchema,
   orderSchema,
   paramsSchema,
   PaymentAlertSchema,
@@ -16,6 +17,7 @@ import { Hono } from 'hono';
 import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
 import { createHmac } from 'node:crypto';
+import { date } from 'zod';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
 const { validateWebhookSignature } = require('../../utils');
 //dates
@@ -73,6 +75,7 @@ const addRewardHistory = async (
         loyaltyId,
         total,
         subTotal: billValue,
+        date: Date.now(),
       },
     ],
     { session },
@@ -106,6 +109,7 @@ const removeRewardHistory = async (
         loyaltyId,
         total,
         subTotal: billValue,
+        date: Date.now(),
       },
     ],
     { session },
@@ -200,32 +204,28 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
     console.error('LoyaltySetting not found or setReward is not a number');
     return 0; // Or handle this case as appropriate for your application
   }
-
   const subTotal = billValue - claimedCoins;
-
   const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
   if (coinsToBeAdded < 0) {
     return 0;
   }
-
   return Math.floor(coinsToBeAdded);
 };
 const paymentsRouter = new Hono()
   .post('/createOrder', zValidator('json', orderSchema), async (c) => {
     const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
     const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
-    await runInTransaction(async (session: ClientSession) => {
+    const res = await runInTransaction(async (session: ClientSession) => {
       const existingOrder = await Order.findOne({ phone, role: 'HIPAL_CUSTOMER' }).sort({ date: -1 });
       const currentDate = Date.now(); // Current timestamp in milliseconds
       const providedDate = new Date(existingOrder?.date || 0).getTime();
       const differenceInMinutes = Math.abs(currentDate - providedDate) / (1000 * 60);
       if (existingOrder && differenceInMinutes < 2) {
-        c.json({
+        return c.json({
           err: true,
           data: {},
           message: 'You have already placed an order. Please wait for 2 minutes before placing another order',
         });
-        return;
       }
       const uniqueOrderId = nanoid(15);
       const response = await razorpayWrapper.client.orders.create({
@@ -247,14 +247,16 @@ const paymentsRouter = new Hono()
             tableName,
             order_id: response.id,
             tips: tips,
+            date: Date.now(),
           },
         ],
         { session },
       );
 
-      c.json({ err: false, message: 'Order created successfully', data: response.id });
-      return;
+      return c.json({ err: false, message: 'Order created successfully', data: response.id });
     });
+
+    return c.json({ err: false, message: 'Order created successfully', data: res });
   })
   .post('/reviews', zValidator('json', ReviewsSchema), async (c) => {
     const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
@@ -296,7 +298,6 @@ const paymentsRouter = new Hono()
     const uniqueOrderId = nanoid(15);
 
     const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
-    console.log('orderAlreadyExist', orderAlreadyExist);
 
     if (orderAlreadyExist) {
       return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} });
@@ -350,11 +351,12 @@ const paymentsRouter = new Hono()
     return c.json({ err: true, message: 'Payment is not valid' });
   })
   .post('/razorpay-webhook', zValidator('json', validatePaymentSchema), async (c) => {
-    await runInTransaction(async (session: ClientSession) => {
+    //@ts-ignore
+    const res = await runInTransaction(async (session: ClientSession) => {
       const headers = RazorpayWebhookHeadersSchema.safeParse(c.req.header());
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(headers);
       if (!headersResult.success) {
-        throw new Error('Invalid headers');
+        return c.json({ err: true, message: 'Invalid headers', data: {} }, 200);
       }
 
       const { 'x-razorpay-signature': razorpaySignature, 'x-razorpay-event-id': razorpayEventId } = headersResult.data;
@@ -364,12 +366,12 @@ const paymentsRouter = new Hono()
       const isSignatureValid = validateWebhookSignature(JSON.stringify(body), razorpaySignature, Bun.env.RAZORPAY_WEBHOOK_SECRET as string);
       if (!isSignatureValid) {
         console.log('Invalid signature');
-        throw new Error('Invalid signature');
+        return c.json({ err: true, message: 'Invalid signature', data: {} }, 200);
       }
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
       if (!bodyResult.success) {
-        throw new Error('Invalid body');
+        return c.json({ err: true, message: 'Invalid body', data: {} }, 200);
       }
       const { event, payload } = bodyResult.data;
 
@@ -402,7 +404,6 @@ const paymentsRouter = new Hono()
         }
       }
       if (event === 'payment.captured') {
-        console.log('payment captured', payload.payment.entity.notes);
         const createPayment = await Payment.create(
           [
             {
@@ -421,6 +422,7 @@ const paymentsRouter = new Hono()
               razorpayOrderId: payload.payment.entity.order_id,
               razorpayAcquirerData: payload.payment.entity.acquirer_data,
               razorpayEventId: razorpayEventId,
+              date: Date.now(),
             },
           ],
           { session },
@@ -445,6 +447,7 @@ const paymentsRouter = new Hono()
               tableName: payload.payment.entity.notes.tableName,
               isAccepted: false,
               posDiscount: posDiscount,
+              date: Date.now(),
             },
           ],
           { session },
@@ -494,7 +497,7 @@ const paymentsRouter = new Hono()
       }
     });
 
-    return c.json({ err: false, message: 'Webhook processed successfully', data: {} });
+    return c.json({ err: false, message: 'Webhook processed successfully', data: res });
   })
 
   .post('/createWaiterAlert', zValidator('json', PaymentAlertSchema), async (c) => {
@@ -561,21 +564,18 @@ const paymentsRouter = new Hono()
       err: false,
     });
   })
-  .put('/:pid/order/:alertId', zValidator('param', paramsSchema), async (c) => {
+  .put('/:pid/order/:alertId', zValidator('param', paramsSchema), zValidator('json', acceptOrderSchema), async (c) => {
     const { alertId } = c.req.param();
     const requestData = await c.req.json();
     const { comment, waiterName } = requestData;
-
-    console.log('alertId', alertId, 'comment', comment, 'waiterName', waiterName);
-
-    await runInTransaction(async (session: ClientSession) => {
+    //@ts-ignore
+    const res = await runInTransaction(async (session: ClientSession) => {
       const alert = await PaymentAlert.findOne({ _id: alertId, isAccepted: false }, null, { session }).select(
         '_id alertType isAccepted order_id businessId',
       );
 
       if (!alert) {
-        c.json({ message: 'Alert not found', err: true, data: {} });
-        return;
+        return c.json({ message: 'Alert not found', err: true, data: {} });
       }
 
       if (alert.alertType === 'ONLINE' || alert.alertType === 'WAITER') {
@@ -658,12 +658,12 @@ const paymentsRouter = new Hono()
           { new: true, session },
         ).populate('order_id');
 
-        c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
-        return;
+        return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
       }
-      c.json({ message: 'Invalid alert type', err: true, data: {} });
-      return;
+      return c.json({ message: 'Invalid alert type', err: true, data: {} });
     });
+
+    return c.json({ message: 'Order accepted successfully', err: false, data: res });
   })
   .put('/:pid/rejectOrder/:alertId', zValidator('param', paramsSchema), async (c) => {
     const { alertId } = c.req.param();

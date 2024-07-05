@@ -44,16 +44,16 @@ if (!Bun.env.RAZORPAY_SECRET) {
 
 razorpayWrapper.create(Bun.env.RAZORPAY_KEY_ID, Bun.env.RAZORPAY_SECRET);
 
-const limiter = rateLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
-  standardHeaders: 'draft-6',
-  keyGenerator: (c) => '<unique_key>',
-  store: new RedisStore({ client: redisClient }),
-});
+// const limiter = rateLimiter({
+//   windowMs: 15 * 60 * 1000,
+//   limit: 100,
+//   standardHeaders: 'draft-6',
+//   keyGenerator: (c) => '<unique_key>',
+//   store: new RedisStore({ client: redisClient }),
+// });
 
 // Apply the rate limiting middleware to all requests.
-app.use(limiter);
+// app.use(limiter);
 
 const { printMetrics, registerMetrics } = prometheus();
 

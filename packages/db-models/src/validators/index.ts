@@ -1,3 +1,4 @@
+export * from './acceptOrder';
 export * from './admin';
 export * from './alert';
 export * from './bill';
