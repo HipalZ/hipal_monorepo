@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { string, z } from 'zod';
+import Otp from '../../../../clients/client-hibiz-react/src/components/templates/signupPage/otp';
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -39,6 +40,11 @@ export const UserAttrs = z.object({
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
   businessId: ObjectIdSchema.optional(),
+  otp: z.string().optional(),
+  loyaltyId: z.string().optional(),
+  signUpBonus: z.number().optional(),
+  userId: z.string().optional(),
+
   _id: z.string().optional(),
 });
 
