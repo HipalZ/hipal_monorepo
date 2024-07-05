@@ -215,6 +215,7 @@ const paymentsRouter = new Hono()
   .post('/createOrder', zValidator('json', orderSchema), async (c) => {
     const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
     const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
+    //@ts-ignore
     const res = await runInTransaction(async (session: ClientSession) => {
       const existingOrder = await Order.findOne({ phone, role: 'HIPAL_CUSTOMER' }).sort({ date: -1 });
       const currentDate = Date.now(); // Current timestamp in milliseconds

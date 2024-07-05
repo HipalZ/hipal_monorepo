@@ -1,3 +1,4 @@
+//@ts-ignore
 import Razorpay from 'razorpay';
 
 class RazorPayWrapper {
