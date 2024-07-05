@@ -287,7 +287,7 @@ const usersRouter = new Hono()
 
     const response = await axios(options);
 
-    if (response?.status !== 200) {
+    if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
       return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
     }
 
