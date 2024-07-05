@@ -15,8 +15,8 @@ export const paramsSchema = z
     alertId: objectIdSchema.optional(),
     pageNumber: z.string().optional(),
     alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER', 'ALL']).optional(),
-    from: z.number().optional(),
-    to: z.number().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
     customLink: z.string().optional(),
   })
   .refine(
