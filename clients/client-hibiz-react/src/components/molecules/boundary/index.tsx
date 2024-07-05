@@ -6,7 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 const Boundary = ({children}:{children:ReactNode}) => {
   return (
-    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+    <ErrorBoundary fallback={<LoadingSpinner />}>
         <Suspense fallback={<LoadingSpinner />}>
           {children}
         </Suspense>
