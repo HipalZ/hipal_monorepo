@@ -1,4 +1,4 @@
-import { UserData } from "@/components/types/businessData"
+import type { UserData } from "@/components/types/businessData"
 import { create } from "zustand"
 
 interface IUserRewardData {

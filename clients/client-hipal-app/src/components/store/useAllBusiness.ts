@@ -1,10 +1,10 @@
 //@ts-nocheck
 "use client"
-import { IBusinessData } from "@/components/types/businessData"
+import type { IBusinessData } from "@/components/types/businessData"
 import { isEqual } from "lodash-es"
 import { useCallback, useMemo } from "react"
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 interface IUseAllBusiness {
 	data: IBusinessData
@@ -19,7 +19,7 @@ export const _useAllBusiness = create<IUseAllBusiness>()(
 		}),
 		{
 			name: "businessStore",
-			getStorage: () => localStorage,
+			storage:createJSONStorage(()=>localStorage)
 		},
 	),
 )

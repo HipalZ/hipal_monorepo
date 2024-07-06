@@ -1,5 +1,5 @@
 "use client";
-import useLoyaltyData, { ILoyaltySetting } from "@/components/store/useLoyaltyData"
+import useLoyaltyData, { type ILoyaltySetting } from "@/components/store/useLoyaltyData"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { useInView } from "framer-motion";
@@ -11,7 +11,7 @@ import { useLogin } from "@/components/store/useLogin";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
-import { createSrcColor, PatternKeys } from "@/components/utils/helpers";
+import { createSrcColor, type PatternKeys } from "@/components/utils/helpers";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 interface ILoyaltyCard {
 	loyalty: ILoyaltySetting

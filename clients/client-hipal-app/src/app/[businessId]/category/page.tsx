@@ -41,12 +41,6 @@ const TopBackground = dynamic(
   },
 );
 
-export async function generateStaticParams() {
-  const businessIds = await fetchAllBusinessIds();
-  return businessIds.map((businessId: string) => ({
-    businessId: businessId,
-  }));
-}
 
 async function fetchData(businessId: string) {
   const data = await categoryApis.all(businessId);

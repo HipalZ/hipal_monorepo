@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { IBiz } from "../types/businessData";
+import { createJSONStorage, persist } from "zustand/middleware";
+import type { IBiz } from "../types/businessData";
 
 export const useBusinessDetails = create(
   persist<{
@@ -60,7 +60,7 @@ export const useBusinessDetails = create(
     }),
     {
       name: "useBusinessDetails",
-      getStorage: () => localStorage,
+      storage:createJSONStorage(()=>localStorage)
     }
   )
 );

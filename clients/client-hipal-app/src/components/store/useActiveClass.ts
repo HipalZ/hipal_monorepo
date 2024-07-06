@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 interface IUseSettings {
 	isActiveCategory: string
@@ -28,7 +28,7 @@ export const useActiveClass = create(
 		}),
 		{
 			name: "activecategory",
-			getStorage: () => localStorage,
+			storage:createJSONStorage(()=>localStorage)
 		},
 	),
 )
