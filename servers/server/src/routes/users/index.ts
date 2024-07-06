@@ -426,6 +426,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string(),
         from: z.string().optional(),
         to: z.string().optional(),
+        pageNumber: z.string().optional(),
       }),
     ),
     async (c) => {
