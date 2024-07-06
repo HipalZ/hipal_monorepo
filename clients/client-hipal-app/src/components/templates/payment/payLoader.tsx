@@ -2,7 +2,7 @@ import React, { memo } from 'react'
 import hipalLoader from "@/assets/hipalLoader.png"
 import Image from 'next/image'
 
-const PayLoader = () => {
+const PayLoader = ({selectedMode}) => {
   return (
     <section className="relative h-[70vh] overflow-hidden">
     <article className="hipal_loader">
@@ -13,7 +13,7 @@ const PayLoader = () => {
         In progress
     </center>
     <center className="mx-6 text-sm opacity-50">
-        We are processing your payment with Razor pay, please wait.
+        We are processing your payment {`${selectedMode ==="ONLINE" ? 'by Razory pay' : ''}`} please wait.
     </center>
 </section>
   )

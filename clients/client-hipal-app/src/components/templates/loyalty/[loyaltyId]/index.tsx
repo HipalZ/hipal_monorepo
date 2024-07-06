@@ -53,7 +53,11 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
     if (historyData.status === 200 || historyData.status === 201) {
       const data = response;
       const items = data?.items;
-      setItemData((prev) => [...prev, ...items]);
+      setItemData((prevData) => {
+        const existingIds = new Set(prevData.map(item => item.id));
+        const uniqueNewData = items.filter(item => !existingIds.has(item.id));
+        return [...prevData, ...uniqueNewData];
+      });
       setHasMoreData(data.length === 10);
       setLoading(false);
     }

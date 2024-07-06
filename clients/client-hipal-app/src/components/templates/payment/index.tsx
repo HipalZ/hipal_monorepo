@@ -273,6 +273,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         })
         const response = await res.json() as unknown as { data: { order_id: string }, message: string }
         if (res.status === 400) {
+            setIsLoading(false)
             return toast.error(response?.message || 'Something went wrong')
         }
         if (response?.data?.order_id) {
@@ -448,7 +449,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     return (
         <>
-            {isLoading ? (<PayLoader />) : showError ? (<ErrorPayment />) : (
+            {isLoading ? (<PayLoader selectedMode={selectedMode}/>) : showError ? (<ErrorPayment />) : (
                 <div>
                     <section className='z-20 w-full bg-base-100'>
                         <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
