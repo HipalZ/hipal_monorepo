@@ -7,11 +7,10 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import toast from "react-hot-toast";
-import { useApiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useTokenStore";
+import { useUserToken } from "@/components/store/useUserToken";
+import { apiRpc } from "@hi/common";
 
 const Login: React.FC = () => {
-  const apiRpc = useApiRpc();
   const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));
   const { setIsLogin, setUser } = useOwnerLogin((state) => ({ setIsLogin: state.setIsLogin, setUser: state.setUser }));
   const setAccessToken = useUserToken.getState().setAccessToken;
@@ -35,16 +34,14 @@ const Login: React.FC = () => {
       setValidPhone(isPhoneValid);
       return;
     }
-    try {
       const response = await apiRpc.users.Owner.Login.$post({
         json: {
           phone: phone,
           password: password,
         },
       });
-
       const user = await response.json();
-      
+      console.log('usee',user);
       if (response.status === 200) {
         setAccessToken(user.data.accessToken);
         setRefreshToken(user.data.refreshToken);
@@ -54,11 +51,10 @@ const Login: React.FC = () => {
         startTransition(() => {
           navigate(routePaths[PAGE_TYPES.BUSINESS]());
         });
+      }else{
+        setValidPassword(true);
+        toast.error(user?.message || "Check credentials");
       }
-    } catch (err) {
-      setValidPassword(false);
-      toast.error("Phone or Password invalid...!");
-    }
   };
 
   const goToSignUp = useCallback(() => {

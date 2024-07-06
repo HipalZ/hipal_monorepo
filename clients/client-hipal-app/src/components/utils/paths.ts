@@ -1,9 +1,9 @@
 // const getApiUrl = process.env.NEXT_PUBLIC_API_HOST
 
 export const paths = {
-	listAllBusiness: () => `/businesses/get/allbusiness`,
-	sendOtp: () => `/users/otp`,
-	verifyOtp: () => `/users?action=login`,
+	listAllBusiness: () => "/businesses/get/allbusiness",
+	sendOtp: () => "/users/otp",
+	verifyOtp: () => "/users?action=login",
 	businessData: (businessId: string) => `/businesses/${businessId}`,
 	businessNameLogo : (businessId: string, nameLogo:string) => `/businesses/${businessId}?nameLogo=${nameLogo}`,
 	categoryByBusiness: (businessId: string) => `/categories?businessId=${businessId}`,

@@ -16,11 +16,12 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import HipalLogo from "@/assets/hipalNewLogo.svg";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
-import { useUserToken } from "@/components/store/useUserToken";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 import { toast } from "react-toastify";
+import { useUserToken } from "@hi/common/src/useTokenStore";
 
 function OtpPage() {
+  const apiRpc = useApiRpc();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const { setIsLogin, setUserDetails, userDetails } = useLogin();
@@ -29,8 +30,8 @@ function OtpPage() {
   const [customerName, setCustomerName] = useState(userDetails.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
   const [logo, setLogo] = useState(businessLogo);
-  const setAccessToken = useUserToken((s) => s.setAccessToken);
-  const setRefreshToken = useUserToken((s) => s.setRefreshToken);
+  const setAccessToken = useUserToken.getState().setAccessToken;
+  const setRefreshToken = useUserToken.getState().setRefreshToken;
   const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -48,7 +49,7 @@ function OtpPage() {
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
   ) => {
-    if (e.target.value.length > 1 || isNaN(Number(e.target.value))) return;
+    if (e.target.value.length > 1 || Number.isNaN(Number(e.target.value))) return;
 
     const newOtp = [...otp];
     newOtp[index] = e.target.value;

@@ -1,24 +1,28 @@
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { useApiRpc } from '@hi/common';
 import { type ChangeEvent, memo, useCallback, useState } from 'react';
 import { FiCopy } from 'react-icons/fi';
 import { MdOutlineCall } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../loadingSpinner';
 import PopUp from '../popUp';
+import { apiRpc } from '@hi/common';
+import { useUserToken } from '@/components/store/useTokenStore';
 
 const BillPopUpMemo = () => {
-  const apiRpc = useApiRpc();
-  const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore();
+  const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore((s)=>({
+    selectedNavItem: s.selectedNavItem,
+    viewData: s.viewData,
+    removeOfflineAlert: s.removeOfflineAlert,
+  }));
   const [textTick, setTextTick] = useState(false);
   const [numberText, setNumberTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
-  const { captainData } = useHiClientZ();
+  const captainData = useHiClientZ((s)=>s.captainData);
 
   const copyText = useCallback((id: string, value?: string) => {
     let text: string;
@@ -48,47 +52,49 @@ const BillPopUpMemo = () => {
   }, []);
 
   const handleCloseAlert = async (id: string) => {
-    try {
-      await apiRpc.payments[':pid'].rejectOrder[':alertId'].$put({
-        param: { alertId: id },
-      });
-      toast.success('order reject successfully');
-      setClickViewMore(!clickViewMore);
-      removeOfflineAlert(id);
-    } catch (err) {
-      console.log(err);
-    }
+    const accessToken = useUserToken.getState().accessToken;
+    const refreshToken = useUserToken.getState().refreshToken;
+    await apiRpc.payments[':pid'].rejectOrder[':alertId'].$put({
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
+      },
+      json: {
+        waiterName: captainData?.name
+      },
+      param: { alertId: id },
+    });
+    toast.success('order reject successfully');
+    setClickViewMore(!clickViewMore);
+    removeOfflineAlert(id);
   };
 
   const handleCloseOnline = useCallback(() => {
     setClickViewMore(!clickViewMore);
   }, []);
 
-  const handleConfirmAlert = async (id: string,comment:string) => {
+  const handleConfirmAlert = async (id: string, comment: string) => {
+    const accessToken = useUserToken.getState().accessToken;
+    const refreshToken = useUserToken.getState().refreshToken;
     setIsLoading(true);
-    console.log('payload', comment);
-    try {
-      const res = await apiRpc.payments[':pid'].order[':alertId'].$put({
-        param: { alertId: id },
-        json: {
-          comment: comment,
-          waiterName: captainData?.name,
-        },
-      });
-      const response = await res.json();
-      console.log('response', response);
-      if (res.status === 200) {
-        toast.success('order confirm successfully');
+    const res = await apiRpc.payments[':pid'].order[':alertId'].$put({
+      param: { alertId: id },
+      json: {
+        comment: comment,
+        waiterName: captainData?.name,
+      },
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
       }
-    } catch (err) {
-      console.log(err);
-      return {};
-    } finally {
+    });
+    if (res.status === 200) {
+      toast.success('order confirm successfully');
       setIsLoading(false);
     }
   };
 
-  const handleConfirm = useCallback((id: string, comment:string) => {
+  const handleConfirm = useCallback((id: string, comment: string) => {
     handleConfirmAlert(id, comment);
     removeOfflineAlert(id);
     setClickViewMore(!clickViewMore);
@@ -243,7 +249,7 @@ const BillPopUpMemo = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleConfirm(viewData._id,comment)}
+                  onClick={() => handleConfirm(viewData._id, comment)}
                   className={
                     'btn btn-black btn-md my-auto mr-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full bg-black !py-1 text-[1rem] capitalize text-white shadow-lg'
                   }

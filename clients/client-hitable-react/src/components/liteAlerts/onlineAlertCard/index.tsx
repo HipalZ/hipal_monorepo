@@ -3,7 +3,7 @@ import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import type { Alert } from '@/components/types/hiClientzData';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { useApiRpc } from '@hi/common';
+import { apiRpc } from '@hi/common';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import { IoCloseCircleSharp } from 'react-icons/io5';
@@ -15,7 +15,6 @@ interface IOnlineProp {
 }
 
 const OnlineAlertCard = (props: IOnlineProp) => {
-  const apiRpc = useApiRpc();
   const { onlineAlertData } = props;
   const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore((s) => ({
     removeOnlineAlert: s.removeOnlineAlert,

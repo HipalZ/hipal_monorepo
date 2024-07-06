@@ -1,13 +1,13 @@
-import { useApiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { Howl } from 'howler';
 import { useEffect, useState } from 'react';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
 import MainRouter from './routes';
+import { apiRpc } from '@hi/common';
+import { useUserToken } from './components/store/useTokenStore';
 
 function App() {
-  const apiRpc = useApiRpc();
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
   const triggerSound = useLiteStore((s) => s.triggerSound);
   const {
@@ -21,53 +21,31 @@ function App() {
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
   } = useLiteStore();
-
+  const accessToken = useUserToken.getState().accessToken
+  const refreshToken = useUserToken.getState().refreshToken
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const businessId = selectedBiz?.businessId?._id;
-  // const fetchAlerts = async (alertType: string) => {
-  //   const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
-  //   setLoading(true);
-  //   try {
-  //     const config = {
-  //       method: 'GET',
-  //       url: `/v1/payments/:id/${url}?businessId=${businessId}&alertType=${alertType}`,
-  //     };
-  //     const response = await axios(config);
-  //     if (response.status === 200) {
-  //       return response.data.data;
-  //     } else {
-  //       return [];
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //     return [];
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const fetchAlerts = async (alertType: string) => {
     const endpoint = alertType === 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
     setLoading(true);
-    try {
-      const res = await apiRpc.payments[':id'][endpoint].$get({
-        query: {
-          businessId,
-          alertType,
-        },
-        param: {
-          id: businessId,
-        },
-      });
-      const response = (await res.json()) || [];
-      return response.data || [];
-    } catch (err) {
-      console.error(err);
-      return [];
-    } finally {
-      setLoading(false);
-    }
+    const res = await apiRpc.payments[':id'][endpoint].$get({
+      query: {
+        businessId,
+        alertType,
+      },
+      param: {
+        id: businessId,
+      },
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
+      }
+    });
+    const response = (await res.json()) || [];
+    setLoading(false);
+    return response.data || [];
   };
 
   const handleOnlineAlerts = async () => {

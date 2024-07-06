@@ -16,6 +16,7 @@ import type {
   IExistingPayments,
 } from "@/components/types/businessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { useUserToken } from "@/components/store/useUserToken";
 
 const MemoPaymentSales = () => {
   const [open, setOpen] = useState(false);
@@ -57,13 +58,15 @@ const MemoPaymentSales = () => {
 
   // number privacy
   const hideMiddleNumbers = (phone: string) => {
-    if (phone.length <= 4) return phone;
-    const firstPart = phone.slice(0, 3);
-    const lastPart = phone.slice(-3);
+    if (phone?.length <= 4) return phone;
+    const firstPart = phone?.slice(0, 3);
+    const lastPart = phone?.slice(-3);
     return `${firstPart}****${lastPart}`;
   };
 
-  const handleHistoryData = async () => {
+  const handleBillsData = async () => {
+    const accessToken = useUserToken.getState().accessToken;
+    const refreshToken = useUserToken.getState().refreshToken;
     try {
       const response = await apiRpc.payments[":id"].bills.$get({
         query: {
@@ -73,6 +76,10 @@ const MemoPaymentSales = () => {
           to: timeStampEnd.toString(),
         },
         param: { id: businessId || "" },
+        header: {
+          x_access_token: accessToken,
+          x_refresh_token: refreshToken
+        }
       });
       const data = (await response.json()).data as HistoryData;
       if (response.status === 200) {
@@ -97,7 +104,7 @@ const MemoPaymentSales = () => {
       timeStampEnd,
       pageNumber,
     ],
-    queryFn: handleHistoryData,
+    queryFn: handleBillsData,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd && !!pageNumber,
   });
 

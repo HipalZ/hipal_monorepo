@@ -1,6 +1,4 @@
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
-import { paths } from "@/components/utils/paths";
-import axios from "@/utils/axios";
 import { set } from "lodash-es";
 import { fetchCommonData } from "../commonApis";
 import { useApiRpc } from "@hi/common";
@@ -39,6 +37,11 @@ export const businessApis = {
 }
 
 export async function fetchAllBusinessIds() {
-	const response = await axios.get(paths.listAllBusiness());
-	return response?.data?.data.map((business: { _id: string }) => business._id);
+	const apiRpc = useApiRpc();
+	const res = await apiRpc.businesses.get.allbusiness.$get({
+
+	});
+	const response = await res.json()
+	console.log('response', response)
+	return response?.data.map((business: { _id: string }) => business._id);
 }

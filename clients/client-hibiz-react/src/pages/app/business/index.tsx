@@ -1,11 +1,9 @@
 import HipeopleLogo from "@/assets/hibizNewLogo.png";
 import hipalHandLogo from "@/assets/login/hand.png";
-import axios from "@/axios";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import type { IBusinessData } from "@/components/types/businessData";
-import { paths } from "@/components/utils/paths";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";

@@ -9,9 +9,10 @@ import HipalLogo from "@/assets/hipalNewLogo.svg";
 import { useLogin } from "@/components/store/useLogin";
 import { useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 
 const SignUp = memo(() => {
+  const apiRpc = useApiRpc();
   const [logo, setLogo] = useState<string>("");
   const [phone, setPhone] = useState("");
   const { setUserDetails } = useLogin();

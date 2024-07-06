@@ -4,7 +4,7 @@ import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import type { Alert } from '@/components/types/hiClientzData';
 import { timestampToDateTime } from '@/components/utils/helpers';
-import { useApiRpc } from '@hi/common';
+import { apiRpc } from '@hi/common';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import { IoCloseCircleSharp } from 'react-icons/io5';
@@ -15,7 +15,6 @@ interface IOfflineProp {
 }
 
 const OfflineAlertCard = (props: IOfflineProp) => {
-  const apiRpc = useApiRpc();
   const { offlineAlertData } = props;
   const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore((s) => ({
     removeOfflineAlert: s.removeOfflineAlert,

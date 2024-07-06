@@ -21,8 +21,7 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
-import { apiRpc } from "@hi/common";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useApiRpc } from "@hi/common";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -57,6 +56,7 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
 const PaymentMemo = ({ data }: { data: IBusinessData }) => {
+    const apiRpc = useApiRpc();
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -75,10 +75,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     const { loyaltySetting } = useLoyaltyData()
     const [maxCoinz, setMaxCoinz] = useState(0)
     const [showError, setShowError] = useState(false)
-    const { accessToken, refreshToken } = useUserToken((s) => ({
-        accessToken: s.accessToken,
-        refreshToken: s.refreshToken
-    }))
 
     useEffect(() => {
         if (!tableName) {
@@ -264,10 +260,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 currency: "INR",
                 tableName: tableName,
             },
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken,
-            }
         })
         const response = await res.json() as unknown as { data: { order_id: string }, message: string }
         if (res.status === 400) {
@@ -298,10 +290,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 tips: tips,
                 tableName: tableName,
             },
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken,
-            }
         })
         const response = await res.json() as unknown as { data: string }
         const orderId = response.data;

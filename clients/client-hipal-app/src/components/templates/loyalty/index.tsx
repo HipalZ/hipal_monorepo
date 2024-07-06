@@ -30,10 +30,11 @@ import avatar from "@/assets/img/avatar.png";
 import hipalzCoinz from "@/assets/img/hipalzCoinz.png";
 import RollingNumber from "@/components/rollingNumbers";
 import hipalBlurred from "@/assets/svg/hipal_blurred_logo.svg";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
+  const apiRpc = useApiRpc();
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const [rewards, setRewards] = useState();

@@ -1,10 +1,9 @@
-import axios from "@/utils/axios";
-import { paths } from "@/components/utils/paths";
 import { isEmpty } from "lodash-es";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 import { fetchCommonData } from "../commonApis";
 
 async function fetchCategoryPageData(customLink: string) {
+	const apiRpc = useApiRpc()
 	// common api has business and settings data
 	const {data, bizId} = await fetchCommonData(customLink)
 	const dishesDataResponse = await apiRpc.dishes.$get({
@@ -34,7 +33,7 @@ async function fetchCategoryPageData(customLink: string) {
 
 		const sortedCategories = new Map()
 
-		for (let categoryId of categoryOrder) {
+		for (const categoryId of categoryOrder) {
 			if (hashedCategories?.has(categoryId)) {
 				sortedCategories.set(categoryId, hashedCategories?.get(categoryId))
 			}
@@ -83,7 +82,6 @@ async function fetchCategoryPageData(customLink: string) {
 		categoryData?.forEach((category) => {
 			const newCategory = JSON.parse(JSON.stringify(category))
 			newCategory.dishes = []
-			console.log('d', dishesData)
 			for (let dishId of category.dishes) {
 				const newDish = dishesData?.data.find((d) => d._id === dishId._id)
 
@@ -104,6 +102,8 @@ export const categoryApis = {
 };
 
 export async function fetchAllBusinessIds() {
-	const response = await axios.get(paths.listAllBusiness());
-	return response?.data?.data.map((business: { _id: string }) => business._id);
+	const apiRpc = useApiRpc();
+	const res = await apiRpc.businesses.get.allbusiness.$get({});
+	const response = await res.json()
+	return response?.data.map((business: { _id: string }) => business._id);
 }

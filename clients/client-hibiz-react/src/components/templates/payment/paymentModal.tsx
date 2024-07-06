@@ -9,9 +9,9 @@ interface PaymentModalProps {
 const PaymentModal = (props: PaymentModalProps) => {
   const { salesData } = props;
   const hideMiddleNumbers = (phone: string) => {
-    if (phone.length <= 4) return phone;
-    const firstPart = phone.slice(0, 3);
-    const lastPart = phone.slice(-3);
+    if (phone?.length <= 4) return phone;
+    const firstPart = phone?.slice(0, 3);
+    const lastPart = phone?.slice(-3);
     return `${firstPart}****${lastPart}`;
   };
 
@@ -62,7 +62,7 @@ const PaymentModal = (props: PaymentModalProps) => {
             <span>
               :{" "}
               {salesData?.order_id?.phone
-                ? hideMiddleNumbers(salesData.order_id.phone)
+                ? hideMiddleNumbers(salesData?.order_id?.phone)
                 : ""}
             </span>
             &nbsp;&nbsp;
@@ -84,7 +84,7 @@ const PaymentModal = (props: PaymentModalProps) => {
           </h1>
           <br />
         </div>
-        {salesData?.comment && salesData?.comment.length > 0 ? (
+        {salesData?.comment && salesData?.comment?.length > 0 ? (
           <>
             <h1 className="mx-6 font-semibold">Added Comment</h1>
             <div className="flex flex-col p-4 m-6 bg-gray-300 rounded-2xl">

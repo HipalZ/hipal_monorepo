@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import type { IBiz, IBusinessData } from "@/components/types/businessData";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 export async function fetchCommonData(businessId: string): Promise<{ data: IBusinessData, bizId: string }> {
+    const apiRpc = useApiRpc();
     let bizId = businessId;
     const data = {} as IBusinessData;
 

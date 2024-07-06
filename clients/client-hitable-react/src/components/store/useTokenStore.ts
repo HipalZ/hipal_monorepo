@@ -8,7 +8,6 @@ interface userToken {
   refreshToken: string;
   setRefreshToken: (data: string) => void;
 }
-
 export const useUserToken = create(
   persist<userToken>(
     (set) => ({
@@ -23,7 +22,6 @@ export const useUserToken = create(
     }),
     {
       name: 'token-data',
-      getStorage: () => localStorage,
     },
   ),
 );

@@ -3,15 +3,15 @@ import { useLiteStore } from '@/components/store/useLiteStore';
 import useTimings from '@/components/store/useTimings';
 import type { ISalesLite } from '@/components/types/hiClientzData';
 import { getDate } from '@/components/utils/helpers';
-import { useApiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import DateRangePickerMemo from '../dateRangePicker';
 import './index.css';
+import { apiRpc } from '@hi/common';
+import { useUserToken } from '@/components/store/useTokenStore';
 
 const SalesLite = () => {
-  const apiRpc = useApiRpc();
   const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
   }));
@@ -26,29 +26,28 @@ const SalesLite = () => {
     timeStampEnd: s.timeStampEnd,
   }));
   const handleSales = async () => {
+    const accessToken = useUserToken.getState().accessToken
+    const refreshToken = useUserToken.getState().refreshToken
     setLoading(true);
-    try {
-      const res = await apiRpc.payments[':id'].salesDashboard.$get({
-        param: { id: businessId },
-        query: {
-          businessId: businessId,
-          from: timeStampStart.toString(),
-          to: timeStampEnd.toString(),
-        },
-      });
-      const response = (await res.json()).data as ISalesLite;
-      if (res.status === 200) {
-        setSalesData(response);
-        return response;
-      } else {
-        return {};
+    const res = await apiRpc.payments[':id'].salesDashboard.$get({
+      param: { id: businessId },
+      query: {
+        businessId: businessId,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+      },
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
       }
-    } catch (err) {
-      console.log(err);
-      return {};
-    } finally {
+    });
+    const response = (await res.json()).data as ISalesLite;
+    if (res.status === 200) {
+      setSalesData(response);
       setLoading(false);
+      return response;
     }
+    return {};
   };
 
   useQuery({

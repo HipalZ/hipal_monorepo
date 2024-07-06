@@ -7,14 +7,13 @@ import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import { useApiRpc } from '@hi/common';
-import { useUserToken } from '@hi/common/src/useTokenStore';
+import { useUserToken } from '@/components/store/useTokenStore';
+import { apiRpc } from '@hi/common';
 import { memo, startTransition, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 //tes
 const LoginMemo = () => {
-  const apiRpc = useApiRpc();
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
   // 
@@ -35,7 +34,6 @@ const LoginMemo = () => {
   //apis
   const handleLogin = async () => {
     setLoading(true);
-    try {
       const res = await apiRpc.users[':id'].stafflogin.$post({
         json: {
           phone: phoneNumber,
@@ -52,11 +50,7 @@ const LoginMemo = () => {
           navigate('/businesses');
         });
       }
-    } catch (error) {
-      toast.error(error?.response?.data?.message || error.message);
-    } finally {
       setLoading(false);
-    }
   };
 
   return (

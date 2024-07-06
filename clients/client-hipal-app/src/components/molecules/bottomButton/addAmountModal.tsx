@@ -11,20 +11,16 @@ import { cn } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { useUserToken } from "@/components/store/useUserToken";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 
 const AddAmountModal = memo(() => {
+  const apiRpc = useApiRpc();
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const business = useBusinessDetails((s) => s.businessDetails);
   const router = useRouter();
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
   const setIsPayment = useLogin((s) => s.setIsPayment);
-  const { accessToken, refreshToken } = useUserToken((state) => ({
-    accessToken: state.accessToken,
-    refreshToken: state.refreshToken,
-  }));
 
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -62,10 +58,6 @@ const AddAmountModal = memo(() => {
         message: "Want to settle bill",
         alertType: "WAITER",
         status: "WAITER",
-      },
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
       },
     });
     if (res.status === 200) {

@@ -19,7 +19,7 @@ import { cn } from '@/components/utils/helpers'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import poweredBy from '@/assets/img/powered_hipalz.png'
-import { apiRpc } from '@hi/common'
+import { useApiRpc } from '@hi/common'
 
 const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
 
@@ -39,6 +39,7 @@ interface Payload {
 }
 
 function Review({ data }: { data: IBusinessData }) {
+	const apiRpc = useApiRpc()
 	const router = useRouter()
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
