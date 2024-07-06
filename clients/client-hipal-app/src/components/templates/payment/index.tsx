@@ -21,7 +21,8 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
-import { useApiRpc } from "@hi/common";
+import { apiRpc } from "@hi/common";
+import { useUserToken } from "@/components/store/useUserToken";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -56,7 +57,8 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
 const PaymentMemo = ({ data }: { data: IBusinessData }) => {
-    const apiRpc = useApiRpc();
+    const accessToken = useUserToken.getState().accessToken
+    const refreshToken = useUserToken.getState().refreshToken
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -211,6 +213,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             const res = await apiRpc.payments.validPayment.$post({
                 json: {
                     response
+                },
+                header:{
+                    x_access_token: accessToken,
+                    x_refresh_token: refreshToken
                 }
             })
             const data = await res.json()
@@ -260,6 +266,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 currency: "INR",
                 tableName: tableName,
             },
+            header:{
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            }
         })
         const response = await res.json() as unknown as { data: { order_id: string }, message: string }
         if (res.status === 400) {
@@ -290,6 +300,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 tips: tips,
                 tableName: tableName,
             },
+            header:{
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken   
+            }
         })
         const response = await res.json() as unknown as { data: string }
         const orderId = response.data;
@@ -368,6 +382,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             query: {
                 userPhone: userDetails.phone,
                 loyaltyId: data?.loyalty?.loyaltyId
+            },
+            header:{
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
             }
         })
         const response = await res.json() as unknown as { data: UserData }

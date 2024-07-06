@@ -1,7 +1,8 @@
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useCart } from "@/components/store/useCart";
 import useTableData from "@/components/store/useTableData";
-import { useApiRpc } from "@hi/common";
+import { useUserToken } from "@/components/store/useUserToken";
+import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -15,10 +16,10 @@ const messages = [
 ];
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
-  const apiRpc = useApiRpc();
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
-
+  const accessToken = useUserToken.getState().accessToken;
+  const refreshToken = useUserToken.getState().refreshToken;
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const [loading, setLoading] = useState<boolean>(false);
   const cart = useCart((s) => s.cart);
@@ -44,6 +45,10 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
           alertType: "WAITER",
           status: "WAITER",
         },
+        header:{
+          x_access_token: accessToken,
+          x_refresh_token: refreshToken
+        }
       });
       if (res.status === 200) {
         toast.success("Captain will be there soon. Thank you!!");

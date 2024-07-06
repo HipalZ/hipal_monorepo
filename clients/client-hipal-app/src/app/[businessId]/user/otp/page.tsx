@@ -16,12 +16,11 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import HipalLogo from "@/assets/hipalNewLogo.svg";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
-import { useApiRpc } from "@hi/common";
 import { toast } from "react-toastify";
-import { useUserToken } from "@hi/common/src/useTokenStore";
+import { useUserToken } from "@/components/store/useUserToken";
+import { apiRpc } from "@hi/common";
 
 function OtpPage() {
-  const apiRpc = useApiRpc();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const { setIsLogin, setUserDetails, userDetails } = useLogin();

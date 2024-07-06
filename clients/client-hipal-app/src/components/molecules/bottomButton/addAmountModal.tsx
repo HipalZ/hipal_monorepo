@@ -11,10 +11,12 @@ import { cn } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { useApiRpc } from "@hi/common";
+import { apiRpc } from "@hi/common";
+import { useUserToken } from "@/components/store/useUserToken";
 
 const AddAmountModal = memo(() => {
-  const apiRpc = useApiRpc();
+  const accessToken = useUserToken.getState().accessToken
+  const refreshToken = useUserToken.getState().refreshToken
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const business = useBusinessDetails((s) => s.businessDetails);
   const router = useRouter();
@@ -59,6 +61,10 @@ const AddAmountModal = memo(() => {
         alertType: "WAITER",
         status: "WAITER",
       },
+      header:{
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
+      }
     });
     if (res.status === 200) {
       toast.success("Captain will be there soon. Thank you!!");

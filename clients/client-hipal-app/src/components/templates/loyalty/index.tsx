@@ -30,11 +30,13 @@ import avatar from "@/assets/img/avatar.png";
 import hipalzCoinz from "@/assets/img/hipalzCoinz.png";
 import RollingNumber from "@/components/rollingNumbers";
 import hipalBlurred from "@/assets/svg/hipal_blurred_logo.svg";
-import { useApiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import { apiRpc } from "@hi/common";
+import { useUserToken } from "@/components/store/useUserToken";
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
-  const apiRpc = useApiRpc();
+  const accessToken = useUserToken.getState().accessToken;
+  const refreshToken = useUserToken.getState().refreshToken;
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const [rewards, setRewards] = useState();
@@ -86,6 +88,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         userPhone: userDetails.phone,
         loyaltyId: data?.loyalty?.loyaltyId,
       },
+      header:{
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
+      }
     });
     const response = (await userReward.json()).data;
     if (userReward.status === 404 || userReward.status === 400) {
@@ -108,6 +114,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         loyaltyId: loyaltySetting?.loyaltyId,
         userPhone: userDetails?.phone,
       },
+      header:{
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
+      }
     });
     const res = (await response.json()).data;
     if (response.status === 200 || response.status === 201) {

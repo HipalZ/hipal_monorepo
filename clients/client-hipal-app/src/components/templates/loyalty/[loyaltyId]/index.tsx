@@ -12,8 +12,8 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import line from "@/assets/svg/Line.svg";
 import ellipse from "@/assets/svg/ellipse.svg";
-import { useApiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import { apiRpc } from "@hi/common";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(
@@ -21,7 +21,6 @@ const BottomButton = dynamic(
 );
 
 const LoyaltyId = ({ data }: { data: IBusinessData }) => {
-  const apiRpc = useApiRpc();
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const { userDetails } = useLogin();

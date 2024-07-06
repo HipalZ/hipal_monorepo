@@ -1,11 +1,10 @@
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { set } from "lodash-es";
 import { fetchCommonData } from "../commonApis";
-import { useApiRpc } from "@hi/common";
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
+import { apiRpc } from "@hi/common";
 
 async function fetchBusinessData(customLink: string) {
-	const apiRpc = useApiRpc();
 	// common function has business and settings data
 	const {data, bizId} = await fetchCommonData(customLink)
 
@@ -37,11 +36,9 @@ export const businessApis = {
 }
 
 export async function fetchAllBusinessIds() {
-	const apiRpc = useApiRpc();
 	const res = await apiRpc.businesses.get.allbusiness.$get({
 
 	});
 	const response = await res.json()
-	console.log('response', response)
 	return response?.data.map((business: { _id: string }) => business._id);
 }

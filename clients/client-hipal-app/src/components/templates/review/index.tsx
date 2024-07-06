@@ -19,7 +19,8 @@ import { cn } from '@/components/utils/helpers'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import poweredBy from '@/assets/img/powered_hipalz.png'
-import { useApiRpc } from '@hi/common'
+import { apiRpc } from '@hi/common'
+import { useUserToken } from '@/components/store/useUserToken'
 
 const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
 
@@ -39,8 +40,9 @@ interface Payload {
 }
 
 function Review({ data }: { data: IBusinessData }) {
-	const apiRpc = useApiRpc()
 	const router = useRouter()
+	const accessToken = useUserToken.getState().accessToken
+	const refreshToken = useUserToken.getState().refreshToken
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
@@ -147,6 +149,10 @@ function Review({ data }: { data: IBusinessData }) {
 			// const res = await axios(config)
 			const res = await apiRpc.payments.reviews.$post({
 				json:payload,
+				header:{
+					x_access_token: accessToken,
+					x_refresh_token: refreshToken
+				}
 			})
 			const response = await res.json()
 			if (res.status === 200) {

@@ -1,9 +1,8 @@
 import { isEmpty } from "lodash-es";
-import { useApiRpc } from "@hi/common";
 import { fetchCommonData } from "../commonApis";
+import { apiRpc } from "@hi/common";
 
 async function fetchCategoryPageData(customLink: string) {
-	const apiRpc = useApiRpc()
 	// common api has business and settings data
 	const {data, bizId} = await fetchCommonData(customLink)
 	const dishesDataResponse = await apiRpc.dishes.$get({
@@ -102,7 +101,6 @@ export const categoryApis = {
 };
 
 export async function fetchAllBusinessIds() {
-	const apiRpc = useApiRpc();
 	const res = await apiRpc.businesses.get.allbusiness.$get({});
 	const response = await res.json()
 	return response?.data.map((business: { _id: string }) => business._id);

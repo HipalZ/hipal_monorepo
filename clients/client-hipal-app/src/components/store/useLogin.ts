@@ -1,5 +1,5 @@
 import axios from "@/utils/axios"
-import { useApiRpc } from "@hi/common"
+import { apiRpc } from "@hi/common"
 import { toast } from "react-toastify"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
@@ -81,16 +81,13 @@ export const useLogin = create(
 			setUserCoinZ: (d: number) => set({ userCoinZ: d }),
 			isLoginCred: () => get()?.userDetails.phone?.length === 10,
 			sendOtp: async () => {
-				const apiRpc = useApiRpc()
 				toast.success("otp send successfully")
-				const config = {
-					method: "POST",
-					url: "/v1/users/otp?clientRole=user",
-					data: {
-						phone: `${get().userDetails.phone}`,
-					},
-				}
-				return await axios(config)
+				const res = await apiRpc.users.resendOtp.$post({
+					json:{
+						phone: get().userDetails.phone
+					}
+				})
+				return await res.json() 
 			},
 		}),
 		{
