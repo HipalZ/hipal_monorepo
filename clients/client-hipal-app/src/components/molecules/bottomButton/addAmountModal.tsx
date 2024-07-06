@@ -23,7 +23,7 @@ const AddAmountModal = memo(() => {
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
   const setIsPayment = useLogin((s) => s.setIsPayment);
-
+  const name = useLogin((s)=>s.userDetails?.name)
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value === "" ? 0 : Number(value));
@@ -60,6 +60,7 @@ const AddAmountModal = memo(() => {
         message: "Want to settle bill",
         alertType: "WAITER",
         status: "WAITER",
+        name: name,
       },
       header:{
         x_access_token: accessToken,

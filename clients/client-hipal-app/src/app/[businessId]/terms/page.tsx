@@ -1,5 +1,5 @@
 "use client"
-import React from 'react'
+import React, { memo } from 'react'
 import Image from 'next/image'
 import Logo from '@/assets/hipalNewLogo.svg'
 import { isEmpty } from 'lodash-es'
@@ -8,12 +8,12 @@ import { HiChevronLeft } from 'react-icons/hi'
 import { getRandomBlurImg } from '@/components/utils/images'
 import PlaceholderImg from '@/components/atoms/placeholder'
 import useBusinessDetails from '@/components/store/useBusinessDetails'
-import { IBiz } from '@/components/types/businessData'
+import type { IBiz } from '@/components/types/businessData'
 
-const Terms= ()=> {
+const Terms = () => {
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
-	const { logo, registeredName, address, phoneNumber } = businessDetails as IBiz
-    const router = useRouter()
+	const { logo } = businessDetails as IBiz
+	const router = useRouter()
 	const onBack = () => {
 		router.back()
 	}
@@ -41,208 +41,99 @@ const Terms= ()=> {
 				)}
 			</div>
 
-			<h1 className="heading">HiPal - Terms of Use</h1>
+			<h1 className="heading"><b><b>{businessDetails?.businessName}</b></b> - Terms of Use</h1>
 			<h3 className="subheading">1. Introduction</h3>
 			<p className="paragraph">
-				Welcome to HiPal, a service provided by Paltribe Solutions PVT Ltd. (&quot;Paltribe&quot;,
-				&quot;us&quot;, &quot;we&quot;, &quot;our&quot;) These Terms of Use govern your use of our
-				technology solutions, including but not limited to point o sales, content management, staff
-				management, and direct delivery services (collectively, the &quot;Services&quot;) .
+				Welcome to <b><b>{businessDetails?.businessName}</b></b> a brand of <b>{businessDetails?.registeredName}</b> ,
+				a service powered by Hipalz technology provided by Paltribe Solutions Pvt Ltd.
+				These terms govern your use of our services, which include digital menu displays, customer data collection,
+				discounts, loyalty programs, user preference management, and bill settlements. Our offerings extend to food delivery,
+				consultation, and sales of consumable products
 			</p>
 
 			<h3 className="subheading">2. Acceptance of Terms</h3>
 			<p className="paragraph">
-				By using the Services in any manner, you are agreeing to be bound by these Terms of Use. If
-				you do not agree with these Terms of Use, you may not access or use our Services
+				By accessing or using our services, you agree to these terms.
+				If you do not agree, please refrain from using our services.
 			</p>
-			<h3 className="subheading">3. Changes to Terms</h3>
+			<h3 className="subheading">3. Modification of Terms</h3>
 			<p className="paragraph">
-				We reserve the right to modify these Terms of Use at any time. Your continued use of our
-				Services following the posting of any changes to these Terms of Use constitutes acceptance
-				of those changes
+				We reserve the right to modify these terms at any time.
+				Changes will become effective immediately upon their posting on our website.
+				Your continued use of our services after any such changes are posted will be considered acceptance of those changes.
+				If you continue to use the services for more than seven days after the posting of modified terms,
+				you are agreeing, by default, to be bound by the modifications.
 			</p>
-			<h3 className="subheading">4. Services</h3>
+			<h3 className="subheading">4. Description of Services</h3>
 			<p className="paragraph">
-				We provide technology solutions to digitalize various aspects of your business: While we
-				strive to maintain high-quality Services, they are provided on an &quot;as is&apos;
-				&apos;&quot; and &quot;as available&quot; basis, without any to warranties of any kind,
-				either express or implied.
+				We use technology to enhance service delivery and customer interaction. All services are provided "as is" without warranties.
 			</p>
-			<h3 className="subheading">5. User Responsibility</h3>
+			<h3 className="subheading">5. User Responsibilities</h3>
 			<p className="paragraph">
-				It is your responsibility to ensure that the information you provide to us is accurate and
-				kept up-to- date: You are responsible for maintaining the confidentiality of any login
-				information and are fully responsible for all activities that occur under your account
+				Users are responsible for the accuracy of their data and maintaining the confidentiality of their account information. Users are liable for all activities under their accounts.
 			</p>
-			<h1 className="heading">HiPal - Terms of Payment</h1>
-			<h3 className="subheading">1. General</h3>
+			<h3 className="subheading">6. Payments and Financial Transactions</h3>
 			<p className="paragraph">
-				These Terms of Payment govern all transactions between you ( The customer ) using the menu
-				and Merchant <b>{registeredName}</b> also using the Hipal software and
-				services. It is to be clearly noted that Hipal is technology and general service provider to
-				its Merchant <b>{registeredName}</b> and is not responsible for activities
-				between Merchant and their customer and any business that uses the HiPal
+				<b>{businessDetails?.businessName}</b> uses Hipalz to facilitate transactions. <b>{businessDetails?.businessName}</b> is responsible for all financial service issues, including disputes and billing inaccuracies.
 			</p>
-			<h3 className="subheading">2. Prices and Payment</h3>
+			<h3 className="subheading">7. Service Fulfillment</h3>
 			<p className="paragraph">
-				All payments for goods or services purchased from the Merchant shall be made in accordance
-				with the Merchants payment terms
+				While Hipalz provides the technology, <b>{businessDetails?.businessName}</b> manages all direct services related to food, products, and consultations. Any issues should be directly addressed by <b>{businessDetails?.businessName}</b>
 			</p>
-			<h3 className="subheading">3. Methods of Payment</h3>
+			<h3 className="subheading">8. Data Usage and Privacy</h3>
 			<p className="paragraph">
-				The Merchant accepts various methods of payment, as indicated at the time of purchase
+				<b>{businessDetails?.businessName}</b> and Hipalz collect and use personal information (name, contact details, DOB, and more) to enhance user experience, provide personalized services, and for marketing. By using our services, you consent to the collection and use of your data as described.
 			</p>
-			<h3 className="subheading">4. Payment Processing</h3>
+			<h3 className="subheading">9. User Consent for Data Sharing</h3>
 			<p className="paragraph">
-				All payments made through our services are processed by third-party payment processors. By
-				using any of our Services, you agree to abide by the terms and conditions of these
-				processors.
+				Your personal information may be shared between <b>{businessDetails?.businessName}</b> and Hipalz to improve services and offer personalized promotions. We commit to protecting your privacy and using information only as stated.
 			</p>
-			<h3 className="subheading">5. Refunds and Disputes</h3>
+			<h3 className="subheading">10. Contact Information</h3>
 			<p className="paragraph">
-				All refund requests and disputes related to purchases from the Merchant should be directed
-				to the Merchant {registeredName} in the first instance, The Merchant is
-				solely responsible for handling all customer service issues related to goods, services, and
-				charges Customers can reach out to Merchant directly or through the contact number given
-				here to share their concerns. Merchant will address the issue the problem as soon as
-				possible and will try refund the money to customer within 7 working days
+				<ol className="unorderedlist">For questions or concerns related to <b>{businessDetails?.businessName}</b> services, please contact:
+					<br />
+					<li>
+						Company Name: <b>{businessDetails?.registeredName}</b>
+					</li>
+					<li>
+						Brand Name: <b>{businessDetails?.businessName}</b>
+					</li>
+					<li>
+						Phone Number: {businessDetails?.phoneNumber}
+					</li>
+					<li>
+						Contact : {businessDetails?.email}
+					</li>
+					<li>
+						Address: {businessDetails?.address}
+					</li>
+				</ol>
 			</p>
-			<h1 className="heading">Sub-merchant - Terms of Payment</h1>
-			<h3 className="subheading">1. General</h3>
+			<h1 className="heading">HiPalz - Terms of Use</h1>
+			<h3 className="subheading">1. Introduction</h3>
 			<p className="paragraph">
-				These Terms of Payment govern all transactions between you and any business that uses the
-				HiPal service (the &quot;Merchant&quot;).
-			</p>
-			<h3 className="subheading">2. Payment Terms</h3>
-			<p className="paragraph">
-				All payments for goods or services purchased from the Merchant shall be made in accordance
-				with the Merchants payment terms.
-			</p>
-			<h3 className="subheading">3. Methods of Payment</h3>
-			<p className="paragraph">
-				The Merchant accepts various methods of payment, as indicated at the time of purchase.
-			</p>
-			<h3 className="subheading">4. Refunds and Disputes</h3>
-			<p className="paragraph">
-				All refund requests and disputes related to purchases from the Merchant should be directed
-				to the Merchant {registeredName} in the first instance, The Merchant is
-				solely responsible for handling all customer service issues related to goods, services, and
-				charges Customers can reach out to Merchant directly or through the contact number given
-				here to share their concerns. Merchant will address the issue the problem as soon as
-				possible and will try refund the money to customer within 7 working days
-			</p>
-			<h3 className="subheading">5. Limitation of Liability</h3>
-			<p className="paragraph">
-				Paltribe Solutions PVT Ltd and HiPal are not liable for any loss or damage arising from your
-				transactions with the Merchant
-			</p>
-			<h3 className="subheading">6. Contact us</h3>
-			<div className='flex flex-col'>
-				<div className='flex flex-row items-start justify-start'>
-					<span className='text-lg whitespace-nowrap'>Call us :</span>
+				Hipalz, a service by Paltribe Solutions Pvt Ltd, supports businesses in the FOOD, FASHION, and FITNESS sectors with digital solutions for menus, payments, and customer engagement.
 
-					<span className='mt-[0.5rem] ml-4 text-xs'> {phoneNumber}</span>
-				</div>
-			</div>
-			<div className='flex flex-col pb-6'>
-				<div className='flex flex-row items-start justify-start'>
-					<span className='text-lg whitespace-nowrap'>Visit us :</span>
-
-					<span className='mt-[0.5rem] ml-4 text-xs'> {address}</span>
-				</div>
-			</div>
-			<h1 className="heading">Privacy Policy Paltribe solutions Pvt </h1>
-			<p className="paragraph">
-				Last updated: September 1st 2023 This Privacy Policy describes Our policies and procedures
-				on the collection, use and disclosure of Your information when You use the Service and tells
-				You about Your privacy rights and how the law protects You. We use Your Personal data to
-				provide and improve the Service. By using the Service, You agree to the collection and use
-				of information in accordance with this Privacy Policy.
 			</p>
-			<h1 className="heading">Interpretation and Definitions </h1>
-			<h3 className="subheading">Interpretation</h3>
+			<h3 className="subheading">2. Acceptance of Terms</h3>
 			<p className="paragraph">
-				The words of which the initial letter is capitalised have meanings defined under the
-				following conditions. The following definitions shall have the same meaning regardless of
-				whether they appear in singular or in plural.
+				By using Hipalz, you accept these terms of use
 			</p>
-			<h3 className="subheading">Definitions</h3>
-			<p className="paragraph">For the purposes of this Privacy Policy:</p>
-			<ul>
-				<li>
-					Account means a unique account created for You to access our Service or parts of our
-					Service.
-				</li>
-				<li>
-					Affiliate means an entity that controls, is controlled by or is under common control with
-					a party, where &quot;control&quot; means ownership of 50% or more of the shares, equity
-					interest or other securities entitled to vote for election of directors or other managing
-					authority.
-				</li>
-				<li>
-					Company (referred to as either &quot;the Company&quot;, &quot;We&quot;, &quot;Us&quot; or
-					&quot;Our&quot; in this Agreement) refers to Infogem Web Solutions, No. 21, 5th Cross St,
-					Kumaran Kudil, Mettukuppam, Oggiyam, Thoraipakkam, Tamil Nadu Chennai-97.
-				</li>
-				<li>
-					Cookies are small files that are placed on Your computer, mobile device or any other
-					device by a website, containing the details of Your browsing history on that website among
-					its many uses.
-				</li>
-				<li>Country refers to: India</li>
-				<li>
-					Device means any device that can access the Service such as a computer, a cellphone or a
-					digital tablet.
-				</li>
-				<li>
-					Personal Data is any information that relates to an identified or identifiable individual.
-					Service refers to the Website.
-				</li>
-				<li>
-					Usage Data refers to data collected automatically, either generated by the use of the
-					Service or from the Service infrastructure itself (for example, the duration of a page
-					visit).
-				</li>
-				<li>
-					Website refers to School Canvas, accessible from www.hipal.life & pro.hipal.life and all
-					its extensions{' '}
-				</li>
-				<li>
-					You means the individual accessing or using the Service, or the company, or other legal
-					entity on behalf of which such individual is accessing or using the Service, as
-					applicable.
-				</li>
-			</ul>
-
-			<h1 className="heading">Collecting and Using Your Personal Data</h1>
-			<h3 className="subheading">Types of Data Collected</h3>
-			<h4 className="subheading">Personal Data</h4>
+			<h3 className="subheading">3. Methods of Terms</h3>
 			<p className="paragraph">
-				While using Our Service, We may ask You to provide Us with certain personally identifiable
-				information that can be used to contact or identify You. Personally identifiable information
-				may include, but is not limited to:
+				We reserve the right to change these terms at any time, with continued use post-change constituting acceptance
 			</p>
-			<ul>
-				<li>Email address</li>
-				<li>First name and last name</li>
-				<li>Phone number</li>
-				<li>Address, State, Province, ZIP/Postal code, City</li>
-				<li>Usage Data</li>
-				<li>DOB</li>
-				<li>Bills and eating patterns.</li>
-			</ul>
-			<h4 className="subheading">Usage Data</h4>
+			<h3 className="subheading">4. Technology Services Description</h3>
 			<p className="paragraph">
-				Usage Data is collected automatically when using the Service. Usage Data may include
-				information such as Your Device&apos;s Internet Protocol address (e.g. IP address), browser
-				type, browser version, the pages of our Service that You visit, the time and date of Your
-				visit, the time spent on those pages, unique device identifiers and other diagnostic data.
-				When You access the Service by or through a mobile device, We may collect certain
-				information automatically, including, but not limited to, the type of mobile device You use,
-				Your mobile device unique ID, the IP address of Your mobile device, Your mobile operating
-				system, the type of mobile Internet browser You use, unique device identifiers and other
-				diagnostic data. We may also collect information that Your browser sends whenever You visit
-				our Service or when You access the Service by or through a mobile device.
+				Hipalz provides technology that supports digital interactions between businesses and their customers, including menu management, transaction processing, and loyalty programs. All services are provided "as is."
+			</p>
+			<h3 className="subheading">5. Role Clarification</h3>
+			<p className="paragraph">
+				Hipalz is solely a technology provider and does not participate in the direct delivery of food, fashion, or fitness services. Information accuracy, product quality, and service delivery are the responsibilities of the partner businesses.
+			</p>
+			<h3 className="subheading">6. Data Handling and Usage</h3>
+			<p className="paragraph">
+				Hipalz processes user data to facilitate service improvements, marketing efforts, and enhanced user experiences. Your data may be shared with partnered businesses under strict privacy controls.
 			</p>
 			<h4 className="subheading">Tracking Technologies and Cookies</h4>
 			<p className="paragraph">
@@ -450,14 +341,50 @@ const Terms= ()=> {
 				Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective
 				when they are posted on this page.
 			</p>
+			<h1 className="heading">
+				Refund Policy
+			</h1>
+			<p className="paragraph">
+				<b>{businessDetails?.businessName}</b> is committed to ensuring satisfaction for all our customers. If you are not satisfied with a purchase or service provided by <b>{businessDetails?.businessName}</b> and we find your point fair and acceptable, here are the terms applicable to refunds:
+
+				Products and Services: Eligible for a refund if a cancellation request is made within the time of interaction or exchange of the purchase or if there are significant discrepancies in the service delivered or product received.
+
+				Cancellation: Orders can be canceled within a specified time frame, typically before the service provision starts or product dispatch. Refunds for canceled orders will be processed within 7-10 business days.
+
+				Issues and Disputes: Any issues or discrepancies related to payments, product quality, or service delivery must be reported to <b>{businessDetails?.businessName}</b> as soon as possible, wherein if the product or service was consumed within store /outlet should reported immediately for other take home service it can be within 48 hours of the transaction or service delivery date.
+
+				Processing Refunds: Refunds will be processed using the original method of payment. If a refund is issued, it will typically appear on your account statement within 7-10 business days.
+
+				Please note that certain conditions and exceptions may apply. For specific details related to refund eligibility and process, please contact our customer service team mentioned in the contact us form
+			</p>
 			<h1 className="heading">Contact Paltribe Solutions Pvt</h1>
 			<p className="paragraph">
 				If you have any questions about this Privacy Policy, You can contact us:
 			</p>
-			<ul>
-				<li>By email: info@paltribe.in</li>
-			</ul>
+			<h3 className="subheading">7. Contact Information</h3>
+			<p className="paragraph">
+				<ol className="unorderedlist">
+					For support related to Hipalz technology, contact:
+					<li>
+						Company Name: <b>Paltribe Solutions Pvt Ltd</b>
+					</li>
+					<li>
+						Brand Name: <b>Hipalz</b>
+					</li>
+					<li>By email: info@paltribe.in</li>
+					<li>
+						Phone Number: <b>7386142525</b>
+					</li>
+					<li>
+						Address: 929, 2nd floor, Sudheekshas, Defence Colony Rd, Hill Top Colony, Sainikpuri, Secunderabad, Hyderabad, Telangana 500056
+					</li>
+				</ol>
+			</p>
+			&nbsp;
+			&nbsp;
 		</div>
 	)
 }
-export default Terms
+
+const MemoTerms = memo(Terms)
+export default MemoTerms

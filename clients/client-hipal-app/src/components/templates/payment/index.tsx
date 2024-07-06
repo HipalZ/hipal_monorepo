@@ -495,8 +495,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                                 userCoinz > 0 &&
                                 <UseCoinzPopup
                                     openModal={openModal}
-                                    claimedCoinz={claimedCoinz}
-                                    userCoinz={userCoinz}
+                                    billValue={billValue}
                                 />
                             }
                             <BillSummary

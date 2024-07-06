@@ -91,7 +91,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
               alt="avatar"
               className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
             />
-            <b>Hey {userDetails?.name} !!</b>
+            <b>Hi {userDetails?.name} !!</b>
           </span>
           <Link href={`/${customLink}/loyalty/`}>
             <button

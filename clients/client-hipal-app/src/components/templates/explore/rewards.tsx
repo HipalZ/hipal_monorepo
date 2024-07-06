@@ -65,7 +65,7 @@ const Rewards = () => {
 						gridColor="#ffffff60"
 					/>
 				</Link>
-				<Link href={`/${customLink}/loyalty`} className="w-full">
+				<Link href="#" className="w-full">
 					<RewardCard
 						bgColor="bg-[#CA2727]"
 						title="CouponZ"

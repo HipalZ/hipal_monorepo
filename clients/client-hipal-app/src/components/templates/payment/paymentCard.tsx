@@ -19,7 +19,7 @@ const PaymentCard = (props: IPaymentCard) => {
 
                     </center>
                     <button type="button">
-                        🥳 Woah ! You are saving ${claimedCoinz}
+                        🥳 Woah ! You are saving ₹{claimedCoinz}
                     </button>
                 </center> : null
             }

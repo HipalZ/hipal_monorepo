@@ -9,12 +9,11 @@ import { RiCouponFill } from "react-icons/ri";
 
 interface IUseCoinzPopup {
     openModal: () => void,
-    claimedCoinz: number,
-    userCoinz: number
+    billValue: number
 }
 
 const UseCoinzPopup = (props: IUseCoinzPopup) => {
-    const { openModal, claimedCoinz, userCoinz } = props;
+    const { openModal, billValue } = props;
     const [editBillModal, setEditBillModal] = useState(false);
     const loyaltySetting = useLoyaltyData(s => s.loyaltySetting)
     const openBillModal = useCallback(() => {
@@ -45,7 +44,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                     &nbsp; &nbsp;
                     <div>
                         <h6>Use Coinz</h6>
-                        <h6 className="text-xs">You can use {loyaltySetting.setClaimAmount} % of <span className="font-bold">{claimedCoinz ? userCoinz - claimedCoinz : userCoinz} coinz</span> </h6>
+                        <h6 className="text-xs">You can use {loyaltySetting.setClaimAmount} % of <span className="font-bold">₹ {billValue}</span> </h6>
                     </div>
                 </div>
                 <div className='flex items-center space-x-4'>

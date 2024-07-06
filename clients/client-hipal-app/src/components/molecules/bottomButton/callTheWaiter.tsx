@@ -1,5 +1,5 @@
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useCart } from "@/components/store/useCart";
+import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@/components/store/useUserToken";
 import { apiRpc } from "@hi/common";
@@ -18,11 +18,11 @@ const messages = [
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
+  const name = useLogin((s)=>s.userDetails?.name)
   const accessToken = useUserToken.getState().accessToken;
   const refreshToken = useUserToken.getState().refreshToken;
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const [loading, setLoading] = useState<boolean>(false);
-  const cart = useCart((s) => s.cart);
 
   const handleSelectMessage = useCallback((message: string) => {
     setMessage(message);
@@ -36,7 +36,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       return toast.error("Please wait for a moment");
     }
     setLoading(true);
-    
+      console.log("name",name)
       const res = await apiRpc.payments.createWaiterAlert.$post({
         json: {
           businessId: businessId,
@@ -44,6 +44,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
           message: message,
           alertType: "WAITER",
           status: "WAITER",
+          name: name,
         },
         header:{
           x_access_token: accessToken,
@@ -59,10 +60,10 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   return (
     <>
       <ul className="h-full overflow-auto">
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <li
             className="p-2 m-4 transition-colors duration-200 ease-in-out transform rounded-md cursor-pointer hover:bg-primary hover:text-base-100 hover:scale-105"
-            key={message + index}
+            key={`${message} index`}
             onClick={() => handleSelectMessage(message)}
           >
             {message}
