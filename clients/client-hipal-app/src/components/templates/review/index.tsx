@@ -47,7 +47,7 @@ function Review({ data }: { data: IBusinessData }) {
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
-	const roundedOffClaim = Math.round(Number(claim) / 10) * 10
+	const roundedOffClaim = Math.round(Number(claim))
 	const orderId = searchParams?.get('orderId')
 	const mode = searchParams?.get('mode')
 	const amount = Number(searchParams?.get('amount') || '0')
