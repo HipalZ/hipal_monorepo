@@ -743,6 +743,8 @@ const paymentsRouter = new Hono()
     zValidator('param', paramsSchema),
     zValidator('header', TokenValidator),
 
+    zValidator('json', acceptOrderSchema),
+
     async (c) => {
       const { alertId } = c.req.param();
       const requestData = await c.req.json();
