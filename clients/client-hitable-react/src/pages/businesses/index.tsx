@@ -2,10 +2,10 @@ import promoAvatar from '@/assets/img/promoCardAvatar.png';
 import bookmarkAfter from '@/assets/svg/bookmarkAfter.svg';
 import bookmarkBefore from '@/assets/svg/bookmarkBefore.svg';
 import FooterSectionMemo from '@/components/atoms/footerSection';
+import ProfileHeader from '@/components/liteAlerts/profileHeader';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import ProfileHeader from '@/components/liteAlerts/profileHeader';
-import { CustomRole } from '@/components/types/hiClientzData';
+import type { CustomRole } from '@/components/types/hiClientzData';
 import { memo, startTransition } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,7 @@ const BusinessesMemo = memo(() => {
   const location = useLocation();
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
   const inBusinesses = location.pathname.includes('businesses');
-  const handleUpdateDefault = (e:Event) => {
+  const handleUpdateDefault = (e: Event) => {
     e.stopPropagation();
   };
 
@@ -24,7 +24,7 @@ const BusinessesMemo = memo(() => {
     setSelectedBiz(biz);
     setTriggerSound(true);
     startTransition(() => {
-      navigate(`/viewInBiz`);
+      navigate('/viewInBiz');
     });
   };
 

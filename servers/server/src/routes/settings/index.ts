@@ -1,7 +1,7 @@
 // books.ts
 import { Dish, Settings, User } from '@hi/db-models';
 import type { DishType } from '@hi/db-models/src/validators';
-import { paramsSchema } from '@hi/db-models/src/validators';
+import { paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

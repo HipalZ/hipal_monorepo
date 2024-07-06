@@ -1,12 +1,13 @@
+import { useApiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { Howl } from 'howler';
 import { useEffect, useState } from 'react';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
 import MainRouter from './routes';
-import { apiRpc } from '@hi/common';
 
 function App() {
+  const apiRpc = useApiRpc();
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
   const triggerSound = useLiteStore((s) => s.triggerSound);
   const {
@@ -51,12 +52,15 @@ function App() {
     setLoading(true);
     try {
       const res = await apiRpc.payments[':id'][endpoint].$get({
-        query:{
+        query: {
           businessId,
-          alertType
-        }
-      })
-      const response = await res.json() || [];
+          alertType,
+        },
+        param: {
+          id: businessId,
+        },
+      });
+      const response = (await res.json()) || [];
       return response.data || [];
     } catch (err) {
       console.error(err);

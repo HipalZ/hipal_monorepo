@@ -1,6 +1,6 @@
 // store/useUserToken.ts
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
 interface userToken {
   accessToken: string;
@@ -23,7 +23,7 @@ export const useUserToken = create(
     }),
     {
       name: 'token-data',
-      storage:createJSONStorage(()=>localStorage)
+      getStorage: () => localStorage,
     },
   ),
 );

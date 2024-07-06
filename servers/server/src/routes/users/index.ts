@@ -1,7 +1,7 @@
 // books.ts
 import { LoyaltyCoinsInfo, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import type { UserType } from '@hi/db-models/src/validators';
-import { UserAttrs, paramsSchema, staffValidator } from '@hi/db-models/src/validators';
+import { TokenValidator, UserAttrs, paramsSchema, staffValidator } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import axios from 'axios';
 import { Hono } from 'hono';
@@ -143,8 +143,8 @@ const usersRouter = new Hono()
     }
 
     if (existingUser) {
-      const accessTokenExistingUser = createAccessToken(existingUser._id.toString(), role);
-      const refreshTokenExistingUser = createRefreshToken(existingUser._id.toString(), role);
+      const accessTokenExistingUser = createAccessToken(existingUser._id.toString(), 'HIPAL_CUSTOMER');
+      const refreshTokenExistingUser = createRefreshToken(existingUser._id.toString(), 'HIPAL_CUSTOMER');
       return c.json(
         {
           status: false,
@@ -158,8 +158,8 @@ const usersRouter = new Hono()
 
     const user = await User.create(requestData);
 
-    const accessToken = createAccessToken(user._id.toString(), role);
-    const refreshToken = createRefreshToken(user._id.toString(), role);
+    const accessToken = createAccessToken(user._id.toString(), 'HIPAL_CUSTOMER');
+    const refreshToken = createRefreshToken(user._id.toString(), 'HIPAL_CUSTOMER');
 
     return c.json(
       {
@@ -297,8 +297,8 @@ const usersRouter = new Hono()
         loyaltyId,
       });
 
-      const accessToken = createAccessToken(existingUser._id?.toString() || '', role);
-      const refreshToken = createRefreshToken(existingUser._id?.toString() || '', role);
+      const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+      const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
       const modifyUser = {
         ...existingUser,
         reward: signUpBonus,
@@ -311,8 +311,8 @@ const usersRouter = new Hono()
       });
     }
 
-    const accessToken = createAccessToken(existingUser._id?.toString() || '', role);
-    const refreshToken = createRefreshToken(existingUser._id?.toString() || '', role);
+    const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+    const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
 
     return c.json({
       status: true,
@@ -323,8 +323,8 @@ const usersRouter = new Hono()
   })
   .get(
     '/:id/loyaltyUserHistiry',
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator(
       'query',
       z.object({
@@ -364,6 +364,9 @@ const usersRouter = new Hono()
   )
   .get(
     '/:businessId/getUserReward',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator(
       'query',
       z.object({
@@ -371,6 +374,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string(),
       }),
     ),
+    zValidator('header', TokenValidator),
     async (c) => {
       const { userPhone, loyaltyId } = c.req.query();
 

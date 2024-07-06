@@ -2,8 +2,9 @@ import callwaiter from '@/assets/img/callwaiter.png';
 import { handleRemoveAlert } from '@/components/hooks/commonApi';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import { Alert } from '@/components/types/hiClientzData';
+import type { Alert } from '@/components/types/hiClientzData';
 import { timestampToDateTime } from '@/components/utils/helpers';
+import { useApiRpc } from '@hi/common';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import { IoCloseCircleSharp } from 'react-icons/io5';
@@ -14,6 +15,7 @@ interface IOfflineProp {
 }
 
 const OfflineAlertCard = (props: IOfflineProp) => {
+  const apiRpc = useApiRpc();
   const { offlineAlertData } = props;
   const { removeOfflineAlert, setViewData, clickViewMore, setClickViewMore, removeOfflineCount } = useLiteStore((s) => ({
     removeOfflineAlert: s.removeOfflineAlert,
@@ -21,7 +23,6 @@ const OfflineAlertCard = (props: IOfflineProp) => {
     clickViewMore: s.clickViewMore,
     setClickViewMore: s.setClickViewMore,
     removeOfflineCount: s.removeOfflineCount,
-
   }));
   const { captainData } = useHiClientZ((s) => ({
     captainData: s.captainData,
@@ -34,15 +35,15 @@ const OfflineAlertCard = (props: IOfflineProp) => {
 
   const removeAlert = async (id: string) => {
     try {
-      const res = await handleRemoveAlert(id, captainData?.name);
+      const res = await handleRemoveAlert(apiRpc, id, captainData?.name);
       if (res.status === 200) {
         removeOfflineAlert(id);
         removeOfflineCount();
       } else {
-        console.error("Failed to remove alert");
+        console.error('Failed to remove alert');
       }
     } catch (error) {
-      console.error("Error removing alert:", error);
+      console.error('Error removing alert:', error);
     }
   };
   return (
@@ -53,7 +54,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
             <section key={alert?._id}>
               {alert?.alertType === 'WAITER' ? (
                 <div className="mx-4 my-4 h-[7rem] rounded-xl bg-white p-4">
-                  <section className="relative flex justify-between mb-2">
+                  <section className="relative mb-2 flex justify-between">
                     <article className="flex w-[8rem] items-center rounded-full bg-[#ffe9cf] px-2">
                       <img src={callwaiter} alt="callwaiter" loading="lazy" />
                       &nbsp;&nbsp;
@@ -62,11 +63,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                     <article>
                       <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                     </article>
-                    <IoCloseCircleSharp
-                      onClick={() => removeAlert(alert?._id)}
-                      size={24}
-                      className="absolute inline text-red-400 -right-6 -top-6"
-                    />
+                    <IoCloseCircleSharp onClick={() => removeAlert(alert?._id)} size={24} className="absolute -right-6 -top-6 inline text-red-400" />
                   </section>
                   <div className="flex justify-between">
                     <section>
@@ -81,8 +78,8 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 mx-4 my-4 bg-white rounded-xl">
-                  <section className="flex items-center justify-between mb-2">
+                <div className="mx-4 my-4 rounded-xl bg-white p-4">
+                  <section className="mb-2 flex items-center justify-between">
                     <article className="flex w-[8.5rem] items-center rounded-full bg-[#ffe9cf] px-2">
                       <span>
                         <CiGlobe />
@@ -102,7 +99,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                         <h6 className="text-xs">Tips : ₹ {alert?.order_id?.tips}</h6>
                       </article>
                       {alert?.coinsApplied ? (
-                        <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full py- w-fit">
+                        <article className="py- my-2 flex w-fit items-center justify-start rounded-full bg-gray-200 px-3">
                           <span>
                             <PiCoinsFill size={20} />
                           </span>
@@ -117,7 +114,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                         <h1 className="text-base text-gray-700">Table: {alert?.order_id?.tableName}</h1>
                         <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                       </article>
-                      <button type="button" onClick={() => handleViewMore(alert)} className="px-6 py-1 mt-6 text-white bg-black rounded-full">
+                      <button type="button" onClick={() => handleViewMore(alert)} className="mt-6 rounded-full bg-black px-6 py-1 text-white">
                         <h1 className="text-xs">View</h1>
                       </button>
                     </section>
@@ -128,7 +125,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
           );
         })
       ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">No Data Found</div>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl">No Data Found</div>
       )}
     </main>
   );

@@ -1,9 +1,9 @@
 import { handleRemoveAlert } from '@/components/hooks/commonApi';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import { Alert } from '@/components/types/hiClientzData';
+import type { Alert } from '@/components/types/hiClientzData';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { apiRpc } from '@hi/common';
+import { useApiRpc } from '@hi/common';
 import { memo } from 'react';
 import { CiGlobe } from 'react-icons/ci';
 import { IoCloseCircleSharp } from 'react-icons/io5';
@@ -15,13 +15,14 @@ interface IOnlineProp {
 }
 
 const OnlineAlertCard = (props: IOnlineProp) => {
+  const apiRpc = useApiRpc();
   const { onlineAlertData } = props;
   const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore((s) => ({
     removeOnlineAlert: s.removeOnlineAlert,
     setViewData: s.setViewData,
     removeOnlineCount: s.removeOnlineCount,
   }));
-  const captainData = useHiClientZ((s)=>s.captainData)
+  const captainData = useHiClientZ((s) => s.captainData);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
@@ -32,15 +33,15 @@ const OnlineAlertCard = (props: IOnlineProp) => {
 
   const removeAlert = async (id: string) => {
     try {
-      const res = await handleRemoveAlert(id, captainData?.name);
-      if (res.status===200) {
+      const res = await handleRemoveAlert(apiRpc, id, captainData?.name);
+      if (res.status === 200) {
         removeOnlineAlert(id);
         removeOnlineCount();
       } else {
-        console.error("Failed to remove alert");
+        console.error('Failed to remove alert');
       }
     } catch (error) {
-      console.error("Error removing alert:", error);
+      console.error('Error removing alert:', error);
     }
   };
 
@@ -51,9 +52,9 @@ const OnlineAlertCard = (props: IOnlineProp) => {
           return (
             <section
               key={alert?._id}
-              className={cn('relative mx-4 my-4 h-full rounded-xl bg-white p-4', alert?.status === 'FAIL' ? ' bg-red-100' : 'bg-green-100')}
+              className={cn('relative mx-4 my-4 h-full rounded-xl bg-white p-4', alert?.status === 'FAIL' ? 'bg-red-100' : 'bg-green-100')}
             >
-              <section className="flex items-center justify-between mb-2">
+              <section className="mb-2 flex items-center justify-between">
                 <article className={cn('flex w-[8rem] items-center rounded-full px-2')}>
                   <span>
                     <CiGlobe />
@@ -66,11 +67,7 @@ const OnlineAlertCard = (props: IOnlineProp) => {
                 <article>
                   <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
                 </article>
-                <IoCloseCircleSharp
-                  onClick={() => removeAlert(alert?._id)}
-                  size={28}
-                  className="absolute inline text-red-400 -right-2 -top-2"
-                />
+                <IoCloseCircleSharp onClick={() => removeAlert(alert?._id)} size={28} className="absolute -right-2 -top-2 inline text-red-400" />
               </section>
               <div className="flex justify-between">
                 <section>
@@ -80,7 +77,7 @@ const OnlineAlertCard = (props: IOnlineProp) => {
                     <h6 className="text-sm">Tips : ₹ {alert?.order_id?.tips}</h6>
                   </article>
                   {alert?.coinsApplied ? (
-                    <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full w-fit">
+                    <article className="my-2 flex w-fit items-center justify-start rounded-full bg-gray-200 px-3">
                       <span>
                         <PiCoinsFill size={20} />
                       </span>
@@ -95,7 +92,7 @@ const OnlineAlertCard = (props: IOnlineProp) => {
                     <h1 className="text-base text-gray-700">Table : {alert?.tableName}</h1>
                     <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                   </article>
-                  <button onClick={() => handleViewMore(alert)} className="px-6 py-2 mt-2 text-white bg-black rounded-full">
+                  <button type="button" onClick={() => handleViewMore(alert)} className="mt-2 rounded-full bg-black px-6 py-2 text-white">
                     <h1 className="text-xs">More</h1>
                   </button>
                 </section>
@@ -104,11 +101,11 @@ const OnlineAlertCard = (props: IOnlineProp) => {
           );
         })
       ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">No Data Found</div>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl">No Data Found</div>
       )}
     </main>
   );
-}
+};
 
 const OnlineAlertCardMemo = memo(OnlineAlertCard);
 export default OnlineAlertCardMemo;

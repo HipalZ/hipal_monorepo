@@ -7,16 +7,22 @@ import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import {apiRpc} from '@hi/common'
+import { useApiRpc } from '@hi/common';
+import { useUserToken } from '@hi/common/src/useTokenStore';
 import { memo, startTransition, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import toast from "react-hot-toast";
 //tes
 const LoginMemo = () => {
+  const apiRpc = useApiRpc();
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
+  const { setAccessToken: setAccess, setRefreshToken: setRefresh } = useUserToken((s) => ({
+    setAccessToken: s.setAccessToken,
+    setRefreshToken: s.setRefreshToken,
+  }));
   // store
-  const { setCaptainData, setAccessToken, setRefreshToken, phoneNumber, setPhoneNumber } = useHiClientZ();
+  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
   const navigate = useNavigate();
 
   //methods
@@ -36,15 +42,15 @@ const LoginMemo = () => {
           phone: phoneNumber,
           password: password,
         },
-      })
+      });
       const response = await res.json();
-      if (res.status===200) {
+      if (res.status === 200) {
         setCaptainData(response.data.user);
-        setAccessToken(response.data.accessToken);
-        setRefreshToken(response.data.refreshToken);
+        setRefresh(response.data.refreshToken);
+        setAccess(response.data.accessToken);
         toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
         startTransition(() => {
-          navigate(`/businesses`);
+          navigate('/businesses');
         });
       }
     } catch (error) {
@@ -127,8 +133,9 @@ const LoginMemo = () => {
       </section>
       <article className="mb-5 flex justify-center">
         <button
+          type="button"
           onClick={handleLogin}
-          className="on_active_bounce text-white fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
+          className="on_active_bounce fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
         >
           Get Started
         </button>

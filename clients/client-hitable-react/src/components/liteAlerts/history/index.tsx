@@ -2,26 +2,26 @@ import DateRangePickerMemo from '@/components/atoms/dateRangePicker';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import useTimings from '@/components/store/useTimings';
+import type { Alert } from '@/components/types/hiClientzData';
+import { useApiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import { memo, useCallback, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
 import HistoryCard from './historyCard';
-import { apiRpc } from '@hi/common';
-import { Alert } from '@/components/types/hiClientzData';
 
 const History = () => {
+  const apiRpc = useApiRpc();
   const [pageNumber, setPageNumber] = useState(1);
-  const { selectedBiz } = useHiClientZ((s)=>({
+  const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
   }));
-  const { historyData, setHistoryData } = useLiteStore((s)=>({
+  const { historyData, setHistoryData } = useLiteStore((s) => ({
     historyData: s.historyData,
     setHistoryData: s.setHistoryData,
   }));
-  const { timeStampStart, timeStampEnd } = useTimings((s)=>({
+  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
-  
   }));
   const businessId = selectedBiz?.businessId?._id;
 
@@ -40,7 +40,7 @@ const History = () => {
           to: timeStampEnd.toString(),
           pageNumber: pageNumber.toString(),
         },
-      })
+      });
       const response = (await res.json()).data as Alert[];
       if (res.status === 200) {
         setHistoryData(response);
@@ -84,7 +84,7 @@ const History = () => {
       <br />
     </>
   );
-}
+};
 
 const HistoryMemo = memo(History);
 export default HistoryMemo;
