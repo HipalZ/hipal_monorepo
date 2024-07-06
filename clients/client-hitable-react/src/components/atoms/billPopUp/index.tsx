@@ -64,7 +64,7 @@ const BillPopUpMemo = () => {
     setClickViewMore(!clickViewMore);
   }, []);
 
-  const handleConfirmAlert = async (id: string) => {
+  const handleConfirmAlert = async (id: string,comment:string) => {
     setIsLoading(true);
     console.log('payload', comment);
     try {
@@ -88,8 +88,8 @@ const BillPopUpMemo = () => {
     }
   };
 
-  const handleConfirm = useCallback((id: string) => {
-    handleConfirmAlert(id);
+  const handleConfirm = useCallback((id: string, comment:string) => {
+    handleConfirmAlert(id, comment);
     removeOfflineAlert(id);
     setClickViewMore(!clickViewMore);
   }, []);
@@ -243,7 +243,7 @@ const BillPopUpMemo = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleConfirm(viewData._id)}
+                  onClick={() => handleConfirm(viewData._id,comment)}
                   className={
                     'btn btn-black btn-md my-auto mr-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full bg-black !py-1 text-[1rem] capitalize text-white shadow-lg'
                   }

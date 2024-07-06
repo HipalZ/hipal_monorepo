@@ -6,17 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { useUserToken } from "@/components/store/useUserToken";
 import toast from "react-hot-toast";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
+import { useUserToken } from "@hi/common/src/useTokenStore";
 
 const Login: React.FC = () => {
+  const apiRpc = useApiRpc();
   const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));
   const { setIsLogin, setUser } = useOwnerLogin((state) => ({ setIsLogin: state.setIsLogin, setUser: state.setUser }));
-  const { setAccessToken, setRefreshToken } = useUserToken((state) => ({
-    setAccessToken: state.setAccessToken,
-    setRefreshToken: state.setRefreshToken,
-  }));
+  const setAccessToken = useUserToken.getState().setAccessToken;
+  const setRefreshToken = useUserToken.getState().setRefreshToken;
 
   const [password, setPassword] = useState("");
   const [validPhone, setValidPhone] = useState(true);

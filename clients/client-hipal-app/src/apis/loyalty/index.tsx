@@ -1,10 +1,11 @@
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 import { fetchCommonData } from "../commonApis";
-import { apiRpc } from "@hi/common";
+import { useApiRpc } from "@hi/common";
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
 
 async function fetchBusinessData(customLink: string) {
+	const apiRpc = useApiRpc();
 	// common function has business and settings data
 	const {data, bizId} = await fetchCommonData(customLink)
 

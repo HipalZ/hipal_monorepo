@@ -17,10 +17,9 @@ const LoginMemo = () => {
   const apiRpc = useApiRpc();
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
-  const { setAccessToken: setAccess, setRefreshToken: setRefresh } = useUserToken((s) => ({
-    setAccessToken: s.setAccessToken,
-    setRefreshToken: s.setRefreshToken,
-  }));
+  // 
+  const setAccessToken = useUserToken.getState().setAccessToken;
+  const setRefreshToken = useUserToken.getState().setRefreshToken;
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
   const navigate = useNavigate();
@@ -46,8 +45,8 @@ const LoginMemo = () => {
       const response = await res.json();
       if (res.status === 200) {
         setCaptainData(response.data.user);
-        setRefresh(response.data.refreshToken);
-        setAccess(response.data.accessToken);
+        setRefreshToken(response.data.refreshToken);
+        setAccessToken(response.data.accessToken);
         toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
         startTransition(() => {
           navigate('/businesses');
