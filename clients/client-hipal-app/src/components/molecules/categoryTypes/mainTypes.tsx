@@ -49,7 +49,7 @@ function MainTypes(props: IMainTypes) {
 	const SplideSlideWrapper = ({ children }: { children?: React.ReactNode }) => {
 		return <SplideSlide>{children}</SplideSlide>
 	}
-	const containerStyles: CSSProperties = {
+	const containerStyles: CSSProperties = { 
 		display: "flex",
 		flexDirection: "row",
 		overflowX: "auto",
@@ -58,8 +58,8 @@ function MainTypes(props: IMainTypes) {
 	}
 
 	return !!mainTypes ? (
-		<div className="flex w-full px-4 mx-auto hide-scrollbar bg-base-200">
-			<div ref={mainContainerRef} style={containerStyles} className="whitespace-nowrap">
+		<div className="flex w-full px-4 mx-auto hide-scrollbar bg-base-200 no-scrollbar">
+			<div ref={mainContainerRef} style={containerStyles} className="whitespace-nowrap no-scrollbar">
 				{Object.values(mainTypes)
 					.filter((item) => item?.visibility)
 					.map((item: ICategory, index: number) => {
@@ -70,7 +70,7 @@ function MainTypes(props: IMainTypes) {
 								<SplideSlideWrapper>
 									<div id={item?._id} className="relative">
 										<a
-											className={`on_active_bounce text-sm flex capitalize space-x-2  ${isActiveParentCategory == item?._id ? "border-b border-primary text-primary" : "opacity-70"
+											className={`on_active_bounce text-sm flex capitalize space-x-2  ${isActiveParentCategory === item?._id ? "border-b border-primary text-primary" : "opacity-70"
 												}`}
 											href={`#${activeSubType || item?._id}`}
 											onClick={() => {

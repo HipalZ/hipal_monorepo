@@ -20,19 +20,17 @@ const SpecialOffers = dynamic(
   () => import("@/components/organisms/explore/specialOffers"),
   { loading: () => <SkeletonLoader height={200} /> },
 );
-const Footer = dynamic(() => import("@/components/molecules/footer"), {
-  loading: () => <SkeletonLoader height={50} />,
-});
-
-const PageName = dynamic(() => import("@/components/molecules/pageName"), {
-  loading: () => <SkeletonLoader height={50} />,
-});
 const PopularRestaurant = dynamic(
   () => import("@/components/organisms/explore/popularRestaurant"),
   {
     loading: () => <SkeletonLoader height={200} />,
   },
 );
+const Footer = dynamic(() => import("@/components/molecules/footer"), {
+  loading: () => <SkeletonLoader height={50} />,
+});
+
+
 const SubLoyalty = dynamic(() => import("@/components/atoms/subLoyalty"), {
   loading: () => <SkeletonLoader height={50} />,
 });
@@ -40,6 +38,10 @@ const BottomButton = dynamic(
   () => import("@/components/molecules/bottomButton"),
   { loading: () => <SkeletonLoader height={50} /> },
 );
+const PageName = dynamic(() => import("@/components/molecules/pageName"), {
+  loading: () => <SkeletonLoader height={50} />,
+});
+
 
 // removed getStaticPaths
 

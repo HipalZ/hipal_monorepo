@@ -30,11 +30,11 @@ function SubTypes(props: ISubTypes) {
 	}, [allCategoriesTypes?.sub, parentCategory])
 
 	return (
-		<section className="overflow-x-auto">
+		<section className="overflow-x-auto no-scrollbar">
 			{!!subTypes && (
 				<div
 					ref={subTypeContainerRef}
-					className="flex flex-nowrap -webkit-flex snap-proximity snap-x"
+					className="flex flex-nowrap -webkit-flex snap-proximity snap-x no-scrollbar"
 				>
 					{Object.values(subTypes).map((item: ICategory, index: number) => (
 						<div
@@ -67,7 +67,7 @@ function SubTypes(props: ISubTypes) {
 										</figure>
 									)
 										: (
-											<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
+											<figure className="w-[1.5rem] h-[1.5rem] rounded-full overflow-hidden">
 											<PlaceholderImg className="rounded-full" />
 											</figure>
 										)}

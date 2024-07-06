@@ -1,10 +1,11 @@
 "use client"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
 import { useDishTypes } from "@/components/store/useDishTypes"
-import { memo, useMemo } from "react"
+import { memo, useEffect, useMemo } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 
 import type { ICategories, ICategory, ICategorySubTypes, ICategoryTypes, IDish } from "@/components/types/businessData"
+import { useRouter } from "next/navigation"
 
 interface IDishesProps {
 	allCategoriesTypes?: {
@@ -22,6 +23,30 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 		setActiveParentCategory: state.setActiveParentCategory,
 		isActiveDishType: state.isActiveDishType,
 	  }));
+
+	  const router = useRouter();
+
+	  useEffect(() => {
+		const handleHashChange = () => {
+		  const { hash } = window.location;
+		  console.log(hash);
+		  if (hash) {
+			const categoryId = hash.substring(1); 
+			const element = document.getElementById(categoryId);
+			if (element) {
+			  element.scrollIntoView({ behavior: "smooth" });
+			}
+		  }
+		};
+	
+		handleHashChange(); 
+	
+		window.addEventListener("hashchange", handleHashChange); 
+	
+		return () => {
+		  window.removeEventListener("hashchange", handleHashChange); 
+		};
+	  }, [router,isActiveDishType]);
 
 	const filteredDishes = useMemo(() => categories?.map((category) => ({
 		...category,
