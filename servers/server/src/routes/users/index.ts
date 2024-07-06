@@ -255,6 +255,9 @@ const usersRouter = new Hono()
       password,
       role: 'RESTAURANT_OWNER',
     });
+    if (!existingUser) {
+      return c.json({ err: true, status: false, message: 'Phone or Password invalid...!' }, 400);
+    }
     const accessToken = createAccessToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
     const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
