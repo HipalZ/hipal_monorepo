@@ -1,5 +1,4 @@
 import { categoryApis } from "@/apis/category";
-import { fetchAllBusinessIds } from "@/apis/explore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { defaultThemes } from "@/components/utils/helpers";

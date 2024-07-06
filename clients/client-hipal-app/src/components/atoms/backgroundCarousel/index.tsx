@@ -1,6 +1,6 @@
 import { getRandomBlurImg } from "@/components/utils/images"
 import { Splide, SplideSlide } from "@splidejs/react-splide"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import { memo } from "react"
 import "@splidejs/react-splide/css"; // Ensure CSS is imported
 
@@ -74,7 +74,7 @@ const WallpaperCarousel = ({ wallpapers, isAvailable }: WallpaperCarouselProps)=
                       <div className="absolute z-20 text-xl text-white bottom-4 left-4">
                         Not Available
                       </div>
-                      <div className="absolute w-full bottom-2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2"></div>
+                      <div className="absolute w-full bottom-2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2"/>
                     </>
                   )}
                 </>

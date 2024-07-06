@@ -1,13 +1,11 @@
 //@ts-nocheck
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { useActiveClass } from "@/components/store/useActiveClass"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import { ICategory } from "@/components/types/businessData"
+import type { ICategory } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import Link from "next/link"
 import { memo, useMemo, useRef } from "react"
-import Coinz from "@/assets/bonuscard/coin.png"
 
 interface ISubTypes {
 	allCategoriesTypes: {

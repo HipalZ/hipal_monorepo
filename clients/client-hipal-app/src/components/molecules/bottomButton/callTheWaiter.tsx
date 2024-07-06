@@ -71,7 +71,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         className="w-[92%] mb-4 px-8 py-3 mx-4 text-sm border rounded-full bg-primary text-base-100"
       >
         {loading ? (
-          <span className="loader_spinner !border-t-base-100 "></span>
+          <span className="loader_spinner !border-t-base-100 "/>
         ) : (
           "Call Captain"
         )}

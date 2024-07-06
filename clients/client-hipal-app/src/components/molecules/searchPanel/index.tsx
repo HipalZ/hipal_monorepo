@@ -10,7 +10,7 @@ import Link from "next/link";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import { ICategory, IDish } from "@/components/types/businessData";
+import type { ICategory, IDish } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { RxCross2 } from "react-icons/rx";
 
@@ -117,7 +117,7 @@ const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => voi
                                                     placeholder="blur"
                                                     blurDataURL={getRandomBlurImg(110, 110)}
                                                     className="on_active_bounce rounded-xl "
-                                                ></Image>
+                                                />
                                             ) : (
                                                 <div>
                                                     <PlaceholderImg className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden" />

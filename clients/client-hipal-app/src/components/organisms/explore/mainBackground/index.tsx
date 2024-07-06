@@ -1,6 +1,6 @@
 "use client";
 import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import { memo, useCallback, useEffect } from "react"
 import img from "@/assets/img/cut.png"
 import RestaurantTime from "@/components/atoms/time/restaurant";
@@ -15,7 +15,7 @@ const MainBackground = (props: { explore: IExplore | undefined }) =>{
 	const searchParams = useSearchParams();
 
 	const tableName = searchParams?.get("tableName");
-	const { setTableName, tableName: storeTableName } = useTableData();
+	const { setTableName } = useTableData();
 	const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
 	const explore = props.explore ?? {
 		wallpaper: img.src,
@@ -48,16 +48,17 @@ const MainBackground = (props: { explore: IExplore | undefined }) =>{
 		<div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
 			<Image
 				src={explore?.wallpaper || img.src}
-				layout="fill"
-				quality={75}
+				quality={95}
 				sizes="(max-width: 450px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
 				alt={"Explore page wallpaper"}
 				placeholder="blur"
-				blurDataURL={getRandomBlurImg(700, 700)}
+				blurDataURL={getRandomBlurImg(500, 500)}
+				width={500}
+				height={400}
 				priority={true}
 			/>
 
-			<div className="sticky flex px-4 py-3 mb-10 bottom-[10%]">
+			<div className="absolute top-0 flex px-4 py-3 mb-10">
 				{
 					explore.openFrom && explore.openTill && (
 						<div className="">

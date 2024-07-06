@@ -1,5 +1,5 @@
 import { memo } from "react"
-import Card, { ICard } from "."
+import Card, { type ICard } from "."
 
 interface ICardLG {
 	src: string
@@ -11,10 +11,9 @@ interface ICardLG {
 const CardLG = ({ src, text, noExplore, ...props }: ICardLG | (ICardLG & ICard)) =>{
 	/** after getting the heading and description text and description has to be added **/
 	return (
-		<Card src={src} size={"lg"}>
-			<h6 className="px-6 pt-2 truncate"></h6>
-			<h6 className="px-6 text-xs line-clamp-2"></h6>
-		</Card>
+		<Card src={src} size={"lg"} />
+	
+		
 	)
 }
 

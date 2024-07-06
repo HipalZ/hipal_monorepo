@@ -227,6 +227,8 @@ const usersRouter = new Hono()
       err: false,
     });
   })
+
+ 
   .post('/Owner/Login', zValidator('json', UserAttrs), async (c) => {
     const requestData = await c.req.json();
     const { phone, password, role } = requestData;
@@ -244,7 +246,7 @@ const usersRouter = new Hono()
       const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
       return c.json({
-        data: { existingUser, accessToken, refreshToken },
+        data: {existingUser:existingUser, accessToken:accessToken, refreshToken:refreshToken },
         err: false,
         status: true,
         message: 'Login SuccessFully !!!',
@@ -262,12 +264,13 @@ const usersRouter = new Hono()
     const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
     return c.json({
-      data: { existingUser, accessToken, refreshToken },
+      data: {existingUser:existingUser, accessToken:accessToken, refreshToken:refreshToken },
       err: false,
       status: true,
       message: 'Login SuccessFully !!!',
     });
   })
+
   .get('/:businessId', zValidator('param', paramsSchema), async (c) => {
     const { businessId } = c.req.param();
     const existingUser = await User.find({

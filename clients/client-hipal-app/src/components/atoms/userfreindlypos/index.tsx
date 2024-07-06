@@ -1,14 +1,14 @@
 import div1 from "@public/homePageImages/div-2.png"
 import i10 from "@public/homePageImages/user.jpeg"
 import React, { memo } from "react"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import { GoArrowRight } from "react-icons/go"
 
 function UserFreindlyPOS() {
 	return (
 		<>
 			<div className="grid md:grid-cols-2 text-left bg-amber-400 mx-5 rounded-[60px] gap-4 mt-10  justify-items-center sm:grid-cols-12">
-				<div className=" p-10 mt-12 ">
+				<div className="p-10 mt-12 ">
 					{" "}
 					<Image width={400} height={300} className="w-[400px]" src={i10} alt="" />
 				</div>

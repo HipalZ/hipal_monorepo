@@ -1,8 +1,8 @@
 import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import PlaceholderImg from "@/components/atoms/placeholder"
-import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType"
-import { IDish } from "@/components/types/businessData"
+import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType"
+import type { IDish } from "@/components/types/businessData"
 import { memo } from "react"
 
 function DiscountDishCard({
@@ -37,7 +37,7 @@ function DiscountDishCard({
 				)}
 			</div>
 			{/* Bottom Section */}
-			<div className="flex mt-2 overflow-hidden text-sm text-center truncate w-32">
+			<div className="flex w-32 mt-2 overflow-hidden text-sm text-center truncate">
 				{dishData?.name}
 			</div>
 		</center>

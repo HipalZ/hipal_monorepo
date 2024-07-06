@@ -42,6 +42,7 @@ const SignUp = memo(() => {
       param: { id: customLink },
     });
     const response = (await res.json()).data;
+    
     if (res.status === 201) {
       setUserDetails(response?.user);
       setLoader(false);

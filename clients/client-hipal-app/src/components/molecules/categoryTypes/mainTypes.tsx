@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { useActiveClass } from "@/components/store/useActiveClass"
 import { useDishTypes } from "@/components/store/useDishTypes"
-import { ICategory } from "@/components/types/businessData"
+import type { ICategory } from "@/components/types/businessData"
 import { SplideSlide } from "@splidejs/react-splide"
-import { CSSProperties, memo, useEffect, useMemo, useRef } from "react"
+import { type CSSProperties, memo, useEffect, useMemo, useRef } from "react"
 
 interface IMainTypes {
 	allCategoriesTypes: {

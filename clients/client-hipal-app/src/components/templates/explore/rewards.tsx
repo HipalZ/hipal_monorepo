@@ -26,7 +26,7 @@ const RewardCard = ({
 		<figure className={styles.reward_card_image}>
 			<Image src={imgSrc} width={90} height={90} alt={imgAlt} />
 		</figure>
-		<button className={`${styles.reward_card_button}`}>{buttonContent}</button>
+		<button type="button" className={`${styles.reward_card_button}`}>{buttonContent}</button>
 	</center>
 );
 
@@ -40,8 +40,8 @@ const Rewards = () => {
 
 	if(!isLogin)return;
 	return (
-		<div className="h-[18rem]">
-			<h3 className="pt-6 pl-4 text-xl text-Primary">
+		<div className="h-[15.5rem]">
+			<h3 className="pt-2 pl-4 text-xl text-Primary">
 				👋 Hi {userDetails.name}
 			</h3>
 			<section className={styles.reward_card_container}>

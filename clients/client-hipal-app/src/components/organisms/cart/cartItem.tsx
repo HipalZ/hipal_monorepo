@@ -17,9 +17,8 @@ const CartItem = ({ cartItem }) => {
 		cartItem.dishData?.images[1] ||
 		cartItem.dishData?.images[2];
 	const [showDescription, setShowDescription] = useState(false);
-    const [selectedDish, setSelectedDish] = useState({} as IDish)
-
-    const openModal = (dishData:any) => {
+    const [selectedDish, setSelectedDish] = useState<IDish>({} as IDish)
+    const openModal = (dishData:IDish) => {
 		setSelectedDish(dishData)
 		setShowDescription(true)
 	}

@@ -1,5 +1,5 @@
 "use client";
-import { useLogin } from "@/components/store/useLogin";
+import { type IUserData, useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

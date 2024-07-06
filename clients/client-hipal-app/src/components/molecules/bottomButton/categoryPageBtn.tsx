@@ -23,8 +23,10 @@ const Cart = dynamic(() => import("@/components/organisms/cart"), {
 
 const CategoryPageBtn = () => {
   const { isLogin, isPayment } = useLogin();
-  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
-  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+  const { businessId,customLink } = useBusinessDetails((s) => ({
+    businessId: s.businessDetails?._id,
+    customLink: s.businessDetails?.customLink,
+  }));
   const tableName = useTableData((s) => s.tableName);
   const [inputModal, setInputModal] = useState(false);
   const setDirection = useLogin((s) => s.setDirection);
@@ -89,7 +91,7 @@ const CategoryPageBtn = () => {
         firstKeyValue.dishData.businessId !== businessId
       ) {
         setCart({});
-		return;
+        return;
       }
     }
   }, []);

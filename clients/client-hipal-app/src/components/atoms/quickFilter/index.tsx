@@ -5,6 +5,27 @@ import Image from "next/image"
 import Mixed from "@/assets/svg/Mixed.svg"
 import { FaCaretDown } from "react-icons/fa";
 
+export const foodTypeIcons = {
+		
+	vegan: (
+		<div className="w-4 h-4 p-[0.125rem] border-2 border-[#02614b]">
+			<div className="w-[0.5rem] h-[0.5rem] bg-[#02614b] rounded-full"/>
+		</div>
+	),
+	egg: (
+		<div className="w-4 h-4 p-[0.125rem] border-2 border-[#D2C903]">
+			<div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full"/>
+		</div>
+	),
+	mixed: (
+		<div className="flex flex-row -mt-2 -mb-8">
+			<Image src={Mixed} width={20} height={4} alt="mixed" />
+		</div>
+	),
+	all: <div className="flex items-center"><FaCaretDown size={20} />Filter</div>
+}
+
+
 const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
 	<div
 		className={`${isActive ? 'bg-white' : ''} flex justify-center items-center px-2 rounded-full py-2 border border-primary `}
@@ -12,7 +33,7 @@ const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
 	>
 		<div className="w-4 h-4 p-[0.125rem] border-2" style={{ borderColor: color }}>
 			{!isNone ? (
-				<div className="w-[0.5rem] h-[0.5rem] rounded-full" style={{ backgroundColor: color }}></div>
+				<div className="w-[0.5rem] h-[0.5rem] rounded-full" style={{ backgroundColor: color }}/>
 			) : (
 				<></>
 			)}
@@ -43,26 +64,7 @@ const QuickFilter = () => {
 		setIsModalOpen(false)
 	}, [setActiveDishType, isActiveDishType])
 
-	const foodTypeIcons = {
-		
-		vegan: (
-			<div className="w-4 h-4 p-[0.125rem] border-2 border-[#02614b]">
-				<div className="w-[0.5rem] h-[0.5rem] bg-[#02614b] rounded-full"></div>
-			</div>
-		),
-		egg: (
-			<div className="w-4 h-4 p-[0.125rem] border-2 border-[#D2C903]">
-				<div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full"></div>
-			</div>
-		),
-		mixed: (
-			<div className="flex flex-row -mt-2 -mb-8">
-				<Image src={Mixed} width={20} height={4} alt="mixed" />
-			</div>
-		),
-		all: <div className="flex items-center"><FaCaretDown size={20} />Filter</div>
-	}
-
+	
 	const activeIcon = foodTypeIcons[isActiveDishType.toLowerCase()] || (
 	<div className="flex items-center"><FaCaretDown size={20} /> Filter</div>
 	)
