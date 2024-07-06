@@ -171,6 +171,37 @@ const usersRouter = new Hono()
       201,
     );
   })
+  .post(
+    '/resendOtp',
+    zValidator(
+      'json',
+      z.object({
+        phone: z.string(),
+      }),
+    ),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { phone } = requestData;
+
+      const options = {
+        method: 'POST',
+        url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
+      };
+      const response = await axios(options);
+
+      return c.json({
+        message: 'OTP sent successfully',
+        data: response.data,
+        err: false,
+      });
+    },
+  )
+
   .post('/:id/stafflogin', zValidator('json', staffValidator), async (c) => {
     const requestData = await c.req.json();
     const { phone, password } = requestData;

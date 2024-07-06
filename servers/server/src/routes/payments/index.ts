@@ -43,9 +43,7 @@ const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money:
 
 const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
   const total = exist + reward;
-
   const sum = Math.min(total, limit);
-
   const finalReward = sum - exist;
   return { finalReward, curentBalance: sum };
 };
@@ -314,7 +312,7 @@ const paymentsRouter = new Hono()
       const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
       const uniqueOrderId = nanoid(15);
 
-      const orderAlreadyExist = await PaymentAlert.findOne({ tableName, alertType: 'OFFLINE', isAccepted: false });
+      const orderAlreadyExist = await PaymentAlert.findOne({ businessId, tableName, alertType: 'OFFLINE', isAccepted: false });
 
       if (orderAlreadyExist) {
         return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} }, 400);
@@ -406,7 +404,6 @@ const paymentsRouter = new Hono()
         const claimCoins = Number(payload.payment.entity.notes.claimedCoins) || 0;
         const alertExist = await PaymentAlert.findOne({ order_id: getOrder?._id });
         if (!alertExist) {
-          await PaymentAlert.updateMany({ tableName: getOrder?.tableName }, { isAccepted: true }, { session });
           await PaymentAlert.create(
             [
               {
