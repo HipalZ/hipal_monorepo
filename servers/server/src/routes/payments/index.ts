@@ -217,7 +217,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
-    // zValidator('header', TokenValidator),
+    zValidator('header', TokenValidator),
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
@@ -265,6 +265,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', ReviewsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
@@ -306,6 +307,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
@@ -358,6 +360,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', validatePaymentSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const requestData = await c.req.json();
@@ -523,26 +526,33 @@ const paymentsRouter = new Hono()
     return c.json({ err: false, message: 'Webhook processed successfully', data: res });
   })
 
-  .post('/createWaiterAlert', zValidator('json', PaymentAlertSchema), async (c) => {
-    const requestData = await c.req.json();
-    const { businessId, tableName, message, name, phone } = requestData;
+  .post(
+    '/createWaiterAlert',
+    zValidator('json', PaymentAlertSchema),
+    zValidator('header', TokenValidator),
 
-    const alert = await PaymentAlert.create({
-      businessId: businessId,
-      alertType: 'WAITER',
-      name: name,
-      status: 'SUCCESS',
-      tableName: tableName,
-      message: message,
-      date: Date.now(),
-    });
-    return c.json({ message: 'Order verified successfully', err: false, data: alert });
-  })
+    async (c) => {
+      const requestData = await c.req.json();
+      const { businessId, tableName, message, name, phone } = requestData;
+
+      const alert = await PaymentAlert.create({
+        businessId: businessId,
+        alertType: 'WAITER',
+        name: name,
+        status: 'SUCCESS',
+        tableName: tableName,
+        message: message,
+        date: Date.now(),
+      });
+      return c.json({ message: 'Order verified successfully', err: false, data: alert });
+    },
+  )
   .get(
     '/:id/paymentAlerts',
     authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, alertType } = c.req.query();
@@ -577,6 +587,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, alertType } = c.req.query();
@@ -595,6 +606,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, orderId } = c.req.query();
@@ -615,6 +627,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('param', paramsSchema),
+    zValidator('header', TokenValidator),
 
     zValidator('json', acceptOrderSchema),
     async (c) => {
@@ -728,6 +741,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('param', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { alertId } = c.req.param();
@@ -749,6 +763,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -819,6 +834,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -914,6 +930,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
     zValidator('query', paramsSchema),
+    zValidator('header', TokenValidator),
 
     async (c) => {
       const { businessId, from, to } = c.req.query();

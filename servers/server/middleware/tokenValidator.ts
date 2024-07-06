@@ -9,8 +9,8 @@ interface DecodedToken extends JwtPayload {
 }
 
 export const authTokenValidator = async (c: Context, next: Next) => {
-  const accessToken = c.req.header('x-access-token');
-  const refreshToken = c.req.header('x-refresh-token');
+  const accessToken = c.req.header('x_access_token');
+  const refreshToken = c.req.header('x_refresh_token');
 
   console.log('Tpken axccess', c.req.header());
 

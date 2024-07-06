@@ -143,13 +143,11 @@ const usersRouter = new Hono()
     }
 
     if (existingUser) {
-      const accessTokenExistingUser = createAccessToken(existingUser._id.toString(), 'HIPAL_CUSTOMER');
-      const refreshTokenExistingUser = createRefreshToken(existingUser._id.toString(), 'HIPAL_CUSTOMER');
       return c.json(
         {
           status: false,
           message: 'User already exist',
-          data: { user: existingUser, accessToken: accessTokenExistingUser, refreshToken: refreshTokenExistingUser },
+          data: { user: existingUser },
           err: true,
         },
         409,
@@ -158,14 +156,11 @@ const usersRouter = new Hono()
 
     const user = await User.create(requestData);
 
-    const accessToken = createAccessToken(user._id.toString(), 'HIPAL_CUSTOMER');
-    const refreshToken = createRefreshToken(user._id.toString(), 'HIPAL_CUSTOMER');
-
     return c.json(
       {
         status: true,
         message: 'User created successfully',
-        data: { user: user, accessToken, refreshToken },
+        data: { user: user },
         err: false,
       },
       201,
@@ -363,6 +358,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string(),
       }),
     ),
+    zValidator('header', TokenValidator),
     async (c) => {
       const { userPhone, loyaltyId } = c.req.query();
 
