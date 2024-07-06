@@ -223,6 +223,8 @@ const paymentsRouter = new Hono()
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
+
+      let order_id = '';
       //@ts-ignore
       const res = await runInTransaction(async (session: ClientSession) => {
         const uniqueOrderId = nanoid(15);
@@ -254,10 +256,10 @@ const paymentsRouter = new Hono()
           return c.json({ err: true, message: 'Order not created', data: {} }, 400);
         }
 
-        return c.json({ err: false, message: 'Order created successfully', data: response.id });
+        order_id = response.id;
       });
 
-      return c.json({ err: false, message: 'Order created successfully', data: res });
+      return c.json({ err: false, message: 'Order created successfully', data: order_id });
     },
   )
   .post(
@@ -535,6 +537,7 @@ const paymentsRouter = new Hono()
       status: 'SUCCESS',
       tableName: tableName,
       message: message,
+      date: Date.now(),
     });
     return c.json({ message: 'Order verified successfully', err: false, data: alert });
   })
@@ -661,6 +664,7 @@ const paymentsRouter = new Hono()
                   tips: order?.tips,
                   tableName: order?.tableName,
                   waiterName,
+                  date: Date.now(),
                 },
               ],
               { session },
