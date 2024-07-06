@@ -17,8 +17,7 @@ const LoginMemo = () => {
   const [password, setPassword] = useState<string>('');
   const { setLoading } = useLiteStore();
   // 
-  const setAccessToken = useUserToken.getState().setAccessToken;
-  const setRefreshToken = useUserToken.getState().setRefreshToken;
+
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
   const navigate = useNavigate();
@@ -33,6 +32,8 @@ const LoginMemo = () => {
 
   //apis
   const handleLogin = async () => {
+    const setAccessToken = useUserToken.getState().setAccessToken;
+    const setRefreshToken = useUserToken.getState().setRefreshToken;
     setLoading(true);
       const res = await apiRpc.users[':id'].stafflogin.$post({
         json: {

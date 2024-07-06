@@ -71,7 +71,7 @@ const BillPopUpMemo = () => {
 
   const handleCloseOnline = useCallback(() => {
     setClickViewMore(!clickViewMore);
-  }, []);
+  }, [clickViewMore]);
 
   const handleConfirmAlert = async (id: string, comment: string) => {
     const accessToken = useUserToken.getState().accessToken;
@@ -98,7 +98,7 @@ const BillPopUpMemo = () => {
     handleConfirmAlert(id, comment);
     removeOfflineAlert(id);
     setClickViewMore(!clickViewMore);
-  }, []);
+  },[clickViewMore]);
 
   const hideMiddleNumbers = useCallback((phone: string) => {
     if (phone.length <= 2) return phone;
@@ -116,7 +116,7 @@ const BillPopUpMemo = () => {
 
   const handleClosePopup = useCallback(() => {
     setClickViewMore(!clickViewMore);
-  }, [clickViewMore]);
+  },[clickViewMore])
 
   return (
     <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>

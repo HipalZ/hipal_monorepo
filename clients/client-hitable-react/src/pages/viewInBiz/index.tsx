@@ -7,7 +7,10 @@ import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
 
 const ViewInBizMemo = () => {
-  const { selectedBiz, captainData } = useHiClientZ();
+  const { selectedBiz, captainData } = useHiClientZ((s)=>({
+    selectedBiz: s.selectedBiz,
+    captainData: s.captainData,
+  }));
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);

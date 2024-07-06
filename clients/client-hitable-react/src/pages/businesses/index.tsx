@@ -11,13 +11,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 const BusinessesMemo = memo(() => {
   // store
-  const { captainData, setSelectedBiz } = useHiClientZ();
+  const { captainData, setSelectedBiz } = useHiClientZ((s)=>({
+    captainData: s.captainData,
+    setSelectedBiz: s.setSelectedBiz,
+  }));
   const navigate = useNavigate();
   const location = useLocation();
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
   const inBusinesses = location.pathname.includes('businesses');
-  const handleUpdateDefault = (e: Event) => {
-    e.stopPropagation();
+  const handleUpdateDefault = (id:string) => {
+    
   };
 
   const exploreBusiness = (biz: CustomRole) => {
@@ -58,9 +61,9 @@ const BusinessesMemo = memo(() => {
                   </p>
                 </div>
               </article>
-              {/* <div>
-                <img onClick={(e) => handleUpdateDefault(e, biz._id)} src={biz.bookMark ? bookmarkAfter : bookmarkBefore} alt="bookmark" />
-              </div> */}
+              <div>
+                <img onClick={() => handleUpdateDefault(biz._id)} src={biz.bookMark ? bookmarkAfter : bookmarkBefore} alt="bookmark" />
+              </div>
             </section>
           );
         })}
