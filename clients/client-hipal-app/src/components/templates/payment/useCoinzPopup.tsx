@@ -19,16 +19,16 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
     const loyaltySetting = useLoyaltyData(s => s.loyaltySetting)
     const openBillModal = useCallback(() => {
         setEditBillModal(true);
-    }, [setEditBillModal]);
+    }, []);
 
     const closeBillModal = useCallback(() => {
         setEditBillModal(false);
-    }, [setEditBillModal]);
+    }, []);
 
     return (
         <>
             <center className="flex items-center justify-center my-2">
-                <button onClick={openBillModal} className="px-2 py-1 text-sm border rounded-full border-primary">
+                <button type="button" onClick={openBillModal} className="px-2 py-1 text-sm border rounded-full border-primary">
                     <CiEdit className="inline-block" />
                     <span className="px-2 py-2">
                         Edit Bill Value

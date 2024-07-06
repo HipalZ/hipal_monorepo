@@ -4,13 +4,13 @@ import { memo } from "react";
 import { GiTakeMyMoney } from "react-icons/gi";
 import { MdOutlineHistory } from "react-icons/md";
 import HeaderAlerts from "@/components/liteAlerts/headerAlerts";
-import { IconType } from "react-icons";
+import type { IconType } from "react-icons";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import SalesLite from "@/components/atoms/salesLite";
 import OnlineAlerts from "@/components/liteAlerts/onlineAlerts";
 import OfflineAlerts from "@/components/liteAlerts/offlineAlerts";
 import History from "@/components/liteAlerts/history";
-import { NavItemTypes } from "@/components/types/hiClientzData";
+import type { NavItemTypes } from "@/components/types/hiClientzData";
 import BillPopUpMemo from "@/components/atoms/billPopUp";
 
 
@@ -50,6 +50,7 @@ const AlertsMemo = () => {
                 <div className="fixed bottom-0 h-[4.5rem] bg-white w-full shadow-2xl flex justify-around items-center">
                     {navItems.map(({ type, icon: Icon }) => (
                         <button
+                            type="button"
                             key={type}
                             onClick={() => handleNavItemClick(type)}
                             className={selectedNavItem === type ? navClass : defaultClass}

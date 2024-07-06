@@ -1,4 +1,4 @@
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { create } from 'zustand';
 
 interface IDishWithParent {
@@ -44,7 +44,7 @@ export const useSearch = create(persist<IUseSearch>(
     }),
     {
         name: 'search-store',
-        getStorage: () => localStorage,
+        storage: createJSONStorage(() => localStorage),
     }
 ),
 );

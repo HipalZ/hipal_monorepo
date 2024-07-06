@@ -45,7 +45,6 @@ const OfflineAlertCard = (props: IOfflineProp) => {
       console.error("Error removing alert:", error);
     }
   };
-
   return (
     <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? (
@@ -118,7 +117,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                         <h1 className="text-base text-gray-700">Table: {alert?.order_id?.tableName}</h1>
                         <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                       </article>
-                      <button onClick={() => handleViewMore(alert)} className="px-6 py-1 mt-6 text-white bg-black rounded-full">
+                      <button type="button" onClick={() => handleViewMore(alert)} className="px-6 py-1 mt-6 text-white bg-black rounded-full">
                         <h1 className="text-xs">View</h1>
                       </button>
                     </section>

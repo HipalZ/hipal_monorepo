@@ -1,10 +1,9 @@
 "use client";
 import { MdOutlineChevronLeft } from "react-icons/md";
-import { ChangeEvent, memo, useEffect, useState } from "react";
-import { IBusinessData } from "@/components/types/businessData";
+import { type ChangeEvent, memo, useEffect, useState } from "react";
+import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
-import axios from "@/utils/axios";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
@@ -22,6 +21,8 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
+import { apiRpc } from "@hi/common";
+import { useUserToken } from "@/components/store/useUserToken";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -74,6 +75,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     const { loyaltySetting } = useLoyaltyData()
     const [maxCoinz, setMaxCoinz] = useState(0)
     const [showError, setShowError] = useState(false)
+    const { accessToken, refreshToken } = useUserToken((s) => ({
+        accessToken: s.accessToken,
+        refreshToken: s.refreshToken
+    }))
 
     useEffect(() => {
         if (!tableName) {
@@ -107,13 +112,15 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         setRazorPayPaymentId('');
         setShowError(true)
         toast.error('Payment failed');
-        setTimeout(()=>{
+        setTimeout(() => {
             setShowError(false)
         }, 2000)
     };
+
     const handlePaymentFailure = (response: any) => {
         setRazorPayOrderId(response.error.metadata.order_id);
     };
+
     const creatingRazorPayOptions = async (orderId: string) => {
         if (!orderId) {
             return;
@@ -205,16 +212,19 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     // verification signature and user reward api
     const sendPaymentResponse = async (response: any) => {
         setIsLoading(true)
-        try {
-            const res = await axios.post('/v1/payments/validPayment', {
-                response,
+            const res = await apiRpc.payments.validPayment.$post({
+                json: {
+                    response
+                }
             })
+            const data = await res.json()
+            const orderId = data?.data as string
             const total = billValue - claimedCoinz + tips;
             const coinsObtained = total * (loyaltySetting?.setReward / 100);
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
             const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             if (res.status === 200) {
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${res?.data?.data}`)
+                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${finalReward?.finalReward}&orderId=${orderId}`)
                 toast.success('Payment successful')
                 setRazorPaySignature('')
                 setRazorPayOrderId('')
@@ -223,11 +233,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             } else {
                 toast.error('Payment failed')
             }
-        } catch (error) {
-            console.log(error)
-        } finally {
-            setIsLoading(false)
-        }
     }
 
     const clearTheTip = () => {
@@ -246,50 +251,44 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         if (isLoading) {
             return toast.error('Please wait for the previous transaction to complete')
         }
-
         setIsLoading(true);
-        try {
-            const config = {
-                method: 'POST',
-                url: '/v1/payments/createOfflineOrder',
-                data: {
-                    businessId: data?.business?._id,
-                    total: billValue - claimedCoinz + tips,
-                    claimedCoins: claimedCoinz,
-                    billValue: billValue,
-                    name: userDetails.name || "user",
-                    phone: userDetails.phone || "+91**********",
-                    tips: tips,
-                    currency: "INR",
-                    tableName: tableName,
-                },
+        const res = await apiRpc.payments.createOfflineOrder.$post({
+            json: {
+                businessId: data?.business?._id || '',
+                total: billValue - claimedCoinz + tips,
+                claimedCoins: claimedCoinz,
+                billValue: billValue,
+                name: userDetails.name || "user",
+                phone: userDetails.phone || "+91**********",
+                tips: tips,
+                currency: "INR",
+                tableName: tableName,
+            },
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken,
             }
-            const response = await axios(config)
-            if (response?.data?.data?.order_id) {
-                const total = billValue - claimedCoinz + tips;
-                const coinsObtained = total * (loyaltySetting?.setReward / 100);
-                const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
-                const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
-                // gives a string which is orderId
-                toast.success('We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.')
-                setTableName('')
-                router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.data?.order_id}`)
-            }
-
-        } catch (err: any) {
-            console.log(err)
-            toast.error(err.response?.data?.message || 'Something went wrong')
-        } finally {
+        })
+        const response = await res.json() as unknown as { data: { order_id: string }, message: string }
+        if (res.status === 400) {
+            return toast.error(response?.message || 'Something went wrong')
+        }
+        if (response?.data?.order_id) {
+            const total = billValue - claimedCoinz + tips;
+            const coinsObtained = total * (loyaltySetting?.setReward / 100);
+            const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
+            const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
+            toast.success('We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.')
+            setTableName('')
+            router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${finalReward?.finalReward}&orderId=${response?.data?.order_id}`)
             setIsLoading(false)
         }
     }
 
     const createRazorPayOrder = async (total: number): Promise<string> => {
-        const config = {
-            method: 'POST',
-            url: '/v1/payments/createOrder',
-            data: {
-                businessId: data?.business?._id,
+        const res = await apiRpc.payments.createOrder.$post({
+            json: {
+                businessId: data?.business?._id || '',
                 total: billValue - claimedCoinz + tips,
                 currency: 'INR',
                 claimedCoins: claimedCoinz,
@@ -299,9 +298,13 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 tips: tips,
                 tableName: tableName,
             },
-        };
-        const response = await axios(config);
-        const orderId = response.data.data;
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken,
+            }
+        })
+        const response = await res.json() as unknown as { data: string }
+        const orderId = response.data;
         setRazorPayOrderId(orderId);
         return orderId;
     };
@@ -370,17 +373,20 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     };
 
     const handleUserCoinz = async () => {
-        try {
-            const config = {
-                method: 'GET',
-                url: `/v1/users/:businessId/getUserReward?userPhone=${userDetails.phone}&loyaltyId=${data?.loyalty?.loyaltyId}`,
+        const res = await apiRpc.users[":businessId"].getUserReward.$get({
+            param: {
+                businessId: data?.business?._id || ''
+            },
+            query: {
+                userPhone: userDetails.phone,
+                loyaltyId: data?.loyalty?.loyaltyId
             }
-            const response = await axios(config)
-            setUserCoinz(response?.data?.data?.rewards)
-            return response?.data?.data?.rewards
-        } catch (err) {
-            console.log(err)
+        })
+        const response = await res.json() as unknown as { data: UserData }
+        if (res.status === 200) {
+            setUserCoinz(response?.data?.rewards)
         }
+        return response?.data?.rewards
     }
 
     const openModal = async () => {
@@ -423,6 +429,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             }
         }
     }
+
     useEffect(() => {
         setBillValue(Number(searchParams?.get("amount")))
     }, [])
@@ -435,96 +442,97 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     return (
         <>
-        {isLoading ? (<PayLoader/>) : showError ? (<ErrorPayment/>) :(
-        <div>
-            <section className='z-20 w-full bg-base-100'>
-                <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
-                    {businessDetails.logo ? (
-                        <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
-                            <button
-                                onClick={handleBack}
-                                type='button'
-                                className='h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
-                            >
-                                <MdOutlineChevronLeft className='text-3xl text-white ' />
-                            </button>
-                            <Image
-                                src={businessDetails.logo}
-                                height={80}
-                                width={80}
-                                quality={95}
-                                objectFit="cover"
-                                alt="logo-businessDetails"
-                                className="object-center border rounded-full shadow-sm aspect-square"
-                                placeholder="blur"
-                                blurDataURL={getRandomBlurImg(100, 100)}
+            {isLoading ? (<PayLoader />) : showError ? (<ErrorPayment />) : (
+                <div>
+                    <section className='z-20 w-full bg-base-100'>
+                        <header className='bg-white h-[4.25rem] flex items-center space-x-8'>
+                            {businessDetails.logo ? (
+                                <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
+                                    <button
+                                        onClick={handleBack}
+                                        type='button'
+                                        className='h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce'
+                                    >
+                                        <MdOutlineChevronLeft className='text-3xl text-white ' />
+                                    </button>
+                                    <Image
+                                        src={businessDetails.logo}
+                                        height={80}
+                                        width={80}
+                                        quality={95}
+                                        objectFit="cover"
+                                        alt="logo-businessDetails"
+                                        className="object-center border rounded-full shadow-sm aspect-square"
+                                        placeholder="blur"
+                                        blurDataURL={getRandomBlurImg(100, 100)}
+                                    />
+                                </figure>
+                            ) : (
+                                <PlaceholderImg />
+                            )}
+                            <div >
+                                Paying:  <br />
+                                <span className='font-bold text-primary'>
+                                    {businessDetails.businessName}
+                                </span>
+                            </div>
+                        </header>
+                    </section>
+                    {selectedMode === "INVOICE" ?
+                        <>
+                            <PaymentCard
+                                claimedCoinz={claimedCoinz}
+                                billValue={billValue}
+                                logo={data?.business?.logo}
                             />
-                        </figure>
-                    ) : (
-                        <PlaceholderImg />
-                    )}
-                    <div >
-                        Paying:  <br />
-                        <span className='font-bold text-primary'>
-                            {businessDetails.businessName}
-                        </span>
-                    </div>
-                </header>
-            </section>
-            {selectedMode === "INVOICE" ?
-                <>
-                    <PaymentCard
-                        claimedCoinz={claimedCoinz}
-                        billValue={billValue}
-                        logo={data?.business?.logo}
-                    />
-                    {
-                        userCoinz > 0 &&
-                        <UseCoinzPopup
-                            openModal={openModal}
-                            claimedCoinz={claimedCoinz}
-                            userCoinz={userCoinz}
+                            {
+                                userCoinz > 0 &&
+                                <UseCoinzPopup
+                                    openModal={openModal}
+                                    claimedCoinz={claimedCoinz}
+                                    userCoinz={userCoinz}
+                                />
+                            }
+                            <BillSummary
+                                billValue={billValue}
+                                claimedCoinz={claimedCoinz}
+                                tips={tips}
+                                isTipActive={isTipActive}
+                                setIsTipActive={setIsTipActive}
+                                clearTheTip={clearTheTip}
+                                handleTipSelect={handleTipSelect}
+                                selectedTip={selectedTip}
+                                customTip={customTip}
+                                showInput={showInput}
+                                handleCustomTip={handleCustomTip}
+                                handleSaveTip={handleSaveTip}
+                            />
+                            <BottomButton >
+                                <div onClick={() => handleMode("MODE")} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'} bg-primary text-base-100 py-3 px-3 rounded-full`} >
+                                    <span>Proceed to pay ₹ {billValue - claimedCoinz + tips}</span>
+                                </div>
+                            </BottomButton>
+                        </> :
+                        <PaymentComponent data={data} tips={tips}
+                            billValue={billValue}
+                            handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
+                            setSelectedMode={setSelectedMode} isLoading={isLoading}
+                            total={billValue - claimedCoinz + tips}
                         />
                     }
-                    <BillSummary
-                        billValue={billValue}
+                    <AvailableCoinz
+                        isModalOpen={isModalOpen}
+                        closeModal={closeModal}
                         claimedCoinz={claimedCoinz}
-                        tips={tips}
-                        isTipActive={isTipActive}
-                        setIsTipActive={setIsTipActive}
-                        clearTheTip={clearTheTip}
-                        handleTipSelect={handleTipSelect}
-                        selectedTip={selectedTip}
-                        customTip={customTip}
-                        showInput={showInput}
-                        handleCustomTip={handleCustomTip}
-                        handleSaveTip={handleSaveTip}
+                        userCoinz={userCoinz}
+                        handleApplyCoinz={handleApplyCoinz}
+                        maxCoinz={maxCoinz}
+                        setMaxCoinz={setMaxCoinz}
+                        billValue={billValue}
+                        setClaimAmount={data?.loyalty?.setClaimAmount}
                     />
-                    <BottomButton >
-                        <div onClick={() => handleMode("MODE")} className={`${billValue > 0 ? '' : 'opacity-20 pointer-events-none'} bg-primary text-base-100 py-3 px-3 rounded-full`} >
-                            <span>Proceed to pay ₹ {billValue - claimedCoinz + tips}</span>
-                        </div>
-                    </BottomButton>
-                </> :
-                <PaymentComponent data={data} tips={tips}
-                    billValue={billValue}
-                    handleCreateOrder={handleCreateOrder} selectedMode={selectedMode}
-                    setSelectedMode={setSelectedMode} isLoading={isLoading}
-                    total={billValue - claimedCoinz + tips}
-                />
-            }
-            <AvailableCoinz
-                isModalOpen={isModalOpen}
-                closeModal={closeModal}
-                claimedCoinz={claimedCoinz}
-                userCoinz={userCoinz}
-                handleApplyCoinz={handleApplyCoinz}
-                maxCoinz={maxCoinz}
-                setMaxCoinz={setMaxCoinz}
-                billValue={billValue}
-                setClaimAmount={data?.loyalty?.setClaimAmount}
-            />
-        </div>)}
+                </div>
+            )}
         </>
     )
 };

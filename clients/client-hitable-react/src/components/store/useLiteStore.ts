@@ -1,4 +1,4 @@
-import {Alert, NavItemTypes, ISalesLite} from '@/components/types/hiClientzData';
+import type {Alert, NavItemTypes, ISalesLite} from '@/components/types/hiClientzData';
 import { create } from 'zustand';
 
 interface ILiteStore {

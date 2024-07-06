@@ -1,4 +1,4 @@
-import { IBusinessData } from "@/components/types/businessData";
+import type { IBusinessData } from "@/components/types/businessData";
 import { paths } from "@/components/utils/paths";
 import axios from "@/utils/axios";
 

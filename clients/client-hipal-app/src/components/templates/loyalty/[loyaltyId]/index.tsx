@@ -4,7 +4,6 @@ import Image from "next/image";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { timestampToDateTime } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
-import axios from "@/utils/axios";
 import { useQuery } from "@tanstack/react-query";
 import useUserReward from "@/components/store/useUserReward";
 import avatar from "@/assets/img/avatar.png";
@@ -150,7 +149,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
         <div>
           {itemData?.map((item) => {
             return (
-              <section className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200">
+              <section key={item?._id} className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200">
                 <article className="flex space-x-0">
                   <figure className="w-[4rem] shrink-0 ">
                     <Image

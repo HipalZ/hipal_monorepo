@@ -1,4 +1,4 @@
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { create } from 'zustand';
 
 interface IuserToken {
@@ -22,7 +22,7 @@ export const useUserToken = create(
     }),
     {
       name: 'token-data',
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

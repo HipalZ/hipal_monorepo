@@ -1,12 +1,5 @@
-import { businessApis, fetchAllBusinessIds } from "@/apis/explore";
+import { businessApis } from "@/apis/explore";
 import Review from "@/components/templates/review";
-
-export async function generateStaticParams() {
-  const businessIds = await fetchAllBusinessIds();
-  return businessIds.map((businessId: string) => ({
-    businessId: businessId,
-  }));
-}
 
 export async function generateMetadata() {
   return {

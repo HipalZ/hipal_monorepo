@@ -1,7 +1,7 @@
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { ChangeEvent, memo, useCallback, useState } from 'react';
+import { type ChangeEvent, memo, useCallback, useState } from 'react';
 import { MdOutlineCall } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import PopUp from '../popUp';
@@ -65,6 +65,7 @@ const BillPopUpMemo = () => {
 
   const handleConfirmAlert = async (id: string) => {
     setIsLoading(true);
+    console.log('payload',comment)
     try {
       const res = await apiRpc.payments[':pid'].order[':alertId'].$put({
         param: { alertId: id },
@@ -127,7 +128,7 @@ const BillPopUpMemo = () => {
           <p>: {viewData?.order_id?.claimedCoins}</p>
         </div>
         <div className="mx-6 mb-2 grid grid-cols-2">
-          <h1>Bill after discount</h1>
+          <h1>Bill before discount</h1>
           <p>: ₹ {viewData?.order_id?.billValue - viewData?.order_id?.discount}</p>
         </div>
         <div className="mx-6 mb-2 grid grid-cols-2">
@@ -212,6 +213,7 @@ const BillPopUpMemo = () => {
         {selectedNavItem === 'online' || selectedNavItem === 'history' ? (
           <div className="mb-5 flex justify-center">
             <button
+              type="button"
               onClick={handleCloseOnline}
               className="on_active_bounce text-white fixed bottom-4 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem]"
             >

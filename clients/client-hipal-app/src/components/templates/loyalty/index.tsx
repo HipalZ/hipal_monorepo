@@ -11,8 +11,6 @@ import {
 } from "@/components/atoms/card/pathPattern";
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
-import { paths } from "@/components/utils/paths";
-import axios from "@/utils/axios";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { memo, useEffect, useState } from "react";
@@ -54,16 +52,16 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   useEffect(() => {
     const patterns = (cardPattern: PatternKeys, fontColor: string) => {
       const defaultColor = "#FAE8CA";
-      fontColor = fontColor || defaultColor;
+      const effectiveColor = fontColor || defaultColor;
 
       const src = {
         wave: waveToDataUrl("#000000", "white").wave,
         triangle: triangleToDataurl("white").triangle,
-        beans: beans(fontColor).beans,
-        bud: bud(fontColor).bud,
-        bowl: bowl(fontColor).bowl,
-        love: love(fontColor).love,
-        flower: flower(fontColor).flower,
+        beans: beans(effectiveColor).beans,
+        bud: bud(effectiveColor).bud,
+        bowl: bowl(effectiveColor).bowl,
+        love: love(effectiveColor).love,
+        flower: flower(effectiveColor).flower,
       };
       return src[cardPattern];
     };

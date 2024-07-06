@@ -18,7 +18,7 @@ const PaymentCard = (props: IPaymentCard) => {
                     <center className="absolute top-0 z-50 w-5 h-5 transform -translate-x-1/2 -translate-y-1/2 bg-base-100 left-[50%] rotate-45">
 
                     </center>
-                    <button>
+                    <button type="button">
                         🥳 Woah ! You are saving ${claimedCoinz}
                     </button>
                 </center> : null
