@@ -22,7 +22,7 @@ import { date } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
-const { validateWebhookSignature } = require('../../utils');
+const { validateWebhookSignature } = require('../../utils/razorpay-utils');
 //dates
 const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
@@ -363,6 +363,7 @@ const paymentsRouter = new Hono()
     zValidator('header', TokenValidator),
 
     async (c) => {
+      console.log('ddddddddddddd');
       const requestData = await c.req.json();
       const { response } = requestData;
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
@@ -374,19 +375,22 @@ const paymentsRouter = new Hono()
       if (signature === razorpay_signature) {
         return c.json({ err: false, message: 'Payment is valid', data: razorpay_order_id });
       }
-      return c.json({ err: true, message: 'Payment is not valid' });
+      return c.json({ err: true, message: 'Payment is not valid' }, 400);
     },
   )
-  .post('/razorpay-webhook', zValidator('json', validatePaymentSchema), async (c) => {
+  .post('/razorpay-webhook', async (c) => {
     //@ts-ignore
     const res = await runInTransaction(async (session: ClientSession) => {
-      const headers = RazorpayWebhookHeadersSchema.safeParse(c.req.header());
-      const headersResult = RazorpayWebhookHeadersSchema.safeParse(headers);
+      console.log('yaha tak');
+
+      const headersResult = RazorpayWebhookHeadersSchema.safeParse(c.req.header());
       if (!headersResult.success) {
         return c.json({ err: true, message: 'Invalid headers', data: {} }, 200);
       }
 
       const { 'x-razorpay-signature': razorpaySignature, 'x-razorpay-event-id': razorpayEventId } = headersResult.data;
+
+      console.log('razorpaySignature', razorpaySignature);
 
       const body = await c.req.json();
 
