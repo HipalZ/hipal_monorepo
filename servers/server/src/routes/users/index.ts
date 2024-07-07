@@ -228,7 +228,6 @@ const usersRouter = new Hono()
     });
   })
 
- 
   .post('/Owner/Login', zValidator('json', UserAttrs), async (c) => {
     const requestData = await c.req.json();
     const { phone, password, role } = requestData;
@@ -246,7 +245,7 @@ const usersRouter = new Hono()
       const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
       return c.json({
-        data: {existingUser:existingUser, accessToken:accessToken, refreshToken:refreshToken },
+        data: { existingUser: existingUser, accessToken: accessToken, refreshToken: refreshToken },
         err: false,
         status: true,
         message: 'Login SuccessFully !!!',
@@ -264,7 +263,7 @@ const usersRouter = new Hono()
     const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
 
     return c.json({
-      data: {existingUser:existingUser, accessToken:accessToken, refreshToken:refreshToken },
+      data: { existingUser: existingUser, accessToken: accessToken, refreshToken: refreshToken },
       err: false,
       status: true,
       message: 'Login SuccessFully !!!',
@@ -354,7 +353,7 @@ const usersRouter = new Hono()
     });
   })
   .get(
-    '/:id/loyaltyUserHistiry',
+    '/:id/loyaltyUserHistory',
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator(

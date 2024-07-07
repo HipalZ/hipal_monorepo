@@ -106,7 +106,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   };
 
   const getUserTotalRewards = async () => {
-    const response = await apiRpc.users[":id"].loyaltyUserHistiry.$get({
+    const response = await apiRpc.users[":id"].loyaltyUserHistory.$get({
       param: {
         id: userDetails?.phone,
       },
