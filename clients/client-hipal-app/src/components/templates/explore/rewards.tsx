@@ -71,7 +71,7 @@ const Rewards = () => {
 						title="CouponZ"
 						imgSrc={Couponz}
 						imgAlt="couponz"
-						buttonContent="Coming soon"
+						buttonContent="🔜"
 						gridColor="#000"
 					/>
 				</Link>

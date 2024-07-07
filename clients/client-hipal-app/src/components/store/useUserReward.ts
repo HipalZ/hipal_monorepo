@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
-interface IUserReward {
+export interface IUserReward {
 	loyaltyId: string
 	userPhone: string
 	userName: string

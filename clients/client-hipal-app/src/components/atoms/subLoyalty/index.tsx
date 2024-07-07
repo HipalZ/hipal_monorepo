@@ -13,6 +13,10 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import { createSrcColor, type PatternKeys } from "@/components/utils/helpers";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
+import { useUserToken } from "@/components/store/useUserToken";
+import type { IUserReward } from "@/components/store/useUserReward";
 interface ILoyaltyCard {
 	loyalty: ILoyaltySetting
 }
@@ -22,6 +26,10 @@ const MainLoyalty = dynamic(() => import("@/components/atoms/mainLoyalty"), { lo
 
 const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 	const { loyaltySetting, setLoyaltySetting } = useLoyaltyData()
+	const userDetails = useLogin((s) => s.userDetails)
+	const setUserCoinZ = useLogin((s) => s.setUserCoinZ)
+	const accessToken = useUserToken((s)=>s.accessToken)
+	const refreshToken = useUserToken((s)=>s.refreshToken)
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const ref = useRef(null);
 	const isInView = useInView(ref, { once: true });
@@ -53,6 +61,33 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 			findPattern(loyalty?.cardPattern);
 		}
 	}, [])
+
+	const handleUserCoinz = async () => {
+        const res = await apiRpc.users[":businessId"].getUserReward.$get({
+            param: {
+                businessId: loyalty?.businessId || ''
+            },
+            query: {
+                userPhone: userDetails.phone,
+                loyaltyId: loyalty?.loyaltyId
+            },
+            header:{
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            }
+        })
+        const response = await res.json() as unknown as { data:IUserReward  }
+        if (res.status === 200) {
+            setUserCoinZ(response?.data?.rewards)
+        }
+        return response?.data?.rewards
+    }
+
+	useQuery({
+        queryKey: ['getUserReward', userDetails.phone, loyalty?.loyaltyId],
+        queryFn: handleUserCoinz,
+        enabled: !!userDetails.phone && !!loyalty?.loyaltyId,
+    })
 
 	if (loyalty?._id) {
 		return (
@@ -93,7 +128,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 
 							<figcaption
 								style={{
-									color: `#183D2E`,
+									color: "#183D2E",
 								}}
 								className="absolute text-sm transform -translate-x-[20%] -translate-y-[30%] rounded-full aspect-square top-1/2 left-1/2"
 							>
