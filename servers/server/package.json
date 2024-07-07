@@ -2,7 +2,8 @@
   "name": "@hipal/server",
   "version": "1.0.2",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts"
   },
   "main": "src/index.ts",
   "dependencies": {
