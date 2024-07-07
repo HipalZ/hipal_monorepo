@@ -1,5 +1,4 @@
 FROM imbios/bun-node:1.0.30-21.7.1-alpine AS base
-RUN npm install -g bun
 COPY  bun.lockb /app/bun.lockb
 COPY . /app
 WORKDIR /app
