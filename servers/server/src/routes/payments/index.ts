@@ -32,8 +32,9 @@ endOfToday.setHours(23, 59, 59, 999);
 
 //calculateDiscount
 const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money: number) => {
+  const valueAfterCoins = Math.abs(total_bill - appliedCoins || 0);
   const subTotal = (total_bill * 100) / 105;
-  const discount = (paid_Money - 1.05 * subTotal) / 1.05;
+  const discount = (valueAfterCoins - 1.05 * subTotal) / 1.05;
   const finalDiscount = Math.floor(Math.abs(discount));
 
   return finalDiscount;

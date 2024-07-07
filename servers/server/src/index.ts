@@ -15,6 +15,7 @@ import { timeout } from 'hono/timeout';
 import { razorpayWrapper } from '../razorpay_wrapper';
 import { routes } from './routes';
 import { customTimeoutException } from './utils';
+
 import './utils/env';
 
 const app = new Hono({
@@ -52,7 +53,7 @@ razorpayWrapper.create(Bun.env.RAZORPAY_KEY_ID, Bun.env.RAZORPAY_SECRET);
 //   store: new RedisStore({ client: redisClient }),
 // });
 
-// Apply the rate limiting middleware to all requests.
+// // Apply the rate limiting middleware to all requests.
 // app.use(limiter);
 
 const { printMetrics, registerMetrics } = prometheus();
