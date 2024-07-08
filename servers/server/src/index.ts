@@ -52,7 +52,7 @@ app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
   await connectDB();
 })();
 
-app.route(`/${Bun.env.API_VERSION}`, routes);
+app.route('/', routes);
 
 app.get('/', async (c) => {
   return c.json({
