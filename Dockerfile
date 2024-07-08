@@ -1,15 +1,19 @@
-FROM imbios/bun-node:1.0.30-21.7.1-alpine AS base
+# FROM imbios/bun-node:1.0.30-21.7.1-alpine AS base
+# FROM oven/bun:1.1.8-alpine AS base
+# FROM --platform=$BUILDPLATFORM oven/bun:1.0.31-alpine AS base
+# FROM oven/bun:1.0.31 AS base-server
+FROM --platform=$BUILDPLATFORM node:lts-slim AS base
+RUN npm i -g bun
 COPY  bun.lockb /app/bun.lockb
 COPY . /app
 WORKDIR /app
 RUN bun install
 
 FROM base AS server
+# RUN npm i -g bun
 RUN rm -r /app/clients
 WORKDIR /app/servers/server
-CMD ["bun", "run", "start"]
-
-
+CMD ["bun", "run", "dev:test"]
 
 
 FROM base AS client-hibiz-react-build

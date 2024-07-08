@@ -16,6 +16,7 @@
     "b:format": "biome format ."
   },
   "keywords": [],
+  "trustredDependencies": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
