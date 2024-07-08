@@ -84,7 +84,7 @@ const addRewardHistory = async (
 
   return data;
 };
-
+//
 const removeRewardHistory = async (
   status: string,
   tableName: string,
