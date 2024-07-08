@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: server-testing
+  DOCKER_REPOSITORY: server-test
 
 jobs:
   build-and-push:
