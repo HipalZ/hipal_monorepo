@@ -1,4 +1,4 @@
-name: Build and Push businesses Server Image
+name: Build and Push server-test to DigitalOcean Container Registry
 
 on:
   push:
