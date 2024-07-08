@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: client-hitable-prod
+  name: client_hitable_test
   namespace: hipalz
 spec:
   ports:
@@ -10,13 +10,13 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    app: client-hitable-prod
+    app: client_hitable_test
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: client-hikitchen-prod
+  name: client_hibiz_test
   namespace: hipalz
 spec:
   ports:
@@ -24,18 +24,4 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    app: client-hikitchen-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: client-hibiz-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
-  selector:
-    app: client-hibiz-prod
+    app: client_hibiz_test

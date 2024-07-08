@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: dishes-server-prod
+  name: server-test
   namespace: hipalz
 spec:
   ports:
@@ -10,102 +10,4 @@ spec:
       port: 80
       targetPort: 4500
   selector:
-    app: dishes-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: zones-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: zones-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: categories-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: categories-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: settings-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: settings-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: payments-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: payments-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kitchens-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: kitchens-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: users-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: users-server-prod
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: businesses-server-prod
-  namespace: hipalz
-spec:
-  ports:
-    - name: http
-      port: 80
-      targetPort: 4500
-  selector:
-    app: businesses-server-prod
+    app: server-test

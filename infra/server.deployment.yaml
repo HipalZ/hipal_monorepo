@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dishes-server-prod
+  name: server-test
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dishes-server-prod
+      app: server-test
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: dishes-server-prod
+        app: server-test
     spec:
       containers:
-        - name: dishes-server-prod
-          image: registry.digitalocean.com/hipalz-repo/dishes-prod-server:latest
+        - name: server-test
+          image: registry.digitalocean.com/hipalz-repo/server-test:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:
@@ -26,190 +26,4 @@ spec:
               containerPort: 4500
 
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: zones-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: zones-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: zones-server-prod
-    spec:
-      containers:
-        - name: zones-server-prod
-          image: registry.digitalocean.com/hipalz-repo/zones-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
 
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: categories-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: categories-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: categories-server-prod
-    spec:
-      containers:
-        - name: categories-server-prod
-          image: registry.digitalocean.com/hipalz-repo/categories-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: settings-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: settings-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: settings-server-prod
-    spec:
-      containers:
-        - name: settings-server-prod
-          image: registry.digitalocean.com/hipalz-repo/settings-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: payments-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: payments-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: payments-server-prod
-    spec:
-      containers:
-        - name: payments-server-prod
-          image: registry.digitalocean.com/hipalz-repo/payments-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kitchens-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: kitchens-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: kitchens-server-prod
-    spec:
-      containers:
-        - name: kitchens-server-prod
-          image: registry.digitalocean.com/hipalz-repo/kitchens-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: users-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: users-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: users-server-prod
-    spec:
-      containers:
-        - name: users-server-prod
-          image: registry.digitalocean.com/hipalz-repo/users-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: businesses-server-prod
-  namespace: hipalz
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: businesses-server-prod
-  strategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: businesses-server-prod
-    spec:
-      containers:
-        - name: businesses-server-prod
-          image: registry.digitalocean.com/hipalz-repo/businesses-prod-server:latest
-          imagePullPolicy: Always
-          # imagePullSecrets: hipalz-repo
-          ports:
-            - name: http
-              containerPort: 4500
