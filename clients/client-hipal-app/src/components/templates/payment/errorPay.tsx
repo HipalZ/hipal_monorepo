@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 
 const ErrorPayment = () => {
     return (
@@ -17,4 +17,5 @@ const ErrorPayment = () => {
     )
 }
 
-export default ErrorPayment
+const MemoErrorPayment = memo(ErrorPayment)
+export default MemoErrorPayment

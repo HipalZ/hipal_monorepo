@@ -8,7 +8,7 @@ const orderSchema = new mongoose.Schema<OrderType>(
     total: { type: Number, required: true, default: 0 },
     currency: { type: String, required: true },
     billValue: { type: Number, required: true },
-    receipt: { type: String, required: true },
+    receipt: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     phone: { type: String, required: true },
     tips: { type: Number, default: 0 },
@@ -17,7 +17,7 @@ const orderSchema = new mongoose.Schema<OrderType>(
 
     order_id: { type: String, required: true },
     tableName: { type: String, default: null },
-    date: { type: Number, required: false },
+    date: { type: Number, required: true },
   },
   {
     timestamps: true,

@@ -1,5 +1,5 @@
 import type { ICart } from "@/components/store/useCart"
-import { ILoyaltySetting } from "../store/useLoyaltyData"
+import type { ILoyaltySetting } from "../store/useLoyaltyData"
 
 export interface IBiz {
 	email: string;
@@ -218,7 +218,7 @@ export interface Item {
 	name: string
 	quantity: number
 	amount: number
-	extras: any[]
+	extras: string[]
 	comments: string
 }
 

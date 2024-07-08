@@ -27,5 +27,5 @@ function OnImgButton({ children, appendClassNames, ...props }: OnImgButtonProps)
 		</div>
 	)
 }
-
-export default memo(OnImgButton)
+const MemoOnImgButton = memo(OnImgButton)
+export default MemoOnImgButton

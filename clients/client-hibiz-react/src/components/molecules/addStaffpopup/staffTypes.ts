@@ -24,7 +24,7 @@ export const AddRoleArray = [
 
 export type servicePermissionsArrayType = {
     title: string;
-    description: string
+    description: string;
 }
 
 export type permissionsArrayType = {
@@ -51,7 +51,7 @@ export const permissionsArray = [
             {
                 title:"View Staff",
                 description:"Will be able to view Staff"
-            }
+            },
         ]
     },
     {
@@ -67,40 +67,4 @@ export const permissionsArray = [
             },
         ]
     },
-    {
-        permission: "Hi Biz",
-        services: [
-            {
-                title: "Items",
-                description: "Can add or delete Items"
-            }, 
-            {
-                title: "Menu Manager and explore page",
-                description: "Can edit the look of items in menu like images and description."
-            },
-            {
-                title:"Edit Staff",
-                description:"Will be able to add or delete Staff"
-            },
-            {
-                title:"View Staff",
-                description:"Will be able to view Staff"
-            }
-        ]
-    },
-    {
-        permission: "Hi Tables",
-        services: [
-            {
-                title: "Reject Payments",
-                description: "Can reject the payments"
-            },
-            {
-                title: "Quick Menu",
-                description: " Can Turn on anf off the dishes for digital Menu "
-            },
-        ]
-    },
-    
-
 ] as permissionsArrayType[];

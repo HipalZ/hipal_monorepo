@@ -2,7 +2,6 @@
 import Header from "@/components/molecules/header"
 import DishesTypes from "@/components/organisms/category/dishTypes"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"
-import { divide } from "lodash-es"
 import { memo, useEffect, useState } from "react"
 import { useInView } from "react-intersection-observer"
 
@@ -51,4 +50,5 @@ function CategoryHeader(props: ICategoryProps) {
 	}
 }
 
-export default memo(CategoryHeader)
+const MemoCategoryHeader = memo(CategoryHeader)
+export default MemoCategoryHeader

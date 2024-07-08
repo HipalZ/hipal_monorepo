@@ -3,7 +3,7 @@ import { memo, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelectedIcon } from '../store/useSelectedIcon';
 
-const ErrorComponent = memo(({ refetch }: any) => {
+const ErrorComponent = ({ refetch }:{refetch: ()=>void}) => {
   const navigate = useNavigate();
   const setSelectedSubIcon = useSelectedIcon((s) => s.setSelectedSubIcon);
   const setSelectedIcon = useSelectedIcon((s) => s.setSelectedIcon);
@@ -21,16 +21,18 @@ const ErrorComponent = memo(({ refetch }: any) => {
       <p className="text-2xl">Something went wrong...</p>
       &nbsp;
       <section className="flex justify-between space-x-6">
-        <button type="button" className="mt-2 rounded bg-red-500 px-4 py-2 text-white focus:outline-none" onClick={() => refetch()}>
+        <button type="button" className="px-4 py-2 mt-2 text-white bg-red-500 rounded focus:outline-none" onClick={() => refetch()}>
           Retry
         </button>
-        <button type="button" className="mt-2 rounded bg-blue-500 px-4 py-2 text-white focus:outline-none" onClick={navigateToHome}>
+        <button type="button" className="px-4 py-2 mt-2 text-white bg-blue-500 rounded focus:outline-none" onClick={navigateToHome}>
           Go to Home
         </button>
       </section>
       <br />
     </div>
   );
-});
+};
 
-export default ErrorComponent;
+const MemoizedErrorComponent = memo(ErrorComponent);
+
+export default MemoizedErrorComponent;

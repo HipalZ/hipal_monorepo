@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 
 interface Props {
     number: number;
@@ -76,4 +76,5 @@ const RollingNumber = (props: Props) => {
     );
 };
 
-export default RollingNumber;
+const MemoRollingNumber = memo(RollingNumber);
+export default MemoRollingNumber;

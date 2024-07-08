@@ -1,51 +1,48 @@
 import PopUp from '@/components/atom/popUp';
 import useTimings from '@/components/store/useTimings';
 import { endOfDay, endOfMonth, startOfDay, startOfMonth, subDays } from 'date-fns';
-import React, { memo, useEffect, useState } from 'react';
+import  { memo, useCallback, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
+const formatDate = (date: Date) => {
+  return `${String(date?.getDate())?.padStart(2, '0')}-${String(date?.getMonth() + 1)?.padStart(2, '0')}-${date?.getFullYear()}`;
+};
 const DateRangePicker: React.FC = memo(() => {
   const { setInTime, setTimeStampStart, setTimeStampEnd, setOutTime, selectedRange, setSelectedRange } = useTimings();
   const [startDate, setStartDate] = useState(startOfDay(new Date()));
   const [endDate, setEndDate] = useState(endOfDay(new Date()));
   const [isCustomDate, setIsCustomDate] = useState(false);
 
-  const formatDate = (date: Date) => {
-    return `${String(date?.getDate())?.padStart(2, '0')}-${String(date?.getMonth() + 1)?.padStart(2, '0')}-${date?.getFullYear()}`;
-  };
-
-  const fetchReportForRange = (start: Date, end: Date) => {
+  const fetchReportForRange = useCallback((start: Date, end: Date) => {
     setStartDate(start);
-    // do not place the optional chaining operator here
     setTimeStampStart(Date.parse(start.toString()));
     setEndDate(end);
-    // do not place the optional chaining operator here
     setTimeStampEnd(Date.parse(end.toString()));
     setInTime(formatDate(start));
     setOutTime(formatDate(end));
-  };
+}, [])
 
-  const handleTodayClick = () => {
-    setSelectedRange('today');
-    fetchReportForRange(startOfDay(new Date()), endOfDay(new Date()));
-  };
+const handleTodayClick = useCallback(() => {
+  setSelectedRange('today');
+  fetchReportForRange(startOfDay(new Date()), endOfDay(new Date()));
+}, [setSelectedRange, fetchReportForRange]);
 
-  const handleYesterdayClick = () => {
-    setSelectedRange('yesterday');
-    const yesterday = subDays(new Date(), 1);
-    fetchReportForRange(startOfDay(yesterday), endOfDay(yesterday));
-  };
+const handleYesterdayClick = useCallback(() => {
+  setSelectedRange('yesterday');
+  const yesterday = subDays(new Date(), 1);
+  fetchReportForRange(startOfDay(yesterday), endOfDay(yesterday));
+}, [setSelectedRange, fetchReportForRange]); 
 
-  const handleThisMonthClick = () => {
-    setSelectedRange('thisMonth');
-    fetchReportForRange(startOfMonth(new Date()), endOfMonth(new Date()));
-  };
+const handleThisMonthClick = useCallback(() => {
+  setSelectedRange('thisMonth');
+  fetchReportForRange(startOfMonth(new Date()), endOfMonth(new Date()));
+}, [setSelectedRange, fetchReportForRange])
 
-  const handleCustomDatesClick = () => {
-    setSelectedRange('custom');
-    setIsCustomDate(!isCustomDate);
-  };
+const handleCustomDatesClick = useCallback(() => {
+  setSelectedRange('custom');
+  setIsCustomDate(isCustomDate => !isCustomDate);
+}, [isCustomDate]);
 
   useEffect(() => {
     if (selectedRange === 'today') {
@@ -54,7 +51,7 @@ const DateRangePicker: React.FC = memo(() => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between space-x-2 px-6 pt-4">
+    <div className="flex items-center justify-between px-6 pt-4 space-x-2">
       <div className="sticky top-0">
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
@@ -87,13 +84,13 @@ const DateRangePicker: React.FC = memo(() => {
           </button>
         </div>
       </div>
-      <div className="date-picker-container mx-6">
+      <div className="mx-6 date-picker-container">
         {isCustomDate && (
           <PopUp show={isCustomDate} onClose={() => setIsCustomDate(false)}>
-            <div className="date-picker-container item-center flex justify-center p-2">
+            <div className="flex justify-center pb-[20vh] pt-6 date-picker-container item-center">
               <DatePicker
                 selected={startDate}
-                onChange={(dates: any) => {
+                onChange={(dates:any) => {
                   if (Array.isArray(dates) && dates.length === 2) {
                     const [start, end] = dates;
                     fetchReportForRange(start, end);
@@ -106,6 +103,9 @@ const DateRangePicker: React.FC = memo(() => {
                 selectsRange
                 inline
               />
+              <button onClick={() => setIsCustomDate(false)} type='button' className='absolute bottom-4 py-3 rounded-full text-white w-[92%] bg-black'>
+                Close
+              </button>
             </div>
           </PopUp>
         )}
@@ -114,4 +114,5 @@ const DateRangePicker: React.FC = memo(() => {
   );
 });
 
-export default DateRangePicker;
+const MemoizedDateRangePicker = memo(DateRangePicker);
+export default MemoizedDateRangePicker;

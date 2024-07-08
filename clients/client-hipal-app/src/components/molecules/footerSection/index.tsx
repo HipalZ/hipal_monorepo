@@ -1,9 +1,10 @@
-import React from "react"
+import React, { memo } from "react"
 import Image from "next/image"
 import { AiFillFacebook, AiOutlineInstagram, AiFillLinkedin } from "react-icons/ai"
 import { RiGoogleFill } from "react-icons/ri"
 import HipalLogo from "@/assets/svg/Hipal_logo.svg"
 import twitter from "@/assets/svg/twitter.svg"
+
 const FooterSection = () => {
 	return (
 		<>
@@ -84,4 +85,5 @@ const FooterSection = () => {
 	)
 }
 
-export default FooterSection
+const MemoFooterSection = memo(FooterSection)
+export default MemoFooterSection

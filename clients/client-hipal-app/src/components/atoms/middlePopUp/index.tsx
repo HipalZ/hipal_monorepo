@@ -1,8 +1,8 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import { HiX } from 'react-icons/hi';
 
-export default function MiddlePopUp({ children, show, onClose, onSave }: { children: React.ReactNode; show: boolean; onClose: () => void, onSave:()=>void; }) {
+function MiddlePopUp({ children, show, onClose, onSave }: { children: React.ReactNode; show: boolean; onClose: () => void, onSave:()=>void; }) {
   const closeModalNothing = (e: any) => {
     // e.preventDefault()
   };
@@ -36,3 +36,6 @@ export default function MiddlePopUp({ children, show, onClose, onSave }: { child
     </Transition>
   );
 }
+
+const MemoMiddlePopUp = memo(MiddlePopUp);
+export default MemoMiddlePopUp;

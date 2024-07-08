@@ -2,7 +2,7 @@ import type { IExtraItem, IExtras } from "@/components/types/businessData"
 import { memo, useState } from "react"
 import { HiMinusSm, HiPlusSm } from "react-icons/hi"
 
-function QuantityPickerNonOutline({
+const QuantityPickerNonOutline = ({
 	quantity,
 	setQuantity,
 	minQuantity,
@@ -20,7 +20,7 @@ function QuantityPickerNonOutline({
 	selectedItemsCount: any
 	isDisabled: any
 	displayAlertPopUp: () => void
-}) {
+}) =>{
 	const [isChecked, setIsChecked] = useState(false)
 	const onDecreaseQuantity = () => {
 		if (quantity > minQuantity) {
@@ -102,4 +102,5 @@ function QuantityPickerNonOutline({
 	)
 }
 
-export default memo(QuantityPickerNonOutline)
+const MemoQuantityPickerNonOutline = memo(QuantityPickerNonOutline)
+export default MemoQuantityPickerNonOutline

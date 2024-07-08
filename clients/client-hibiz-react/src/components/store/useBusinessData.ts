@@ -1,6 +1,6 @@
 import type { IBusinessData } from '@/components/types/businessData';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface IExistingLoyalty {
   signUpBonus: number;
@@ -49,6 +49,7 @@ export const useBusinessData = create(
     }),
     {
       name: 'data',
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

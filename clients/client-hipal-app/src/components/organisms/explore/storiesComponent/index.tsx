@@ -6,7 +6,7 @@ import { useStory } from "@/components/store/useStory"
 import { getRandomImg } from "@/components/utils/images"
 import { AnimatePresence, motion } from "framer-motion"
 import isEmpty from "lodash-es/isEmpty"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import { memo, useEffect, useState } from "react"
 import { MdClose } from "react-icons/md"
 import ReactInstaStories from "react-insta-stories"
@@ -16,7 +16,7 @@ interface IStoriesComponent{
 		stories: string[]
 		_id: string
 }
-export default memo(function StoriesComponent({highlights}:{highlights:IStoriesComponent[]}) {
+function StoriesComponent({highlights}:{highlights:IStoriesComponent[]}) {
 	// const data = _useAllBusiness((s) => s.data)
 	const setIsStoryOn = useStory((s) => s.setIsStoryOn)
 	const isStoryOn = useStory((s) => s.isStoryOn)
@@ -136,7 +136,7 @@ export default memo(function StoriesComponent({highlights}:{highlights:IStoriesC
 			</AnimatePresence>
 		</Section>
 	)
-})
+}
 
 function Story({ action, isPaused, imgUrl, handleClose }) {
 	useEffect(() => {
@@ -190,3 +190,6 @@ function Story({ action, isPaused, imgUrl, handleClose }) {
 		</div>
 	)
 }
+
+const MemoStoriesComponent = memo(StoriesComponent)
+export default MemoStoriesComponent

@@ -107,4 +107,5 @@ function BottomButton({
   );
 }
 
-export default memo(BottomButton);
+const MemoBottomButton = memo(BottomButton);
+export default MemoBottomButton

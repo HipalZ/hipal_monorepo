@@ -1,5 +1,5 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import tick from "@/assets/img/tick.png"
 import coffeeCup from "@/assets/svg/coffee_cup_logo.svg"
 import OTC from "@/assets/svg/OTC_logo.svg"
@@ -8,6 +8,7 @@ import nanking from "@/assets/svg/nanking_logo.svg"
 import proteify from "@/assets/svg/proteify_logo.svg"
 import lacasa from "@/assets/svg/lacasa_logo.svg"
 import glasses from "@/assets/svg/glasses.svg"
+
 const MiddleSection = () => {
 	return (
 		<>
@@ -113,4 +114,5 @@ const MiddleSection = () => {
 	)
 }
 
-export default MiddleSection
+const MemoMiddleSection = memo(MiddleSection)
+export default MemoMiddleSection

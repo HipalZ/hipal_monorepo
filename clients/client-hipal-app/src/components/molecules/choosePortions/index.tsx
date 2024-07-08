@@ -86,4 +86,5 @@ function ChoosePortions({ dishData }:{dishData:IDish}) {
 	)
 }
 
-export default memo(ChoosePortions)
+const MemoChoosePortions = memo(ChoosePortions)
+export default MemoChoosePortions

@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 export interface ILoyaltySetting {
     loyaltyId: string
@@ -21,7 +21,7 @@ export const useLoyaltyData = create(
 		loyaltySetting: ILoyaltySetting
 		setLoyaltySetting: (loyaltySetting: ILoyaltySetting) => void
 	}>(
-		(set, get) => ({
+		(set) => ({
 			loyaltySetting: {
 				loyaltyId: "",
 				businessId: "",
@@ -41,6 +41,7 @@ export const useLoyaltyData = create(
 		}),
 		{
 			name: "userLoyaltyData",
+			storage:createJSONStorage(()=>localStorage)
 		},
 	),
 )

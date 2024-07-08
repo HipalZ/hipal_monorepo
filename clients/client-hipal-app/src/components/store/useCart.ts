@@ -1,6 +1,6 @@
-import { IDish, IExtraItem, IPortion } from "@/components/types/businessData";
+import type { IDish, IExtraItem, IPortion } from "@/components/types/businessData";
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface ICartExtra {
   [key: string]: IExtraItem & {
@@ -80,7 +80,7 @@ export const useCart = create<IUseCart>()(
     }),
     {
       name: "cartStore",
-      storage: createJSONStorage(() => localStorage), 
+      storage:createJSONStorage(()=>localStorage)
     }
   )
 );

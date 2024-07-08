@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { memo, useEffect, useMemo, useState } from "react"
 
 interface TitleTransitionProps {
 	loyaltySetting: {
@@ -8,7 +8,7 @@ interface TitleTransitionProps {
 	align?: "left" | "center" | "right"
 }
 
-export default function TitleTransition({ loyaltySetting, data, align }: TitleTransitionProps) {
+function TitleTransition({ loyaltySetting, data, align }: TitleTransitionProps) {
 	const [index, setIndex] = useState(0)
 
 	const combinedTexts: string[] = useMemo(() => {
@@ -51,3 +51,6 @@ export default function TitleTransition({ loyaltySetting, data, align }: TitleTr
 		</div>
 	)
 }
+
+const MemoTitleTransition = memo(TitleTransition)
+export default MemoTitleTransition

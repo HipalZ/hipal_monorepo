@@ -21,4 +21,5 @@ function EmptyCartBtn() {
 	)
 }
 
-export default memo(EmptyCartBtn)
+const MemoEmptyCartBtn = memo(EmptyCartBtn)
+export default MemoEmptyCartBtn

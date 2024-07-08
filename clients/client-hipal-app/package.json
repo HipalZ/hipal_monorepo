@@ -4,16 +4,16 @@
   "scripts": {
     "dev": "dotenv -e ./.env.local next --host ",
     "dev:test": "dotenv -e ./.env.test next --host",
-    "bundle:development": "dotenv -e .env pnpm run bundle",
+    "bundle:development": "dotenv -e .env bun run bundle",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:local": "dotenv -e .env.local pnpm run build",
-    "bundle:local": "dotenv -e .env.local pnpm run bundle",
-    "build:test": "dotenv -e ./.env.test pnpm run build",
-    "bundle:test": "dotenv -e ./.env.test pnpm run bundle",
-    "build:production": "dotenv -e ./.env.production pnpm run build",
-    "bundle:production": "dotenv -e ./.env.production pnpm run bundle",
+    "build:local": "dotenv -e .env.local bun run build",
+    "bundle:local": "dotenv -e .env.local bun run bundle",
+    "build:test": "dotenv -e ./.env.test bun run build",
+    "bundle:test": "dotenv -e ./.env.test bun run bundle",
+    "build:production": "dotenv -e ./.env.production bun run build",
+    "bundle:production": "dotenv -e ./.env.production bun run bundle",
     "bundle": "next build"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "canvas-confetti": "^1.9.3",
     "color": "^4.2.3",
     "env-cmd": "^10.1.0",
+    "hono": "^4.4.3",
     "framer-motion": "^9.1.7",
     "html5-qrcode": "^2.3.8",
     "lodash-es": "^4.17.21",
@@ -46,7 +47,8 @@
     "run": "^1.5.0",
     "styled-jsx": "^5.1.1",
     "tailwind-merge": "^2.3.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "@hi/common": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",

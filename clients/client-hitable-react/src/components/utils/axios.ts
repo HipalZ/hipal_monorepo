@@ -1,5 +1,4 @@
-import { APP_ENV, BASE_URL } from '@/configs';
-
+import { BASE_URL } from '@/configs';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
@@ -7,36 +6,18 @@ import axiosConstructor from 'axios';
 const axios = axiosConstructor.create({
   baseURL: BASE_URL,
 });
+
 axios.interceptors.request.use(
   (config: any) => {
     if (config.url == undefined) {
       return;
     }
 
-    if (APP_ENV !== 'test' && APP_ENV !== 'production') {
-      // Modify the baseURL based on the request URL
-      if (config.url.startsWith('/v1/businesses')) {
-        config.baseURL = 'http://localhost:8001';
-      } else if (config.url.startsWith('/v1/categories')) {
-        config.baseURL = 'http://localhost:8002';
-      } else if (config.url.startsWith('/v1/dishes')) {
-        config.baseURL = 'http://localhost:8003';
-      } else if (config.url.startsWith('/v1/kitchens')) {
-        config.baseURL = 'http://localhost:8004';
-      } else if (config.url.startsWith('/v1/payments')) {
-        config.baseURL = 'http://localhost:8005';
-      } else if (config.url.startsWith('/v1/settings')) {
-        config.baseURL = 'http://localhost:8006';
-      } else if (config.url.startsWith('/v1/users')) {
-        config.baseURL = 'http://localhost:8007';
-      } else if (config.url.startsWith('/v1/zones')) {
-        config.baseURL = 'http://localhost:8008';
-      }
-    }
-
-    const { accessToken, refreshToken } = useUserToken.getState();
-    const accessTokenLite = useHiClientZ.getState().accessToken;
-    const refreshTokenLite = useHiClientZ.getState().refreshToken;
+    const accessToken = useUserToken((s) => s.accessToken);
+    const refreshToken = useUserToken((s)=>s.refreshToken);
+    
+    const accessTokenLite = useHiClientZ((s)=>s.accessToken)
+    const refreshTokenLite = useHiClientZ((s)=>s.refreshToken)
     if (accessToken && refreshToken) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
       config.headers['x-refresh-with'] = refreshToken;

@@ -1,16 +1,15 @@
 "use client"
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
-import axios from '@/utils/axios'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChangeEvent, memo, useEffect, useState } from 'react'
+import { type ChangeEvent, memo, useCallback, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
 import pendingStatus from '@/assets/payment/pendingStatus.png'
 import coinsReview from "@/assets/payment/reviewCoinz.png"
 import { useQuery } from '@tanstack/react-query'
-import { IBusinessData, User } from '@/components/types/businessData'
+import type { IBusinessData, User } from '@/components/types/businessData'
 import { updateTheme } from '@/components/utils/themes'
 import { toast } from 'react-toastify'
 import { MdOutlineMessage, MdOutlinePerson } from 'react-icons/md'
@@ -20,6 +19,8 @@ import { cn } from '@/components/utils/helpers'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import poweredBy from '@/assets/img/powered_hipalz.png'
+import { apiRpc } from '@hi/common'
+import { useUserToken } from '@/components/store/useUserToken'
 
 const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
 
@@ -38,19 +39,20 @@ interface Payload {
 	service?: boolean | null;
 }
 
-export default memo(function Review({ data }: { data: IBusinessData }) {
+function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
+	const accessToken = useUserToken.getState().accessToken
+	const refreshToken = useUserToken.getState().refreshToken
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
-	const roundedOffClaim = Math.round(Number(claim) / 10) * 10
+	const roundedOffClaim = Math.round(Number(claim))
 	const orderId = searchParams?.get('orderId')
 	const mode = searchParams?.get('mode')
-	const amount = parseInt(searchParams?.get('amount') || '0')
+	const amount = Number(searchParams?.get('amount') || '0')
 	const businessName = useBusinessDetails((s) => s.businessDetails?.businessName);
 	const logo = useBusinessDetails((s) => s.businessDetails?.logo);
-
 	const [rating, setRating] = useState<string | null>();
 	const [description, setDescription] = useState<string | ''>('')
 	const [showSuggestions, setShowSuggestions] = useState(false)
@@ -69,19 +71,19 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 		{ name: 'Hygiene & Celanese', state: hygiene, setState: setHygiene },
 	];
 
-	const handleFeedback = (area, value) => {
+	const handleFeedback = useCallback((area, value) => {
 		area.setState(value);
-	};
+	},[]);
 
 	const handleSelectStaff = (staff) => {
 		if (!selectedStaff.includes(staff)) {
 			setSelectedStaff([...selectedStaff, staff]);
 		}
-	};
+	}
 
 	const handleRemoveStaff = (staffToRemove) => {
 		setSelectedStaff(selectedStaff.filter(staff => staff !== staffToRemove));
-	};
+	}
 
 	const handleKeyDown = (e) => {
 		if (e.key === 'Enter') {
@@ -92,9 +94,14 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	const userDetails = useLogin((s) => s.userDetails)
 
 	const getStaff = async () => {
-		const response = await axios.get(`/v1/users/${businessId}`)
-		setStaffs(response?.data?.data)
-		return response?.data?.data
+		const res = await apiRpc.users[':businessId'].$get({
+			param:{
+				businessId: businessId
+			}
+		})
+		const response = await res.json()
+		setStaffs(response?.data)
+		return response?.data
 	}
 
 	const {
@@ -116,7 +123,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 	}
 
 	const result = async () => {
-		let payload: Payload = {
+		const payload: Payload = {
 			businessId: businessId,
 			reviewerName: userDetails?.name,
 			reviewerPhone: `91${userDetails?.phone}`,
@@ -139,30 +146,29 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 		if (service === true || service === false) {
 			payload.service = service;
 		}
-		try {
-			const config = {
-				method: 'POST',
-				url: '/v1/payments/reviews',
-				data: payload,
-			}
-			const res = await axios(config)
-			if (res.status === 201) {
-				toast.success('Thank You for Your Feedback')
+			// const res = await axios(config)
+			const res = await apiRpc.payments.reviews.$post({
+				json:payload,
+				header:{
+					x_access_token: accessToken,
+					x_refresh_token: refreshToken
+				}
+			})
+			const response = await res.json()
+			if (res.status === 200) {
+				toast.success(response.message || 'Review submitted successfully')
 				router.push(`/${customLink}/loyalty?claim=${roundedOffClaim}`)
 			}
-		} catch (error) {
-			toast.error(error?.response?.data?.message)
-		}
 	}
 
-	const handleDescriptionChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+	const handleDescriptionChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value
 		setDescription(value)
-	}
+	},[])
 
-	const handleSaveStaff = () => {
+	const handleSaveStaff = useCallback(() => {
 		setShowSuggestions(!showSuggestions)
-	}
+	},[showSuggestions])
 
 	useEffect(() => {
 		if (data?.settings?.themes) {
@@ -280,11 +286,11 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 				)}
 				&nbsp;
 				{rating && <article className="flex justify-around">
-					<button onClick={() => setOpenComment(!openComment)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
+					<button type='button' onClick={() => setOpenComment(!openComment)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
 						<MdOutlineMessage size={20} />
 						<span>Comment</span>
 					</button>
-					<button onClick={() => setShowSuggestions(!showSuggestions)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
+					<button type='button' onClick={() => setShowSuggestions(!showSuggestions)} className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full">
 						<MdOutlinePerson size={20} />
 						<span>
 							Tag Staff
@@ -327,7 +333,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 						>
 							<center className="my-4 text-xl font-semibold">Staff members</center>
 							{staffs?.map((staff, index) => (
-								<div key={staff?.name + index}>
+								<div key={staff?.name + index.toString()}>
 									{isPending && <center>Loading staff...</center>}
 									{error && <center>Error loading staff!</center>}
 									<li
@@ -351,6 +357,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 				{rating && rating.length > 0 ? (
 					<article className="flex justify-center">
 						<button
+							type="button"
 							onClick={result}
 							className="on_active_bounce text-base-100 fixed bottom-20 z-50 w-[20.5rem] rounded-full bg-primary py-[0.75rem] text-[18px] leading-[1.15rem]"
 						>
@@ -363,4 +370,7 @@ export default memo(function Review({ data }: { data: IBusinessData }) {
 			</div>
 		</div>
 	)
-})
+}
+
+const MemoReview = memo(Review)
+export default MemoReview

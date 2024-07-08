@@ -5,7 +5,7 @@ import { AiOutlineStar } from "react-icons/ai"
 import { BsSunFill } from "react-icons/bs"
 import { MdLocalOffer } from "react-icons/md"
 
-function DishTag({
+const DishTag = ({
 	tags,
 }: {
 	readonly tags: ReadonlyArray<{
@@ -13,7 +13,7 @@ function DishTag({
 		readonly color: string
 		readonly icon: string
 	}>
-}) {
+}) =>{
 	const TAG_TYPES: { [key: string]: { Icon: IconType } } = {
 		star_outline: {
 			Icon: AiOutlineStar,
@@ -44,4 +44,5 @@ function DishTag({
 	)
 }
 
-export default memo(DishTag)
+const MemoDishTag = memo(DishTag)
+export default MemoDishTag

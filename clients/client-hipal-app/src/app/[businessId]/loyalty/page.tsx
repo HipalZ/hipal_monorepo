@@ -1,12 +1,5 @@
-import { fetchAllBusinessIds, loyaltyApis } from "@/apis/loyalty";
+import {  loyaltyApis } from "@/apis/loyalty";
 import LoyaltyCardPage from "@/components/templates/loyalty";
-
-export async function generateStaticParams() {
-  const businessIds = await fetchAllBusinessIds();
-  return businessIds.map((businessId: string) => ({
-    businessId: businessId,
-  }));
-}
 
 export async function generateMetadata() {
   return {

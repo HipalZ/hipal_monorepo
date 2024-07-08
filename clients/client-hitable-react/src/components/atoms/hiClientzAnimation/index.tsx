@@ -1,4 +1,3 @@
-import './index.css';
 import Icon1 from '@/assets/img/liteLoginIcon1.png';
 import Icon2 from '@/assets/img/liteLoginIcon2.png';
 import Icon3 from '@/assets/img/liteLoginIcon3.png';
@@ -6,6 +5,8 @@ import MainIcon from '@/assets/img/liteLoginIcon4.png';
 import Icon5 from '@/assets/img/liteLoginIcon5.png';
 import Icon6 from '@/assets/img/liteLoginIcon6.png';
 import Icon7 from '@/assets/img/liteLoginIcon7.png';
+import { memo } from 'react';
+import './index.css';
 
 const HiClientZAnimation = () => {
     return (
@@ -35,4 +36,5 @@ const HiClientZAnimation = () => {
     );
 };
 
-export default HiClientZAnimation;
+const HiAnimation = memo(HiClientZAnimation)
+export default HiAnimation;

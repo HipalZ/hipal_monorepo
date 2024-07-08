@@ -1,5 +1,5 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import hikitchen from "@/assets/svg/hikitchen.svg"
 import hikitchenDish from "@/assets/img/hikitchen_dish.png"
 import hikitchenDishLG from "@/assets/img/hikitchen_dish_lg.png"
@@ -11,6 +11,7 @@ import hibiz from "@/assets/svg/hibiz.svg"
 import hitableDish from "@/assets/img/hitable_dish.png"
 import hitableDishLG from "@/assets/img/hitable_dish_lg.png"
 import { HiChevronRight } from "react-icons/hi"
+
 const CardSection = () => {
 	return (
 		<div className="lg:mb-[11.313rem]">
@@ -177,4 +178,5 @@ const CardSection = () => {
 	)
 }
 
-export default CardSection
+const MemoCardSection = memo(CardSection)
+export default MemoCardSection

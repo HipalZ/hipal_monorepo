@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-interface State {
+interface ITimings {
   inTime: string;
   outTime: string;
   timeStampStart: number;
@@ -23,7 +23,7 @@ interface State {
   setRating: (rating: string) => void;
 }
 
-const useTimings = create<State>((set) => ({
+const useTimings = create<ITimings>((set) => ({
   inTime: '',
   outTime: '',
   timeStampStart: 0,
@@ -46,4 +46,4 @@ const useTimings = create<State>((set) => ({
   setRating: (rating) => set({ rating }),
 }));
 
-export default useTimings;
+export default useTimings

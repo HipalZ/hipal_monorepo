@@ -160,7 +160,7 @@ export const calculateReward = (exist: number, reward: number, limit: number) =>
 	let total = exist + reward;
 
 	const sum = Math.min(total, limit);
-	const finalReward = Math.round(Number(sum - exist) / 10) * 10;
+	const finalReward = Number(sum - exist)
 	return { finalReward, curentBalance: sum };
 };
 
@@ -354,3 +354,13 @@ export function convertToHsl(input: InputObject): ResultObject | InputObject {
 	return input;
 }
 
+
+export const defaultThemes: IThemes = {
+	primaryColor: '',
+	secondaryColor: '',
+	footerText: '',
+	instagramLink: '',
+	facebookLink: '',
+	youtubeLink: '',
+	linkedinLink: '',
+  };

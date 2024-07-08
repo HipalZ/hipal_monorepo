@@ -1,13 +1,19 @@
 import useTimings from '@/components/store/useTimings';
-import { endOfDay, endOfMonth, startOfDay, startOfMonth, subDays } from 'date-fns';
-import type React from 'react';
-import { memo, useEffect, useState } from 'react';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
+import React, { memo, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PopUp from '../popUp';
 
-const DateRangePicker: React.FC = memo(() => {
-    const { setInTime, setTimeStampStart, setTimeStampEnd, setOutTime, selectedRange, setSelectedRange } = useTimings();
+const DateRangePicker: React.FC = () => {
+    const { setInTime, setTimeStampStart, setTimeStampEnd, setOutTime, selectedRange, setSelectedRange } = useTimings((s)=>({
+        setInTime:s.setInTime,
+        setTimeStampStart:s.setTimeStampStart,
+        setTimeStampEnd:s.setTimeStampEnd,
+        setOutTime:s.setOutTime,
+        selectedRange:s.selectedRange,
+        setSelectedRange:s.setSelectedRange,
+    }));
     const [dayBeforeYesterday, setDayBeforeYesterday] = useState('');
     const [startDate, setStartDate] = useState(startOfDay(new Date()));
     const [endDate, setEndDate] = useState(endOfDay(new Date()));
@@ -106,6 +112,7 @@ const DateRangePicker: React.FC = memo(() => {
             </div>
         </div>
     );
-});
+}
 
-export default DateRangePicker;
+const DateRangePickerMemo = memo(DateRangePicker);
+export default DateRangePickerMemo;

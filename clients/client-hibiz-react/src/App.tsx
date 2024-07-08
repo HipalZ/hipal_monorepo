@@ -1,9 +1,8 @@
 import { startTransition, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
 import MainRouter from './routes';
-import { toast } from 'react-toastify';
 import { useOwnerLogin } from './components/store/useOwnerLogin';
+import toast from 'react-hot-toast';
 
 interface AccessControl {
   dish: boolean;
@@ -95,7 +94,7 @@ function App() {
   }, []);
   return (
     <div className="App">
-      {!isOnline && <div className="bg-red-500 text-center text-white">Please check your internet connection</div>}
+      {!isOnline && <div className="text-center text-white bg-red-500">Please check your internet connection</div>}
       {isOnline && isSlow && <div className="bg-[#ef9b0f] text-center text-white">⚠ Your connection is too slow</div>}
       <MainRouter />
     </div>

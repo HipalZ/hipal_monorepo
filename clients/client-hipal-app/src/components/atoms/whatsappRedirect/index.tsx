@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 import { BsWhatsapp } from "react-icons/bs"
 
 const WhatsappRedirect = () => {
@@ -16,4 +16,5 @@ const WhatsappRedirect = () => {
 	)
 }
 
-export default WhatsappRedirect
+const MemoWhatsappRedirect = memo(WhatsappRedirect)
+export default MemoWhatsappRedirect

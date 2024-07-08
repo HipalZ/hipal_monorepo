@@ -1,13 +1,11 @@
 //@ts-nocheck
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { useActiveClass } from "@/components/store/useActiveClass"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import { ICategory } from "@/components/types/businessData"
+import type { ICategory } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import Link from "next/link"
 import { memo, useMemo, useRef } from "react"
-import Coinz from "@/assets/bonuscard/coin.png"
 
 interface ISubTypes {
 	allCategoriesTypes: {
@@ -32,11 +30,11 @@ function SubTypes(props: ISubTypes) {
 	}, [allCategoriesTypes?.sub, parentCategory])
 
 	return (
-		<section className="overflow-x-auto">
+		<section className="overflow-x-auto no-scrollbar">
 			{!!subTypes && (
 				<div
 					ref={subTypeContainerRef}
-					className="flex flex-nowrap -webkit-flex snap-proximity snap-x"
+					className="flex flex-nowrap -webkit-flex snap-proximity snap-x no-scrollbar"
 				>
 					{Object.values(subTypes).map((item: ICategory, index: number) => (
 						<div
@@ -69,7 +67,7 @@ function SubTypes(props: ISubTypes) {
 										</figure>
 									)
 										: (
-											<figure className="w-[1.75rem] h-[1.75rem] rounded-full overflow-hidden">
+											<figure className="w-[1.5rem] h-[1.5rem] rounded-full overflow-hidden">
 											<PlaceholderImg className="rounded-full" />
 											</figure>
 										)}
@@ -90,4 +88,6 @@ function SubTypes(props: ISubTypes) {
 		</section>
 	)
 }
-export default memo(SubTypes)
+
+const MemoSubTypes = memo(SubTypes)
+export default MemoSubTypes

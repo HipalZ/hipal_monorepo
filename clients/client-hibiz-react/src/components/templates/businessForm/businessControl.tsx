@@ -1,17 +1,17 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import Img from "@/assets/background.png";
-import { startTransition, useCallback } from "react";
+import { memo, startTransition, useCallback } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { businessCtrlServices } from "./businessCtrlStore";
 
 const BusinessControl = () => {
-	const { setStep } = useBusinessCtrl();
+	const  setStep  = useBusinessCtrl(state=>state.setStep);
 	const navigate = useNavigate();
 	const { businessId } = useParams<{ businessId: string }>();
-	const goToNextStep = useCallback(() => {
-		setStep(1);
+	const goToNextStep = useCallback((step:number) => {
+		setStep(step);
 	}, []);
 
 	const navigateService = useCallback((service: string) => {
@@ -24,8 +24,8 @@ const BusinessControl = () => {
 			<figcaption className="card">
 				<h4>Set the theme</h4>
 				<h6>Set your layout & themes</h6>
-				<button
-					onClick={goToNextStep}
+				<button type="button"
+					onClick={()=>goToNextStep(1)}
 					className="w-16 px-4 py-1 mt-2 text-white bg-black rounded-3xl"
 				>
 					Set
@@ -34,8 +34,8 @@ const BusinessControl = () => {
 			<figcaption className="big-card">
 				<h3>Set the theme</h3>
 				<h4>Set your layout & themes</h4>
-				<button
-					onClick={goToNextStep}
+				<button type="button"
+					onClick={()=>goToNextStep(1)}
 					className="w-24 px-6 py-1 mt-6 text-xl text-white bg-black rounded-3xl"
 				>
 					Set
@@ -61,9 +61,9 @@ const BusinessControl = () => {
 										)
 									}
 									<div className="flex flex-wrap">
-										{service.tags.map((tag, index) => (
+										{service.tags.map((tag) => (
 											<div
-												key={tag + index}
+												key={tag}
 												className="px-4 py-2 m-1 text-xs text-[#6F649B] bg-[#F2F1F6] rounded-full"
 											>
 												{tag}
@@ -81,4 +81,6 @@ const BusinessControl = () => {
 	);
 };
 
-export default BusinessControl;
+const MemoBusinessControl = memo(BusinessControl);
+
+export default MemoBusinessControl;

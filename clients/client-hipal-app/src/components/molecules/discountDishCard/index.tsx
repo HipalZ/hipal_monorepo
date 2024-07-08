@@ -1,8 +1,9 @@
 import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import PlaceholderImg from "@/components/atoms/placeholder"
-import FoodType, { FOOD_TYPES } from "@/components/atoms/foodType"
-import { IDish } from "@/components/types/businessData"
+import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType"
+import type { IDish } from "@/components/types/businessData"
+import { memo } from "react"
 
 function DiscountDishCard({
 	dishData,
@@ -12,20 +13,19 @@ function DiscountDishCard({
 	onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }) {
 	return (
-		<center className="relative flex flex-col w-32" onClick={onClick}>
+		<center className="relative flex flex-col w-32 no-scrollbar" onClick={onClick}>
 			<div className="absolute z-50 scale-75 bg-white rounded-md left-1 top-1">
 				<FoodType type={dishData.dishType as FOOD_TYPES} />
 			</div>
-			<div className="z-10 flex overflow-hidden bg-cover rounded-xl border-1 border-base-content">
+			<div className="z-10 flex overflow-hidden rounded-xl border-1 border-base-content">
 				{dishData?.images && dishData.images[0] ? (
-					<div className="w-32 h-[9rem] rounded-2xl">
+					<div className="w-32 h-[10rem] rounded-2xl">
 						<Image
 							src={dishData.images[0]}
 							width={132}
-							height={150}
+							height={200}
 							quality={95}
-							objectFit="cover"
-							className=""
+							className="h-[10rem] w-full rounded-t-2xl object-cover"
 							alt={"text"}
 							placeholder="blur"
 							blurDataURL={getRandomBlurImg(150, 150)}
@@ -36,11 +36,12 @@ function DiscountDishCard({
 				)}
 			</div>
 			{/* Bottom Section */}
-			<div className="flex mt-2 overflow-hidden text-sm text-center truncate w-32">
+			<div className="flex w-32 mt-2 overflow-hidden text-sm text-center truncate">
 				{dishData?.name}
 			</div>
 		</center>
 	)
 }
 
-export default DiscountDishCard
+const MemoizedDiscountDishCard = memo(DiscountDishCard)
+export default MemoizedDiscountDishCard

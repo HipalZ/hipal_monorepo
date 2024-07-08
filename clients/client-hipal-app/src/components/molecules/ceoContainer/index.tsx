@@ -1,8 +1,9 @@
 import Image from "next/image"
-import React from "react"
+import React, { memo } from "react"
 import CEO from "@/assets/svg/CEO.svg"
 import handBottomLg from "@/assets/svg/hand_bottom_lg.svg"
 import { BsArrowRight } from "react-icons/bs"
+
 const CeoContainer = () => {
 	return (
 		<>
@@ -47,4 +48,5 @@ const CeoContainer = () => {
 	)
 }
 
-export default CeoContainer
+const MemoCeoContainer = memo(CeoContainer)
+export default MemoCeoContainer

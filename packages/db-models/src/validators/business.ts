@@ -39,6 +39,7 @@ export const BusinessSchema = z.object({
   withPopCorn: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
   description: z.string().optional(),
+  nameLogo: z.string().optional(),
 });
 
 export type BusinessType = z.infer<typeof BusinessSchema>;

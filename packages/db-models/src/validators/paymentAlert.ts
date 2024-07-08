@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import z from 'zod';
+import { z } from 'zod';
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
     .string()

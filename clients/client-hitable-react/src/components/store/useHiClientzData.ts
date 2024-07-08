@@ -1,6 +1,6 @@
-import { CustomRole, HiClientzData } from '@/components/types/hiClientzData';
+import type { CustomRole, HiClientzData } from '@/components/types/hiClientzData';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface HiClientzStore {
   captainData: HiClientzData;
@@ -34,6 +34,7 @@ export const useHiClientZ = create(
     }),
     {
       name: 'hiClientZ-store',
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

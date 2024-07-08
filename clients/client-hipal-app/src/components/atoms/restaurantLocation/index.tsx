@@ -1,12 +1,13 @@
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import { memo, useMemo } from "react"
+import { memo } from "react"
 import { HiOutlineLocationMarker } from "react-icons/hi"
 import OnImgButton from "../buttons/onImgButton"
 
 interface IProps {
 	location: string
 }
-export default memo(function RestaurantLocation(props:IProps) {
+
+function RestaurantLocation(props:IProps) {
 	const {location} = props
 	const OnImgButtonProps = {
 		onClick: () => {
@@ -30,4 +31,7 @@ export default memo(function RestaurantLocation(props:IProps) {
 			)}
 		</div>
 	)
-})
+}
+
+const MemoRestaurantLocation = memo(RestaurantLocation)
+export default MemoRestaurantLocation

@@ -9,26 +9,25 @@ import { RiCouponFill } from "react-icons/ri";
 
 interface IUseCoinzPopup {
     openModal: () => void,
-    claimedCoinz: number,
-    userCoinz: number
+    billValue: number
 }
 
 const UseCoinzPopup = (props: IUseCoinzPopup) => {
-    const { openModal, claimedCoinz, userCoinz } = props;
+    const { openModal, billValue } = props;
     const [editBillModal, setEditBillModal] = useState(false);
     const loyaltySetting = useLoyaltyData(s => s.loyaltySetting)
     const openBillModal = useCallback(() => {
         setEditBillModal(true);
-    }, [setEditBillModal]);
+    }, []);
 
     const closeBillModal = useCallback(() => {
         setEditBillModal(false);
-    }, [setEditBillModal]);
+    }, []);
 
     return (
         <>
             <center className="flex items-center justify-center my-2">
-                <button onClick={openBillModal} className="px-2 py-1 text-sm border rounded-full border-primary">
+                <button type="button" onClick={openBillModal} className="px-2 py-1 text-sm border rounded-full border-primary">
                     <CiEdit className="inline-block" />
                     <span className="px-2 py-2">
                         Edit Bill Value
@@ -45,7 +44,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
                     &nbsp; &nbsp;
                     <div>
                         <h6>Use Coinz</h6>
-                        <h6 className="text-xs">You can use {loyaltySetting.setClaimAmount} % of <span className="font-bold">{claimedCoinz ? userCoinz - claimedCoinz : userCoinz} coinz</span> </h6>
+                        <h6 className="text-xs">You can use {loyaltySetting.setClaimAmount} % of <span className="font-bold">₹ {billValue}</span> </h6>
                     </div>
                 </div>
                 <div className='flex items-center space-x-4'>
@@ -78,4 +77,5 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
     )
 };
 
-export default memo(UseCoinzPopup);
+const MemoUseCoinzPopup = memo(UseCoinzPopup);
+export default MemoUseCoinzPopup

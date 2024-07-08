@@ -59,4 +59,5 @@ const NumberAnimation = ({ number }: { number: number }) => {
 	)
 }
 
-export default memo(NumberAnimation)
+const MemoNumberAnimation = memo(NumberAnimation)
+export default MemoNumberAnimation

@@ -6,7 +6,7 @@ import { cn } from "@/components/utils/helpers";
 
 export type FOOD_TYPES = "veg" | "nonveg" | "vegan" | "egg" | "other" | "mixed";
 
-function FoodType({ type }: { type: FOOD_TYPES }) {
+const FoodType = ({ type }: { type: FOOD_TYPES }) => {
   const [currentType, setCurrentType] = useState<FOOD_TYPES>("other");
   const {showCart} = useCart();
   const classes: Record<FOOD_TYPES, { border: string; circle: string; text: string }> = {
@@ -72,4 +72,5 @@ function FoodType({ type }: { type: FOOD_TYPES }) {
   );
 }
 
-export default memo(FoodType);
+const MemoFoodType = memo(FoodType);
+export default MemoFoodType;

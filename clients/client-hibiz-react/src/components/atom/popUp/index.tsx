@@ -1,14 +1,11 @@
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
-import { Fragment, memo } from 'react';
-import { HiX } from 'react-icons/hi';
+import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
+import { Fragment, memo } from "react";
+import { HiX } from "react-icons/hi";
 
 function PopUp({ children, show, onClose }: { children: React.ReactNode; show: boolean; onClose: () => void }) {
-  const closeModalNothing = (e: any) => {
-    // e.preventDefault()
-  };
   return (
     <Transition appear show={show} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={(e) => closeModalNothing(e)}>
+      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={onClose}>
         <div className="fixed inset-0 flex items-end justify-center bg-black bg-opacity-70 backdrop-blur-sm">
           <TransitionChild
             as={Fragment}
@@ -32,4 +29,6 @@ function PopUp({ children, show, onClose }: { children: React.ReactNode; show: b
   );
 }
 
-export default memo(PopUp);
+const MemoizedPopUp = memo(PopUp);
+
+export default MemoizedPopUp;

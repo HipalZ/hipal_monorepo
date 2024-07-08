@@ -1,13 +1,14 @@
 import axios from "@/utils/axios"
+import { apiRpc } from "@hi/common"
 import { toast } from "react-toastify"
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
-interface IUserData {
+export interface IUserData {
 	name?: string
 	email?: string
 	phone: string
-	role: string
+	role: string[]
 	userDescription?: string
 	reward?: number
 	count?: number
@@ -52,7 +53,7 @@ export const useLogin = create(
 				name: "",
 				phone: "",
 				reward: 0,
-				role: "",
+				role: [],
 				userDescription: "",
 				_id: "",
 			},
@@ -81,18 +82,17 @@ export const useLogin = create(
 			isLoginCred: () => get()?.userDetails.phone?.length === 10,
 			sendOtp: async () => {
 				toast.success("otp send successfully")
-				let config = {
-					method: "POST",
-					url: "/v1/users/otp?clientRole=user",
-					data: {
-						phone: `${get().userDetails.phone}`,
-					},
-				}
-				return await axios(config)
+				const res = await apiRpc.users.resendOtp.$post({
+					json:{
+						phone: get().userDetails.phone
+					}
+				})
+				return await res.json() 
 			},
 		}),
 		{
 			name: "useLogin",
+			storage:createJSONStorage(()=>localStorage)
 		},
 	),
 )

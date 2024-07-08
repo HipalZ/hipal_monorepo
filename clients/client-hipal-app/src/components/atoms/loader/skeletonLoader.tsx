@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -7,7 +7,7 @@ type SkeletonLoaderProps = {
   count?: number;
 };
 
-const SkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
+const MemoSkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
   return (
     <div className="p-4">
       <Skeleton count={count} height={height ?? 30} />
@@ -15,4 +15,5 @@ const SkeletonLoader = ({ height, count }: SkeletonLoaderProps) => {
   );
 };
 
+const SkeletonLoader = memo(MemoSkeletonLoader);
 export default SkeletonLoader

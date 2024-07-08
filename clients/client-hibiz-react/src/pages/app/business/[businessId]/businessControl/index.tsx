@@ -1,18 +1,17 @@
-import React, { startTransition, useCallback, lazy, Suspense, memo } from 'react';
+import { startTransition, useCallback, lazy, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import useBusinessCtrl from '@/components/store/useBusinessCtrl';
-import LoadingSpinner from '@/components/atom/loadingSpinner';
 import Header from '@/components/molecules/header';
 import { routeToDashboard } from '@/components/utils/routes';
+import SectionWithLogo from "@/components/atom/sectionWithLogo"
 import Hi from '@/assets/svg/hi.svg';
-import './businessControl.css';
 
 // Lazy load the components
 const ExplorePage = lazy(() => import('@/components/templates/businessForm/explorePage'));
 const MenuPage = lazy(() => import('@/components/templates/businessForm/menu'));
 const Congratulation = lazy(() => import('@/components/templates/signupPage/congratulation'));
-const SectionWithLogo = lazy(() => import('@/pages/signup').then(module => ({ default: module.SectionWithLogo })));
+
 const BusinessControl = lazy(() => import('@/components/templates/businessForm/businessControl'));
 const Setting = lazy(() => import('@/components/templates/businessForm/setting'));
 
@@ -50,7 +49,6 @@ const MainBusinessPage: React.FC = () => {
 					/>
 				</div>
 			)}
-			<Suspense fallback={<div><LoadingSpinner /></div>}>
 				{step === 0 && <BusinessControl />}
 				{step === 1 && <ExplorePage />}
 				{step === 2 && <MenuPage />}
@@ -60,9 +58,10 @@ const MainBusinessPage: React.FC = () => {
 						<Congratulation />
 					</SectionWithLogo>
 				)}
-			</Suspense>
 		</main>
 	);
 };
 
-export default memo(MainBusinessPage);
+const MemoizedMainBusinessPage = memo(MainBusinessPage);
+
+export default MemoizedMainBusinessPage;

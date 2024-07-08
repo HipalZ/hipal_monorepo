@@ -30,7 +30,7 @@ export default function MainRouter() {
         variants={variants}
         transition={{ duration: 0.15, ease: 'easeOut' }}
       >
-        <Suspense fallback={<Loader />}>{element}</Suspense>
+        {element}
       </motion.div>
     </AnimatePresence>
   );

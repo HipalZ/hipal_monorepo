@@ -1,6 +1,6 @@
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import BottomButton from '@/components/molecules/bottomButton'
-import { ChangeEvent, memo, useState } from "react";
+import { type ChangeEvent, memo, useState } from "react";
 
 interface IAvailableCoinz {
     isModalOpen: boolean,
@@ -14,7 +14,7 @@ interface IAvailableCoinz {
     setClaimAmount: number
 }
 
-const AvailableCoinz = memo((props: IAvailableCoinz) => {
+const AvailableCoinz = (props: IAvailableCoinz) => {
     const { isModalOpen, closeModal, userCoinz, claimedCoinz, handleApplyCoinz ,billValue, setMaxCoinz, setClaimAmount} = props;
     const [tempClaimedCoinz, setTempClaimedCoinz] = useState(claimedCoinz);
 
@@ -47,19 +47,20 @@ const AvailableCoinz = memo((props: IAvailableCoinz) => {
                     onChange={(e) => handleChange(e, userCoinz)}
                     type='tel'
                     value={tempClaimedCoinz}
-                    placeholder={`Enter the coinz to apply`}
+                    placeholder="Enter the coinz to apply"
                     min={0}
                     max={userCoinz}
                     className='border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 '
                 />
             </div>
             <BottomButton>
-                <button className="w-full px-4 py-3 rounded-full bg-primary text-base-100" onClick={handleNextClick}>
+                <button type="button" className="w-full px-4 py-3 rounded-full bg-primary text-base-100" onClick={handleNextClick}>
                     Next
                     </button>
             </BottomButton>
         </BottomPopUp>
     )
-});
+}
 
-export default AvailableCoinz;
+const MemoAvailableCoinz = memo(AvailableCoinz);
+export default MemoAvailableCoinz;

@@ -3,7 +3,7 @@ import DishQuantityButton from "@/components/organisms/dishDescription/dishQuant
 import type {  ICategory, IDish } from "@/components/types/businessData"
 import { getPrice } from "@/components/utils/helpers"
 import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/legacy/image"
+import Image from "next/image"
 import { memo, useState } from "react"
 import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai"
 import FoodType, { type FOOD_TYPES } from "../foodType"
@@ -11,10 +11,10 @@ import DishData from "../dishDescription"
 import DishPopup from "../dishPopup"
 import NotAvailable from "../notAvailable"
 import { useCart } from "@/components/store/useCart"
-import RecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 import PlaceholderImg from "../placeholder"
+import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
 
-function HorizontalCard({
+const HorizontalCard = ({
 	dishData,
 	noAddBtn,
 	noDescription,
@@ -26,14 +26,14 @@ function HorizontalCard({
 	noDescription?: boolean
 	isTopScrollWithSubTypes?: boolean
 	redirection?: (id: string, categories: ICategory[]) => void
-}) {
+}) =>{
 	const coverImage = dishData?.images?.[0]
 	const isAvailable = dishData?.availability
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [selectedDish, setSelectedDish] = useState({} as IDish)
 	const cart = useCart((s) => s.cart)
-
-	const openModal = (dishData:any) => {
+	const showRecommendations = Object.keys(cart).includes(dishData._id)
+	const openModal = (dishData:IDish) => {
 		setSelectedDish(dishData)
 		setIsModalOpen(true)
 	}
@@ -108,7 +108,7 @@ function HorizontalCard({
 										<div className="absolute z-20 text-sm text-white bottom-4 left-2">
 											Not Available
 										</div>
-										<div className="absolute w-full bottom-2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2"></div>
+										<div className="absolute w-full bottom-2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2"/>
 									</>
 								)}
 							</div>
@@ -152,9 +152,10 @@ function HorizontalCard({
 					)}
 				</div>
 			</div>
-			{/* <div>{isDishInCart && <RecommendedDishes dishData={dishData} openModal={openModal} />}</div> */}
+			<div>{showRecommendations && <MemoRecommendedDishes dishData={dishData} openModal={openModal} />}</div>
 		</section>
 	)
 }
 
-export default memo(HorizontalCard)
+const MemoHorizontalCard = memo(HorizontalCard)
+export default MemoHorizontalCard

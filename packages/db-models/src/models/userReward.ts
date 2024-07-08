@@ -27,7 +27,6 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
     },
     date: {
       type: Number,
-      default: Date.now(),
     },
     count: {
       type: Number,

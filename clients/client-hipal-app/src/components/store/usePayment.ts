@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface PaymentStore{
 	razorPayPaymentId: string
@@ -22,7 +22,7 @@ const usePayment = create(
 		}),
 		{
 			name: 'payment-store',
-			getStorage: () => localStorage,
+			storage:createJSONStorage(()=>localStorage)
 		},
 	),
 )

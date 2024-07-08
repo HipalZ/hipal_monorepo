@@ -1,12 +1,9 @@
-import { useCallback, lazy, Suspense, memo } from "react";
+import { useCallback, lazy,  memo } from "react";
 import { AddRoleArray } from "./staffTypes";
 import { cn } from "@/components/utils/helper";
-import Loader from "@/components/atom/loader";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 
 const MultipleBottomButtons = lazy(() => import("@/components/atom/multipleButtons"));
-
-
 
 const AddRole = () => {
     const { selectedRole, setSelectedRole, pageToggle, setPageToggle } = useAddStaffStore();
@@ -25,7 +22,7 @@ const AddRole = () => {
 
     const goBack = useCallback(() => {
         setPageToggle("ADD_STAFF");
-    }, [pageToggle, setPageToggle]);
+    }, [pageToggle]);
 
     return (
         <section className="relative px-4 rounded-4">
@@ -55,7 +52,6 @@ const AddRole = () => {
                 ))}
             </section>
 
-            <Suspense fallback={<div><Loader /></div>}>
                 <MultipleBottomButtons
                     buttons={[
                         {
@@ -70,9 +66,10 @@ const AddRole = () => {
                         },
                     ]}
                 />
-            </Suspense>
         </section>
     );
 };
 
-export default memo(AddRole);
+const MemoAddRole = memo(AddRole);
+
+export default MemoAddRole;

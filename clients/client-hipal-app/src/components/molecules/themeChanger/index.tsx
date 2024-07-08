@@ -107,4 +107,5 @@ function Themes() {
 	)
 }
 
-export default memo(Themes)
+const MemoThemes = memo(Themes)
+export default MemoThemes

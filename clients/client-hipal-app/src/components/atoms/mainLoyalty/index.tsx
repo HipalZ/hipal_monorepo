@@ -1,5 +1,5 @@
 import { useLogin } from "@/components/store/useLogin"
-import React, { useEffect, useState } from "react"
+import React, { memo, useEffect, useState } from "react"
 import {
 	beans,
 	bowl,
@@ -164,4 +164,5 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	)
 }
 
-export default MainLoyalty
+const MemoMainLoyalty = memo(MainLoyalty)
+export default MemoMainLoyalty

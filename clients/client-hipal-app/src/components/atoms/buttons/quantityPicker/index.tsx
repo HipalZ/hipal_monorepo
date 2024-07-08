@@ -2,7 +2,7 @@ import { memo } from "react"
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai"
 import { BiTrash } from "react-icons/bi"
 
-function QuantityPicker({
+const QuantityPicker = ({
 	quantity,
 	setQuantity,
 	minQuantity,
@@ -14,7 +14,7 @@ function QuantityPicker({
 	minQuantity: number
 	isDeleteAble?: boolean
 	onDeleteItem?: () => void
-}) {
+}) =>{
 	const onIncreaseQuantity = () => {
 		setQuantity(quantity + 1)
 	}
@@ -69,4 +69,5 @@ function QuantityPicker({
 	)
 }
 
-export default memo(QuantityPicker)
+const MemoQuantityPicker = memo(QuantityPicker)
+export default MemoQuantityPicker

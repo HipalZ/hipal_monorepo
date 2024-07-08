@@ -23,6 +23,7 @@ export const useUserToken = create(
     }),
     {
       name: 'token-data',
+      getStorage: () => localStorage,
     },
   ),
 );

@@ -1,11 +1,11 @@
-import React, { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import Image from 'next/image';
 import QRcodeImg from "@/assets/payment/mobileqr.png"
 import HandPay from "@/assets/payment/handcash.png"
 import online from "@/assets/payment/mobilepay.png"
 import background from "@/assets/payment/background-rainbow.png"
 import Grid from '@/assets/payment/grid.png';
-import { PageStates } from '.';
+import type { PageStates } from '.';
 import { toast } from 'react-toastify';
 
 interface Business {
@@ -27,7 +27,7 @@ interface PaymentComponentProps {
     total:number;
 }
 
-const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValue, total,handleCreateOrder, setSelectedMode,isLoading }) => {
+const PaymentComponent: React.FC<PaymentComponentProps> = ({ data, billValue, total,handleCreateOrder, setSelectedMode,isLoading }) => {
 
     const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
 
@@ -105,7 +105,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                             Pay Cash to Captain
                         </div>
                         
-                        <button className='absolute px-4 py-1 w-[90%] text-white bg-black rounded-full bottom-2 left-2'>
+                        <button type='button' className='absolute px-4 py-1 w-[90%] text-white bg-black rounded-full bottom-2 left-2'>
                             {
                                 isLoading ?(
                                     <span className="loader_spinner !border-t-primary"></span>
@@ -125,7 +125,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
                         <div className='px-4 pt-2 text-sm leading-2'>
                             Hassle free & easy payments
                         </div>
-                        <button className='absolute w-[90%] px-4 py-1 text-white bg-black rounded-full bottom-2 left-2'>
+                        <button type='button' className='absolute w-[90%] px-4 py-1 text-white bg-black rounded-full bottom-2 left-2'>
                         {
                                 isLoading ? (
                                     <span className="loader_spinner !border-t-primary"></span>
@@ -138,6 +138,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = memo(({ data, billValu
             </section>
         </section>
     );
-});
+}
 
-export default memo(PaymentComponent);
+
+const MemoPaymentComponent = memo(PaymentComponent);
+export default MemoPaymentComponent

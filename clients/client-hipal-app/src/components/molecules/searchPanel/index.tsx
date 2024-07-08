@@ -10,13 +10,12 @@ import Link from "next/link";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import { ICategory, IDish } from "@/components/types/businessData";
+import type { ICategory, IDish } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { RxCross2 } from "react-icons/rx";
 
-
 // NOTE: A `relative` tag must be added to the parent of this component
-const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
+const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
     const panel = useRef(null);
     const { searchText, setSearchText } = useSearch();
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
@@ -118,7 +117,7 @@ const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () =
                                                     placeholder="blur"
                                                     blurDataURL={getRandomBlurImg(110, 110)}
                                                     className="on_active_bounce rounded-xl "
-                                                ></Image>
+                                                />
                                             ) : (
                                                 <div>
                                                     <PlaceholderImg className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden" />
@@ -166,6 +165,7 @@ const SearchPanel = memo(({ closeSearchBox, categories }: { closeSearchBox: () =
             )}
         </div>
     );
-})
+}
 
-export default SearchPanel
+const MemoizedSearchPanel = memo(SearchPanel)
+export default MemoizedSearchPanel

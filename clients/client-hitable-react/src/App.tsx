@@ -3,12 +3,13 @@ import { Howl } from 'howler';
 import { useEffect, useState } from 'react';
 import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
-import axios from './components/utils/axios';
 import MainRouter from './routes';
+import { apiRpc } from '@hi/common';
+import { useUserToken } from './components/store/useTokenStore';
 
 function App() {
-  const { selectedBiz } = useHiClientZ();
-  const businessId = selectedBiz?.businessId?._id;
+  const selectedBiz = useHiClientZ((state) => state.selectedBiz);
+  const triggerSound = useLiteStore((s) => s.triggerSound);
   const {
     setLoading,
     setOnlineCount,
@@ -20,28 +21,31 @@ function App() {
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
   } = useLiteStore();
+  const accessToken = useUserToken.getState().accessToken
+  const refreshToken = useUserToken.getState().refreshToken
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
+  const businessId = selectedBiz?.businessId?._id;
+
   const fetchAlerts = async (alertType: string) => {
-    const url = alertType == 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
+    const endpoint = alertType === 'ONLINE' ? 'paymentAlerts' : 'offlineAlerts';
     setLoading(true);
-    try {
-      const config = {
-        method: 'GET',
-        url: `/v1/payments/:id/${url}?businessId=${businessId}&alertType=${alertType}`,
-      };
-      const response = await axios(config);
-      if (response.status === 200) {
-        return response.data.data;
-      } else {
-        return [];
+    const res = await apiRpc.payments[':id'][endpoint].$get({
+      query: {
+        businessId,
+        alertType,
+      },
+      param: {
+        id: businessId,
+      },
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken
       }
-    } catch (err) {
-      console.log(err);
-      return [];
-    } finally {
-      setLoading(false);
-    }
+    });
+    const response = (await res.json()) || [];
+    setLoading(false);
+    return response.data || [];
   };
 
   const handleOnlineAlerts = async () => {
@@ -49,10 +53,9 @@ function App() {
     setOnlineAlertData(data);
     setOnlineCount(data.length);
     if (data.length > onlineCount) {
-      // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
-        autoplay: true,
+        autoplay: triggerSound,
         loop: true,
       });
       sound.play();
@@ -69,10 +72,9 @@ function App() {
     setOfflineAlertData(data);
     setOfflineCount(data.length);
     if (data.length > offlineCount) {
-      // initializeMessaging('New order', 'Hey pal, we have new order');
       const sound = new Howl({
         src: ['/sounds/order.mp3'],
-        autoplay: true,
+        autoplay: triggerSound,
         loop: true,
       });
       sound.play();
@@ -88,7 +90,6 @@ function App() {
     const checkOnlineStatus = () => {
       const online = navigator.onLine;
       setIsOnline(online);
-      console.log(`Network status: ${online ? 'Online' : 'Offline'}`);
     };
     const handleConnectionChange = () => {
       if ('connection' in navigator) {
@@ -122,21 +123,21 @@ function App() {
     queryKey: ['onlineAlerts', businessId],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 17000, // 15 seconds
+    refetchInterval: 17000, // 17 seconds
   });
 
   const { refetch: refetchOfflineAlerts } = useQuery({
     queryKey: ['offlineAlerts', businessId],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 19000, // 15 seconds
+    refetchInterval: 19000, // 19 seconds
   });
 
   return (
     <>
       {!isOnline && <div className="bg-red-500 text-center text-white">Please check your internet connection</div>}
       {isOnline && isSlow && <div className="bg-[#ef9b0f] text-center text-white">⚠ Your connection is too slow</div>}
-      <MainRouter />;
+      <MainRouter />
     </>
   );
 }

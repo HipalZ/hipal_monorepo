@@ -1,10 +1,11 @@
 "use client"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
 import { useDishTypes } from "@/components/store/useDishTypes"
-import { useMemo } from "react"
+import { memo, useEffect, useMemo } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 
-import { ICategories, ICategory, ICategorySubTypes, ICategoryTypes, IDish } from "@/components/types/businessData"
+import type { ICategories, ICategory, ICategorySubTypes, ICategoryTypes, IDish } from "@/components/types/businessData"
+import { useRouter } from "next/navigation"
 
 interface IDishesProps {
 	allCategoriesTypes?: {
@@ -17,9 +18,35 @@ interface IDishesProps {
 
 const DishesList: React.FC<IDishesProps> = (props) => {
 	const { allCategoriesTypes, categories } = props;
-	const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
-	const { isActiveDishType } = useActiveClass();
-	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory);
+	const { isActiveDishType, setActiveCategory, setActiveParentCategory } = useActiveClass((state) => ({
+		setActiveCategory: state.setActiveCategory,
+		setActiveParentCategory: state.setActiveParentCategory,
+		isActiveDishType: state.isActiveDishType,
+	  }));
+
+	  const router = useRouter();
+
+	  useEffect(() => {
+		const handleHashChange = () => {
+		  const { hash } = window.location;
+		  console.log(hash);
+		  if (hash) {
+			const categoryId = hash.substring(1); 
+			const element = document.getElementById(categoryId);
+			if (element) {
+			  element.scrollIntoView({ behavior: "smooth" });
+			}
+		  }
+		};
+	
+		handleHashChange(); 
+	
+		window.addEventListener("hashchange", handleHashChange); 
+	
+		return () => {
+		  window.removeEventListener("hashchange", handleHashChange); 
+		};
+	  }, [router,isActiveDishType]);
 
 	const filteredDishes = useMemo(() => categories?.map((category) => ({
 		...category,
@@ -67,7 +94,7 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 	// Group categories by their parent category
 	const groupedCategories = useMemo(() => {
 		const group: { [key: string]: { parentCategoryName: string; categories: ICategory[] } } = {};
-		filteredDishes.forEach((category) => {
+		for (const category of filteredDishes) {
 			const parentCategory = category.parentCategory || 'Others';
 			if (!group[parentCategory]) {
 				group[parentCategory] = {
@@ -78,9 +105,7 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 			if (category.dishes && category.dishes.length > 0) {
 				group[parentCategory].categories.push(category);
 			}
-		});
-	
-		// Remove parent categories with no child categories
+		}
 		return Object.values(group).filter((group) => group.categories.length > 0);
 	}, [filteredDishes]);
 
@@ -119,4 +144,5 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 	);
 };
 
-export default DishesList;
+const MemoDishesList = memo(DishesList);
+export default MemoDishesList;

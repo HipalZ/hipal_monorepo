@@ -13,145 +13,174 @@ import { BsBagHeart } from "react-icons/bs";
 import { useCart } from "@/components/store/useCart";
 import { HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import dynamic from "next/dynamic";
 
-const CategoryPageBtn = memo(() => {
-	const { isLogin, isPayment } = useLogin();
-	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
-	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
-	const tableName = useTableData((s) => s.tableName)
-	const [inputModal, setInputModal] = useState(false);
-	const setDirection = useLogin((s) => s.setDirection);
-	const setIsPayment = useLogin((s) => s.setIsPayment);
-	const router = useRouter();
-	const [callWaiterModal, setCallWaiterModal] = useState(false);
-	const { setShowCart, showCart ,cart} = useCart()
+const Cart = dynamic(() => import("@/components/organisms/cart"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
 
-	const closeModal = useCallback(() => {
-		setInputModal(false);
-		setIsPayment(false)
-	}, [setInputModal]);
+const CategoryPageBtn = () => {
+  const { isLogin, isPayment } = useLogin();
+  const { businessId,customLink } = useBusinessDetails((s) => ({
+    businessId: s.businessDetails?._id,
+    customLink: s.businessDetails?.customLink,
+  }));
+  const tableName = useTableData((s) => s.tableName);
+  const [inputModal, setInputModal] = useState(false);
+  const setDirection = useLogin((s) => s.setDirection);
+  const setIsPayment = useLogin((s) => s.setIsPayment);
+  const router = useRouter();
+  const [callWaiterModal, setCallWaiterModal] = useState(false);
+  const { setShowCart, showCart, cart, setCart } = useCart();
 
-	const openModal = useCallback(() => {
-		setInputModal(true);
-	}, [setInputModal]);
+  const closeModal = useCallback(() => {
+    setInputModal(false);
+    setIsPayment(false);
+  }, [setInputModal]);
 
-	const openCallWaiterModal = useCallback(() => {
-		setCallWaiterModal(true);
-	}, [setCallWaiterModal]);
+  const openModal = useCallback(() => {
+    setInputModal(true);
+  }, [setInputModal]);
 
-	const closeCallWaiterModal = useCallback(() => {
-		setCallWaiterModal(false);
-	}, [setCallWaiterModal]);
+  const openCallWaiterModal = useCallback(() => {
+    setCallWaiterModal(true);
+  }, [setCallWaiterModal]);
 
-	const proceedToPayment = useCallback(() => {
-		setDirection('category');
-		setIsPayment(true)
-		if (!tableName) {
-			return router.push(`/${customLink}/scan`);
-		}
-		if (!isLogin) { 
-			return router.push(`/${customLink}/user/signup`);
+  const closeCallWaiterModal = useCallback(() => {
+    setCallWaiterModal(false);
+  }, [setCallWaiterModal]);
 
-		} else {
-			openModal()
-		}
-	}, [setDirection, isLogin, businessId, router,customLink]);
+  const proceedToPayment = useCallback(() => {
+    setDirection("category");
+    setIsPayment(true);
+    if (!tableName) {
+      return router.push(`/${customLink}/scan`);
+    }
+    if (!isLogin) {
+      return router.push(`/${customLink}/user/signup`);
+    }
+    openModal();
+  }, [setDirection, isLogin, businessId, router, customLink]);
 
-	const triggerCallWaiter = useCallback(() => {
-		setDirection('category');
-		if (!tableName) {
-			return router.push(`/${customLink}/scan`);
-		}
-		if (!isLogin) {
-			return router.push(`/${customLink}/user/signup`);
+  const triggerCallWaiter = useCallback(() => {
+    setDirection("category");
+    if (!tableName) {
+      return router.push(`/${customLink}/scan`);
+    }
+    if (!isLogin) {
+      return router.push(`/${customLink}/user/signup`);
+    }
+    openCallWaiterModal();
+  }, [setDirection, isLogin, businessId, router, customLink]);
 
-		} else {
-			openCallWaiterModal()
-		}
-	}, [setDirection, isLogin, businessId, router,customLink]);
+  const showingCart = useCallback(() => {
+    setShowCart(!showCart);
+  }, [showCart, setShowCart]);
 
-	const showingCart = useCallback(() => {
-		setShowCart(!showCart);
-	}, [showCart, setShowCart]);
+  useEffect(() => {
+    if (isPayment && isLogin && tableName) {
+      openModal();
+    }
+    if (businessId && cart && Object.values(cart).length > 0) {
+      const firstKeyValue = cart[Object.keys(cart)[0]];
 
-	useEffect(() => {
-		if (isPayment && isLogin && tableName) {
-			openModal()
-		}
-	}, [])
+      if (
+        firstKeyValue.dishData &&
+        firstKeyValue.dishData.businessId !== businessId
+      ) {
+        setCart({});
+        return;
+      }
+    }
+  }, []);
 
-	return (
-		<>
-			<BottomButton>
-				<section className="relative flex items-center justify-between gap-4">
-					<center onClick={triggerCallWaiter} className="w-full px-2 font-light text-base-100">
-						<FaConciergeBell size={22} className="mr-2" />
-						Call captain
-					</center>
-					<button
-						onClick={showingCart}
-						className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
-					>
-						<AnimatePresence initial={false} mode='wait'>
-                            {showCart ? (
-                                <motion.div
-                                    key="close"
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.5 }}
-                                    transition={{ duration: 0.15 }}
-                                >
-                                    <HiX size={30} className="text-primary" />
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    key="bag"
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.5 }}
-                                    transition={{ duration: 0.15 }}
-                                >
-                                    <div className="relative">
-                                        <BsBagHeart size={30} />
-                                        {Object.values(cart).length > 0 && (
-                                            <motion.span
-                                                className="absolute py-1 px-2 text-xs font-bold text-white bg-red-600 rounded-full -top-6 right-0"
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                exit={{ scale: 0 }}
-                                                transition={{ duration: 0.5 }}
-                                            >
-                                                {Object.values(cart).length}
-                                            </motion.span>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-					</button>
-					<span className="w-full -mb-5 font-thin text-base-100">{
-						showCart ? 'Menu' : 'Cart'
-					}</span>
-					<center onClick={proceedToPayment} className="w-full px-2 font-light text-base-100">
-						<FaMoneyBillWave size={22} />
-					Pay bill
-					</center>
-				</section>
-			</BottomButton>
+  return (
+    <>
+      <BottomButton>
+        <section className="relative flex items-center justify-between gap-4">
+          <center
+            onClick={triggerCallWaiter}
+            className="w-full px-2 font-light text-base-100"
+          >
+            <FaConciergeBell size={22} className="mr-2" />
+            Call captain
+          </center>
+          <button
+            type="button"
+            onClick={showingCart}
+            className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
+          >
+            <AnimatePresence initial={false} mode="wait">
+              {showCart ? (
+                <motion.div
+                  key="close"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <HiX size={30} className="text-primary" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="bag"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <div className="relative">
+                    <BsBagHeart size={30} />
+                    {Object.values(cart).length > 0 && (
+                      <motion.span
+                        className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-6"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        {Object.values(cart).length}
+                      </motion.span>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
+          <span className="w-full -mb-5 font-thin text-base-100">
+            {showCart ? "Menu" : "Cart"}
+          </span>
+          <center
+            onClick={proceedToPayment}
+            className="w-full px-2 font-light text-base-100"
+          >
+            <FaMoneyBillWave size={22} />
+            Pay bill
+          </center>
+        </section>
+      </BottomButton>
 
-			{inputModal &&
-				<BottomPopUp show={inputModal} onClose={closeModal}>
-					<AddAmountModal />
-				</BottomPopUp>
-			}
+      {inputModal && (
+        <BottomPopUp show={inputModal} onClose={closeModal}>
+          <AddAmountModal />
+        </BottomPopUp>
+      )}
 
-			{callWaiterModal &&
-				<BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
-					<CallTheWaiterComponent onClose={closeCallWaiterModal} />
-				</BottomPopUp>
-			}
-		</>
-	);
-})
+      {callWaiterModal && (
+        <BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
+          <CallTheWaiterComponent onClose={closeCallWaiterModal} />
+        </BottomPopUp>
+      )}
+      {showCart && (
+        <BottomPopUp show={showCart} onClose={showingCart}>
+          <Cart />
+        </BottomPopUp>
+      )}
+    </>
+  );
+};
 
-export default CategoryPageBtn
+const MemoCategoryPageBtn = memo(CategoryPageBtn);
+export default MemoCategoryPageBtn;

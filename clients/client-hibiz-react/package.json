@@ -3,21 +3,23 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3005",
+    "dev": "dotenv -e ./env/.env.local vite --host",
     "dev:test": "dotenv -e ./env/.env.test vite --host",
-    "bundle:development": "dotenv -e .env pnpm run bundle",
+    "bundle:development": "dotenv -e .env bun run bundle",
     "bundle": "vite build",
     "build": "vite build",
     "serve": "vite preview --port 3005",
     "lint": "eslint . --ext .ts,.tsx",
-    "build:test": "dotenv -e ./env/.env.test pnpm run build",
-    "bundle:test": "dotenv -e ./env/.env.test pnpm run bundle",
-    "build:production": "dotenv -e ./env/.env.production pnpm run build",
-    "bundle:production": "dotenv -e ./env/.env.production pnpm run bundle"
+    "build:test": "dotenv -e ./env/.env.test bun run build",
+    "bundle:test": "dotenv -e ./env/.env.test bun run bundle",
+    "build:production": "dotenv -e ./env/.env.production bun run build",
+    "bundle:production": "dotenv -e ./env/.env.production bun run bundle"
   },
+
   "dependencies": {
     "@fontsource/inter": "^5.0.18",
     "@headlessui/react": "^2.0.4",
+    "@hi/common": "workspace:*",
     "@tanstack/react-query": "^5.40.0",
     "autoprefixer": "10.4.15",
     "axios": "^1.7.2",
@@ -25,10 +27,12 @@
     "cssnano": "^7.0.1",
     "daisyui": "^4.11.1",
     "date-fns": "^3.6.0",
+    "esbuild": "^0.22.0",
     "eslint-plugin-react-compiler": "0.0.0-experimental-51a85ea-20240601",
     "exceljs": "^4.4.0",
     "flowbite": "^1.8.1",
     "framer-motion": "^11.2.11",
+    "hono": "^4.4.3",
     "lodash-es": "^4.17.21",
     "postcss-cli": "^11.0.0",
     "qrcode": "^1.5.3",
@@ -41,7 +45,6 @@
     "react-router-dom": "^6.23.1",
     "react-swipeable": "^7.0.1",
     "react-switch": "^7.0.0",
-    "react-toastify": "^10.0.5",
     "react-top-loading-bar": "^2.3.1",
     "tailwind-merge": "^2.3.0",
     "unimported": "^1.31.1",
@@ -54,6 +57,8 @@
     "@babel/core": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
     "@babel/preset-react": "^7.24.7",
+    "@hono/vite-dev-server": "^0.12.2",
+    "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
@@ -62,14 +67,17 @@
     "@vitejs/plugin-react-swc": "^3.7.0",
     "autoprefixer": "^10.4.19",
     "babel-plugin-react-compiler": "0.0.0-experimental-938cd9a-20240601",
+    "dotenv-cli": "^7.3.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
-    "vite": "4.2.2",
-    "vite-plugin-pwa": "^0.14.7",
-    "dotenv-cli": "^7.3.0"
+    "vite": "5.3.2",
+    "vite-plugin-pwa": "^0.14.7"
+  },
+  "browser": {
+    "crypto": false
   }
 }

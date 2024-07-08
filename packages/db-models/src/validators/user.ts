@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { z } from 'zod';
+import { string, z } from 'zod';
+import Otp from '../../../../clients/client-hibiz-react/src/components/templates/signupPage/otp';
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -31,14 +32,20 @@ export const CustomRole = z.object({
 });
 
 export const UserAttrs = z.object({
+  id: z.string().optional(),
   name: z.string().max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(10).max(10),
-  role: z.string().optional(),
+  role: z.array(z.string()).optional(),
   customRole: z.array(CustomRole).optional(),
   password: z.string().optional(),
   businessId: ObjectIdSchema.optional(),
-  userId: ObjectIdSchema.optional(),
+  otp: z.string().optional(),
+  loyaltyId: z.string().optional(),
+  signUpBonus: z.number().optional(),
+  userId: z.string().optional(),
+
+  _id: z.string().optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;

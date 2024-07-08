@@ -1,5 +1,5 @@
 "use client"
-import * as React from "react"
+import React,{memo} from "react"
 
 const texts = [
 	"Restaurant Management System",
@@ -7,7 +7,7 @@ const texts = [
 	"Kitchen Management System",
 ]
 
-export default function TitleTransition() {
+function TitleTransition() {
 	const [index, setIndex] = React.useState(0)
 
 	React.useEffect(() => {
@@ -27,3 +27,6 @@ export default function TitleTransition() {
 		</span>
 	)
 }
+
+const MemoTitleTransition = memo(TitleTransition)
+export default MemoTitleTransition

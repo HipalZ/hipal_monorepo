@@ -15,7 +15,7 @@ function Section({
 	const CustomTag = tag ? (`${tag}` as React.ElementType) : ("h2" as React.ElementType)
 
 	return (
-		<center className="flex flex-col" {...props}>
+		<center className="flex flex-col no-scrollbar" {...props}>
 			<div className="px-4 mb-2 prose">
 				<CustomTag className={`!font-bold !text-2xl pb-2 uppercase ${tagClassName}`}>{title}</CustomTag>
 			</div>
@@ -24,4 +24,5 @@ function Section({
 	)
 }
 
-export default memo(Section)
+const MemoSection = memo(Section)
+export default MemoSection

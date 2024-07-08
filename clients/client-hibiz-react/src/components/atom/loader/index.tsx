@@ -23,4 +23,6 @@ function Loader({ type, isSquare }: { type?: 'warning'; isSquare?: boolean }) {
   );
 }
 
-export default memo(Loader);
+const MemoizedLoader = memo(Loader);
+
+export default MemoizedLoader;

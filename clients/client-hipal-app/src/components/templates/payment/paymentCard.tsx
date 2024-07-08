@@ -6,7 +6,7 @@ interface IPaymentCard {
     logo: string | undefined
 }
 
-const PaymentCard = memo((props: IPaymentCard) => {
+const PaymentCard = (props: IPaymentCard) => {
     const { claimedCoinz, billValue } = props;
     return (
         <center className={`relative text-xl rounded-b-3xl bg-primary pt-4 text-base-100 ${claimedCoinz > 0 ? "h-[12rem]":"h-[6rem]"}`}>
@@ -18,14 +18,15 @@ const PaymentCard = memo((props: IPaymentCard) => {
                     <center className="absolute top-0 z-50 w-5 h-5 transform -translate-x-1/2 -translate-y-1/2 bg-base-100 left-[50%] rotate-45">
 
                     </center>
-                    <button>
-                        🥳 Woah ! You are saving ${claimedCoinz}
+                    <button type="button">
+                        🥳 Woah ! You are saving ₹{claimedCoinz}
                     </button>
                 </center> : null
             }
 
         </center>
     )
-});
+}
 
-export default PaymentCard;
+const MemoPaymentCard = memo(PaymentCard)
+export default MemoPaymentCard;

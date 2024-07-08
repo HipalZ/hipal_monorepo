@@ -1,16 +1,15 @@
 import Header from "@/components/molecules/header";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { routeToDashboard } from "@/components/utils/routes";
-import { startTransition, useCallback } from "react";
+import { memo, startTransition, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
-import BusinessType from "./businessType";
-import OutletType from "./outletTypeForm";
-import AddName from "./addName";
+import BusinessType from "@/components/templates/addBusinessForm/businessType";
+import OutletType from "@/components/templates/addBusinessForm/outletTypeForm";
+import AddName from "@/components/templates/addBusinessForm/addName";
 import Congratulation from "@/components/templates/signupPage/congratulation";
-import { SectionWithLogo } from "@/pages/signup";
-import "./add.css"
+import SectionWithLogo from "@/components/atom/sectionWithLogo"
 
 
 const AddBusinessForm = () => {
@@ -77,5 +76,5 @@ const AddBusinessForm = () => {
 		</main>
 	);
 };
-
-export default AddBusinessForm;
+const MemoizedAddBusinessForm = memo(AddBusinessForm);
+export default MemoizedAddBusinessForm;

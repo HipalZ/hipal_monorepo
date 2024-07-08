@@ -106,4 +106,6 @@ function BottomPanel({ dishData }:{dishData: IDish}) {
 			</Transition>
 	)
 }
-export default memo(BottomPanel)
+
+const MemoBottomPanel = memo(BottomPanel)
+export default MemoBottomPanel

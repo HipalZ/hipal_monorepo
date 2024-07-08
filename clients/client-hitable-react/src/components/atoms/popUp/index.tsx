@@ -1,11 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 import { HiX } from "react-icons/hi";
 import { CiGlobe } from "react-icons/ci";
 import { cn } from "@/components/utils/helpers";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import { GiTakeMyMoney } from "react-icons/gi";
 
-export default function PopUp({
+function PopUp({
   children,
   show,
   onClose,
@@ -37,15 +38,15 @@ export default function PopUp({
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 translate-y-full"
           >
-            <DialogPanel className={cn("relative w-full max-w-md shadow-md bg-base-100 rounded-t-[1.5rem]", status?.length > 0 ? ' h-[85vh]' : '')}>
+            <DialogPanel className={cn("relative w-full max-w-md shadow-md bg-white rounded-t-[1.5rem]", status?.length > 0 ? ' h-[85vh]' : '')}>
               <div className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce left-1/2", status?.length > 0 ? '' : '-top-8')}>
                 <HiX
-                  className="absolute -top-10 p-2 text-4xl text-black rounded-full cursor-pointer bg-base-100"
+                  className="absolute -top-10 p-2 text-4xl text-black rounded-full cursor-pointer bg-white"
                   onClick={onClose}
                 />
                 {status && status.length > 0 ?
-                  <article className={cn("flex items-center p-2 rounded-full", viewData?.alertType === "ONLINE" ? 'bg-green-100 ' : 'bg-red-100')}>
-                    <span><CiGlobe size={24} /></span>&nbsp;
+                  <article className={cn("flex items-center p-2 rounded-full bg-green-100")}>
+                    <span>{viewData?.alertType === "ONLINE" ? <CiGlobe size={24} />: <GiTakeMyMoney size={24}/>}</span>&nbsp;
                     <h1 className="text-base">{status}</h1>
                   </article>
                   : null}
@@ -58,3 +59,6 @@ export default function PopUp({
     </Transition>
   );
 }
+
+const PopUpMemo = memo(PopUp);
+export default PopUpMemo;

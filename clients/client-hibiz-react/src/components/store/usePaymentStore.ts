@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface PaymentMethod {
   _id: string;
@@ -29,6 +29,7 @@ export const usePaymentMethodsStore = create(
     }),
     {
       name: 'hibiz-payment-storage',
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 );

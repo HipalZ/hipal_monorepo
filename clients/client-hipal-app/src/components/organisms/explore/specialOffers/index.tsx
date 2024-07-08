@@ -2,7 +2,7 @@
 import CardLG from "@/components/atoms/card/cardLG"
 import Section from "@/components/molecules/section"
 import img from "@/assets/img/cut.png"
-import { IExplore } from "@/components/types/businessData"
+import type { IExplore } from "@/components/types/businessData"
 import { getRandomImg } from "@/components/utils/images"
 import isEmpty from "lodash-es/isEmpty"
 import { memo } from "react"
@@ -13,7 +13,7 @@ interface ISpecialOffers {
 	explore: IExplore | undefined
 
 }
-export default memo(function SpecialOffers(props: ISpecialOffers) {
+function SpecialOffers(props: ISpecialOffers) {
 	const explore = props.explore ?? {
 		wallpaper: img.src,
 		phone: '',
@@ -34,9 +34,9 @@ export default memo(function SpecialOffers(props: ISpecialOffers) {
 
 	return (
 		<div id="specialOffers" className="py-1">
-			<div className="relative">
+			<div className="relative no-scrollbar">
 				<Section title="Banners" tag={"h3"}>
-					<div className="flex flex-row px-4 space-x-4 overflow-auto snap-proximity snap-x scroll-smooth">
+					<div className="flex flex-row px-4 space-x-4 overflow-auto snap-proximity snap-x scroll-smooth no-scrollbar">
 						{explore?.specialOffers.map((offer) => (
 							<div key={offer._id} className="snap-center snap-center:scale-110">
 									<CardLG
@@ -54,4 +54,7 @@ export default memo(function SpecialOffers(props: ISpecialOffers) {
 			</div> 
 		</div>
 	)
-})
+}
+
+const MemoSpecialOffers = memo(SpecialOffers)
+export default MemoSpecialOffers
