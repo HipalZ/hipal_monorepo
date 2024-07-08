@@ -22,39 +22,17 @@ const app = new Hono({
   strict: true,
 });
 
-// Your MongoDB connection string
-
-// export const connectToDatabase = async () => {
-//   try {
-//     await client.connect();
-//     console.log('Connected to MongoDB');
-//     return client.db(Bun.env.MONGO_DB); // Replace with your database name
-//   } catch (error) {
-//     console.error('Could not connect to MongoDB', error);
-//     process.exit(1);
-//   }
-// };
-
-if (!Bun.env.RAZORPAY_KEY_ID) {
-  throw new Error('RAZORPAY_KEY_ID must be defined');
-}
-
-if (!Bun.env.RAZORPAY_SECRET) {
-  throw new Error('RAZORPAY_SECRET must be defined');
-}
-
 razorpayWrapper.create(Bun.env.RAZORPAY_KEY_ID, Bun.env.RAZORPAY_SECRET);
 
-// const limiter = rateLimiter({
-//   windowMs: 15 * 60 * 1000,
-//   limit: 100,
-//   standardHeaders: 'draft-6',
-//   keyGenerator: (c) => '<unique_key>',
-//   store: new RedisStore({ client: redisClient }),
-// });
-
+const limiter = rateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 5000,
+  standardHeaders: 'draft-6',
+  keyGenerator: (c) => c.req.header('authorization') ?? 'new-user',
+  // store: new RedisStore({ client: redisClient }),
+});
 // // Apply the rate limiting middleware to all requests.
-// app.use(limiter);
+app.use(limiter);
 
 const { printMetrics, registerMetrics } = prometheus();
 
@@ -69,15 +47,20 @@ app.use(logger());
 app.use('/assets/*', serveStatic({ path: './assets' }));
 app.get('/ui', swaggerUI({ url: '/doc' }));
 app.notFound((c) => c.json({ message: 'Not Found', ok: false }, 404));
-const start = async () => {
-  await connectDB();
-};
 
-start();
-app.route('/', routes);
+(async () => {
+  await connectDB();
+})();
+
+app.route(`/${Bun.env.API_VERSION}`, routes);
 
 app.get('/', async (c) => {
-  return c.text('Hello Hono!');
+  return c.json({
+    message: `Hipalz Backend RPC Server with Environment:${Bun.env.NODE_ENV}`,
+    data: {
+      pid: process.pid,
+    },
+  });
 });
 
 export default {

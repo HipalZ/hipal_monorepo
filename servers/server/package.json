@@ -1,10 +1,16 @@
 {
   "name": "@hipal/server",
   "version": "1.0.2",
+  "type": "module",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "bun run src/index.ts"
+    "start": "bun run src/index.ts",
+    "dev:test": "cp envs/.env.test .env && bun run --hot src/index.ts",
+    "dev:prod": "cp envs/.env.prod .env && bun run --hot src/index.ts",
+    "start:test": "cp envs/.env.test .env && bun run src/index.ts",
+    "start:prod": "cp envs/.env.prod .env && bun run src/index.ts"
   },
+  "trustredDependencies": [],
   "main": "src/index.ts",
   "dependencies": {
     "@hipal/server-instances": "workspace:*",
@@ -12,10 +18,8 @@
     "@hono/prometheus": "^1.0.1",
     "@hono/swagger-ui": "^0.2.2",
     "@hono/zod-validator": "^0.2.2",
-    "@upstash/redis": "^1.31.3",
     "hono": "^4.4.2",
     "hono-rate-limiter": "^0.3.0",
-    "ioredis": "^5.4.1",
     "prom-client": "^15.1.2",
     "zod": "^3.23.8"
   },
