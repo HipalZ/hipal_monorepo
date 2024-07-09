@@ -1,6 +1,6 @@
-import mongoose, { Model } from 'mongoose';
-import { ExploreType, HighlightType, NavigationType, SettingsType, SpecialOfferType, ThemesType } from '../validators';
-const ObjectId = mongoose.Schema.Types.ObjectId as any;
+import mongoose, { type Model } from 'mongoose';
+import type { ExploreType, HighlightType, NavigationType, SettingsType, SpecialOfferType, ThemesType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const themesSchema = new mongoose.Schema<ThemesType>({
   primaryColor: { type: String },

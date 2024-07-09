@@ -1,5 +1,13 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 export const Themes = z.object({
   primaryColor: z.string(),
   secondaryColor: z.string(),
@@ -50,7 +58,7 @@ export const Navigation = z.object({
 });
 
 export const settingsSchema = z.object({
-  businessId: z.string(),
+  businessId: ObjectIdSchema,
   themes: Themes.optional(),
   explore: Explore.optional(),
   navigation: Navigation.optional(),

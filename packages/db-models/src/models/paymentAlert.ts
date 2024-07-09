@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { PaymentAlertType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { PaymentAlertType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(

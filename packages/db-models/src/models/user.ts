@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { CustomRoleType, UserControllerType, UserType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { CustomRoleType, UserControllerType, UserType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const UserController = {

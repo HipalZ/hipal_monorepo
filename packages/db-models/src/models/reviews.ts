@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { ReviewsType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { ReviewsType } from '../validators';
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
   {

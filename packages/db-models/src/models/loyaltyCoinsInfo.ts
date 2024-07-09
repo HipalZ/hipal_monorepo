@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { LoyaltyCoinsInfoType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { LoyaltyCoinsInfoType } from '../validators';
 const loyaltyCoinsInfoSchema = new mongoose.Schema<LoyaltyCoinsInfoType>({
   businessId: { type: String, required: true },
   coinzIssued: { type: Number, required: true },

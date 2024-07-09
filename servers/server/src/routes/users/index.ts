@@ -253,7 +253,7 @@ const usersRouter = new Hono()
           return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
         }
 
-        const user = await User.create({ name, phone, role: 'RESTAURANT_OWNER' });
+        const user = await User.create({ name, phone, role: ['RESTAURANT_OWNER', 'HIPAL_CUSTOMER', 'RESTAURANT_STAFF'] });
 
         const accessToken = createAccessToken(user._id, 'RESTAURANT_OWNER');
         const refreshToken = createRefreshToken(user._id, 'RESTAURANT_OWNER');
@@ -348,11 +348,11 @@ const usersRouter = new Hono()
     }
   })
   .put(
-    '/:id',
+    '/:ownerId',
     zValidator(
       'param',
       z.object({
-        id: z.string(),
+        ownerId: z.string(),
       }),
     ),
     zValidator(
@@ -365,11 +365,11 @@ const usersRouter = new Hono()
       const requestData = await c.req.json();
       const { password } = requestData;
 
-      const { id } = c.req.param();
+      const { ownerId } = c.req.param();
 
       const hashedPassword = await hashPassword(password);
 
-      const user = await User.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
+      const user = await User.findByIdAndUpdate(ownerId, { password: hashedPassword }, { new: true });
 
       if (!user) {
         return c.json(
@@ -423,6 +423,36 @@ const usersRouter = new Hono()
   .post('/:id/stafflogin', zValidator('json', staffValidator), async (c) => {
     const requestData = await c.req.json();
     const { phone, password } = requestData;
+    const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
+      path: 'customRole.businessId',
+      select: 'businessName address logo',
+    });
+
+    const isPasswordValid = await verifyPassword(password, staff?.password || '');
+
+    if (!isPasswordValid) {
+      return c.json(
+        {
+          message: 'Invalid Password',
+          data: {},
+          err: true,
+        },
+        400,
+      );
+    }
+    // Generate JWT
+    const accessToken = createAccessToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
+    const refreshToken = createRefreshToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
+
+    return c.json({
+      message: 'Staff Logged in Successfully',
+      data: { user: staff, accessToken, refreshToken },
+      err: false,
+    });
+  })
+  .post('/addStaff', zValidator('json', staffValidator), async (c) => {
+    const requestData = await c.req.json();
+    const { name, phone, password, customRole } = requestData;
     const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
       path: 'customRole.businessId',
       select: 'businessName address logo',

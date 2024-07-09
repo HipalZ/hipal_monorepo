@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { UserRewardHistoryType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { UserRewardHistoryType } from '../validators';
 
 const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   {

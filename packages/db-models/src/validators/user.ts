@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { string, z } from 'zod';
-import Otp from '../../../../clients/client-hibiz-react/src/components/templates/signupPage/otp';
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z

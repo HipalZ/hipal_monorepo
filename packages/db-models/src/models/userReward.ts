@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { UserRewardType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { UserRewardType } from '../validators';
 
 const userRewardSchema = new mongoose.Schema<UserRewardType>(
   {

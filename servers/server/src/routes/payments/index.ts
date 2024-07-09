@@ -345,6 +345,7 @@ const paymentsRouter = new Hono()
         order_id: saveOrder?._id,
         status: 'SUCCESS',
         tableName: tableName,
+        // biome-ignore lint/complexity/noUselessTernary: <explanation>
         coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
         message: `Paid ${total}`,
         date: Date.now(),
@@ -422,7 +423,8 @@ const paymentsRouter = new Hono()
                 order_id: getOrder?._id,
                 status: 'FAIL',
                 tableName: payload.payment.entity.notes.tableName,
-                coinsApplied: claimCoins > 0 ? true : false,
+
+                coinsApplied: claimCoins > 0,
                 isAccepted: false,
                 date: Date.now(),
 
@@ -471,7 +473,7 @@ const paymentsRouter = new Hono()
               businessId: payload.payment.entity.notes.businessId,
               alertType: 'ONLINE',
               payment_id: createPayment[0]._id,
-              coinsApplied: claimCoins > 0 ? true : false,
+              coinsApplied: claimCoins > 0,
               status: 'SUCCESS',
               order_id: getOrder?._id,
               message: `Paid ${payload.payment.entity.notes.total}`,
