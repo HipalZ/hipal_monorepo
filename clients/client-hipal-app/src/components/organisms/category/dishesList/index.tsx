@@ -120,7 +120,7 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 						<section
 							className={`min-h-60 ${isTopScrollWithSubTypes ? 'scroll-mt-[15rem]' : 'scroll-mt-[13.2rem]'} bg-base-100 w-full pb-4`}
 							id={category._id}
-							key={category._id + `${index}`}
+							key={`${category._id}${index}`}
 							onTouchStart={() => handleTouchStart(category._id, category?.parentCategoryId || '')}
 						>
 							<div className={`${category.dishes.length === 0 ? '' : 'border-t-2 border-primary'} z-40 flex flex-row justify-between px-6 pb-2 font-bold prose bg-base-200`}>
