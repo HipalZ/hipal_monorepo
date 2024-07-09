@@ -217,7 +217,7 @@ const businessesRouter = new Hono()
       const { id } = c.req.query();
 
       const existingBusinesses = await Business.find({
-        staff: id,
+        staffids: id,
       });
 
       return c.json({
