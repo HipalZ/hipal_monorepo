@@ -9,24 +9,11 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
-export const UserController = z
-  .object({
-    hibiz: z.boolean().optional(),
-    dish: z.boolean().optional(),
-    staff: z.boolean().optional(),
-    loyalty: z.boolean().optional(),
-    sale: z.boolean().optional(),
-    reports: z.boolean().optional(),
-    zones_table: z.boolean().optional(),
-  })
-  .default({})
-  .optional();
+
 export const CustomRole = z.object({
   businessId: ObjectIdSchema,
-  customRoleId: ObjectIdSchema,
-  roleName: z.string().optional(),
-  role: z.string().optional(),
-  accessControl: UserController,
+
+  permissions: z.array(string()),
   bookMark: z.boolean().optional(),
 });
 
@@ -43,10 +30,8 @@ export const UserAttrs = z.object({
   loyaltyId: z.string().optional(),
   signUpBonus: z.number().optional(),
   userId: z.string().optional(),
-
   _id: z.string().optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;
 export type CustomRoleType = z.infer<typeof CustomRole>;
-export type UserControllerType = z.infer<typeof UserController>;

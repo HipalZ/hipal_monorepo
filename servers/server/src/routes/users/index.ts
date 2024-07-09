@@ -12,8 +12,8 @@ import jwt from 'jsonwebtoken';
 //@ts-ignore
 
 import argon2 from 'argon2';
-import { password } from 'bun';
-import { z } from 'zod';
+
+import { string, z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 
@@ -450,36 +450,147 @@ const usersRouter = new Hono()
       err: false,
     });
   })
-  .post('/addStaff', zValidator('json', staffValidator), async (c) => {
-    const requestData = await c.req.json();
-    const { name, phone, password, customRole } = requestData;
-    const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
-      path: 'customRole.businessId',
-      select: 'businessName address logo',
-    });
+  .post(
+    '/addStaff',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    zValidator(
+      'json',
+      z.object({
+        businessId: z.string(),
+        name: z.string().max(30),
+        phone: z.string().max(10),
 
-    const isPasswordValid = await verifyPassword(password, staff?.password || '');
+        permissions: z.array(z.string()).optional(),
+      }),
+    ),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { name, phone, permissions, businessId } = requestData;
+      const newCustomRole = {
+        businessId: businessId,
+        permissions: permissions,
+        bookMark: true,
+      };
 
-    if (!isPasswordValid) {
-      return c.json(
+      const updateUser = await User.findOneAndUpdate(
+        { phone },
         {
-          message: 'Invalid Password',
-          data: {},
-          err: true,
+          $set: {
+            name,
+            phone,
+            role: [ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER],
+          },
+          $push: { customRole: newCustomRole },
         },
-        400,
+        { new: true, upsert: true },
       );
-    }
-    // Generate JWT
-    const accessToken = createAccessToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
-    const refreshToken = createRefreshToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
 
-    return c.json({
-      message: 'Staff Logged in Successfully',
-      data: { user: staff, accessToken, refreshToken },
-      err: false,
-    });
-  })
+      if (!updateUser) {
+        return c.json(
+          {
+            err: true,
+            message: 'staff failed',
+            data: {},
+          },
+          400,
+        );
+      }
+
+      return c.json({
+        err: false,
+        data: updateUser,
+        message: updateUser ? 'User updated with new custom role!' : 'Staff created!',
+      });
+    },
+  )
+  .put(
+    '/:staffId/staff',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    zValidator(
+      'json',
+      z
+        .object({
+          role: z.string().max(30),
+          phone: z.string().max(10),
+          password: z.string().optional(),
+          businessId: z.string(),
+
+          permissions: z.array(z.string()).optional(),
+        })
+        .partial(),
+    ),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { staffId } = c.req.param();
+      const { phone, permissions, role, password, businessId } = requestData;
+
+      const hashedPassword = await hashPassword(password);
+      const newCustomRole = {
+        businessId: businessId,
+        permissions: permissions,
+        bookMark: true,
+      };
+
+      const updateUser = await User.findByIdAndUpdate(
+        staffId,
+        {
+          $set: {
+            phone,
+            role: [ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER],
+            password: hashedPassword ? hashedPassword : '',
+          },
+          $addToSet: { customRole: newCustomRole },
+        },
+        { new: true, upsert: true },
+      );
+
+      if (!updateUser) {
+        return c.json(
+          {
+            err: true,
+            message: 'staff failed',
+            data: {},
+          },
+          400,
+        );
+      }
+
+      return c.json({
+        err: false,
+        data: updateUser,
+        message: updateUser ? 'User updated with new custom role!' : 'Staff created!',
+      });
+    },
+  )
+
+  .delete(
+    '/:staffId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
+    zValidator('header', TokenValidator),
+    zValidator(
+      'param',
+      z.object({
+        staffId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { staffId } = c.req.param();
+
+      const deleteStaff = await User.findByIdAndDelete(staffId);
+
+      return c.json({
+        message: 'deleted',
+        data: { user: deleteStaff },
+        err: false,
+      });
+    },
+  )
 
   .post('/Owner/Login', zValidator('json', UserAttrs), async (c) => {
     const requestData = await c.req.json();

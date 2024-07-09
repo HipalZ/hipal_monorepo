@@ -1,39 +1,6 @@
 import mongoose, { type Model } from 'mongoose';
-import type { CustomRoleType, UserControllerType, UserType } from '../validators';
+import type { CustomRoleType, UserType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
-
-const UserController = {
-  hibiz: {
-    type: Boolean,
-    required: false,
-  },
-  dish: {
-    type: Boolean,
-    required: false,
-  },
-  staff: {
-    type: Boolean,
-    required: false,
-  },
-  loyalty: {
-    type: Boolean,
-    required: false,
-  },
-  sale: {
-    type: Boolean,
-    required: false,
-  },
-  reports: {
-    type: Boolean,
-    required: false,
-  },
-  zones_table: {
-    type: Boolean,
-    required: false,
-  },
-};
-
-const userController = new mongoose.Schema<UserControllerType>(UserController);
 
 const CustomRole = {
   businessId: {
@@ -41,16 +8,8 @@ const CustomRole = {
     required: true,
     ref: 'Business',
   },
-  customRoleId: {
-    type: ObjectId,
-    required: true,
-    ref: 'Role',
-  },
-  role: {
-    type: String,
-  },
-  accessControl: {
-    type: userController,
+  permissions: {
+    type: [String],
     default: {},
   },
   bookMark: {
@@ -59,14 +18,12 @@ const CustomRole = {
   },
 };
 
-const customRoleSchema = new mongoose.Schema<CustomRoleType>(CustomRole);
-
 const userSchema = new mongoose.Schema<UserType>(
   {
     name: {
       type: String,
       required: false,
-      default: '',
+      default: true,
     },
     email: {
       type: String,
@@ -78,7 +35,7 @@ const userSchema = new mongoose.Schema<UserType>(
       unique: true,
     },
     customRole: {
-      type: [customRoleSchema],
+      type: [],
       required: false,
     },
     password: {
