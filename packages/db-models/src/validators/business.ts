@@ -1,45 +1,31 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 export const BusinessSchema = z.object({
-  businessName: z.string(),
-  registeredName: z.string(),
-  businessType: z.string(),
-  gstRegistered: z.boolean(),
-  multipleOutlets: z.boolean(),
-  customLink: z.string(),
-  logo: z.string(),
-  address: z.string().optional(),
-  staff: z.array(z.string()).optional(),
+  businessName: z.string().max(50),
+  registeredName: z.string().max(50).optional(),
+  businessType: z.enum(['FOOD', 'OTHER']),
+  gstRegistered: z.boolean().default(false).optional(),
+  multipleOutlets: z.boolean().default(false).optional(),
+  parent_business_id: ObjectIdSchema.optional(),
+  customLink: z.string().max(30),
+  staffIds: z.array(ObjectIdSchema),
   gstNumber: z.string().optional(),
   fssaiLicenseNumber: z.string().optional(),
   status: z.boolean().optional(),
-  likes: z.array(z.string()).optional(),
-  wallpaper: z.string().optional(),
-  tier: z.string().optional(),
-  expiry: z.coerce.number().optional(),
-  open: z.string().optional(),
-  close: z.string().optional(),
-  isHasSetting: z.boolean().optional(),
-  isHasDishData: z.boolean().optional(),
-  hikitchen: z.boolean().optional(),
-  hitable: z.boolean().optional(),
-  hipeople: z.boolean().optional(),
-  hibiz: z.boolean().optional(),
-  kotPrinter: z.boolean().optional(),
-  serviceCharge: z.boolean().optional(),
-  serviceChargePercentage: z.coerce.number().optional(),
-  serviceChargeRemovalPass: z.coerce.number().optional(),
-  serviceControl: z.record(z.any()).optional(),
-  ownerPhone: z.coerce.number().optional(),
-  takeAwayName: z.string().optional(),
-  loyalty: z.boolean().optional(),
-  isHasGst: z.boolean().optional(),
-  gstPercentage: z.coerce.number().optional(),
-  isPaymentIntegrated: z.boolean().optional(),
-  withPopCorn: z.boolean().optional(),
-  tags: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  nameLogo: z.string().optional(),
+  withPopCorn: z.boolean().default(false).optional(),
+  cloneParentBusinessData: z.boolean().default(false).optional(),
+  exploreLayout: z.enum(['BUTTER', 'SUNFLOWER']).optional(),
+  menuLayout: z.enum(['MAIN_CATEGORY', 'MAIN_AND_SUB_CATEGORY']).optional(),
+  primaryColor: z.string().max(30).optional(),
+  secondaryColor: z.string().max(30).optional(),
 });
 
 export type BusinessType = z.infer<typeof BusinessSchema>;

@@ -30,9 +30,9 @@ const envSchema = z.object({
   //   NOTIFICATION_QUEUE: z.string(),
 
   // ** REDIS
-  REDIS_URL: z.string(),
-  REDIS_PASSWORD: z.string(),
-  REDIS_PORT: z.string(),
+  // REDIS_URL: z.string(),
+  // REDIS_PASSWORD: z.string(),
+  // REDIS_PORT: z.string(),
 
   // ** GENERAL
   PORT: z.string(),

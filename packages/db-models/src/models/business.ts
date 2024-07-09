@@ -1,44 +1,41 @@
 import type { Model } from 'mongoose';
 import mongoose from 'mongoose';
 import type { BusinessType } from '../validators';
-
+const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
     businessName: {
       type: String,
       required: true,
     },
-    registeredName: {
-      type: String,
-      required: true,
-    },
+
     businessType: {
       type: String,
+      enum: ['FOOD', 'OTHER'],
+
       required: true,
     },
-    gstRegistered: {
-      type: Boolean,
-      required: true,
-    },
+
     multipleOutlets: {
       type: Boolean,
       required: true,
+      default: false,
+    },
+    parent_business_id: {
+      type: ObjectId,
+      required: false,
+      ref: 'Business',
     },
     customLink: {
       type: String,
       required: true,
+      unique: true,
     },
-    logo: {
-      type: String,
+
+    staffIds: {
+      type: [ObjectId],
       required: true,
-    },
-    address: {
-      type: String,
-      required: false,
-    },
-    staff: {
-      type: [String],
-      required: false,
+      ref: 'User',
     },
     gstNumber: {
       type: String,
@@ -55,108 +52,30 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: false,
       default: false,
     },
-    likes: {
-      type: [String],
-      required: false,
-      default: [],
-    },
-    wallpaper: {
-      type: String,
-      required: false,
-      default: '',
-    },
-    tier: {
-      type: String,
-      required: false,
-    },
-    expiry: {
-      type: Number,
-      required: false,
-    },
-    open: {
-      type: String,
-      default: 0,
-    },
-    close: {
-      type: String,
-      default: 0,
-    },
-    isHasSetting: {
-      type: Boolean,
-      default: false,
-    },
-    isHasDishData: {
-      type: Boolean,
-      default: false,
-    },
-    hikitchen: {
-      type: Boolean,
-      default: false,
-    },
-    hitable: {
-      type: Boolean,
-      default: false,
-    },
-    hipeople: {
-      type: Boolean,
-      default: false,
-    },
-    hibiz: {
-      type: Boolean,
-      default: false,
-    },
-    kotPrinter: {
-      type: Boolean,
-      default: false,
-    },
-    serviceChargePercentage: {
-      type: Number,
-    },
-    serviceChargeRemovalPass: {
-      type: Number,
-    },
-    serviceCharge: {
-      type: Boolean,
-      default: false,
-    },
-    serviceControl: {
-      type: Object,
-      default: {},
-    },
-    ownerPhone: {
-      type: Number,
-    },
-    takeAwayName: {
-      type: String,
-      default: '',
-    },
-    loyalty: {
-      type: Boolean,
-      default: false,
-    },
-    isHasGst: {
-      type: Boolean,
-      default: true,
-    },
-    gstPercentage: {
-      type: Number,
-      default: 0.05,
-    },
-    isPaymentIntegrated: {
-      type: Boolean,
-      default: false,
-    },
+
     withPopCorn: {
       type: Boolean,
       default: false,
     },
-    tags: {
-      type: [String],
-      default: [],
+    cloneParentBusinessData: {
+      type: Boolean,
+      default: false,
     },
-    description: {
+
+    exploreLayout: {
       type: String,
-      default: '',
+      enum: ['BUTTER', 'SUNFLOWER'],
+      required: false,
+    },
+    menuLayout: {
+      type: String,
+      enum: ['MAIN_CATEGORY', 'MAIN_AND_SUB_CATEGORY'],
+    },
+    primaryColor: {
+      type: String,
+    },
+    secondaryColor: {
+      type: String,
     },
   },
   {

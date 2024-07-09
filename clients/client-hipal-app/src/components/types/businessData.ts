@@ -2,6 +2,7 @@ import type { ICart } from "@/components/store/useCart"
 import type { ILoyaltySetting } from "../store/useLoyaltyData"
 
 export interface IBiz {
+	email: string;
 	businessName: string;
 	registeredName: string;
 	businessType: string;

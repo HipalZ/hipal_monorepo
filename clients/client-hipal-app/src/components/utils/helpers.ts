@@ -107,17 +107,14 @@ export function timestampToDateTime(timestamp: number): string {
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
 
-export const calculateReward = (
-  exist: number,
-  reward: number,
-  limit: number,
-) => {
-  console.log("exist", exist, "reward", reward, "limit", limit);
-  let total = exist + reward;
 
-  const sum = Math.min(total, limit);
-  const finalReward = Math.round(Number(sum - exist));
-  return { finalReward, curentBalance: sum };
+export const calculateReward = (exist: number, reward: number, limit: number) => {
+	console.log('exist', exist, 'reward', reward, 'limit', limit);
+	let total = exist + reward;
+
+	const sum = Math.min(total, limit);
+	const finalReward = Number(sum - exist)
+	return { finalReward, curentBalance: sum };
 };
 
 interface InputObject {

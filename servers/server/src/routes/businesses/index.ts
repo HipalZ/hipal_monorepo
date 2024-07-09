@@ -1,124 +1,211 @@
 // books.ts
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
 import type { BusinessType } from '@hi/db-models/src/validators';
-import { BusinessSchema, paramsSchema } from '@hi/db-models/src/validators';
+import { BusinessSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 //@ts-ignore
 import { z } from 'zod';
+import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
 const businessesRouter = new Hono()
-  .post('/', zValidator('json', BusinessSchema), async (c) => {
-    const requestData = await c.req.json();
-    const {
-      likes,
-      wallpaper,
-      businessName,
-      registeredName,
-      businessType,
-      gstRegistered,
-      multipleOutlets,
-      customLink,
-      logo,
-      address,
-      gstNumber,
-      fssaiLicenseNumber,
-      open,
-      close,
-      isHasSetting,
-      isHasDishData,
-      hikitchen,
-      hitable,
-      hipeople,
-      hibiz,
-      kotPrinter,
-      serviceCharge,
-      serviceChargeRemovalPass,
-      serviceChargePercentage,
-      serviceControl,
-      ownerPhone,
-      takeAwayName,
-      loyalty,
-      isHasGst,
-      gstPercentage,
-      isPaymentIntegrated,
-      withPopCorn,
-      tags,
-      description,
-    } = requestData;
+  .post(
+    '/',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
-    const business = await Business.create({
-      likes,
-      wallpaper,
-      businessName,
-      registeredName,
-      businessType,
-      gstRegistered,
-      multipleOutlets,
-      customLink,
-      logo,
-      address,
-      gstNumber,
-      fssaiLicenseNumber,
-      status: false,
-      tier: 'ON THE HOUSE',
-      open,
-      close,
-      isHasSetting,
-      isHasDishData,
-      hikitchen,
-      hitable,
-      hipeople,
-      hibiz,
-      kotPrinter,
-      serviceCharge,
-      serviceChargePercentage,
-      serviceChargeRemovalPass,
-      serviceControl,
-      takeAwayName,
-      loyalty,
-      isHasGst,
-      gstPercentage,
-      isPaymentIntegrated,
-      withPopCorn,
-      tags,
-      description,
-    });
-    await business.save();
+    zValidator('json', BusinessSchema),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const requestData = await c.req.json();
+      const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
+      if (isCustomLinkExist) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'customLink already exist',
+          },
+          409,
+        );
+      }
+      const business = await Business.create(requestData);
+      if (!business) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'business not created !',
+        });
+      }
 
-    return c.json({
-      data: business._id,
-      status: 200,
-      error: false,
-    });
-  })
-  .get('/:id', zValidator('param', BusinessSchema), zValidator('query', BusinessSchema), async (c) => {
-    const { id } = c.req.param();
-    const { customLink, nameLogo } = c.req.query();
+      return c.json({
+        data: business,
+        status: 200,
+        err: false,
+      });
+    },
+  )
+  .post(
+    '/:customLink',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
-    if (customLink) {
-      const existingBusiness = await Business.findOne({ customLink: id });
+    zValidator(
+      'param',
+      z.object({
+        customLink: z.string(),
+      }),
+    ),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      let { customLink } = c.req.param();
+      customLink = customLink.trim();
+
+      const reservedDomains = ['hipal', 'hipalz', 'hiclient', 'pro.hipal', 'hitable', 'hibiz', 'biz'];
+      const validDomainRegex = /^[a-z0-9]+$/;
+
+      // Check if the custom link matches the valid domain regex
+      if (!validDomainRegex.test(customLink)) {
+        return c.json(
+          {
+            err: true,
+            data: { exist: false },
+            message: 'Invalid domain link format',
+          },
+          400,
+        );
+      }
+
+      // Check if the custom link is in the reserved domains
+      if (reservedDomains.includes(customLink)) {
+        return c.json(
+          {
+            err: true,
+            data: { exist: false },
+            message: 'Custom link is reserved',
+          },
+          400,
+        );
+      }
+
+      // Check if the custom link already exists in the database
+      const CustomLinkExist = await Business.findOne({ customLink: customLink });
 
       return c.json({
         err: false,
-        message: 'Business not found',
-        data: !!existingBusiness,
+        data: { exist: !!CustomLinkExist },
+        message: 'fetched',
       });
-    }
+    },
+  )
+  .post(
+    '/:businessId/role',
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
-    let existingBusiness: BusinessType | BusinessType[] | null = null;
+    zValidator(
+      'param',
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      'json',
+      z.object({
+        name: z.enum([ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_MANAGER, ClientRoles.OPERATOR, ClientRoles.RESTAURANT_FLOOR_MANAGER]),
+      }),
+    ),
+    // zValidator('header', TokenValidator),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { name } = await c.req.json();
+      const alreadyExist = await Role.findOne({ name });
+      if (alreadyExist) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'already exist',
+          },
+          409,
+        );
+      }
+      const role = await Role.create({
+        businessId: businessId,
+        name,
+      });
 
-    if (nameLogo) {
-      existingBusiness = await Business.findById(id).select('logo businessName');
-    } else {
-      existingBusiness = await Business.findById(id);
-    }
+      return c.json({
+        data: role,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  .put(
+    '/:businessId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
-    return c.json({
-      data: existingBusiness,
-      status: 200,
-      err: false,
-    });
-  })
+    zValidator(
+      'param',
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator('json', BusinessSchema.partial()),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+
+      const updateBusiness = await Business.findByIdAndUpdate(businessId, requestData, { new: true });
+      if (!updateBusiness) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'business not found ',
+          },
+          404,
+        );
+      }
+      return c.json({
+        err: false,
+        data: updateBusiness,
+        message: 'update successfully',
+      });
+    },
+  )
+
+  // .get('/:id', zValidator('param', BusinessSchema), zValidator('query', BusinessSchema), async (c) => {
+  //   const { id } = c.req.param();
+  //   const { customLink, nameLogo } = c.req.query();
+
+  //   if (customLink) {
+  //     const existingBusiness = await Business.findOne({ customLink: id });
+
+  //     return c.json({
+  //       err: false,
+  //       message: 'Business not found',
+  //       data: !!existingBusiness,
+  //     });
+  //   }
+
+  //   let existingBusiness: BusinessType | BusinessType[] | null = null;
+
+  //   if (nameLogo) {
+  //     existingBusiness = await Business.findById(id).select('logo businessName');
+  //   } else {
+  //     existingBusiness = await Business.findById(id);
+  //   }
+
+  //   return c.json({
+  //     data: existingBusiness,
+  //     status: 200,
+  //     err: false,
+  //   });
+  // })
   .get(
     '/',
     zValidator(
@@ -187,18 +274,32 @@ const businessesRouter = new Hono()
       });
     },
   )
-  // .get('/:id/users', async (c) => {
-  //   const { id } = c.req.param();
-  //   const existingRoles = await Role.find({
-  //     businessId: id,
-  //   });
 
-  //   return c.json({
-  //     data: existingRoles,
-  //     status: 200,
-  //     error: false,
-  //   });
-  // })
+  .get(
+    '/:businessId/users',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
+    zValidator(
+      'param',
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const existingRoles = await Role.find({
+        businessId: businessId,
+      });
+
+      return c.json({
+        data: existingRoles,
+        status: 200,
+        error: false,
+      });
+    },
+  )
   .get('/get/allbusiness', async (c) => {
     const existingBusinesses = await Business.find({});
 

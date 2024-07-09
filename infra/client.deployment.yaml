@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client_hitable_test
+  name: client-hitable-test
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client_hitable_test
+      app: client-hitable-test
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: client_hitable_test
+        app: client-hitable-test
     spec:
       containers:
-        - name: client_hitable_test
-          image: registry.digitalocean.com/hipalz-repo/client_hitable_test:latest
+        - name: client-hitable-test
+          image: registry.digitalocean.com/hipalz-repo/client-hitable-test:latest
           imagePullPolicy: Always
           ports:
             - name: http
@@ -35,23 +35,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client_hibiz_test
+  name: client-hibiz-test
   namespace: hipalz
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client_hibiz_test
+      app: client-hibiz-test
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: client_hibiz_test
+        app: client-hibiz-test
     spec:
       containers:
-        - name: client_hibiz_test
-          image: registry.digitalocean.com/hipalz-repo/client_hibiz_test:latest
+        - name: client-hibiz-test
+          image: registry.digitalocean.com/hipalz-repo/client-hibiz-test:latest
           imagePullPolicy: Always
           ports:
             - name: http

@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { UserRewardHistoryType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { UserRewardHistoryType } from '../validators';
 
 const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   {
@@ -17,7 +17,6 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     status: String,
     date: {
       type: Number,
-      default: Date.now(),
     },
     businessName: {
       type: String,

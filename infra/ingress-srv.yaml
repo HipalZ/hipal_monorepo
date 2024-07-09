@@ -6,18 +6,16 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: 'true'
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    cert-manager.io/issuer: letsencrypt-nginx
+    cert-manager.io/issuer: letsencrypt-nginx-wcard
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - dev.api.hipalz.com
-        - dev.hiclient.hipalz.com
-        - dev.hibiz.hipalz.com
-      secretName: letsencrypt-nginx
+        - api.test.hipalz.com
+      secretName: test.hipalz.com
   rules:
-    - host: dev.api.hipalz.com
+    - host: api.test.hipalz.com
       http:
         paths:
           - path: /
@@ -28,24 +26,24 @@ spec:
                 port:
                   number: 80
 
-    - host: dev.hiclient.hipalz.com
+    - host: table.test.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client_hitable_test
+                name: client-hitable-test
                 port:
                   number: 80
 
-    - host: dev.hibiz.hipalz.com
+    - host: biz.test.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client_hibiz_test
+                name: client-hibiz-test
                 port:
                   number: 80

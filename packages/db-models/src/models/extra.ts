@@ -1,6 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { ExtraType,ItemsType} from '../validators';
-
+import mongoose, { type Model } from 'mongoose';
+import type { ExtraType, ItemsType } from '../validators';
 
 const itemSchema = new mongoose.Schema<ItemsType>({
   name: { type: String, required: true },

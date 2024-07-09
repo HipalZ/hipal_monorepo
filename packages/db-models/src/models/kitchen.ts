@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { KitchenType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { KitchenType } from '../validators';
 
 const kitchenSchema = new mongoose.Schema<KitchenType>(
   {

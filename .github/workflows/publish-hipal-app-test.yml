@@ -6,7 +6,7 @@ env:
 
 on:
   push:
-    branches: ['prod']
+    branches: ['testing']
     paths:
       - 'package.json'
       - '*'

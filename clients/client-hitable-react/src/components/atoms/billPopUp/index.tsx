@@ -1,17 +1,17 @@
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
+import { useUserToken } from '@/components/store/useTokenStore';
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
+import { apiRpc } from '@hi/common';
 import { type ChangeEvent, memo, useCallback, useState } from 'react';
 import { FiCopy } from 'react-icons/fi';
 import { MdOutlineCall } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../loadingSpinner';
 import PopUp from '../popUp';
-import { apiRpc } from '@hi/common';
-import { useUserToken } from '@/components/store/useTokenStore';
 
 const BillPopUpMemo = () => {
-  const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore((s)=>({
+  const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     viewData: s.viewData,
     removeOfflineAlert: s.removeOfflineAlert,
@@ -22,7 +22,7 @@ const BillPopUpMemo = () => {
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState('');
-  const captainData = useHiClientZ((s)=>s.captainData);
+  const captainData = useHiClientZ((s) => s.captainData);
 
   const copyText = useCallback((id: string, value?: string) => {
     let text: string;
@@ -57,10 +57,10 @@ const BillPopUpMemo = () => {
     await apiRpc.payments[':pid'].rejectOrder[':alertId'].$put({
       header: {
         x_access_token: accessToken,
-        x_refresh_token: refreshToken
+        x_refresh_token: refreshToken,
       },
       json: {
-        waiterName: captainData?.name
+        waiterName: captainData?.name,
       },
       param: { alertId: id },
     });
@@ -85,8 +85,8 @@ const BillPopUpMemo = () => {
       },
       header: {
         x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
+        x_refresh_token: refreshToken,
+      },
     });
     if (res.status === 200) {
       toast.success('order confirm successfully');
@@ -94,11 +94,14 @@ const BillPopUpMemo = () => {
     }
   };
 
-  const handleConfirm = useCallback((id: string, comment: string) => {
-    handleConfirmAlert(id, comment);
-    removeOfflineAlert(id);
-    setClickViewMore(!clickViewMore);
-  },[clickViewMore]);
+  const handleConfirm = useCallback(
+    (id: string, comment: string) => {
+      handleConfirmAlert(id, comment);
+      removeOfflineAlert(id);
+      setClickViewMore(!clickViewMore);
+    },
+    [clickViewMore],
+  );
 
   const hideMiddleNumbers = useCallback((phone: string) => {
     if (phone.length <= 2) return phone;
@@ -116,7 +119,7 @@ const BillPopUpMemo = () => {
 
   const handleClosePopup = useCallback(() => {
     setClickViewMore(!clickViewMore);
-  },[clickViewMore])
+  }, [clickViewMore]);
 
   return (
     <PopUp show={clickViewMore} status={viewData?.alertType} onClose={handleClosePopup}>
@@ -143,8 +146,8 @@ const BillPopUpMemo = () => {
             <p>: {viewData?.order_id?.claimedCoins}</p>
           </div>
           <div className="mx-6 mb-2 grid grid-cols-2">
-            <h1>Bill before discount</h1>
-            <p>: ₹ {viewData?.order_id?.billValue - viewData?.order_id?.discount}</p>
+            <h1>Bill after discount</h1>
+            <p>: ₹ {viewData?.order_id?.billValue - viewData?.order_id?.claimedCoins}</p>
           </div>
           <div className="mx-6 mb-2 grid grid-cols-2">
             <h1>Tips</h1>

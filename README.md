@@ -65,8 +65,6 @@ search resolved bug
 
 color solved
 
-
-
 changes ui
 
 routes changed from r to customlink
@@ -74,9 +72,8 @@ routes changed from r to customlink
 home icon change and bookmark back button remove
 //
 
-
 popo
-loaders payment 
-loaders payment 
+loaders payment
+loaders payment
 create order offline toast
 optimized code
