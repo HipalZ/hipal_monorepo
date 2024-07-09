@@ -4,6 +4,7 @@ import type { AppType } from '@hipal/server';
 import { hc } from 'hono/client';
 import type { ReactNode } from 'react';
 import { handleCatchErrors } from './error-handler';
+import { useUserToken } from './useUserToken';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -17,4 +18,7 @@ const queryClient = new QueryClient({
 export const RpcProvider = ({ children }: { children: ReactNode }) => {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 };
+const { accessToken, refreshToken } = useUserToken.getState();
+console.log('accessToken', accessToken);
+console.log('refreshToken', refreshToken);
 export const apiRpc = hc<AppType>('http://localhost:4500', {});

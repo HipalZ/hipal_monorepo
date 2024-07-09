@@ -1,4 +1,6 @@
 import PlaceHolder from "@/assets/businessControl.png"
+import ExploreIcon from '@/assets/hisite/exploreIcon.png'
+import MenuIcon from '@/assets/hisite/menuIcon.png'
 export const colors = [
 	{
 		primaryColor: "#FFF7F1",
@@ -61,5 +63,28 @@ export const businessCtrlServices = [
 			"Menu manager",
 		]
 	},
-	
+	{
+		image: PlaceHolder,
+		Title: "Hi Sites",
+		tags: [
+			"Explore Page",
+			"Business Info",
+		],
+		navigation: "hisite",
+	},
+]
+
+export const hisiteServices = [
+	{	
+		_id:1,
+		title:"Explore Page",
+		description:"Manage how your business look",
+		icon: ExploreIcon,
+		navigateTo: "explorePage"
+	},{
+		_id:2,
+		title:'Menu Page',
+		description:'Manage your menu items',
+		icon:MenuIcon
+	}
 ]

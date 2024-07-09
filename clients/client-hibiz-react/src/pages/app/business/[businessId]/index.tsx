@@ -19,7 +19,7 @@ const Business = () => {
   const handleClick = useCallback(
     (text: string) => {
       setSelectedIcon(text);
-      const urlFriendlyText = text.toLowerCase().replace(/ /g, "");
+      const urlFriendlyText = text?.toLowerCase().replace(/ /g, "");
       startTransition(() => {
         navigate(`/app/business/${businessId}/${urlFriendlyText}`, {
           replace: true,
@@ -31,7 +31,7 @@ const Business = () => {
 
   const handleBack = useCallback(() => {
     startTransition(() => {
-      navigate(`/app/business/`);
+      navigate("/app/business/");
     });
   }, [navigate]);
 
@@ -40,6 +40,7 @@ const Business = () => {
       navigate(`/app/business/${businessId}/businessControl`);
     });
   }, [navigate]);
+  
   return (
     <main className="relative">
       <section className=" linear_gradient_background">

@@ -7,25 +7,32 @@ import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { businessCtrlServices } from "./businessCtrlStore";
 
 const BusinessControl = () => {
-	const  setStep  = useBusinessCtrl(state=>state.setStep);
+	const setStep = useBusinessCtrl(state => state.setStep);
 	const navigate = useNavigate();
 	const { businessId } = useParams<{ businessId: string }>();
-	const goToNextStep = useCallback((step:number) => {
+	const goToNextStep = useCallback((step: number) => {
 		setStep(step);
 	}, []);
 
 	const navigateService = useCallback((service: string) => {
-		startTransition(() => {
-			navigate(routePathsWithId[PAGE_TYPES.STAFF](businessId || ""))
-		})
+		if(service === 'staff'){
+			startTransition(() => {
+				navigate(routePathsWithId[PAGE_TYPES.STAFF](businessId || ""))
+			})
+		}else if(service === 'hisite'){
+			startTransition(() => {
+				navigate(routePathsWithId[PAGE_TYPES.HISITE](businessId || ""))
+			})
+		}
 	}, [])
+	
 	return (
 		<><article className="card-background">
 			<figcaption className="card">
 				<h4>Set the theme</h4>
 				<h6>Set your layout & themes</h6>
 				<button type="button"
-					onClick={()=>goToNextStep(1)}
+					onClick={() => goToNextStep(1)}
 					className="w-16 px-4 py-1 mt-2 text-white bg-black rounded-3xl"
 				>
 					Set
@@ -35,17 +42,16 @@ const BusinessControl = () => {
 				<h3>Set the theme</h3>
 				<h4>Set your layout & themes</h4>
 				<button type="button"
-					onClick={()=>goToNextStep(1)}
+					onClick={() => goToNextStep(1)}
 					className="w-24 px-6 py-1 mt-6 text-xl text-white bg-black rounded-3xl"
 				>
 					Set
 				</button>
 			</figcaption>
-
 			<img className="image-class" src={Img} alt="Avatar" />
 		</article>
 			<section className="px-6 pt-6 text-xl font-semibold">
-				<h3 className="">Your Features</h3>
+				<h3>Your Features</h3>
 				<div className="business_control_services_grid">
 					{
 						businessCtrlServices.map((service) => (
@@ -73,9 +79,7 @@ const BusinessControl = () => {
 								</figcaption>
 							</article>
 						))}
-
 				</div>
-
 			</section>
 		</>
 	);

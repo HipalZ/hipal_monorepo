@@ -9,6 +9,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import toast from "react-hot-toast";
 import { useUserToken } from "@/components/store/useUserToken";
 import { apiRpc } from "@hi/common";
+import type { ILoginProps } from "@/components/types/businessData";
 
 const Login: React.FC = () => {
   const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));
@@ -40,7 +41,7 @@ const Login: React.FC = () => {
           password: password,
         },
       });
-      const user = await response.json();
+      const user = await response.json() as unknown as {data:ILoginProps, message:string};
       if (response.status === 200) {
         setAccessToken(user.data.accessToken);
         setRefreshToken(user.data.refreshToken);

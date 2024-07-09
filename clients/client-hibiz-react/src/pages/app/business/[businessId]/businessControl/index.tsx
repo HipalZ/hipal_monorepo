@@ -11,7 +11,6 @@ import Hi from '@/assets/svg/hi.svg';
 const ExplorePage = lazy(() => import('@/components/templates/businessForm/explorePage'));
 const MenuPage = lazy(() => import('@/components/templates/businessForm/menu'));
 const Congratulation = lazy(() => import('@/components/templates/signupPage/congratulation'));
-
 const BusinessControl = lazy(() => import('@/components/templates/businessForm/businessControl'));
 const Setting = lazy(() => import('@/components/templates/businessForm/setting'));
 

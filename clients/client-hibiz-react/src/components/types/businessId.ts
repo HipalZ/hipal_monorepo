@@ -260,11 +260,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
         description: "Activate after Hi-site",
         navigateTo:"staff"
     },
-    // {
-    //     image: Love,
-    //     text: "Hi-site",
-    //     description: "Activate after Hi-site"
-    // },
+    {
+        image: Love,
+        text: "Hi-site",
+        description: "Activate after Hi-site",
+        navigateTo:"hiSite"
+    },
     // {
     //     image: Love,
     //     text: "Settings",

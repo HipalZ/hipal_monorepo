@@ -1,3 +1,5 @@
+import { User } from "../store/useOwnerLogin";
+
 export interface CustomRole {
   businessId: string;
   customRoleId: string;
@@ -167,4 +169,10 @@ export interface NavigatorWithNetworkInformation extends Navigator {
   connection?: NetworkInformation;
   mozConnection?: NetworkInformation;
   webkitConnection?: NetworkInformation;
+}
+
+export interface ILoginProps{
+  accessToken:string;
+  refreshToken:string;
+  existingUser:User;
 }
