@@ -1,6 +1,5 @@
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes"
 import SubTypes from "@/components/molecules/categoryTypes/subTypes"
-import { useDishTypes } from "@/components/store/useDishTypes"
 import type { ICategory } from "@/components/types/businessData"
 import { memo } from "react"
 

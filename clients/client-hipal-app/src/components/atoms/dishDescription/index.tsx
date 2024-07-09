@@ -33,12 +33,13 @@ function DishData({
 						leaveTo="opacity-0 -translate-y-full"
 					>
 						<DialogPanel className="relative w-full max-w-md shadow-md bg-base-100 rounded-t-2xl">
-							<div
+							<button
+							type="button"
 								onClick={() => onClose()}
-								className="absolute z-50 flex items-center justify-center transform -translate-x-[40%] -translate-y-1/2 on_active_bounce -top-10 left-1/2"
+								className="absolute z-50 flex items-center justify-center transform -translate-x-[50%] -translate-y-1/2 on_active_bounce -top-12 left-[45%]"
 							>
 								<HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer " />
-							</div>
+							</button>
 							{children}
 						</DialogPanel>
 					</TransitionChild>

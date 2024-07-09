@@ -3,7 +3,7 @@ import WallpaperCarousel from "@/components/atoms/backgroundCarousel"
 import { isEmpty } from "lodash-es"
 import NotAvailable from "../notAvailable"
 import PlaceholderImg from "../placeholder"
-import { IDish } from "@/components/types/businessData"
+import type { IDish } from "@/components/types/businessData"
 import { memo } from "react"
 
 function DishPopup({ dishData }:{dishData: IDish}) {

@@ -204,12 +204,12 @@ export interface IExtraItem {
 	id: string
 	ExtraType?: string
 	name: string
-	price: string
+	price: number
 }
 
 export interface IPortion {
 	name: string
-	price: string
+	price: number
 	discount: string
 	default: boolean | string
 }
