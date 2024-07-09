@@ -4,7 +4,7 @@ import type { BusinessType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
-    businessName: {
+    name: {
       type: String,
       required: true,
     },
@@ -17,15 +17,12 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
 
     multipleOutlets: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    parent_business_id: {
-      type: ObjectId,
+      type: [ObjectId],
       required: false,
+
       ref: 'Business',
     },
+
     customLink: {
       type: String,
       required: true,
@@ -37,30 +34,30 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: true,
       ref: 'User',
     },
-    gstNumber: {
+    gst: {
       type: String,
       default: '',
       required: false,
     },
-    fssaiLicenseNumber: {
+    fssai: {
       type: String,
       default: '',
       required: false,
     },
-    status: {
+    isActive: {
       type: Boolean,
       required: false,
       default: false,
     },
 
-    withPopCorn: {
-      type: Boolean,
-      default: false,
-    },
-    cloneParentBusinessData: {
-      type: Boolean,
-      default: false,
-    },
+    // withPopCorn: {
+    //   type: Boolean,
+    //   default: false,
+    // },
+    // cloneParentBusinessData: {
+    //   type: Boolean,
+    //   default: false,
+    // },
 
     exploreLayout: {
       type: String,

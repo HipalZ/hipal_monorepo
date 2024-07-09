@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { OrderType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { OrderType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const orderSchema = new mongoose.Schema<OrderType>(

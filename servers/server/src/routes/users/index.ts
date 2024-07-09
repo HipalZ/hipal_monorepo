@@ -450,6 +450,7 @@ const usersRouter = new Hono()
       err: false,
     });
   })
+  //TODO: ADD PERMISSION DONE
   .post(
     '/addStaff',
     authTokenValidator,

@@ -18,10 +18,10 @@ export const authTokenValidator = async (c: Context, next: Next) => {
 
   let decodedToken: DecodedToken | undefined;
 
-  jwt.verify(accessToken || 'randomtoken', Bun.env.JWT_SECRET as string, (err: Error, decoded: JwtPayload) => {
+  jwt.verify(accessToken || 'randomtoken', Bun.env.JWT_SECRET, (err: Error, decoded: JwtPayload) => {
     if (err && refreshToken) {
       try {
-        decodedToken = jwt.verify(refreshToken, Bun.env.JWT_SECRET as string) as DecodedToken;
+        decodedToken = jwt.verify(refreshToken, Bun.env.JWT_SECRET) as DecodedToken;
       } catch (refreshErr) {
         return c.json({ status: false, error: true, message: 'Invalid Token!' }, 401);
       }

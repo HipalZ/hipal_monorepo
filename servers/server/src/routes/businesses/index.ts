@@ -11,8 +11,8 @@ import { authTokenValidator } from '../../../middleware/tokenValidator';
 const businessesRouter = new Hono()
   .post(
     '/',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
     zValidator('json', BusinessSchema),
     zValidator('header', TokenValidator),
@@ -63,8 +63,8 @@ const businessesRouter = new Hono()
 
       const reservedDomains = ['hipal', 'hipalz', 'hiclient', 'pro.hipal', 'hitable', 'hibiz', 'biz'];
       const validDomainRegex = /^[a-z0-9]+$/;
+      //TODO: BADWORD
 
-      // Check if the custom link matches the valid domain regex
       if (!validDomainRegex.test(customLink)) {
         return c.json(
           {
@@ -76,7 +76,6 @@ const businessesRouter = new Hono()
         );
       }
 
-      // Check if the custom link is in the reserved domains
       if (reservedDomains.includes(customLink)) {
         return c.json(
           {
@@ -90,7 +89,7 @@ const businessesRouter = new Hono()
 
       // Check if the custom link already exists in the database
       const CustomLinkExist = await Business.findOne({ customLink: customLink });
-
+      //TODO : SEPERATE FUNCTION RESPONSE
       return c.json({
         err: false,
         data: { exist: !!CustomLinkExist },
