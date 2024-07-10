@@ -1,5 +1,6 @@
 export * from './admin';
 export * from './alert';
+export * from './appConfig';
 export * from './business';
 export * from './category';
 export * from './dish';

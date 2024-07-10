@@ -214,7 +214,7 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 };
 const paymentsRouter = new Hono()
   .post(
-    '/createOrder',
+    '/createOrder/:mer',
     authTokenValidator,
     requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
@@ -365,7 +365,6 @@ const paymentsRouter = new Hono()
     zValidator('header', TokenValidator),
 
     async (c) => {
-      console.log('ddddddddddddd');
       const requestData = await c.req.json();
       const { response } = requestData;
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
@@ -380,7 +379,7 @@ const paymentsRouter = new Hono()
       return c.json({ err: true, message: 'Payment is not valid' }, 400);
     },
   )
-  .post('/razorpay-webhook', async (c) => {
+  .post('/razorpay-webhook/:murchent', async (c) => {
     //@ts-ignore
     const res = await runInTransaction(async (session: ClientSession) => {
       console.log('yaha tak');

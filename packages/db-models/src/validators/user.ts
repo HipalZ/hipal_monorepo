@@ -10,11 +10,16 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
+export const subPermissions = z.object({
+  title: z.string().optional(),
+  permissions: z.array(string()),
+});
+
 export const CustomRole = z.object({
   businessId: ObjectIdSchema,
   role: z.string(),
 
-  permissions: z.array(string()),
+  permissions: z.array(subPermissions).optional(),
   bookMark: z.boolean().optional(),
 });
 

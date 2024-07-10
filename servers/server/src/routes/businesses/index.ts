@@ -1,7 +1,14 @@
 // books.ts
-import { Business, LoyaltySettings, Role } from '@hi/db-models';
+import { Business, LoyaltySettings, Permissions, Role } from '@hi/db-models';
 import type { BusinessType } from '@hi/db-models/src/validators';
-import { BusinessSchema, paramsSchema, TokenValidator, UpdateBusinessSchema } from '@hi/db-models/src/validators';
+import {
+  BusinessSchema,
+  paramsSchema,
+  permissionSchema,
+  permissionsSchema,
+  TokenValidator,
+  UpdateBusinessSchema,
+} from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 //@ts-ignore
@@ -35,6 +42,31 @@ const businessesRouter = new Hono()
           err: true,
           data: {},
           message: 'business not created !',
+        });
+      }
+
+      return c.json({
+        data: business,
+        status: 200,
+        err: false,
+      });
+    },
+  )
+  .post(
+    '/permissions',
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
+    zValidator('json', permissionsSchema),
+    async (c) => {
+      const requestData = await c.req.json();
+
+      const business = await Permissions.create(requestData);
+      if (!business) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'permissions not created !',
         });
       }
 
@@ -211,6 +243,31 @@ const businessesRouter = new Hono()
   //     err: false,
   //   });
   // })
+  .get(
+    '/:businessId/permissions',
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
+    zValidator('param', z.object({ businessId: z.string() })),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const business = await Permissions.findOne({ businessId: businessId });
+      if (!business) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'permissions not created !',
+        });
+      }
+
+      return c.json({
+        data: business,
+        status: 200,
+        err: false,
+      });
+    },
+  )
   .get(
     '/',
     zValidator(

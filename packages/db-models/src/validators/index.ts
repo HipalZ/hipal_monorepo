@@ -1,6 +1,7 @@
 export * from './acceptOrder';
 export * from './admin';
 export * from './alert';
+export * from './appconfig';
 export * from './bill';
 export * from './business';
 export * from './category';
@@ -30,6 +31,7 @@ export * from './settings';
 export * from './staffValidator';
 export * from './table';
 export * from './tempModel';
+export * from './token';
 export * from './urlModel';
 export * from './user';
 export * from './userBill';
@@ -41,5 +43,3 @@ export * from './validate_webhook';
 export * from './waiterKots';
 export * from './waiterPaymentAlert';
 export * from './zone';
-
-export * from './token';

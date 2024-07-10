@@ -1,7 +1,7 @@
 // books.ts
 import { LoyaltyCoinsInfo, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import type { UserType } from '@hi/db-models/src/validators';
-import { TokenValidator, UserAttrs, ownerLoginValidator, paramsSchema, staffValidator } from '@hi/db-models/src/validators';
+import { TokenValidator, UserAttrs, ownerLoginValidator, paramsSchema, staffValidator, subPermissions } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import axios from 'axios';
 import { Hono } from 'hono';
@@ -473,18 +473,32 @@ const usersRouter = new Hono()
         businessId: z.string(),
         name: z.string().max(30),
         phone: z.string().max(10),
-
-        permissions: z.array(z.string()).optional(),
+        permissions: z
+          .array(
+            z.object({
+              title: z.string(),
+              subPermissions: z
+                .array(
+                  z.object({
+                    subTitle: z.string().optional(),
+                    descriptions: z.string(), // Assuming descriptions should be a string. If it needs to be an array, adjust accordingly.
+                  }),
+                )
+                .optional(),
+            }),
+          )
+          .optional(),
       }),
     ),
     zValidator('header', TokenValidator),
     async (c) => {
       const requestData = await c.req.json();
-      const { name, phone, permissions, businessId } = requestData;
+      const { name, phone, permissions, businessId, role } = requestData;
       const newCustomRole = {
         businessId: businessId,
         permissions: permissions,
         bookMark: true,
+        role: role,
       };
 
       const updateUser = await User.findOneAndUpdate(
@@ -526,12 +540,26 @@ const usersRouter = new Hono()
       'json',
       z
         .object({
-          role: z.string().max(30),
-          phone: z.string().max(10),
+          role: z.string().max(30).optional(),
+          phone: z.string().max(10).optional(),
           password: z.string().optional(),
           businessId: z.string(),
 
-          permissions: z.array(z.string()).optional(),
+          permissions: z
+            .array(
+              z.object({
+                title: z.string(),
+                subPermissions: z
+                  .array(
+                    z.object({
+                      subTitle: z.string().optional(),
+                      descriptions: z.string(), // Assuming descriptions should be a string. If it needs to be an array, adjust accordingly.
+                    }),
+                  )
+                  .optional(),
+              }),
+            )
+            .optional(),
         })
         .partial(),
     ),
