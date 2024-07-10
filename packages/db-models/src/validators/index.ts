@@ -14,6 +14,7 @@ export * from './extra';
 export * from './kitchen';
 export * from './kot';
 export * from './kotPassword';
+export * from './license';
 export * from './loyaltyCoinsInfo';
 export * from './loyaltySetting';
 export * from './order';

@@ -27,6 +27,7 @@ export const BusinessSchema = z.object({
 
 export const UpdateBusinessSchema = z.object({
   name: z.string().min(4).max(50).optional(),
+  staffIds: z.array(ObjectIdSchema).optional(),
 
   businessType: z.enum(['FOOD', 'OTHER']),
   exploreLayout: z.enum(ExploreLayout).optional(),

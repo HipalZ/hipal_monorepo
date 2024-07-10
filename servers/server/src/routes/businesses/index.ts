@@ -316,6 +316,8 @@ const businessesRouter = new Hono()
     async (c) => {
       const { id } = c.req.query();
 
+      console.log('id', id);
+
       const existingBusinesses = await Business.find({
         staffIds: id,
       });
