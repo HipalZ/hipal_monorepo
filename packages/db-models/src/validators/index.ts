@@ -1,7 +1,9 @@
 export * from './acceptOrder';
+export * from './addStaffValidator';
 export * from './admin';
 export * from './alert';
 export * from './appconfig';
+export * from './banner';
 export * from './bill';
 export * from './business';
 export * from './category';
@@ -33,6 +35,7 @@ export * from './staffValidator';
 export * from './table';
 export * from './tempModel';
 export * from './token';
+export * from './uniquelyYours';
 export * from './urlModel';
 export * from './user';
 export * from './userBill';

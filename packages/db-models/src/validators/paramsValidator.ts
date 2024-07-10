@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { z } from 'zod';
+import { UniquelyYours } from '../models';
 
 const objectIdValidation = (value: string) => mongoose.Schema.Types.ObjectId;
 
@@ -18,6 +19,7 @@ export const paramsSchema = z
     from: z.string().optional(),
     to: z.string().optional(),
     customLink: z.string().optional(),
+    UniquelyYours: z.string().optional(),
   })
   .refine(
     (data) => {

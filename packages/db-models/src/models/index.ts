@@ -1,6 +1,7 @@
 export * from './admin';
 export * from './alert';
 export * from './appConfig';
+export * from './banner';
 export * from './business';
 export * from './category';
 export * from './dish';
@@ -25,6 +26,7 @@ export * from './settings';
 export * from './table';
 export * from './tempBill';
 export * from './tempModel';
+export * from './uniquelyYours';
 export * from './urlModel';
 export * from './user';
 export * from './userBill';

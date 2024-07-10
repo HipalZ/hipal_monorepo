@@ -1,5 +1,5 @@
-import mongoose, { Model } from 'mongoose';
-import { TempModelType } from '../validators';
+import mongoose, { type Model } from 'mongoose';
+import type { TempModelType } from '../validators';
 
 const TempModelSchema = new mongoose.Schema<TempModelType>({
   hiCode: {

@@ -15,6 +15,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { respond } from '../../utils/response';
 const businessesRouter = new Hono()
   .post(
     '/',
@@ -45,11 +46,7 @@ const businessesRouter = new Hono()
         });
       }
 
-      return c.json({
-        data: business,
-        status: 200,
-        err: false,
-      });
+      return respond(c, 'business created', false, 201, business);
     },
   )
   .post(
@@ -62,58 +59,29 @@ const businessesRouter = new Hono()
     async (c) => {
       const requestData = await c.req.json();
       const isInfoAlreadyExist = await OutLetInfo.findOne({ businessId: requestData.businessId });
-      if (isInfoAlreadyExist) {
-        return c.json(
-          {
-            err: true,
-            data: {},
-            message: 'outletInfo already exist',
-          },
-          409,
-        );
-      }
-      const outLetInfo = await OutLetInfo.create(requestData);
-      if (!outLetInfo) {
-        return c.json(
-          {
-            err: true,
-            data: {},
-            message: 'outletInfo not created !',
-          },
-          400,
-        );
-      }
 
-      return c.json({
-        data: outLetInfo,
-        status: 200,
-        err: false,
-      });
+      if (isInfoAlreadyExist) return respond(c, 'outletInfo already exists', true, 409, {});
+
+      const outLetInfo = await OutLetInfo.create(requestData);
+      if (!outLetInfo) return respond(c, 'outletInfo not created', true, 400, {});
+
+      return respond(c, 'outletInfo created', false, 201, outLetInfo);
     },
   )
   .post(
     '/permissions',
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
 
     zValidator('json', permissionsSchema),
+    zValidator('header', TokenValidator),
     async (c) => {
       const requestData = await c.req.json();
 
       const business = await Permissions.create(requestData);
-      if (!business) {
-        return c.json({
-          err: true,
-          data: {},
-          message: 'permissions not created !',
-        });
-      }
+      if (!business) respond(c, 'permissions not created', true, 400, {});
 
-      return c.json({
-        data: business,
-        status: 200,
-        err: false,
-      });
+      return respond(c, 'permissions created', false, 201, business);
     },
   )
   .post(
@@ -253,6 +221,29 @@ const businessesRouter = new Hono()
       });
     },
   )
+  .put(
+    'outletInfo/:outletInfoId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    zValidator(
+      'param',
+      z.object({
+        outletInfoId: z.string(),
+      }),
+    ),
+    zValidator('json', outLetInfoSchema.partial()),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const { outletInfoId } = c.req.param();
+      const requestData = await c.req.json();
+
+      const updateOutletInfo = await OutLetInfo.findByIdAndUpdate(outletInfoId, requestData, { new: true });
+
+      if (!updateOutletInfo) return respond(c, 'outletInfo not found', true, 404, {});
+
+      return respond(c, 'outletInfo updated', false, 200, updateOutletInfo);
+    },
+  )
 
   // .get('/:id', zValidator('param', BusinessSchema), zValidator('query', BusinessSchema), async (c) => {
   //   const { id } = c.req.param();
@@ -292,19 +283,26 @@ const businessesRouter = new Hono()
       const { businessId } = c.req.param();
 
       const business = await Permissions.findOne({ businessId: businessId });
-      if (!business) {
-        return c.json({
-          err: true,
-          data: {},
-          message: 'permissions not created !',
-        });
-      }
+      if (!business) return respond(c, 'permissions not found', true, 404, {});
 
-      return c.json({
-        data: business,
-        status: 200,
-        err: false,
-      });
+      return respond(c, 'permissions found', false, 200, business);
+    },
+  )
+  .get(
+    '/outletInfo/:businessId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    zValidator('param', z.object({ businessId: z.string() })),
+    zValidator('header', TokenValidator),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const outLetInfo = await OutLetInfo.findOne({ businessId: businessId });
+
+      if (!outLetInfo) return respond(c, 'outletInfo not found', true, 404, {});
+
+      return respond(c, 'outletInfo found', false, 200, outLetInfo);
     },
   )
   .get(

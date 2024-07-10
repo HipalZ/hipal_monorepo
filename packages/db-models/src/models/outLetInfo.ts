@@ -2,12 +2,17 @@ import mongoose from 'mongoose';
 
 import type { Model } from 'mongoose';
 import type { OutLetInfoType } from '../validators';
+import { Amenities } from '../validators';
 const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   businessId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     index: true,
     ref: 'Business',
+  },
+  name: {
+    type: String,
+    required: true,
   },
   fssai: {
     type: String,
@@ -50,7 +55,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   amenities: [
     {
       type: String,
-      enum: ['SMOKING SECTION', 'BUFFET', 'PARKING', 'HI SPEED WIFI', 'CHILD FRIENDLY', 'ALCOHOL', 'DELIVERY', 'TAKEAWAY', 'DINEIN', 'RESERVATION'],
+      enum: Amenities,
       required: false,
     },
   ],
@@ -58,6 +63,23 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     {
       type: String,
       required: false,
+    },
+  ],
+  footerDescription: {
+    type: String,
+
+    required: false,
+  },
+  socialMediaLinks: [
+    {
+      icon: {
+        type: String,
+        required: true,
+      },
+      link: {
+        type: String,
+        required: true,
+      },
     },
   ],
 });
