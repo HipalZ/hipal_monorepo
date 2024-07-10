@@ -12,6 +12,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 
 export const CustomRole = z.object({
   businessId: ObjectIdSchema,
+  role: z.string(),
 
   permissions: z.array(string()),
   bookMark: z.boolean().optional(),

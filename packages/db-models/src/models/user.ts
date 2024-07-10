@@ -16,6 +16,9 @@ const CustomRole = {
     type: Boolean,
     default: false,
   },
+  role: {
+    type: String,
+  },
 };
 
 const userSchema = new mongoose.Schema<UserType>(
