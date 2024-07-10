@@ -34,16 +34,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: true,
       ref: 'User',
     },
-    gst: {
-      type: String,
-      default: '',
-      required: false,
-    },
-    fssai: {
-      type: String,
-      default: '',
-      required: false,
-    },
+
     isActive: {
       type: Boolean,
       required: false,

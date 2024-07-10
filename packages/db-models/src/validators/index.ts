@@ -16,6 +16,7 @@ export * from './loyaltyCoinsInfo';
 export * from './loyaltySetting';
 export * from './order';
 export * from './orderDetails';
+export * from './outLetInfo';
 export * from './ownerLogin';
 export * from './paramsValidator';
 export * from './payment';

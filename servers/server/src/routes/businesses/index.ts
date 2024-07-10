@@ -1,10 +1,10 @@
 // books.ts
-import { Business, LoyaltySettings, Permissions, Role } from '@hi/db-models';
+import { Business, LoyaltySettings, OutLetInfo, Permissions, Role } from '@hi/db-models';
 import type { BusinessType } from '@hi/db-models/src/validators';
 import {
   BusinessSchema,
+  outLetInfoSchema,
   paramsSchema,
-  permissionSchema,
   permissionsSchema,
   TokenValidator,
   UpdateBusinessSchema,
@@ -47,6 +47,45 @@ const businessesRouter = new Hono()
 
       return c.json({
         data: business,
+        status: 200,
+        err: false,
+      });
+    },
+  )
+  .post(
+    '/outletInfo',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+
+    zValidator('json', outLetInfoSchema),
+    zValidator('header', TokenValidator),
+    async (c) => {
+      const requestData = await c.req.json();
+      const isInfoAlreadyExist = await OutLetInfo.findOne({ businessId: requestData.businessId });
+      if (isInfoAlreadyExist) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'outletInfo already exist',
+          },
+          409,
+        );
+      }
+      const outLetInfo = await OutLetInfo.create(requestData);
+      if (!outLetInfo) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'outletInfo not created !',
+          },
+          400,
+        );
+      }
+
+      return c.json({
+        data: outLetInfo,
         status: 200,
         err: false,
       });

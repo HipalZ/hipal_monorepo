@@ -120,7 +120,8 @@ const usersRouter = new Hono()
       });
     }
 
-    const existingUser = await User.findOne({ phone, role: 'HIPAL_CUSTOMER' });
+    const existingUser = await User.findOne({ phone });
+    //TODO: USER ["HIPAL_CUSTOMER"]
 
     try {
       const options = {
@@ -181,18 +182,10 @@ const usersRouter = new Hono()
 
       const { name, phone, otp } = requestData;
       const { verifyOtp } = c.req.query();
-      if (!phone || !name || !verifyOtp) {
-        return c.json({
-          status: false,
-          message: ' Phone, Name and verifyOtp required !',
-          data: {},
-          err: true,
-        });
-      }
 
       let existingUser: UserType | null = null;
 
-      existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
+      existingUser = await User.findOne({ phone: phone });
       if (existingUser) {
         return c.json(
           {
@@ -272,7 +265,7 @@ const usersRouter = new Hono()
     zValidator(
       'json',
       z.object({
-        phone: z.string().max(10),
+        phone: z.string().max(10).optional(),
         otp: z.string().length(4).optional(),
         password: z.string().max(20).optional(),
       }),
@@ -298,7 +291,7 @@ const usersRouter = new Hono()
       if (verifyOtp === 'false') {
         let existingUser: UserType | null = null;
 
-        existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
+        existingUser = await User.findOne({ phone: phone });
         if (!existingUser) {
           return c.json(
             {
@@ -346,7 +339,7 @@ const usersRouter = new Hono()
           return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
         }
 
-        const user = await User.findOne({ phone, role: 'RESTAURANT_OWNER' });
+        const user = await User.findOne({ phone });
 
         const accessToken = createAccessToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
         const refreshToken = createRefreshToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
@@ -435,7 +428,7 @@ const usersRouter = new Hono()
   .post('/:id/stafflogin', zValidator('json', staffValidator), async (c) => {
     const requestData = await c.req.json();
     const { phone, password } = requestData;
-    const staff = await User.findOne({ phone: phone, role: 'RESTAURANT_STAFF' }).populate({
+    const staff = await User.findOne({ phone: phone }).populate({
       path: 'customRole.businessId',
       select: 'businessName address logo',
     });
@@ -704,6 +697,7 @@ const usersRouter = new Hono()
         400,
       );
     }
+    //TODO: ROLE WHEN I ADD ROLE IN USER SCHEMA
     try {
       if (loyaltyId && signUpBonus && signUpBonus > 0 && role === 'HIPAL_CUSTOMER') {
         await addSignUpBonus(phone, loyaltyId, name, signUpBonus);

@@ -13,6 +13,7 @@ export * from './loyaltyCoinsInfo';
 export * from './loyaltySetting';
 export * from './order';
 export * from './orderDetails';
+export * from './outLetInfo';
 export * from './payment';
 export * from './paymentAlert';
 export * from './paymentMode';

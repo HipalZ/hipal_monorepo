@@ -1,0 +1,39 @@
+import mongoose from 'mongoose';
+import { z } from 'zod';
+
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+
+export const Amenities = [
+  'SMOKING SECTION',
+  'BUFFET',
+  'PARKING',
+  'HI SPEED WIFI',
+  'CHILD FRIENDLY',
+  'ALCOHOL',
+  'DELIVERY',
+  'TAKEAWAY',
+  'DINEIN',
+  'RESERVATION',
+] as const;
+export const outLetInfoSchema = z.object({
+  businessId: ObjectIdSchema,
+  fssai: z.string().min(26).max(26).optional(),
+  gst: z.string().min(26).max(26).optional(),
+  specialBannerUrl: z.string().url({ message: 'add valid url' }).min(10).max(100).optional(),
+  logoUrl: z.string().url({ message: 'add valid url' }).min(10).max(100).optional(),
+  description: z.string().min(4).max(100).optional(),
+  tags: z.array(z.string().min(4).max(30)).optional(),
+  phone: z.string().min(10).max(10).optional(),
+  location: z.string().url().min(10).max(100).optional(),
+  amenities: z.enum(Amenities).array().optional(),
+  timing: z.array(z.string().min(4).max(30)).optional(),
+});
+
+export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
