@@ -5,7 +5,7 @@ const roleSchema = new mongoose.Schema<BusinessRoleType>(
   {
     name: {
       type: String,
-      enum: ['RESTAURANT_MANAGER', 'RESTAURANT_FLOOR_MANAGER', 'RESTAURANT_STAFF', 'OPERATOR'],
+      enum: ['RESTAURANT_MANAGER', 'RESTAURANT_FLOOR_MANAGER', 'RESTAURANT_STAFF', 'OPERATOR', 'RESTAURANT_OWNER'],
       required: true,
     },
     description: {

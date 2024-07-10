@@ -1,7 +1,7 @@
 // books.ts
 import { Business, LoyaltySettings, Role } from '@hi/db-models';
 import type { BusinessType } from '@hi/db-models/src/validators';
-import { BusinessSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
+import { BusinessSchema, paramsSchema, TokenValidator, UpdateBusinessSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 //@ts-ignore
@@ -111,7 +111,13 @@ const businessesRouter = new Hono()
     zValidator(
       'json',
       z.object({
-        name: z.enum([ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_MANAGER, ClientRoles.OPERATOR, ClientRoles.RESTAURANT_FLOOR_MANAGER]),
+        name: z.enum([
+          ClientRoles.RESTAURANT_STAFF,
+          ClientRoles.RESTAURANT_MANAGER,
+          ClientRoles.OPERATOR,
+          ClientRoles.RESTAURANT_FLOOR_MANAGER,
+          ClientRoles.RESTAURANT_OWNER,
+        ]),
       }),
     ),
     // zValidator('header', TokenValidator),
@@ -152,7 +158,7 @@ const businessesRouter = new Hono()
         businessId: z.string(),
       }),
     ),
-    zValidator('json', BusinessSchema.partial()),
+    zValidator('json', UpdateBusinessSchema),
     zValidator('header', TokenValidator),
     async (c) => {
       const { businessId } = c.req.param();
@@ -290,7 +296,7 @@ const businessesRouter = new Hono()
       const { businessId } = c.req.param();
       const existingRoles = await Role.find({
         businessId: businessId,
-      });
+      }).select('_id name');
 
       return c.json({
         data: existingRoles,

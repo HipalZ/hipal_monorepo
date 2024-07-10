@@ -267,86 +267,98 @@ const usersRouter = new Hono()
       }
     },
   )
-  .post('/ownerSignIn', zValidator('json', ownerLoginValidator), zValidator('query', z.object({})), async (c) => {
-    const requestData = await c.req.json();
-    const { verifyOtp } = c.req.query();
-    const { phone, password, otp } = requestData;
+  .post(
+    '/ownerSignIn',
+    zValidator(
+      'json',
+      z.object({
+        phone: z.string().max(10),
+        otp: z.string().length(4).optional(),
+        password: z.string().max(20).optional(),
+      }),
+    ),
+    zValidator('query', z.object({})),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { verifyOtp } = c.req.query();
+      const { phone, password, otp } = requestData;
 
-    if (!phone || !password || !verifyOtp) {
-      return c.json(
-        {
-          status: false,
-          message: ' Phone, Password and verifyOtp required !',
-          data: {},
-          err: true,
-        },
-        400,
-      );
-    }
-
-    if (verifyOtp === 'false') {
-      let existingUser: UserType | null = null;
-
-      existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
-      if (!existingUser) {
+      if (!phone || !password || !verifyOtp) {
         return c.json(
           {
-            message: 'User not found',
-            data: {},
-            err: true,
-          },
-          404,
-        );
-      }
-      const comparePass = verifyPassword(password, existingUser?.password || '');
-
-      if (!comparePass) {
-        return c.json(
-          {
-            message: 'Invalid Password',
+            status: false,
+            message: ' Phone, Password and verifyOtp required !',
             data: {},
             err: true,
           },
           400,
         );
       }
-      const accessToken = createAccessToken(existingUser?._id || '', 'RESTAURANT_OWNER');
-      const refreshToken = createRefreshToken(existingUser?._id || '', 'RESTAURANT_OWNER');
 
-      return c.json({
-        message: 'Owner Logged in Successfully',
-        data: { user: existingUser, accessToken, refreshToken },
-        err: false,
-      });
-    }
-    if (verifyOtp === 'true') {
-      const options = {
-        method: 'GET',
-        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
-        headers: {
-          accept: 'application/json',
-          authkey: '387796AmyGlDBq63b2d75aP1',
-        },
-      };
+      if (verifyOtp === 'false') {
+        let existingUser: UserType | null = null;
 
-      const response = await axios(options);
+        existingUser = await User.findOne({ phone: phone, role: 'RESTAURANT_OWNER' });
+        if (!existingUser) {
+          return c.json(
+            {
+              message: 'User not found',
+              data: {},
+              err: true,
+            },
+            404,
+          );
+        }
+        const comparePass = verifyPassword(password, existingUser?.password || '');
 
-      if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
-        return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
+        if (!comparePass) {
+          return c.json(
+            {
+              message: 'Invalid Password',
+              data: {},
+              err: true,
+            },
+            400,
+          );
+        }
+        const accessToken = createAccessToken(existingUser?._id || '', 'RESTAURANT_OWNER');
+        const refreshToken = createRefreshToken(existingUser?._id || '', 'RESTAURANT_OWNER');
+
+        return c.json({
+          message: 'Owner Logged in Successfully',
+          data: { user: existingUser, accessToken, refreshToken },
+          err: false,
+        });
       }
+      if (verifyOtp === 'true') {
+        const options = {
+          method: 'GET',
+          url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+          headers: {
+            accept: 'application/json',
+            authkey: '387796AmyGlDBq63b2d75aP1',
+          },
+        };
 
-      const user = await User.findOne({ phone, role: 'RESTAURANT_OWNER' });
+        const response = await axios(options);
 
-      const accessToken = createAccessToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
-      const refreshToken = createRefreshToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
+        if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
+          return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
+        }
 
-      return c.json({
-        message: 'Owner Logged in Successfully',
-        data: { user, accessToken, refreshToken },
-        err: false,
-      });
-    }
-  })
+        const user = await User.findOne({ phone, role: 'RESTAURANT_OWNER' });
+
+        const accessToken = createAccessToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
+        const refreshToken = createRefreshToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
+
+        return c.json({
+          message: 'Owner Logged in Successfully',
+          data: { user, accessToken, refreshToken },
+          err: false,
+        });
+      }
+    },
+  )
   .put(
     '/:ownerId',
     zValidator(
