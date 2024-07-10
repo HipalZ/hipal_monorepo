@@ -276,18 +276,6 @@ const usersRouter = new Hono()
       const { verifyOtp } = c.req.query();
       const { phone, password, otp } = requestData;
 
-      if (!phone || !password || !verifyOtp) {
-        return c.json(
-          {
-            status: false,
-            message: ' Phone, Password and verifyOtp required !',
-            data: {},
-            err: true,
-          },
-          400,
-        );
-      }
-
       if (verifyOtp === 'false') {
         let existingUser: UserType | null = null;
 
