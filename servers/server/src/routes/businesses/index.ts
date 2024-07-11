@@ -1,5 +1,5 @@
 // books.ts
-import { Business, LoyaltySettings, OutLetInfo, Permissions, Role } from '@hi/db-models';
+import { Business, LoyaltySettings, OutLetInfo, Permissions, Role, Theme } from '@hi/db-models';
 import type { BusinessType } from '@hi/db-models/src/validators';
 import {
   BusinessSchema,
@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { respond } from '../../utils/response';
+import { convertToHsl } from '../../utils/theme';
 const businessesRouter = new Hono()
   .post(
     '/',
@@ -202,6 +203,17 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
+      if (requestData?.primaryColor && requestData?.secondaryColor) {
+        const convertedColors = convertToHsl({
+          primary: requestData.primaryColor,
+          accent: requestData.primaryColor,
+          'base-100': requestData.secondaryColor,
+        });
+
+        const createTheme = await Theme.findOneAndUpdate({ businessId: businessId }, { theme: convertedColors }, { new: true, upsert: true });
+
+        if (!createTheme) return respond(c, 'theme not created', true, 400, {});
+      }
 
       const updateBusiness = await Business.findByIdAndUpdate(businessId, requestData, { new: true });
       if (!updateBusiness) {

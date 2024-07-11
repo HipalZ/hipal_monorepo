@@ -1,6 +1,7 @@
 import type { Model } from 'mongoose';
 import mongoose from 'mongoose';
 import type { BusinessType } from '../validators';
+import { BusinessEnumType, ExploreLayout, MenuLayout } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -11,7 +12,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
 
     businessType: {
       type: String,
-      enum: ['FOOD', 'OTHER'],
+      enum: BusinessEnumType,
 
       required: true,
     },
@@ -40,24 +41,14 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: false,
       default: false,
     },
-
-    // withPopCorn: {
-    //   type: Boolean,
-    //   default: false,
-    // },
-    // cloneParentBusinessData: {
-    //   type: Boolean,
-    //   default: false,
-    // },
-
     exploreLayout: {
       type: String,
-      enum: ['BUTTER', 'SUNFLOWER'],
+      enum: ExploreLayout,
       required: false,
     },
     menuLayout: {
       type: String,
-      enum: ['MAIN_CATEGORY', 'MAIN_AND_SUB_CATEGORY'],
+      enum: MenuLayout,
     },
     primaryColor: {
       type: String,

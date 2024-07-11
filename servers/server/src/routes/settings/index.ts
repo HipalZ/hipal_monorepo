@@ -1,7 +1,7 @@
 // books.ts
-import { Banner, Dish, Settings, User } from '@hi/db-models';
+import { Banner, BusinessSettings, Dish, Settings, User } from '@hi/db-models';
 import type { DishType } from '@hi/db-models/src/validators';
-import { bannerSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
+import { bannerSchema, BusinessSettingsSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
 
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -37,6 +37,37 @@ const settingsRouter = new Hono()
       return respond(c, 'Banner created successfully', false, 201, createBanner);
     },
   )
+  .post(
+    '/',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    zValidator('json', BusinessSettingsSchema),
+    zValidator('header', TokenValidator),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const existingSetting = await BusinessSettings.findOne({ businessId: requestData.businessId });
+      if (existingSetting) return respond(c, 'Setting already exists', true, 409, {});
+      const createSetting = await BusinessSettings.create(requestData);
+      if (!createSetting) return respond(c, 'Error in creating setting', true, 400, {});
+      return respond(c, 'Setting created successfully', false, 201, createSetting);
+    },
+  )
+  .get(
+    '/:settingsId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    zValidator('param', z.object({ settingsId: z.string() })),
+    zValidator('header', TokenValidator),
+
+    async (c) => {
+      const { settingsId } = c.req.param();
+      const existingSetting = await BusinessSettings.findById(settingsId);
+      if (!existingSetting) return respond(c, 'Setting not found', true, 404, {});
+      return respond(c, 'Setting fetched successfully', false, 200, existingSetting);
+    },
+  )
+
   .put(
     '/banner/:bannerId',
     authTokenValidator,

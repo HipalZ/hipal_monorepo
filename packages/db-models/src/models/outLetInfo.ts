@@ -82,6 +82,26 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
       },
     },
   ],
+  billingStartTime: {
+    type: String,
+
+    required: false,
+  },
+  billingEndTime: {
+    type: String,
+
+    required: false,
+  },
+  brandName: {
+    type: String,
+
+    required: false,
+  },
+  branchName: {
+    type: String,
+
+    required: false,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>('outlet', outLetInfoSchema);

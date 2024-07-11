@@ -11,9 +11,10 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 
 export const ExploreLayout = ['BUTTER', 'SUNFLOWER'] as const;
 export const MenuLayout = ['MAIN_CATEGORY', 'MAIN_AND_SUB_CATEGORY'] as const;
+export const BusinessEnumType = ['FOOD', 'OTHER'] as const;
 export const BusinessSchema = z.object({
   name: z.string().min(4).max(50),
-  businessType: z.enum(['FOOD', 'OTHER']),
+  businessType: z.enum(BusinessEnumType),
   multipleOutlets: z.array(ObjectIdSchema).optional(),
   customLink: z.string().min(3).max(30),
   staffIds: z.array(ObjectIdSchema),
