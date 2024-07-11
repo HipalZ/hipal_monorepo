@@ -1,5 +1,5 @@
 import {  memo, startTransition, useCallback } from "react";
-import HipeopleLogo from "@/assets/hibizNewLogo.png";
+import HiPeopleLogo from "@/assets/hibizNewLogo.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
@@ -44,7 +44,7 @@ const Business = () => {
   return (
     <main className="relative">
       <section className=" linear_gradient_background">
-        <Header onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={HipeopleLogo} isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"} />
+        <Header onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={HiPeopleLogo} isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"} />
         <center className="pb-4 -mt-8 space-y-2">
           <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
             <img width={64} height={64} src={businessData?.logo} alt="Business_Logo" />

@@ -1,5 +1,5 @@
 import { IphoneExplore } from "@/components/atom/svgtheme";
-import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import useBusinessCtrl, { type exploreLayout } from "@/components/store/useBusinessCtrl";
 import { memo, useCallback, useEffect, useState } from "react";
 
 const ExplorePage = () => {
@@ -23,7 +23,7 @@ const ExplorePage = () => {
   };
 
   const handleLayoutSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setExploreLayout(event.target.value);
+    setExploreLayout(event.target.value as exploreLayout);
   };
 
   const handleNextStep = useCallback(() => {
@@ -54,10 +54,10 @@ const ExplorePage = () => {
           </figcaption>
         </section>
 
-        <section className="space-y-4 explore_page_selection">
-          <label className="p-4 mx-4  bg-[#F4F4F4] rounded-xl">
+        <section className="space-y-4 explore_page_selection h-[50vh]">
+          <label className="p-4 mx-4  bg-[#F4F4F4] rounded-xl ">
             <article className="flex items-center space-x-2">
-              <input type="radio" value="Butter" checked={exploreLayout === "Butter"} onChange={handleLayoutSelection} className="form-radio" />
+              <input type="radio" value="BUTTER" checked={exploreLayout === "BUTTER"} onChange={handleLayoutSelection} className="form-radio radio radio-black" />
               <span>Butter</span>
             </article>
             <small className="opacity-50">
@@ -66,10 +66,10 @@ const ExplorePage = () => {
           </label>
           <label className="p-4 mx-4 rounded-xl bg-[#F4F4F4]">
             <article className="flex items-center space-x-2">
-              <input type="radio" value="Sunflower" checked={exploreLayout === "Sunflower"} onChange={handleLayoutSelection} className="form-radio" />
+              <input type="radio" value="SUNFLOWER" checked={exploreLayout === "SUNFLOWER"} onChange={handleLayoutSelection} className="form-radio radio radio-black" />
               <span>Sunflower</span>
             </article>
-            <small className="opacity-50">This layout is not avaliable</small>
+            <small className="opacity-50">This layout is not available</small>
           </label>
         </section>
       </section>

@@ -1,5 +1,5 @@
 import { IphoneCategory } from "@/components/atom/svgtheme";
-import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import useBusinessCtrl, { type MenuLayout } from "@/components/store/useBusinessCtrl";
 import { memo, useCallback, useEffect, useState } from "react";
 
 const MenuPage = () => {
@@ -21,14 +21,14 @@ const MenuPage = () => {
     }
   };
   const handleLayoutSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMenuLayout(event.target.value);
+    setMenuLayout(event.target.value as MenuLayout);
   };
 
   const handleNextStep = useCallback(() => {
     if (menuLayout) {
       setStep(step + 1);
     }
-  }, [menuLayout, step, setStep]);
+  }, [menuLayout, step]);
 
   useEffect(() => {
     updateDimensions();
@@ -44,15 +44,15 @@ const MenuPage = () => {
         <IphoneCategory primary={primaryColor} secondary={secondaryColor} category={2} width={dimensions.width} height={dimensions.height} />
       </center>
 
-      <section className="space-y-4 explore_page_selection">
+      <section className="space-y-4 explore_page_selection h-[50vh]">
         <label className="p-4 mx-4 bg-[#F4F4F4] rounded-xl">
           <article className="flex items-center space-x-2">
             <input
               type="radio"
-              value="Main Category"
-              checked={menuLayout === "Main Category"}
+              value="MAIN_CATEGORY"
+              checked={menuLayout === "MAIN_CATEGORY"}
               onChange={handleLayoutSelection}
-              className="form-radio"
+              className="form-radio radio radio-black"
             />
             <span>Main Category</span>
           </article>
@@ -64,10 +64,10 @@ const MenuPage = () => {
           <article className="flex items-center space-x-2">
             <input
               type="radio"
-              value="With Main & Sub-Category"
-              checked={menuLayout === "With Main & Sub-Category"}
+              value="MAIN_AND_SUB_CATEGORY"
+              checked={menuLayout === "MAIN_AND_SUB_CATEGORY"}
               onChange={handleLayoutSelection}
-              className="form-radio"
+              className="form-radio radio radio-black"
             />
             <span>With Main & Sub-Category</span>
           </article>

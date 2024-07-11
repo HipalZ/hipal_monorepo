@@ -1,7 +1,9 @@
 import Hand from "@/assets/login/hand.png";
 import useLoginStore from "@/components/store/useLogin";
+import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
-import { useState } from "react";
+import { apiRpc } from "@hi/common";
+import { useCallback, useState } from "react";
 import { LuArrowLeft } from "react-icons/lu";
 
 const Password = () => {
@@ -9,12 +11,14 @@ const Password = () => {
     step: state.step,
     setStep: state.setStep,
   }));
+  const {user} = useOwnerLogin()
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const goBack = () => {
+  const goBack = useCallback(() => {
     setStep(step - 1);
-  };
+  },[step]);
+  
   const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
   };
@@ -23,7 +27,7 @@ const Password = () => {
     setConfirmPassword(e.target.value);
   };
 
-  const saveThePassword = (e: React.FormEvent<HTMLFormElement>) => {
+  const saveThePassword = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (password.length < 8 || confirmPassword.length < 8) {
@@ -31,11 +35,23 @@ const Password = () => {
       return;
     }
     if (password === confirmPassword) {
-      setStep(step + 1);
+      const res = await apiRpc.users[":ownerId"].$put({
+        json:{
+          password:password
+        },
+        param:{
+          ownerId:user._id
+        }
+      })
+      const response = await res.json()
+      if(res.status === 200 || res.status === 201){
+        
+        setStep(step + 1);
+      }
     } else {
       alert("Password does not match");
     }
-  };
+  },[password,confirmPassword,step,user]);
 
   return (
     <form onSubmit={saveThePassword}>

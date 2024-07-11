@@ -1,4 +1,4 @@
-import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import useBusinessCtrl, { type businessType } from "@/components/store/useBusinessCtrl";
 import { memo, useCallback } from "react";
 import toast from "react-hot-toast";
 
@@ -9,6 +9,7 @@ export const businessTypeArray = [
     tags: ["Web page", "E.Menu", "Rewardz & Loyalty", "Payments", "CRM", "Messaging"],
     tagColor: "#9775F8",
     gradient: "linear-gradient(1.7deg, #D9CCFF -11.95%, #F2F2F2 112.46%)",
+    type:"FOOD" as businessType
   },
   {
     title: "✨Others",
@@ -16,6 +17,7 @@ export const businessTypeArray = [
     tags: ["Web page", "E.Catalog", "Rewardz & Loyalty", "Payments", "CRM", "Messaging"],
     tagColor: "#000000",
     gradient: "linear-gradient(7.04deg, #FFF3A6 -60.02%, #F0DDE7 93.33%)",
+    type:"OTHER" as businessType
   },
 ];
 
@@ -28,7 +30,7 @@ const BusinessType = () => {
   }));
 
   const saveBusinessType = useCallback(
-    (type: string) => {
+    (type: businessType) => {
       setBusinessType(type);
     },
     [step],
@@ -49,9 +51,9 @@ const BusinessType = () => {
               name="businessType"
               value={ele.title}
               id={`businessType-${ele.title}`}
-              onChange={() => saveBusinessType(ele.title)}
-              checked={businessType === ele.title}
-              className="mr-2"
+              onChange={() => saveBusinessType(ele.type)}
+              checked={businessType === ele.type}
+              className="mr-2 radio radio-black"
             />
             <h3 className="text-lg font-semibold">{ele.title}</h3>
           </article>

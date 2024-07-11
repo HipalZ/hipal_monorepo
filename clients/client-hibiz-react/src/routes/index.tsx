@@ -1,6 +1,5 @@
-import Loader from '@/components/atom/loader';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ReactNode, Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
 //testing

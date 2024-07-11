@@ -1,3 +1,4 @@
+import { businessType } from "../store/useBusinessCtrl";
 import { User } from "../store/useOwnerLogin";
 
 export interface CustomRole {
@@ -21,9 +22,9 @@ export interface IBusinessData {
   tags: any[];
   description: string;
   _id: string;
-  businessName: string;
+  name: string;
   registeredName: string;
-  businessType: string;
+  businessType: businessType;
   gstRegistered: boolean;
   multipleOutlets: boolean;
   customLink: string;

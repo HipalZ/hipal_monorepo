@@ -5,7 +5,7 @@ import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { IoChevronDown } from "react-icons/io5";
 import { AnimatePresence, easeOut, motion } from "framer-motion";
 import { cn } from "@/components/utils/helper";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 
 const AddPermissions = () => {
   const { selectedPermissions, toggleMainService, toggleSubService, setPageToggle } = useAddStaffStore();

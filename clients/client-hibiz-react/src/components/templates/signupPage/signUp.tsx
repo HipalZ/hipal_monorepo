@@ -4,16 +4,20 @@ import { PiSealWarningBold } from "react-icons/pi";
 import useLoginStore from "@/components/store/useLogin";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/components/utils/helper";
+import { apiRpc } from "@hi/common";
+import toast from "react-hot-toast";
 
 const SignUpPage: React.FC = () => {
-  const { step, setStep, phone, setPhone, name, setName } = useLoginStore((state) => ({
-    step: state.step,
-    setStep: state.setStep,
-    phone: state.phone,
-    setPhone: state.setPhone,
-    name: state.name,
-    setName: state.setName,
-  }));
+  const { step, setStep, phone, setPhone, name, setName } = useLoginStore(
+    (state) => ({
+      step: state.step,
+      setStep: state.setStep,
+      phone: state.phone,
+      setPhone: state.setPhone,
+      name: state.name,
+      setName: state.setName,
+    }),
+  );
   const [validPhone, setValidPhone] = useState(true);
 
   const navigate = useNavigate();
@@ -23,15 +27,28 @@ const SignUpPage: React.FC = () => {
     return phoneRegex.test(phone);
   }, [phone]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const isPhoneValid = validPhoneNumber();
-
     setValidPhone(isPhoneValid);
 
-    if (isPhoneValid) {
+    if (!isPhoneValid) return toast.error("Please enter valid number");
+
+    const res = await apiRpc.users.ownerSignUp.$post({
+      json: {
+        name: name,
+        phone: phone,
+      },
+      query: {
+        verifyOtp: "false",
+      },
+    });
+    if (res.status === 409) {
+      return toast.error("user already register");
+    }
+    if (res.status === 200) {
       setStep(step + 1);
     }
-  }, [validPhone, step]);
+  }, [validPhone, step, name, phone]);
 
   const goToLoginScreens = useCallback(() => {
     startTransition(() => {
@@ -41,14 +58,26 @@ const SignUpPage: React.FC = () => {
 
   return (
     <>
-      <img className="absolute left-0 right-0 m-auto -top-[6.5rem]" width={63} height={73} src={Hand} alt="Hipal_hand" />
+      <img
+        className="absolute left-0 right-0 m-auto -top-[6.5rem]"
+        width={63}
+        height={73}
+        src={Hand}
+        alt="Hipal_hand"
+      />
       <h5>
         Already User?{" "}
-        <span onClick={goToLoginScreens} className="text-[#1C4EFF] text-sm font-semibold cursor-pointer">
+        <button
+          type="button"
+          onClick={goToLoginScreens}
+          className="text-[#1C4EFF] text-sm font-semibold cursor-pointer"
+        >
           Login
-        </span>
+        </button>
       </h5>
-      <h3 className="mt-4 text-xl font-semibold leading-8">Hi Pal, Let’s get started</h3>
+      <h3 className="mt-4 text-xl font-semibold leading-8">
+        Hi Pal, Let’s get started
+      </h3>
       <p>Grow your restaurant! 🍽️</p>
       <section className="mt-6 space-y-6">
         <div>
@@ -75,7 +104,9 @@ const SignUpPage: React.FC = () => {
             onChange={(e) => setPhone(e.target.value)}
             className={cn(
               "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-              validPhone ? "border-black focus:ring-black" : "border-red-500 focus:ring-red-500",
+              validPhone
+                ? "border-black focus:ring-black"
+                : "border-red-500 focus:ring-red-500",
             )}
             placeholder="Enter phone number"
             maxLength={10}
@@ -83,7 +114,7 @@ const SignUpPage: React.FC = () => {
           />
         </div>
       </section>
-      <button className="action_btn" onClick={handleSubmit}>
+      <button type="button" className="action_btn" onClick={handleSubmit}>
         Create my biz
       </button>
     </>

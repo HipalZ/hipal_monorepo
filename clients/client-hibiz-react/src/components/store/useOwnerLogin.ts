@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: string;
+  role: [];
   customRole: CustomRole[];
   password: string;
   _id: string;
@@ -49,7 +49,7 @@ export const useOwnerLogin = create(
         name: '',
         email: '',
         phone: '',
-        role: '',
+        role: [],
         customRole: [],
         password: '',
         _id: '',

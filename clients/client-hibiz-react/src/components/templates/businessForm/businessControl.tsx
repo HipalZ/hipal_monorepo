@@ -8,6 +8,7 @@ import { businessCtrlServices } from "./businessCtrlStore";
 
 const BusinessControl = () => {
 	const setStep = useBusinessCtrl(state => state.setStep);
+	
 	const navigate = useNavigate();
 	const { businessId } = useParams<{ businessId: string }>();
 	const goToNextStep = useCallback((step: number) => {
@@ -30,7 +31,7 @@ const BusinessControl = () => {
 		<><article className="card-background">
 			<figcaption className="card">
 				<h4>Set the theme</h4>
-				<h6>Set your layout & themes</h6>
+				<small>Set your layout & themes</small>
 				<button type="button"
 					onClick={() => goToNextStep(1)}
 					className="w-16 px-4 py-1 mt-2 text-white bg-black rounded-3xl"

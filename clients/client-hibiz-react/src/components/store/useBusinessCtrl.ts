@@ -1,20 +1,22 @@
 import {create} from 'zustand';
-
+export type businessType = "FOOD" | "OTHER" | ""
+export type MenuLayout = 'MAIN_CATEGORY'|'MAIN_AND_SUB_CATEGORY'
+export type exploreLayout ='BUTTER'| 'SUNFLOWER'
 interface BusinessCtrl {
     step:number;
     setStep:(step:number)=>void;
-    exploreLayout:string;
-    menuLayout:string;
-    setExploreLayout:(layout:string)=>void;
-    setMenuLayout:(layout:string)=>void;
+    exploreLayout:exploreLayout;
+    menuLayout:MenuLayout;
+    setExploreLayout:(layout:exploreLayout)=>void;
+    setMenuLayout:(layout:MenuLayout)=>void;
     primaryColor:string;
     setPrimaryColor:(color:string)=>void;
     secondaryColor:string;
     setSecondaryColor:(color:string)=>void;
 
     //create business
-    businessType:string;
-    setBusinessType:(type:string)=>void;
+    businessType:businessType;
+    setBusinessType:(type:businessType)=>void;
     outletType:string;
     setOutletType:(type:string)=>void;
     businessName:string;
@@ -26,16 +28,16 @@ interface BusinessCtrl {
 const useBusinessCtrl = create<BusinessCtrl>((set)=>({
     step:0,
     setStep:(step:number)=>set({step}),
-    exploreLayout:'',
-    menuLayout:'',
-    setExploreLayout:(layout:string)=>set({exploreLayout:layout}),
-    setMenuLayout:(layout:string)=>set({menuLayout:layout}),
+    exploreLayout:'BUTTER',
+    setExploreLayout:(layout:exploreLayout)=>set({exploreLayout:layout}),
+    menuLayout:'MAIN_AND_SUB_CATEGORY',
+    setMenuLayout:(layout:MenuLayout)=>set({menuLayout:layout}),
     primaryColor:'',
     setPrimaryColor:(color:string)=>set({primaryColor:color}),
     secondaryColor:'',
     setSecondaryColor:(color:string)=>set({secondaryColor:color}),
     businessType:'',
-    setBusinessType:(type:string)=>set({businessType:type}),
+    setBusinessType:(type:businessType)=>set({businessType:type}),
     outletType:'',
     setOutletType:(type:string)=>set({outletType:type}),
     businessName:'',

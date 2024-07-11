@@ -1,11 +1,23 @@
 import HipalLogo from "@/assets/hipal.png";
 import Background from "@/assets/login/background.png";
 import useLoginStore from "@/components/store/useLogin";
+import { memo, startTransition, useCallback } from "react";
 import { LuMoveRight } from "react-icons/lu";
+import { Link, useNavigate } from "react-router-dom";
 
-const Hipal = () => {
-  const setStep = useLoginStore((s) => s.setStep);
+const MemoHipal = () => {
+  const { setStep, step } = useLoginStore((state) => ({
+    setStep: state.setStep,
+    step: state.step,
+  }));
+  const navigate = useNavigate();
 
+  const createAccount = useCallback(() => {
+    startTransition(() => {
+      navigate("/signup");
+      setStep(2);
+    });
+  }, [step]);
   return (
     <main>
       <center className="pt-6">
@@ -25,14 +37,20 @@ const Hipal = () => {
         }}
       >
         <article className="pt-12 pl-4">
-          <h3 className="text-xl font-semibold leading-10">Grow your restaurant</h3>
+          <h3 className="text-xl font-semibold leading-10">
+            Grow your restaurant
+          </h3>
           <p className="mb-4">Hi Pal, Let’s get started Growing our Biz !</p>
-          <button type="button" onClick={() => setStep(2)} className="px-4 text-sm py-2 bg-[#1C4EFF] text-white rounded-3xl">
+          <button
+            onClick={createAccount}
+            type="button"
+            className="px-4 text-sm py-2 bg-[#1C4EFF] text-white rounded-3xl"
+          >
             Create account
           </button>
         </article>
       </section>
-      <button type="button" className="bottom_btn">
+      <button onClick={() => setStep(2)} type="button" className="bottom_btn">
         <div className="flex items-center justify-between px-4">
           <span>Get Started</span>
           <LuMoveRight size={24} />
@@ -41,5 +59,7 @@ const Hipal = () => {
     </main>
   );
 };
+
+const Hipal = memo(MemoHipal);
 
 export default Hipal;

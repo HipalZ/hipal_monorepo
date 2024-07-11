@@ -66,7 +66,7 @@ const StaffPage = () => {
             leftIcon={<FaArrowLeft />}
             centerImage={Hi}
             rightImage={Hi}
-            isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+            isIconBusinessShow={false}
           />
         </div>
 

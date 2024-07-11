@@ -12,8 +12,16 @@ import { apiRpc } from "@hi/common";
 import type { ILoginProps } from "@/components/types/businessData";
 
 const Login: React.FC = () => {
-  const { phone, setPhone } = useLoginStore((state) => ({ phone: state.phone, setPhone: state.setPhone }));
-  const { setIsLogin, setUser } = useOwnerLogin((state) => ({ setIsLogin: state.setIsLogin, setUser: state.setUser }));
+  const { phone, setPhone, step, setStep } = useLoginStore((state) => ({
+    phone: state.phone,
+    setPhone: state.setPhone,
+    step: state.step,
+    setStep: state.setStep,
+  }));
+  const { setIsLogin, setUser } = useOwnerLogin((state) => ({
+    setIsLogin: state.setIsLogin,
+    setUser: state.setUser,
+  }));
   const setAccessToken = useUserToken.getState().setAccessToken;
   const setRefreshToken = useUserToken.getState().setRefreshToken;
 
@@ -27,7 +35,7 @@ const Login: React.FC = () => {
     const phoneRegex = /^[6-9]\d{9}$/;
     return phoneRegex.test(phone);
   }, [phone]);
-  
+
   const handleSubmit = async () => {
     const isPhoneValid = validPhoneNumber();
 
@@ -35,27 +43,34 @@ const Login: React.FC = () => {
       setValidPhone(isPhoneValid);
       return;
     }
-      const response = await apiRpc.users.Owner.Login.$post({
-        json: {
-          phone: phone,
-          password: password,
-        },
+    const response = await apiRpc.users.Owner.Login.$post({
+      json: {
+        phone: phone,
+        password: password,
+      },
+    });
+    const user = (await response.json()) as unknown as {
+      data: ILoginProps;
+      message: string;
+    };
+    if (response.status === 200) {
+      setAccessToken(user.data.accessToken);
+      setRefreshToken(user.data.refreshToken);
+      setUser(user.data.existingUser);
+      toast.success("Login Successfully");
+      setIsLogin(true);
+      startTransition(() => {
+        navigate(routePaths[PAGE_TYPES.BUSINESS]());
       });
-      const user = await response.json() as unknown as {data:ILoginProps, message:string};
-      if (response.status === 200) {
-        setAccessToken(user.data.accessToken);
-        setRefreshToken(user.data.refreshToken);
-        setUser(user.data.existingUser);
-        toast.success("Login Successfully");
-        setIsLogin(true);
-        startTransition(() => {
-          navigate(routePaths[PAGE_TYPES.BUSINESS]());
-        });
-      }else{
-        setValidPassword(true);
-        toast.error(user?.message || "Check credentials");
-      }
+    } else {
+      setValidPassword(true);
+      toast.error(user?.message || "Check credentials");
+    }
   };
+
+  const sendOtp = useCallback(() => {
+    setStep(step + 1);
+  }, [step]);
 
   const goToSignUp = useCallback(() => {
     startTransition(() => {
@@ -65,14 +80,26 @@ const Login: React.FC = () => {
 
   return (
     <>
-      <img className="absolute left-0 right-0 m-auto -top-[6.5rem]" width={63} height={73} src={Hand} alt="Hipal_hand" />
+      <img
+        className="absolute left-0 right-0 m-auto -top-[6.5rem]"
+        width={63}
+        height={73}
+        src={Hand}
+        alt="Hipal_hand"
+      />
       <h5>
         New User?{" "}
-        <span onClick={goToSignUp} className="text-[#1C4EFF] text-sm font-semibold cursor-pointer">
+        <button
+          type="button"
+          onClick={goToSignUp}
+          className="text-[#1C4EFF] text-sm font-semibold cursor-pointer"
+        >
           Create Account
-        </span>
+        </button>
       </h5>
-      <h3 className="mt-4 text-xl font-semibold leading-8">Hi Pal, Let’s get started</h3>
+      <h3 className="mt-4 text-xl font-semibold leading-8">
+        Hi Pal, Let’s get started
+      </h3>
       <p>Grow your restaurant! 🍽️</p>
       <section className="mt-6 space-y-6">
         <div>
@@ -88,7 +115,9 @@ const Login: React.FC = () => {
             onChange={(e) => setPhone(e.target.value)}
             className={cn(
               "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-              validPhone ? "border-black focus:ring-black" : "border-red-500 focus:ring-red-500",
+              validPhone
+                ? "border-black focus:ring-black"
+                : "border-red-500 focus:ring-red-500",
             )}
             placeholder="Enter phone number"
             maxLength={10}
@@ -108,7 +137,9 @@ const Login: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             className={cn(
               "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-              validPassword ? "border-black focus:ring-black" : "border-red-500 focus:ring-red-500",
+              validPassword
+                ? "border-black focus:ring-black"
+                : "border-red-500 focus:ring-red-500",
             )}
             placeholder="Password"
             required
@@ -119,7 +150,10 @@ const Login: React.FC = () => {
         Enter In
       </button>
       <center className="mt-4">
-        Forgot Password? <span className="text-[#1C4EFF]">Set OTP</span>
+        Forgot Password?{" "}
+        <button onClick={sendOtp} type="button" className="text-[#1C4EFF]">
+          Set OTP
+        </button>
       </center>
     </>
   );

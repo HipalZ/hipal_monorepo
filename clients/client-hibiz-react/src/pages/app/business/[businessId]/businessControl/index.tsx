@@ -20,6 +20,7 @@ const MainBusinessPage: React.FC = () => {
 	const { step, setStep } = useBusinessCtrl();
 
 	const handleBack = useCallback(() => {
+		console.log(step);
 		if (step === 0) {
 			startTransition(() => {
 				navigate(routeToDashboard(businessId as string));
@@ -27,7 +28,7 @@ const MainBusinessPage: React.FC = () => {
 		} else {
 			setStep(step - 1);
 		}
-	}, [navigate, businessId, step, setStep]);
+	}, [ businessId, step]);
 
 	const handleTitle = useCallback(() => {
 		const titles = ["Business Control", "Explore Page", "Menu Page", "Themes"];
@@ -37,7 +38,7 @@ const MainBusinessPage: React.FC = () => {
 	return (
 		<main className="business_control_background">
 			{step === 4 ? null : (
-				<div className="pb-6 linear_gradient_background">
+				<div className="linear_gradient_background">
 					<Header
 						title={handleTitle()}
 						onBack={handleBack}
