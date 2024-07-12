@@ -1,15 +1,13 @@
 // books.ts
-import { Banner, BusinessSettings, Dish, Settings, User } from '@hi/db-models';
-import type { DishType } from '@hi/db-models/src/validators';
+import { Banner, BusinessSettings, Settings } from '@hi/db-models';
 import { bannerSchema, BusinessSettingsSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authTokenValidator } from '../../../middleware/tokenValidator';
-
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
+import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { respond } from '../../utils/response';
+
 const settingsRouter = new Hono()
   .get(
     '/',
@@ -27,7 +25,7 @@ const settingsRouter = new Hono()
   .post(
     '/banner',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', bannerSchema),
     zValidator('header', TokenValidator),
     async (c) => {
@@ -40,7 +38,7 @@ const settingsRouter = new Hono()
   .post(
     '/',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', BusinessSettingsSchema),
     zValidator('header', TokenValidator),
 
@@ -56,7 +54,7 @@ const settingsRouter = new Hono()
   .get(
     '/:settingsId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ settingsId: z.string() })),
     zValidator('header', TokenValidator),
 
@@ -71,7 +69,7 @@ const settingsRouter = new Hono()
   .put(
     '/banner/:bannerId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', bannerSchema.partial()),
     zValidator('param', z.object({ bannerId: z.string() })),
     zValidator('header', TokenValidator),
@@ -86,7 +84,7 @@ const settingsRouter = new Hono()
   .get(
     '/banner/:bannerId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('header', TokenValidator),
     zValidator('param', z.object({ bannerId: z.string() })),
 
@@ -100,7 +98,7 @@ const settingsRouter = new Hono()
   .get(
     '/banners/:businessId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('header', TokenValidator),
     zValidator('param', z.object({ businessId: z.string() })),
 

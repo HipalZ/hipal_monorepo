@@ -44,6 +44,7 @@ export * from './userBill';
 export * from './userReview';
 export * from './userReward';
 export * from './userRewardHistory';
+export * from './userRoles';
 export * from './validate_signature';
 export * from './validate_webhook';
 export * from './waiterKots';

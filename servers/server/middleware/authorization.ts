@@ -1,13 +1,13 @@
 import type { Context, Next } from 'hono';
 
 export enum ClientRoles {
-  OPERATOR = 'OPERATOR',
   HIPAL_ADMIN = 'HIPAL_ADMIN',
   HIPAL_CUSTOMER = 'HIPAL_CUSTOMER',
-  RESTAURANT_OWNER = 'RESTAURANT_OWNER',
-  RESTAURANT_MANAGER = 'RESTAURANT_MANAGER',
-  RESTAURANT_FLOOR_MANAGER = 'RESTAURANT_FLOOR_MANAGER',
-  RESTAURANT_STAFF = 'RESTAURANT_STAFF',
+  OWNER = 'OWNER',
+  CO_OWNER = 'CO_OWNER',
+  MANAGER = 'MANAGER',
+  CAPTAIN = 'CAPTAIN',
+  MARKETING_AGENT = 'MARKETING_AGENT',
 }
 
 // ! Assumes we are going to call current Client before this middleware

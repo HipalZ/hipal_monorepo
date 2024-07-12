@@ -1,4 +1,4 @@
-import mongoose, { type Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import type { BusinessRoleType } from '../validators';
 
 const roleSchema = new mongoose.Schema<BusinessRoleType>(

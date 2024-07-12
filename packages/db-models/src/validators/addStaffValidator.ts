@@ -1,24 +1,18 @@
-import { z } from 'zod';
+import { string, z } from 'zod';
 
 export const addStaffValidator = z.object({
   businessId: z.string(),
-  name: z.string().max(30),
-  phone: z.string().max(10),
+  name: z.string().min(3).max(30),
+  phone: z.string().min(10).max(10),
   permissions: z
     .array(
       z.object({
         title: z.string(),
-        subPermissions: z
-          .array(
-            z.object({
-              subTitle: z.string().optional(),
-              descriptions: z.string(), // Assuming descriptions should be a string. If it needs to be an array, adjust accordingly.
-            }),
-          )
-          .optional(),
+        subPermissions: z.array(string()).optional(),
       }),
     )
     .optional(),
+  role: z.enum(['HIPAL_ADMIN', 'HIPAL_CUSTOMER', 'OWNER', 'CO_OWNER', 'MANAGER', 'CAPTAIN', 'MARKETING_AGENT']),
 });
 
 export type AddStaffValidatorType = z.infer<typeof addStaffValidator>;

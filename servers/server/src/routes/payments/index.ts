@@ -1,6 +1,6 @@
 // books.ts
 import { LoyaltyCoinsInfo, LoyaltySettings, Order, Payment, PaymentAlert, Reviews, UserReward, UserRewardHistory } from '@hi/db-models';
-import type { AcceptOrderType, PaymentType } from '@hi/db-models/src/validators';
+import type { PaymentType } from '@hi/db-models/src/validators';
 import {
   acceptOrderSchema,
   orderSchema,
@@ -18,7 +18,6 @@ import { Hono } from 'hono';
 import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
 import { createHmac } from 'node:crypto';
-import { date } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
@@ -216,7 +215,7 @@ const paymentsRouter = new Hono()
   .post(
     '/createOrder/:mer',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
     zValidator('header', TokenValidator),
     async (c) => {
@@ -264,7 +263,7 @@ const paymentsRouter = new Hono()
   .post(
     '/reviews',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', ReviewsSchema),
     zValidator('header', TokenValidator),
 
@@ -306,7 +305,7 @@ const paymentsRouter = new Hono()
   .post(
     '/createOfflineOrder',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
     zValidator('header', TokenValidator),
 
@@ -345,7 +344,7 @@ const paymentsRouter = new Hono()
         order_id: saveOrder?._id,
         status: 'SUCCESS',
         tableName: tableName,
-        // biome-ignore lint/complexity/noUselessTernary: <explanation>
+
         coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
         message: `Paid ${total}`,
         date: Date.now(),
@@ -360,7 +359,7 @@ const paymentsRouter = new Hono()
   .post(
     '/validPayment',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', validatePaymentSchema),
     zValidator('header', TokenValidator),
 
@@ -556,7 +555,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/paymentAlerts',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -591,7 +590,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/orders/:orderId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -610,7 +609,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/offlineAlerts',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -631,7 +630,7 @@ const paymentsRouter = new Hono()
   .put(
     '/:pid/order/:alertId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('param', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -745,7 +744,7 @@ const paymentsRouter = new Hono()
   .put(
     '/:pid/rejectOrder/:alertId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('param', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -769,7 +768,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/paymentAlertHistory',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -840,7 +839,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/salesDashboard',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 
@@ -936,7 +935,7 @@ const paymentsRouter = new Hono()
   .get(
     '/:id/bills',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.RESTAURANT_STAFF]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
     zValidator('header', TokenValidator),
 

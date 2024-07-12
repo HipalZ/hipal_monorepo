@@ -1,4 +1,5 @@
-import mongoose, { type Model } from 'mongoose';
+import type { Model } from 'mongoose';
+import mongoose from 'mongoose';
 import type { PermissionType } from '../validators';
 
 const subPermissionMongooseSchema = new mongoose.Schema({
@@ -26,10 +27,10 @@ const permissionsMongooseSchema = new mongoose.Schema<PermissionType>({
     required: true,
     ref: 'Business',
   },
-  co_owner: [roleMongooseSchema],
-  manager: [roleMongooseSchema],
-  captain: [roleMongooseSchema],
-  marketingAgent: [roleMongooseSchema],
+  CO_OWNER: [roleMongooseSchema],
+  MANAGER: [roleMongooseSchema],
+  CAPTAIN: [roleMongooseSchema],
+  MARKETING_AGENT: [roleMongooseSchema],
 });
 const Permissions: Model<PermissionType> = mongoose.model<PermissionType>('appconfig', permissionsMongooseSchema);
 

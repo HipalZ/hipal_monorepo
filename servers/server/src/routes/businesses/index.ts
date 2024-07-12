@@ -1,6 +1,5 @@
 // books.ts
 import { Business, LoyaltySettings, OutLetInfo, Permissions, Role, Theme } from '@hi/db-models';
-import type { BusinessType } from '@hi/db-models/src/validators';
 import {
   BusinessSchema,
   outLetInfoSchema,
@@ -21,7 +20,7 @@ const businessesRouter = new Hono()
   .post(
     '/',
     // authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    // requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', BusinessSchema),
     zValidator('header', TokenValidator),
@@ -53,7 +52,7 @@ const businessesRouter = new Hono()
   .post(
     '/outletInfo',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', outLetInfoSchema),
     zValidator('header', TokenValidator),
@@ -72,7 +71,7 @@ const businessesRouter = new Hono()
   .post(
     '/permissions',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', permissionsSchema),
     zValidator('header', TokenValidator),
@@ -88,7 +87,7 @@ const businessesRouter = new Hono()
   .post(
     '/:customLink',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       'param',
@@ -140,7 +139,7 @@ const businessesRouter = new Hono()
   .post(
     '/:businessId/role',
     // authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    // requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       'param',
@@ -151,17 +150,14 @@ const businessesRouter = new Hono()
     zValidator(
       'json',
       z.object({
-        name: z.enum([
-         'MANAGER','CO_OWNER',"CAPTAIN", "MARKETING_AGENT", 'RESTAURANT_OWNER'
-        ]),
-        description:z.string().min(4).max(100)
-        
+        name: z.enum(['OWNER', 'CO_OWNER', 'MANAGER', 'CAPTAIN', 'MARKETING_AGENT', 'HIPAL_ADMIN', 'HIPAL_CUSTOMER']),
+        description: z.string().optional(),
       }),
     ),
     // zValidator('header', TokenValidator),
     async (c) => {
       const { businessId } = c.req.param();
-      const { name ,description} = await c.req.json();
+      const { name, description } = await c.req.json();
       const alreadyExist = await Role.findOne({ name });
       if (alreadyExist) {
         return c.json(
@@ -176,7 +172,7 @@ const businessesRouter = new Hono()
       const role = await Role.create({
         businessId: businessId,
         name,
-        description
+        description,
       });
 
       return c.json({
@@ -189,7 +185,7 @@ const businessesRouter = new Hono()
   .put(
     '/:businessId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       'param',
@@ -235,7 +231,7 @@ const businessesRouter = new Hono()
   .put(
     'outletInfo/:outletInfoId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
     zValidator(
       'param',
       z.object({
@@ -287,7 +283,7 @@ const businessesRouter = new Hono()
   .get(
     '/:businessId/permissions',
     // authTokenValidator,
-    // requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    // requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('param', z.object({ businessId: z.string() })),
     async (c) => {
@@ -302,7 +298,7 @@ const businessesRouter = new Hono()
   .get(
     '/outletInfo/:businessId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
     zValidator('param', z.object({ businessId: z.string() })),
     zValidator('header', TokenValidator),
 
@@ -390,7 +386,7 @@ const businessesRouter = new Hono()
   .get(
     '/:businessId/users',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       'param',

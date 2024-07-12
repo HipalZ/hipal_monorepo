@@ -1,29 +1,19 @@
 // books.ts
 import { LoyaltyCoinsInfo, User, UserReward, UserRewardHistory } from '@hi/db-models';
 import type { UserType } from '@hi/db-models/src/validators';
-import {
-  TokenValidator,
-  UserAttrs,
-  addStaffValidator,
-  ownerLoginValidator,
-  paramsSchema,
-  staffValidator,
-  subPermissions,
-} from '@hi/db-models/src/validators';
+import { addStaffValidator, ownerLoginValidator, paramsSchema, roles, staffValidator, TokenValidator, UserAttrs } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
+//@ts-ignore
+//@ts-ignore
+import argon2 from 'argon2';
 import axios from 'axios';
 import { Hono } from 'hono';
 //@ts-ignore
 import jwt from 'jsonwebtoken';
-//@ts-ignore
-
-//@ts-ignore
-
-import argon2 from 'argon2';
-
-import { string, z } from 'zod';
+import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
+import { respond } from '../../utils/response';
 
 // Hash a password
 async function hashPassword(password: string): Promise<string> {
@@ -254,10 +244,10 @@ const usersRouter = new Hono()
           return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
         }
 
-        const user = await User.create({ name, phone, role: ['RESTAURANT_OWNER', 'HIPAL_CUSTOMER', 'RESTAURANT_STAFF'] });
+        const user = await User.create({ name, phone, role: roles });
 
-        const accessToken = createAccessToken(user._id, 'RESTAURANT_OWNER');
-        const refreshToken = createRefreshToken(user._id, 'RESTAURANT_OWNER');
+        const accessToken = createAccessToken(user._id, 'OWNER');
+        const refreshToken = createRefreshToken(user._id, 'OWNER');
 
         return c.json({
           status: true,
@@ -310,8 +300,8 @@ const usersRouter = new Hono()
             400,
           );
         }
-        const accessToken = createAccessToken(existingUser?._id || '', 'RESTAURANT_OWNER');
-        const refreshToken = createRefreshToken(existingUser?._id || '', 'RESTAURANT_OWNER');
+        const accessToken = createAccessToken(existingUser?._id || '', 'OWNER');
+        const refreshToken = createRefreshToken(existingUser?._id || '', 'OWNER');
 
         return c.json({
           message: 'Owner Logged in Successfully',
@@ -336,14 +326,15 @@ const usersRouter = new Hono()
         }
 
         const user = await User.findOne({ phone });
+        if (!user) return respond(c, 'User not found', true, 404, {});
 
-        const accessToken = createAccessToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
-        const refreshToken = createRefreshToken(user?._id.toString() || '', 'RESTAURANT_OWNER');
+        const accessToken = createAccessToken(user?._id.toString() || '', 'OWNER');
+        const refreshToken = createRefreshToken(user?._id.toString() || '', 'OWNER');
 
-        return c.json({
-          message: 'Owner Logged in Successfully',
-          data: { user, accessToken, refreshToken },
-          err: false,
+        return respond(c, 'Owner Logged in Successfully', false, 200, {
+          user,
+          accessToken,
+          refreshToken,
         });
       }
     },
@@ -442,8 +433,8 @@ const usersRouter = new Hono()
       );
     }
     // Generate JWT
-    const accessToken = createAccessToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
-    const refreshToken = createRefreshToken(staff?._id.toString() || '', 'RESTAURANT_STAFF');
+    const accessToken = createAccessToken(staff?._id.toString() || '', 'CAPTAIN');
+    const refreshToken = createRefreshToken(staff?._id.toString() || '', 'CAPTAIN');
 
     return c.json({
       message: 'Staff Logged in Successfully',
@@ -455,7 +446,7 @@ const usersRouter = new Hono()
   .post(
     '/addStaff',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
     zValidator('json', addStaffValidator),
     zValidator('header', TokenValidator),
     async (c) => {
@@ -468,62 +459,52 @@ const usersRouter = new Hono()
         role: role,
       };
 
+      const existingUser = await User.findOne({
+        phone,
+        customRole: { $elemMatch: { businessId: businessId } },
+      });
+
+      if (existingUser) {
+        return respond(c, 'Staff already exist', true, 400, existingUser);
+      }
+
       const updateUser = await User.findOneAndUpdate(
         { phone },
         {
           $set: {
             name,
             phone,
-            role: [ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER],
+            role: roles,
           },
-          $push: { customRole: newCustomRole },
+          $addToSet: { customRole: newCustomRole },
         },
         { new: true, upsert: true },
       );
 
-      if (!updateUser) {
-        return c.json(
-          {
-            err: true,
-            message: 'staff failed',
-            data: {},
-          },
-          400,
-        );
-      }
 
-      return c.json({
-        err: false,
-        data: updateUser,
-        message: updateUser ? 'User updated with new custom role!' : 'Staff created!',
-      });
+
+
+      if (!updateUser) return respond(c, 'staff failed', true, 400, {});
+      return respond(c, 'Staff created!', false, 200, updateUser);
     },
   )
   .put(
     '/:staffId/staff',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
     zValidator(
       'json',
       z
         .object({
-          role: z.string().max(30).optional(),
-          phone: z.string().max(10).optional(),
+          role: z.enum(roles).optional(),
+          phone: z.string().min(10).max(10).optional(),
           password: z.string().optional(),
           businessId: z.string(),
-
           permissions: z
             .array(
               z.object({
                 title: z.string(),
-                subPermissions: z
-                  .array(
-                    z.object({
-                      subTitle: z.string().optional(),
-                      descriptions: z.string(), // Assuming descriptions should be a string. If it needs to be an array, adjust accordingly.
-                    }),
-                  )
-                  .optional(),
+                subPermissions: z.array(z.string()).optional(),
               }),
             )
             .optional(),
@@ -536,49 +517,48 @@ const usersRouter = new Hono()
       const { staffId } = c.req.param();
       const { phone, permissions, role, password, businessId } = requestData;
 
-      const hashedPassword = await hashPassword(password);
+    const staff = await User.findOne({ _id: staffId ,customRole: { $elemMatch: { businessId: businessId } } });
+
+      if (!staff) {
+        return respond(c, 'Staff not found', true, 404, {});
+      }
+
+      console.log("staff",staff)
+
       const newCustomRole = {
         businessId: businessId,
         permissions: permissions,
         bookMark: true,
       };
 
-      const updateUser = await User.findByIdAndUpdate(
-        staffId,
+      const hashPass = password ? await hashPassword(password) : null;
+
+      const updateUser = await User.findOneAndUpdate(
+        { _id: staffId, "customRole.businessId": businessId },
         {
           $set: {
-            phone,
-            role: [ClientRoles.RESTAURANT_STAFF, ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER],
-            password: hashedPassword ? hashedPassword : '',
+            "customRole.$.permissions": permissions, // Update permissions in the matched customRole
+            "customRole.$.bookMark": true, // Set bookMark to true in the matched customRole
+            phone, // Assuming these are user-level updates
+            role: roles,
+            password: hashPass || staff.password,
           },
-          $addToSet: { customRole: newCustomRole },
         },
-        { new: true, upsert: true },
+        { new: true },
       );
 
       if (!updateUser) {
-        return c.json(
-          {
-            err: true,
-            message: 'staff failed',
-            data: {},
-          },
-          400,
-        );
+        return respond(c, 'staff failed', true, 400, {});
       }
 
-      return c.json({
-        err: false,
-        data: updateUser,
-        message: updateUser ? 'User updated with new custom role!' : 'Staff created!',
-      });
+      return respond(c, updateUser ? 'User updated with new custom role!' : 'Staff created!', false, 200, updateUser);
     },
   )
 
   .delete(
     '/:staffId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER]),
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('header', TokenValidator),
     zValidator(
@@ -607,17 +587,28 @@ const usersRouter = new Hono()
     if (password === '1234') {
       const existingUser = await User.findOne({
         phone,
-        role: 'RESTAURANT_OWNER',
+        role: 'OWNER',
       });
 
       if (!existingUser) {
-        return c.json({ err: true, status: false, message: 'Phone or Password invalid...!' }, 400);
+        return c.json(
+          {
+            err: true,
+            status: false,
+            message: 'Phone or Password invalid...!',
+          },
+          400,
+        );
       }
-      const accessToken = createAccessToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
-      const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
+      const accessToken = createAccessToken(existingUser?._id.toString() || '', 'OWNER');
+      const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'OWNER');
 
       return c.json({
-        data: { existingUser: existingUser, accessToken: accessToken, refreshToken: refreshToken },
+        data: {
+          existingUser: existingUser,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        },
         err: false,
         status: true,
         message: 'Login SuccessFully !!!',
@@ -626,16 +617,20 @@ const usersRouter = new Hono()
     const existingUser = await User.findOne({
       phone,
       password,
-      role: 'RESTAURANT_OWNER',
+      role: 'OWNER',
     });
     if (!existingUser) {
       return c.json({ err: true, status: false, message: 'Phone or Password invalid...!' }, 400);
     }
-    const accessToken = createAccessToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
-    const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'RESTAURANT_OWNER');
+    const accessToken = createAccessToken(existingUser?._id.toString() || '', 'OWNER');
+    const refreshToken = createRefreshToken(existingUser?._id.toString() || '', 'OWNER');
 
     return c.json({
-      data: { existingUser: existingUser, accessToken: accessToken, refreshToken: refreshToken },
+      data: {
+        existingUser: existingUser,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      },
       err: false,
       status: true,
       message: 'Login SuccessFully !!!',
@@ -655,6 +650,25 @@ const usersRouter = new Hono()
       err: false,
     });
   })
+  .get(
+    '/getStaff/:staffId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
+    zValidator('header', TokenValidator),
+
+    zValidator(
+      'param',
+      z.object({
+        staffId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { staffId } = c.req.param();
+      const existingUser = await User.findById(staffId);
+      if (!existingUser) return respond(c, 'User not found', true, 404, {});
+      return respond(c, 'User fetched successfully', false, 200, existingUser);
+    },
+  )
   .post('/:id/signIn', zValidator('json', UserAttrs), async (c) => {
     const requestData = await c.req.json();
     const { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = requestData;
@@ -710,7 +724,12 @@ const usersRouter = new Hono()
       };
       return c.json({
         message: 'User logged in successfully',
-        data: { user: modifyUser, accessToken, refreshToken, rewards: userReward?.rewards || 0 },
+        data: {
+          user: modifyUser,
+          accessToken,
+          refreshToken,
+          rewards: userReward?.rewards || 0,
+        },
         err: false,
       });
     }
@@ -728,7 +747,7 @@ const usersRouter = new Hono()
   .get(
     '/:id/loyaltyUserHistory',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator(
       'query',
       z.object({
@@ -770,7 +789,7 @@ const usersRouter = new Hono()
   .get(
     '/:businessId/getUserReward',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
 
     zValidator(
       'query',

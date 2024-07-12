@@ -1,8 +1,6 @@
 // books.ts
-import { Dish, UniquelyYours, User } from '@hi/db-models';
-import type { DishType } from '@hi/db-models/src/validators';
+import { Dish, UniquelyYours } from '@hi/db-models';
 import { paramsSchema, TokenValidator, uniquelyYoursSchema } from '@hi/db-models/src/validators';
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -32,7 +30,7 @@ const dishesRouter = new Hono()
   .post(
     '/uniquelyYours',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator(
       'json',
       z.object({
@@ -55,7 +53,7 @@ const dishesRouter = new Hono()
   .get(
     '/uniquelyDishes/:businessId',
     authTokenValidator,
-    requireAuthorization([ClientRoles.RESTAURANT_OWNER, ClientRoles.HIPAL_ADMIN]),
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ businessId: z.string() })),
 
     zValidator('header', TokenValidator),
