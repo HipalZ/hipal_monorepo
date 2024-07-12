@@ -72,6 +72,15 @@ export const businessCtrlServices = [
 		],
 		navigation: "hisite",
 	},
+	{
+		image: PlaceHolder,
+		Title: "Settings",
+		tags: [
+			"Explore Page",
+			"Business Info",
+		],
+		navigation: "settings",
+	},
 ]
 
 export const hisiteServices = [

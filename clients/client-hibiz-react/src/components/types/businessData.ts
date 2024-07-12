@@ -1,11 +1,19 @@
-import { businessType } from "../store/useBusinessCtrl";
-import { User } from "../store/useOwnerLogin";
+import type { businessType } from "../store/useBusinessCtrl";
+import type { User } from "../store/useOwnerLogin";
+
+interface IAcessControl {
+  [key :string] :string;
+  _id:string
+}
 
 export interface CustomRole {
   businessId: string;
   customRoleId: string;
   permissions: string[];
-  roleName: string;
+  role: string;
+  bookmark: boolean;
+  _id: string;
+  accessControl: IAcessControl
 }
 
 export interface UserProfile {
@@ -154,13 +162,13 @@ export interface IExistingPayments {
   __v: number;
 }
 export interface HistoryData {
-  existingPayments : IExistingPayments[];
+  existingPayments: IExistingPayments[];
   totalSale: number;
 }
 
 export interface NetworkInformation extends EventTarget {
   downlink?: number;
-  effectiveType?: 'slow-2g' | '2g' | '3g' | '4g';
+  effectiveType?: "slow-2g" | "2g" | "3g" | "4g";
   rtt?: number;
   saveData?: boolean;
   onchange?: EventListenerOrEventListenerObject;
@@ -172,8 +180,8 @@ export interface NavigatorWithNetworkInformation extends Navigator {
   webkitConnection?: NetworkInformation;
 }
 
-export interface ILoginProps{
-  accessToken:string;
-  refreshToken:string;
-  existingUser:User;
+export interface ILoginProps {
+  accessToken: string;
+  refreshToken: string;
+  existingUser: User;
 }

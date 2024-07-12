@@ -26,7 +26,7 @@ const Business = () => {
         });
       });
     },
-    [businessId, navigate],
+    [businessId],
   );
 
   const handleBack = useCallback(() => {
@@ -49,7 +49,7 @@ const Business = () => {
           <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
             <img width={64} height={64} src={businessData?.logo} alt="Business_Logo" />
           </figure>
-          <figcaption className="text-xl font-bold capitalize">{businessData?.businessName}</figcaption>
+          <figcaption className="text-xl font-bold capitalize">{businessData?.name}</figcaption>
         </center>
       </section>
       <section className="mx-4">

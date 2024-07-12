@@ -152,18 +152,16 @@ const businessesRouter = new Hono()
       'json',
       z.object({
         name: z.enum([
-          ClientRoles.RESTAURANT_STAFF,
-          ClientRoles.RESTAURANT_MANAGER,
-          ClientRoles.OPERATOR,
-          ClientRoles.RESTAURANT_FLOOR_MANAGER,
-          ClientRoles.RESTAURANT_OWNER,
+         'MANAGER','CO_OWNER',"CAPTAIN", "MARKETING_AGENT", 'RESTAURANT_OWNER'
         ]),
+        description:z.string().min(4).max(100)
+        
       }),
     ),
     // zValidator('header', TokenValidator),
     async (c) => {
       const { businessId } = c.req.param();
-      const { name } = await c.req.json();
+      const { name ,description} = await c.req.json();
       const alreadyExist = await Role.findOne({ name });
       if (alreadyExist) {
         return c.json(
@@ -178,6 +176,7 @@ const businessesRouter = new Hono()
       const role = await Role.create({
         businessId: businessId,
         name,
+        description
       });
 
       return c.json({
@@ -404,7 +403,7 @@ const businessesRouter = new Hono()
       const { businessId } = c.req.param();
       const existingRoles = await Role.find({
         businessId: businessId,
-      }).select('_id name');
+      }).select('_id name description');
 
       return c.json({
         data: existingRoles,

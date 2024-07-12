@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const RoleSchema = z.object({
-  name: z.enum(['RESTAURANT_MANAGER', 'RESTAURANT_FLOOR_MANAGER', 'RESTAURANT_STAFF', 'OPERATOR']),
+  name: z.enum(['MANAGER','CO_OWNER',"CAPTAIN", "MARKETING_AGENT", 'RESTAURANT_OWNER']),
   description: z.string().max(100).optional(),
   permissions: z.array(z.string()).max(100).optional(),
   businessId: z.string(),
