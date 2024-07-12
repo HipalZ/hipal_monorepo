@@ -14,7 +14,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: String,
       enum: BusinessEnumType,
 
-      required: true,
+      required: false,
     },
 
     multipleOutlets: {

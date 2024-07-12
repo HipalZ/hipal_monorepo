@@ -1,6 +1,7 @@
 // books.ts
 import { Business, LoyaltySettings, OutLetInfo, Permissions, Role, Theme } from '@hi/db-models';
 import {
+  BranchSchema,
   BusinessSchema,
   outLetInfoSchema,
   paramsSchema,
@@ -47,6 +48,39 @@ const businessesRouter = new Hono()
       }
 
       return respond(c, 'business created', false, 201, business);
+    },
+  )
+  .post(
+    '/createBranch',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
+
+    zValidator('json', BranchSchema),
+    zValidator('header', TokenValidator),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
+      if (isCustomLinkExist) {
+        return c.json(
+          {
+            err: true,
+            data: {},
+            message: 'customLink already exist',
+          },
+          409,
+        );
+      }
+      const business = await Business.create(requestData);
+      if (!business) {
+        return c.json({
+          err: true,
+          data: {},
+          message: 'business not created !',
+        });
+      }
+
+      return respond(c, 'branch  created', false, 201, business);
     },
   )
   .post(
@@ -293,6 +327,28 @@ const businessesRouter = new Hono()
       if (!business) return respond(c, 'permissions not found', true, 404, {});
 
       return respond(c, 'permissions found', false, 200, business);
+    },
+  )
+  .get(
+    '/getBranches/:ownerId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
+
+    zValidator('header', TokenValidator),
+
+    zValidator(
+      'param',
+      z.object({
+        ownerId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { ownerId } = c.req.param();
+      const existingBusinesses = await Business.find({
+        staffIds: ownerId,
+      }).select('name _id');
+
+      return respond(c, 'businesses found', false, 200, existingBusinesses);
     },
   )
   .get(
