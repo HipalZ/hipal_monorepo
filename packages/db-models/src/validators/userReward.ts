@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const UserRewardDoc = z.object({
+  _id: z.string().optional(),
   userPhone: z.string(),
   userName: z.string(),
   loyaltyId: z.string(),

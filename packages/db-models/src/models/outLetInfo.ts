@@ -12,7 +12,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   },
   name: {
     type: String,
-    required: true,
+    required: false,
   },
   fssai: {
     type: String,

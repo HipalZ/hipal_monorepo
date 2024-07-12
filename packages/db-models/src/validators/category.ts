@@ -9,6 +9,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 export const categorySchema = z.object({
+  _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
   name: z.string().max(100),
   visibility: z.boolean(),

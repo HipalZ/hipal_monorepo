@@ -16,6 +16,7 @@ export const Alignment = ['LEFT', 'CENTER', 'RIGHT', 'JUSTIFY'] as const;
 export const RedirectionType = ['CATEGORY', 'DISH', 'LINK', 'NONE'] as const;
 
 export const bannerSchema = z.object({
+  _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
   bannerType: z.enum(BannerTypes).optional(),
   bannerImage: z.string().min(3).max(100).url().optional(),

@@ -39,6 +39,7 @@ const tagSchema = z.object({
 });
 
 export const dishSchema = z.object({
+  _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
   name: z.string(),
   price: z.coerce.number(),

@@ -1,22 +1,45 @@
 // books.ts
-import { Business, LoyaltySettings, OutLetInfo, Permissions, Role, Theme } from '@hi/db-models';
 import {
+  Banner,
+  Business,
+  BusinessSettings,
+  Category,
+  Dish,
+  Extra,
+  LoyaltySettings,
+  OutLetInfo,
+  Permissions,
+  Role,
+  Theme,
+  UserReward,
+} from '@hi/db-models';
+import {
+  BannerType,
   BranchSchema,
   BusinessSchema,
+  CategoryType,
+  DishType,
+  ExtraType,
+  LoyaltyType,
   outLetInfoSchema,
   paramsSchema,
   permissionsSchema,
+  ThemesType,
   TokenValidator,
   UpdateBusinessSchema,
+  UserRewardType,
 } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 //@ts-ignore
+import { runInTransaction } from '@hi/utils';
+import type { ClientSession } from 'mongoose';
 import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { respond } from '../../utils/response';
 import { convertToHsl } from '../../utils/theme';
+
 const businessesRouter = new Hono()
   .post(
     '/',
@@ -54,33 +77,97 @@ const businessesRouter = new Hono()
     '/createBranch',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
-
     zValidator('json', BranchSchema),
     zValidator('header', TokenValidator),
-
     async (c) => {
-      const requestData = await c.req.json();
-      const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
-      if (isCustomLinkExist) {
-        return c.json(
-          {
-            err: true,
-            data: {},
-            message: 'customLink already exist',
-          },
-          409,
-        );
-      }
-      const business = await Business.create(requestData);
-      if (!business) {
-        return c.json({
-          err: true,
-          data: {},
-          message: 'business not created !',
-        });
-      }
+      return await runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
+        console.log('isCustomLinkExist', isCustomLinkExist);
+        if (isCustomLinkExist) return respond(c, 'customLink already exist', true, 409, {});
 
-      return respond(c, 'branch  created', false, 201, business);
+        const business = await Business.create([requestData], { session });
+        if (requestData.parentBranchId) {
+          const { menu, themes, rewards, paymentAndBusinessSettings, parentBranchId } = requestData;
+          const currentBusinessId = business[0]._id;
+          console.log('currentBusinessId', currentBusinessId);
+          console.log('parentBranchId', parentBranchId);
+
+          if (menu) {
+            const categories = await Category.find({ businessId: parentBranchId }).lean();
+            
+            for (let i = 0; i < categories.length; i++) {
+              const category = categories[i];
+              delete category._id;
+              category['businessId'] = currentBusinessId;
+            }
+
+            await Category.insertMany(categories, { session });
+
+            const dishes = await Dish.find({ businessId: parentBranchId }).lean();
+            dishes.forEach((dish) => {
+              delete dish._id;
+              dish['businessId'] = currentBusinessId;
+            });
+            await Dish.insertMany(dishes, { session });
+
+            const extras = await Extra.find({ businessId: parentBranchId }).lean();
+            extras.forEach((extra) => {
+              delete extra._id;
+              extra.businessId = currentBusinessId;
+            });
+            await Extra.insertMany(extras, { session });
+          }
+
+          if (themes) {
+            console.log('themes', themes);
+            const outLet = await OutLetInfo.findOne({ businessId: parentBranchId }).lean();
+
+            if (!outLet) return respond(c, 'outLet not found', true, 404, {});
+
+            delete outLet._id;
+
+            console.log('outLet', outLet);
+            await OutLetInfo.create([{ ...outLet, businessId: currentBusinessId }], { session });
+
+            const banners = await Banner.find({ businessId: parentBranchId }).lean();
+            banners.forEach((banner) => {
+              delete banner._id;
+              banner.businessId = currentBusinessId;
+            });
+            await Banner.insertMany(banners, { session });
+
+            const themesData = await Theme.findOne({ businessId: parentBranchId }).lean();
+            if (themesData) {
+              delete themesData._id;
+              await Theme.create([{ theme: themesData.theme, businessId: currentBusinessId }], { session });
+            }
+          }
+
+          if (rewards) {
+            const loyaltySettings = await LoyaltySettings.findOne({ businessId: parentBranchId }).lean();
+            if (!loyaltySettings) return respond(c, 'loyaltySettings not found', true, 404, {});
+            delete loyaltySettings._id;
+            await LoyaltySettings.create([{ ...loyaltySettings, businessId: currentBusinessId }], { session });
+
+            const loyaltyUsers = await UserReward.find({ loyaltyId: parentBranchId }).lean();
+            loyaltyUsers.forEach((user) => {
+              delete user._id;
+              user.loyaltyId = currentBusinessId.toString();
+            });
+            await UserReward.insertMany(loyaltyUsers, { session });
+          }
+
+          if (paymentAndBusinessSettings) {
+            const businessSetting = await BusinessSettings.findOne({ businessId: parentBranchId }).lean();
+            if (!businessSetting) return respond(c, 'businessSetting not found', true, 404, {});
+            delete businessSetting._id;
+            await BusinessSettings.create([{ ...businessSetting, businessId: currentBusinessId }], { session });
+          }
+        }
+
+        return respond(c, 'branch created', false, 201, business);
+      });
     },
   )
   .post(

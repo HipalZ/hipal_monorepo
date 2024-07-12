@@ -213,7 +213,7 @@ const calculatedCashbackCoins = async (businessId: string, billValue: number, cl
 };
 const paymentsRouter = new Hono()
   .post(
-    '/createOrder/:mer',
+    '/createOrder',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),

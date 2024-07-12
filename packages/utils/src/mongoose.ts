@@ -4,13 +4,11 @@ type TransactionCallback = (session: ClientSession) => Promise<void>;
 
 export const runInTransaction = async (callback: TransactionCallback) => {
   const session: ClientSession = await mongoose.startSession();
-
   session.startTransaction();
-
   try {
-    await callback(session);
-
+    const res = await callback(session);
     await session.commitTransaction();
+    return res;
   } catch (error) {
     await session.abortTransaction();
     console.error(error);

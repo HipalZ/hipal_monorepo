@@ -1,5 +1,13 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 const Items = z.object({
   name: z.string(),
   price: z.coerce.number(),
@@ -11,7 +19,8 @@ const Items = z.object({
 });
 
 export const ExtraAttrs = z.object({
-  businessId: z.string(),
+  _id: z.string().optional(),
+  businessId: ObjectIdSchema,
   name: z.string(),
   numOptions: z.coerce.number(),
   numSelections: z.coerce.number(),

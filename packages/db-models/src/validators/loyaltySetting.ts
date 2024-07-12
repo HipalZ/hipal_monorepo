@@ -11,6 +11,7 @@ const ObjectIdSchema = z.string().refine(
 );
 
 export const loyaltySchema = z.object({
+  _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
   loyaltyId: z.string(),
   setReward: z.coerce.number(),

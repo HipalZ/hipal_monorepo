@@ -58,6 +58,7 @@ export const Navigation = z.object({
 });
 
 export const settingsSchema = z.object({
+  _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
   themes: Themes.optional(),
   explore: Explore.optional(),

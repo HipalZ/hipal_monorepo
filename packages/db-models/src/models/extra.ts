@@ -1,6 +1,6 @@
 import mongoose, { type Model } from 'mongoose';
 import type { ExtraType, ItemsType } from '../validators';
-
+const ObjectId = mongoose.Schema.Types.ObjectId;
 const itemSchema = new mongoose.Schema<ItemsType>({
   name: { type: String, required: true },
   price: { type: Number, required: true },
@@ -16,8 +16,9 @@ const Item = mongoose.model('Item', itemSchema);
 const extraSchema = new mongoose.Schema<ExtraType>(
   {
     businessId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: 'Business',
     },
     name: {
       type: String,
