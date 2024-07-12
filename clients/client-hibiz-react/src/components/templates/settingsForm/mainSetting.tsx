@@ -28,7 +28,7 @@ const MemoSettings = () => {
               <header className="relative flex items-center mb-6 space-x-4">
                 <article className="w-6 h-6 bg-purple-700">
                   <service.icon className="text-white" />
-                </article>
+                </article> 
                 <h1 className="text-2xl">{service?.title}</h1>
                 <Link
                   to={`/app/business/${businessId}/${service?.navigateTo}`}
