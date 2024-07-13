@@ -469,7 +469,7 @@ const businessesRouter = new Hono()
       console.log('id', id);
 
       const existingBusinesses = await Business.find({
-        staffIds: id,
+        staffIds: id, outlet: true
       }).populate('parentOutLetId', {
         name: 1,
         _id: 0
