@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 import { useLocation, useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
-//testing
+//testing/
 export default function MainRouter() {
   const location = useLocation();
   const element = useRoutes(routes) as ReactNode;

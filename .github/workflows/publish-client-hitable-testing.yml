@@ -2,7 +2,7 @@ name: Build and Push client-hitable-test Server Image
 
 on:
   push:
-    branches: ['testing']
+    branches: ['test']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
