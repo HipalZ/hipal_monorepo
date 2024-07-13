@@ -43,7 +43,10 @@ const Login: React.FC = () => {
       setValidPhone(isPhoneValid);
       return;
     }
-    const response = await apiRpc.users.Owner.Login.$post({
+    const response = await apiRpc.users.ownerSignIn.$post({
+      query:{
+        verifyOtp: "false",
+      },
       json: {
         phone: phone,
         password: password,
@@ -56,7 +59,7 @@ const Login: React.FC = () => {
     if (response.status === 200) {
       setAccessToken(user.data.accessToken);
       setRefreshToken(user.data.refreshToken);
-      setUser(user.data.existingUser);
+      setUser(user.data.user);
       toast.success("Login Successfully");
       setIsLogin(true);
       startTransition(() => {
