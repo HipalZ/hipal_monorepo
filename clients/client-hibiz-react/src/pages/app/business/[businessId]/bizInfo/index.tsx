@@ -1,9 +1,9 @@
 import Header from '@/components/molecules/header';
-import { Paragraph, SubHeader } from '../explorePage';
 import { useState } from 'react';
 import { FaGlassMartiniAlt, FaPhoneAlt } from 'react-icons/fa';
 import { MdOutlineSmokingRooms, MdOutlineStroller, MdOutlineWatchLater } from 'react-icons/md';
 import { IoBeerOutline, IoWifiOutline } from 'react-icons/io5';
+import { Paragraph, SubHeader } from '@/components/templates/explorePage/explorePageStore';
 
 const BizInfo = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
