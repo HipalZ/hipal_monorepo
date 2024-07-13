@@ -7,3 +7,6 @@ export enum ClientRoles {
   CAPTAIN = 'CAPTAIN',
   MARKETING_AGENT = 'MARKETING_AGENT',
 }
+
+
+export const Permissions = ["hitable", "readable", "writable", "deletable", "updatable", "creatable", "listable", "searchable", "exportable", "importable", "printable", "send"]

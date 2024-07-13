@@ -10,7 +10,8 @@ export enum ClientRoles {
   MARKETING_AGENT = 'MARKETING_AGENT',
 }
 
-// ! Assumes we are going to call current Client before this middleware
+// ! Assumes we are going to call tokenvalidator Client before this middleware
+
 export const requireAuthorization = (roles: ClientRoles[]) => {
   const checkAuthorization = async (c: Context, next: Next) => {
     // TODO: ADD A CHECK FOR LOCALHOST
