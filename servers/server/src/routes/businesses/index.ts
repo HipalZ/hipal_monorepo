@@ -83,19 +83,19 @@ const businessesRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
-        console.log('isCustomLinkExist', isCustomLinkExist);
+
         if (isCustomLinkExist) return respond(c, 'customLink already exist', true, 409, {});
 
         const business = await Business.create([requestData], { session });
         if (requestData.parentBranchId) {
-          const { menu, themes, rewards, paymentAndBusinessSettings, parentBranchId } = requestData;
+          const { menu, themes, rewards, paymentAndBusinessSettings, parentOutLetId } = requestData;
           const currentBusinessId = business[0]._id;
           console.log('currentBusinessId', currentBusinessId);
-          console.log('parentBranchId', parentBranchId);
+          console.log('parentBranchId', parentOutLetId);
 
           if (menu) {
-            const categories = await Category.find({ businessId: parentBranchId }).lean();
-            
+            const categories = await Category.find({ businessId: parentOutLetId }).lean();
+
             for (let i = 0; i < categories.length; i++) {
               const category = categories[i];
               delete category._id;
@@ -104,14 +104,14 @@ const businessesRouter = new Hono()
 
             await Category.insertMany(categories, { session });
 
-            const dishes = await Dish.find({ businessId: parentBranchId }).lean();
+            const dishes = await Dish.find({ businessId: parentOutLetId }).lean();
             dishes.forEach((dish) => {
               delete dish._id;
               dish['businessId'] = currentBusinessId;
             });
             await Dish.insertMany(dishes, { session });
 
-            const extras = await Extra.find({ businessId: parentBranchId }).lean();
+            const extras = await Extra.find({ businessId: parentOutLetId }).lean();
             extras.forEach((extra) => {
               delete extra._id;
               extra.businessId = currentBusinessId;
@@ -121,7 +121,7 @@ const businessesRouter = new Hono()
 
           if (themes) {
             console.log('themes', themes);
-            const outLet = await OutLetInfo.findOne({ businessId: parentBranchId }).lean();
+            const outLet = await OutLetInfo.findOne({ businessId: parentOutLetId }).lean();
 
             if (!outLet) return respond(c, 'outLet not found', true, 404, {});
 
@@ -130,14 +130,14 @@ const businessesRouter = new Hono()
             console.log('outLet', outLet);
             await OutLetInfo.create([{ ...outLet, businessId: currentBusinessId }], { session });
 
-            const banners = await Banner.find({ businessId: parentBranchId }).lean();
+            const banners = await Banner.find({ businessId: parentOutLetId }).lean();
             banners.forEach((banner) => {
               delete banner._id;
               banner.businessId = currentBusinessId;
             });
             await Banner.insertMany(banners, { session });
 
-            const themesData = await Theme.findOne({ businessId: parentBranchId }).lean();
+            const themesData = await Theme.findOne({ businessId: parentOutLetId }).lean();
             if (themesData) {
               delete themesData._id;
               await Theme.create([{ theme: themesData.theme, businessId: currentBusinessId }], { session });
@@ -145,12 +145,12 @@ const businessesRouter = new Hono()
           }
 
           if (rewards) {
-            const loyaltySettings = await LoyaltySettings.findOne({ businessId: parentBranchId }).lean();
+            const loyaltySettings = await LoyaltySettings.findOne({ businessId: parentOutLetId }).lean();
             if (!loyaltySettings) return respond(c, 'loyaltySettings not found', true, 404, {});
             delete loyaltySettings._id;
             await LoyaltySettings.create([{ ...loyaltySettings, businessId: currentBusinessId }], { session });
 
-            const loyaltyUsers = await UserReward.find({ loyaltyId: parentBranchId }).lean();
+            const loyaltyUsers = await UserReward.find({ loyaltyId: parentOutLetId }).lean();
             loyaltyUsers.forEach((user) => {
               delete user._id;
               user.loyaltyId = currentBusinessId.toString();
@@ -159,7 +159,7 @@ const businessesRouter = new Hono()
           }
 
           if (paymentAndBusinessSettings) {
-            const businessSetting = await BusinessSettings.findOne({ businessId: parentBranchId }).lean();
+            const businessSetting = await BusinessSettings.findOne({ businessId: parentOutLetId }).lean();
             if (!businessSetting) return respond(c, 'businessSetting not found', true, 404, {});
             delete businessSetting._id;
             await BusinessSettings.create([{ ...businessSetting, businessId: currentBusinessId }], { session });

@@ -16,11 +16,9 @@ const businessSchema = new mongoose.Schema<BusinessType>(
 
       required: false,
     },
-
-    multipleOutlets: {
-      type: [ObjectId],
+    parentOutLetId: {
+      type: ObjectId,
       required: false,
-
       ref: 'Business',
     },
 
@@ -55,6 +53,10 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     },
     secondaryColor: {
       type: String,
+    },
+    outlet: {
+      type: Boolean,
+      default: true,
     },
   },
   {
