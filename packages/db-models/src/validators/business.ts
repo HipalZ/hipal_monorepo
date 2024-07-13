@@ -15,7 +15,6 @@ export const BusinessEnumType = ['FOOD', 'OTHER'] as const;
 export const BusinessSchema = z.object({
   name: z.string().min(4).max(50),
   businessType: z.enum(BusinessEnumType),
-  // multipleOutlets: z.array(ObjectIdSchema).optional(),
   customLink: z.string().min(3).max(30),
   staffIds: z.array(ObjectIdSchema),
   isActive: z.boolean().optional().default(false),
@@ -31,13 +30,12 @@ export const BusinessSchema = z.object({
 export const BranchSchema = z.object({
   name: z.string().min(4).max(50),
   parentOutLetId: ObjectIdSchema.optional(),
-  // parentBranchId: ObjectIdSchema.optional(),
   outlet: z.boolean().optional().default(true),
   businessType: z.enum(BusinessEnumType).optional(),
-  // multipleOutlets: z.array(ObjectIdSchema).optional(),
   customLink: z.string().min(3).max(30),
   staffIds: z.array(ObjectIdSchema),
   isActive: z.boolean().optional().default(false),
+  multiple: z.boolean().optional().default(false),
   menu: z.boolean().optional().default(false),
   themes: z.boolean().optional().default(false),
   rewards: z.boolean().optional().default(false),

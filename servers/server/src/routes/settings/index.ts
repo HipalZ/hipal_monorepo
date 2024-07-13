@@ -1,5 +1,5 @@
 // books.ts
-import { Banner, BusinessSettings, Settings } from '@hi/db-models';
+import { Banner, BusinessSettings } from '@hi/db-models';
 import { bannerSchema, BusinessSettingsSchema, paramsSchema, TokenValidator } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -9,19 +9,19 @@ import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { respond } from '../../utils/response';
 
 const settingsRouter = new Hono()
-  .get(
-    '/',
+  // .get(
+  //   '/',
 
-    zValidator('query', paramsSchema),
-    async (c) => {
-      console.log('settingsRouter');
-      const { businessId } = c.req.query();
-      const existingSettings = await Settings.find({
-        businessId,
-      }).populate('explore.popular');
-      return respond(c, 'Settings fetched successfully', false, 200, existingSettings);
-    },
-  )
+  //   zValidator('query', paramsSchema),
+  //   async (c) => {
+  //     console.log('settingsRouter');
+  //     const { businessId } = c.req.query();
+  //     const existingSettings = await Settings.find({
+  //       businessId,
+  //     }).populate('explore.popular');
+  //     return respond(c, 'Settings fetched successfully', false, 200, existingSettings);
+  //   },
+  // )
   .post(
     '/banner',
     authTokenValidator,

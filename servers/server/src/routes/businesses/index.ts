@@ -24,7 +24,7 @@ import {
   outLetInfoSchema,
   paramsSchema,
   permissionsSchema,
-  ThemesType,
+
   TokenValidator,
   UpdateBusinessSchema,
   UserRewardType,
@@ -86,7 +86,7 @@ const businessesRouter = new Hono()
 
         if (isCustomLinkExist) return respond(c, 'customLink already exist', true, 409, {});
 
-        const business = await Business.create([requestData], { session });
+        const business = await Business.create([{ ...requestData, outlet: false, }], { session });
         if (requestData.parentBranchId) {
           const { menu, themes, rewards, paymentAndBusinessSettings, parentOutLetId } = requestData;
           const currentBusinessId = business[0]._id;
@@ -470,6 +470,9 @@ const businessesRouter = new Hono()
 
       const existingBusinesses = await Business.find({
         staffIds: id,
+      }).populate('parentOutLetId', {
+        name: 1,
+        _id: 0
       });
 
       return c.json({
