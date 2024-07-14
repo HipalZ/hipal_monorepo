@@ -41,7 +41,12 @@ export const outLetInfoSchema = z.object({
   phone: z.string({ message: 'enter valid 10 digit phone' }).min(10).max(10).optional(),
   location: z.string({ message: 'valid url address' }).url().min(10).max(100).optional(),
   amenities: z.enum(Amenities).array().optional(),
-  timing: z.array(z.string().min(4).max(30)).optional(),
+  timing: z.array(z.object({
+    openTime: z.string(),
+    closedTime: z.string()
+  })).optional(),
+  fixOpenTime: z.string().min(2).max(4).optional(),
+  fixCloseTime: z.string().min(2).max(4).optional(),
   footerDescription: z.string().min(10).max(200).optional(),
   socialMediaLinks: z.array(SocialMedia).optional(),
   billingStartTime: z.string().min(4).max(30).optional(),

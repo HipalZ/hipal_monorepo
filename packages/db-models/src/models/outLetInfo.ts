@@ -61,7 +61,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   ],
   timing: [
     {
-      type: String,
+      type: [],
       required: false,
     },
   ],
@@ -96,6 +96,12 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
 
     required: false,
+  },
+  fixOpenTime: {
+    type: String
+  },
+  fixCloseTime: {
+    type: String
   },
   branchName: {
     type: String,
