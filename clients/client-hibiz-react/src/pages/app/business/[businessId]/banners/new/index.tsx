@@ -1,11 +1,12 @@
-import { memo, startTransition } from 'react';
-import Header from '@/components/molecules/header';
-import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
-import layout3 from '@/assets/hisite/layout3.jpg';
-import { useBannerStore } from '@/components/store/useBannerStore';
+import { lazy, memo, startTransition, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBannerStore } from '@/components/store/useBannerStore';
 import { BannerType, bannerTypes } from '@/components/templates/explorePage/explorePageStore';
-import CreateBanner from '@/components/templates/explorePage/createBanner';
+
+// Lazy load components
+const Header = lazy(() => import('@/components/molecules/header'));
+const CreateBanner = lazy(() => import('@/components/templates/explorePage/createBanner'));
+
 
 const MemoNewBanner = () => {
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ const MemoNewBanner = () => {
     }
 
     return (
-        <>
+        <Suspense fallback={<div>Loading ...</div>}>
             {selectedBannerType === BannerType.BANNER_TYPE_0 ? (
                 <main className='relative h-screen'>
                     <article onKeyDown={handleBack} onClick={handleBack} className='fixed top-0 w-full bg-white shadow-lg'>
@@ -72,7 +73,7 @@ const MemoNewBanner = () => {
             ) : (
                 <CreateBanner />
             )}
-        </>
+        </Suspense>
     );
 };
 
