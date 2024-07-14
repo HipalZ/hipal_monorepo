@@ -183,7 +183,7 @@ const businessesRouter = new Hono()
 
       if (isInfoAlreadyExist) return respond(c, 'outletInfo already exists', true, 409, {});
 
-      const outLetInfo = await OutLetInfo.create(requestData);
+      const outLetInfo = await OutLetInfo.findOneAndUpdate({ businessId: requestData.businessId }, requestData, { new: true, upsert: true });
       if (!outLetInfo) return respond(c, 'outletInfo not created', true, 400, {});
 
       return respond(c, 'outletInfo created', false, 201, outLetInfo);
@@ -350,22 +350,22 @@ const businessesRouter = new Hono()
     },
   )
   .put(
-    'outletInfo/:outletInfoId',
+    'outletInfo/:businessId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator(
       'param',
       z.object({
-        outletInfoId: z.string(),
+        businessId: z.string(),
       }),
     ),
     zValidator('json', outLetInfoSchema.partial()),
     zValidator('header', TokenValidator),
     async (c) => {
-      const { outletInfoId } = c.req.param();
+      const { businessId } = c.req.param();
       const requestData = await c.req.json();
 
-      const updateOutletInfo = await OutLetInfo.findByIdAndUpdate(outletInfoId, requestData, { new: true });
+      const updateOutletInfo = await OutLetInfo.findOneAndUpdate({ businessId: businessId }, requestData, { new: true, upsert: true });
 
       if (!updateOutletInfo) return respond(c, 'outletInfo not found', true, 404, {});
 
