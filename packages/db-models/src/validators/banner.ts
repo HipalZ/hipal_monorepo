@@ -20,19 +20,22 @@ export const bannerSchema = z.object({
   businessId: ObjectIdSchema,
   bannerType: z.enum(BannerTypes).optional(),
   bannerImage: z.string().min(3).max(100).url().optional(),
+  heading: z.string().min(3).max(20).optional(),
   headingColor: z.string().min(3).max(100).optional(),
   headingFontWeight: z.enum(FontWeight).optional(),
   headingAlign: z.enum(Alignment).optional(),
+  paragraph: z.string().min(3).max(100).optional(),
   paragraphColor: z.string().min(3).max(100).optional(),
   paragraphFontWeight: z.enum(FontWeight).optional(),
   paragraphAlign: z.enum(Alignment).optional(),
+  buttonName: z.string().min(3).max(100).optional(),
   buttonColor: z.string().min(3).max(100).optional(),
   callToAction: z.string().min(3).max(100).optional(),
   backgroundColor: z.string().min(3).max(100).optional(),
   redirectionId: z.string().optional().optional(),
   redirectionType: z.enum(RedirectionType).optional(),
   isPublished: z.boolean().default(false).optional(),
-
+  redirectionName:z.string().optional(),
   isDeleted: z.boolean().default(false).optional(),
 });
 

@@ -117,6 +117,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
 
     required: false,
   },
+  avgPricingForTwo: {
+    type: Number,
+    reuired:false,
+  }
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>('outlet', outLetInfoSchema);

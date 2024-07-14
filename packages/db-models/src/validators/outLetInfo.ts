@@ -29,10 +29,10 @@ export const SocialMedia = z.object({
 });
 
 export const outLetInfoSchema = z.object({
-  name: z.string().min(4).max(50),
+  name: z.string().min(4).max(50).optional(),
   businessId: ObjectIdSchema,
-  fssai: z.string({ message: 'add valid fssai number' }).min(26).max(50).optional(),
-  gst: z.string({ message: 'add valid gst number' }).min(15).max(26).optional(),
+  fssai: z.string({ message: 'add valid fssai number' }).min(14).max(16).optional(),
+  gst: z.string({ message: 'add valid gst number' }).min(15).max(16).optional(),
   specialBannerUrl: z.string().url({ message: 'add valid url' }).min(10).max(100).optional(),
   endBannerUrl: z.string().url({ message: 'add valid url' }).min(10).max(100).optional(),
   logoUrl: z.string().url({ message: 'add valid url' }).min(10).max(100).optional(),
@@ -44,10 +44,10 @@ export const outLetInfoSchema = z.object({
   customTiming: z.array(z.object({
     day: z.string(),
     openTime: z.string(),
-    closedTime: z.string()
+    closeTime: z.string()
   })).optional(),
-  fixOpenTime: z.string().min(2).max(4).optional(),
-  fixCloseTime: z.string().min(2).max(4).optional(),
+  fixOpenTime: z.string().min(2).max(6).optional(),
+  fixCloseTime: z.string().min(2).max(6).optional(),
   footerDescription: z.string().min(10).max(200).optional(),
   socialMediaLinks: z.array(SocialMedia).optional(),
   billingStartTime: z.string().min(4).max(30).optional(),
@@ -55,6 +55,7 @@ export const outLetInfoSchema = z.object({
   brandName: z.string().min(4).max(30).optional(),
   branchName: z.string().min(4).max(30).optional(),
   isCustomTime: z.boolean().optional(),
+  avgPricingForTwo: z.coerce.number().positive().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
