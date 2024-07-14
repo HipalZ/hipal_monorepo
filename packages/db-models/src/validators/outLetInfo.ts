@@ -53,6 +53,7 @@ export const outLetInfoSchema = z.object({
   billingEndTime: z.string().min(4).max(30).optional(),
   brandName: z.string().min(4).max(30).optional(),
   branchName: z.string().min(4).max(30).optional(),
+  customTiming: z.boolean().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

@@ -31,6 +31,7 @@ export const bannerSchema = z.object({
   backgroundColor: z.string().min(3).max(100).optional(),
   redirectionId: z.string().optional().optional(),
   redirectionType: z.enum(RedirectionType).optional(),
+  isPublished: z.boolean().default(false).optional(),
 
   isDeleted: z.boolean().default(false).optional(),
 });

@@ -97,6 +97,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
 
     required: false,
   },
+  customTiming: {
+    type: Boolean,
+    default: false,
+  },
   fixOpenTime: {
     type: String
   },

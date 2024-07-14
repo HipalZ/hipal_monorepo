@@ -18,6 +18,7 @@ const bannerSchema = new Schema<BannerType>({
   redirectionId: { type: String, required: false },
   redirectionType: { type: String, enum: RedirectionType, required: false },
   isDeleted: { type: Boolean, default: false },
+  isPublished: { type: Boolean, default: false },
 });
 
 const Banner: Model<BannerType> = mongoose.model<BannerType>('Banner', bannerSchema);
