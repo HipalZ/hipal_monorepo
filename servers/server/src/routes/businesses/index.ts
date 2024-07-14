@@ -350,7 +350,7 @@ const businessesRouter = new Hono()
     },
   )
   .put(
-    'outletInfo/:businessId',
+    'outletInfo/update/:businessId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator(
