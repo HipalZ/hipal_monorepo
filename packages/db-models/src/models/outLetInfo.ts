@@ -59,7 +59,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
       required: false,
     },
   ],
-  timing: [
+  customTiming: [
     {
       type: [],
       required: false,
@@ -97,7 +97,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
 
     required: false,
   },
-  customTiming: {
+  isCustomTime: {
     type: Boolean,
     default: false,
   },

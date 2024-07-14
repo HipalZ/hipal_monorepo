@@ -41,7 +41,8 @@ export const outLetInfoSchema = z.object({
   phone: z.string({ message: 'enter valid 10 digit phone' }).min(10).max(10).optional(),
   location: z.string({ message: 'valid url address' }).url().min(10).max(100).optional(),
   amenities: z.enum(Amenities).array().optional(),
-  timing: z.array(z.object({
+  customTiming: z.array(z.object({
+    day: z.string(),
     openTime: z.string(),
     closedTime: z.string()
   })).optional(),
@@ -53,7 +54,7 @@ export const outLetInfoSchema = z.object({
   billingEndTime: z.string().min(4).max(30).optional(),
   brandName: z.string().min(4).max(30).optional(),
   branchName: z.string().min(4).max(30).optional(),
-  customTiming: z.boolean().optional(),
+  isCustomTime: z.boolean().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
