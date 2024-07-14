@@ -1,0 +1,143 @@
+import type { ICategory, IDish } from "@/components/types/businessData";
+import { apiRpc } from "@hi/common";
+import { memo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { combineAllDishes } from "./explorePageStore";
+import { useQuery } from "@tanstack/react-query";
+import BottomButton from "@/components/atom/bottomButton";
+import { IoIosSearch } from "react-icons/io";
+import SubHeader from "@/components/atom/subHeader";
+
+interface IProps {
+    setClickRedirect: (value: boolean) => void;
+    handleSaveRedirections: (selectedLink: string, selectedId: string, itemName:string) => void;
+}
+
+enum RedirectionType {
+    CATEGORIES = 'CATEGORY',
+    DISHES = 'DISH'
+}
+
+const MemoRedirectionPopUp = (props: IProps) => {
+    const { handleSaveRedirections,setClickRedirect } = props;
+    const businessId = useParams()?.businessId;
+    const [selectedLink, setSelectedLink] = useState('');
+    const [itemName, setItemName] = useState('')
+    const [dishes, setDishes] = useState<IDish[]>([]);
+    const [categories, setCategories] = useState<ICategory[]>([]);
+    const [selectedId, setSelectedId] = useState<string>('');
+
+    const handleSelectCategory = () => {
+        setSelectedLink(RedirectionType.CATEGORIES);
+    }
+
+    const [isVisible, setIsVisible] = useState(false);
+
+    const toggleSearch = () => {
+        setIsVisible(!isVisible);
+    };
+
+    const handleSelectDish = () => {
+        setSelectedLink(RedirectionType.DISHES);
+    }
+
+    const handleSave = () => {
+        handleSaveRedirections(selectedLink, selectedId, itemName);
+        setClickRedirect(false);
+    }
+
+    const handleItem = (id:string, name:string) =>{
+        setSelectedId(id)
+        setItemName(name)
+    }
+
+    const getAllCategoryData = async (businessId: string) => {
+        const categoryResponse = await apiRpc.categories.$get({
+            query: {
+                businessId: businessId
+            },
+        });
+        const data = await categoryResponse.json();
+        const categories = data?.data;
+        setCategories(categories);
+        const allDishes = combineAllDishes(categories);
+        return allDishes;
+    };
+
+    useQuery<ICategory[]>({
+        queryKey: ['categories', businessId],
+        queryFn: async () => {
+            const res = await getAllCategoryData(businessId || '');
+            setDishes(res);
+            return res;
+        },
+        enabled: !!businessId,
+    });
+
+    return (
+        <section className='m-6 h-[80vh] overflow-y-auto'>
+            <center className='text-2xl'>Add Redirection</center>
+            {selectedLink === '' ? (
+                <>
+                    &nbsp;
+                    <article>
+                        <SubHeader text="Link Action Button" />
+                        <article className='bg-white p-4 rounded-2xl space-y-10'>
+                            <button onClick={handleSelectCategory} type="button" className='bg-gray-100 w-full py-2 rounded-full'>
+                                <h1>&#128279; Direct to Category</h1>
+                            </button>
+                            <button onClick={handleSelectDish} type="button" className='bg-gray-100 w-full py-2 rounded-full'>
+                                <h1>&#128279; Direct to Dish</h1>
+                            </button>
+                        </article>
+                    </article>
+                </>
+            ) : (
+                <>
+                    <div className="relative h-6 mt-4">
+                        <IoIosSearch className="absolute top-0 right-0 mt-3 mr-4 cursor-pointer" size={20} onClick={toggleSearch} />
+                        {isVisible && (
+                            <input
+                                type="search"
+                                className='w-full rounded-2xl border border-gray-300'
+                                placeholder="Search for a dish or category"
+                            />
+                        )}
+                    </div>
+                    <article className='mt-6'>
+                        {selectedLink === RedirectionType.CATEGORIES && categories.map((cat) => (
+                            <section key={cat?._id} className='flex items-center gap-4 bg-white m-2 p-4 rounded-2xl'>
+                                <label className='flex items-center gap-4 w-full cursor-pointer'>
+                                    <input 
+                                        type="radio" 
+                                        name="cat" 
+                                        className='text-2xl text-black'
+                                        onChange={()=>handleItem(cat?._id, cat?.name)}
+                                    />
+                                    <span className='text-xl truncate'>{cat?.name}</span>
+                                </label>
+                            </section>
+                        ))}
+                        {selectedLink === RedirectionType.DISHES && dishes.map((dish) => (
+                            <section key={dish?._id} className='flex items-center gap-4 bg-white m-2 p-4 rounded-2xl'>
+                                <label className='flex items-center gap-4 w-full cursor-pointer'>
+                                    <input 
+                                        type="radio" 
+                                        name="dish" 
+                                        className='text-2xl text-black'
+                                        onChange={()=>handleItem(dish?._id, dish?.name)}
+                                    />
+                                    <span className='text-xl truncate'>{dish?.name}</span>
+                                </label>
+                            </section>
+                        ))}
+                    </article>
+                    <BottomButton text='Save' onClick={handleSave} />
+                </>
+            )}
+        </section>
+    );
+}
+
+const RedirectionPopUp = memo(MemoRedirectionPopUp);
+export default RedirectionPopUp;

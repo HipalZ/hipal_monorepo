@@ -1,9 +1,9 @@
-import axios from '@/axios';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
 import { BillsData } from '../types/businessData';
 import { ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import axios from '@/axios';
 
 export function convertToCSV(data: BillsData) {
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -91,7 +91,8 @@ export async function storeImageFiles(image: File) {
     formdata.append('fileName', `${imageId}`);
     formdata.append('bucketName', 'assets');
     try {
-      await axios.post(`https://dev.api.hipal.life/v1/storage`, formdata);
+     const res =  await axios.post(`https://api.hipal.life/v1/storage`, formdata);
+     console.log('res',res)
       return `https://storage.hipal.life/minio/assets/${imageId}`;
     } catch (error) {
       console.log(error);
@@ -123,7 +124,7 @@ export async function storeImageAfterSave(image: File) {
     formdata.append('fileName', `${imageId}`);
     formdata.append('bucketName', 'assets');
     try {
-      await axios.post(`https://dev.api.hipal.life/v1/storage`, formdata);
+      await axios.post(`https://api.hipal.life/v1/storage`, formdata);
       return `https://storage.hipal.life/minio/assets/${imageId}`;
     } catch (error) {
       console.log(error);

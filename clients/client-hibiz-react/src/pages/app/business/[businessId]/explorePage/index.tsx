@@ -1,89 +1,132 @@
-import { memo, useCallback, useRef, useState } from 'react';
-import Header from '@/components/molecules/header';
-import ReactCropper, { cropImage } from '@/components/cropper';
-import MiddlePopUp from '@/components/atom/middlePopUp';
+import { type ChangeEvent, type FormEvent, memo, startTransition, useCallback, useRef, useState, Suspense, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IoMdArrowUp } from "react-icons/io";
-import PopUp from '@/components/atom/popUp';
-import { basicInfos, Paragraph, PlusButton, RightButton, socialMediaLinks, SubHeader } from '@/components/templates/explorePage/explorePageStore';
+import { basicInfos, combineAllDishes, type IBizPayload } from '@/components/templates/explorePage/explorePageStore';
+import { apiRpc } from '@hi/common';
+import { useQuery } from '@tanstack/react-query';
+import type { IBizInfo, ICategory, IDish } from '@/components/types/businessData';
+import { useUserToken } from '@/components/store/useUserToken';
+import { useExploreStore } from '@/components/store/useExploreStore';
+import { storeImageAfterSave } from '@/components/utils/helper';
+import toast from 'react-hot-toast';
+import { BsInstagram } from 'react-icons/bs';
+import { CiFacebook } from 'react-icons/ci';
+import { FaXTwitter } from 'react-icons/fa6';
+import { TbBrandTelegram } from 'react-icons/tb';
+import { RiDiscordLine } from 'react-icons/ri';
+
+// Lazy loading components
+const Header = lazy(() => import('@/components/molecules/header'));
+const ReactCropper = lazy(() => import('@/components/cropper'));
+const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
+const PopUp = lazy(() => import('@/components/atom/popUp'));
+const UniquelyYoursPopUp = lazy(() => import('@/components/templates/explorePage/uniquelyYoursPopUp'));
+const ExplorePageTopSection = lazy(() => import('@/components/templates/explorePage/explorePageTopSection'));
+const BizInfo = lazy(() => import('@/components/templates/explorePage/bizInfo'));
+const BannerSection = lazy(() => import('@/components/templates/explorePage/bannerSection'));
+const UniquelyYoursSection = lazy(() => import('@/components/templates/explorePage/uniquelyYoursSection'));
+const FooterSection = lazy(() => import('@/components/templates/explorePage/footerSection'));
+const SocialMediaLinks = lazy(() => import('@/components/templates/explorePage/socialMediaLinks'));
+const BottomButton = lazy(() => import('@/components/atom/bottomButton'));
+const RightButton = lazy(() => import('@/components/atom/rightButton'));
+const SubHeader = lazy(() => import('@/components/atom/subHeader'));
+const Paragraph = lazy(() => import('@/components/atom/paragraph'));
+
 
 const MemoExplorePage = () => {
     const navigate = useNavigate();
     const businessId = useParams()?.businessId
+    const { accessToken, refreshToken } = useUserToken(s => ({
+        accessToken: s.accessToken,
+        refreshToken: s.refreshToken
+    }))
+    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes } = useExploreStore(
+        (state) => ({
+            bizInfo: state.bizInfo,
+            setBizInfo: state.setBizInfo,
+            originalDishes: state.originalDishes,
+            setOriginalDishes: state.setOriginalDishes,
+            selectedDishes: state.selectedDishes,
+            setSelectedDishes: state.setSelectedDishes,
+            uniquelyDishes: state.uniquelyDishes,
+            setUniquelyDishes: state.setUniquelyDishes
+        }),
+    );
     const cropperRef = useRef(null);
-    const [selectedSocialMedia, setSelectedSocialMedia] = useState('');
-    const handleIconClick = (socialMediaName: string) => {
-        setSelectedSocialMedia(socialMediaName);
-    };
-    const [fssai, setFssai] = useState('');
-    const [gst, setGst] = useState('');
-    const [img, setImg] = useState({ banner: '', logo: '' });
+    const [socialMediaLinks, setSocialMediaLinks] = useState([
+        { _id: 1, icon: 'instagram', logo: <BsInstagram size={30} />, link: '' },
+        { _id: 2, icon: 'facebook', logo: <CiFacebook size={36} />, link: '' },
+        { _id: 3, icon: 'twitter', logo: <FaXTwitter size={30} />, link: '' },
+        { _id: 4, icon: 'telegram', logo: <TbBrandTelegram size={30} />, link: '' },
+        { _id: 5, icon: 'discord', logo: <RiDiscordLine size={36} />, link: '' },
+    ]);
+    const [uploadsPopUp, setUploadsPopUp] = useState(false)
+    const [showUniquePopUp, setShowUniquePopUp] = useState(false);
+    const [img, setImg] = useState({ banner: bizInfo?.specialBannerUrl, logo: bizInfo?.logoUrl, footer: bizInfo?.endBannerUrl });
     const [imageFiles, setImageFiles] = useState({ banner: null, logo: null });
-    const [uniquelyFiles, setUniquelyFiles] = useState([{ id: 1, src: '', file: null }]);
+    const [selectedSocialMedia, setSelectedSocialMedia] = useState('');
     const [showCropper, setShowCropper] = useState(false);
     const [cropping, setCropping] = useState({ image: null, type: null });
-    const [selectedDish, setSelectedDish] = useState({ id: null, src: '' });
+    const [dishes, setDishes] = useState<IDish[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const handleDishSelect = (dish) => {
-        setSelectedDish(dish);
-    };
-    const handleOpenPopUp = (id) => {
-        setSelectedDish({ id, src: '' });
+    const handleDishSelect = useCallback((selectedDish: IDish) => {
+        const isAlreadySelected = selectedDishes.some(dish => dish._id === selectedDish._id);
+
+        let updatedSelectedDishes: IDish[];
+        if (isAlreadySelected) {
+            updatedSelectedDishes = selectedDishes.filter(dish => dish._id !== selectedDish._id);
+        } else {
+            updatedSelectedDishes = [...selectedDishes, selectedDish];
+        }
+
+        setSelectedDishes(updatedSelectedDishes);
+    }, []);
+    const handleOpenPopUp = useCallback(() => {
         setShowUniquePopUp(true);
-    };
-    const handleSaveDish = () => {
-        setUniquelyFiles(prev => {
-            const newFiles = prev.map(fileItem => {
-                if (fileItem.id === selectedDish.id) {
-                    return { ...fileItem, src: selectedDish.src };
-                }
-                return fileItem;
-            });
+    }, []);
 
-            if (newFiles.length < 7 && !newFiles.find(fileItem => fileItem.id === newFiles.length + 1)) {
-                newFiles.push({ id: newFiles.length + 1, src: '', file: null });
-            }
-
-            return newFiles;
-        });
+    const handleSaveDish = useCallback(async () => {
+        setUniquelyDishes(selectedDishes);
+        await handleUniquelyYours(selectedDishes)
         setShowUniquePopUp(false);
-    };
-    const [showUniquePopUp, setShowUniquePopUp] = useState(false);
+    });
 
-    const handleImageChange = (event: Event) => {
+    const handleUniquelyYours = async (selectedDishes: IDish[]) => {
+        apiRpc.dishes.uniquelyYours.$post({
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            }, json: {
+                dishArray: selectedDishes.map(dish => {
+                    return {
+                        dishId: dish._id,
+                        name: dish.name,
+                        images: dish.images,
+                        dishType: dish?.dishType,
+                        businessId
+                    }
+                }),
+            }
+        })
+    }
+
+    const handleImageChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const type = event?.target?.dataset?.type;
-        const id = event?.target?.dataset?.id;
         const file = event?.target?.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onloadend = () => {
-                if (type === 'uniquelyYours') {
-                    setUniquelyFiles(prev => {
-                        const newFiles = prev.map(fileItem => {
-                            if (fileItem.id === Number(id)) {
-                                return { ...fileItem, src: reader.result, file };
-                            }
-                            return fileItem;
-                        });
-
-                        if (newFiles.length < 7 && !newFiles.find(fileItem => fileItem.id === newFiles.length + 1)) {
-                            newFiles.push({ id: newFiles.length + 1, src: '', file: null });
-                        }
-
-                        return newFiles;
-                    });
-                } else {
-                    setCropping({ image: reader.result, type });
-                    setShowCropper(true);
-                }
+                setCropping({ image: reader.result, type });
+                setShowCropper(true);
             };
 
             setImageFiles(prev => ({ ...prev, [type]: file }));
         }
-    };
+    }, []);
 
-    const handleCrop = async () => {
+    const handleCrop = useCallback(async () => {
         const { image, type } = cropping;
         const cropper = cropperRef.current;
         if (cropper && image && type) {
@@ -107,153 +150,278 @@ const MemoExplorePage = () => {
                 }
             }
         }
-    };
+    }, []);
 
     const handleBizInfo = useCallback(() => {
-        navigate(`/app/business/${businessId}/bizInfo`)
-    },[businessId])
+        startTransition(() => {
+            navigate(`/app/business/${businessId}/bizInfo`)
+        })
+    }, [businessId]);
 
-    const handleFssaiNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFssai(e.target.value)
+    const handleNavigate = useCallback(() => {
+        startTransition(() => {
+            navigate(`/app/business/${businessId}/hisite`)
+        })
+    }, [businessId]);
+
+    const handleNavigation = useCallback(() => {
+        startTransition(() => {
+            navigate(`/app/business/${businessId}/banners`)
+        })
+    }, [businessId])
+
+    const handleFssaiNumber = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.value.length >= 50) return toast.error('FSSAI number should be less than 50 characters')
+        setBizInfo({ ...bizInfo, fssai: e.target.value });
     }
 
-    const handlegst = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setGst(e.target.value)
+    const handlegst = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.value.length >= 26) return toast.error('GST number should be less than 26 characters')
+        setBizInfo({ ...bizInfo, gst: e.target.value });
+    }
+    const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+        const search = e.target.value;
+        setSearchQuery(search);
+        const filteredDishes = dishes.filter(dish => dish.name.toLowerCase().includes(search.toLowerCase()));
+        setDishes(filteredDishes);
+        if (search.trim() === '') {
+            setDishes(originalDishes);
+        }
+    }
+
+    const handleBizName = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        setBizInfo({ ...bizInfo, name: e.target.value });
+    }, [])
+
+    const handleFooterComment = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+        setBizInfo({ ...bizInfo, footerDescription: e.target.value });
+    }, [])
+
+    const handleSaveSocialMediaLink = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        const newLink = e.target.value;
+        setSocialMediaLinks((prev) =>
+            prev.map((link) =>
+                link.icon === selectedSocialMedia ? { ...link, link: newLink } : link
+            )
+        );
+
+    }, []);
+
+    const getAllCategoryData = async (businessId: string) => {
+        const categoryResponse = await apiRpc.categories.$get({
+            query: {
+                businessId: businessId
+            },
+        });
+        const data = await categoryResponse.json();
+        const categories = data?.data;
+        const allDishes = combineAllDishes(categories);
+        return allDishes;
+    };
+
+    const getAllBizInfo = async () => {
+        return await apiRpc.businesses.outletInfo[':businessId'].$get({
+            param: {
+                businessId
+            },
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            }
+        })
+    }
+
+    const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!businessId) return;
+        const bannerExplore = await storeImageAfterSave(imageFiles?.banner);
+        const logoExplore = await storeImageAfterSave(imageFiles?.logo);
+        const footerExplore = await storeImageAfterSave(imageFiles?.footer);
+
+        const filteredSocialMedia = socialMediaLinks
+            .filter((item) => item.link && item.link.length > 0)
+            .map((item) => ({ icon: item.icon, link: item.link }));
+        // Initialize payload with properties that are always present   
+        console.log('fil', filteredSocialMedia)
+
+        const payload: IBizPayload = {
+            businessId,
+            logoUrl: logoExplore,
+        };
+
+        const config = {
+            x_access_token: accessToken,
+            x_refresh_token: refreshToken
+        }
+
+        // Conditionally add keys if they have a length greater than 0
+        if (bizInfo?.name && bizInfo?.name.length > 0) {
+            payload.name = bizInfo?.name
+        }
+        if (bannerExplore && bannerExplore.length > 10) {
+            payload.specialBannerUrl = bannerExplore;
+        }
+        if (logoExplore && logoExplore.length > 10) {
+            payload.logoUrl = logoExplore
+        }
+        if (footerExplore && footerExplore.length > 10) {
+            payload.endBannerUrl = footerExplore;
+        }
+        if (bizInfo.fssai && bizInfo?.fssai.length > 0 && bizInfo?.fssai.length >= 16) {
+            payload.fssai = bizInfo.fssai;
+        }
+        if (bizInfo.gst && bizInfo.gst.length > 0 && bizInfo.gst.length >= 15) {
+            payload.gst = bizInfo.gst;
+        }
+        if (bizInfo.footerDescription && bizInfo.footerDescription.length > 0) {
+            payload.footerDescription = bizInfo.footerDescription;
+        }
+        if (filteredSocialMedia && filteredSocialMedia.length > 0) {
+            payload.socialMediaLinks = filteredSocialMedia;
+        }
+        let res: {
+            status: number
+        };
+        if (bizInfo?._id === '') {
+            res = await apiRpc.businesses.outletInfo.$post({
+                header: config,
+                json: payload
+            });
+        }
+
+        if (bizInfo?._id !== '' || res && res.status === 409) {
+            const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
+                header: config,
+                json: payload,
+                param: {
+                    businessId: businessId
+                },
+            })
+            if (outletInfo.status === 200) {
+                setUploadsPopUp(false)
+                toast.success('Data saved successfully')
+            }
+        }
+    };
+
+    useQuery({
+        queryKey: ['bizInfo', businessId],
+        queryFn: async () => {
+            const res = await getAllBizInfo();
+            const response = await res.json();
+            setBizInfo(response?.data as IBizInfo);
+            setSocialMediaLinks((prevLinks) =>
+                prevLinks.map(link => {
+                    const matchingLink = response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
+                    return matchingLink ? { ...link, link: matchingLink.link } : link;
+                })
+            );
+            return response;
+        },
+        enabled: !!businessId,
+    });
+
+
+    useQuery<ICategory[]>({
+        queryKey: ['categories', businessId],
+        queryFn: async () => {
+            const res = await getAllCategoryData(businessId as string);
+            setDishes(res);
+            setOriginalDishes(res);
+            return res;
+        },
+        enabled: !!businessId,
+    });
+
+    const handleUploads = () => {
+        setUploadsPopUp(!uploadsPopUp)
+    }
+
+    const handleIconClick = (icon: string) => {
+        setSelectedSocialMedia(icon);
     }
 
     return (
-        <main className='px-4'>
-            <Header title='Explore Page' rightButton={<RightButton />} isIconBusinessShow={false} />
-            <section className='mb-4'>
-                <SubHeader text="Banner" />
-                <article className='relative rounded-xl h-[20rem] w-full border-dashed border-2 inline-block border-[#8C63FF]' onClick={() => document.getElementById('bannerInput').click()}>
-                    <input type='file' id='bannerInput' style={{ display: 'none' }} onChange={handleImageChange} data-type="banner" />
-                    <label htmlFor='bannerInput' className='w-full h-full flex justify-center items-center cursor-pointer overflow-hidden rounded-xl'>
-                        {img.banner ? <img src={img.banner} alt="Banner" /> : <PlusButton />}
-                    </label>
-                </article>
-            </section>
-            <SubHeader text="Basic Info" />
-            <section className='mt-4 flex justify-between items-center space-x-4'>
-                <article className='shrink-0 relative rounded-xl h-[8rem] w-[8rem] border-dashed border-2 inline-block border-[#8C63FF]' onClick={() => document.getElementById('logoInput').click()}>
-                    <input type='file' id='logoInput' style={{ display: 'none' }} onChange={handleImageChange} data-type="logo" />
-                    <label htmlFor='logoInput' className='w-full h-full flex justify-center items-center cursor-pointer  overflow-hidden rounded-xl'>
-                        {img.logo ? <img src={img.logo} alt="Logo" /> : <PlusButton />}
-                    </label>
-                </article>
-                <input type="text" className='w-full rounded-2xl' placeholder='Business Name' />
-            </section>
-            <br />
-            <br />
-            <section className='mb-4'>
-                <SubHeader text="Basic Information" />
-                <article onKeyDown={handleBizInfo} onClick={handleBizInfo} className='bg-white p-4 flex flex-wrap gap-4 rounded-xl mt-4'>
-                    {basicInfos.map((info) => {
-                        return (
-                            <div key={info._id} className='border border-1 border-black border-dashed bg-gray-50 p-2 rounded-lg'>
-                                <span>{info.text}</span>
-                            </div>
-                        )
-                    })}
-                </article>
-            </section>
-            <section className='mb-4'>
-                <SubHeader text="Uniquely Yours" />
-                <Paragraph text="select your best dishes on explore page" />
-                &nbsp;
-                <article className='bg-white flex flex-wrap gap-3 p-4'>
-                    {uniquelyFiles.map((file) => (
-                        <article key={file.id} className='shrink-0 relative rounded-xl h-[5rem] w-[5rem] border-dashed border-2 inline-block border-[#8C63FF]' >
-                            <input type='file' id={`uniquelyYours${file.id}`} style={{ display: 'none' }} onChange={handleImageChange} data-type="uniquelyYours" data-id={file.id} />
-                            <label htmlFor={`uniquelyYours${file.id}`} className='w-full h-full flex justify-center items-center cursor-pointer overflow-hidden rounded-xl'>
-                                {file.src ? <img src={file.src} alt="Logo" /> : <PlusButton />}
-                            </label>
-                        </article>
-                    ))}
-                </article>
-            </section>
-            <section>
-                <SubHeader text="Footer Banner" />
-                <article className='relative rounded-xl h-[20rem] w-full border-dashed border-2 inline-block border-[#8C63FF]' onClick={() => document.getElementById('footerInput').click()}>
-                    <input type='file' id='footerInput' style={{ display: 'none' }} onChange={handleImageChange} data-type="footer" />
-                    <label htmlFor='footerInput' className='w-full h-full flex justify-center items-center cursor-pointer overflow-hidden rounded-xl'>
-                        {img.banner ? <img src={img.banner} alt="Banner" /> : <PlusButton />}
-                    </label>
-                </article>
-            </section>
-            &nbsp;
-            <section>
-                <SubHeader text="Footer Section" />
-                <article className='bg-white p-4 rounded-2xl'>
-                    <textarea className='resize-none h-22 w-full rounded-2xl' placeholder='Add Footer comment' />
-                    <br /><br />
-                    <Paragraph text="Optional Sections" />
+        <Suspense fallback={<div>Loading....</div>}>
+            <main>
+                <Header onBack={handleNavigate} title='Explore Page' rightButton={<RightButton />} isIconBusinessShow={false} />
+                <form onSubmit={handleSaveExplorePage} className='px-4'>
+                    <SubHeader text='Business Explore' />
+                    <section onClick={handleUploads} className='p-4 bg-white rounded-2xl'>
+                        <h1>Click and upload banners and business name here</h1>
+                    </section>
+                    &nbsp;
+                    <PopUp show={uploadsPopUp} onClose={handleUploads}>
+                        <ExplorePageTopSection
+                            handleImageChange={handleImageChange}
+                            img={img}
+                            handleBizName={handleBizName}
+                            handleSaveExplorePage={handleSaveExplorePage} />
+                    </PopUp>
+
                     <br />
-                    <article className='rounded-2xl space-y-4'>
-                        <input placeholder='FSSAI number' type="text" value={fssai} className='rounded-2xl w-full' onChange={handleFssaiNumber} />
-                        <input placeholder='GST number' type="text" value={gst} className='rounded-2xl w-full' onChange={handlegst} />
-                    </article>
-                </article>
-                <br />
-            </section>
-            <SubHeader text='Social Media Links' />
-            <section className='bg-white rounded-2xl'>
-                <article className='flex justify-between items-center p-6 '>
-                    {
-                        socialMediaLinks.map((link) => {
-                            return (
-                                <div onClick={() => handleIconClick(link.title)} key={link._id} className={`${selectedSocialMedia === link.title ? 'border-2 border-[#FFD700]' : 'bg-gray-100'} h-10 w-10 rounded-full flex justify-center items-center`}>
-                                    {link.icon}
-                                </div>
-                            )
-                        })
-                    }
-                </article>
-                {
-                    selectedSocialMedia.length === 0 ? null : (
-                        <article className='rounded-2xl space-y-4 mx-6 pb-4'>
-                            <input placeholder={`Enter ${selectedSocialMedia} link`} type="text" value={fssai} className='rounded-2xl w-full' onChange={handleFssaiNumber} />
+                    <br />
+                    <Suspense fallback={<div>Loading Business information....</div>}>
+                        <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />
+                    </Suspense>
+                    <Suspense fallback={<div>Loading Banner section....</div>}>
+                        <BannerSection
+                            handleNavigation={handleNavigation}
+                        />
+                    </Suspense>
+
+                    <UniquelyYoursSection
+                        handleOpenPopUp={handleOpenPopUp} />
+
+                    <FooterSection
+                        handleFooterComment={handleFooterComment}
+                        handleFssaiNumber={handleFssaiNumber}
+                        handlegst={handlegst} />
+
+                    <SocialMediaLinks
+                        handleSaveSocialMediaLink={handleSaveSocialMediaLink}
+                        selectedSocialMedia={selectedSocialMedia}
+                        handleIconClick={handleIconClick}
+                        socialMediaLinks={socialMediaLinks}
+                    />
+
+                    <section className='mt-4 opacity-30'>
+                        <SubHeader text="Terms & Condition" />
+                        <article className='flex items-center justify-between p-4 bg-white rounded-2xl'>
+                            <Paragraph text="Add your terms and conditions here" />
+                            <IoMdArrowUp size={20} className='rotate-45' />
                         </article>
-                    )
-                }
-            </section>
-            <section className='mt-4'>
-                <SubHeader text="Terms & Condition" />
-                <article className='flex items-center justify-between bg-white p-4 rounded-2xl'>
-                    <Paragraph text="Add your terms and conditions here" />
-                    <IoMdArrowUp size={20} className='rotate-45' />
-                </article>
-            </section>
-            <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
-                <ReactCropper image={cropping.image} ref={cropperRef} width={250} height={250} />
-            </MiddlePopUp>
-            {showUniquePopUp && (
-                <PopUp show={showUniquePopUp} onClose={() => setShowUniquePopUp(false)}>
-                    <div className='p-4'>
-                        <h2>Select a Dish</h2>
-                        <div className='grid grid-cols-3 gap-4'>
-                            {dishImages.map(dish => (
-                                <div key={dish.id} className='cursor-pointer' onClick={() => handleDishSelect(dish)}>
-                                    <img src={dish.src} alt={`Dish ${dish.id}`} className={`border-2 ${selectedDish.id === dish.id ? 'border-blue-500' : 'border-transparent'}`} />
-                                </div>
-                            ))}
-                        </div>
-                        <button className='mt-4' onClick={handleSaveDish}>Save</button>
-                    </div>
-                </PopUp>
-            )}
-            <section className='fixed bottom-4 left-6 right-6'>
-                <button type="button" className="action_btn" >
-                    Save
-                </button>
-            </section>
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-        </main>
+                    </section>
+
+                    <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
+                        <ReactCropper image={cropping.image} ref={cropperRef} width={250} height={250} />
+                    </MiddlePopUp>
+
+                    {showUniquePopUp && (
+                        <PopUp show={showUniquePopUp} onClose={() => setShowUniquePopUp(false)}>
+                            <UniquelyYoursPopUp setSelectedDishes={setSelectedDishes}
+                                selectedDishes={selectedDishes}
+                                handleSearch={handleSearch}
+                                searchQuery={searchQuery}
+                                dishes={dishes}
+                                uniquelyDishes={uniquelyDishes}
+                                handleDishSelect={handleDishSelect}
+                                handleSaveDish={handleSaveDish} />
+                        </PopUp>
+                    )}
+
+                    <BottomButton text='Save' />
+
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                </form>
+            </main>
+        </Suspense>
+
     );
 };
 

@@ -9,6 +9,9 @@ const ReactCompilerConfig = {
 
 export default defineConfig({
   envDir: "env",
+  server:{
+    port:3000,
+  },
   plugins: [
     react(),
     // babel({

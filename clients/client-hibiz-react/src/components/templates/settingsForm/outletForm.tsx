@@ -1,7 +1,7 @@
 import { apiRpc } from "@hi/common";
 import { useState, useCallback, type FormEvent, memo } from "react";
 
-const convertTo12HourFormat = (time: string): string => {
+export const convertTo12HourFormat = (time: string): string => {
   if (!time) return "";
   const [hours, minutes] = time.split(":").map(Number);
   const period = hours >= 12 ? "PM" : "AM";

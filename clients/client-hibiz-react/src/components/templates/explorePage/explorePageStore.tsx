@@ -1,68 +1,144 @@
 
-import { FaXTwitter } from 'react-icons/fa6';
-import { BsInstagram } from 'react-icons/bs';
-import { CiFacebook } from 'react-icons/ci';
-import { TbBrandTelegram } from 'react-icons/tb';
-import { RiDiscordLine } from "react-icons/ri";
+import { apiRpc } from '@hi/common';
+import type { ICategory } from '@/components/types/businessData';
+
+export interface IBizPayload {
+    customTiming: { day: string; openTime: string; closeTime: string; }[];
+    fixCloseTime: string;
+    fixOpenTime: string;
+    socialMediaLinks?: { icon: string; link: string; }[];
+    name?:string;
+    socialMedia?: { icon: string; link: string; }[];
+    footerDescription?: string;
+    businessId: string;
+    specialBannerUrl?: string | undefined;
+    logoUrl?: string | undefined;
+    endBannerUrl?: string | undefined;
+    fssai?: string;
+    gst?: string;
+    description?: string;
+    phone?: string;
+    location?: string;
+    amenities?: string[];
+    tags?: string[];
+    avgPricingForTwo?:string;
+    isCustomTime: boolean;
+}
+
+export interface IBannerPayload {
+    businessId?: string;
+    bannerType?: string;
+    bannerImage?: string;
+    heading?: string;
+    headingColor?: string;
+    headingFontWeight?: string;
+    headingAlign?: string;
+    paragraph?: string;
+    paragraphColor?: string;
+    paragraphFontWeight?: string;
+    paragraphAlign?: string;
+    buttonName?: string;
+    buttonColor?: string;
+    callToAction?: string;
+    backgroundColor?: string;
+    redirectionId?: string;
+    redirectionType?: string;
+    redirectionName?: string;
+    _id?:string
+}
+
+export interface BasicInfo{
+    _id:number
+    text:string
+}
 export const basicInfos = [
     {
         _id: 1,
         text: 'Description',
     }, {
         _id: 2,
-        text: 'Contact',
-    }, {
+        text: 'Phone',
+    },{
         _id: 3,
-        text: 'Store basics',
-    }, {
-        _id: 4,
         text: 'Amenities',
-    }
-]
-
-export const socialMediaLinks = [
-    {
-        _id: 1,
-        title: 'Instagram',
-        icon: <BsInstagram size={30} />,
-        link: ''
-    }, {
-        _id: 2,
-        title: 'Facebook',
-        icon: <CiFacebook size={36} />,
-        link: ''
-    }, {
-        _id: 3,
-        title: 'Twitter',
-        icon: <FaXTwitter size={30} />,
-        link: ''
     }, {
         _id: 4,
-        title: 'Telegram',
-        icon: <TbBrandTelegram size={30} />,
-        link: ''
-    }, {
-        _id: 5,
-        title: 'Discord',
-        icon: <RiDiscordLine size={36} />,
-        link: ''
-    }
+        text: 'Tags',
+    }, 
 ]
+export enum BannerType {
+    BANNER_TYPE_0 = 'BANNER_TYPE_0',
+    BANNER_TYPE_1 = 'BANNER_TYPE_1',
+    BANNER_TYPE_2 = 'BANNER_TYPE_2',
+    BANNER_TYPE_3 = 'BANNER_TYPE_3',
+}
+export const bannerTypes = [
+    {
+        _id: 'BANNER_TYPE_1',
+        title: 'Banner Type 1',
+        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        bannerType: BannerType.BANNER_TYPE_1,
+    }, {
+        _id: 'BANNER_TYPE_2',
+        title: 'Banner Type 2',
+        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        bannerType: BannerType.BANNER_TYPE_2,
+    }, {
+        _id: 'BANNER_TYPE_3',
+        title: 'Banner Type 3',
+        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        bannerType: BannerType.BANNER_TYPE_3,
+    }
+];
 
-export const RightButton = () => (
-    <button type="button" style={{ background: "linear-gradient(259.68deg, #7F66FE 9.06%, #4D6FF9 104.24%)" }} className='px-4 py-1 rounded-full text-white'>
-        Preview
-    </button>
-);
+export const colors = ([
+    {
+        _id: '1',
+        textColor: '#7A10FF',
+        bgColor: '#C8AAEE'
+    },
+    {
+        _id: '2',
+        textColor: '#FF6464',
+        bgColor: '#FBDADA'
+    },
+    {
+        _id: '3',
+        bgColor: '#FF6363',
+        textColor: '#F4F4F4'
+    },
+    {
+        _id: '4',
+        bgColor: '#2F75C7',
+        textColor: '#F4F4F4'
+    },
+    {
+        _id: '5',
+        bgColor: '#DAFBED',
+        textColor: '#4ABD8D'
+    },
+    {
+        _id: '6',
+        textColor: '#E28E2B',
+        bgColor: '#F1CB9F'
+    }
+])
 
-export const PlusButton = () => (
-    <span className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl'>+</span>
-);
 
-export const SubHeader = ({ text }: { text: string }) => (
-    <h1 className='text-[#807C83] text-xl mb-4'>{text}</h1>
-);
+export const combineAllDishes = (categories: ICategory[]) => {
+    return categories.reduce((dishes, category) => {
+        return dishes.concat(category?.dishes)
+    }, []);
+};
 
-export const Paragraph = ({ text }: { text: string }) => (
-    <p className='text-[#807C83]'>{text}</p>
-)
+export const getAllCategoryData = async (businessId: string) => {
+    const categoryResponse = await apiRpc.categories.$get({
+        query: {
+            businessId: businessId
+        },
+    });
+    const data = await categoryResponse.json();
+    const categories = data?.data;
+    const allDishes = combineAllDishes(categories);
+    return allDishes;
+};

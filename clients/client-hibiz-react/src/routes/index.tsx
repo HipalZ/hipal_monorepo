@@ -1,36 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import type { ReactNode } from 'react';
-import { useLocation, useRoutes } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
-//testing/
 export default function MainRouter() {
-  const location = useLocation();
-  const element = useRoutes(routes) as ReactNode;
-
-  const variants = {
-    initial: {
-      x: '100%',
-    },
-    animate: {
-      x: 0,
-    },
-    exit: {
-      x: '-100%',
-    },
-  };
-
-  return (
-    <AnimatePresence initial={false}>
-      <motion.div
-        key={location.pathname}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={variants}
-        transition={{ duration: 0.15, ease: 'easeOut' }}
-      >
-        {element}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return <div>{useRoutes(routes) as ReactNode}</div>;
 }

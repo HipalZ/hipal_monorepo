@@ -27,7 +27,7 @@ export interface UserProfile {
   _id: string;
 }
 export interface IBusinessData {
-  tags: any[];
+  tags: string[];
   description: string;
   _id: string;
   name: string;
@@ -190,7 +190,100 @@ export interface NavigatorWithNetworkInformation extends Navigator {
 }
 
 export interface ILoginProps {
+  user: User
   accessToken: string;
   refreshToken: string;
   existingUser: User;
 }
+
+export interface IDish {
+  _id: string,
+  name: string,
+  images: string[],
+  dishType: string,
+}
+export interface ICategory {
+  _id: string
+  businessId: string
+  name: string
+  visibility: boolean
+  timerOn: boolean
+  timerStart: null
+  timerEnd: null
+  availableDays: never[]
+  hierarchy: string | "PARENT"
+  parentCategory: string
+  parentCategoryId?: string
+  coverImage: string
+  links: never[]
+  dishes: {
+    _id: string,
+    name: string,
+    images: string[],
+    businessId: string,
+  }[]
+  version: number
+  id: string
+}
+
+export interface IBizInfo {
+  _id: string,
+  logoUrl: string;
+  endBannerUrl: string;
+  specialBannerUrl: string;
+  businessId: string;
+  name: string;
+  description: string;
+  phone: string;
+  location: string;
+  avgPricingForTwo: string;
+  socialMediaLinks: {
+    icon: string,
+    link: string
+  }[]
+  amenities: string[];
+  tags: string[];
+  fssai: string;
+  gst: string;
+  footerDescription: string;
+}
+
+export type Banner = {
+  _id: string;
+  title: string;
+  description: string;
+  bannerType: string;
+}
+
+export type Color = {
+  textColor: string
+  bgColor: string
+}
+
+export type IStyles = {
+  textAlign: string,
+  fontWeight: number,
+  color: string
+}
+
+  export interface IBanner {
+    _id: string;
+    businessId: string;
+    bannerType?: string;
+    bannerImage?: string;
+    headingColor?: string;
+    headingFontWeight?: string;
+    headingAlign?: string;
+    paragraphColor?: string;
+    paragraphFontWeight?: string;
+    paragraphAlign?: string;
+    callToAction?: string;
+    backgroundColor?: string;
+    redirectionId?: string;
+    redirectionType?: string;
+    isDeleted?: boolean;
+    buttonColor?: string;
+    redirectionName?: string;
+    heading?: string;
+    paragraph?: string;
+  }
