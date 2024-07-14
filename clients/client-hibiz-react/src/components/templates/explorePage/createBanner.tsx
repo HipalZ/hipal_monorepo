@@ -1,28 +1,31 @@
-import ReactCropper, { cropImage } from '@/components/cropper';
-import { useBannerStore } from '@/components/store/useBannerStore';
-import { type ChangeEvent, memo, startTransition, useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, memo, startTransition, useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { BannerType, bannerTypes, type IBannerPayload } from './explorePageStore';
 import { IoMdColorPalette } from 'react-icons/io';
-import PopUp from '@/components/atom/popUp';
-import MiddlePopUp from '@/components/atom/middlePopUp';
-import BottomButton from '@/components/atom/bottomButton';
 import { TfiPaintBucket } from 'react-icons/tfi';
-import Header from '@/components/molecules/header';
 import { FaCaretDown } from 'react-icons/fa';
-import ChangeBannerColor from './changebannerColor';
-import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
-import SubHeader from '@/components/atom/subHeader';
-import StylingsIcons from './stylingsIcons';
-import PlusButton from '@/components/atom/plusButton';
-import layout3 from '@/assets/hisite/layout3.jpg';
-import RedirectionPopUp from './redirectionPopUp';
 import { apiRpc } from '@hi/common';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useNavigate, useParams } from 'react-router-dom';
 import { storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
 import type { Color, IStyles } from '@/components/types/businessData';
-import ExploreColorWheel from './exploreColorWheel';
+import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
+import layout3 from '@/assets/hisite/layout3.jpg';
+import { useBannerStore } from '@/components/store/useBannerStore';
+
+// Lazy load components
+const ReactCropper = lazy(() => import('@/components/cropper'));
+const PopUp = lazy(() => import('@/components/atom/popUp'));
+const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
+const BottomButton = lazy(() => import('@/components/atom/bottomButton'));
+const Header = lazy(() => import('@/components/molecules/header'));
+const ChangeBannerColor = lazy(() => import('./changebannerColor'));
+const SubHeader = lazy(() => import('@/components/atom/subHeader'));
+const StylingsIcons = lazy(() => import('./stylingsIcons'));
+const PlusButton = lazy(() => import('@/components/atom/plusButton'));
+const RedirectionPopUp = lazy(() => import('./redirectionPopUp'));
+const ExploreColorWheel = lazy(() => import('./exploreColorWheel'));
+
 
 const MemoCreateBanner = () => {
     const cropperRef = useRef(null);
@@ -85,6 +88,7 @@ const MemoCreateBanner = () => {
 
     useEffect(() => {
         if (editBanner && editingBanner) {
+            console.log('trigegering banner')
             setImg((prev) => ({ ...prev, logo: editingBanner?.bannerImage || ''}))
             setHeading(editingBanner?.heading || '')
             setDescription(editingBanner?.paragraph || '')
@@ -112,8 +116,6 @@ const MemoCreateBanner = () => {
             setSelectedBannerType(editingBanner?.bannerType || '')
         }
     }, [editBanner, editingBanner])
-
-
 
     const handleBannerTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
         setSelectedBannerType(e.target.value);
@@ -328,170 +330,172 @@ const MemoCreateBanner = () => {
     }
 
     return (
-        <main className='relative h-screen'>
-            <section className='fixed top-0 bg-white w-full pb-[1rem] z-10'>
-                <Header onBack={handleChangeColors} dropDown={
-                    <div className="relative">
-                        <label htmlFor="banner-type" className='flex items-center text-lg font-medium text-gray-900'>
-                            <span>Select Card Type</span>
-                            <span onClick={toggleDropDown} className="ml-2 cursor-pointer">
-                                <FaCaretDown />
-                            </span>
-                        </label>
-                        {isDropDownVisible && (
-                            <div className="absolute w-48 mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-                                <select
-                                    id="banner-type"
-                                    value={selectedBannerType}
-                                    onChange={handleBannerTypeChange}
-                                    className='block w-full p-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'
-                                >
-                                    {bannerTypes.map((banner) => (
-                                        <option key={banner._id} value={banner._id}>{banner.title}</option>
-                                    ))}
-                                </select>
-                            </div>
+        <Suspense fallback={<div>Loading...</div>}>
+            <main className='relative h-screen'>
+                <section className='fixed top-0 bg-white w-full pb-[1rem] z-10'>
+                    <Header onBack={handleChangeColors} dropDown={
+                        <div className="relative">
+                            <label htmlFor="banner-type" className='flex items-center text-lg font-medium text-gray-900'>
+                                <span>Select Card Type</span>
+                                <span onClick={toggleDropDown} className="ml-2 cursor-pointer">
+                                    <FaCaretDown />
+                                </span>
+                            </label>
+                            {isDropDownVisible && (
+                                <div className="absolute w-48 mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                                    <select
+                                        id="banner-type"
+                                        value={selectedBannerType}
+                                        onChange={handleBannerTypeChange}
+                                        className='block w-full p-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'
+                                    >
+                                        {bannerTypes.map((banner) => (
+                                            <option key={banner._id} value={banner._id}>{banner.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                    } isIconBusinessShow={false}>
+                    </Header>
+                    <section className='flex justify-center w-full bg-white'>
+                        {selectedBannerType === BannerType.BANNER_TYPE_1 && (
+                            <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 mt-4 space-y-4 border rounded-2xl'>
+                                <h1 style={{  ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                <p style={{ ...paragraphStyle, color: selectedColor.textColor  }}>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                <div>
+                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                </div>
+                            </article>
                         )}
-                    </div>
-                } isIconBusinessShow={false}>
-                </Header>
-                <section className='flex justify-center w-full bg-white'>
-                    {selectedBannerType === BannerType.BANNER_TYPE_1 && (
-                        <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 mt-4 space-y-4 border rounded-2xl'>
-                            <h1 style={{  ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                            <p style={{ ...paragraphStyle, color: selectedColor.textColor  }}>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                            <div>
+                        {selectedBannerType === BannerType.BANNER_TYPE_2 && (
+                            <article style={{ backgroundImage: `url(${img?.logo || BannerDummy})`, backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='p-4 py-6 space-y-10 bg-cover rounded-2xl'>
+                                <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                <p style={{ ...paragraphStyle, color: selectedColor.textColor }} className='my-4'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
-                            </div>
-                        </article>
-                    )}
-                    {selectedBannerType === BannerType.BANNER_TYPE_2 && (
-                        <article style={{ backgroundImage: `url(${img?.logo || BannerDummy})`, backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='p-4 py-6 space-y-10 bg-cover rounded-2xl'>
-                            <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                            <p style={{ ...paragraphStyle, color: selectedColor.textColor }} className='my-4'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                            <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
-                        </article>
-                    )}
-                    {selectedBannerType === BannerType?.BANNER_TYPE_3 && (
-                        <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex items-center justify-between mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
-                            <article className='h-full'>
-                                <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='px-4 text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                <p style={{ ...paragraphStyle, color: selectedColor.textColor, width: '180px' }} className='px-4 my-4 text-sm'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 ml-4 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
                             </article>
-                            <figure>
-                                <img src={img?.logo || layout3} alt="BannerDummy" className='h-full overflow-hidden' />
-                            </figure>
-                        </section>
-                    )}
+                        )}
+                        {selectedBannerType === BannerType?.BANNER_TYPE_3 && (
+                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex items-center justify-between mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
+                                <article className='h-full'>
+                                    <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='px-4 text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                    <p style={{ ...paragraphStyle, color: selectedColor.textColor, width: '180px' }} className='px-4 my-4 text-sm'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 ml-4 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                </article>
+                                <figure>
+                                    <img src={img?.logo || layout3} alt="BannerDummy" className='h-full overflow-hidden' />
+                                </figure>
+                            </section>
+                        )}
+                    </section>
+                    &nbsp;
+                    {clickedChangeColor ? null : <center>
+                        <button type='button' onClick={toggleColor} className='flex items-center justify-center px-4 py-2 space-x-2 bg-gray-200 rounded-full'>
+                            <IoMdColorPalette /> <span>Change Colors</span>
+                        </button>
+                    </center>}
                 </section>
-                &nbsp;
-                {clickedChangeColor ? null : <center>
-                    <button type='button' onClick={toggleColor} className='flex items-center justify-center px-4 py-2 space-x-2 bg-gray-200 rounded-full'>
-                        <IoMdColorPalette /> <span>Change Colors</span>
-                    </button>
-                </center>}
-            </section>
-            {clickedChangeColor ? <ChangeBannerColor handleColorChange={handleColorChange} /> : <section>
-                <section className='mt-[30rem] mx-6'>
-                    <SubHeader text='Banner Details' />
-                    <section className='bg-white pb-[1rem]'>
-                        <section className='flex items-center justify-between p-4 mt-4 space-x-4'>
-                            {selectedBannerType !== BannerType.BANNER_TYPE_1 && <article className='shrink-0 relative rounded-xl h-[8rem] w-[8rem] border-dashed border-2 inline-block border-[#8C63FF]'>
-                                <input onClick={() => document.getElementById('logoInput')?.click()} type='file' id='logoInput' style={{ display: 'none' }} onChange={handleImageChange} data-type="logo" />
-                                <label htmlFor='logoInput' className='flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl'>
-                                    {img.logo ? <img src={img.logo} alt="Logo" /> : <PlusButton />}
-                                </label>
-                            </article>}
-                            <label>Background color</label>
-                            <article onClick={() => setColorWheelBackground(!colorWheelBackground)} className='px-3 py-2 border border-black rounded-2xl border-1'>
-                                <span><TfiPaintBucket size={24} /></span>
-                            </article>
-                            <PopUp show={colorWheelBackground} onClose={() => setColorWheelBackground(!colorWheelBackground)}>
-                                <ExploreColorWheel close={() => setColorWheelBackground(!colorWheelBackground)} colorType="backgroundColor" setStyle={setSelectedColor} style={selectedColor}/>
-                            </PopUp>
-                        </section>
-                        <section className='m-4'>
-                            <input maxLength={26} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' style={headingStyle} />
-                            <StylingsIcons setIsColorPickerVisible={setIsColorPickerVisible}
-                                isColorPickerVisible={isColorPickerVisible}
-                                element="heading"
-                                onAlignmentChange={handleAlignmentChange}
-                                onFontWeightChange={handleFontWeightChange}
-                                onColorChange={handleCustomColor}
-                                colorWheel={colorWheelHeading}
-                                setColorWheel={setColorWheelHeading}
-                            />
-                            <PopUp show={colorWheelHeading} onClose={() => setColorWheelHeading(!colorWheelHeading)}>
-                                <ExploreColorWheel 
-                                    close={() => setColorWheelHeading(!colorWheelHeading)} 
-                                    colorType="heading" 
-                                    style={headingStyle} 
-                                    setStyle={setHeadingStyle}/>
-                            </PopUp>
-                        </section>
-                        &nbsp;
-                        <section className='m-4'>
-                            <textarea maxLength={75} className='w-full h-24 resize-none rounded-2xl' value={description} onChange={handleDescriptionChange} placeholder='Description' style={paragraphStyle} />
-                            <StylingsIcons
-                                setIsColorPickerVisible={setIsColorPickerVisible}
-                                isColorPickerVisible={isColorPickerVisible}
-                                element="paragraph"
-                                onAlignmentChange={handleAlignmentChange}
-                                onFontWeightChange={handleFontWeightChange}
-                                onColorChange={handleCustomColor} 
-                                colorWheel={colorWheelParagraph}
-                                setColorWheel={setColorWheelParagraph}
+                {clickedChangeColor ? <ChangeBannerColor handleColorChange={handleColorChange} /> : <section>
+                    <section className='mt-[30rem] mx-6'>
+                        <SubHeader text='Banner Details' />
+                        <section className='bg-white pb-[1rem]'>
+                            <section className='flex items-center justify-between p-4 mt-4 space-x-4'>
+                                {selectedBannerType !== BannerType.BANNER_TYPE_1 && <article className='shrink-0 relative rounded-xl h-[8rem] w-[8rem] border-dashed border-2 inline-block border-[#8C63FF]'>
+                                    <input onClick={() => document.getElementById('logoInput')?.click()} type='file' id='logoInput' style={{ display: 'none' }} onChange={handleImageChange} data-type="logo" />
+                                    <label htmlFor='logoInput' className='flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl'>
+                                        {img.logo ? <img src={img.logo} alt="Logo" /> : <PlusButton />}
+                                    </label>
+                                </article>}
+                                <label>Background color</label>
+                                <article onClick={() => setColorWheelBackground(!colorWheelBackground)} className='px-3 py-2 border border-black rounded-2xl border-1'>
+                                    <span><TfiPaintBucket size={24} /></span>
+                                </article>
+                                <PopUp show={colorWheelBackground} onClose={() => setColorWheelBackground(!colorWheelBackground)}>
+                                    <ExploreColorWheel close={() => setColorWheelBackground(!colorWheelBackground)} colorType="backgroundColor" setStyle={setSelectedColor} style={selectedColor}/>
+                                </PopUp>
+                            </section>
+                            <section className='m-4'>
+                                <input maxLength={26} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' style={headingStyle} />
+                                <StylingsIcons setIsColorPickerVisible={setIsColorPickerVisible}
+                                    isColorPickerVisible={isColorPickerVisible}
+                                    element="heading"
+                                    onAlignmentChange={handleAlignmentChange}
+                                    onFontWeightChange={handleFontWeightChange}
+                                    onColorChange={handleCustomColor}
+                                    colorWheel={colorWheelHeading}
+                                    setColorWheel={setColorWheelHeading}
                                 />
-                            <PopUp show={colorWheelParagraph} onClose={() => setColorWheelParagraph(!colorWheelParagraph)}>
-                                <ExploreColorWheel 
-                                    close={() => setColorWheelParagraph(!colorWheelParagraph)} 
-                                    colorType="paragraph" 
-                                    style={paragraphStyle} 
-                                    setStyle={setParagraphStyle}/>
-                            </PopUp>
+                                <PopUp show={colorWheelHeading} onClose={() => setColorWheelHeading(!colorWheelHeading)}>
+                                    <ExploreColorWheel 
+                                        close={() => setColorWheelHeading(!colorWheelHeading)} 
+                                        colorType="heading" 
+                                        style={headingStyle} 
+                                        setStyle={setHeadingStyle}/>
+                                </PopUp>
+                            </section>
+                            &nbsp;
+                            <section className='m-4'>
+                                <textarea maxLength={75} className='w-full h-24 resize-none rounded-2xl' value={description} onChange={handleDescriptionChange} placeholder='Description' style={paragraphStyle} />
+                                <StylingsIcons
+                                    setIsColorPickerVisible={setIsColorPickerVisible}
+                                    isColorPickerVisible={isColorPickerVisible}
+                                    element="paragraph"
+                                    onAlignmentChange={handleAlignmentChange}
+                                    onFontWeightChange={handleFontWeightChange}
+                                    onColorChange={handleCustomColor} 
+                                    colorWheel={colorWheelParagraph}
+                                    setColorWheel={setColorWheelParagraph}
+                                    />
+                                <PopUp show={colorWheelParagraph} onClose={() => setColorWheelParagraph(!colorWheelParagraph)}>
+                                    <ExploreColorWheel 
+                                        close={() => setColorWheelParagraph(!colorWheelParagraph)} 
+                                        colorType="paragraph" 
+                                        style={paragraphStyle} 
+                                        setStyle={setParagraphStyle}/>
+                                </PopUp>
+                            </section>
                         </section>
                     </section>
-                </section>
-                <section className='m-6'>
-                    <SubHeader text='Add Button Name' />
-                    <article className='flex items-center justify-between p-2 bg-white rounded-2xl'>
-                        <input type="text" className='w-2/3 rounded-2xl' value={callToAction} onChange={handleButtonName} placeholder='Button Name'  />
-                        <article onClick={() => setColorWheelButton(!colorWheelButton)} className='w-12 px-3 py-2 border border-black rounded-2xl border-1'>
-                            <span><TfiPaintBucket size={24} /></span>
+                    <section className='m-6'>
+                        <SubHeader text='Add Button Name' />
+                        <article className='flex items-center justify-between p-2 bg-white rounded-2xl'>
+                            <input type="text" className='w-2/3 rounded-2xl' value={callToAction} onChange={handleButtonName} placeholder='Button Name'  />
+                            <article onClick={() => setColorWheelButton(!colorWheelButton)} className='w-12 px-3 py-2 border border-black rounded-2xl border-1'>
+                                <span><TfiPaintBucket size={24} /></span>
+                            </article>
+                            <PopUp show={colorWheelButton} onClose={() => setColorWheelButton(!colorWheelButton)}>
+                                    <ExploreColorWheel 
+                                        close={() => setColorWheelButton(!colorWheelButton)} 
+                                        colorType="button" 
+                                        style={buttonStyle} 
+                                        setStyle={setButtonStyle}/>
+                                </PopUp>
                         </article>
-                        <PopUp show={colorWheelButton} onClose={() => setColorWheelButton(!colorWheelButton)}>
-                                <ExploreColorWheel 
-                                    close={() => setColorWheelButton(!colorWheelButton)} 
-                                    colorType="button" 
-                                    style={buttonStyle} 
-                                    setStyle={setButtonStyle}/>
-                            </PopUp>
-                    </article>
-                </section>
-                <section className='m-6 pb-[7rem]'>
-                    <SubHeader text='Call to action' />
-                    <article className='p-4 bg-white rounded-2xl'>
-                        <button onClick={handleRedirections} type="button" className='w-full py-2 bg-gray-100 rounded-full'>
-                            <h1>&#128279; Categories or dish</h1>
-                        </button>
-                    </article>
-                    &nbsp;
-                    {itemName && <article className='p-4 bg-white rounded-2xl'>
-                        <h1 className='font-normal'>Selected Item: <span className='font-semibold'>{itemName}</span></h1>
-                    </article>}
-                </section>
-                <BottomButton text='Save Changes' onClick={handleCreateBanner} />
-            </section>}
-            <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
-                <ReactCropper image={cropping.image} ref={cropperRef} width={400} height={400} />
-            </MiddlePopUp>
-            <PopUp show={clickRedirect} onClose={() => {
-                setClickRedirect(false)
-            }}>
-                <RedirectionPopUp handleSaveRedirections={handleSaveRedirections} setClickRedirect={setClickRedirect} />
-            </PopUp>
-        </main>
+                    </section>
+                    <section className='m-6 pb-[7rem]'>
+                        <SubHeader text='Call to action' />
+                        <article className='p-4 bg-white rounded-2xl'>
+                            <button onClick={handleRedirections} type="button" className='w-full py-2 bg-gray-100 rounded-full'>
+                                <h1>&#128279; Categories or dish</h1>
+                            </button>
+                        </article>
+                        &nbsp;
+                        {itemName && <article className='p-4 bg-white rounded-2xl'>
+                            <h1 className='font-normal'>Selected Item: <span className='font-semibold'>{itemName}</span></h1>
+                        </article>}
+                    </section>
+                    <BottomButton text='Save Changes' onClick={handleCreateBanner} />
+                </section>}
+                <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
+                    <ReactCropper image={cropping.image} ref={cropperRef} width={400} height={400} />
+                </MiddlePopUp>
+                <PopUp show={clickRedirect} onClose={() => {
+                    setClickRedirect(false)
+                }}>
+                    <RedirectionPopUp handleSaveRedirections={handleSaveRedirections} setClickRedirect={setClickRedirect} />
+                </PopUp>
+            </main>
+        </Suspense>
     );
 };
 
