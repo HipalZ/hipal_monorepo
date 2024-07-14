@@ -10,6 +10,11 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     index: true,
     ref: 'Business',
   },
+  endBannerUrl: {
+    type: String,
+    required: false,
+  },
+
   name: {
     type: String,
     required: false,

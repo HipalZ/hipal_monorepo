@@ -51,6 +51,22 @@ const settingsRouter = new Hono()
       return respond(c, 'Setting created successfully', false, 201, createSetting);
     },
   )
+  .put(
+    '/update/:settingsId',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    zValidator('json', BusinessSettingsSchema.partial()),
+    zValidator('param', z.object({ settingsId: z.string() })),
+    zValidator('header', TokenValidator),
+    async (c) => {
+
+      const requestData = await c.req.json();
+      const { settingsId } = c.req.param();
+      const updateSetting = await BusinessSettings.findByIdAndUpdate(settingsId, requestData, { new: true });
+      if (!updateSetting) return respond(c, 'Error in updating setting', true, 400, {});
+      return respond(c, 'Setting updated successfully', false, 200, updateSetting);
+    },
+  )
   .get(
     '/:settingsId',
     authTokenValidator,
