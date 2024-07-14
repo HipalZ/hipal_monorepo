@@ -3,7 +3,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import PopUp from "@/components/atom/popUp";
 import Header from "@/components/molecules/header";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { UserProfile } from "@/components/types/businessData";
+import type { CustomRole, UserProfile } from "@/components/types/businessData";
 import { routeToDashboard } from "@/components/utils/routes";
 import { useQuery } from "@tanstack/react-query";
 import { memo, startTransition, useState } from "react";
@@ -14,8 +14,9 @@ import Avatar from "@/assets/avtarStaff.png";
 import NewAddStaff from "@/components/molecules/addStaffpopup/addStaff";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useAddStaffStore } from "@/components/store/useAddStaffStore";
+import { getUserPermissionsForRole, IPermissions, type role, useAddStaffStore } from "@/components/store/useAddStaffStore";
 import EditStaff from "@/components/molecules/addStaffpopup/editStaff";
+import toast from "react-hot-toast";
 
 const StaffPage = () => {
   const user = useOwnerLogin((s) => s.user);
@@ -31,19 +32,54 @@ const StaffPage = () => {
     setIsEditing,
     setEditStaffId,
     setPageToggle,
+    setPermissions,
+    setSelectedPermissions
   } = useAddStaffStore();
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
 
-  const handleStaffDetails = (staff: UserProfile) => {
+
+
+  const fetchPermissions = async () => {
+    const res = await apiRpc.businesses[":businessId"].permissions.$get({
+      // header: {
+      //   x_access_token: accessToken,
+      //   x_refresh_token: refreshToken,
+      // },
+      param: {
+        businessId: businessData?._id,
+      },
+    });
+    const data = await res.json();
+    if (res.status === 200 || res.status === 201) {
+      setPermissions(data.data);
+    } else {
+      toast.error("Failed to fetch permissions");
+    }
+    return data.data;
+  };
+
+  const handleStaffDetails = async (staff: UserProfile) => {
+    const matchingData = staff.customRole.filter((item:CustomRole) => item.businessId === businessData?._id)
+   console.log(matchingData);
+   const role = matchingData[0].role as role
     setName(staff.name);
     setPhone(staff.phone);
-    setSelectedRole(staff.customRole[0].role);
+    setSelectedRole(role);
     setPermissionsBasedOnRole(staff.role);
     setIsEditing(true);
     setEditStaffId(staff._id);
     setIsEditStaffOpen(true);
     setPageToggle("EDIT_STAFF");
+    const permissionsData = await fetchPermissions();
+
+    const userPermissions = permissionsData[role];
+    console.log(userPermissions);
+    const userSelectedPermissions = getUserPermissionsForRole(userPermissions, matchingData[0].permissions);
+    setPermissions(userPermissions);
+    setSelectedPermissions(userSelectedPermissions);
   };
+
+  
 
   const closeEditModal = () => {
     setName("");

@@ -1,7 +1,18 @@
 import Hand from "@/assets/login/hand.png";
-import { Link } from "react-router-dom";
+import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import { startTransition } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Congratulation = () => {
+	const { setStep } = useBusinessCtrl();
+	const navigate = useNavigate();
+
+	const goToBusinessDashboard = () => {
+		startTransition(() => {
+			setStep(0);
+			navigate("/app/business");
+		})
+	}
 	return (
 		<>
 			{" "}
@@ -16,12 +27,10 @@ const Congratulation = () => {
 				🥳Congratulationz !!!
 			</h3>
 			<h3 className="flex mb-6 leading-8"> We are your partnerz in growth</h3>
-			<Link to={"/app/business"}>
-            <button type="button" className="action_btn">
+			<button onClick={goToBusinessDashboard} type="button" className="action_btn">
 				Register my biz
 			</button>
-			</Link>
-        </>
+		</>
 	);
 };
 

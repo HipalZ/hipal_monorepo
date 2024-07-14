@@ -1,4 +1,4 @@
-import {  memo, startTransition, useCallback } from "react";
+import { memo, startTransition, useCallback } from "react";
 import HiPeopleLogo from "@/assets/hibizNewLogo.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -40,16 +40,20 @@ const Business = () => {
       navigate(`/app/business/${businessId}/businessControl`);
     });
   }, [navigate]);
-  
+
   return (
     <main className="relative">
       <section className=" linear_gradient_background">
         <Header onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={HiPeopleLogo} isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"} />
         <center className="pb-4 -mt-8 space-y-2">
-          <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
-            <img width={64} height={64} src={businessData?.logo} alt="Business_Logo" />
-          </figure>
-          <figcaption className="text-xl font-bold capitalize">{businessData?.name}</figcaption>
+          {
+            businessData?.logo && (
+              <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
+                <img width={64} height={64} src={businessData?.logo} alt="Business_Logo" />
+              </figure>
+            )
+          }
+          <figcaption className="mt-4 text-xl font-bold capitalize">{businessData?.name}</figcaption>
         </center>
       </section>
       <section className="mx-4">

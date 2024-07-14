@@ -10,8 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import { memo, startTransition } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoWarning } from "react-icons/io5";
-import { TbHomePlus } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
+import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
+import { TbHomePlus } from "react-icons/tb";
 
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
@@ -32,9 +33,6 @@ const Business = () => {
 
   const {
     data: sample,
-    isLoading,
-    isError,
-    error,
   } = useQuery({
     queryKey: ["getBusinesses", user._id],
     queryFn: () =>
@@ -44,14 +42,14 @@ const Business = () => {
     enabled: !!user._id,
   });
   return (
-    <main className="h-screen">
+    <section className="h-screen min-h-screen overflow-auto">
       <div className="business_gradient">
         <section className="sticky top-0 z-10 w-full px-0 pb-4">
           <Header
             leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
-            isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+            isIconBusinessShow={false}
           />
         </section>
         <section className="business_gradient_hero_section">
@@ -80,27 +78,26 @@ const Business = () => {
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${
-              ele?.status
-                ? "pointer-events-auto"
-                : "pointer-events-none opacity-75"
-            } child_business_card`}
+            className={`${ele?.status || ele.isActive
+              ? "pointer-events-auto"
+              : "pointer-events-none opacity-90"
+              } child_business_card`}
           >
             <div className="text-xl capitalize">
-              {/* {ele?.status && (
+              {!ele?.status && (
                 <div className="flex items-center text-sm text-red-500">
                   <IoWarning /> Under verification
                 </div>
-              )} */}
-              {/* {ele?.status && (
+              )}
+              {!ele?.outlet && (
                 <div className="flex items-center text-sm text-[#1877F2]">
-                  <TbHomePlus /> Branch @Old Tree Cafe...
+                  <TbHomePlus /> Branch @ {ele.parentOutLetId.name}
                 </div>
-              )} */}
+              )}
               <div>{ele?.name}</div>
             </div>
             <div className="aspect-square h-[4rem] w-[4rem] overflow-hidden rounded-full pb-6">
-              {ele?.logo && (
+              {ele?.logo ? (
                 <img
                   src={ele?.logo}
                   width={66}
@@ -109,7 +106,14 @@ const Business = () => {
                   loading="lazy"
                   className="aspect-square h-[4rem] w-[4rem]"
                 />
-              )}
+              ) : <img
+                src={logoPlaceholder}
+                width={66}
+                height={66}
+                alt="Business_logo"
+                loading="lazy"
+                className="aspect-square h-[4rem] w-[4rem]"
+              />}
             </div>
           </button>
         ))}
@@ -117,11 +121,11 @@ const Business = () => {
       <button
         type="button"
         onClick={addBusiness}
-        className="bottom_btn on_active_bounce"
+        className="fixed z-10 px-4 py-3 text-white transform -translate-x-1/2 bg-black rounded-full bottom-4 left-1/2 w-[92%] max-w-[30rem]"
       >
         + Add Business
       </button>
-    </main>
+    </section>
   );
 };
 

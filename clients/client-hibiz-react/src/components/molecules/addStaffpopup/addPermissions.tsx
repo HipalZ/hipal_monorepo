@@ -31,12 +31,12 @@ const AddPermissions = () => {
     accessToken: s.accessToken,
     refreshToken: s.refreshToken,
   }));
-  
+
   const goBack = useCallback(() => {
-    if(isEditing){
+    if (isEditing) {
       setPageToggle("EDIT_STAFF")
       return
-  }
+    }
     setPageToggle("ADD_STAFF");
   }, [setPageToggle]);
 
@@ -77,20 +77,20 @@ const AddPermissions = () => {
     }
     return data.data;
   };
-  
+
   useQuery({
     queryKey: ["roles", businessData?._id],
     queryFn: fetchPermissions,
     enabled: !!businessData?._id,
   });
-console.log(selectedRole);
+  console.log(selectedRole);
   return (
     <section className="relative px-4 rounded">
       <center className="sticky top-0 z-20 p-2 mt-4 text-xl font-semibold bg-[#f4f4f4]">
         Add Permissions
       </center>
 
-      {(permissions[selectedRole.toLowerCase()] || []).map((permission) => (
+      {(permissions[selectedRole] || []).map((permission) => (
         <Disclosure
           as="div"
           key={permission.title}
@@ -171,8 +171,7 @@ console.log(selectedRole);
           },
           {
             text: "Save",
-            onClick: () =>
-              console.log("Selected permissions:", selectedPermissions),
+            onClick: () => setPageToggle("ADD_STAFF"),
             className: "bg-black text-white",
           },
         ]}

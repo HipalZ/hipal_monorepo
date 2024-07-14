@@ -1,7 +1,8 @@
-import { useCallback, lazy, memo, useEffect } from "react";
+import { useCallback, lazy, memo } from "react";
 import { cn } from "@/components/utils/helper";
 import {
   type IRoles,
+  type role,
   useAddStaffStore,
 } from "@/components/store/useAddStaffStore";
 import { useQuery } from "@tanstack/react-query";
@@ -26,7 +27,8 @@ const AddRole = () => {
   } = useAddStaffStore();
 
   const handleRoleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedRole(event.target.value);
+    const role = event.target.value as role
+    setSelectedRole(role);
   };
   const { accessToken, refreshToken } = useUserToken((s) => ({
     accessToken: s.accessToken,
@@ -35,10 +37,12 @@ const AddRole = () => {
   const businessData = useBusinessData((s) => s.businessData);
 
   const saveRole = () => {
+    if (!selectedRole) {
+      toast.error("Please select a role");
+      return;
+    }
     if (selectedRole) {
-      console.log("Selected role:", selectedRole);
-    } else {
-      console.error("No role selected");
+      setPageToggle("ADD_STAFF")
     }
   };
 
@@ -53,8 +57,8 @@ const AddRole = () => {
       },
     });
     const response = (await res.json()).data;
-    if(res.status === 400 || res.status === 403 || res.status === 409){
-        toast.error("roles not found")
+    if (res.status === 400 || res.status === 403 || res.status === 409) {
+      toast.error("roles not found")
     }
     if (res.status === 200 || res.status === 201) {
       setRoles(response);
@@ -63,12 +67,12 @@ const AddRole = () => {
   };
 
   const goBack = useCallback(() => {
-    if(isEditing){
-        setPageToggle("EDIT_STAFF")
-        return
+    if (isEditing) {
+      setPageToggle("EDIT_STAFF")
+      return
     }
     setPageToggle("ADD_STAFF");
-  }, [pageToggle,setPageToggle]);
+  }, [pageToggle, setPageToggle]);
 
   useQuery({
     queryKey: ["roles", accessToken, refreshToken, businessData?._id],
@@ -79,7 +83,9 @@ const AddRole = () => {
   return (
     <section className="relative px-4 rounded-4">
       <center className="sticky top-0 z-20 p-2 my-4 text-xl font-semibold bg-[#f4f4f4]">
-        Add Role
+        {
+          isEditing ? "Edit Staff" : "Add Staff"
+        }
       </center>
       {roles.length > 0 && (
         <section>

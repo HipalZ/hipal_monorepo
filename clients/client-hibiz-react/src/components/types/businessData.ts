@@ -1,9 +1,9 @@
-import type { businessType } from "../store/useBusinessCtrl";
+import type { businessType, exploreLayout, MenuLayout } from "../store/useBusinessCtrl";
 import type { User } from "../store/useOwnerLogin";
 
 interface IAcessControl {
-  [key :string] :string;
-  _id:string
+  [key: string]: string;
+  _id: string
 }
 
 export interface CustomRole {
@@ -38,7 +38,7 @@ export interface IBusinessData {
   customLink: string;
   logo: string;
   address: string;
-  staff: string[];
+  staffIds: string[];
   gstNumber: string;
   fssaiLicenseNumber: string;
   status: boolean;
@@ -46,6 +46,7 @@ export interface IBusinessData {
   wallpaper: string;
   tier: string;
   open: string;
+  outlet: boolean;
   close: string;
   isHasSetting: boolean;
   isHasDishData: boolean;
@@ -57,6 +58,10 @@ export interface IBusinessData {
   serviceCharge: boolean;
   serviceChargePercentage: number;
   serviceChargeRemovalPass: number;
+  exploreLayout:exploreLayout;
+  menuLayout: MenuLayout;
+  primaryColor: string;
+  secondaryColor: string;
   takeAwayName: string;
   loyalty: boolean;
   isHasGst: boolean;
@@ -65,6 +70,10 @@ export interface IBusinessData {
   withPopCorn: boolean;
   createdAt: string;
   updatedAt: string;
+  isActive:boolean;
+  parentOutLetId: {
+    name: string
+  }
   __v: number;
   serviceControl: {
     discountPassword: string;

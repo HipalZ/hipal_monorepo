@@ -19,6 +19,7 @@ const EditStaff = () => {
     setPermissions,
     setPageToggle,
     editStaffId,
+    isEditing
   } = useAddStaffStore();
   const { accessToken, refreshToken } = useUserToken();
   const businessData = useBusinessData((s) => s.businessData);
@@ -41,9 +42,10 @@ const EditStaff = () => {
   // };
 
   return (
-    <>
+    <section className="min-h-auto h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4] pb-[7rem]">
+
       {pageToggle === "EDIT_STAFF" && (
-        <section className="min-h-auto h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4] pb-[7rem]">
+        <>
           <center className="pt-6 text-2xl font-semibold">Edit Staff</center>
           <h6 className="mx-4 mt-4 -mb-2 opacity-50">Staff</h6>
           <section className="p-4 m-4 space-y-4 bg-white rounded-xl">
@@ -109,11 +111,11 @@ const EditStaff = () => {
           <button type="button" className="bottom_btn">
             Save Changes
           </button>
-        </section>
+        </>
       )}
       {pageToggle === "ADD_ROLE" && <AddRole />}
       {pageToggle === "ADD_PERMISSIONS" && <AddPermissions />}
-    </>
+    </section>
   );
 };
 

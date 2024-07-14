@@ -1,48 +1,44 @@
-import { memo } from "react";
-import Header from "@/components/molecules/header";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import HiSiteMiddleImage from "@/assets/hisite/hisiteHeader.png";
-import { Link, useParams } from "react-router-dom";
+import { memo, useCallback } from "react";
+import {  FaArrowRight } from "react-icons/fa";
 import { settingServices } from "./settingStore";
+import { type SettingPageTypes, useSettings } from "@/components/store/useSettings";
 
 const MemoSettings = () => {
-  const businessId = useParams()?.businessId || "";
+  const {setPageToggle} = useSettings((s) => ({
+    setPageToggle: s.setPageToggle,
+    pageToggle: s.pageToggle,
+  }))
+  const goToForm = useCallback((navigateTo:SettingPageTypes) => {
+    setPageToggle(navigateTo)
+  },[])
+
   return (
-    <main>
-      <header className="pb-4 linear_gradient_background">
-        <Header leftIcon={<FaArrowLeft />} isIconBusinessShow={false}>
-          <img src={HiSiteMiddleImage} alt="HiSiteMiddleImage" loading="lazy" />
-          <h1 className="mt-4 mb-2 text-2xl font-semibold">Settings</h1>
-          <p className="mx-16 text-[#7D7D7D]">
-            Manage outlet & business settings
-          </p>
-        </Header>
-      </header>
+      
       <section className="p-6 space-y-6">
         {settingServices.map((service) => {
           return (
             <article
               key={service?._id}
-              className="bg-white h-[7rem] rounded-2xl p-4"
+              className="bg-white h-[6.5rem] rounded-2xl p-4"
             >
-              <header className="relative flex items-center mb-6 space-x-4">
-                <article className="w-6 h-6 bg-purple-700">
+              <header className="relative flex items-center mb-4 space-x-4">
+                <article className="flex items-center justify-center w-8 h-8 bg-purple-700 rounded-full">
                   <service.icon className="text-white" />
-                </article> 
-                <h1 className="text-2xl">{service?.title}</h1>
-                <Link
-                  to={`/app/business/${businessId}/${service?.navigateTo}`}
+                </article>
+                <h1 className="text-xl font-normal">{service?.title}</h1>
+                <button
+                  type="button"
+                  onClick={() => goToForm(service?.navigateTo)}
                   className="absolute -rotate-45 right-2 top-2"
                 >
                   <FaArrowRight />
-                </Link>
+                </button>
               </header>
               <p>{service?.description}</p>
             </article>
           );
         })}
       </section>
-    </main>
   );
 };
 

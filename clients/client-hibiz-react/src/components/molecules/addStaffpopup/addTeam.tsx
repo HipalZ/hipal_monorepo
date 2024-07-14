@@ -21,34 +21,18 @@ const AddTeam = () => {
   const { accessToken, refreshToken } = useUserToken();
   const businessData = useBusinessData((s) => s.businessData);
 
-  
-  const preparePermissions = useCallback(() => {
-    const selectedPermissionsSet = new Set(selectedPermissions);
-    const rolePermissions = permissions[selectedRole] || [];
 
-    return rolePermissions
-      .map((permission) => {
-        const subPermissions = permission.subPermissions.filter(
-          (subPermission) => selectedPermissionsSet.has(subPermission.subTitle),
-        );
-        if (
-          subPermissions.length > 0 ||
-          selectedPermissionsSet.has(permission.title)
-        ) {
-          return {
-            title: permission.title,
-            subPermissions: subPermissions.map(
-              ({ subTitle, descriptions }) => ({ subTitle, descriptions }),
-            ),
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }, [selectedPermissions, permissions, selectedRole]);
-
+  const formatPermissions = useCallback(() => {
+    if (!selectedRole) return [];
+    const perms = permissions[selectedRole] || [];
+    return perms.map(permission => ({
+      title: permission.title,
+      subPermissions: permission.subPermissions
+        .filter(sp => selectedPermissions.includes(sp.subTitle))
+        .map(sp => sp.subTitle)
+    })).filter(p => p.subPermissions.length > 0);
+  }, [permissions, selectedPermissions, selectedRole]);
   const addStaff = async () => {
-    const preparedPermissions = preparePermissions();
     const res = await apiRpc.users.addStaff.$post({
       header: {
         x_access_token: accessToken,
@@ -58,8 +42,9 @@ const AddTeam = () => {
         businessId: businessData?._id || "",
         name: name,
         phone: phone,
-        permissions: preparedPermissions,
-        
+        role: selectedRole || "CAPTAIN",
+        permissions: formatPermissions()
+
       },
     });
     if (res.status === 201 || res.status === 200) {
