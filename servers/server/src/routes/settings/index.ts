@@ -68,15 +68,15 @@ const settingsRouter = new Hono()
     },
   )
   .get(
-    '/:settingsId',
+    '/:businessId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ settingsId: z.string() })),
     zValidator('header', TokenValidator),
 
     async (c) => {
-      const { settingsId } = c.req.param();
-      const existingSetting = await BusinessSettings.findById(settingsId);
+      const { businessId } = c.req.param();
+      const existingSetting = await BusinessSettings.findOne({ businessId });
       if (!existingSetting) return respond(c, 'Setting not found', true, 404, {});
       return respond(c, 'Setting fetched successfully', false, 200, existingSetting);
     },

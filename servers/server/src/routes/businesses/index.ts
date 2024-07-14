@@ -403,8 +403,9 @@ const businessesRouter = new Hono()
   // })
   .get(
     '/:businessId/permissions',
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
+    zValidator('header', TokenValidator),
 
     zValidator('param', z.object({ businessId: z.string() })),
     async (c) => {
