@@ -13,6 +13,7 @@ export interface IProps {
 const MemoExplorePageSection = (props: IProps) => {
     const bizInfo = useExploreStore((s)=>s.bizInfo)
     const { img, handleImageChange, handleBizName , handleSaveExplorePage} = props
+    console.log('img',img)
     return (
         <main className='px-4 overflow-y-auto h-[75vh] pb-[10rem]'>
             <section className='mb-4'>

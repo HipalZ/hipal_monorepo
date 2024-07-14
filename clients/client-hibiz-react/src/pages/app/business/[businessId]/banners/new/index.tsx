@@ -2,6 +2,8 @@ import { lazy, memo, startTransition, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { BannerType, bannerTypes } from '@/components/templates/explorePage/explorePageStore';
+import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
+import layout3 from '@/assets/hisite/layout3.jpg';
 
 // Lazy load components
 const Header = lazy(() => import('@/components/molecules/header'));

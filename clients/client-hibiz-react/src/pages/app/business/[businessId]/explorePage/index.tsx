@@ -7,19 +7,20 @@ import { useQuery } from '@tanstack/react-query';
 import type { IBizInfo, ICategory, IDish } from '@/components/types/businessData';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useExploreStore } from '@/components/store/useExploreStore';
-import { storeImageAfterSave } from '@/components/utils/helper';
+import { filterPayload, storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
 import { BsInstagram } from 'react-icons/bs';
 import { CiFacebook } from 'react-icons/ci';
 import { FaXTwitter } from 'react-icons/fa6';
 import { TbBrandTelegram } from 'react-icons/tb';
 import { RiDiscordLine } from 'react-icons/ri';
+import { cropImage } from '@/components/cropper';
+import PopUp from "@/components/atom/popUp";
 
 // Lazy loading components
 const Header = lazy(() => import('@/components/molecules/header'));
 const ReactCropper = lazy(() => import('@/components/cropper'));
 const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
-const PopUp = lazy(() => import('@/components/atom/popUp'));
 const UniquelyYoursPopUp = lazy(() => import('@/components/templates/explorePage/uniquelyYoursPopUp'));
 const ExplorePageTopSection = lazy(() => import('@/components/templates/explorePage/explorePageTopSection'));
 const BizInfo = lazy(() => import('@/components/templates/explorePage/bizInfo'));
@@ -81,16 +82,17 @@ const MemoExplorePage = () => {
         }
 
         setSelectedDishes(updatedSelectedDishes);
-    }, []);
+    }, [selectedDishes]);
+
     const handleOpenPopUp = useCallback(() => {
         setShowUniquePopUp(true);
     }, []);
 
-    const handleSaveDish = useCallback(async () => {
+    const handleSaveDish = async () => {
         setUniquelyDishes(selectedDishes);
         await handleUniquelyYours(selectedDishes)
         setShowUniquePopUp(false);
-    });
+    };
 
     const handleUniquelyYours = async (selectedDishes: IDish[]) => {
         apiRpc.dishes.uniquelyYours.$post({
@@ -111,7 +113,7 @@ const MemoExplorePage = () => {
         })
     }
 
-    const handleImageChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const type = event?.target?.dataset?.type;
         const file = event?.target?.files?.[0];
         if (file) {
@@ -124,9 +126,9 @@ const MemoExplorePage = () => {
 
             setImageFiles(prev => ({ ...prev, [type]: file }));
         }
-    }, []);
+    };
 
-    const handleCrop = useCallback(async () => {
+    const handleCrop = async () => {
         const { image, type } = cropping;
         const cropper = cropperRef.current;
         if (cropper && image && type) {
@@ -150,7 +152,7 @@ const MemoExplorePage = () => {
                 }
             }
         }
-    }, []);
+    };
 
     const handleBizInfo = useCallback(() => {
         startTransition(() => {
@@ -191,11 +193,11 @@ const MemoExplorePage = () => {
 
     const handleBizName = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setBizInfo({ ...bizInfo, name: e.target.value });
-    }, [])
+    }, [bizInfo])
 
     const handleFooterComment = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         setBizInfo({ ...bizInfo, footerDescription: e.target.value });
-    }, [])
+    }, [bizInfo])
 
     const handleSaveSocialMediaLink = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const newLink = e.target.value;
@@ -205,7 +207,7 @@ const MemoExplorePage = () => {
             )
         );
 
-    }, []);
+    }, [socialMediaLinks, selectedSocialMedia]);
 
     const getAllCategoryData = async (businessId: string) => {
         const categoryResponse = await apiRpc.categories.$get({
@@ -247,7 +249,16 @@ const MemoExplorePage = () => {
         const payload: IBizPayload = {
             businessId,
             logoUrl: logoExplore,
+            specialBannerUrl: bannerExplore,
+            endBannerUrl: footerExplore,
+            socialMediaLinks: filteredSocialMedia,
+            name: bizInfo?.name,
+            fssai: bizInfo?.fssai,
+            gst: bizInfo?.gst,
+            footerDescription: bizInfo?.footerDescription,
         };
+        
+        const filteredPayload = filterPayload(payload);
 
         const config = {
             x_access_token: accessToken,
@@ -255,44 +266,21 @@ const MemoExplorePage = () => {
         }
 
         // Conditionally add keys if they have a length greater than 0
-        if (bizInfo?.name && bizInfo?.name.length > 0) {
-            payload.name = bizInfo?.name
-        }
-        if (bannerExplore && bannerExplore.length > 10) {
-            payload.specialBannerUrl = bannerExplore;
-        }
-        if (logoExplore && logoExplore.length > 10) {
-            payload.logoUrl = logoExplore
-        }
-        if (footerExplore && footerExplore.length > 10) {
-            payload.endBannerUrl = footerExplore;
-        }
-        if (bizInfo.fssai && bizInfo?.fssai.length > 0 && bizInfo?.fssai.length >= 16) {
-            payload.fssai = bizInfo.fssai;
-        }
-        if (bizInfo.gst && bizInfo.gst.length > 0 && bizInfo.gst.length >= 15) {
-            payload.gst = bizInfo.gst;
-        }
-        if (bizInfo.footerDescription && bizInfo.footerDescription.length > 0) {
-            payload.footerDescription = bizInfo.footerDescription;
-        }
-        if (filteredSocialMedia && filteredSocialMedia.length > 0) {
-            payload.socialMediaLinks = filteredSocialMedia;
-        }
+
         let res: {
             status: number
         };
         if (bizInfo?._id === '') {
             res = await apiRpc.businesses.outletInfo.$post({
                 header: config,
-                json: payload
+                json: filteredPayload
             });
         }
 
         if (bizInfo?._id !== '' || res && res.status === 409) {
             const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
                 header: config,
-                json: payload,
+                json: filteredPayload,
                 param: {
                     businessId: businessId
                 },

@@ -3,9 +3,9 @@ import { apiRpc } from '@hi/common';
 import type { ICategory } from '@/components/types/businessData';
 
 export interface IBizPayload {
-    customTiming: { day: string; openTime: string; closeTime: string; }[];
-    fixCloseTime: string;
-    fixOpenTime: string;
+    customTiming?: { day: string; openTime: string; closeTime: string; }[];
+    fixCloseTime?: string;
+    fixOpenTime?: string;
     socialMediaLinks?: { icon: string; link: string; }[];
     name?:string;
     socialMedia?: { icon: string; link: string; }[];
@@ -27,6 +27,7 @@ export interface IBizPayload {
 
 export interface IBannerPayload {
     businessId?: string;
+    isPublished: boolean;
     bannerType?: string;
     bannerImage?: string;
     heading?: string;
@@ -37,7 +38,6 @@ export interface IBannerPayload {
     paragraphColor?: string;
     paragraphFontWeight?: string;
     paragraphAlign?: string;
-    buttonName?: string;
     buttonColor?: string;
     callToAction?: string;
     backgroundColor?: string;
@@ -71,6 +71,12 @@ export enum BannerType {
     BANNER_TYPE_1 = 'BANNER_TYPE_1',
     BANNER_TYPE_2 = 'BANNER_TYPE_2',
     BANNER_TYPE_3 = 'BANNER_TYPE_3',
+}
+export interface IBannerType {
+    _id: string;
+    title: string;
+    description: string;
+    bannerType: BannerType;
 }
 export const bannerTypes = [
     {

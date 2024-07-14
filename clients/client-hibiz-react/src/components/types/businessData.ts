@@ -246,6 +246,10 @@ export interface IBizInfo {
   fssai: string;
   gst: string;
   footerDescription: string;
+  fixOpenTime: string;
+  fixCloseTime: string;
+  customTimings: string;
+  isCustomTime: boolean;
 }
 
 export type Banner = {

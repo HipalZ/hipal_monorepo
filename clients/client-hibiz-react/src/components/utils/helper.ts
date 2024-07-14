@@ -303,3 +303,10 @@ export function timestampToDateTime(timestamp: number): string {
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
+
+export function filterPayload(payload: Record<string, any>): Record<string, any> {
+  const filteredPayload = Object.fromEntries(
+    Object.entries(payload).filter(([_, value]) => value !== null && value !== "")
+  );
+  return filteredPayload;
+}

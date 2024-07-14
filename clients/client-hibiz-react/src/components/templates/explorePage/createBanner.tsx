@@ -2,7 +2,6 @@ import { type ChangeEvent, memo, startTransition, useEffect, useRef, useState, S
 import { BannerType, bannerTypes, type IBannerPayload } from './explorePageStore';
 import { IoMdColorPalette } from 'react-icons/io';
 import { TfiPaintBucket } from 'react-icons/tfi';
-import { FaCaretDown } from 'react-icons/fa';
 import { apiRpc } from '@hi/common';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -12,13 +11,14 @@ import type { Color, IStyles } from '@/components/types/businessData';
 import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
 import layout3 from '@/assets/hisite/layout3.jpg';
 import { useBannerStore } from '@/components/store/useBannerStore';
+import { Switch } from '@headlessui/react';
+import HeaderDropDown from './headerDropDown';
 
 // Lazy load components
 const ReactCropper = lazy(() => import('@/components/cropper'));
 const PopUp = lazy(() => import('@/components/atom/popUp'));
 const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
 const BottomButton = lazy(() => import('@/components/atom/bottomButton'));
-const Header = lazy(() => import('@/components/molecules/header'));
 const ChangeBannerColor = lazy(() => import('./changebannerColor'));
 const SubHeader = lazy(() => import('@/components/atom/subHeader'));
 const StylingsIcons = lazy(() => import('./stylingsIcons'));
@@ -29,19 +29,21 @@ const ExploreColorWheel = lazy(() => import('./exploreColorWheel'));
 
 const MemoCreateBanner = () => {
     const cropperRef = useRef(null);
+    const [isPublished, setIsPublished] = useState(false)
     const navigate = useNavigate();
     const { businessId, editBanner } = useParams();
     const { accessToken, refreshToken } = useUserToken(s => ({
         accessToken: s.accessToken,
         refreshToken: s.refreshToken
     }))
+
     const [itemName, setItemName] = useState('')
     const [img, setImg] = useState({ logo: '' });
     const [imageFiles, setImageFiles] = useState({ logo: null });
     const [showCropper, setShowCropper] = useState(false);
     const [cropping, setCropping] = useState({ image: null, type: null });
     const [heading, setHeading] = useState('')
-    const [description, setDescription] = useState('')
+    const [paragraph, setParagraph] = useState('')
     const [clickRedirect, setClickRedirect] = useState(false)
     const [callToAction, setCallToAction] = useState('')
     const [isColorPickerVisible, setIsColorPickerVisible] = useState(false);
@@ -88,10 +90,9 @@ const MemoCreateBanner = () => {
 
     useEffect(() => {
         if (editBanner && editingBanner) {
-            console.log('trigegering banner')
-            setImg((prev) => ({ ...prev, logo: editingBanner?.bannerImage || ''}))
+            setImg((prev) => ({ ...prev, logo: editingBanner?.bannerImage || '' }))
             setHeading(editingBanner?.heading || '')
-            setDescription(editingBanner?.paragraph || '')
+            setParagraph(editingBanner?.paragraph || '')
             setParagraphStyle((prev) => ({
                 ...prev,
                 textAlign: editingBanner?.paragraphAlign || prev.textAlign,
@@ -117,12 +118,13 @@ const MemoCreateBanner = () => {
         }
     }, [editBanner, editingBanner])
 
-    const handleBannerTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        setSelectedBannerType(e.target.value);
-    };
-    
     const toggleDropDown = () => {
         setIsDropDownVisible(!isDropDownVisible);
+    };
+
+    const handleOptionClick = (bannerId: string) => {
+        setSelectedBannerType(bannerId);
+        setIsDropDownVisible(false);
     };
 
     const handleChangeColors = () => {
@@ -184,7 +186,7 @@ const MemoCreateBanner = () => {
     };
 
     const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-        setDescription(e.target.value);
+        setParagraph(e.target.value);
     };
 
     const handleRedirections = () => {
@@ -258,55 +260,29 @@ const MemoCreateBanner = () => {
         }
         const payload: IBannerPayload = {
             businessId,
+            isPublished,
+            bannerType: selectedBannerType,
+            bannerImage,
+            heading,
+            headingColor: headingStyle.color,
+            headingFontWeight: headingStyle.fontWeight.toString(),
+            headingAlign: headingStyle.textAlign.toUpperCase(),
+            paragraph,
+            paragraphColor: paragraphStyle.color,
+            paragraphFontWeight: paragraphStyle.fontWeight.toString(),
+            paragraphAlign: paragraphStyle.textAlign.toUpperCase(),
+            buttonColor: buttonStyle.color,
+            callToAction,
+            backgroundColor: selectedColor.bgColor,
+            redirectionId,
+            redirectionType,
+            redirectionName: itemName,
         }
-        if (selectedBannerType) {
-            payload.bannerType = selectedBannerType
-        }
-        if (heading && heading.length > 0) {
-            payload.heading = heading
-        }
-        if (description && description.length > 0) {
-            payload.paragraph = description
-        }
-        if (bannerImage && bannerImage.length > 0) {
-            payload.bannerImage = bannerImage
-        }
-        if (headingStyle && headingStyle?.color.length > 0) {
-            payload.headingColor = headingStyle.color
-        }
-        if (headingStyle?.fontWeight) {
-            payload.headingFontWeight = headingStyle.fontWeight.toString()
-        }
-        if (headingStyle?.textAlign) {
-            payload.headingAlign = headingStyle.textAlign.toUpperCase()
-        }
-        if (paragraphStyle && paragraphStyle?.color.length > 0) {
-            payload.paragraphColor = paragraphStyle.color
-        }
-        if (paragraphStyle?.fontWeight) {
-            payload.paragraphFontWeight = paragraphStyle.fontWeight.toString()
-        }
-        if (paragraphStyle?.textAlign) {
-            payload.paragraphAlign = paragraphStyle.textAlign.toUpperCase()
-        }
-        if (buttonStyle && buttonStyle?.color.length > 0) {
-            payload.buttonColor = buttonStyle.color
-        }
-        if (callToAction && callToAction.length > 0) {
-            payload.callToAction = callToAction
-        }
-        if (selectedColor && selectedColor?.bgColor.length > 0) {
-            payload.backgroundColor = selectedColor.bgColor
-        }
-        if (redirectionId && redirectionId.length > 0) {
-            payload.redirectionId = redirectionId
-        }
-        if (redirectionType && redirectionType.length > 0) {
-            payload.redirectionType = redirectionType
-        }
-        if (itemName && itemName.length > 0) {
-            payload.redirectionName = itemName
-        }
+
+        const filteredPayload = Object.fromEntries(
+            Object.entries(payload).filter(([_, value]) => value !== null && value !== "")
+        );
+
         let res;
         if (editBanner) {
             res = await apiRpc.settings.banner[':bannerId'].$put({
@@ -314,12 +290,12 @@ const MemoCreateBanner = () => {
                     bannerId: editBanner
                 },
                 header: config,
-                json: payload
+                json: filteredPayload
             })
         } else {
             res = await apiRpc.settings.banner.$post({
                 header: config,
-                json: payload,
+                json: filteredPayload,
             })
         }
         await res.json()
@@ -332,61 +308,50 @@ const MemoCreateBanner = () => {
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <main className='relative h-screen'>
-                <section className='fixed top-0 bg-white w-full pb-[1rem] z-10'>
-                    <Header onBack={handleChangeColors} dropDown={
-                        <div className="relative">
-                            <label htmlFor="banner-type" className='flex items-center text-lg font-medium text-gray-900'>
-                                <span>Select Card Type</span>
-                                <span onClick={toggleDropDown} className="ml-2 cursor-pointer">
-                                    <FaCaretDown />
-                                </span>
-                            </label>
-                            {isDropDownVisible && (
-                                <div className="absolute w-48 mt-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-                                    <select
-                                        id="banner-type"
-                                        value={selectedBannerType}
-                                        onChange={handleBannerTypeChange}
-                                        className='block w-full p-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'
-                                    >
-                                        {bannerTypes.map((banner) => (
-                                            <option key={banner._id} value={banner._id}>{banner.title}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-                    } isIconBusinessShow={false}>
-                    </Header>
+                <section className='fixed top-0 bg-white w-full pb-[1rem] z-10 max-w-[69rem]'>
+                    <HeaderDropDown bannerTypes={bannerTypes} handleChangeColors={handleChangeColors} handleOptionClick={handleOptionClick} isDropDownVisible={isDropDownVisible} toggleDropDown={toggleDropDown} />
                     <section className='flex justify-center w-full bg-white'>
                         {selectedBannerType === BannerType.BANNER_TYPE_1 && (
-                            <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 mt-4 space-y-4 border rounded-2xl'>
-                                <h1 style={{  ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                <p style={{ ...paragraphStyle, color: selectedColor.textColor  }}>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                            <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 mt-4 border rounded-2xl'>
+                                <div>
+                                    <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                    <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }}>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                </div>
                                 <div>
                                     <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
                                 </div>
                             </article>
                         )}
+
                         {selectedBannerType === BannerType.BANNER_TYPE_2 && (
-                            <article style={{ backgroundImage: `url(${img?.logo || BannerDummy})`, backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='p-4 py-6 space-y-10 bg-cover rounded-2xl'>
-                                <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                <p style={{ ...paragraphStyle, color: selectedColor.textColor }} className='my-4'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                            <article style={{ backgroundImage: `url(${img?.logo || BannerDummy})`, backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 bg-cover rounded-2xl'>
+                                <div>
+                                    <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                    <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }} className='my-4'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                </div>
+                                <div>
+                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                </div>
                             </article>
                         )}
-                        {selectedBannerType === BannerType?.BANNER_TYPE_3 && (
-                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex items-center justify-between mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
-                                <article className='h-full'>
-                                    <h1 style={{ ...headingStyle, color: selectedColor.textColor }} className='px-4 text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                    <p style={{ ...paragraphStyle, color: selectedColor.textColor, width: '180px' }} className='px-4 my-4 text-sm'>{description ? truncateDescription(description) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 ml-4 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+
+                        {selectedBannerType === BannerType.BANNER_TYPE_3 && (
+                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='grid grid-rows-2 mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
+                                <div className='row-span-1'>
+                                    <img src={img?.logo || layout3} alt="BannerDummy" className='object-cover w-full h-full' />
+                                </div>
+                                <article className='flex items-center justify-between row-span-1 p-4'>
+                                    <div>
+                                        <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                        <p style={{ color: selectedColor.textColor, ...paragraphStyle }} className='my-4 text-sm'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                    </div>
+                                    <div>
+                                        <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                    </div>
                                 </article>
-                                <figure>
-                                    <img src={img?.logo || layout3} alt="BannerDummy" className='h-full overflow-hidden' />
-                                </figure>
                             </section>
                         )}
+
                     </section>
                     &nbsp;
                     {clickedChangeColor ? null : <center>
@@ -396,7 +361,17 @@ const MemoCreateBanner = () => {
                     </center>}
                 </section>
                 {clickedChangeColor ? <ChangeBannerColor handleColorChange={handleColorChange} /> : <section>
-                    <section className='mt-[30rem] mx-6'>
+                    <section className='mt-[28rem] mx-6'>
+                        <article className='flex items-center justify-between p-4 mb-4 bg-white rounded-2xl'>
+                            <SubHeader text='Publish Banner' />
+                            <Switch
+                                checked={isPublished}
+                                onChange={setIsPublished}
+                                className="mb-4 group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-green-500"
+                            >
+                                <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
+                            </Switch>
+                        </article>
                         <SubHeader text='Banner Details' />
                         <section className='bg-white pb-[1rem]'>
                             <section className='flex items-center justify-between p-4 mt-4 space-x-4'>
@@ -411,11 +386,11 @@ const MemoCreateBanner = () => {
                                     <span><TfiPaintBucket size={24} /></span>
                                 </article>
                                 <PopUp show={colorWheelBackground} onClose={() => setColorWheelBackground(!colorWheelBackground)}>
-                                    <ExploreColorWheel close={() => setColorWheelBackground(!colorWheelBackground)} colorType="backgroundColor" setStyle={setSelectedColor} style={selectedColor}/>
+                                    <ExploreColorWheel close={() => setColorWheelBackground(!colorWheelBackground)} colorType="backgroundColor" setStyle={setSelectedColor} style={selectedColor} />
                                 </PopUp>
                             </section>
                             <section className='m-4'>
-                                <input maxLength={26} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' style={headingStyle} />
+                                <input maxLength={26} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' />
                                 <StylingsIcons setIsColorPickerVisible={setIsColorPickerVisible}
                                     isColorPickerVisible={isColorPickerVisible}
                                     element="heading"
@@ -426,32 +401,32 @@ const MemoCreateBanner = () => {
                                     setColorWheel={setColorWheelHeading}
                                 />
                                 <PopUp show={colorWheelHeading} onClose={() => setColorWheelHeading(!colorWheelHeading)}>
-                                    <ExploreColorWheel 
-                                        close={() => setColorWheelHeading(!colorWheelHeading)} 
-                                        colorType="heading" 
-                                        style={headingStyle} 
-                                        setStyle={setHeadingStyle}/>
+                                    <ExploreColorWheel
+                                        close={() => setColorWheelHeading(!colorWheelHeading)}
+                                        colorType="heading"
+                                        style={headingStyle}
+                                        setStyle={setHeadingStyle} />
                                 </PopUp>
                             </section>
                             &nbsp;
                             <section className='m-4'>
-                                <textarea maxLength={75} className='w-full h-24 resize-none rounded-2xl' value={description} onChange={handleDescriptionChange} placeholder='Description' style={paragraphStyle} />
+                                <textarea maxLength={75} className='w-full h-24 resize-none rounded-2xl' value={paragraph} onChange={handleDescriptionChange} placeholder='Description' />
                                 <StylingsIcons
                                     setIsColorPickerVisible={setIsColorPickerVisible}
                                     isColorPickerVisible={isColorPickerVisible}
                                     element="paragraph"
                                     onAlignmentChange={handleAlignmentChange}
                                     onFontWeightChange={handleFontWeightChange}
-                                    onColorChange={handleCustomColor} 
+                                    onColorChange={handleCustomColor}
                                     colorWheel={colorWheelParagraph}
                                     setColorWheel={setColorWheelParagraph}
-                                    />
+                                />
                                 <PopUp show={colorWheelParagraph} onClose={() => setColorWheelParagraph(!colorWheelParagraph)}>
-                                    <ExploreColorWheel 
-                                        close={() => setColorWheelParagraph(!colorWheelParagraph)} 
-                                        colorType="paragraph" 
-                                        style={paragraphStyle} 
-                                        setStyle={setParagraphStyle}/>
+                                    <ExploreColorWheel
+                                        close={() => setColorWheelParagraph(!colorWheelParagraph)}
+                                        colorType="paragraph"
+                                        style={paragraphStyle}
+                                        setStyle={setParagraphStyle} />
                                 </PopUp>
                             </section>
                         </section>
@@ -459,17 +434,17 @@ const MemoCreateBanner = () => {
                     <section className='m-6'>
                         <SubHeader text='Add Button Name' />
                         <article className='flex items-center justify-between p-2 bg-white rounded-2xl'>
-                            <input type="text" className='w-2/3 rounded-2xl' value={callToAction} onChange={handleButtonName} placeholder='Button Name'  />
+                            <input type="text" className='w-2/3 rounded-2xl' maxLength={16} value={callToAction} onChange={handleButtonName} placeholder='Button Name' />
                             <article onClick={() => setColorWheelButton(!colorWheelButton)} className='w-12 px-3 py-2 border border-black rounded-2xl border-1'>
                                 <span><TfiPaintBucket size={24} /></span>
                             </article>
                             <PopUp show={colorWheelButton} onClose={() => setColorWheelButton(!colorWheelButton)}>
-                                    <ExploreColorWheel 
-                                        close={() => setColorWheelButton(!colorWheelButton)} 
-                                        colorType="button" 
-                                        style={buttonStyle} 
-                                        setStyle={setButtonStyle}/>
-                                </PopUp>
+                                <ExploreColorWheel
+                                    close={() => setColorWheelButton(!colorWheelButton)}
+                                    colorType="button"
+                                    style={buttonStyle}
+                                    setStyle={setButtonStyle} />
+                            </PopUp>
                         </article>
                     </section>
                     <section className='m-6 pb-[7rem]'>

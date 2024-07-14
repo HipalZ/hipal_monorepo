@@ -43,7 +43,8 @@ export const useExploreStore = create(
         footerDescription: '',
         fixOpenTime: '',
         fixCloseTime: '',
-        customTimings: ''
+        customTimings: '',
+        isCustomTime: false,
       },
       setBizInfo: (bizInfo) => set(() => ({ bizInfo })),
       selectedDishes: [],
