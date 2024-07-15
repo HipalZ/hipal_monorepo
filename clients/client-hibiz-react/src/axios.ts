@@ -4,7 +4,7 @@ import axiosConstructor from 'axios';
 const axios = axiosConstructor.create({
   baseURL: BASE_URL,
 });
-
+//
 axios.interceptors.request.use(
   (config: any) => {
     if (config.url === undefined) {

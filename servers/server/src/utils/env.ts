@@ -1,9 +1,10 @@
-import { Z } from '@upstash/redis/zmscore-9faf292c';
+
 import { z } from 'zod';
 
 const envSchema = z.object({
   //   APP_DOMAIN: z.string(),
   //   APP_FRONTEND_DOMAIN: z.string(),
+  BASE_URL: z.string(),
 
   // ** MONGO DB
   MONGO_URI: z.string(),

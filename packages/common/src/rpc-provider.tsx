@@ -21,4 +21,4 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
 const { accessToken, refreshToken } = useUserToken.getState();
 console.log('accessToken', accessToken);
 console.log('refreshToken', refreshToken);
-export const apiRpc = hc<AppType>('http://localhost:4500', {});
+export const apiRpc = hc<AppType>(Bun.env.BASE_URL, {});
