@@ -1,6 +1,9 @@
 import type { IDish } from '@/components/types/businessData';
 import dummyImage from '@/assets/hisite/placeholder.png';
 import { memo, useEffect, type ChangeEvent } from 'react';
+import { useExploreStore } from '@/components/store/useExploreStore';
+import { cn } from '@/components/utils/helper';
+import toast from 'react-hot-toast';
 interface IUniqueProps {
     dishes: IDish[];
     uniquelyDishes: IDish[];
@@ -12,13 +15,17 @@ interface IUniqueProps {
     setSelectedDishes : (dishes:IDish[])=>void
 }
 const MemoUniquelyYoursPopUp = (props:IUniqueProps) => {
-    const { dishes, uniquelyDishes, setSelectedDishes,selectedDishes,handleSearch, searchQuery, handleDishSelect, handleSaveDish } = props;
+    const {originalDishes} = useExploreStore((s) => ({
+        originalDishes: s.originalDishes
+    }))
+    const { uniquelyDishes, dishes,setSelectedDishes,selectedDishes,handleSearch, searchQuery, handleDishSelect, handleSaveDish } = props;
+    console.log('selectedDise',selectedDishes)
     useEffect(() => {
         setSelectedDishes(uniquelyDishes);
     }, [uniquelyDishes]);
     return (
             <div className='p-4 h-[80vh] overflow-auto'>
-                <center className='mb-4 text-2xl'>Uniquely Yours</center>
+                <center className='mb-4 text-2xl'>Uniquely Yours {selectedDishes.length}/7</center>
                 <input
                     type="search"
                     onChange={handleSearch}
@@ -27,16 +34,43 @@ const MemoUniquelyYoursPopUp = (props:IUniqueProps) => {
                     placeholder="Search for a dish"
                 />
                 <div className='gap-4'>
-                    {dishes.map(dish => {
+                    {dishes.length>0 ? dishes.map(dish => {
+                        const isSelected = selectedDishes.some(d => d._id === dish._id);
                         return (
                             <div key={dish._id} className='flex items-center space-x-4 space-y-4 cursor-pointer'>
                                 <input
                                     type="checkbox"
-                                    className='text-black rounded-sm'
+                                    className='text-black rounded-md'
                                     checked={selectedDishes.some(d => d._id === dish._id)}
-                                    onChange={() => handleDishSelect(dish)}
+                                    onChange={() => {
+                                        if (isSelected || selectedDishes.length < 7) {
+                                            handleDishSelect(dish);
+                                        }else{
+                                            toast.error('You can only select 7 dishes');
+                                        }
+                                    }}
                                 />
-                                <img loading="lazy" src={dish.images[0] || dummyImage} alt={`Dish ${dish._id}`} className='h-[5rem] w-[5rem] border-2' />
+                                <img loading="lazy" src={dish.images[0] || dummyImage} alt={`Dish ${dish._id}`} className='h-[5rem] w-[5rem] border-2 rounded-md' />
+                                <h1>{dish?.name}</h1>
+                            </div>
+                        )
+                    }) : originalDishes.map(dish => {
+                        const isSelected = selectedDishes.some(d => d._id === dish._id);
+                        return (
+                            <div key={dish._id} className={cn('flex items-center space-x-4 space-y-4 cursor-pointer', )}>
+                                <input
+                                    type="checkbox"
+                                    className='text-black rounded-md'
+                                    checked={selectedDishes.some(d => d._id === dish._id)}
+                                    onChange={() => {
+                                        if (isSelected || selectedDishes.length < 7) {
+                                            handleDishSelect(dish);
+                                        }else{
+                                            toast.error('You can only select 7 dishes');
+                                        }
+                                    }}
+                                />
+                                <img loading="lazy" src={dish.images[0] || dummyImage} alt={`Dish ${dish._id}`} className='h-[5rem] w-[5rem] border-2 rounded-md' />
                                 <h1>{dish?.name}</h1>
                             </div>
                         )

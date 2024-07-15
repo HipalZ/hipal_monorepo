@@ -1,10 +1,10 @@
 import { type ChangeEvent, type FormEvent, memo, startTransition, useCallback, useRef, useState, Suspense, lazy, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IoMdArrowUp } from "react-icons/io";
-import { basicInfos, combineAllDishes, type IBizPayload } from '@/components/templates/explorePage/explorePageStore';
+import { basicInfos, combineAllDishes } from '@/components/templates/explorePage/explorePageStore';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
-import type { IBizInfo, IDish } from '@/components/types/businessData';
+import type { IBizInfo, IBizPayload, IDish } from '@/components/types/businessData';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import { filterPayload, storeImageAfterSave } from '@/components/utils/helper';

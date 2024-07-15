@@ -291,3 +291,55 @@ export type IStyles = {
     heading?: string;
     paragraph?: string;
   }
+
+export type TextAlign = 'center' | 'left' | 'right' | 'justify' | 'initial' | 'inherit'
+
+export interface IBizPayload {
+  customTiming?: { day: string; openTime: string; closeTime: string; }[];
+  fixCloseTime?: string;
+  fixOpenTime?: string;
+  socialMediaLinks?: { icon: string; link: string; }[];
+  name?:string;
+  socialMedia?: { icon: string; link: string; }[];
+  footerDescription?: string;
+  businessId: string;
+  specialBannerUrl?: string;
+  logoUrl?: string;
+  endBannerUrl?: string;
+  fssai?: string;
+  gst?: string;
+  description?: string;
+  phone?: string;
+  location?: string;
+  amenities?: string[];
+  tags?: string[];
+  avgPricingForTwo?:string;
+  isCustomTime: boolean;
+}
+
+export interface IBannerPayload {
+  businessId?: string;
+  isPublished?: boolean;
+  bannerType?: string;
+  bannerImage?: string;
+  heading?: string;
+  headingColor?: string;
+  headingFontWeight?: string;
+  headingAlign?: string;
+  paragraph?: string;
+  paragraphColor?: string;
+  paragraphFontWeight?: string;
+  paragraphAlign?: string;
+  buttonColor?: string;
+  callToAction?: string;
+  backgroundColor?: string;
+  redirectionId?: string;
+  redirectionType?: string;
+  redirectionName?: string;
+  _id?:string
+}
+
+export interface BasicInfo{
+  _id:number
+  text:string
+}

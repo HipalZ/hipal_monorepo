@@ -7,7 +7,6 @@ import Paragraph from '@/components/atom/paragraph';
 import { apiRpc } from '@hi/common';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useParams } from 'react-router-dom';
-import type { IBizPayload } from '@/components/templates/explorePage/explorePageStore';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import BottomButton from '@/components/atom/bottomButton';
 import toast from 'react-hot-toast';
@@ -15,6 +14,7 @@ import PopUp from '@/components/atom/popUp';
 import { convertTo12HourFormat } from '@/components/templates/settingsForm/outletForm';
 import { Switch } from '@headlessui/react';
 import useShowErrorToasts from '@/components/atom/errorToasts';
+import { IBizPayload } from '@/components/types/businessData';
 
 const amenitiesArr = [
     { _id: 1, text: 'SMOKING SECTION', image: <MdOutlineSmokingRooms /> },

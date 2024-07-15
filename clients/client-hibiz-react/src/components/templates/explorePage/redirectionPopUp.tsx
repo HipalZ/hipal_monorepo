@@ -10,7 +10,7 @@ import SubHeader from "@/components/atom/subHeader";
 
 interface IProps {
     setClickRedirect: (value: boolean) => void;
-    handleSaveRedirections: (selectedLink: string, selectedId: string, itemName:string) => void;
+    handleSaveRedirections: (selectedLink: string, selectedId: string, itemName: string) => void;
 }
 
 enum RedirectionType {
@@ -19,7 +19,7 @@ enum RedirectionType {
 }
 
 const MemoRedirectionPopUp = (props: IProps) => {
-    const { handleSaveRedirections,setClickRedirect } = props;
+    const { handleSaveRedirections, setClickRedirect } = props;
     const businessId = useParams()?.businessId;
     const [selectedLink, setSelectedLink] = useState('');
     const [itemName, setItemName] = useState('')
@@ -46,7 +46,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
         setClickRedirect(false);
     }
 
-    const handleItem = (id:string, name:string) =>{
+    const handleItem = (id: string, name: string) => {
         setSelectedId(id)
         setItemName(name)
     }
@@ -78,54 +78,55 @@ const MemoRedirectionPopUp = (props: IProps) => {
         <section className='m-6 h-[80vh] overflow-y-auto'>
             <center className='text-2xl'>Add Redirection</center>
             {selectedLink === '' ? (
-                <>
-                    &nbsp;
-                    <article>
-                        <SubHeader text="Link Action Button" />
-                        <article className='bg-white p-4 rounded-2xl space-y-10'>
-                            <button onClick={handleSelectCategory} type="button" className='bg-gray-100 w-full py-2 rounded-full'>
-                                <h1>&#128279; Direct to Category</h1>
-                            </button>
-                            <button onClick={handleSelectDish} type="button" className='bg-gray-100 w-full py-2 rounded-full'>
-                                <h1>&#128279; Direct to Dish</h1>
-                            </button>
-                        </article>
+                <article>
+                    <SubHeader text="Link Action Button" />
+                    <article className='p-4 space-y-10 bg-white rounded-2xl'>
+                        <button onClick={handleSelectCategory} type="button" className='w-full py-2 bg-gray-100 rounded-full'>
+                            <h1>&#128279; Direct to Category</h1>
+                        </button>
+                        <button onClick={handleSelectDish} type="button" className='w-full py-2 bg-gray-100 rounded-full'>
+                            <h1>&#128279; Direct to Dish</h1>
+                        </button>
                     </article>
-                </>
+                </article>
             ) : (
                 <>
-                    <div className="relative h-6 mt-4">
-                        <IoIosSearch className="absolute top-0 right-0 mt-3 mr-4 cursor-pointer" size={20} onClick={toggleSearch} />
+                    <div className="relative flex items-center justify-between h-6 mx-6 mt-4 space-x-10">
+                        <div className="w-[90vw]">
                         {isVisible && (
                             <input
-                                type="search"
-                                className='w-full rounded-2xl border border-gray-300'
-                                placeholder="Search for a dish or category"
+                            type="search"
+                            className='h-[2rem] border border-gray-300 rounded-2xl'
+                            placeholder="Search for a dish or category"
                             />
                         )}
+                        </div>
+                        <div className="w-24">
+                            <IoIosSearch size={20} onClick={toggleSearch} />
+                        </div>
                     </div>
                     <article className='mt-6'>
                         {selectedLink === RedirectionType.CATEGORIES && categories.map((cat) => (
-                            <section key={cat?._id} className='flex items-center gap-4 bg-white m-2 p-4 rounded-2xl'>
-                                <label className='flex items-center gap-4 w-full cursor-pointer'>
-                                    <input 
-                                        type="radio" 
-                                        name="cat" 
+                            <section key={cat?._id} className='flex items-center gap-4 p-4 m-2 bg-white rounded-2xl'>
+                                <label className='flex items-center w-full gap-4 cursor-pointer'>
+                                    <input
+                                        type="radio"
+                                        name="cat"
                                         className='text-2xl text-black'
-                                        onChange={()=>handleItem(cat?._id, cat?.name)}
+                                        onChange={() => handleItem(cat?._id, cat?.name)}
                                     />
                                     <span className='text-xl truncate'>{cat?.name}</span>
                                 </label>
                             </section>
                         ))}
                         {selectedLink === RedirectionType.DISHES && dishes.map((dish) => (
-                            <section key={dish?._id} className='flex items-center gap-4 bg-white m-2 p-4 rounded-2xl'>
-                                <label className='flex items-center gap-4 w-full cursor-pointer'>
-                                    <input 
-                                        type="radio" 
-                                        name="dish" 
+                            <section key={dish?._id} className='flex items-center gap-4 p-4 m-2 bg-white rounded-2xl'>
+                                <label className='flex items-center w-full gap-4 cursor-pointer'>
+                                    <input
+                                        type="radio"
+                                        name="dish"
                                         className='text-2xl text-black'
-                                        onChange={()=>handleItem(dish?._id, dish?.name)}
+                                        onChange={() => handleItem(dish?._id, dish?.name)}
                                     />
                                     <span className='text-xl truncate'>{dish?.name}</span>
                                 </label>

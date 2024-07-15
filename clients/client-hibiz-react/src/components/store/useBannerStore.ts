@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import type { IBannerPayload } from '../templates/explorePage/explorePageStore';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { Color } from '../types/businessData';
+import type { Color, IBannerPayload } from '../types/businessData';
 
 type Style = {
   textAlign: string;

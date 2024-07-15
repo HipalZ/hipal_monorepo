@@ -1,5 +1,5 @@
 import { type ChangeEvent, memo, startTransition, useEffect, useRef, useState, Suspense, lazy } from 'react';
-import { BannerType, bannerTypes, type IBannerPayload } from './explorePageStore';
+import { BannerType, bannerTypes } from './explorePageStore';
 import { IoMdColorPalette } from 'react-icons/io';
 import { TfiPaintBucket } from 'react-icons/tfi';
 import { apiRpc } from '@hi/common';
@@ -7,7 +7,7 @@ import { useUserToken } from '@/components/store/useUserToken';
 import { useNavigate, useParams } from 'react-router-dom';
 import { storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
-import type { Color, IStyles } from '@/components/types/businessData';
+import type { Color, IBannerPayload, IStyles } from '@/components/types/businessData';
 import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
 import layout3 from '@/assets/hisite/layout3.jpg';
 import { useBannerStore } from '@/components/store/useBannerStore';
@@ -342,11 +342,11 @@ const MemoCreateBanner = () => {
                                     <img src={img?.logo || layout3} alt="BannerDummy" className='object-cover w-full h-full' />
                                 </div>
                                 <article className='flex items-center justify-between row-span-1 p-4'>
-                                    <div>
+                                    <div className='w-2/3'>
                                         <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
                                         <p style={{ color: selectedColor.textColor, ...paragraphStyle }} className='my-4 text-sm'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                     </div>
-                                    <div>
+                                    <div className='w-1/3'>
                                         <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
                                     </div>
                                 </article>
