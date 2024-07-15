@@ -13,6 +13,7 @@ import layout3 from '@/assets/hisite/layout3.jpg';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { Switch } from '@headlessui/react';
 import HeaderDropDown from './headerDropDown';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
 
 // Lazy load components
 const ReactCropper = lazy(() => import('@/components/cropper'));
@@ -306,7 +307,7 @@ const MemoCreateBanner = () => {
     }
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<LoadingSpinner/>}>
             <main className='relative h-screen'>
                 <section className='fixed top-0 bg-white w-full pb-[1rem] z-10 max-w-[69rem]'>
                     <HeaderDropDown bannerTypes={bannerTypes} handleChangeColors={handleChangeColors} handleOptionClick={handleOptionClick} isDropDownVisible={isDropDownVisible} toggleDropDown={toggleDropDown} />
