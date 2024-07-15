@@ -517,19 +517,11 @@ const usersRouter = new Hono()
       const { staffId } = c.req.param();
       const { phone, permissions, role, password, businessId } = requestData;
 
-    const staff = await User.findOne({ _id: staffId ,customRole: { $elemMatch: { businessId: businessId } } });
+      const staff = await User.findOne({ _id: staffId, customRole: { $elemMatch: { businessId: businessId } } });
 
       if (!staff) {
         return respond(c, 'Staff not found', true, 404, {});
       }
-
-      console.log("staff",staff)
-
-      const newCustomRole = {
-        businessId: businessId,
-        permissions: permissions,
-        bookMark: true,
-      };
 
       const hashPass = password ? await hashPassword(password) : null;
 
@@ -538,7 +530,9 @@ const usersRouter = new Hono()
         {
           $set: {
             "customRole.$.permissions": permissions, // Update permissions in the matched customRole
-            "customRole.$.bookMark": true, // Set bookMark to true in the matched customRole
+            "customRole.$.bookMark": true,
+            "customRole.$.role": role || staff?.customRole?.[0]?.role,
+
             phone, // Assuming these are user-level updates
             role: roles,
             password: hashPass || staff.password,

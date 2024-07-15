@@ -411,7 +411,7 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const business = await Permissions.findOne({ businessId: businessId });
+      const business = await Permissions.find();
       if (!business) return respond(c, 'permissions not found', true, 404, {});
 
       return respond(c, 'permissions found', false, 200, business);
@@ -433,7 +433,7 @@ const businessesRouter = new Hono()
     async (c) => {
       const { ownerId } = c.req.param();
       const existingBusinesses = await Business.find({
-        staffIds: ownerId,
+        staffIds: ownerId, outlet: true
       }).select('name _id');
 
       return respond(c, 'businesses found', false, 200, existingBusinesses);
@@ -470,17 +470,13 @@ const businessesRouter = new Hono()
       console.log('id', id);
 
       const existingBusinesses = await Business.find({
-        staffIds: id, outlet: true
+        staffIds: id
       }).populate('parentOutLetId', {
         name: 1,
         _id: 0
       });
 
-      return c.json({
-        data: existingBusinesses,
-        status: 200,
-        error: false,
-      });
+      return respond(c, 'businesses found', false, 200, existingBusinesses);
     },
   )
   .get('/get/Single/:businessId', zValidator('param', paramsSchema), async (c) => {
@@ -545,14 +541,10 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const existingRoles = await Role.find({
-        businessId: businessId,
+
       }).select('_id name description');
 
-      return c.json({
-        data: existingRoles,
-        status: 200,
-        error: false,
-      });
+      return respond(c, 'roles found', false, 200, existingRoles);
     },
   )
   .get('/get/allbusiness', async (c) => {

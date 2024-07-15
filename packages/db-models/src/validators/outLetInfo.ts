@@ -46,6 +46,7 @@ export const outLetInfoSchema = z.object({
     openTime: z.string(),
     closeTime: z.string()
   })).optional(),
+  address: z.string().min(4).max(100).optional(),
   fixOpenTime: z.string().min(2).max(6).optional(),
   fixCloseTime: z.string().min(2).max(6).optional(),
   footerDescription: z.string().min(10).max(200).optional(),
@@ -56,6 +57,7 @@ export const outLetInfoSchema = z.object({
   branchName: z.string().min(4).max(30).optional(),
   isCustomTime: z.boolean().optional(),
   avgPricingForTwo: z.coerce.number().positive().optional(),
+  avgRating: z.coerce.number().positive().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

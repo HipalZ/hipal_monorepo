@@ -64,6 +64,16 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
       required: false,
     },
   ],
+  address: {
+    type: String,
+    required: false
+
+  },
+  avgRating: {
+    type: Number,
+    required: false
+  },
+
   customTiming: [
     {
       type: [],
@@ -119,7 +129,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   },
   avgPricingForTwo: {
     type: Number,
-    reuired:false,
+    reuired: false,
   }
 });
 

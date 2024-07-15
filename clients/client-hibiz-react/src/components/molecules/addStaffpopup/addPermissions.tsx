@@ -61,16 +61,17 @@ const AddPermissions = () => {
 
   const fetchPermissions = async () => {
     const res = await apiRpc.businesses[":businessId"].permissions.$get({
-      // header: {
-      //   x_access_token: accessToken,
-      //   x_refresh_token: refreshToken,
-      // },
+      header: {
+        x_access_token: accessToken,
+        x_refresh_token: refreshToken,
+      },
       param: {
         businessId: businessData?._id,
       },
     });
     const data = await res.json();
     if (res.status === 200 || res.status === 201) {
+      console.log("per", data.data);
       setPermissions(data.data);
     } else {
       toast.error("Failed to fetch permissions");
