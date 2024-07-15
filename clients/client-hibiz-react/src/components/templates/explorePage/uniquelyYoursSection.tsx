@@ -20,8 +20,9 @@ const MemoUniquelyYoursSection = (props: IUniqueSection) => {
             &nbsp;
             <article className='flex flex-wrap gap-3 p-6 bg-white rounded-2xl'>
                 {uniquelyDishes.length > 0 && uniquelyDishes.map((dish: IDish, index: number) => {
+                    const borderStyle = dish.images[0] ? 'border-none' : 'border-dashed border-2 border-[#8C63FF]';
                     return (
-                        <article onClick={handleOpenPopUp} onKeyDown={handleOpenPopUp} key={dish._id} className='shrink-0 relative rounded-xl h-[5rem] w-[5rem] border-dashed border-2 inline-block border-[#8C63FF]'>
+                        <article onClick={handleOpenPopUp} onKeyDown={handleOpenPopUp} key={dish._id} className={`shrink-0 relative rounded-xl h-[5rem] w-[5rem] inline-block ${borderStyle}`}>
                             <label htmlFor={`uniquelyYours${dish._id || index}`} className='flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl'>
                                 {dish.images[0] ? <img src={dish.images[0] || dummyImage} alt="Dish" /> : <PlusButton />}
                             </label>
