@@ -9,7 +9,7 @@ interface IBanner {
 const MemoBannerCards = (props:IBanner) => {
     const {banners, handleEditBanner,sizeInPx} = props
     return (
-        <section className='md:grid md:grid-cols-2 lg:grid-cols-3'>
+        <section className='flex flex-col items-center md:grid md:grid-cols-2 lg:grid-cols-3'>
             {banners.map((banner:IBannerPayload) => {
                 const headingStyles = {
                     color: banner?.headingColor, fontWeight: banner?.headingFontWeight, textAlign: banner?.headingAlign
@@ -17,7 +17,7 @@ const MemoBannerCards = (props:IBanner) => {
                 const paragraphStyles = { color: banner?.paragraphColor, fontWeight: banner?.paragraphFontWeight, textAlign: banner?.paragraphAlign }
                 const buttonStyles = { color: banner?.buttonColor, border: `1px solid ${banner?.buttonColor}` }
                 return (
-                    <div onClick={() => handleEditBanner(banner)} key={banner._id} >
+                    <div onClick={() => handleEditBanner(banner)} key={banner._id}>
                         {banner.bannerType === BannerType.BANNER_TYPE_1 && (
                             <article style={{ backgroundColor: banner?.backgroundColor, height: sizeInPx , width: sizeInPx }} className='p-4 py-6 mt-4 space-y-4 border rounded-2xl'>
                                 <h1 style={headingStyles} className='text-xl'>{banner.heading || 'heading'}</h1>
