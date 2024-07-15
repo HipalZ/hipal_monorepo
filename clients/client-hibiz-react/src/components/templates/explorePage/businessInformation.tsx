@@ -264,7 +264,7 @@ const MemoBizInfo = () => {
                                         key={amenity._id}
                                         onClick={() => handleSelectAmenitiesChange(amenity.text)}
                                         onKeyDown={() => handleSelectAmenitiesChange(amenity.text)}
-                                        className={`capitalize flex items-center space-x-4 rounded-full border border-1 px-2 py-1 cursor-pointer ${isSelected ? 'bg-indigo-100' : 'bg-gray-100'}`}
+                                        className={`capitalize flex items-center space-x-4 rounded-full border border-1 px-2 py-1 cursor-pointer ${isSelected ? 'bg-[#FFE7AB]' : 'bg-gray-100'}`}
                                     >
                                         {amenity?.image}
                                         <h1>{amenity.text.toLowerCase()}</h1>

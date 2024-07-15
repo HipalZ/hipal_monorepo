@@ -1,6 +1,6 @@
 import type { ICategory, IDish } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { combineAllDishes } from "./explorePageStore";
 import { useQuery } from "@tanstack/react-query";
@@ -22,10 +22,13 @@ const MemoRedirectionPopUp = (props: IProps) => {
     const { handleSaveRedirections, setClickRedirect } = props;
     const businessId = useParams()?.businessId;
     const [selectedLink, setSelectedLink] = useState('');
-    const [itemName, setItemName] = useState('')
+    const [itemName, setItemName] = useState('');
     const [dishes, setDishes] = useState<IDish[]>([]);
     const [categories, setCategories] = useState<ICategory[]>([]);
+    const [filteredDishes, setFilteredDishes] = useState<IDish[]>([]);
+    const [filteredCategories, setFilteredCategories] = useState<ICategory[]>([]);
     const [selectedId, setSelectedId] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
     const handleSelectCategory = () => {
         setSelectedLink(RedirectionType.CATEGORIES);
@@ -60,6 +63,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
         const data = await categoryResponse.json();
         const categories = data?.data;
         setCategories(categories);
+        setFilteredCategories(categories);
         const allDishes = combineAllDishes(categories);
         return allDishes;
     };
@@ -69,10 +73,27 @@ const MemoRedirectionPopUp = (props: IProps) => {
         queryFn: async () => {
             const res = await getAllCategoryData(businessId || '');
             setDishes(res);
+            setFilteredDishes(res);
             return res;
         },
         enabled: !!businessId,
     });
+
+    useEffect(() => {
+        if (selectedLink === RedirectionType.CATEGORIES) {
+            setFilteredCategories(
+                categories.filter(category => 
+                    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+            );
+        } else if (selectedLink === RedirectionType.DISHES) {
+            setFilteredDishes(
+                dishes.filter(dish => 
+                    dish.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+            );
+        }
+    }, [searchQuery, selectedLink, categories, dishes]);
 
     return (
         <section className='m-6 h-[80vh] overflow-y-auto'>
@@ -93,20 +114,23 @@ const MemoRedirectionPopUp = (props: IProps) => {
                 <>
                     <div className="relative flex items-center justify-between h-6 mx-6 mt-4 space-x-10">
                         <div className="w-[90vw]">
-                        {isVisible && (
-                            <input
-                            type="search"
-                            className='h-[2rem] border border-gray-300 rounded-2xl'
-                            placeholder="Search for a dish or category"
-                            />
-                        )}
+                            {isVisible && (
+                                <input
+                                    type="search"
+                                    className='h-[2rem] border border-gray-300 rounded-2xl'
+                                    placeholder="Search for a dish or category"
+                                    value={searchQuery}
+                                    autoFocus
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            )}
                         </div>
                         <div className="w-24">
                             <IoIosSearch size={20} onClick={toggleSearch} />
                         </div>
                     </div>
                     <article className='mt-6'>
-                        {selectedLink === RedirectionType.CATEGORIES && categories.map((cat) => (
+                        {selectedLink === RedirectionType.CATEGORIES && filteredCategories.map((cat) => (
                             <section key={cat?._id} className='flex items-center gap-4 p-4 m-2 bg-white rounded-2xl'>
                                 <label className='flex items-center w-full gap-4 cursor-pointer'>
                                     <input
@@ -119,7 +143,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                                 </label>
                             </section>
                         ))}
-                        {selectedLink === RedirectionType.DISHES && dishes.map((dish) => (
+                        {selectedLink === RedirectionType.DISHES && Array.isArray(filteredDishes) && filteredDishes.map((dish) => (
                             <section key={dish?._id} className='flex items-center gap-4 p-4 m-2 bg-white rounded-2xl'>
                                 <label className='flex items-center w-full gap-4 cursor-pointer'>
                                     <input

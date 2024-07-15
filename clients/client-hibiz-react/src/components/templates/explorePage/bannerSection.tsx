@@ -56,13 +56,13 @@ const MemoBannerSection = (props: IProps) => {
                                 </div>
                             )
                         })}
-                <div className='aspect-square shrink-0 relative rounded-xl h-[8.5rem] lg:h-[12rem] border-dashed border-2 border-[#8C63FF]' onClick={handleNavigation}>
+                    </section>
+                    : null}
+                <div className='ml-2 aspect-square shrink-0 relative rounded-xl h-[8.5rem] lg:h-[12rem] border-dashed border-2 border-[#8C63FF]' onClick={handleNavigation}>
                     <label className='flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl'>
                         <PlusButton />
                     </label>
                 </div>
-                    </section>
-                    : null}
             </article>
         </section>
     )

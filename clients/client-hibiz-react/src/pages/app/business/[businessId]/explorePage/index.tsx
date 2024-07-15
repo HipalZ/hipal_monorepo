@@ -244,7 +244,13 @@ const MemoExplorePage = () => {
         const footerExplore = await storeImageAfterSave(imageFiles?.footer);
 
         const filteredSocialMedia = socialMediaLinks
-            .filter((item) => item.link && item.link.length > 0)
+            .filter((item) => {
+            if (!item.link || item.link.length === 0 || !item.link.startsWith("https://")) {
+                toast.error(`Invalid social media link for ${item.icon}. Link should start with 'https://'`);
+                return false;
+            }
+            return true;
+            })
             .map((item) => ({ icon: item.icon, link: item.link }));
         // Initialize payload with properties that are always present   
         console.log('fil', filteredSocialMedia)
