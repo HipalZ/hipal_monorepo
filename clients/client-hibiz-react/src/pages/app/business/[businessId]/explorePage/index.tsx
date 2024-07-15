@@ -18,6 +18,7 @@ import { cropImage } from '@/components/cropper';
 import PopUp from "@/components/atom/popUp";
 import BizInformation from '@/components/templates/explorePage/businessInformation';
 import useShowErrorToasts from '@/components/atom/errorToasts';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
 
 // Lazy loading components
 const Header = lazy(() => import('@/components/molecules/header'));
@@ -44,7 +45,7 @@ const MemoExplorePage = () => {
         accessToken: s.accessToken,
         refreshToken: s.refreshToken
     }))
-    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
+    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setBanners,setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
         (state) => ({
             bizInfo: state.bizInfo,
             setBizInfo: state.setBizInfo,
@@ -54,7 +55,8 @@ const MemoExplorePage = () => {
             setSelectedDishes: state.setSelectedDishes,
             uniquelyDishes: state.uniquelyDishes,
             setUniquelyDishes: state.setUniquelyDishes,
-            clearOriginalDishes: state.clearOriginalDishes
+            clearOriginalDishes: state.clearOriginalDishes,
+            setBanners: state.setBanners
         }),
     );
     const cropperRef = useRef(null);
@@ -299,28 +301,11 @@ const MemoExplorePage = () => {
                 setUploadsPopUp(false)
                 toast.success('Data saved successfully')
             }
-            else if(outletInfo.status === 400){
+            else if (outletInfo.status === 400) {
                 showErrorToasts(outletInfoData?.error)
             }
         }
     };
-
-    useQuery({
-        queryKey: ['bizInfo', businessId],
-        queryFn: async () => {
-            const res = await getAllBizInfo();
-            const response = await res.json();
-            setBizInfo(response?.data as IBizInfo);
-            setSocialMediaLinks((prevLinks) =>
-                prevLinks.map(link => {
-                    const matchingLink = response?.data?.socialMediaLinks && response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
-                    return matchingLink ? { ...link, link: matchingLink.link } : link;
-                })
-            );
-            return response;
-        },
-        enabled: !!businessId,
-    });
 
     const fetchCategories = useCallback(async () => {
         if (originalDishes && originalDishes.length > 0) {
@@ -345,8 +330,76 @@ const MemoExplorePage = () => {
         setSelectedSocialMedia(icon);
     }
 
+    const fetchUniquelyYours = async () => {
+        const res = await apiRpc.dishes.uniquelyDishes[':businessId'].$get({
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            },
+            param: {
+                businessId
+            }
+        });
+        const response = await res.json();
+        if(res.status===200){
+            uniquelyYoursRef.current = true
+            setUniquelyDishes(response?.data);
+        }
+        return response?.data;
+    }
+
+    const fetchBanners = async()=>{
+        const res = await apiRpc.settings.banners[':businessId'].$get({
+            header: {
+                x_access_token: accessToken,
+                x_refresh_token: refreshToken
+            },
+            param: {
+                businessId
+            }
+        });
+        const response = await res.json();
+        if(res.status===200){
+            bannersRef.current=true
+            setBanners(response?.data);
+        }
+        return response?.data;
+    }
+    const bannersRef = useRef(false)
+    const uniquelyYoursRef = useRef(false)
+
+    useQuery({
+        queryKey: ['bizInfo', businessId],
+        queryFn: async () => {
+            const res = await getAllBizInfo();
+            const response = await res.json();
+            setBizInfo(response?.data as IBizInfo);
+            setSocialMediaLinks((prevLinks) =>
+                prevLinks.map(link => {
+                    const matchingLink = response?.data?.socialMediaLinks && response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
+                    return matchingLink ? { ...link, link: matchingLink.link } : link;
+                })
+            );
+            return response;
+        },
+        enabled: !!businessId,
+    });
+
+    useQuery({
+        queryKey: ['banners', businessId, bannersRef.current],
+        queryFn: fetchBanners,
+        enabled: !!businessId && !bannersRef.current,
+    })
+
+    useQuery({
+        queryKey: ['categories', businessId, uniquelyYoursRef.current],
+        queryFn:fetchUniquelyYours,
+        enabled: !!businessId && !uniquelyYoursRef.current,
+    })
+
+
     return (
-        <Suspense fallback={<div>Loading....</div>}>
+        <Suspense fallback={<LoadingSpinner />}>
             <main>
                 <Header onBack={handleNavigate} title={`${toggleBizInfo ? 'Business Info' : 'Explore Page'} `} rightButton={<RightButton />} isIconBusinessShow={false} />
                 {toggleBizInfo ? <BizInformation /> : <form onSubmit={handleSaveExplorePage} className='px-4'>
@@ -355,39 +408,44 @@ const MemoExplorePage = () => {
                         <h1>Click and upload banners and business name here</h1>
                     </section>
                     &nbsp;
-                    <PopUp show={uploadsPopUp} onClose={handleUploads}>
-                        <ExplorePageTopSection
-                            handleImageChange={handleImageChange}
-                            img={img}
-                            handleBizName={handleBizName}
-                            handleSaveExplorePage={handleSaveExplorePage} />
-                    </PopUp>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <PopUp show={uploadsPopUp} onClose={handleUploads}>
+                            <ExplorePageTopSection
+                                handleImageChange={handleImageChange}
+                                img={img}
+                                handleBizName={handleBizName}
+                                handleSaveExplorePage={handleSaveExplorePage} />
+                        </PopUp>
+                    </Suspense>
 
                     <br />
                     <br />
-                    <Suspense fallback={<div>Loading Business information....</div>}>
+                    <Suspense fallback={<LoadingSpinner />}>
                         <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />
                     </Suspense>
-                    <Suspense fallback={<div>Loading Banner section....</div>}>
+                    <Suspense fallback={<LoadingSpinner />}>
                         <BannerSection
                             handleNavigation={handleNavigation}
                         />
                     </Suspense>
-
-                    <UniquelyYoursSection
-                        handleOpenPopUp={handleOpenPopUp} />
-
-                    <FooterSection
-                        handleFooterComment={handleFooterComment}
-                        handleFssaiNumber={handleFssaiNumber}
-                        handlegst={handlegst} />
-
-                    <SocialMediaLinks
-                        handleSaveSocialMediaLink={handleSaveSocialMediaLink}
-                        selectedSocialMedia={selectedSocialMedia}
-                        handleIconClick={handleIconClick}
-                        socialMediaLinks={socialMediaLinks}
-                    />
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <UniquelyYoursSection
+                            handleOpenPopUp={handleOpenPopUp} />
+                    </Suspense>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <FooterSection
+                            handleFooterComment={handleFooterComment}
+                            handleFssaiNumber={handleFssaiNumber}
+                            handlegst={handlegst} />
+                    </Suspense>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <SocialMediaLinks
+                            handleSaveSocialMediaLink={handleSaveSocialMediaLink}
+                            selectedSocialMedia={selectedSocialMedia}
+                            handleIconClick={handleIconClick}
+                            socialMediaLinks={socialMediaLinks}
+                        />
+                    </Suspense>
 
                     <section className='mt-4 opacity-30'>
                         <SubHeader text="Terms & Condition" />
@@ -396,10 +454,11 @@ const MemoExplorePage = () => {
                             <IoMdArrowUp size={20} className='rotate-45' />
                         </article>
                     </section>
-
-                    <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
-                        <ReactCropper image={cropping.image} ref={cropperRef} width={250} height={250} />
-                    </MiddlePopUp>
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <MiddlePopUp show={showCropper} onSave={handleCrop} onClose={() => setShowCropper(false)}>
+                            <ReactCropper image={cropping.image} ref={cropperRef} width={250} height={250} />
+                        </MiddlePopUp>
+                    </Suspense>
 
                     {showUniquePopUp && (
                         <PopUp show={showUniquePopUp} onClose={() => setShowUniquePopUp(false)}>
@@ -413,8 +472,9 @@ const MemoExplorePage = () => {
                                 handleSaveDish={handleSaveDish} />
                         </PopUp>
                     )}
-
-                    <BottomButton text='Save' />
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <BottomButton text='Save' />
+                    </Suspense>
 
                     <br />
                     <br />

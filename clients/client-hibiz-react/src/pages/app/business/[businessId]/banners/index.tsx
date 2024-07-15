@@ -1,4 +1,4 @@
-import { lazy, memo, startTransition, Suspense } from 'react';
+import { lazy, memo, startTransition, Suspense, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { useExploreStore } from '@/components/store/useExploreStore';
@@ -79,6 +79,7 @@ const MemoBanners = () => {
             setBanners(response)
             return response;
         },
+        enabled: !!businessId,
     })
 
     return (

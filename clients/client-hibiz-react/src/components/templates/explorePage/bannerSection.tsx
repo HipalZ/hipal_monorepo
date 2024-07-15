@@ -23,7 +23,7 @@ const MemoBannerSection = (props: IProps) => {
                             const paragraphStyles = { color: banner?.paragraphColor, fontWeight: banner?.paragraphFontWeight, textAlign: banner?.paragraphAlign }
                             const buttonStyles = { color: banner?.buttonColor, border: `1px solid ${banner?.buttonColor}` }
                             return (
-                                <div onClick={() => handleEditBanner(banner)} key={banner._id} style={{ transform: 'scale(0.45)', transformOrigin: 'top left', width: '268px', height: '268px' }}>
+                                <div key={banner._id} style={{ transform: 'scale(0.45)', transformOrigin: 'top left', width: '268px', height: '268px' }}>
                                     {banner.bannerType === BannerType.BANNER_TYPE_1 && (
                                         <article style={{ backgroundColor: banner?.backgroundColor, height: '100%', width: '100%' }} className='p-4 py-6 space-y-4 border shrink-0 rounded-2xl'>
                                             <h1 style={headingStyles} className='text-xs'>{banner.heading || 'heading'}</h1>

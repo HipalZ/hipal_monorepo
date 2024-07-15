@@ -2,8 +2,8 @@ import { memo } from 'react';
 import { BannerType, type IBannerPayload } from './explorePageStore'
 
 interface IBanner {
-    banners:any;
-    handleEditBanner?:(banner:any)=>void;
+    banners:IBannerPayload[];
+    handleEditBanner?:(banner:IBannerPayload)=>void;
     sizeInPx?:string;
 }
 const MemoBannerCards = (props:IBanner) => {
