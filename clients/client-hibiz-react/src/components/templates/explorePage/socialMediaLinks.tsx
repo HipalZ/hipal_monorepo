@@ -1,5 +1,5 @@
 import SubHeader from '@/components/atom/subHeader';
-import { memo, type ChangeEvent } from 'react';
+import { memo, useState, useEffect, type ChangeEvent, useRef } from 'react';
 
 interface ISocialMediaLinks {
   selectedSocialMedia: string;
@@ -10,7 +10,27 @@ interface ISocialMediaLinks {
 
 const MemoSocialMediaLinks = (props: ISocialMediaLinks) => {
   const { selectedSocialMedia, handleIconClick, handleSaveSocialMediaLink, socialMediaLinks } = props;
-  const selectedLink = socialMediaLinks.find(link => link.icon === selectedSocialMedia);
+  const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState('');
+  const socialMediaRef = useRef(false);
+  
+  useEffect(() => {
+    if(!socialMediaRef.current){
+      const selectedLink = socialMediaLinks.find(link => link.icon === selectedSocialMedia);
+      setInputValue(selectedLink ? selectedLink.link : '');
+      socialMediaRef.current= true
+    }
+  }, [selectedSocialMedia, socialMediaLinks,socialMediaRef.current]);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (!e.target.value.startsWith('https://')) {
+      setError('URL must start with "https://"');
+    } else {
+      setError('');
+    }
+    handleSaveSocialMediaLink(e)
+  };
 
   return (
     <>
@@ -30,12 +50,13 @@ const MemoSocialMediaLinks = (props: ISocialMediaLinks) => {
         {selectedSocialMedia.length === 0 ? null : (
           <article className='pb-4 mx-6 space-y-4 rounded-2xl'>
             <input
-              value={selectedLink ? selectedLink.link : ''}
-              onChange={handleSaveSocialMediaLink}
+              value={inputValue}
+              onChange={handleChange}
               placeholder={`Enter ${selectedSocialMedia} link`}
               type="text"
               className='w-full rounded-2xl'
             />
+            {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
           </article>
         )}
       </section>

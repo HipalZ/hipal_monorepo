@@ -17,6 +17,7 @@ import { RiDiscordLine } from 'react-icons/ri';
 import { cropImage } from '@/components/cropper';
 import PopUp from "@/components/atom/popUp";
 import BizInformation from '@/components/templates/explorePage/businessInformation';
+import useShowErrorToasts from '@/components/atom/errorToasts';
 
 // Lazy loading components
 const Header = lazy(() => import('@/components/molecules/header'));
@@ -37,6 +38,7 @@ const Paragraph = lazy(() => import('@/components/atom/paragraph'));
 
 const MemoExplorePage = () => {
     const navigate = useNavigate();
+    const showErrorToasts = useShowErrorToasts()
     const businessId = useParams()?.businessId
     const { accessToken, refreshToken } = useUserToken(s => ({
         accessToken: s.accessToken,
@@ -157,8 +159,6 @@ const MemoExplorePage = () => {
             }
         }
     };
-
-
 
     const handleBizInfo = useCallback(() => {
         setToggleBizInfo(!toggleBizInfo);
@@ -293,9 +293,14 @@ const MemoExplorePage = () => {
                     businessId: businessId
                 },
             })
+            const outletInfoData = await outletInfo.json();
+            console.log('outletInfo', outletInfoData?.error)
             if (outletInfo.status === 200) {
                 setUploadsPopUp(false)
                 toast.success('Data saved successfully')
+            }
+            else if(outletInfo.status === 400){
+                showErrorToasts(outletInfoData?.error)
             }
         }
     };

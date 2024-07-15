@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import PopUp from '@/components/atom/popUp';
 import { convertTo12HourFormat } from '@/components/templates/settingsForm/outletForm';
 import { Switch } from '@headlessui/react';
+import useShowErrorToasts from '@/components/atom/errorToasts';
 
 const amenitiesArr = [
     { _id: 1, text: 'SMOKING SECTION', image: <MdOutlineSmokingRooms /> },
@@ -25,6 +26,7 @@ const amenitiesArr = [
 
 const MemoBizInfo = () => {
     const businessId = useParams()?.businessId;
+    const showErrorToasts = useShowErrorToasts()
     const [openTimings, setOpenTimings] = useState(false);
     const [showCustomTime, setShowCustomTime] = useState(false);
     const [customTimings, setCustomTimings] = useState([
@@ -63,10 +65,10 @@ const MemoBizInfo = () => {
         setTempPhone(bizInfo.phone);
         setTempLocation(bizInfo.location);
         setTempAvgPricingForTwo(bizInfo.avgPricingForTwo);
-        if(bizInfo?.tags && bizInfo?.tags.length>0){
+        if (bizInfo?.tags && bizInfo?.tags.length > 0) {
             setTempTags([...bizInfo.tags]);
         }
-        if(bizInfo?.amenities && bizInfo?.amenities.length>0){
+        if (bizInfo?.amenities && bizInfo?.amenities.length > 0) {
             setTempAmenities([...bizInfo.amenities]);
         }
     }, [bizInfo]);
@@ -183,6 +185,8 @@ const MemoBizInfo = () => {
             });
             if (outletInfo.status === 200) {
                 toast.success('Data saved successfully');
+            } else if (outletInfo.status === 400) {
+                showErrorToasts(outletInfoData?.error)
             }
         }
     };
@@ -255,7 +259,7 @@ const MemoBizInfo = () => {
                             className='w-full mb-2 outline-none rounded-2xl'
                             placeholder='Add Average Pricing For Two'
                         />
-                        {amenitiesArr && amenitiesArr.length>0 ? <SubHeader text="Add Amenities" /> :null}
+                        {amenitiesArr && amenitiesArr.length > 0 ? <SubHeader text="Add Amenities" /> : null}
                         <section className='flex flex-wrap gap-4'>
                             {amenitiesArr ? amenitiesArr.map((amenity) => {
                                 if (tempAmenities === undefined) return null;
