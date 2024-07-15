@@ -2,74 +2,6 @@ import mongoose, { type Model } from 'mongoose';
 import type { PaymentType } from '../validators';
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-// const paymentItemSchema = new mongoose.Schema<PaymentItemType>(
-//   {
-//     name: {
-//       required: true,
-//       type: String,
-//     },
-//     quantity: {
-//       required: true,
-//       type: Number,
-//     },
-//     amount: {
-//       required: true,
-//       type: Number,
-//     },
-//     portions: {
-//       required: false,
-//       type: Object,
-//     },
-//     extras: {
-//       required: false,
-//       type: Object,
-//     },
-//     category: {
-//       required: false,
-//       type: String,
-//     },
-//     comments: {
-//       required: false,
-//       type: String,
-//     },
-//   },
-//   { timestamps: true },
-// );
-
-// const paymentSwiggyBillObjSchema = new mongoose.Schema<PaymentSwiggyBillObjType>(
-//   {
-//     totalItems: {
-//       required: true,
-//       type: Number,
-//     },
-//     subTotal: {
-//       required: true,
-//       type: Number,
-//     },
-//     packingCharges: {
-//       required: true,
-//       type: Number,
-//     },
-//     RxPayableGST: {
-//       required: true,
-//       type: Number,
-//     },
-//     swiggyPayableGST: {
-//       required: true,
-//       type: Number,
-//     },
-//     discount: {
-//       required: true,
-//       type: Number,
-//     },
-//     totalPrice: {
-//       required: true,
-//       type: Number,
-//     },
-//   },
-//   { timestamps: true },
-// );
-
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
     businessId: {
@@ -80,7 +12,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
 
     date: {
-      required: false,
+      required: true,
       type: Number,
     },
 
@@ -90,17 +22,14 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       default: 0,
     },
 
-    customerName: {
-      required: false,
-      type: String,
-    },
-    customerPhone: {
-      required: false,
-      type: String,
+    userId: {
+      type: ObjectId,
+      required: true,
+      ref: 'User',
     },
 
     mode: {
-      required: false,
+      required: true,
       type: String,
     },
     paymentMode: {
@@ -114,10 +43,12 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
     tableName: {
       type: String,
+      required: true,
     },
     order_id: {
       type: ObjectId,
       ref: 'Order',
+      required: true,
     },
 
     tips: {
@@ -145,6 +76,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     waiterName: {
       type: String,
+      required: false,
     },
     comment: {
       type: String,

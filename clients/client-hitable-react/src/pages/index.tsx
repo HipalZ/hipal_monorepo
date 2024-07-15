@@ -7,7 +7,7 @@ import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
 import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import { useUserToken } from '@/components/store/useTokenStore';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from '@hi/common';
 import { memo, startTransition, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -35,23 +35,23 @@ const LoginMemo = () => {
     const setAccessToken = useUserToken.getState().setAccessToken;
     const setRefreshToken = useUserToken.getState().setRefreshToken;
     setLoading(true);
-      const res = await apiRpc.users[':id'].stafflogin.$post({
-        json: {
-          phone: phoneNumber,
-          password: password,
-        },
+    const res = await apiRpc.users[':id'].stafflogin.$post({
+      json: {
+        phone: phoneNumber,
+        password: password,
+      },
+    });
+    const response = await res.json();
+    if (res.status === 200) {
+      setCaptainData(response.data.user);
+      setRefreshToken(response.data.refreshToken);
+      setAccessToken(response.data.accessToken);
+      toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
+      startTransition(() => {
+        navigate('/businesses');
       });
-      const response = await res.json();
-      if (res.status === 200) {
-        setCaptainData(response.data.user);
-        setRefreshToken(response.data.refreshToken);
-        setAccessToken(response.data.accessToken);
-        toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
-        startTransition(() => {
-          navigate('/businesses');
-        });
-      }
-      setLoading(false);
+    }
+    setLoading(false);
   };
 
   return (

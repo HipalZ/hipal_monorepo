@@ -32,11 +32,9 @@ import RollingNumber from "@/components/rollingNumbers";
 import hipalBlurred from "@/assets/svg/hipal_blurred_logo.svg";
 import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
-  const accessToken = useUserToken.getState().accessToken;
-  const refreshToken = useUserToken.getState().refreshToken;
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const [rewards, setRewards] = useState();
@@ -79,7 +77,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       data?.loyalty?.loyaltyId === undefined
     )
       return;
-  
+
     const userReward = await apiRpc.users[":businessId"].getUserReward.$get({
       param: {
         businessId: userDetails.phone,
@@ -88,10 +86,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         userPhone: userDetails.phone,
         loyaltyId: data?.loyalty?.loyaltyId,
       },
-      header:{
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
+
     });
     const response = (await userReward.json()).data;
     if (userReward.status === 404 || userReward.status === 400) {
@@ -114,10 +109,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         loyaltyId: loyaltySetting?.loyaltyId,
         userPhone: userDetails?.phone,
       },
-      header:{
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
+
     });
     const res = (await response.json()).data;
     if (response.status === 200 || response.status === 201) {
@@ -268,35 +260,30 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                 style={{
                   backgroundImage: `url(${image})`,
                   backgroundColor: data?.loyalty?.cardColor || "primary",
-                  backgroundSize: `${
-                    data?.loyalty?.cardPattern === "beans" ||
+                  backgroundSize: `${data?.loyalty?.cardPattern === "beans" ||
                     data?.loyalty?.cardPattern === "bowl" ||
                     data?.loyalty?.cardPattern === "love" ||
                     data?.loyalty?.cardPattern === "flower" ||
                     data?.loyalty?.cardPattern === "bud"
-                      ? "90px 75px"
-                      : "cover"
-                  }`,
-                  backgroundPosition: `${
-                    data?.loyalty?.cardPattern === "beans" ||
+                    ? "90px 75px"
+                    : "cover"
+                    }`,
+                  backgroundPosition: `${data?.loyalty?.cardPattern === "beans" ||
                     data?.loyalty?.cardPattern === "bowl" ||
                     data?.loyalty?.cardPattern === "love" ||
                     data?.loyalty?.cardPattern === "flower" ||
                     data?.loyalty?.cardPattern === "bud"
-                      ? "right 5% top 50%"
-                      : ""
-                  }`,
+                    ? "right 5% top 50%"
+                    : ""
+                    }`,
                   backgroundRepeat: "no-repeat",
                 }}
-                className={`'justify-between' ${
-                  animate ? "backInUp" : "tada"
-                } ${
-                  data?.loyalty?.cardColor
+                className={`'justify-between' ${animate ? "backInUp" : "tada"
+                  } ${data?.loyalty?.cardColor
                     ? data?.loyalty?.cardColor
                     : "bg-primary"
-                } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] left-0 right-0 m-auto h-[10rem] border border-1 mb-14  ${
-                  Number(claim) > 0 ? "mt-[40rem]" : "mt-[28rem]"
-                } 
+                  } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] left-0 right-0 m-auto h-[10rem] border border-1 mb-14  ${Number(claim) > 0 ? "mt-[40rem]" : "mt-[28rem]"
+                  } 
 							transition-transform duration-500 -skew-y-6`}
               >
                 <>
@@ -324,18 +311,16 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                       WebkitBackfaceVisibility: "hidden",
                       color: `${data?.loyalty?.fontColor}`,
                     }}
-                    className={`${
-                      data?.loyalty?.fontColor ? "" : "text-primary-content"
-                    } flex self-center text-3xl font-semibold`}
+                    className={`${data?.loyalty?.fontColor ? "" : "text-primary-content"
+                      } flex self-center text-3xl font-semibold`}
                   >
                     {rewards}{" "}
                     <span
                       style={{ color: `${data?.loyalty?.fontColor}` }}
-                      className={`${
-                        data?.loyalty?.fontColor
-                          ? `text-[${data?.loyalty?.fontColor}]`
-                          : "text-primary-content"
-                      } text-sm flex self-center ml-2 `}
+                      className={`${data?.loyalty?.fontColor
+                        ? `text-[${data?.loyalty?.fontColor}]`
+                        : "text-primary-content"
+                        } text-sm flex self-center ml-2 `}
                     >
                       Coins
                     </span>
@@ -346,11 +331,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                       WebkitBackfaceVisibility: "hidden",
                       color: `${data?.loyalty?.fontColor}`,
                     }}
-                    className={`${
-                      data?.loyalty?.fontColor
-                        ? `text-[${data?.loyalty?.fontColor}]`
-                        : "text-primary-content"
-                    } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
+                    className={`${data?.loyalty?.fontColor
+                      ? `text-[${data?.loyalty?.fontColor}]`
+                      : "text-primary-content"
+                      } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
                   >
                     {userName}
                   </h1>

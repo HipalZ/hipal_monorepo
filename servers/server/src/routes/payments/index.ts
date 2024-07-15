@@ -34,7 +34,7 @@ const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money:
   const valueAfterCoins = Math.abs(total_bill - appliedCoins || 0);
   const subTotal = (total_bill * 100) / 105;
   const discount = (valueAfterCoins - 1.05 * subTotal) / 1.05;
-  const finalDiscount = Math.floor(Math.abs(discount));
+  const finalDiscount = Math.round(Math.abs(discount));
 
   return finalDiscount;
 };
@@ -44,7 +44,7 @@ const calculateDiscount = (total_bill: number, appliedCoins: number, paid_Money:
 const calculateReward = async (exist: number, reward: number, limit: number, session: ClientSession) => {
   const total = exist + reward;
   const sum = Math.min(total, limit);
-  const finalReward = sum - exist;
+  const finalReward = Math.round(Math.abs(sum - exist));
   return { finalReward, curentBalance: sum };
 };
 
@@ -55,26 +55,19 @@ const addRewardHistory = async (
   tableName: string,
   loyaltyId: string,
   total: number,
-  userName: string,
-  userPhone: string,
+  userId: string,
   addCoins: number,
-  currentBalance: number,
   billValue: number,
   session: ClientSession,
 ) => {
   const data = await UserRewardHistory.create(
     [
       {
-        userName: userName,
-        userPhone,
+        userId: userId,
         rewards: addCoins,
         status: status,
-        claimedCoins: 0,
-        currentBalance: currentBalance,
         tableName,
         loyaltyId,
-        total,
-        subTotal: billValue,
         date: Date.now(),
       },
     ],
@@ -217,7 +210,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
@@ -265,7 +258,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', ReviewsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
@@ -307,7 +300,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', orderSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
@@ -361,7 +354,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
     zValidator('json', validatePaymentSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const requestData = await c.req.json();
@@ -534,7 +527,7 @@ const paymentsRouter = new Hono()
   .post(
     '/createWaiterAlert',
     zValidator('json', PaymentAlertSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const requestData = await c.req.json();
@@ -557,7 +550,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, alertType } = c.req.query();
@@ -575,7 +568,7 @@ const paymentsRouter = new Hono()
     '/:id/orders',
 
     zValidator('query', paramsSchema),
-    // zValidator('header', TokenValidator),
+    // ,
     async (c) => {
       const { businessId } = c.req.query();
       const existingOrders = await Order.find({ businessId });
@@ -592,7 +585,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, alertType } = c.req.query();
@@ -611,7 +604,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, orderId } = c.req.query();
@@ -632,7 +625,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('param', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     zValidator('json', acceptOrderSchema),
     async (c) => {
@@ -746,7 +739,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('param', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     zValidator('json', acceptOrderSchema),
 
@@ -770,7 +763,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -841,7 +834,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -937,7 +930,7 @@ const paymentsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
     zValidator('query', paramsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId, from, to } = c.req.query();

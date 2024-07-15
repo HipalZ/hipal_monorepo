@@ -20,7 +20,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import poweredBy from '@/assets/img/powered_hipalz.png'
 import { apiRpc } from '@hi/common'
-import { useUserToken } from '@/components/store/useUserToken'
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const MiddlePopUp = dynamic(() => import('@/components/atoms/middlePopUp'));
 
@@ -41,8 +41,6 @@ interface Payload {
 
 function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
-	const accessToken = useUserToken.getState().accessToken
-	const refreshToken = useUserToken.getState().refreshToken
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
 	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
 	const searchParams = useSearchParams()
@@ -73,7 +71,7 @@ function Review({ data }: { data: IBusinessData }) {
 
 	const handleFeedback = useCallback((area, value) => {
 		area.setState(value);
-	},[]);
+	}, []);
 
 	const handleSelectStaff = (staff) => {
 		if (!selectedStaff.includes(staff)) {
@@ -95,7 +93,7 @@ function Review({ data }: { data: IBusinessData }) {
 
 	const getStaff = async () => {
 		const res = await apiRpc.users[':businessId'].$get({
-			param:{
+			param: {
 				businessId: businessId
 			}
 		})
@@ -146,29 +144,25 @@ function Review({ data }: { data: IBusinessData }) {
 		if (service === true || service === false) {
 			payload.service = service;
 		}
-			// const res = await axios(config)
-			const res = await apiRpc.payments.reviews.$post({
-				json:payload,
-				header:{
-					x_access_token: accessToken,
-					x_refresh_token: refreshToken
-				}
-			})
-			const response = await res.json()
-			if (res.status === 200) {
-				toast.success(response.message || 'Review submitted successfully')
-				router.push(`/${customLink}/loyalty?claim=${roundedOffClaim}`)
-			}
+		// const res = await axios(config)
+		const res = await apiRpc.payments.reviews.$post({
+			json: payload,
+		})
+		const response = await res.json()
+		if (res.status === 200) {
+			toast.success(response.message || 'Review submitted successfully')
+			router.push(`/${customLink}/loyalty?claim=${roundedOffClaim}`)
+		}
 	}
 
 	const handleDescriptionChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value
 		setDescription(value)
-	},[])
+	}, [])
 
 	const handleSaveStaff = useCallback(() => {
 		setShowSuggestions(!showSuggestions)
-	},[showSuggestions])
+	}, [showSuggestions])
 
 	useEffect(() => {
 		if (data?.settings?.themes) {
@@ -179,7 +173,7 @@ function Review({ data }: { data: IBusinessData }) {
 	return (
 		<div className='p-4 animate-fade-up animate-once'>
 			<figure className='z-10 flex items-center space-x-4 rounded-full'>
-				<Image src={logo} alt='logo' height={38} width={38}/>
+				<Image src={logo} alt='logo' height={38} width={38} />
 				<span className='text-xl capitalize'>{businessName}</span>
 			</figure>
 			&nbsp;

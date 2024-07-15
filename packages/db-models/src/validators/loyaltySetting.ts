@@ -1,31 +1,29 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-const ObjectIdSchema = z.string().refine(
-  (value) => {
-    // Check if the value is a valid ObjectId
-    return /^[a-f\d]{24}$/i.test(value);
-  },
-  {
-    // Custom error message
-    message: 'Invalid ObjectId',
-  },
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
 export const loyaltySchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
-  loyaltyId: z.string(),
-  setReward: z.coerce.number(),
-  setClaimAmount: z.coerce.number(),
-  password: z.string(),
+  loyaltyId: ObjectIdSchema,
+  setCashBackPercentage: z.coerce.number(),
+  setClaimedPercentage: z.coerce.number(),
+  password: z.string().min(6).max(100),
   origin: z.boolean().optional(),
   cardPattern: z.string().optional(),
   cardColor: z.string().optional(),
   fontColor: z.string().optional(),
   logo: z.string().optional(),
-  expiryDate: z.string().optional(),
   loyaltyExpiryDate: z.coerce.number(),
   rewardLimit: z.coerce.number(),
-  signUpBonus: z.coerce.number(),
+  signUpBonus: z.coerce.number().optional(),
 });
 
 export type LoyaltyType = z.infer<typeof loyaltySchema>;

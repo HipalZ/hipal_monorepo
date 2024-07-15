@@ -1,5 +1,5 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { type FormEvent, memo, useCallback, useState, type ChangeEvent } from "react";
 import { debounce } from "lodash";
@@ -84,10 +84,6 @@ const AddName = () => {
   const debouncedApiCall = useCallback(
     debounce(async (link) => {
       const res = await apiRpc.businesses[":customLink"].$post({
-        header: {
-          x_access_token: accessToken,
-          x_refresh_token: refreshToken,
-        },
         param: {
           customLink: link,
         },
@@ -122,10 +118,7 @@ const AddName = () => {
       return;
     }
     const res = await apiRpc.businesses.$post({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
+
       json: {
         businessType: businessType || "FOOD",
         name: businessName,
@@ -162,10 +155,6 @@ const AddName = () => {
 
   const createBranch = async () => {
     const res = await apiRpc.businesses.createBranch.$post({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
       json: {
         name: businessName,
         customLink: customLink,
@@ -178,7 +167,7 @@ const AddName = () => {
         paymentAndBusinessSettings,
       },
     });
-    
+
     if (res.status === 200 || res.status === 201) {
       console.log({
         name: businessName,

@@ -1,6 +1,6 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { apiRpc } from "@hi/common";
 import { memo, useCallback, useEffect } from "react";
@@ -40,18 +40,14 @@ const OutletType = () => {
   const user = useOwnerLogin((s) => s.user);
 
   const getAllBranches = useCallback(async () => {
-      const res = await apiRpc.businesses.getBranches[":ownerId"].$get({
-        header: {
-          x_access_token: accessToken,
-          x_refresh_token: refreshToken,
-        },
-        param: {
-          ownerId: user?._id || "",
-        },
-      });
-      const response = (await res.json()).data as Array<{ _id: string, name: string }> || [];
-      setBranches(response);
-    
+    const res = await apiRpc.businesses.getBranches[":ownerId"].$get({
+      param: {
+        ownerId: user?._id || "",
+      },
+    });
+    const response = (await res.json()).data as Array<{ _id: string, name: string }> || [];
+    setBranches(response);
+
   }, [user?._id, accessToken, refreshToken, setBranches]);
 
   useEffect(() => {
@@ -72,7 +68,7 @@ const OutletType = () => {
 
   return (
     <main>
-      {businessTypeArray.map((ele,index) => (
+      {businessTypeArray.map((ele, index) => (
         <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6  border rounded-2xl">
           <article className="flex items-center p-4">
             <input
@@ -108,7 +104,7 @@ const OutletType = () => {
                     <MenuItem key={branch._id} as="div">
                       {({ focus }) => (
                         <button
-                        type="button"
+                          type="button"
                           className={`${focus ? 'bg-gray-100' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                           onClick={() => setSelectedBranch(branch._id)}
                         >

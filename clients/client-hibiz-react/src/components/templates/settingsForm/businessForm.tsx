@@ -1,6 +1,6 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import { useBusinessFormStore } from "@/components/store/useOutlet";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import * as React from "react";
 import { useCallback, useRef, memo, useEffect, type FormEvent } from "react";
@@ -16,12 +16,6 @@ const MemoBusinessForm: React.FC = () => {
   const { businessFormData } = useBusinessFormStore((s) => ({
     businessFormData: s.businessFormData,
     setEntireBusinessFormData: s.setEntireBusinessFormData,
-  }));
-
-  // Retrieve user tokens from the store
-  const { accessToken, refreshToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-    refreshToken: s.refreshToken,
   }));
 
   // Retrieve business data
@@ -83,10 +77,6 @@ const MemoBusinessForm: React.FC = () => {
     try {
       if (businessFormData._id) {
         res = await apiRpc.settings.update[":settingsId"].$put({
-          header: {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken,
-          },
           param: {
             settingsId: businessFormData._id,
           },
@@ -96,10 +86,6 @@ const MemoBusinessForm: React.FC = () => {
         res = await apiRpc.settings.update[":settingsId"].$put({
           param: {
             settingsId: businessFormData._id
-          },
-          header: {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken,
           },
           json: filteredFormData,
         });
@@ -114,7 +100,7 @@ const MemoBusinessForm: React.FC = () => {
       toast.error("Error submitting form");
       console.error("Error submitting form:", error);
     }
-  }, [accessToken, refreshToken, businessFormData, businessData]);
+  }, [businessFormData, businessData]);
 
   // JSX rendering for the form
   return (

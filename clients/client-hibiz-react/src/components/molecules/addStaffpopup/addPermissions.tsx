@@ -12,8 +12,8 @@ import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { apiRpc } from "@hi/common";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
-import { useUserToken } from "@/components/store/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const AddPermissions = () => {
   const {
@@ -61,10 +61,6 @@ const AddPermissions = () => {
 
   const fetchPermissions = async () => {
     const res = await apiRpc.businesses[":businessId"].permissions.$get({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
       param: {
         businessId: businessData?._id,
       },

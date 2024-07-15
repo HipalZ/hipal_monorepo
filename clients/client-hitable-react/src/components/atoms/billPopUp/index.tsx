@@ -1,6 +1,6 @@
 import { useHiClientZ } from '@/components/store/useHiClientzData';
 import { useLiteStore } from '@/components/store/useLiteStore';
-import { useUserToken } from '@/components/store/useTokenStore';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { cn, timestampToDateTime } from '@/components/utils/helpers';
 import { apiRpc } from '@hi/common';
 import { type ChangeEvent, memo, useCallback, useState } from 'react';
@@ -52,13 +52,7 @@ const BillPopUpMemo = () => {
   }, []);
 
   const handleCloseAlert = async (id: string) => {
-    const accessToken = useUserToken.getState().accessToken;
-    const refreshToken = useUserToken.getState().refreshToken;
     await apiRpc.payments[':pid'].rejectOrder[':alertId'].$put({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
       json: {
         waiterName: captainData?.name,
       },
@@ -74,18 +68,12 @@ const BillPopUpMemo = () => {
   }, [clickViewMore]);
 
   const handleConfirmAlert = async (id: string, comment: string) => {
-    const accessToken = useUserToken.getState().accessToken;
-    const refreshToken = useUserToken.getState().refreshToken;
     setIsLoading(true);
     const res = await apiRpc.payments[':pid'].order[':alertId'].$put({
       param: { alertId: id },
       json: {
         comment: comment,
         waiterName: captainData?.name,
-      },
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
       },
     });
     if (res.status === 200) {

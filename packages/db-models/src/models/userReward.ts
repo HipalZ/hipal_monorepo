@@ -1,18 +1,18 @@
 import mongoose, { type Model } from 'mongoose';
 import type { UserRewardType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const userRewardSchema = new mongoose.Schema<UserRewardType>(
   {
-    userPhone: {
-      type: String,
+    userId: {
+      type: ObjectId,
       required: true,
-    },
-    userName: {
-      type: String,
+      ref: 'User',
     },
     loyaltyId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: 'LoyaltySetting',
     },
 
     rewards: {
@@ -28,10 +28,7 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
     date: {
       type: Number,
     },
-    count: {
-      type: Number,
-      default: 0,
-    },
+
   },
   {
     timestamps: true,

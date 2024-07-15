@@ -9,12 +9,10 @@ const orderSchema = new mongoose.Schema<OrderType>(
     currency: { type: String, required: true },
     billValue: { type: Number, required: true },
     receipt: { type: String, required: true, unique: true },
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
+    userId: { type: ObjectId, required: true, ref: 'User', index: true },
     tips: { type: Number, default: 0 },
     claimedCoins: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
-
     order_id: { type: String, required: true },
     tableName: { type: String, default: null },
     date: { type: Number, required: true },

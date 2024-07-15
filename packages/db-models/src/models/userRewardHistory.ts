@@ -1,42 +1,40 @@
 import mongoose, { type Model } from 'mongoose';
 import type { UserRewardHistoryType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
+
 
 const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   {
-    userPhone: {
-      type: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
-    },
-    userName: {
-      type: String,
     },
     rewards: {
       type: Number,
     },
-    currentBalance: Number,
-    status: String,
+
+    status: {
+      type: String,
+      enum: ['MINUS', 'PLUS'],
+    },
     date: {
       type: Number,
     },
-    businessName: {
+
+    tableName: {
       type: String,
     },
-    waiterName: {
-      type: String,
+    orderId: {
+      type: ObjectId,
+      ref: 'Order',
+
     },
 
-    tableName: String,
 
     loyaltyId: {
-      type: String,
-    },
-    total: {
-      type: Number,
-      default: 0,
-    },
-    subTotal: {
-      type: Number,
-      default: 0,
+      type: ObjectId,
+      required: true,
+      ref: 'LoyaltySetting',
     },
   },
   {

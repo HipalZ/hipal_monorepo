@@ -1,7 +1,7 @@
 import { MdEdit } from "react-icons/md";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { useCallback } from "react";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
@@ -34,10 +34,6 @@ const AddTeam = () => {
   }, [permissions, selectedPermissions, selectedRole]);
   const addStaff = async () => {
     const res = await apiRpc.users.addStaff.$post({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
       json: {
         businessId: businessData?._id || "",
         name: name,

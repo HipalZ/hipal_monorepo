@@ -11,23 +11,21 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 
 export const PaymentAlertSchema = z.object({
   businessId: ObjectIdSchema,
-  comment: z.string().optional(),
-  message: z.string().optional(),
+  comment: z.string().min(4).max(300).optional(),
+  message: z.string().min(4).max(300).optional(),
   alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER']),
   status: z.enum(['SUCCESS', 'FAIL', 'WAITER']),
   order_id: ObjectIdSchema.optional(),
   errorReason: z.string().optional(),
   errorDescription: z.string().optional(),
-  payment_id: ObjectIdSchema.optional(),
   isAccepted: z.boolean().default(false).optional(),
   coinsApplied: z.boolean().default(false).optional(),
-  completionCode: z.number().optional(),
-  name: z.string().optional(),
   tableName: z.string(),
   posDiscount: z.number().default(0).optional(),
   waiterName: z.string().optional(),
   isRejected: z.boolean().default(false).optional(),
   date: z.number().optional(),
+  userId: ObjectIdSchema,
 });
 
 export type PaymentAlertType = z.infer<typeof PaymentAlertSchema>;

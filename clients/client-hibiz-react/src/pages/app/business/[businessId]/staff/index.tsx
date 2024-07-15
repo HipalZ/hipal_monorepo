@@ -14,7 +14,7 @@ import Avatar from "@/assets/avtarStaff.png";
 import NewAddStaff from "@/components/molecules/addStaffpopup/addStaff";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
-import { getUserPermissionsForRole, IPermissions, type role, useAddStaffStore } from "@/components/store/useAddStaffStore";
+import { getUserPermissionsForRole, type role, useAddStaffStore } from "@/components/store/useAddStaffStore";
 import EditStaff from "@/components/molecules/addStaffpopup/editStaff";
 import toast from "react-hot-toast";
 
@@ -41,10 +41,6 @@ const StaffPage = () => {
 
   const fetchPermissions = async () => {
     const res = await apiRpc.businesses[":businessId"].permissions.$get({
-      // header: {
-      //   x_access_token: accessToken,
-      //   x_refresh_token: refreshToken,
-      // },
       param: {
         businessId: businessData?._id,
       },
@@ -59,9 +55,9 @@ const StaffPage = () => {
   };
 
   const handleStaffDetails = async (staff: UserProfile) => {
-    const matchingData = staff.customRole.filter((item:CustomRole) => item.businessId === businessData?._id)
-   console.log(matchingData);
-   const role = matchingData[0].role as role
+    const matchingData = staff.customRole.filter((item: CustomRole) => item.businessId === businessData?._id)
+    console.log(matchingData);
+    const role = matchingData[0].role as role
     setName(staff.name);
     setPhone(staff.phone);
     setSelectedRole(role);
@@ -79,7 +75,7 @@ const StaffPage = () => {
     setSelectedPermissions(userSelectedPermissions);
   };
 
-  
+
 
   const closeEditModal = () => {
     setName("");

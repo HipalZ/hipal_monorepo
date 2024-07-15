@@ -2,7 +2,7 @@ import { lazy, memo, startTransition, Suspense, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { useExploreStore } from '@/components/store/useExploreStore';
-import { useUserToken } from '@/components/store/useUserToken';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { BannerType } from '@/components/templates/explorePage/explorePageStore';
 import type { Banner } from '@/components/types/businessData';
 import { apiRpc } from '@hi/common';
@@ -36,10 +36,6 @@ const MemoBanners = () => {
         setAddSpotlight: s.setAddSpotlight,
         setSelectedBannerType: s.setSelectedBannerType
     }))
-    const config = {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-    }
     const handleNewSpotlight = () => {
         setAddSpotlight(true)
         setSelectedBannerType(BannerType.BANNER_TYPE_0)
@@ -70,7 +66,6 @@ const MemoBanners = () => {
         queryKey: ['banners', businessId],
         queryFn: async () => {
             const res = await apiRpc.settings.banners[':businessId'].$get({
-                header: config,
                 param: {
                     businessId: businessId
                 },
@@ -94,7 +89,7 @@ const MemoBanners = () => {
                     <article>
                         <h1>Banners</h1>
                     </article>
-                    <BannerCards banners={banners}  handleEditBanner={handleEditBanner} sizeInPx='268px'/>
+                    <BannerCards banners={banners} handleEditBanner={handleEditBanner} sizeInPx='268px' />
                     <BottomButton text='Add new Spotlight' onClick={handleNewSpotlight} />
                 </section>
                 {addSpotlight ? <MiddlePopUp show={addSpotlight} onClose={() => { setAddSpotlight(false) }} onlyPopUp={false}>

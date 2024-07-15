@@ -1,7 +1,7 @@
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
@@ -18,9 +18,7 @@ const messages = [
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
-  const name = useLogin((s)=>s.userDetails?.name)
-  const accessToken = useUserToken.getState().accessToken;
-  const refreshToken = useUserToken.getState().refreshToken;
+  const name = useLogin((s) => s.userDetails?.name)
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -36,25 +34,21 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       return toast.error("Please wait for a moment");
     }
     setLoading(true);
-      console.log("name",name)
-      const res = await apiRpc.payments.createWaiterAlert.$post({
-        json: {
-          businessId: businessId,
-          tableName: tableName,
-          message: message,
-          alertType: "WAITER",
-          status: "WAITER",
-          name: name,
-        },
-        header:{
-          x_access_token: accessToken,
-          x_refresh_token: refreshToken
-        }
-      });
-      if (res.status === 200) {
-        toast.success("Captain will be there soon. Thank you!!");
-        onClose();
-      }
+    console.log("name", name)
+    const res = await apiRpc.payments.createWaiterAlert.$post({
+      json: {
+        businessId: businessId,
+        tableName: tableName,
+        message: message,
+        alertType: "WAITER",
+        status: "WAITER",
+        name: name,
+      },
+    });
+    if (res.status === 200) {
+      toast.success("Captain will be there soon. Thank you!!");
+      onClose();
+    }
   }, [businessId, tableName, message]);
 
   return (
@@ -77,7 +71,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         className="w-[92%] mb-4 px-8 py-3 mx-4 text-sm border rounded-full bg-primary text-base-100"
       >
         {loading ? (
-          <span className="loader_spinner !border-t-base-100 "/>
+          <span className="loader_spinner !border-t-base-100 " />
         ) : (
           "Call Captain"
         )}

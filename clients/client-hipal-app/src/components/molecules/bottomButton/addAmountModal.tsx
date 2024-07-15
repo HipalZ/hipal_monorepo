@@ -12,18 +12,15 @@ import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@/components/store/useUserToken";
 
 const AddAmountModal = memo(() => {
-  const accessToken = useUserToken.getState().accessToken
-  const refreshToken = useUserToken.getState().refreshToken
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const business = useBusinessDetails((s) => s.businessDetails);
   const router = useRouter();
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
   const setIsPayment = useLogin((s) => s.setIsPayment);
-  const name = useLogin((s)=>s.userDetails?.name)
+  const name = useLogin((s) => s.userDetails?.name)
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value === "" ? 0 : Number(value));
@@ -62,10 +59,6 @@ const AddAmountModal = memo(() => {
         status: "WAITER",
         name: name,
       },
-      header:{
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
     });
     if (res.status === 200) {
       toast.success("Captain will be there soon. Thank you!!");
@@ -73,7 +66,7 @@ const AddAmountModal = memo(() => {
     }
     if (res.status === 404 || res.status === 400) {
       toast.error("Table not found");
-        setLoading(false);
+      setLoading(false);
     }
   }, [businessId, tableName]);
   return (

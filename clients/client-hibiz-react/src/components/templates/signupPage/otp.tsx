@@ -1,7 +1,7 @@
 import Hand from "@/assets/login/hand.png";
 import useLoginStore from "@/components/store/useLogin";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { startTransition, useCallback, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -33,7 +33,7 @@ const Otp = ({ login }: { login?: boolean }) => {
   ];
   const handleSubmit = useCallback(async () => {
     const endpoint = login ? apiRpc.users.ownerSignIn : apiRpc.users.ownerSignUp;
-    
+
     const res = await endpoint.$post({
       json: {
         name: name,
@@ -44,23 +44,23 @@ const Otp = ({ login }: { login?: boolean }) => {
         verifyOtp: "true",
       },
     });
-  
+
     const response = await res.json();
-  
+
     if (res.status === 200) {
       setAccessToken(response.data.accessToken);
       setRefreshToken(response.data.refreshToken);
       setUser(response.data.user);
       toast.success("Login Successfully");
       setIsLogin(true);
-  
+
       if (login) {
         startTransition(() => {
           navigate("/app/business");
         });
         return;
       }
-  
+
       setStep(step + 1);
     } else if (res.status === 409) {
       toast.error("Please try again");

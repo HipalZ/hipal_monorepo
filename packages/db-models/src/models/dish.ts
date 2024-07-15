@@ -37,10 +37,7 @@ const portionSchema = new mongoose.Schema<PortionType>(
       type: Number,
       required: true,
     },
-    discount: {
-      type: Number,
-      required: false,
-    },
+
     default: {
       type: Boolean,
       required: false,
@@ -120,19 +117,13 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: Number,
       required: true,
     },
-    swiggy: {
-      type: Number,
-      required: false,
-    },
+
     visibility: {
       type: Boolean,
       required: false,
       default: true,
     },
-    discount: {
-      type: Number,
-      required: false,
-    },
+
     avgTime: {
       type: Number,
       required: false,
@@ -179,10 +170,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: [tagsSchema],
       required: false,
     },
-    links: {
-      type: [String],
-      required: false,
-    },
+
     delayTime: {
       type: Number,
       required: false,

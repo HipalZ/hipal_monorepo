@@ -7,7 +7,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import toast from "react-hot-toast";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import type { ILoginProps } from "@/components/types/businessData";
 
@@ -44,7 +44,7 @@ const Login: React.FC = () => {
       return;
     }
     const response = await apiRpc.users.ownerSignIn.$post({
-      query:{
+      query: {
         verifyOtp: "false",
       },
       json: {
@@ -57,6 +57,7 @@ const Login: React.FC = () => {
       message: string;
     };
     if (response.status === 200) {
+      console.log("user", user);
       setAccessToken(user.data.accessToken);
       setRefreshToken(user.data.refreshToken);
       setUser(user.data.user);

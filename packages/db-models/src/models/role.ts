@@ -1,11 +1,11 @@
-import mongoose, { Model } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import type { BusinessRoleType } from '../validators';
 
 const roleSchema = new mongoose.Schema<BusinessRoleType>(
   {
     name: {
       type: String,
-      enum: ['MANAGER','CO_OWNER',"CAPTAIN", "MARKETING_AGENT", 'RESTAURANT_OWNER'],
+      enum: ['MANAGER', 'CO_OWNER', "CAPTAIN", "MARKETING_AGENT", 'RESTAURANT_OWNER'],
       required: true,
     },
     description: {

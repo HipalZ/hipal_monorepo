@@ -11,21 +11,19 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const categorySchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
-  name: z.string().max(100),
+  name: z.string().min(3).max(100),
   visibility: z.boolean(),
   timerOn: z.boolean().optional(),
-  timerStart: z.string().optional(),
-  timerEnd: z.string().optional(),
+  timerStart: z.string().min(3).max(50).optional(),
+  timerEnd: z.string().min(3).max(50).optional(),
   availableDays: z.array(z.coerce.number()),
   hierarchy: z.enum(['PARENT', 'CHILD']),
-  parentCategory: z.string().optional().default(''),
-  parentCategoryId: z.string().optional().default(''),
-  coverImage: z.string().url().optional(),
-  links: z.array(z.string()).optional(),
+  parentCategory: z.string().max(100).optional().default(''),
+  parentCategoryId: z.string().max(100).optional().default(''),
+  coverImage: z.string().url().max(100).optional(),
+  links: z.array(z.string().min(3).max(100)).optional(),
   dishes: z.array(ObjectIdSchema).optional().default([]),
-  version: z.coerce.number().optional(),
   availability: z.boolean().default(true),
-  charges: z.array(z.unknown()).optional(),
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;

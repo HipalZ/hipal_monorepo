@@ -24,7 +24,6 @@ import {
   outLetInfoSchema,
   paramsSchema,
   permissionsSchema,
-
   TokenValidator,
   UpdateBusinessSchema,
   UserRewardType,
@@ -47,7 +46,7 @@ const businessesRouter = new Hono()
     // requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', BusinessSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
@@ -78,7 +77,7 @@ const businessesRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator('json', BranchSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
@@ -86,7 +85,7 @@ const businessesRouter = new Hono()
 
         if (isCustomLinkExist) return respond(c, 'customLink already exist', true, 409, {});
 
-        const business = await Business.create([{ ...requestData, outlet: false, }], { session });
+        const business = await Business.create([{ ...requestData, outlet: false }], { session });
         if (requestData.parentBranchId) {
           const { menu, themes, rewards, paymentAndBusinessSettings, parentOutLetId } = requestData;
           const currentBusinessId = business[0]._id;
@@ -176,7 +175,7 @@ const businessesRouter = new Hono()
     requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', outLetInfoSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const isInfoAlreadyExist = await OutLetInfo.findOne({ businessId: requestData.businessId });
@@ -195,7 +194,7 @@ const businessesRouter = new Hono()
     requireAuthorization([ClientRoles.OWNER]),
 
     zValidator('json', permissionsSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
 
@@ -216,7 +215,7 @@ const businessesRouter = new Hono()
         customLink: z.string(),
       }),
     ),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       let { customLink } = c.req.param();
       customLink = customLink.trim();
@@ -275,7 +274,7 @@ const businessesRouter = new Hono()
         description: z.string().optional(),
       }),
     ),
-    // zValidator('header', TokenValidator),
+    // ,
     async (c) => {
       const { businessId } = c.req.param();
       const { name, description } = await c.req.json();
@@ -315,7 +314,7 @@ const businessesRouter = new Hono()
       }),
     ),
     zValidator('json', UpdateBusinessSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
@@ -360,7 +359,7 @@ const businessesRouter = new Hono()
       }),
     ),
     zValidator('json', outLetInfoSchema.partial()),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
@@ -373,39 +372,12 @@ const businessesRouter = new Hono()
     },
   )
 
-  // .get('/:id', zValidator('param', BusinessSchema), zValidator('query', BusinessSchema), async (c) => {
-  //   const { id } = c.req.param();
-  //   const { customLink, nameLogo } = c.req.query();
 
-  //   if (customLink) {
-  //     const existingBusiness = await Business.findOne({ customLink: id });
-
-  //     return c.json({
-  //       err: false,
-  //       message: 'Business not found',
-  //       data: !!existingBusiness,
-  //     });
-  //   }
-
-  //   let existingBusiness: BusinessType | BusinessType[] | null = null;
-
-  //   if (nameLogo) {
-  //     existingBusiness = await Business.findById(id).select('logo businessName');
-  //   } else {
-  //     existingBusiness = await Business.findById(id);
-  //   }
-
-  //   return c.json({
-  //     data: existingBusiness,
-  //     status: 200,
-  //     err: false,
-  //   });
-  // })
   .get(
     '/:businessId/permissions',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
-    zValidator('header', TokenValidator),
+
 
     zValidator('param', z.object({ businessId: z.string() })),
     async (c) => {
@@ -422,7 +394,7 @@ const businessesRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-    zValidator('header', TokenValidator),
+
 
     zValidator(
       'param',
@@ -433,7 +405,8 @@ const businessesRouter = new Hono()
     async (c) => {
       const { ownerId } = c.req.param();
       const existingBusinesses = await Business.find({
-        staffIds: ownerId, outlet: true
+        staffIds: ownerId,
+        outlet: true,
       }).select('name _id');
 
       return respond(c, 'businesses found', false, 200, existingBusinesses);
@@ -444,7 +417,7 @@ const businessesRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator('param', z.object({ businessId: z.string() })),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId } = c.req.param();
@@ -470,15 +443,20 @@ const businessesRouter = new Hono()
       console.log('id', id);
 
       const existingBusinesses = await Business.find({
-        staffIds: id
+        staffIds: id,
       }).populate('parentOutLetId', {
         name: 1,
-        _id: 0
+        _id: 0,
       });
 
       return respond(c, 'businesses found', false, 200, existingBusinesses);
     },
   )
+  .get('/getAllbusinesses', async (c) => {
+    const existingBusinesses = await Business.find({});
+
+    return respond(c, 'businesses found', false, 200, existingBusinesses);
+  })
   .get('/get/Single/:businessId', zValidator('param', paramsSchema), async (c) => {
     const { businessId } = c.req.param();
 
@@ -495,13 +473,11 @@ const businessesRouter = new Hono()
 
     customLink = customLink.trim();
 
-    const getBusiness = await Business.findOne({ customLink: customLink });
+    const getBusiness = await Business.findOne({ customLink: customLink }).select('_id');
+    const outLetInfo = await OutLetInfo.findOne({ businessId: getBusiness?._id });
 
-    return c.json({
-      data: getBusiness,
-      status: 200,
-      error: false,
-    });
+    if (!outLetInfo) return respond(c, 'business not found', true, 404, {});
+    return respond(c, 'business found', false, 200, outLetInfo);
   })
   .get(
     '/:businessId/loyalty',
@@ -525,6 +501,40 @@ const businessesRouter = new Hono()
       });
     },
   )
+  .get(
+    '/themes/:businessId',
+    zValidator(
+      'param',
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const existingTheme = await Theme.findOne({ businessId: businessId });
+      if (!existingTheme) return respond(c, 'theme not found', true, 404, {});
+
+      return respond(c, 'theme found', false, 200, existingTheme);
+    },
+  )
+  .get(
+    '/loyalty/:businessId',
+    zValidator(
+      'param',
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId });
+      if (!existingLoyalty) return respond(c, 'theme not found', true, 404, {});
+
+      return respond(c, 'theme found', false, 200, existingLoyalty);
+    },
+  )
 
   .get(
     '/:businessId/users',
@@ -537,12 +547,10 @@ const businessesRouter = new Hono()
         businessId: z.string(),
       }),
     ),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const { businessId } = c.req.param();
-      const existingRoles = await Role.find({
-
-      }).select('_id name description');
+      const existingRoles = await Role.find({}).select('_id name description');
 
       return respond(c, 'roles found', false, 200, existingRoles);
     },

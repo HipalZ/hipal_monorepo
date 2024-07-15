@@ -1,6 +1,6 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOutletFormStore } from "@/components/store/useOutlet";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { memo, type FormEvent } from "react";
 import toast from "react-hot-toast";
@@ -22,10 +22,6 @@ const MemoOutletForm: React.FC = () => {
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
-  const { accessToken, refreshToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-    refreshToken: s.refreshToken,
-  }));
 
   const handleInputChange = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(key, e.target.value);
@@ -47,10 +43,6 @@ const MemoOutletForm: React.FC = () => {
     try {
       if (formData._id) {
         res = await apiRpc.businesses.outletInfo.update[":businessId"].$put({
-          header: {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken,
-          },
           param: {
             businessId: businessData?._id,
           },
@@ -58,10 +50,6 @@ const MemoOutletForm: React.FC = () => {
         });
       } else {
         res = await apiRpc.businesses.outletInfo.$post({
-          header: {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken,
-          },
           json: requestBody,
         });
       }

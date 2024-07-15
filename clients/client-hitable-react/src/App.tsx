@@ -5,7 +5,7 @@ import { useHiClientZ } from './components/store/useHiClientzData';
 import { useLiteStore } from './components/store/useLiteStore';
 import MainRouter from './routes';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from './components/store/useTokenStore';
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 function App() {
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
@@ -21,8 +21,6 @@ function App() {
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
   } = useLiteStore();
-  const accessToken = useUserToken.getState().accessToken
-  const refreshToken = useUserToken.getState().refreshToken
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const businessId = selectedBiz?.businessId?._id;
@@ -38,10 +36,6 @@ function App() {
       param: {
         id: businessId,
       },
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
     });
     const response = (await res.json()) || [];
     setLoading(false);

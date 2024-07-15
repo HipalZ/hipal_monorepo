@@ -10,9 +10,8 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 const portionSchema = z
   .object({
-    name: z.string().optional(),
-    price: z.coerce.number().optional(),
-    discount: z.coerce.number().optional(),
+    name: z.string(),
+    price: z.coerce.number().positive(),
     default: z.boolean().optional(),
     portionType: z.string().optional(),
     id: z.string(),
@@ -22,32 +21,30 @@ const portionSchema = z
 const filtersSchema = z.object({
   dishes: z.array(ObjectIdSchema).optional(),
   timeToConsume: z.coerce.number().optional(),
-  portionBestSuited: z.string().optional(),
-  bestWeather: z.string().optional(),
-  levelOfSpice: z.string().optional(),
-  bestOccasion: z.string().optional(),
-  texture: z.string().optional(),
+  portionBestSuited: z.string().min(3).max(100).optional(),
+  bestWeather: z.string().min(3).max(100).optional(),
+  levelOfSpice: z.string().min(3).max(100).optional(),
+  bestOccasion: z.string().min(3).max(100).optional(),
+  texture: z.string().min(3).max(100).optional(),
   time: z.coerce.number().optional(),
-  metaTags: z.array(z.string()).optional(),
+  metaTags: z.array(z.string().min(3).max(50)).optional(),
 });
 
 const tagSchema = z.object({
-  name: z.string().optional(),
-  color: z.string().optional(),
-  icon: z.string().optional(),
-  fontColor: z.string().optional(),
+  name: z.string().min(3).max(50).optional(),
+  color: z.string().min(3).max(50).optional(),
+  icon: z.string().min(3).max(50).optional(),
+  fontColor: z.string().min(3).max(50).optional(),
 });
 
 export const dishSchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
-  name: z.string(),
-  price: z.coerce.number(),
-  swiggy: z.coerce.number().optional(),
+  name: z.string().min(3).max(100),
+  price: z.coerce.number().positive(),
   visibility: z.boolean().default(true),
-  discount: z.coerce.number().optional(),
   avgTime: z.coerce.number().optional(),
-  dishType: z.string(),
+  dishType: z.string().min(3).max(100).optional(),
   categories: z.array(ObjectIdSchema).optional(),
   portions: z.array(portionSchema).optional(),
   extras: z.array(ObjectIdSchema).optional(),
@@ -65,10 +62,9 @@ export const dishSchema = z.object({
       metaTags: [], // added this line
     })
     .optional(),
-  images: z.array(z.string()).optional(),
-  description: z.string().optional(),
+  images: z.array(z.string().min(6).max(100)).optional(),
+  description: z.string().min(10).max(150).optional(),
   tags: z.array(tagSchema).optional(),
-  links: z.array(z.string()).optional(),
   delayTime: z.coerce.number().optional().default(0),
   availability: z.boolean().default(true),
 });

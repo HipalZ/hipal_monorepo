@@ -1,24 +1,22 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
-
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: 'Invalid ObjectId',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
 const UserRewardHistoryAttrs = z.object({
-  userPhone: z.string(),
-  day: z.string().optional(),
-  userName: z.string().optional(),
-  businessName: z.string().optional(),
-  waiterName: z.string().optional(),
-  rewards: z.coerce.number().optional(),
-  status: z.string().optional(),
-  date: z.coerce.number().optional(),
-  time: z.string().optional(),
-  items: z.array(z.unknown()).default([]).optional(),
-  total: z.coerce.number().default(0),
-  subTotal: z.coerce.number().default(0).optional(),
-  sgst: z.coerce.number().default(0).optional(),
-  cgst: z.coerce.number().default(0).optional(),
-  currentBalance: z.coerce.number().optional(),
-  tableName: z.string().optional(),
-  loyaltyId: z.string(),
-  reward_date: z.coerce.number().default(Date.now()),
+  userId: ObjectIdSchema,
+  rewards: z.coerce.number(),
+  status: z.enum(['MINUS', 'PLUS']),
+  date: z.coerce.number(),
+  tableName: z.string(),
+  loyaltyId: ObjectIdSchema,
+  orderId: ObjectIdSchema.optional(),
+
 });
 
 export type UserRewardHistoryType = z.infer<typeof UserRewardHistoryAttrs>;

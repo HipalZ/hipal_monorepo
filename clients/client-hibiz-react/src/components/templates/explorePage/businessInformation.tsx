@@ -5,7 +5,7 @@ import { IoBeerOutline, IoWifiOutline } from 'react-icons/io5';
 import SubHeader from '@/components/atom/subHeader';
 import Paragraph from '@/components/atom/paragraph';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from '@/components/store/useUserToken';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams } from 'react-router-dom';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import BottomButton from '@/components/atom/bottomButton';
@@ -14,7 +14,7 @@ import PopUp from '@/components/atom/popUp';
 import { convertTo12HourFormat } from '@/components/templates/settingsForm/outletForm';
 import { Switch } from '@headlessui/react';
 import useShowErrorToasts from '@/components/atom/errorToasts';
-import { IBizPayload } from '@/components/types/businessData';
+import type { IBizPayload } from '@/components/types/businessData';
 
 const amenitiesArr = [
     { _id: 1, text: 'SMOKING SECTION', image: <MdOutlineSmokingRooms /> },
@@ -163,21 +163,16 @@ const MemoBizInfo = () => {
             Object.entries(payload).filter(([_, value]) => value !== null && value !== '' && value !== undefined)
         );
 
-        const config = {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken
-        };
         let res: { status: number };
         if (bizInfo?._id === '') {
             res = await apiRpc.businesses.outletInfo.$post({
-                header: config,
+
                 json: filteredPayload
             });
         }
 
         if (bizInfo?._id !== '' || res && res.status === 409) {
             const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
-                header: config,
                 json: filteredPayload,
                 param: {
                     businessId: businessId

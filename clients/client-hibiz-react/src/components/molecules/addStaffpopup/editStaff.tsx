@@ -1,6 +1,6 @@
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { MdEdit } from "react-icons/md";
 import AddRole from "./addRole";

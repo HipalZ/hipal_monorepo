@@ -6,10 +6,10 @@ import {
   useAddStaffStore,
 } from "@/components/store/useAddStaffStore";
 import { useQuery } from "@tanstack/react-query";
-import { useUserToken } from "@/components/store/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const MultipleBottomButtons = lazy(
   () => import("@/components/atom/multipleButtons"),
@@ -48,10 +48,6 @@ const AddRole = () => {
 
   const getAllRoles = async () => {
     const res = await apiRpc.businesses[":businessId"].users.$get({
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken,
-      },
       param: {
         businessId: businessData?._id,
       },

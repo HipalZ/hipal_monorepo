@@ -1,6 +1,7 @@
-import mongoose, { Model } from 'mongoose';
-import { LoyaltyType } from '../validators';
-const ObjectId = mongoose.Schema.Types.ObjectId as any;
+import mongoose, { type Model } from 'mongoose';
+import type { LoyaltyType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
+
 const loyaltySchema = new mongoose.Schema<LoyaltyType>(
   {
     businessId: {
@@ -8,11 +9,11 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       ref: 'Business',
       required: true,
     },
-    setReward: {
+    setCashBackPercentage: {
       type: Number,
       required: true,
     },
-    setClaimAmount: {
+    setClaimedPercentage: {
       type: Number,
       required: true,
     },
@@ -21,10 +22,14 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       default: '1234',
     },
     loyaltyId: {
-      type: String,
+      type: ObjectId,
       required: true,
+      ref: 'LoyaltySetting',
     },
-    origin: Boolean,
+    origin: {
+      type: Boolean,
+      default: false,
+    },
     cardPattern: {
       type: String,
       default: 'beans',
@@ -42,14 +47,13 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       type: String,
       default: '',
     },
-    expiryDate: {
-      type: String,
-    },
+
     loyaltyExpiryDate: {
       type: Number,
     },
     rewardLimit: {
       type: Number,
+      default: 4999
     },
     signUpBonus: {
       type: Number,

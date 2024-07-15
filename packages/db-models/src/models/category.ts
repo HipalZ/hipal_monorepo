@@ -68,7 +68,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       default: true,
     },
-    charges: [Object],
+
   },
   {
     timestamps: true,

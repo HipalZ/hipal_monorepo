@@ -27,7 +27,7 @@ const settingsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', bannerSchema),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const createBanner = await Banner.create(requestData);
@@ -40,7 +40,7 @@ const settingsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', BusinessSettingsSchema),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const requestData = await c.req.json();
@@ -57,7 +57,7 @@ const settingsRouter = new Hono()
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', BusinessSettingsSchema.partial()),
     zValidator('param', z.object({ settingsId: z.string() })),
-    zValidator('header', TokenValidator),
+
     async (c) => {
 
       const requestData = await c.req.json();
@@ -72,7 +72,7 @@ const settingsRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ businessId: z.string() })),
-    zValidator('header', TokenValidator),
+
 
     async (c) => {
       const { businessId } = c.req.param();
@@ -88,7 +88,7 @@ const settingsRouter = new Hono()
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('json', bannerSchema.partial()),
     zValidator('param', z.object({ bannerId: z.string() })),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const { bannerId } = c.req.param();
@@ -101,7 +101,7 @@ const settingsRouter = new Hono()
     '/banner/:bannerId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    zValidator('header', TokenValidator),
+
     zValidator('param', z.object({ bannerId: z.string() })),
 
     async (c) => {
@@ -115,7 +115,7 @@ const settingsRouter = new Hono()
     '/banners/:businessId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    zValidator('header', TokenValidator),
+
     zValidator('param', z.object({ businessId: z.string() })),
 
     async (c) => {

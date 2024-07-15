@@ -7,7 +7,7 @@ import { timestampToDateTime } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);
@@ -17,8 +17,6 @@ const Overview = () => {
     timeStampEnd: s.timeStampEnd,
   }));
   const handleHistoryData = async () => {
-    const accessToken = useUserToken.getState().accessToken;
-    const refreshToken = useUserToken.getState().refreshToken;
     try {
       // Await the response directly and convert it to JSON in the next line.
       const response = await apiRpc.payments[":id"].salesDashboard.$get({
@@ -28,10 +26,6 @@ const Overview = () => {
           to: timeStampEnd.toString(),
         },
         param: { id: business?._id || "" },
-        header: {
-          x_access_token: accessToken,
-          x_refresh_token: refreshToken
-        }
       });
       const data = (await response.json()).data as ISalesLite;
 

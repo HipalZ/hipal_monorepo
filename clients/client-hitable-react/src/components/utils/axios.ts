@@ -1,6 +1,4 @@
 import { BASE_URL } from '@/configs';
-import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { useUserToken } from '@/components/store/useUserToken';
 import axiosConstructor from 'axios';
 
 const axios = axiosConstructor.create({
@@ -12,20 +10,6 @@ axios.interceptors.request.use(
     if (config.url == undefined) {
       return;
     }
-
-    const accessToken = useUserToken((s) => s.accessToken);
-    const refreshToken = useUserToken((s)=>s.refreshToken);
-    
-    const accessTokenLite = useHiClientZ((s)=>s.accessToken)
-    const refreshTokenLite = useHiClientZ((s)=>s.refreshToken)
-    if (accessToken && refreshToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-      config.headers['x-refresh-with'] = refreshToken;
-    } else if (accessTokenLite && refreshTokenLite) {
-      config.headers['Authorization'] = `Bearer ${accessTokenLite}`;
-      config.headers['x-refresh-with'] = refreshTokenLite;
-    }
-
     return config;
   },
   (error) => {

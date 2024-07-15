@@ -6,7 +6,7 @@ import { CgArrowsHAlt } from "react-icons/cg";
 import PopUp from "@/components/atom/popUp";
 import ColorWheel from "@/components/atom/colorWheel";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 
 const Setting = () => {
@@ -24,21 +24,21 @@ const Setting = () => {
     setPrimaryColor: s.setPrimaryColor,
     setSecondaryColor: s.setSecondaryColor,
     setStep: s.setStep,
-    exploreLayout:s.exploreLayout,
-    menuLayout:s.menuLayout
+    exploreLayout: s.exploreLayout,
+    menuLayout: s.menuLayout
   }));
 
-  const businessData = useBusinessData(s=>s.businessData)
+  const businessData = useBusinessData(s => s.businessData)
 
   const [selectedPrimaryColor, setSelectedPrimaryColor] =
     useState(primaryColor);
   const [selectedSecondaryColor, setSelectedSecondaryColor] =
     useState(secondaryColor);
 
-    const {accessToken, refreshToken} = useUserToken(s=>({
-      refreshToken:s.refreshToken,
-      accessToken:s.accessToken
-    }))
+  const { accessToken, refreshToken } = useUserToken(s => ({
+    refreshToken: s.refreshToken,
+    accessToken: s.accessToken
+  }))
 
   const [open, setOpen] = useState(false);
   const [colorType, setColorType] = useState<"primary" | "secondary">(
@@ -76,26 +76,22 @@ const Setting = () => {
     setSecondaryColor(primary);
   };
 
-  const apiCall = async() => {
-    
+  const apiCall = async () => {
+
     const res = await apiRpc.businesses[":businessId"].$put({
-      header:{
-        x_access_token:accessToken,
-        x_refresh_token:refreshToken
+      json: {
+        exploreLayout: exploreLayout,
+        menuLayout: menuLayout,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+        businessType: businessData?.businessType || "FOOD"
       },
-      json:{
-        exploreLayout:exploreLayout,
-        menuLayout:menuLayout,
-        primaryColor:primaryColor,
-        secondaryColor:secondaryColor,
-        businessType:businessData?.businessType || "FOOD"
-      },
-      param:{
-        businessId:businessData?._id
+      param: {
+        businessId: businessData?._id
       }
     })
-    if(res.status===200 || res.status ===201 ){
-    setStep(4);
+    if (res.status === 200 || res.status === 201) {
+      setStep(4);
     }
   };
 

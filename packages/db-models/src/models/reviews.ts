@@ -1,20 +1,22 @@
 import mongoose, { type Model } from 'mongoose';
 import type { ReviewsType } from '../validators';
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
   {
     businessId: {
       required: true,
-      type: String,
+      type: ObjectId,
       index: true,
+      ref: 'Business',
     },
-    reviewerName: {
-      type: String,
-    },
-    reviewerPhone: {
+    userId: {
       required: true,
-      type: String,
+      type: ObjectId,
+      index: true,
+      ref: 'User',
     },
+
     reviewRating: {
       required: true,
       type: Number,
@@ -45,10 +47,11 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     date: {
       required: true,
       type: Number,
-      default: Date.now(),
     },
     order_id: {
-      type: String,
+      type: ObjectId,
+      ref: 'Order',
+      required: true,
     },
   },
   {

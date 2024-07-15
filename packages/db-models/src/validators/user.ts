@@ -35,6 +35,7 @@ export const UserAttrs = z.object({
   loyaltyId: z.string().optional(),
   signUpBonus: z.number().optional(),
   userId: z.string().optional(),
+  isDeleted: z.boolean().optional(),
   _id: z.string().optional(),
 });
 

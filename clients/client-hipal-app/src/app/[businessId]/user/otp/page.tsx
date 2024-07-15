@@ -17,8 +17,8 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import HipalLogo from "@/assets/hipalNewLogo.svg";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import { toast } from "react-toastify";
-import { useUserToken } from "@/components/store/useUserToken";
 import { apiRpc } from "@hi/common";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 function OtpPage() {
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -97,46 +97,46 @@ function OtpPage() {
     }
     setLoading(true)
 
-      const res = await apiRpc.users[":id"].signIn.$post({
-		json: {
-		phone: userDetails.phone,
-		userId: userDetails._id,
-		otp: fullOtp,
-		role: userDetails.role,
-		loyaltyId: loyaltyId,
-		signUpBonus: signUpBonus,
-		name: customerName || userDetails.name,
-		},
-		param: { id: customLink },
-	  })
-	  const response = (await res.json()).data;
-    if(res.status === 400) {
+    const res = await apiRpc.users[":id"].signIn.$post({
+      json: {
+        phone: userDetails.phone,
+        userId: userDetails._id,
+        otp: fullOtp,
+        role: userDetails.role,
+        loyaltyId: loyaltyId,
+        signUpBonus: signUpBonus,
+        name: customerName || userDetails.name,
+      },
+      param: { id: customLink },
+    })
+    const response = (await res.json()).data;
+    if (res.status === 400) {
       setError("Invalid OTP");
       toast.error("Invalid OTP");
       setLoading(false);
       return;
     }
-	  if(res.status === 200) {
-		setAccessToken(response.accessToken);
-		setRefreshToken(response.refreshToken);
-		setUserDetails(response?.user);
-		setUserCoinZ(response?.rewards);
-		setIsLogin(true);
-		if (response.user?.reward > 0 && response.user?.count === 1) {
-		  setCoinz(response.user.reward);
-		  setIsModalOpen(true);
-		  triggerConfettiBlast();
-		  setTimeout(triggerConfettiBlast, 1000);
-		  setTimeout(triggerConfettiBlast, 2000);
-		  return;
-	  }
-	  goNext();
+    if (res.status === 200) {
+      setAccessToken(response.accessToken);
+      setRefreshToken(response.refreshToken);
+      setUserDetails(response?.user);
+      setUserCoinZ(response?.rewards);
+      setIsLogin(true);
+      if (response.user?.reward > 0 && response.user?.count === 1) {
+        setCoinz(response.user.reward);
+        setIsModalOpen(true);
+        triggerConfettiBlast();
+        setTimeout(triggerConfettiBlast, 1000);
+        setTimeout(triggerConfettiBlast, 2000);
+        return;
+      }
+      goNext();
       setOtp(["", "", "", ""]);
       if (inputRefs[0].current) {
         inputRefs[0].current.focus();
       }
     }
-}
+  }
 
   const goBack = useCallback(() => {
     router.back();
@@ -240,9 +240,8 @@ function OtpPage() {
                 max={1}
                 min={0}
                 ref={inputRefs[index]}
-                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
-                  error && "border-red-500"
-                }`}
+                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${error && "border-red-500"
+                  }`}
                 required
               />
             ))}

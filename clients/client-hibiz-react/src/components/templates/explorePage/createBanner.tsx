@@ -3,7 +3,7 @@ import { BannerType, bannerTypes } from './explorePageStore';
 import { IoMdColorPalette } from 'react-icons/io';
 import { TfiPaintBucket } from 'react-icons/tfi';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from '@/components/store/useUserToken';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { useNavigate, useParams } from 'react-router-dom';
 import { storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
@@ -33,10 +33,6 @@ const MemoCreateBanner = () => {
     const [isPublished, setIsPublished] = useState(false)
     const navigate = useNavigate();
     const { businessId, editBanner } = useParams();
-    const { accessToken, refreshToken } = useUserToken(s => ({
-        accessToken: s.accessToken,
-        refreshToken: s.refreshToken
-    }))
 
     const [itemName, setItemName] = useState('')
     const [img, setImg] = useState({ logo: '' });
@@ -254,11 +250,6 @@ const MemoCreateBanner = () => {
         if (imageFiles?.logo) {
             bannerImage = await storeImageAfterSave(imageFiles?.logo)
         }
-
-        const config = {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken
-        }
         const payload: IBannerPayload = {
             businessId,
             isPublished,
@@ -290,12 +281,10 @@ const MemoCreateBanner = () => {
                 param: {
                     bannerId: editBanner
                 },
-                header: config,
                 json: filteredPayload
             })
         } else {
             res = await apiRpc.settings.banner.$post({
-                header: config,
                 json: filteredPayload,
             })
         }
@@ -307,7 +296,7 @@ const MemoCreateBanner = () => {
     }
 
     return (
-        <Suspense fallback={<LoadingSpinner/>}>
+        <Suspense fallback={<LoadingSpinner />}>
             <main className='relative h-screen'>
                 <section className='fixed top-0 bg-white w-full pb-[1rem] z-10 max-w-[69rem]'>
                     <HeaderDropDown bannerTypes={bannerTypes} handleChangeColors={handleChangeColors} handleOptionClick={handleOptionClick} isDropDownVisible={isDropDownVisible} toggleDropDown={toggleDropDown} />

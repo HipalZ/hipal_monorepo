@@ -8,7 +8,6 @@ import { memo, useCallback, useState } from 'react';
 import { BiChevronsLeft, BiChevronsRight } from 'react-icons/bi';
 import HistoryCard from './historyCard';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from '@/components/store/useTokenStore';
 
 const History = () => {
 
@@ -32,27 +31,21 @@ const History = () => {
   }, []);
 
   const handleHistoryData = async () => {
-    const accessToken = useUserToken.getState().accessToken
-    const refreshToken = useUserToken.getState().refreshToken
-      const res = await apiRpc.payments[':id'].paymentAlertHistory.$get({
-        param: { id: businessId },
-        query: {
-          businessId: businessId,
-          from: timeStampStart.toString(),
-          to: timeStampEnd.toString(),
-          pageNumber: pageNumber.toString(),
-        },
-        header: {
-          x_access_token: accessToken,
-          x_refresh_token: refreshToken
-        }
-      });
-      const response = (await res.json()).data as Alert[];
-      if (res.status === 200) {
-        setHistoryData(response);
-        return response;
-      }
-      return [];
+    const res = await apiRpc.payments[':id'].paymentAlertHistory.$get({
+      param: { id: businessId },
+      query: {
+        businessId: businessId,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+        pageNumber: pageNumber.toString(),
+      },
+    });
+    const response = (await res.json()).data as Alert[];
+    if (res.status === 200) {
+      setHistoryData(response);
+      return response;
+    }
+    return [];
   };
   const defaultClass = 'text-base w-10 h-10 flex justify-center items-center bg-[#f3eeff] text-[#834cff] border rounded-full border-[#2B354D]';
 

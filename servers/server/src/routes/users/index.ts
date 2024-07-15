@@ -109,14 +109,6 @@ const usersRouter = new Hono()
     const requestData = await c.req.json();
 
     const { phone, role } = requestData;
-    if (!phone || !role) {
-      return c.json({
-        status: false,
-        message: 'Phone and role required !',
-        data: {},
-        err: true,
-      });
-    }
 
     const existingUser = await User.findOne({ phone });
     //TODO: USER ["HIPAL_CUSTOMER"]
@@ -134,37 +126,16 @@ const usersRouter = new Hono()
       await axios(options);
     } catch (e) {
       console.log(e);
-      return c.json({
-        status: false,
-        message: 'OTP not sent',
-        data: {},
-        err: true,
-      });
+      return respond(c, 'Otp not sent', true, 400, {});
     }
 
     if (existingUser) {
-      return c.json(
-        {
-          status: false,
-          message: 'User already exist',
-          data: { user: existingUser },
-          err: true,
-        },
-        409,
-      );
+      return respond(c, 'User already exist', true, 409, existingUser);
     }
 
-    const user = await User.create(requestData);
+    const user = await User.create({ ...requestData, role: roles });
 
-    return c.json(
-      {
-        status: true,
-        message: 'User created successfully',
-        data: { user: user },
-        err: false,
-      },
-      201,
-    );
+    return respond(c, 'User created successfully', false, 201, user);
   })
   .post(
     '/ownerSignUp',
@@ -448,7 +419,7 @@ const usersRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator('json', addStaffValidator),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const { name, phone, permissions, businessId, role } = requestData;
@@ -481,9 +452,6 @@ const usersRouter = new Hono()
         { new: true, upsert: true },
       );
 
-
-
-
       if (!updateUser) return respond(c, 'staff failed', true, 400, {});
       return respond(c, 'Staff created!', false, 200, updateUser);
     },
@@ -511,7 +479,7 @@ const usersRouter = new Hono()
         })
         .partial(),
     ),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const requestData = await c.req.json();
       const { staffId } = c.req.param();
@@ -526,12 +494,12 @@ const usersRouter = new Hono()
       const hashPass = password ? await hashPassword(password) : null;
 
       const updateUser = await User.findOneAndUpdate(
-        { _id: staffId, "customRole.businessId": businessId },
+        { _id: staffId, 'customRole.businessId': businessId },
         {
           $set: {
-            "customRole.$.permissions": permissions, // Update permissions in the matched customRole
-            "customRole.$.bookMark": true,
-            "customRole.$.role": role || staff?.customRole?.[0]?.role,
+            'customRole.$.permissions': permissions, // Update permissions in the matched customRole
+            'customRole.$.bookMark': true,
+            'customRole.$.role': role || staff?.customRole?.[0]?.role,
 
             phone, // Assuming these are user-level updates
             role: roles,
@@ -554,7 +522,7 @@ const usersRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-    zValidator('header', TokenValidator),
+
     zValidator(
       'param',
       z.object({
@@ -564,13 +532,8 @@ const usersRouter = new Hono()
     async (c) => {
       const { staffId } = c.req.param();
 
-      const deleteStaff = await User.findByIdAndDelete(staffId);
-
-      return c.json({
-        message: 'deleted',
-        data: { user: deleteStaff },
-        err: false,
-      });
+      const deleteStaff = await User.findByIdAndUpdate(staffId, { isDeleted: true }, { new: true });
+      return respond(c, deleteStaff ? 'Staff deleted successfully' : 'Staff not found', !deleteStaff, deleteStaff ? 200 : 404, deleteStaff || {});
     },
   )
 
@@ -635,20 +598,16 @@ const usersRouter = new Hono()
     const { businessId } = c.req.param();
     const existingUser = await User.find({
       'customRole.businessId': businessId,
+      isDeleted: false,
     });
 
-    return c.json({
-      data: existingUser,
-      status: true,
-      message: 'User fetched successfully',
-      err: false,
-    });
+    return respond(c, 'Staff fetched successfully', false, 200, existingUser);
   })
   .get(
     '/getStaff/:staffId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
-    zValidator('header', TokenValidator),
+
 
     zValidator(
       'param',
@@ -663,81 +622,84 @@ const usersRouter = new Hono()
       return respond(c, 'User fetched successfully', false, 200, existingUser);
     },
   )
-  .post('/:id/signIn', zValidator('json', UserAttrs), async (c) => {
-    const requestData = await c.req.json();
-    const { otp, role, businessId, loyaltyId, signUpBonus, name, userId, phone } = requestData;
+  .post(
+    '/:id/signIn',
+    zValidator(
+      'json',
+      z.object({
+        otp: z.string().length(4),
+        loyaltyId: z.string().optional(),
+        signUpBonus: z.number().optional(),
+        name: z.string().min(3).max(100).optional(),
+        userId: z.string().optional(),
+        phone: z.string().min(10).max(10),
+      }),
+    ),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { otp, loyaltyId, signUpBonus, name, userId, phone } = requestData;
 
-    let existingUser: UserType | null = null;
-    existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
-    if (!existingUser) {
-      return c.json(
-        {
-          message: 'User not found',
-          data: {},
-          err: true,
-        },
-        400,
-      );
-    }
-    //TODO: ROLE WHEN I ADD ROLE IN USER SCHEMA
-    try {
-      if (loyaltyId && signUpBonus && signUpBonus > 0 && role === 'HIPAL_CUSTOMER') {
-        await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+      let existingUser: UserType | null = null;
+      existingUser = await User.findByIdAndUpdate(userId, { name }, { new: true }).lean();
+      if (!existingUser) {
+        return respond(c, 'User not found', true, 404, {});
       }
-    } catch (e) {
-      console.log(e);
-    }
+      //TODO: ROLE WHEN I ADD ROLE IN USER SCHEMA
+      try {
+        if (loyaltyId && signUpBonus && signUpBonus > 0) {
+          await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+        }
+      } catch (e) {
+        return respond(c, 'Error in adding sign up bonus', true, 400, {});
+      }
 
-    const options = {
-      method: 'GET',
-      url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
-      headers: {
-        accept: 'application/json',
-        authkey: '387796AmyGlDBq63b2d75aP1',
-      },
-    };
-
-    const response = await axios(options);
-
-    if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match') {
-      return c.json({ err: true, status: false, message: 'Please enter valid Otp !!' }, 400);
-    }
-
-    if (loyaltyId && signUpBonus > 0) {
-      const userReward = await UserReward.findOne({
-        userPhone: phone,
-        loyaltyId,
-      });
-
-      const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
-      const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
-      const modifyUser = {
-        ...existingUser,
-        reward: signUpBonus,
-        count: userReward?.scanCount,
+      const options = {
+        method: 'GET',
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: 'application/json',
+          authkey: '387796AmyGlDBq63b2d75aP1',
+        },
       };
-      return c.json({
-        message: 'User logged in successfully',
-        data: {
+
+      const response = await axios(options);
+
+      if (response?.data?.message === 'Mobile no. not found' || response?.data?.message === 'OTP not match')
+        return respond(c, 'Please enter valid Otp !!', true, 400, {});
+
+      if (loyaltyId && signUpBonus > 0) {
+        const userReward = await UserReward.findOne({
+          userPhone: phone,
+          loyaltyId,
+        });
+
+        const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+        const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+        const modifyUser = {
+          ...existingUser,
+          reward: signUpBonus,
+          count: userReward?.scanCount,
+        };
+        return respond(c, 'User logged in successfully', false, 200, {
           user: modifyUser,
           accessToken,
           refreshToken,
-          rewards: userReward?.rewards || 0,
-        },
-        err: false,
+          rewards: signUpBonus,
+        });
+
+      }
+
+      const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+      const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
+
+      return respond(c, 'User logged in successfully', false, 200, {
+        user: existingUser,
+        accessToken,
+        refreshToken,
+        rewards: 0,
       });
-    }
-
-    const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
-    const refreshToken = createRefreshToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
-
-    return c.json({
-      status: true,
-      message: 'User logged in successfully',
-      data: { user: existingUser, accessToken, refreshToken, rewards: 0 },
-      err: false,
-    });
-  })
+    },
+  )
   .get(
     '/:id/loyaltyUserHistory',
     authTokenValidator,
@@ -749,7 +711,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string(),
       }),
     ),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const { userPhone, loyaltyId } = c.req.query();
 
@@ -792,7 +754,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string(),
       }),
     ),
-    zValidator('header', TokenValidator),
+
     async (c) => {
       const { userPhone, loyaltyId } = c.req.query();
 

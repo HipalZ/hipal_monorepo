@@ -22,7 +22,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@/components/store/useUserToken";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -57,8 +57,6 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
 const PaymentMemo = ({ data }: { data: IBusinessData }) => {
-    const accessToken = useUserToken.getState().accessToken
-    const refreshToken = useUserToken.getState().refreshToken
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -97,7 +95,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         setCustomTip('')
     }, [])
 
-    const handlePaymentSuccess = async(response: any) => {
+    const handlePaymentSuccess = async (response: any) => {
         setIsLoading(true)
         await sendPaymentResponse(response);
         setRazorPaySignature(response.razorpay_signature);
@@ -209,31 +207,27 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     const sendPaymentResponse = async (response: any) => {
         setIsLoading(true)
-            const res = await apiRpc.payments.validPayment.$post({
-                json: {
-                    response
-                },
-                header:{
-                    x_access_token: accessToken,
-                    x_refresh_token: refreshToken
-                }
-            })
-            const data = await res.json()
-            const orderId = data?.data as string
-            console.log('orderId', orderId)
-            const total = billValue - claimedCoinz + tips;
-            const coinsObtained = total * (loyaltySetting?.setReward / 100);
-            const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
-            const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
-            if (res.status === 200) {
-                toast.success('Payment successful')
-                setRazorPaySignature('')
-                setRazorPayOrderId('')
-                setRazorPayPaymentId('')
-                setTableName('')
-                return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${Math.round(finalReward?.finalReward)}&orderId=${orderId}`)
-            } 
-            toast.error('Payment failed')
+        const res = await apiRpc.payments.validPayment.$post({
+            json: {
+                response
+            },
+        })
+        const data = await res.json()
+        const orderId = data?.data as string
+        console.log('orderId', orderId)
+        const total = billValue - claimedCoinz + tips;
+        const coinsObtained = total * (loyaltySetting?.setReward / 100);
+        const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
+        const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
+        if (res.status === 200) {
+            toast.success('Payment successful')
+            setRazorPaySignature('')
+            setRazorPayOrderId('')
+            setRazorPayPaymentId('')
+            setTableName('')
+            return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${Math.round(finalReward?.finalReward)}&orderId=${orderId}`)
+        }
+        toast.error('Payment failed')
     }
 
     const clearTheTip = () => {
@@ -265,10 +259,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 currency: "INR",
                 tableName: tableName,
             },
-            header:{
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            }
         })
         const response = await res.json() as unknown as { data: { order_id: string }, message: string }
         if (res.status === 400) {
@@ -300,10 +290,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 tips: tips,
                 tableName: tableName,
             },
-            header:{
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken   
-            }
         })
         const response = await res.json() as unknown as { data: string }
         const orderId = response.data;
@@ -383,10 +369,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 userPhone: userDetails.phone,
                 loyaltyId: data?.loyalty?.loyaltyId
             },
-            header:{
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            }
+
         })
         const response = await res.json() as unknown as { data: UserData }
         if (res.status === 200) {
@@ -448,7 +431,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     return (
         <>
-            {isLoading ? (<PayLoader selectedMode={selectedMode}/>) : showError ? (<ErrorPayment />) : (
+            {isLoading ? (<PayLoader selectedMode={selectedMode} />) : showError ? (<ErrorPayment />) : (
                 <div>
                     <section className='z-20 w-full bg-base-100'>
                         <header className='bg-white h-[4.25rem] flex items-center space-x-8'>

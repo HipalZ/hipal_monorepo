@@ -5,8 +5,7 @@ import { HiLightBulb, HiSearch } from "react-icons/hi"
 import { useInView } from "react-intersection-observer"
 import SearchPanel from "../searchPanel"
 import QuickFilter from "@/components/atoms/quickFilter"
-
-import { ICategory } from "@/components/types/businessData"
+import type { ICategory } from "@/components/types/businessData"
 
 function Header({
 	hideBackBtn: _hideBackBtn,
@@ -28,7 +27,7 @@ function Header({
 	showOtherButtons?: boolean
 	otherButtons?: JSX.Element
 	children?: JSX.Element
-	categories?:ICategory[]
+	categories?: ICategory[]
 	primaryColor?: string
 }) {
 	const router = useRouter()
@@ -81,90 +80,90 @@ function Header({
 	useEffect(() => {
 		changeHeaderStyle()
 	}, [entry])
-	
+
 
 	return (
-			<div
-				ref={headerRef}
-				className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
-					} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
+		<div
+			ref={headerRef}
+			className={`bg-base-100 transition-all  sticky -top-1 z-50 flex flex-col -mt-12 space-y-2 text-4xl  ${data.roundedHeader ? " rounded-t-3xl  pt-6 shadow-none" : " rounded-none pt-6 shadow-lg"
+				} ${!children && !data.roundedHeader ? " pb-6 " : "pb-0"}
 				`}
-			>
-				<div className="relative flex w-full">
-					{/* Back Button */}
-					<div className={`flex w-full`}>
-						<button
-							className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${data.roundedHeader &&
-								((!state.showSearchBox && title) || !(!state.showSearchBox && title))
-								? "hidden"
-								: ""
-								}`}
-							onClick={() => {
-								if (title) {
-									state.showSearchBox ? closeSearchBox() : _onBack()
-								} else {
-									_onBack()
-								}
-							}}
-						>
-							{title ? (
-								<>
-									<input type="checkbox" className="hidden" defaultChecked={!state.showSearchBox} />
+		>
+			<div className="relative flex w-full">
+				{/* Back Button */}
+				<div className={`flex w-full`}>
+					<button
+						className={`swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full ${data.roundedHeader &&
+							((!state.showSearchBox && title) || !(!state.showSearchBox && title))
+							? "hidden"
+							: ""
+							}`}
+						onClick={() => {
+							if (title) {
+								state.showSearchBox ? closeSearchBox() : _onBack()
+							} else {
+								_onBack()
+							}
+						}}
+					>
+						{title ? (
+							<>
+								<input type="checkbox" className="hidden" defaultChecked={!state.showSearchBox} />
 
-									<FiChevronLeft className="text-2xl swap-on text-primary" />
+								<FiChevronLeft className="text-2xl swap-on text-primary" />
 
-									<FiX className="text-2xl swap-off text-primary" />
-								</>
-							) : !data.roundedHeader ? (
-								<>
-									<FiChevronLeft className="text-2xl text-primary" />
-								</>
-							) :null}
-						</button>
+								<FiX className="text-2xl swap-off text-primary" />
+							</>
+						) : !data.roundedHeader ? (
+							<>
+								<FiChevronLeft className="text-2xl text-primary" />
+							</>
+						) : null}
+					</button>
 
-						{!state.showSearchBox && title ? (
-							<div className={`my-auto prose capitalize ${data.roundedHeader && "ml-4" }`}>
-								<CustomTag>
-									{typeof title === "function"
-										? title({
-											isRounded: data.roundedHeader,
-										})
-										: title}
-								</CustomTag>
-							</div>
-						) : (
-							<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []}/>
-						)}
-					</div>
-
-					{!state.showSearchBox && otherButtons && otherButtons}
-					{showOtherButtons && (
-						<div className="flex flex-row ml-auto ">
-							{!state.showSearchBox && (
-								<div className="flex items-center justify-around pl-2 ml-auto">
-									<div className="mt-1 mr-2">
-										<QuickFilter />
-									</div>
-									<button
-										className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full"
-										onClick={openSearchBox}
-									>
-										<HiSearch size={30} className="text-lg text-primary" />
-									</button>
-								</div>
-							)}
-
-							{/* Filter */}
-							<div className="hidden ml-2 ">
-								<button className="btn btn-ghost bg-primary !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full">
-									<HiLightBulb className="text-lg text-primary-content" />
-								</button>
-							</div>
+					{!state.showSearchBox && title ? (
+						<div className={`my-auto prose capitalize ${data.roundedHeader && "ml-4"}`}>
+							<CustomTag>
+								{typeof title === "function"
+									? title({
+										isRounded: data.roundedHeader,
+									})
+									: title}
+							</CustomTag>
 						</div>
+					) : (
+						<SearchPanel closeSearchBox={closeSearchBox} categories={categories || []} />
 					)}
 				</div>
-				{children && <div>{children}</div>}
+
+				{!state.showSearchBox && otherButtons && otherButtons}
+				{showOtherButtons && (
+					<div className="flex flex-row ml-auto ">
+						{!state.showSearchBox && (
+							<div className="flex items-center justify-around pl-2 ml-auto">
+								<div className="mt-1 mr-2">
+									<QuickFilter />
+								</div>
+								<button
+									className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full"
+									onClick={openSearchBox}
+								>
+									<HiSearch size={30} className="text-lg text-primary" />
+								</button>
+							</div>
+						)}
+
+						{/* Filter */}
+						<div className="hidden ml-2 ">
+							<button className="btn btn-ghost bg-primary !h-8 !min-h-8 aspect-square !px-1 my-auto  rounded-full">
+								<HiLightBulb className="text-lg text-primary-content" />
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
+			{children && <div>{children}</div>}
+		</div>
 	)
 
 	function changeHeaderStyle() {

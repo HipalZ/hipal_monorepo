@@ -5,7 +5,7 @@ import { basicInfos, combineAllDishes } from '@/components/templates/explorePage
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import type { IBizInfo, IBizPayload, IDish } from '@/components/types/businessData';
-import { useUserToken } from '@/components/store/useUserToken';
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { useExploreStore } from '@/components/store/useExploreStore';
 import { filterPayload, storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
@@ -45,7 +45,7 @@ const MemoExplorePage = () => {
         accessToken: s.accessToken,
         refreshToken: s.refreshToken
     }))
-    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setBanners,setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
+    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setBanners, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
         (state) => ({
             bizInfo: state.bizInfo,
             setBizInfo: state.setBizInfo,
@@ -104,10 +104,7 @@ const MemoExplorePage = () => {
 
     const handleUniquelyYours = async (selectedDishes: IDish[]) => {
         apiRpc.dishes.uniquelyYours.$post({
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            }, json: {
+            json: {
                 dishArray: selectedDishes.map(dish => {
                     return {
                         dishId: dish._id,
@@ -236,10 +233,6 @@ const MemoExplorePage = () => {
             param: {
                 businessId
             },
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            }
         })
     }
 
@@ -270,11 +263,6 @@ const MemoExplorePage = () => {
 
         const filteredPayload = filterPayload(payload);
 
-        const config = {
-            x_access_token: accessToken,
-            x_refresh_token: refreshToken
-        }
-
         // Conditionally add keys if they have a length greater than 0
 
         let res: {
@@ -282,14 +270,12 @@ const MemoExplorePage = () => {
         };
         if (bizInfo?._id === '') {
             res = await apiRpc.businesses.outletInfo.$post({
-                header: config,
                 json: filteredPayload
             });
         }
 
         if (bizInfo?._id !== '' || res && res.status === 409) {
             const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
-                header: config,
                 json: filteredPayload,
                 param: {
                     businessId: businessId
@@ -332,35 +318,27 @@ const MemoExplorePage = () => {
 
     const fetchUniquelyYours = async () => {
         const res = await apiRpc.dishes.uniquelyDishes[':businessId'].$get({
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            },
             param: {
                 businessId
             }
         });
         const response = await res.json();
-        if(res.status===200){
+        if (res.status === 200) {
             uniquelyYoursRef.current = true
             setUniquelyDishes(response?.data);
         }
         return response?.data;
     }
 
-    const fetchBanners = async()=>{
+    const fetchBanners = async () => {
         const res = await apiRpc.settings.banners[':businessId'].$get({
-            header: {
-                x_access_token: accessToken,
-                x_refresh_token: refreshToken
-            },
             param: {
                 businessId
             }
         });
         const response = await res.json();
-        if(res.status===200){
-            bannersRef.current=true
+        if (res.status === 200) {
+            bannersRef.current = true
             setBanners(response?.data);
         }
         return response?.data;
@@ -393,7 +371,7 @@ const MemoExplorePage = () => {
 
     useQuery({
         queryKey: ['categories', businessId, uniquelyYoursRef.current],
-        queryFn:fetchUniquelyYours,
+        queryFn: fetchUniquelyYours,
         enabled: !!businessId && !uniquelyYoursRef.current,
     })
 

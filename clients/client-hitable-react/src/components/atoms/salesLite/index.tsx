@@ -9,7 +9,6 @@ import { CiGlobe } from 'react-icons/ci';
 import DateRangePickerMemo from '../dateRangePicker';
 import './index.css';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from '@/components/store/useTokenStore';
 
 const SalesLite = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
@@ -26,8 +25,6 @@ const SalesLite = () => {
     timeStampEnd: s.timeStampEnd,
   }));
   const handleSales = async () => {
-    const accessToken = useUserToken.getState().accessToken
-    const refreshToken = useUserToken.getState().refreshToken
     setLoading(true);
     const res = await apiRpc.payments[':id'].salesDashboard.$get({
       param: { id: businessId },
@@ -36,10 +33,6 @@ const SalesLite = () => {
         from: timeStampStart.toString(),
         to: timeStampEnd.toString(),
       },
-      header: {
-        x_access_token: accessToken,
-        x_refresh_token: refreshToken
-      }
     });
     const response = (await res.json()).data as ISalesLite;
     if (res.status === 200) {

@@ -3,7 +3,7 @@ import { Dish, UniquelyYours } from '@hi/db-models';
 import { paramsSchema, TokenValidator, uniquelyYoursSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import { string, z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { respond } from '../../utils/response';
@@ -12,7 +12,7 @@ const dishesRouter = new Hono()
   .get(
     '/',
 
-    zValidator('query', paramsSchema),
+    zValidator('query', z.object({ businessId: z.string(), UniquelyYours: z.string().optional() })),
     async (c) => {
       const { businessId, UniquelyYours } = c.req.query();
       if (UniquelyYours) {
@@ -38,7 +38,6 @@ const dishesRouter = new Hono()
       }),
     ),
 
-    zValidator('header', TokenValidator),
     async (c) => {
       const { dishArray } = await c.req.json();
       const businessId = dishArray[0]?.businessId;
@@ -56,7 +55,6 @@ const dishesRouter = new Hono()
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ businessId: z.string() })),
 
-    zValidator('header', TokenValidator),
     async (c) => {
       const { businessId } = c.req.param();
 
@@ -65,14 +63,20 @@ const dishesRouter = new Hono()
       return respond(c, 'Dishes fetched successfully', false, 200, dishes);
     },
   )
-  .get('/:id', zValidator('param', paramsSchema), async (c) => {
-    const { id } = c.req.param();
-    const existingDish = await Dish.findById(id).populate(['categories', 'extras', 'filters.dishes']);
-    return c.json({
-      data: existingDish,
-      status: 200,
-      err: false,
-    });
-  });
+  .get(
+    '/:id',
+    zValidator(
+      'param',
+      z.object({
+        id: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { id } = c.req.param();
+      const existingDish = await Dish.findById(id).populate(['categories', 'extras', 'filters.dishes']);
+      if (!existingDish) return respond(c, 'Dish not found', true, 404, {});
+      return respond(c, 'Dish fetched successfully', false, 200, existingDish);
+    },
+  );
 
 export default dishesRouter;

@@ -1,4 +1,3 @@
-// store/useUserToken.ts
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -22,7 +21,7 @@ export const useUserToken = create(
       },
     }),
     {
-      name: "HiBiz-token-data",
+      name: "common-tokens",
       storage: createJSONStorage(() => localStorage),
     },
   ),
