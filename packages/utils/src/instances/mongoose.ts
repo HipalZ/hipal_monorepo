@@ -1,8 +1,10 @@
 import mongoose, { ConnectOptions } from 'mongoose';
+// import { BASE_URL } from '../base_url';
 
 const db_name = Bun.env.MONGO_DB;
 const db_uri = Bun.env.MONGO_URI || `mongodb://localhost:27017/${db_name}`;
-console.log('db_uri:', db_uri);
+
+
 const options: ConnectOptions = {
   dbName: db_name,
 };
