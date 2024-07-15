@@ -1,10 +1,10 @@
-import { type ChangeEvent, type FormEvent, memo, startTransition, useCallback, useRef, useState, Suspense, lazy } from 'react';
+import { type ChangeEvent, type FormEvent, memo, startTransition, useCallback, useRef, useState, Suspense, lazy, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IoMdArrowUp } from "react-icons/io";
 import { basicInfos, combineAllDishes, type IBizPayload } from '@/components/templates/explorePage/explorePageStore';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
-import type { IBizInfo, ICategory, IDish } from '@/components/types/businessData';
+import type { IBizInfo, IDish } from '@/components/types/businessData';
 import { useUserToken } from '@/components/store/useUserToken';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import { filterPayload, storeImageAfterSave } from '@/components/utils/helper';
@@ -16,6 +16,7 @@ import { TbBrandTelegram } from 'react-icons/tb';
 import { RiDiscordLine } from 'react-icons/ri';
 import { cropImage } from '@/components/cropper';
 import PopUp from "@/components/atom/popUp";
+import BizInformation from '@/components/templates/explorePage/businessInformation';
 
 // Lazy loading components
 const Header = lazy(() => import('@/components/molecules/header'));
@@ -41,7 +42,7 @@ const MemoExplorePage = () => {
         accessToken: s.accessToken,
         refreshToken: s.refreshToken
     }))
-    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes } = useExploreStore(
+    const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
         (state) => ({
             bizInfo: state.bizInfo,
             setBizInfo: state.setBizInfo,
@@ -50,10 +51,13 @@ const MemoExplorePage = () => {
             selectedDishes: state.selectedDishes,
             setSelectedDishes: state.setSelectedDishes,
             uniquelyDishes: state.uniquelyDishes,
-            setUniquelyDishes: state.setUniquelyDishes
+            setUniquelyDishes: state.setUniquelyDishes,
+            clearOriginalDishes: state.clearOriginalDishes
         }),
     );
     const cropperRef = useRef(null);
+    const hasFetchedCategoriesRef = useRef(false);
+    const [toggleBizInfo, setToggleBizInfo] = useState(false);
     const [socialMediaLinks, setSocialMediaLinks] = useState([
         { _id: 1, icon: 'instagram', logo: <BsInstagram size={30} />, link: '' },
         { _id: 2, icon: 'facebook', logo: <CiFacebook size={36} />, link: '' },
@@ -154,17 +158,21 @@ const MemoExplorePage = () => {
         }
     };
 
+
+
     const handleBizInfo = useCallback(() => {
-        startTransition(() => {
-            navigate(`/app/business/${businessId}/bizInfo`)
-        })
-    }, [businessId]);
+        setToggleBizInfo(!toggleBizInfo);
+    }, [toggleBizInfo]);
 
     const handleNavigate = useCallback(() => {
-        startTransition(() => {
-            navigate(`/app/business/${businessId}/hisite`)
-        })
-    }, [businessId]);
+        setToggleBizInfo(!toggleBizInfo);
+        if (!toggleBizInfo) {
+            startTransition(() => {
+                clearOriginalDishes()
+                navigate(`/app/business/${businessId}/hisite`)
+            })
+        }
+    }, [businessId, toggleBizInfo, clearOriginalDishes, originalDishes]);
 
     const handleNavigation = useCallback(() => {
         startTransition(() => {
@@ -217,7 +225,7 @@ const MemoExplorePage = () => {
         });
         const data = await categoryResponse.json();
         const categories = data?.data;
-        const allDishes = combineAllDishes(categories);
+        const allDishes = await combineAllDishes(categories);
         return allDishes;
     };
 
@@ -257,7 +265,7 @@ const MemoExplorePage = () => {
             gst: bizInfo?.gst,
             footerDescription: bizInfo?.footerDescription,
         };
-        
+
         const filteredPayload = filterPayload(payload);
 
         const config = {
@@ -300,7 +308,7 @@ const MemoExplorePage = () => {
             setBizInfo(response?.data as IBizInfo);
             setSocialMediaLinks((prevLinks) =>
                 prevLinks.map(link => {
-                    const matchingLink = response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
+                    const matchingLink = response?.data?.socialMediaLinks && response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
                     return matchingLink ? { ...link, link: matchingLink.link } : link;
                 })
             );
@@ -309,17 +317,20 @@ const MemoExplorePage = () => {
         enabled: !!businessId,
     });
 
+    const fetchCategories = useCallback(async () => {
+        if (originalDishes && originalDishes.length > 0) {
+            return originalDishes;
+        }
+        const res = await getAllCategoryData(businessId as string);
+        setDishes(res);
+        setOriginalDishes(res);
+    }, [businessId, originalDishes])
 
-    useQuery<ICategory[]>({
-        queryKey: ['categories', businessId],
-        queryFn: async () => {
-            const res = await getAllCategoryData(businessId as string);
-            setDishes(res);
-            setOriginalDishes(res);
-            return res;
-        },
-        enabled: !!businessId,
-    });
+    useEffect(() => {
+        if (originalDishes.length > 0 || hasFetchedCategoriesRef.current) return;
+        fetchCategories();
+        hasFetchedCategoriesRef.current = true;
+    }, [businessId]);
 
     const handleUploads = () => {
         setUploadsPopUp(!uploadsPopUp)
@@ -332,8 +343,8 @@ const MemoExplorePage = () => {
     return (
         <Suspense fallback={<div>Loading....</div>}>
             <main>
-                <Header onBack={handleNavigate} title='Explore Page' rightButton={<RightButton />} isIconBusinessShow={false} />
-                <form onSubmit={handleSaveExplorePage} className='px-4'>
+                <Header onBack={handleNavigate} title={`${toggleBizInfo ? 'Business Info' : 'Explore Page'} `} rightButton={<RightButton />} isIconBusinessShow={false} />
+                {toggleBizInfo ? <BizInformation /> : <form onSubmit={handleSaveExplorePage} className='px-4'>
                     <SubHeader text='Business Explore' />
                     <section onClick={handleUploads} className='p-4 bg-white rounded-2xl'>
                         <h1>Click and upload banners and business name here</h1>
@@ -406,7 +417,7 @@ const MemoExplorePage = () => {
                     <br />
                     <br />
                     <br />
-                </form>
+                </form>}
             </main>
         </Suspense>
 

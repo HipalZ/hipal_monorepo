@@ -21,7 +21,7 @@ const MemoFooterSection = (props:IFooterSection) => {
                     maxLength={200} 
                     value={bizInfo?.footerDescription} 
                     onChange={handleFooterComment} 
-                    className='w-full resize-none h-22 rounded-2xl' placeholder='Add Footer comment' />
+                    className='w-full resize-none h-36 rounded-2xl' placeholder='Add Footer comment' />
                 <br /><br />
                 <Paragraph text="Optional Sections" />
                 <br />

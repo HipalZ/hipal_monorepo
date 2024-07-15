@@ -1,5 +1,4 @@
-import Header from '@/components/molecules/header';
-import { type ChangeEvent, memo, useCallback, useState } from 'react';
+import { type ChangeEvent, memo, useCallback, useEffect, useState } from 'react';
 import { FaGlassMartiniAlt } from 'react-icons/fa';
 import { MdOutlineSmokingRooms, MdOutlineStroller, MdOutlineWatchLater } from 'react-icons/md';
 import { IoBeerOutline, IoWifiOutline } from 'react-icons/io5';
@@ -52,12 +51,25 @@ const MemoBizInfo = () => {
     }));
 
     // Temporary state variables
-    const [tempDescription, setTempDescription] = useState(bizInfo.description);
-    const [tempPhone, setTempPhone] = useState(bizInfo.phone);
-    const [tempLocation, setTempLocation] = useState(bizInfo.location);
-    const [tempAvgPricingForTwo, setTempAvgPricingForTwo] = useState(bizInfo.avgPricingForTwo);
-    const [tempTags, setTempTags] = useState([...bizInfo.tags]);
-    const [tempAmenities, setTempAmenities] = useState([...bizInfo.amenities]);
+    const [tempDescription, setTempDescription] = useState('');
+    const [tempPhone, setTempPhone] = useState('');
+    const [tempLocation, setTempLocation] = useState('');
+    const [tempAvgPricingForTwo, setTempAvgPricingForTwo] = useState('');
+    const [tempTags, setTempTags] = useState(['', '', '']);
+    const [tempAmenities, setTempAmenities] = useState([]);
+
+    useEffect(() => {
+        setTempDescription(bizInfo.description);
+        setTempPhone(bizInfo.phone);
+        setTempLocation(bizInfo.location);
+        setTempAvgPricingForTwo(bizInfo.avgPricingForTwo);
+        if(bizInfo?.tags && bizInfo?.tags.length>0){
+            setTempTags([...bizInfo.tags]);
+        }
+        if(bizInfo?.amenities && bizInfo?.amenities.length>0){
+            setTempAmenities([...bizInfo.amenities]);
+        }
+    }, [bizInfo]);
 
     const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         setTempDescription(e.target.value);
@@ -111,7 +123,7 @@ const MemoBizInfo = () => {
 
     const handleFixedTimeChange = useCallback((key: 'openTime' | 'closeTime', value: string) => {
         setFixedTime((prev) => ({ ...prev, [key]: value }));
-    },[]);
+    }, []);
 
     const handleSaveChanges = () => {
         setBizInfo({
@@ -120,78 +132,64 @@ const MemoBizInfo = () => {
             phone: tempPhone,
             location: tempLocation,
             avgPricingForTwo: tempAvgPricingForTwo,
-            tags: tempTags,
+            tags: tempTags.filter(tag => tag.trim() !== ''),
             amenities: tempAmenities,
             fixOpenTime: fixedTime?.openTime,
             fixCloseTime: fixedTime?.closeTime,
-            customTimings: customTimings
+            customTiming: customTimings
         });
-        toast.success('Changes saved locally. Click "Save" to submit.');
+        toast.success('Timings saved');
+        handleTimings();
     };
 
     const handleCreateInfo = async () => {
         if (!businessId) return;
         const payload: IBizPayload = {
             businessId,
-            isCustomTime: showCustomTime
+            isCustomTime: showCustomTime,
+            description: tempDescription,
+            phone: tempPhone,
+            location: tempLocation,
+            avgPricingForTwo: tempAvgPricingForTwo,
+            tags: tempTags.filter(tag => tag.trim() !== ''),
+            amenities: tempAmenities,
+            fixOpenTime: fixedTime?.openTime,
+            fixCloseTime: fixedTime?.closeTime,
+            customTiming: customTimings.filter(timing => timing.openTime || timing.closeTime)
         };
-        if (bizInfo?.description && bizInfo?.description.length > 0) {
-            payload.description = bizInfo.description;
-        }
-        if (bizInfo?.phone && bizInfo?.phone.length > 0) {
-            payload.phone = bizInfo.phone;
-        }
-        if (bizInfo?.tags && bizInfo?.tags.length > 0) {
-            payload.tags = bizInfo.tags.filter(tag => tag && tag !== '');
-        }
-        if (bizInfo?.location && bizInfo?.location.length > 0) {
-            payload.location = bizInfo.location;
-        }
-        if (bizInfo?.amenities && bizInfo?.amenities.length > 0) {
-            payload.amenities = bizInfo.amenities;
-        }
-        if (bizInfo?.avgPricingForTwo && bizInfo?.avgPricingForTwo.length > 0) {
-            payload.avgPricingForTwo = bizInfo.avgPricingForTwo;
-        }
-        if (fixedTime?.openTime && fixedTime?.closeTime) {
-            payload.fixOpenTime = fixedTime?.openTime;
-            payload.fixCloseTime = fixedTime?.closeTime;
-        }
-        if (showCustomTime && customTimings.some(timing => timing.openTime || timing.closeTime)) {
-            payload.customTiming = customTimings.filter(timing => timing.openTime || timing.closeTime);
-        }
+        const filteredPayload = Object.fromEntries(
+            Object.entries(payload).filter(([_, value]) => value !== null && value !== '' && value !== undefined)
+        );
+
         const config = {
             x_access_token: accessToken,
             x_refresh_token: refreshToken
         };
-        let res:{
-            status:number
-        };
-        if(bizInfo?._id ===''){
+        let res: { status: number };
+        if (bizInfo?._id === '') {
             res = await apiRpc.businesses.outletInfo.$post({
                 header: config,
-                json: payload
+                json: filteredPayload
             });
         }
 
         if (bizInfo?._id !== '' || res && res.status === 409) {
             const outletInfo = await apiRpc.businesses.outletInfo.update[':businessId'].$put({
-                    header: config,
-                    json: payload,
-                    param:{
-                        businessId: businessId
-                    },
-            })
+                header: config,
+                json: filteredPayload,
+                param: {
+                    businessId: businessId
+                },
+            });
             if (outletInfo.status === 200) {
-                toast.success('Data saved successfully')
+                toast.success('Data saved successfully');
             }
         }
     };
 
     return (
-        <main className='mb-[7rem]'>
-            <Header isIconBusinessShow={false} title='Business Info' />
-            <section className='mx-6'>
+        <main className='px-4'>
+            <section>
                 <SubHeader text="Basic Information" />
                 <article className='p-4 bg-white rounded-2xl'>
                     <textarea
@@ -204,7 +202,7 @@ const MemoBizInfo = () => {
                     />
                     &nbsp;
                     <Paragraph text="Describe Your business with 3 words" />
-                    {tempTags ? tempTags.map((tag, index) => (
+                    {tempTags.map((tag, index) => (
                         <section key={index.toString()} className='flex items-center my-4 space-x-4'>
                             <h1>{index + 1}</h1>
                             <input
@@ -217,10 +215,10 @@ const MemoBizInfo = () => {
                                 onChange={(e) => handleTagChange(e, index)}
                             />
                         </section>
-                    )) : null}
+                    ))}
                 </article>
             </section>
-            <section className='m-6'>
+            <section className='my-6'>
                 <SubHeader text="Contact" />
                 <article className='p-4 space-y-4 bg-white rounded-2xl'>
                     <input
@@ -243,11 +241,11 @@ const MemoBizInfo = () => {
                     />
                 </article>
             </section>
-            <article className='mx-6'>
+            <article>
                 <SubHeader text='Info' />
             </article>
-            <section>
-                <article className='p-4 m-4 bg-white rounded-2xl'>
+            <section className='mb-[5rem]'>
+                <article className='p-4 bg-white rounded-2xl'>
                     <section className='p-4 border border-1 rounded-2xl'>
                         <input
                             value={tempAvgPricingForTwo}
@@ -257,7 +255,7 @@ const MemoBizInfo = () => {
                             className='w-full mb-2 outline-none rounded-2xl'
                             placeholder='Add Average Pricing For Two'
                         />
-                        <SubHeader text="Add Amenities" />
+                        {amenitiesArr && amenitiesArr.length>0 ? <SubHeader text="Add Amenities" /> :null}
                         <section className='flex flex-wrap gap-4'>
                             {amenitiesArr ? amenitiesArr.map((amenity) => {
                                 if (tempAmenities === undefined) return null;
@@ -284,14 +282,13 @@ const MemoBizInfo = () => {
                         </article>
                     </section>
                     {(fixedTime?.openTime || fixedTime?.closeTime) && (
-                            <div className="w-96 px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full">
-                                Business time from {convertTo12HourFormat(fixedTime?.openTime)} to{" "}
-                                {convertTo12HourFormat(fixedTime?.closeTime)}
-                            </div>
-                        )}
+                        <div className="w-96 px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full">
+                            Business time from {convertTo12HourFormat(fixedTime?.openTime)} to{" "}
+                            {convertTo12HourFormat(fixedTime?.closeTime)}
+                        </div>
+                    )}
                 </article>
             </section>
-
             <BottomButton text='Save' onClick={handleCreateInfo} />
             <br />
             <PopUp show={openTimings} onClose={handleTimings}>
@@ -339,20 +336,20 @@ const MemoBizInfo = () => {
                     {showCustomTime && <section className='my-4 bg-white rounded-2xl'>
                         {customTimings.map((timing, index) => (
                             <article key={`timing${index}`} className='flex items-center justify-between p-2 my-2'>
-                                <h1 className='w-[6rem]'>{timing.day}</h1>
+                                <h1 className='w-[3rem]'>{timing.day}</h1>
                                 <input
                                     type="time"
                                     id={`customTimingOpen${index}`}
                                     value={timing.openTime}
                                     onChange={(e) => handleCustomTimingChange(index, 'openTime', e.target.value)}
-                                    className="rounded-full w-[7rem]"
+                                    className="rounded-full w-[8rem]"
                                 />
                                 <input
                                     type="time"
                                     id={`customTimingClose${index}`}
                                     value={timing.closeTime}
                                     onChange={(e) => handleCustomTimingChange(index, 'closeTime', e.target.value)}
-                                    className="rounded-full w-[7rem]"
+                                    className="rounded-full w-[8rem]"
                                 />
                             </article>
                         ))}
@@ -364,5 +361,5 @@ const MemoBizInfo = () => {
     );
 };
 
-const BizInfo = memo(MemoBizInfo);
-export default BizInfo;
+const BizInformation = memo(MemoBizInfo);
+export default BizInformation;

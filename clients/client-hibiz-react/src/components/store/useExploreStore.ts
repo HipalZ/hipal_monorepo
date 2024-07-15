@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { IBanner, IBizInfo, IDish } from '../types/businessData';
 
 interface IExploreStore {
+  clearOriginalDishes: () => void;
   dishes: IDish[];
   setDishes: (dishes: IDish[]) => void;
   bizInfo: IBizInfo;
@@ -43,7 +44,7 @@ export const useExploreStore = create(
         footerDescription: '',
         fixOpenTime: '',
         fixCloseTime: '',
-        customTimings: '',
+        customTiming:[],
         isCustomTime: false,
       },
       setBizInfo: (bizInfo) => set(() => ({ bizInfo })),
@@ -77,6 +78,7 @@ export const useExploreStore = create(
         paragraph: ''
       },
       setBannerObj: (banner: IBanner) => set(() => ({ bannerObj: banner })),
+      clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
     }),
     {
       name: 'explore-store',

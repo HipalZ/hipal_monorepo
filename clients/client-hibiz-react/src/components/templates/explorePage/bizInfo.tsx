@@ -19,16 +19,14 @@ const MemoBizInfo = (props: PropsBasicInfo) => {
     });
 
     useEffect(() => {
-        if(!bizInfo)return
-        // if (bizInfo) {
-        //     setBizInfoFilled({
-        //         description: !!bizInfo.description,
-        //         phone: !!bizInfo.phone,
-        //         amenities: !!bizInfo.amenities.length,
-        //         tags: !!bizInfo.tags.length,
-        //     })
-
-        // }
+        if (bizInfo) {
+            setBizInfoFilled({
+                description: !!bizInfo.description,
+                phone: !!bizInfo.phone,
+                amenities: Array.isArray(bizInfo.amenities) && !!bizInfo.amenities.length,
+                tags: Array.isArray(bizInfo.tags) && !!bizInfo.tags.length,
+            })
+        }
     }, [bizInfo])
 
     return (

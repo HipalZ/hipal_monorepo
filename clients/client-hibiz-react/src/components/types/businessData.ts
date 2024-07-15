@@ -248,7 +248,7 @@ export interface IBizInfo {
   footerDescription: string;
   fixOpenTime: string;
   fixCloseTime: string;
-  customTimings: string;
+  customTiming: Array<Record<string,string>>;
   isCustomTime: boolean;
 }
 
