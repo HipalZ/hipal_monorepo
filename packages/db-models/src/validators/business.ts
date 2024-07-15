@@ -17,7 +17,7 @@ export const BusinessSchema = z.object({
   businessType: z.enum(BusinessEnumType),
   customLink: z.string().min(3).max(30),
   staffIds: z.array(ObjectIdSchema),
-  isActive: z.boolean().optional().default(false),
+  status: z.boolean().optional().default(false),
   //TODO : CREATE NEW LIASENCE
   exploreLayout: z.enum(ExploreLayout).optional(),
   menuLayout: z.enum(MenuLayout).optional(),
@@ -34,7 +34,7 @@ export const BranchSchema = z.object({
   businessType: z.enum(BusinessEnumType).optional(),
   customLink: z.string().min(3).max(30),
   staffIds: z.array(ObjectIdSchema),
-  isActive: z.boolean().optional().default(false),
+  status: z.boolean().optional().default(false),
   multiple: z.boolean().optional().default(false),
   menu: z.boolean().optional().default(false),
   themes: z.boolean().optional().default(false),

@@ -34,7 +34,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       ref: 'User',
     },
 
-    isActive: {
+    status: {
       type: Boolean,
       required: false,
       default: false,
