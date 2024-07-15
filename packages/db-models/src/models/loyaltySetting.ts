@@ -8,6 +8,7 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       type: ObjectId,
       ref: 'Business',
       required: true,
+      unique: true,
     },
     setCashBackPercentage: {
       type: Number,
