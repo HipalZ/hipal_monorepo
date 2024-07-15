@@ -1,10 +1,12 @@
-function LoadingSpinner() {
+import { memo } from "react";
+
+function MemoLoadingSpinner() {
 	return (
 		<div role="status" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 opacity-50">
-			<div className="flex flex-col bg-transparent text-center">
+			<div className="flex flex-col text-center bg-transparent">
 				<svg
 					aria-hidden="true"
-					className="h-12 w-12 animate-spin fill-blue-900 text-gray-200 dark:text-gray-600"
+					className="w-12 h-12 text-gray-200 animate-spin fill-blue-900 dark:text-gray-600"
 					viewBox="0 0 100 101"
 					fill="none"
 					xmlns="http://www.w3.org/2000/svg"
@@ -23,4 +25,5 @@ function LoadingSpinner() {
 		</div>
 	);
 }
+const LoadingSpinner = memo(MemoLoadingSpinner)
 export default LoadingSpinner;
