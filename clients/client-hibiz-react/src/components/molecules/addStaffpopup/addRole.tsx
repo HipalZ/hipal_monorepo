@@ -9,7 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const MultipleBottomButtons = lazy(
   () => import("@/components/atom/multipleButtons"),
@@ -30,10 +29,7 @@ const AddRole = () => {
     const role = event.target.value as role
     setSelectedRole(role);
   };
-  const { accessToken, refreshToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-    refreshToken: s.refreshToken,
-  }));
+ 
   const businessData = useBusinessData((s) => s.businessData);
 
   const saveRole = () => {
@@ -42,7 +38,7 @@ const AddRole = () => {
       return;
     }
     if (selectedRole) {
-      setPageToggle("ADD_STAFF")
+      setPageToggle(isEditing?"EDIT_STAFF":"ADD_STAFF")
     }
   };
 
@@ -53,6 +49,7 @@ const AddRole = () => {
       },
     });
     const response = (await res.json()).data;
+    console.log("roles", response);
     if (res.status === 400 || res.status === 403 || res.status === 409) {
       toast.error("roles not found")
     }
@@ -71,9 +68,9 @@ const AddRole = () => {
   }, [pageToggle, setPageToggle]);
 
   useQuery({
-    queryKey: ["roles", accessToken, refreshToken, businessData?._id],
+    queryKey: ["roles", businessData?._id],
     queryFn: getAllRoles,
-    enabled: !!businessData?._id && !!accessToken && !!refreshToken,
+    enabled: !!businessData?._id
   });
 
   return (
@@ -98,9 +95,11 @@ const AddRole = () => {
                   type="radio"
                   name="role"
                   value={item.name}
+                  defaultChecked={selectedRole === item.name}
+                  defaultValue={selectedRole}
                   checked={selectedRole === item.name}
                   onChange={handleRoleChange}
-                  className="mr-2"
+                  className="mr-2 radio-black radio"
                 />
                 <span className="font-bold">
                   {item.name.split("_").join(" ")}

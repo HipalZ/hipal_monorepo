@@ -1,11 +1,11 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
-import { type FormEvent, memo, useCallback, useState, type ChangeEvent } from "react";
+import { type FormEvent, memo, useCallback, useState, type ChangeEvent, startTransition } from "react";
 import { debounce } from "lodash";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import PopUp from "@/components/atom/popUp";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const parentBranchCopy = [
   {
@@ -80,6 +80,8 @@ const AddName = () => {
   const addBusinessName = (e: ChangeEvent<HTMLInputElement>) => {
     setBusinessName(e.target.value);
   };
+
+  const navigate = useNavigate();
 
   const debouncedApiCall = useCallback(
     debounce(async (link) => {
@@ -169,17 +171,9 @@ const AddName = () => {
     });
 
     if (res.status === 200 || res.status === 201) {
-      console.log({
-        name: businessName,
-        customLink: customLink,
-        staffIds: [user._id],
-        businessType: businessType || "FOOD",
-        parentOutLetId: branchName,
-        menu,
-        themes,
-        rewards,
-        paymentAndBusinessSettings,
-      });
+      closeCopyModal();
+      toast.success("Branch created successfully");
+      setStep(step + 1);
     }
   }
 
@@ -262,36 +256,48 @@ const AddName = () => {
       </button>
       {openCopyModal && (
         <PopUp show={openCopyModal} onClose={closeCopyModal}>
-          {parentBranchCopy.map((ele) => (
-            <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6 border rounded-2xl">
-              <article className="flex items-center p-4">
-                <input
-                  type="checkbox"
-                  name={ele.title}
-                  checked={
-                    ele.title === "menu" ? menu :
-                      ele.title === "themes" ? themes :
-                        ele.title === "rewards" ? rewards :
-                          ele.title === "paymentAndBusinessSettings" ? paymentAndBusinessSettings :
-                            false
-                  }
-                  onChange={handleCheckboxChange}
-                  className="mr-2"
-                />
-                <h3 className="text-lg font-semibold">{ele.title}</h3>
-              </article>
-              <article className="p-4" style={{ background: "#E4E0F9" }}>
-                <p className="text-sm">{ele.description}</p>
-              </article>
-            </section>
-          ))}
-          <button
-            type="button"
-            className="bottom_btn"
-            onClick={createBranch}
-          >
-            Next
-          </button>
+          <section className="max-h-[85dvh] overflow-auto">
+            <h2 className="mt-4 ml-4 text-2xl ">
+              Copy from parent branch
+            </h2>
+            <h2 className="mt-4 ml-4 opacity-80">
+              You may select the following points to copy from the parent outlet
+            </h2>
+            {parentBranchCopy.map((ele) => (
+              <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6 border rounded-2xl">
+                <article className="flex items-center p-4 ">
+                  <input
+                    type="checkbox"
+
+                    name={ele.title}
+                    checked={
+                      ele.title === "menu" ? menu :
+                        ele.title === "themes" ? themes :
+                          ele.title === "rewards" ? rewards :
+                            ele.title === "paymentAndBusinessSettings" ? paymentAndBusinessSettings :
+                              false
+                    }
+                    onChange={handleCheckboxChange}
+                    className="w-8 h-8 mr-2 checkbox-black checkbox checkbox-xs"
+                  />
+                  <h3 className="text-lg font-semibold">{ele.title}</h3>
+                </article>
+                <article className="p-4 rounded-b-2xl" style={{ background: "#E4E0F9" }}>
+                  <p className="text-sm">{ele.description}</p>
+                </article>
+              </section>
+
+            ))}
+            <br />
+            <br />
+            <button
+              type="button"
+              className="bottom_btn"
+              onClick={createBranch}
+            >
+              Next
+            </button>
+          </section>
         </PopUp>
       )}
     </form>

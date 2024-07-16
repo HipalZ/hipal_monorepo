@@ -21,7 +21,7 @@ export const useUserToken = create(
       },
     }),
     {
-      name: "common-tokens",
+      name: "auth",
       storage: createJSONStorage(() => localStorage),
     },
   ),

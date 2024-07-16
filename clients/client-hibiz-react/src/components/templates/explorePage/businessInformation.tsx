@@ -43,7 +43,6 @@ const MemoBizInfo = () => {
         openTime: '',
         closeTime: ''
     });
-
     const { bizInfo, setBizInfo } = useExploreStore((s) => ({
         bizInfo: s.bizInfo,
         setBizInfo: s.setBizInfo

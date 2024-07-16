@@ -1,6 +1,5 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { apiRpc } from "@hi/common";
 import { memo, useCallback, useEffect } from "react";
@@ -32,11 +31,6 @@ const OutletType = () => {
     setSelectedBranch: s.setSelectedBranch,
   }));
 
-  const { accessToken, refreshToken } = useUserToken((s) => ({
-    refreshToken: s.refreshToken,
-    accessToken: s.accessToken,
-  }));
-
   const user = useOwnerLogin((s) => s.user);
 
   const getAllBranches = useCallback(async () => {
@@ -48,7 +42,7 @@ const OutletType = () => {
     const response = (await res.json()).data as Array<{ _id: string, name: string }> || [];
     setBranches(response);
 
-  }, [user?._id, accessToken, refreshToken, setBranches]);
+  }, [user?._id, setBranches]);
 
   useEffect(() => {
     if (outletType === "✨Branch") {
@@ -81,7 +75,7 @@ const OutletType = () => {
                 setSelectedBranch("");
               }}
               checked={outletType === ele.title}
-              className="mr-2"
+              className="mr-2 radio-black radio"
             />
             <h3 className="text-lg font-semibold">{ele.title}</h3>
           </article>

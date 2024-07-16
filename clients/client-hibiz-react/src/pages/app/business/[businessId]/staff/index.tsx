@@ -23,7 +23,6 @@ const StaffPage = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const navigate = useNavigate();
   const [staffDetails, setStaffDetails] = useState<UserProfile[]>([]);
-  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const {
     setName,
     setPhone,
@@ -33,11 +32,12 @@ const StaffPage = () => {
     setEditStaffId,
     setPageToggle,
     setPermissions,
-    setSelectedPermissions
+    setSelectedPermissions,
+    isEditStaffOpen,
+    setIsEditStaffOpen,
+    isAddStaffOpen,
+    setIsAddStaffOpen
   } = useAddStaffStore();
-  const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
-
-
 
   const fetchPermissions = async () => {
     const res = await apiRpc.businesses[":businessId"].permissions.$get({
@@ -47,6 +47,7 @@ const StaffPage = () => {
     });
     const data = await res.json();
     if (res.status === 200 || res.status === 201) {
+    
       setPermissions(data.data);
     } else {
       toast.error("Failed to fetch permissions");
@@ -56,26 +57,22 @@ const StaffPage = () => {
 
   const handleStaffDetails = async (staff: UserProfile) => {
     const matchingData = staff.customRole.filter((item: CustomRole) => item.businessId === businessData?._id)
-    console.log(matchingData);
     const role = matchingData[0].role as role
-    setName(staff.name);
-    setPhone(staff.phone);
+    console.log(matchingData);
     setSelectedRole(role);
     setPermissionsBasedOnRole(staff.role);
-    setIsEditing(true);
-    setEditStaffId(staff._id);
-    setIsEditStaffOpen(true);
-    setPageToggle("EDIT_STAFF");
     const permissionsData = await fetchPermissions();
-
-    const userPermissions = permissionsData[role];
-    console.log(userPermissions);
+    const userPermissions = permissionsData[role as keyof typeof permissionsData];
     const userSelectedPermissions = getUserPermissionsForRole(userPermissions, matchingData[0].permissions);
     setPermissions(userPermissions);
     setSelectedPermissions(userSelectedPermissions);
+    setEditStaffId(staff._id);
+    setName(staff.name);
+    setPhone(staff.phone);
+    setPageToggle("EDIT_STAFF");
+    setIsEditing(true);
+    setIsEditStaffOpen(true);
   };
-
-
 
   const closeEditModal = () => {
     setName("");
@@ -116,7 +113,7 @@ const StaffPage = () => {
     });
   };
 
-  const { isLoading } = useQuery({
+  const { isLoading,refetch } = useQuery({
     queryKey: ["staff", businessData?._id],
     queryFn: getStaff,
     enabled: !!businessData?._id,
@@ -139,20 +136,21 @@ const StaffPage = () => {
         {staffDetails.length > 0 ? (
           <div className="business_system_cards">
             {staffDetails.map((staff: UserProfile) => (
-              <div
+              <button
                 key={staff._id}
                 onClick={() => handleStaffDetails(staff)}
-                className="on_active_bounce p-4 mt-6 rounded-lg border border-[#cacaca] bg-white font-medium capitalize text-[#000000]"
+                type="button"
+                className="on_active_bounce p-4 mt-6 rounded-lg border border-[#cacaca] text-left bg-white font-medium capitalize text-[#000000]"
               >
                 <img src={Avatar} alt="Avatar" />
-                <div className="flex flex-col pt-6 pb-2">
+                <div className="flex flex-col pt-6">
                   <span>{staff?.name}</span>
 
                   <span className="ml-1 text-sm opacity-60">
                     {staff?.customRole?.[0]?.role}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -168,13 +166,13 @@ const StaffPage = () => {
 
       {isAddStaffOpen && (
         <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
-          <NewAddStaff />
+          <NewAddStaff  refetch={refetch} />
         </PopUp>
       )}
 
       {isEditStaffOpen && (
         <PopUp show={isEditStaffOpen} onClose={closeEditModal}>
-          <EditStaff />
+          <EditStaff refetch={refetch} />
         </PopUp>
       )}
 

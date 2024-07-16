@@ -62,15 +62,15 @@ const Header: React.FC<HeaderProps> = memo(
             } `}
           >
             {centerImage && (
-              <div onKeyDown={logoutUser} onClick={logoutUser}>
+              <button type="button"  onClick={logoutUser}>
                 <img src={centerImage} alt="Center img" loading="lazy" />
-              </div>
+              </button>
             )}
             &nbsp;
             <span
               className={`${
                 centerImage
-                  ? ""
+                  ? "mr-8"
                   : "absolute transform -translate-x-1/2 left-1/2"
               } text-2xl font-medium capitalize`}
             >

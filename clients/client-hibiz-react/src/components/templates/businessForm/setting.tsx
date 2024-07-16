@@ -6,7 +6,6 @@ import { CgArrowsHAlt } from "react-icons/cg";
 import PopUp from "@/components/atom/popUp";
 import ColorWheel from "@/components/atom/colorWheel";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 
 const Setting = () => {
@@ -34,11 +33,6 @@ const Setting = () => {
     useState(primaryColor);
   const [selectedSecondaryColor, setSelectedSecondaryColor] =
     useState(secondaryColor);
-
-  const { accessToken, refreshToken } = useUserToken(s => ({
-    refreshToken: s.refreshToken,
-    accessToken: s.accessToken
-  }))
 
   const [open, setOpen] = useState(false);
   const [colorType, setColorType] = useState<"primary" | "secondary">(

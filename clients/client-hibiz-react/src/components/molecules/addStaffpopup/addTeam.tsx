@@ -1,12 +1,11 @@
 import { MdEdit } from "react-icons/md";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { useCallback } from "react";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 
-const AddTeam = () => {
+const AddTeam = ({ getUser }: { getUser: () => void }) => {
   const {
     setPageToggle,
     name,
@@ -17,8 +16,8 @@ const AddTeam = () => {
     selectedRole,
     selectedPermissions,
     permissions,
+    setIsAddStaffOpen
   } = useAddStaffStore();
-  const { accessToken, refreshToken } = useUserToken();
   const businessData = useBusinessData((s) => s.businessData);
 
 
@@ -32,7 +31,17 @@ const AddTeam = () => {
         .map(sp => sp.subTitle)
     })).filter(p => p.subPermissions.length > 0);
   }, [permissions, selectedPermissions, selectedRole]);
+  
+  const formattedPermissions = formatPermissions();
+
   const addStaff = async () => {
+    if (!name || !phone || !selectedRole) {
+      toast.error("Please fill all the fields");
+      return
+    }
+    if (phone.length !== 10) {
+      toast.error("Phone number should be of 10 digits")
+    }
     const res = await apiRpc.users.addStaff.$post({
       json: {
         businessId: businessData?._id || "",
@@ -43,8 +52,13 @@ const AddTeam = () => {
 
       },
     });
+    if (res.status === 400 || res.status === 403 || res.status === 409) {
+      toast.error("Failed to add staff")
+    }
     if (res.status === 201 || res.status === 200) {
       toast.success("Staff added successfully");
+      setIsAddStaffOpen(false);
+      getUser();
     }
   };
   const goToRoles = useCallback(() => {
@@ -104,13 +118,17 @@ const AddTeam = () => {
             Customize Permissions for Co owner
           </h6>
           <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-2xl bg-[#2C01A360] text-white"
-            >
-              Owner
-            </button>
-            <br />
+            {formattedPermissions.length > 0 && (
+              formattedPermissions.map((permission) => (
+                <button
+                  type="button"
+                  key={permission.title}
+                  className="px-4 py-2 mr-4 rounded-2xl bg-[#2C01A360] text-white"
+                >
+                  {permission.title}
+                </button>
+              ))
+            )}
             <button
               type="button"
               onClick={() => setPageToggle("ADD_PERMISSIONS")}

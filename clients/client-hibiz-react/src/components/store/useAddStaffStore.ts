@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
-export type AddStaffProps = "" | "EDIT_STAFF" | "ADD_STAFF" | "ADD_ROLE" | "ADD_PERMISSIONS" | "COMPLETED";
-export type role = "" | "CO_OWNER" | "MANAGER" | "CAPTAIN" | "MARKETING_AGENT" | "OWNER" | "HIPAL_ADMIN" | "HIPAL_CUSTOMER"
+export type AddStaffProps = "" |"DELETE_STAFF" | "EDIT_STAFF" | "ADD_STAFF" | "ADD_ROLE" | "ADD_PERMISSIONS" | "COMPLETED";
+export type role = "" | "CO_OWNER" | "MANAGER" | "CAPTAIN" | "MARKETING_AGENT" | "OWNER" | "HIPAL_CUSTOMER"
 
 export interface IRoles {
   _id: string;
@@ -30,6 +30,9 @@ interface AddStaffState {
   permissions: { [role: string]: IPermissions[] };
   isEditing: boolean;
   editStaffId: string;
+  isEditStaffOpen: boolean;
+  isAddStaffOpen: boolean;
+  setIsAddStaffOpen: (value: boolean) => void;
   setIsEditing: (value: boolean) => void;
   setEditStaffId: (value: string) => void;
   setName: (value: string) => void;
@@ -42,9 +45,10 @@ interface AddStaffState {
   toggleSubService: (serviceTitle: string) => void;
   setPermissionsBasedOnRole: (role: string) => void;
   setSelectedPermissions: (permissions: string[]) => void;
+  setIsEditStaffOpen: (value: boolean) => void;
 }
 
-const getPermissionsForRole = (permissions: { [role: string]: IPermissions[] }, role: string): string[] => {
+export const getPermissionsForRole = (permissions: { [role: string]: IPermissions[] }, role: string): string[] => {
   return (permissions[role] || []).flatMap(p => [p.title, ...p.subPermissions.map(s => s.subTitle)]);
 };
 export const getUserPermissionsForRole = (permissions: IPermissions[], userPermissions: any): string[] => {
@@ -61,9 +65,13 @@ export const useAddStaffStore = create<AddStaffState>((set) => ({
   selectedRole: "",
   roles: [],
   permissions: {},
-
   isEditing: false,
   editStaffId: "",
+  isEditStaffOpen: false,
+  isAddStaffOpen:false,
+
+  setIsAddStaffOpen: (value: boolean) => set({ isAddStaffOpen: value }),
+  setIsEditStaffOpen: (value: boolean) => set({ isEditStaffOpen: value }),
   setIsEditing: (value: boolean) => set({ isEditing: value }),
   setEditStaffId: (value: string) => set({ editStaffId: value }),
 

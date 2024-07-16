@@ -77,7 +77,7 @@ const Business = () => {
           <h3 className="px-4 pt-4 text-2xl">Shortcuts</h3>
           <section className="business_system_cards">
             {liteVersionCardButtons.map((item: ILiteVersionCardButton) => (
-              <article onClick={() => handleClick(item?.navigateTo)} key={item.text} className="relative overflow-hidden rounded-2xl ">
+              <article onClick={() => handleClick(item?.navigateTo)} key={item.text} className="relative mt-4 overflow-hidden rounded-2xl">
                 <figure>
                   <img width={200} height={146} src={item.image} alt={item.text} />
                 </figure>

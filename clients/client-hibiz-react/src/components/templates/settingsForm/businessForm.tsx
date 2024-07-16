@@ -107,21 +107,21 @@ const MemoBusinessForm: React.FC = () => {
     <section>
       <form onSubmit={handleSubmit} className="pb-[5rem] grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormSection title="Basics">
-          <TextInput ref={setRef("registerName")} id="registeredBusinessName" label="Registered Business Name" />
+          <TextInput ref={setRef("registerName")} id="registeredBusinessName" label="Registered Business Name" maxLength={21} />
           <SelectInput ref={setRef("registerType")} id="registrationType" label="Registration Type" options={["Proprietorship", "Partnership Deed", "LLP", "Pvt"]} />
           <SelectInput ref={setRef("businessType")} id="businessType" label="Business Type" options={["FOOD", "FASHION", "FITNESS", "TRAVEL", "OTHERS"]} />
         </FormSection>
 
         <FormSection title="Company">
-          <TextInput ref={setRef("establishmentYear")} id="establishmentYear" label="Establishment Year" />
-          <TextInput ref={setRef("panNumber")} id="companyPan" label="Company PAN" />
-          <TextInput ref={setRef("gstNumber")} id="gstNumber" label="GST Number" />
+          <TextInput ref={setRef("establishmentYear")} id="establishmentYear" label="Establishment Year" maxLength={10} />
+          <TextInput ref={setRef("panNumber")} id="companyPan" label="Company PAN" maxLength={10} />
+          <TextInput ref={setRef("gstNumber")} id="gstNumber" label="GST Number" maxLength={15} />
         </FormSection>
 
         <FormSection title="Banking Details">
-          <TextInput ref={setRef("accountNumber")} id="accountNumber" label="Account Number" />
-          <TextInput ref={setRef("beneficiaryName")} id="beneficiaryName" label="Beneficiary Name" />
-          <TextInput ref={setRef("ifscCode")} id="ifscCode" label="Branch IFSC Code" />
+          <TextInput ref={setRef("accountNumber")} id="accountNumber" label="Account Number" maxLength={20} />
+          <TextInput ref={setRef("beneficiaryName")} id="beneficiaryName" label="Beneficiary Name" maxLength={20} />
+          <TextInput ref={setRef("ifscCode")} id="ifscCode" label="Branch IFSC Code" maxLength={11} />
         </FormSection>
 
         {/* <FormSection title="Contact">
@@ -135,9 +135,9 @@ const MemoBusinessForm: React.FC = () => {
         </FormSection> */}
 
         <FormSection title="Credentials">
-          <TextInput ref={setRef("razorpayMerchantId")} id="merchantId" label="Merchant ID" />
-          <TextInput ref={setRef("razorpayKeyId")} id="accessKeyId" label="Access Key ID" />
-          <TextInput ref={setRef("razorpayKeySecret")} id="secretKey" label="Secret Key" />
+          <TextInput ref={setRef("razorpayMerchantId")} id="merchantId" label="Merchant ID" maxLength={35} />
+          <TextInput ref={setRef("razorpayKeyId")} id="accessKeyId" label="Access Key ID" maxLength={35} />
+          <TextInput ref={setRef("razorpayKeySecret")} id="secretKey" label="Secret Key" maxLength={35} />
         </FormSection>
 
         <button className="col-span-1 md:col-span-2 bottom_btn" type="submit">
@@ -160,12 +160,13 @@ const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({ t
   </section>
 );
 
-const TextInput = React.forwardRef<HTMLInputElement, { id: string; label: string }>(({ id, label }, ref) => (
+const TextInput = React.forwardRef<HTMLInputElement, { id: string; label: string; maxLength: number }>(({ id, label, maxLength }, ref) => (
   <div className="relative">
     <input
       type="text"
       ref={ref}
       id={id}
+      maxLength={maxLength}
       className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 text-base bg-white border border-black rounded-lg dark:text-white focus:outline-none focus:border-black dark:border-gray-600 peer"
     />
     <label htmlFor={id} className="absolute z-0 px-2 text-sm text-gray-500 duration-300 transform -translate-y-4 bg-white scale-85 dark:text-gray-400 top-2 dark:bg-gray-900 peer-focus:px-2 peer-focus:text-black peer-focus:dark:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-85 peer-focus:-translate-y-4 left-1">

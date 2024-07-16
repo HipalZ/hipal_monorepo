@@ -109,7 +109,7 @@ const MemoOutletForm: React.FC = () => {
                 value={formData.brandName}
                 onChange={handleInputChange("brandName")}
                 className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base border border-gray-800 rounded-2xl text-base-content bg-base-100 dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
-                placeholder=" "
+                maxLength={21}
                 required
               />
               <label
@@ -126,7 +126,7 @@ const MemoOutletForm: React.FC = () => {
                 value={formData.branchName}
                 onChange={handleInputChange("branchName")}
                 className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base border border-gray-800 rounded-2xl text-base-content bg-base-100 dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
-                placeholder=" "
+                maxLength={21}
                 required
               />
               <label
