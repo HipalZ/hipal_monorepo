@@ -18,7 +18,7 @@ const MemoUniquelyYoursSection = (props: IUniqueSection) => {
             <SubHeader text="Uniquely Yours" />
             <Paragraph text="select your best dishes on explore page" />
             &nbsp;
-            <article className='flex flex-wrap gap-3 p-6 bg-white rounded-2xl'>
+            <article className='flex flex-wrap gap-2 p-4 bg-white rounded-2xl'>
                 {uniquelyDishes.length > 0 && uniquelyDishes.map((dish: IDish, index: number) => {
                     const borderStyle = dish.images[0] ? 'border-none' : 'border-dashed border-2 border-[#8C63FF]';
                     return (

@@ -5,7 +5,6 @@ import { IoBeerOutline, IoWifiOutline } from 'react-icons/io5';
 import SubHeader from '@/components/atom/subHeader';
 import Paragraph from '@/components/atom/paragraph';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams } from 'react-router-dom';
 import { useExploreStore } from '@/components/store/useExploreStore';
 import BottomButton from '@/components/atom/bottomButton';
@@ -15,6 +14,7 @@ import { convertTo12HourFormat } from '@/components/templates/settingsForm/outle
 import { Switch } from '@headlessui/react';
 import useShowErrorToasts from '@/components/atom/errorToasts';
 import type { IBizPayload } from '@/components/types/businessData';
+import { FaLocationDot } from 'react-icons/fa6';
 
 const amenitiesArr = [
     { _id: 1, text: 'SMOKING SECTION', image: <MdOutlineSmokingRooms /> },
@@ -43,10 +43,7 @@ const MemoBizInfo = () => {
         openTime: '',
         closeTime: ''
     });
-    const { accessToken, refreshToken } = useUserToken(s => ({
-        accessToken: s.accessToken,
-        refreshToken: s.refreshToken
-    }));
+
     const { bizInfo, setBizInfo } = useExploreStore((s) => ({
         bizInfo: s.bizInfo,
         setBizInfo: s.setBizInfo
@@ -58,7 +55,8 @@ const MemoBizInfo = () => {
     const [tempLocation, setTempLocation] = useState('');
     const [tempAvgPricingForTwo, setTempAvgPricingForTwo] = useState('');
     const [tempTags, setTempTags] = useState(['', '', '']);
-    const [tempAmenities, setTempAmenities] = useState([]);
+    const [tempAmenities, setTempAmenities] = useState<string[]>([]);
+    const [tempAddress, setTempAddress] = useState('');
 
     useEffect(() => {
         setTempDescription(bizInfo.description);
@@ -71,6 +69,16 @@ const MemoBizInfo = () => {
         if (bizInfo?.amenities && bizInfo?.amenities.length > 0) {
             setTempAmenities([...bizInfo.amenities]);
         }
+        if (bizInfo?.fixOpenTime && bizInfo?.fixCloseTime) {
+            setFixedTime({
+                openTime: bizInfo.fixOpenTime,
+                closeTime: bizInfo.fixCloseTime
+            });
+        }
+        if (bizInfo?.customTiming && bizInfo?.customTiming.length > 0) {
+            setCustomTimings([...bizInfo.customTiming]);
+        }
+        setTempAddress(bizInfo?.address);
     }, [bizInfo]);
 
     const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -83,6 +91,11 @@ const MemoBizInfo = () => {
 
     const handleLocationChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setTempLocation(e.target.value);
+    }, []);
+
+    const handleChangeAddress = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        console.log('address', e.target.value);
+        setTempAddress(e.target.value);
     }, []);
 
     const handlePricingChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +151,8 @@ const MemoBizInfo = () => {
             amenities: tempAmenities,
             fixOpenTime: fixedTime?.openTime,
             fixCloseTime: fixedTime?.closeTime,
-            customTiming: customTimings
+            customTiming: customTimings,
+            address: tempAddress
         });
         toast.success('Timings saved');
         handleTimings();
@@ -157,7 +171,8 @@ const MemoBizInfo = () => {
             amenities: tempAmenities,
             fixOpenTime: fixedTime?.openTime,
             fixCloseTime: fixedTime?.closeTime,
-            customTiming: customTimings.filter(timing => timing.openTime || timing.closeTime)
+            customTiming: customTimings.filter(timing => timing.openTime || timing.closeTime),
+            address: tempAddress
         };
         const filteredPayload = Object.fromEntries(
             Object.entries(payload).filter(([_, value]) => value !== null && value !== '' && value !== undefined)
@@ -166,7 +181,6 @@ const MemoBizInfo = () => {
         let res: { status: number };
         if (bizInfo?._id === '') {
             res = await apiRpc.businesses.outletInfo.$post({
-
                 json: filteredPayload
             });
         }
@@ -229,14 +243,28 @@ const MemoBizInfo = () => {
                         maxLength={10}
                         minLength={10}
                     />
+                    <div className='relative'>
+                        <input
+                            minLength={10}
+                            maxLength={100}
+                            placeholder='Add Location on map'
+                            type="text"
+                            value={tempLocation}
+                            className='w-full rounded-2xl'
+                            onChange={handleLocationChange}
+                        />
+                        <small className='absolute bottom-4 right-4'>
+                            <FaLocationDot />
+                        </small>
+                    </div>
                     <input
                         minLength={10}
                         maxLength={100}
-                        placeholder='Add Location on map'
+                        placeholder='Add Address'
                         type="text"
-                        value={tempLocation}
+                        value={tempAddress}
                         className='w-full rounded-2xl'
-                        onChange={handleLocationChange}
+                        onChange={handleChangeAddress}
                     />
                 </article>
             </section>
@@ -281,7 +309,7 @@ const MemoBizInfo = () => {
                         </article>
                     </section>
                     {(fixedTime?.openTime || fixedTime?.closeTime) && (
-                        <div className="w-96 px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full">
+                        <div className="px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full">
                             Business time from {convertTo12HourFormat(fixedTime?.openTime)} to{" "}
                             {convertTo12HourFormat(fixedTime?.closeTime)}
                         </div>
@@ -323,7 +351,7 @@ const MemoBizInfo = () => {
                         )}
                     </section>
                     <section className='flex items-center justify-between p-4 my-4 bg-white rounded-xl'>
-                        <label>Custom Timings</label>
+                        <h1>Custom Timings</h1>
                         <Switch
                             checked={showCustomTime}
                             onChange={setShowCustomTime}
@@ -334,7 +362,7 @@ const MemoBizInfo = () => {
                     </section>
                     {showCustomTime && <section className='my-4 bg-white rounded-2xl'>
                         {customTimings.map((timing, index) => (
-                            <article key={`timing${index}`} className='flex items-center justify-between p-2 my-2'>
+                            <article key={`timing${index.toString()}`} className='flex items-center justify-between p-2 my-2'>
                                 <h1 className='w-[3rem]'>{timing.day}</h1>
                                 <input
                                     type="time"

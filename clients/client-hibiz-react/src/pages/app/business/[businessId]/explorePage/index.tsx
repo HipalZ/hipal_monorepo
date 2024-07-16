@@ -17,9 +17,9 @@ import { cropImage } from '@/components/cropper';
 import PopUp from "@/components/atom/popUp";
 import BizInformation from '@/components/templates/explorePage/businessInformation';
 import useShowErrorToasts from '@/components/atom/errorToasts';
-import LoadingSpinner from '@/components/atom/loadingSpinner';
 
 // Lazy loading components
+const LoadingSpinner = lazy(() => import('@/components/atom/loadingSpinner'));
 const HisiteHeader = lazy(() => import('@/components/molecules/hisiteHeader'));
 const ReactCropper = lazy(() => import('@/components/cropper'));
 const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
@@ -406,7 +406,6 @@ const MemoExplorePage = () => {
                                 handleSaveExplorePage={handleSaveExplorePage} />
                         </PopUp>
                     </Suspense>
-                    <br />
                     <br />
                     <Suspense fallback={<LoadingSpinner />}>
                         <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />

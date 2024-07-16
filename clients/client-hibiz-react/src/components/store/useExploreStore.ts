@@ -46,6 +46,7 @@ export const useExploreStore = create(
         fixCloseTime: '',
         customTiming:[],
         isCustomTime: false,
+        address: '',
       },
       setBizInfo: (bizInfo) => set(() => ({ bizInfo })),
       selectedDishes: [],

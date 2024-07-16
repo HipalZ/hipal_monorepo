@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react'
-import type { BasicInfo } from './explorePageStore'
 import SubHeader from '@/components/atom/subHeader'
 import { useExploreStore } from '@/components/store/useExploreStore'
+import type { BasicInfo } from '@/components/types/businessData'
 
 interface PropsBasicInfo {
     handleBizInfo: () => void

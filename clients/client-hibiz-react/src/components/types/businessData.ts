@@ -250,6 +250,7 @@ export interface IBizInfo {
   fixCloseTime: string;
   customTiming: Array<Record<string,string>>;
   isCustomTime: boolean;
+  address: string;
 }
 
 export type Banner = {
@@ -315,6 +316,7 @@ export interface IBizPayload {
   tags?: string[];
   avgPricingForTwo?:string;
   isCustomTime?: boolean;
+  address?: string;
 }
 
 export interface IBannerPayload {
