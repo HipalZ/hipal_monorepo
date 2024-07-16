@@ -5,7 +5,6 @@ import { basicInfos, combineAllDishes } from '@/components/templates/explorePage
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
 import type { IBizInfo, IBizPayload, IDish } from '@/components/types/businessData';
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { useExploreStore } from '@/components/store/useExploreStore';
 import { filterPayload, storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
@@ -21,7 +20,7 @@ import useShowErrorToasts from '@/components/atom/errorToasts';
 import LoadingSpinner from '@/components/atom/loadingSpinner';
 
 // Lazy loading components
-const Header = lazy(() => import('@/components/molecules/header'));
+const HisiteHeader = lazy(() => import('@/components/molecules/hisiteHeader'));
 const ReactCropper = lazy(() => import('@/components/cropper'));
 const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
 const UniquelyYoursPopUp = lazy(() => import('@/components/templates/explorePage/uniquelyYoursPopUp'));
@@ -41,10 +40,7 @@ const MemoExplorePage = () => {
     const navigate = useNavigate();
     const showErrorToasts = useShowErrorToasts()
     const businessId = useParams()?.businessId
-    const { accessToken, refreshToken } = useUserToken(s => ({
-        accessToken: s.accessToken,
-        refreshToken: s.refreshToken
-    }))
+
     const { bizInfo, setBizInfo, originalDishes, uniquelyDishes, setBanners, setUniquelyDishes, setOriginalDishes, setSelectedDishes, selectedDishes, clearOriginalDishes } = useExploreStore(
         (state) => ({
             bizInfo: state.bizInfo,
@@ -72,7 +68,7 @@ const MemoExplorePage = () => {
     const [uploadsPopUp, setUploadsPopUp] = useState(false)
     const [showUniquePopUp, setShowUniquePopUp] = useState(false);
     const [img, setImg] = useState({ banner: bizInfo?.specialBannerUrl, logo: bizInfo?.logoUrl, footer: bizInfo?.endBannerUrl });
-    const [imageFiles, setImageFiles] = useState({ banner: null, logo: null });
+    const [imageFiles, setImageFiles] = useState({ banner: null, logo: null, footer: null });
     const [selectedSocialMedia, setSelectedSocialMedia] = useState('');
     const [showCropper, setShowCropper] = useState(false);
     const [cropping, setCropping] = useState({ image: null, type: null });
@@ -239,21 +235,30 @@ const MemoExplorePage = () => {
     const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!businessId) return;
-        const bannerExplore = await storeImageAfterSave(imageFiles?.banner);
-        const logoExplore = await storeImageAfterSave(imageFiles?.logo);
-        const footerExplore = await storeImageAfterSave(imageFiles?.footer);
+        let bannerExplore:string | undefined;
+        let logoExplore:string | undefined;
+        let footerExplore:string | undefined;
+        if(imageFiles?.banner !== null) {
+            bannerExplore = await storeImageAfterSave(imageFiles?.banner);
+        }
+        if(imageFiles?.logo !== null){
+            logoExplore = await storeImageAfterSave(imageFiles?.logo);
+        }
+        if(imageFiles?.footer !== null){
+            footerExplore = await storeImageAfterSave(imageFiles?.footer);
+        }
 
-        const filteredSocialMedia = socialMediaLinks
-            .filter((item) => {
-            if (!item.link || item.link.length === 0 || !item.link.startsWith("https://")) {
+        const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
+
+        // Then, check each non-empty link for the "https://" prefix
+        const filteredSocialMedia = validSocialMediaLinks.reduce<{ icon: string; link: string }[]>((acc, item) => {
+            if (!item.link.startsWith("https://")) {
                 toast.error(`Invalid social media link for ${item.icon}. Link should start with 'https://'`);
-                return false;
+            } else {
+                acc.push({ icon: item.icon, link: item.link });
             }
-            return true;
-            })
-            .map((item) => ({ icon: item.icon, link: item.link }));
-        // Initialize payload with properties that are always present   
-        console.log('fil', filteredSocialMedia)
+            return acc;
+        }, []);
 
         const payload: IBizPayload = {
             businessId,
@@ -360,7 +365,7 @@ const MemoExplorePage = () => {
             setBizInfo(response?.data as IBizInfo);
             setSocialMediaLinks((prevLinks) =>
                 prevLinks.map(link => {
-                    const matchingLink = response?.data?.socialMediaLinks && response?.data?.socialMediaLinks.find(media => media.icon === link.icon);
+                    const matchingLink = response?.data?.socialMediaLinks?.find(media => media.icon === link.icon);
                     return matchingLink ? { ...link, link: matchingLink.link } : link;
                 })
             );
@@ -385,7 +390,7 @@ const MemoExplorePage = () => {
     return (
         <Suspense fallback={<LoadingSpinner />}>
             <main>
-                <Header onBack={handleNavigate} title={`${toggleBizInfo ? 'Business Info' : 'Explore Page'} `} rightButton={<RightButton />} isIconBusinessShow={false} />
+                <HisiteHeader onBack={handleNavigate} title={`${toggleBizInfo ? 'Business Info' : 'Explore Page'} `} rightButton={<RightButton />} isIconBusinessShow={false} />
                 {toggleBizInfo ? <BizInformation /> : <form onSubmit={handleSaveExplorePage} className='px-4'>
                     <SubHeader text='Business Explore' />
                     <section onClick={handleUploads} className='p-4 bg-white rounded-2xl'>
@@ -401,7 +406,6 @@ const MemoExplorePage = () => {
                                 handleSaveExplorePage={handleSaveExplorePage} />
                         </PopUp>
                     </Suspense>
-
                     <br />
                     <br />
                     <Suspense fallback={<LoadingSpinner />}>

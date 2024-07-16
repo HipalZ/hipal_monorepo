@@ -314,7 +314,7 @@ export interface IBizPayload {
   amenities?: string[];
   tags?: string[];
   avgPricingForTwo?:string;
-  isCustomTime: boolean;
+  isCustomTime?: boolean;
 }
 
 export interface IBannerPayload {

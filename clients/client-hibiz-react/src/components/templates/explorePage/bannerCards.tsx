@@ -1,7 +1,8 @@
 import { type CSSProperties, memo } from 'react';
 import { BannerType } from './explorePageStore'
 import type { IBannerPayload, TextAlign } from '@/components/types/businessData';
-
+import BannerDummy from '@/assets/hisite/bannerDummy.jpg';
+import layout3 from '@/assets/hisite/layout3.jpg';
 interface IBanner {
     banners:IBannerPayload[];
     handleEditBanner?:(banner:IBannerPayload)=>void;
@@ -11,7 +12,7 @@ const MemoBannerCards = (props:IBanner) => {
     const {banners, handleEditBanner,sizeInPx} = props
     return (
         <section className='flex flex-col items-center justify-center md:grid md:gap-6 md:grid-cols-2 lg:grid-cols-3'>
-            {banners.map((banner:IBannerPayload) => {
+            {banners?.map((banner:IBannerPayload) => {
                 const headingStyles: CSSProperties = {
                     color: banner?.headingColor, fontWeight: banner?.headingFontWeight, textAlign: banner?.headingAlign as TextAlign
                 }
@@ -29,7 +30,7 @@ const MemoBannerCards = (props:IBanner) => {
                             </article>
                         )}
                         {banner.bannerType === BannerType.BANNER_TYPE_2 && (
-                            <article style={{ backgroundImage: `url(${banner?.bannerImage})`, height: sizeInPx }} className='flex flex-col justify-between p-4 py-6 mt-4 space-y-10 bg-cover rounded-2xl'>
+                            <article style={{ backgroundImage: `url(${banner?.bannerImage || BannerDummy})`, height: sizeInPx }} className='flex flex-col justify-between p-4 py-6 mt-4 space-y-10 bg-cover border rounded-2xl border-1'>
                                 <h1 style={headingStyles} className='text-xl'>{banner.heading || 'heading'}</h1>
                                 <p style={paragraphStyles} className='my-4'>{banner.paragraph || 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 <div>
@@ -47,7 +48,7 @@ const MemoBannerCards = (props:IBanner) => {
                                     </div>
                                 </article>
                                 <figure>
-                                    <img src={banner?.bannerImage} alt="banner" className='overflow-hidden' />
+                                    <img src={banner?.bannerImage || layout3} alt="banner" className='overflow-hidden' />
                                 </figure>
                             </section>
                         )}

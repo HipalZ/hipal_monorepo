@@ -1,9 +1,9 @@
 import Hi from '@/assets/svg/hi.svg';
-import DateRangePicker from '@/components/molecules/dateRangePicker';
-import Header from '@/components/molecules/header';
 import { cn } from '@/components/utils/helper';
 import { lazy, memo, useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
+const DateRangePicker = lazy(() => import('@/components/molecules/dateRangePicker'));
+const HisiteHeader = lazy(() => import('@/components/molecules/hisiteHeader'));
 
 // Lazy load the Overview and PaymentSales components
 const Overview = lazy(() => import('@/components/templates/payment/overview'));
@@ -16,7 +16,7 @@ const Payments = () => {
   return (
     <main>
       <article className="pb-4 linear_gradient_background">
-        <Header title="Payments" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
+        <HisiteHeader title="Payments" leftIcon={<FaArrowLeft />} centerImage={Hi} rightImage={Hi} isIconBusinessShow={false} />
       </article>
       <section className="flex justify-around mt-6 mb-2 text-lg">
         <button

@@ -1,7 +1,7 @@
-import React, { lazy } from 'react'
+import { lazy, memo } from 'react'
 import type { IBannerType } from './explorePageStore';
 import { FaCaretDown } from 'react-icons/fa';
-const Header = lazy(() => import('@/components/molecules/header'));
+const HisiteHeader = lazy(() => import('@/components/molecules/hisiteHeader'));
 
 type Props = {
     handleChangeColors: () => void
@@ -11,10 +11,10 @@ type Props = {
     handleOptionClick: (id: string) => void
 }
 
-const HeaderDropDown = (props:Props) => {
+const MemoizedHeaderDropDown = (props:Props) => {
     const { handleChangeColors, toggleDropDown, isDropDownVisible, bannerTypes, handleOptionClick } = props
     return (
-        <Header onBack={handleChangeColors} dropDown={
+        <HisiteHeader onBack={handleChangeColors} dropDown={
             <div className="relative">
                 <label className='flex items-center text-lg font-medium text-gray-900'>
                     <span>Select Card Type</span>
@@ -39,8 +39,9 @@ const HeaderDropDown = (props:Props) => {
                 )}
             </div>
         } isIconBusinessShow={false}>
-        </Header>
+        </HisiteHeader>
     )
 }
 
+const HeaderDropDown = memo(MemoizedHeaderDropDown)
 export default HeaderDropDown

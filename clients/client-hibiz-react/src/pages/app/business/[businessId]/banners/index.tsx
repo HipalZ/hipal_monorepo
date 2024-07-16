@@ -1,4 +1,4 @@
-import { lazy, memo, startTransition, Suspense, useEffect } from 'react';
+import { lazy, memo, startTransition, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { useExploreStore } from '@/components/store/useExploreStore';
@@ -7,6 +7,7 @@ import { BannerType } from '@/components/templates/explorePage/explorePageStore'
 import type { Banner } from '@/components/types/businessData';
 import { apiRpc } from '@hi/common';
 import { useQuery } from '@tanstack/react-query';
+import LoadingSpinner from '@/components/atom/loadingSpinner';
 
 // Lazy load components
 const BannerCards = lazy(() => import('@/components/templates/explorePage/bannerCards'));
@@ -14,7 +15,7 @@ const BottomButton = lazy(() => import('@/components/atom/bottomButton'));
 const MiddlePopUp = lazy(() => import('@/components/atom/middlePopUp'));
 const Paragraph = lazy(() => import('@/components/atom/paragraph'));
 const SubHeader = lazy(() => import('@/components/atom/subHeader'));
-const Header = lazy(() => import('@/components/molecules/header'));
+const HisiteHeader = lazy(() => import('@/components/molecules/hisiteHeader'));
 
 
 const MemoBanners = () => {
@@ -78,9 +79,9 @@ const MemoBanners = () => {
     })
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <main className='h-screen'>
-                <Header title='Banners' isIconBusinessShow={false} onBack={handleNavigate} />
+        <Suspense fallback={<LoadingSpinner />}>
+            <main className='h-screen mb-[2rem]'>
+                <HisiteHeader title='Banners' isIconBusinessShow={false} onBack={handleNavigate} />
                 &nbsp;
                 <section className='mx-6'>
                     <SubHeader text='Spotlights' color='#000' />
@@ -90,7 +91,7 @@ const MemoBanners = () => {
                         <h1>Banners</h1>
                     </article>
                     <BannerCards banners={banners} handleEditBanner={handleEditBanner} sizeInPx='268px' />
-                    <BottomButton text='Add new Spotlight' onClick={handleNewSpotlight} />
+                    <BottomButton text='Add New Spotlight' onClick={handleNewSpotlight} />
                 </section>
                 {addSpotlight ? <MiddlePopUp show={addSpotlight} onClose={() => { setAddSpotlight(false) }} onlyPopUp={false}>
                     <section className='p-4'>

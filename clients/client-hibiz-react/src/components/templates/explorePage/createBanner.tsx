@@ -3,7 +3,6 @@ import { BannerType, bannerTypes } from './explorePageStore';
 import { IoMdColorPalette } from 'react-icons/io';
 import { TfiPaintBucket } from 'react-icons/tfi';
 import { apiRpc } from '@hi/common';
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { useNavigate, useParams } from 'react-router-dom';
 import { storeImageAfterSave } from '@/components/utils/helper';
 import toast from 'react-hot-toast';
@@ -14,6 +13,7 @@ import { useBannerStore } from '@/components/store/useBannerStore';
 import { Switch } from '@headlessui/react';
 import HeaderDropDown from './headerDropDown';
 import LoadingSpinner from '@/components/atom/loadingSpinner';
+import { cropImage } from '@/components/cropper';
 
 // Lazy load components
 const ReactCropper = lazy(() => import('@/components/cropper'));
@@ -302,13 +302,13 @@ const MemoCreateBanner = () => {
                     <HeaderDropDown bannerTypes={bannerTypes} handleChangeColors={handleChangeColors} handleOptionClick={handleOptionClick} isDropDownVisible={isDropDownVisible} toggleDropDown={toggleDropDown} />
                     <section className='flex justify-center w-full bg-white'>
                         {selectedBannerType === BannerType.BANNER_TYPE_1 && (
-                            <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 mt-4 border rounded-2xl'>
+                            <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 border rounded-2xl'>
                                 <div>
                                     <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
                                     <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }}>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 </div>
                                 <div>
-                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
                                 </div>
                             </article>
                         )}
@@ -320,28 +320,28 @@ const MemoCreateBanner = () => {
                                     <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }} className='my-4'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 </div>
                                 <div>
-                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                    <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
                                 </div>
                             </article>
                         )}
-
                         {selectedBannerType === BannerType.BANNER_TYPE_3 && (
-                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='grid grid-rows-2 mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
+                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='grid grid-rows-2 overflow-hidden bg-white border rounded-2xl border-1'>
                                 <div className='row-span-1'>
                                     <img src={img?.logo || layout3} alt="BannerDummy" className='object-cover w-full h-full' />
                                 </div>
-                                <article className='flex items-center justify-between row-span-1 p-4'>
-                                    <div className='w-2/3'>
-                                        <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                        <p style={{ color: selectedColor.textColor, ...paragraphStyle }} className='my-4 text-sm'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                    </div>
-                                    <div className='w-1/3'>
-                                        <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-2 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
-                                    </div>
-                                </article>
+                                <section className='flex row-span-1 p-2 bg-gray-700'>
+                                    <article className='flex items-center justify-around px-2 bg-white rounded-2xl'>
+                                        <div>
+                                            <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                            <p style={{ color: selectedColor.textColor, ...paragraphStyle }} className='my-2 text-sm'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                        </div>
+                                        <div className='w-1/3'>
+                                            <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
+                                        </div>
+                                    </article>
+                                </section>
                             </section>
                         )}
-
                     </section>
                     &nbsp;
                     {clickedChangeColor ? null : <center>
@@ -380,7 +380,12 @@ const MemoCreateBanner = () => {
                                 </PopUp>
                             </section>
                             <section className='m-4'>
-                                <input maxLength={26} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' />
+                                <div className='relative'>
+                                    <input maxLength={15} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' />
+                                    <small className="absolute text-gray-700 bottom-3 right-2">
+                                        {heading.length}/15
+                                    </small>
+                                </div>
                                 <StylingsIcons setIsColorPickerVisible={setIsColorPickerVisible}
                                     isColorPickerVisible={isColorPickerVisible}
                                     element="heading"
@@ -400,7 +405,12 @@ const MemoCreateBanner = () => {
                             </section>
                             &nbsp;
                             <section className='m-4'>
-                                <textarea maxLength={75} className='w-full h-24 resize-none rounded-2xl' value={paragraph} onChange={handleDescriptionChange} placeholder='Description' />
+                                <div className="relative">
+                                    <textarea maxLength={70} className='w-full h-24 resize-none rounded-2xl' value={paragraph} onChange={handleDescriptionChange} placeholder='Description' />
+                                    <small className="absolute text-gray-700 bottom-4 right-2">
+                                        {paragraph.length}/70
+                                    </small>
+                                </div>
                                 <StylingsIcons
                                     setIsColorPickerVisible={setIsColorPickerVisible}
                                     isColorPickerVisible={isColorPickerVisible}
@@ -424,7 +434,12 @@ const MemoCreateBanner = () => {
                     <section className='m-6'>
                         <SubHeader text='Add Button Name' />
                         <article className='flex items-center justify-between p-2 bg-white rounded-2xl'>
-                            <input type="text" className='w-2/3 rounded-2xl' maxLength={16} value={callToAction} onChange={handleButtonName} placeholder='Button Name' />
+                            <div className='relative'>
+                                <input type="text" className='rounded-2xl' maxLength={16} value={callToAction} onChange={handleButtonName} placeholder='Button Name' />
+                            <small className='absolute text-gray-700 right-2 bottom-2'>
+                                {callToAction.length}/16
+                            </small>
+                            </div>
                             <article onClick={() => setColorWheelButton(!colorWheelButton)} className='w-12 px-3 py-2 border border-black rounded-2xl border-1'>
                                 <span><TfiPaintBucket size={24} /></span>
                             </article>
