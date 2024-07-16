@@ -1,5 +1,7 @@
 import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import BannerCards from "@/components/organisms/explore/bannerCards";
+import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type { IBusinessData } from "@/components/types/businessData";
 import { defaultThemes } from "@/components/utils/helpers";
 import dynamic from "next/dynamic";
@@ -16,20 +18,10 @@ const Rewards = dynamic(
   () => import("@/components/templates/explore/rewards"),
   { loading: () => <SkeletonLoader height={50} /> },
 );
-const SpecialOffers = dynamic(
-  () => import("@/components/organisms/explore/specialOffers"),
-  { loading: () => <SkeletonLoader height={200} /> },
-);
-const PopularRestaurant = dynamic(
-  () => import("@/components/organisms/explore/popularRestaurant"),
-  {
-    loading: () => <SkeletonLoader height={200} />,
-  },
-);
+
 const Footer = dynamic(() => import("@/components/molecules/footer"), {
   loading: () => <SkeletonLoader height={50} />,
 });
-
 
 const SubLoyalty = dynamic(() => import("@/components/atoms/subLoyalty"), {
   loading: () => <SkeletonLoader height={50} />,
@@ -41,7 +33,6 @@ const BottomButton = dynamic(
 const PageName = dynamic(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
-
 
 // removed getStaticPaths
 
@@ -57,16 +48,16 @@ export default async function Page({
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
   return (
     <div className="relative flex flex-col w-full pb-16 ">
-      <MainBackground explore={data?.settings?.explore} />
+      <MainBackground explore={data?.business} />
       <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
         <HeroSection data={data} />
         <Rewards />
-        <SpecialOffers explore={data?.settings?.explore} />
+        <BannerCards banners={data?.banners} />
         <SubLoyalty loyalty={data?.loyalty} />
         <div className="overflow-auto">
-          <PopularRestaurant popular={data?.settings?.explore?.popular} />
+          <UniquelyDishes uniquelyDishes={data?.uniquelyDishes}/>
         </div>
-        <Footer themes={data?.settings?.themes || defaultThemes} />
+        <Footer themes={data?.settings || defaultThemes} />
         <PageName />
       </div>
       <BottomButton />

@@ -1,4 +1,4 @@
-import { memo } from "react"
+import { memo, useState } from "react"
 import { colors } from "./explorePageStore"
 import { IoMdColorPalette } from "react-icons/io"
 
@@ -9,14 +9,24 @@ type Color = {
 }
 interface ChangeBannerColorProps {
     handleColorChange: (color: Color) => void
-
 }
+
 const MemoChangeBannerColor = (props:ChangeBannerColorProps) => {
     const { handleColorChange } = props
+    const [selectedColor, setSelectedColor] = useState<Color | null>(null)
+    
+    const onColorChange = (color: Color) => {
+        
+        setSelectedColor(color);
+        handleColorChange(color);
+}
+console.log('trigger')
 
     return (
         <section className='mt-[30rem] grid grid-cols-3 place-items-center mx-6 gap-10'>
             {colors?.map((color) => {
+                
+                const isSelected = selectedColor?._id === color._id;
                 return (
                     <article key={color?._id} className='text-center'>
                         <h1 style={{
@@ -27,7 +37,13 @@ const MemoChangeBannerColor = (props:ChangeBannerColorProps) => {
                         }} className='rounded-2xl'>
                             <IoMdColorPalette color={color?.textColor} size={48} />
                         </h1>
-                        <input type="radio" name="color" className='mt-2 text-black' onChange={() => handleColorChange(color)} />
+                        <input 
+                            type="radio" 
+                            name="color" 
+                            className={`mt-2 ${isSelected ? 'ring-2 ring-offset-2 ring-blue-500' : 'text-black'}`}
+                            onChange={() => onColorChange(color)} 
+                            checked={isSelected}
+                        />
                     </article>
                 )
             })}

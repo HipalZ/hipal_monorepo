@@ -2,15 +2,15 @@ import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType"
-import type { IDish } from "@/components/types/businessData"
+import type { IDish, IUniquelyDishes } from "@/components/types/businessData"
 import { memo } from "react"
 
 function DiscountDishCard({
 	dishData,
 	onClick,
 }: {
-	dishData: IDish
-	onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
+	dishData: IDish | IUniquelyDishes
+	onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }) {
 	return (
 		<center className="relative flex flex-col w-32 no-scrollbar" onClick={onClick}>

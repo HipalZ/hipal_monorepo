@@ -60,8 +60,8 @@ const dishesRouter = new Hono()
   )
   .get(
     '/uniquelyDishes/:businessId',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator('param', z.object({ businessId: z.string() })),
 
     async (c) => {

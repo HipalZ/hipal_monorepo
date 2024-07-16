@@ -414,8 +414,8 @@ const businessesRouter = new Hono()
   )
   .get(
     '/outletInfo/:businessId',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER]),
     zValidator('param', z.object({ businessId: z.string() })),
 
 
@@ -512,6 +512,7 @@ const businessesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.param();
+      console.log("from fro",businessId)
 
       const existingTheme = await Theme.findOne({ businessId: businessId });
       if (!existingTheme) return respond(c, 'theme not found', true, 404, {});

@@ -55,11 +55,17 @@ const MemoCreateBanner = () => {
     const [colorWheelParagraph, setColorWheelParagraph] = useState(false)
     const [colorWheelButton, setColorWheelButton] = useState(false)
 
-    const { setSelectedBannerType, selectedBannerType, } = useBannerStore((s) => ({
+    const { setSelectedBannerType, selectedBannerType} = useBannerStore((s) => ({
         setSelectedBannerType: s.setSelectedBannerType,
         selectedBannerType: s.selectedBannerType,
         buttonStyle: s.buttonStyle,
         setButtonStyle: s.setButtonStyle,
+        headingStyle: s.headingStyle,
+        setHeadingStyle: s.setHeadingStyle,
+        paragraphStyle: s.paragraphStyle,
+        setParagraphStyle: s.setParagraphStyle,
+        selectedColor: s.selectedColor,
+        setSelectedColor: s.setSelectedColor
     }));
 
     const [headingStyle, setHeadingStyle] = useState<IStyles>({
@@ -199,6 +205,9 @@ const MemoCreateBanner = () => {
             textColor: color ? (color.textColor ? color.textColor : '') : event.target.value,
             bgColor: color ? (color.bgColor ? color.bgColor : '') : event.target.value
         });
+        setHeadingStyle((prevStyle) => ({ ...prevStyle, color: color.textColor }));
+        setParagraphStyle((prevStyle) => ({ ...prevStyle, color: color.textColor }));
+        setButtonStyle((prevStyle) => ({ ...prevStyle, color: color.textColor }));
     };
 
     const handleAlignmentChange = (element: string, alignment: string) => {
@@ -304,8 +313,8 @@ const MemoCreateBanner = () => {
                         {selectedBannerType === BannerType.BANNER_TYPE_1 && (
                             <article style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 border rounded-2xl'>
                                 <div>
-                                    <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                    <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }}>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                    <h1 style={headingStyle} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                    <p style={paragraphStyle}>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 </div>
                                 <div>
                                     <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
@@ -316,8 +325,8 @@ const MemoCreateBanner = () => {
                         {selectedBannerType === BannerType.BANNER_TYPE_2 && (
                             <article style={{ backgroundImage: `url(${img?.logo || BannerDummy})`, backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='flex flex-col justify-between p-4 py-6 bg-cover rounded-2xl'>
                                 <div>
-                                    <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                    <p style={{ color: selectedColor.textColor, ...paragraphStyle, flexGrow: 1 }} className='my-4'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
+                                    <h1 style={headingStyle} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                    <p style={paragraphStyle} className='my-4'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                 </div>
                                 <div>
                                     <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 rounded-full'>{callToAction ? callToAction : 'Link'}</button>
@@ -325,19 +334,15 @@ const MemoCreateBanner = () => {
                             </article>
                         )}
                         {selectedBannerType === BannerType.BANNER_TYPE_3 && (
-                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='grid grid-rows-2 overflow-hidden bg-white border rounded-2xl border-1'>
-                                <div className='row-span-1'>
-                                    <img src={img?.logo || layout3} alt="BannerDummy" className='object-cover w-full h-full' />
+                            <section style={{ backgroundColor: selectedColor.bgColor, height: '268px', width: '268px' }} className='relative grid mt-4 overflow-hidden bg-white border aspect-square rounded-2xl border-1'>
+                                <div className='row-span-3'>
+                                    <img src={img?.logo || layout3} alt="BannerDummy" className='w-full h-full bg-cover' />
                                 </div>
-                                <section className='flex row-span-1 p-2 bg-gray-700'>
-                                    <article className='flex items-center justify-around px-2 bg-white rounded-2xl'>
-                                        <div>
-                                            <h1 style={{ color: selectedColor.textColor, ...headingStyle }} className='text-xl'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
-                                            <p style={{ color: selectedColor.textColor, ...paragraphStyle }} className='my-2 text-sm'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                        </div>
-                                        <div className='w-1/3'>
-                                            <button type="button" style={{ color: buttonStyle?.color, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='px-4 py-1 text-sm rounded-full'>{callToAction ? callToAction : 'Link'}</button>
-                                        </div>
+                                <section className='absolute bottom-0 flex items-center justify-between w-full px-2 '>
+                                    <article className='w-full p-2 mt-1 mb-2 bg-white rounded-lg'>
+                                        <h1 style={headingStyle} className='text-sm'>{heading ? truncateDescription(heading) : 'Heading'}</h1>
+                                        <p style={paragraphStyle} className='my-2 text-xs'>{paragraph ? truncateDescription(paragraph) : 'Lorem Ipsum has been the industrys '}</p>
+                                        <button type="button" style={{ color: buttonStyle?.color || selectedColor?.textColor, border: `1px solid ${buttonStyle?.color || selectedColor?.textColor}` }} className='w-full px-4 py-1 text-xs border border-black rounded-full border-1'>{callToAction ? callToAction : 'Link'}</button>
                                     </article>
                                 </section>
                             </section>
@@ -371,7 +376,7 @@ const MemoCreateBanner = () => {
                                         {img.logo ? <img src={img.logo} alt="Logo" /> : <PlusButton />}
                                     </label>
                                 </article>}
-                                <label>Background color</label>
+                                <h1>Background color</h1>
                                 <article onClick={() => setColorWheelBackground(!colorWheelBackground)} className='px-3 py-2 border border-black rounded-2xl border-1'>
                                     <span><TfiPaintBucket size={24} /></span>
                                 </article>
@@ -381,7 +386,7 @@ const MemoCreateBanner = () => {
                             </section>
                             <section className='m-4'>
                                 <div className='relative'>
-                                    <input maxLength={15} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' />
+                                    <input maxLength={20} type="text" className='w-full rounded-2xl' value={heading} onChange={handleHeadingChange} placeholder='Heading' />
                                     <small className="absolute text-gray-700 bottom-3 right-2">
                                         {heading.length}/15
                                     </small>
@@ -436,9 +441,9 @@ const MemoCreateBanner = () => {
                         <article className='flex items-center justify-between p-2 bg-white rounded-2xl'>
                             <div className='relative'>
                                 <input type="text" className='rounded-2xl' maxLength={16} value={callToAction} onChange={handleButtonName} placeholder='Button Name' />
-                            <small className='absolute text-gray-700 right-2 bottom-2'>
-                                {callToAction.length}/16
-                            </small>
+                                <small className='absolute text-gray-700 right-2 bottom-2'>
+                                    {callToAction.length}/16
+                                </small>
                             </div>
                             <article onClick={() => setColorWheelButton(!colorWheelButton)} className='w-12 px-3 py-2 border border-black rounded-2xl border-1'>
                                 <span><TfiPaintBucket size={24} /></span>

@@ -33,17 +33,17 @@ export const bannerTypes = [
     {
         _id: 'BANNER_TYPE_1',
         title: 'Banner Type 1',
-        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
         bannerType: BannerType.BANNER_TYPE_1,
     }, {
         _id: 'BANNER_TYPE_2',
         title: 'Banner Type 2',
-        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        description: 'Lorem Ipsum is simply dummy text.',
         bannerType: BannerType.BANNER_TYPE_2,
     }, {
         _id: 'BANNER_TYPE_3',
         title: 'Banner Type 3',
-        description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+        description: 'Lorem Ipsum is simply dummy text',
         bannerType: BannerType.BANNER_TYPE_3,
     }
 ];

@@ -1443,3 +1443,23 @@ input[type='password'] {
 .paragraph {
 	margin-bottom: 1rem;
 }
+
+
+.splide__pagination.custom-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.splide__pagination__page.custom-pagination__page {
+    background-color: #ccc; /* Adjust color as needed */
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 0 4px;
+    transition: background-color 0.3s;
+}
+
+.splide__pagination__page.custom-pagination__page.is-active {
+    background-color: #333; /* Adjust color as needed */
+}

@@ -33,7 +33,7 @@ const MemoNewBanner = () => {
         <Suspense fallback={<div>Loading ...</div>}>
             {selectedBannerType === BannerType.BANNER_TYPE_0 ? (
                 <main className='relative h-screen'>
-                    <article onKeyDown={handleBack} onClick={handleBack} className='fixed top-0 w-full bg-white shadow-lg'>
+                    <article onClick={handleBack} className='fixed top-0 w-full bg-white shadow-lg'>
                         <HisiteHeader onBack={handleBack} title='Choose Banner Type' isIconBusinessShow={false} />
                     </article>
                     <section className='flex flex-col justify-center items-center m-6 pb-[5rem] mt-24 md:grid md:grid-cols-2 lg:grid-cols-3'>
@@ -42,36 +42,34 @@ const MemoNewBanner = () => {
                                 <input onClick={() => handleBannerType(banner._id)} type="radio" id={`banner-${banner._id}`} name="banner" />
                                 <label htmlFor={`banner-${banner._id}`} className='ml-2 text-[#807C83]'>{banner.title}</label>
                                 {banner.bannerType === BannerType.BANNER_TYPE_1 && (
-                                    <article className='bg-white mt-4 p-4 rounded-2xl h-[16rem] aspect-square space-y-10 py-6'>
-                                        <h1 className='text-xl'>Heading</h1>
-                                        <p>{banner.description}</p>
-                                        <button type="button" className='px-4 py-1 border border-black rounded-full border-1'>Link</button>
+                                    <article className='bg-white mt-4 p-4 rounded-2xl h-[16rem] aspect-square flex flex-col justify-between'>
+                                        <h1 className='text-sm'>Heading</h1>
+                                        <p className='text-xs'>{banner.description}</p>
+                                        <button type="button" className='w-full px-4 py-1 text-xs border border-black rounded-full border-1'>Link</button>
                                     </article>
                                 )}
                                 {banner.bannerType === BannerType.BANNER_TYPE_2 && (
-                                    <article style={{ backgroundImage: `url(${BannerDummy})` }} className='h-[16rem] aspect-square space-y-10 py-6 bg-cover mt-4 p-4 rounded-2xl'>
-                                        <h1 className='text-xl'>Heading</h1>
-                                        <p className='my-4'>{banner.description}</p>
-                                        <button type="button" className='px-4 py-1 border border-black rounded-full border-1'>Link</button>
+                                    <article style={{ backgroundImage: `url(${BannerDummy})` }} className='h-[16rem] aspect-square flex flex-col justify-end bg-cover mt-4 p-4 rounded-2xl'>
+                                        <h1 className='text-sm'>Heading</h1>
+                                        <div>
+                                            <p className='text-xs'>{banner.description}</p>
+                                            {/* <button type="button" className='w-full px-4 py-1 text-xs border border-black rounded-full border-1'>Link</button> */}
+                                        </div>
                                     </article>
                                 )}
                                 {banner.bannerType === BannerType.BANNER_TYPE_3 && (
-                                    <section className='h-[16rem] aspect-square grid grid-rows-2 mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
-                                        <div className='row-span-1'>
-                                            <img src={layout3} alt="BannerDummy" className='object-cover w-full h-full' />
-                                        </div>
-                                        <section className='flex items-center justify-between row-span-1 px-2 bg-gray-700'>
-                                            <article className='flex items-center justify-between p-2 mb-4 bg-white rounded-2xl'>
-                                                <div>
-                                                    <h1 className='text-xl'>Heading</h1>
-                                                    <p className='text-sm'>{banner.description}</p>
-                                                </div>
-                                                <div>
-                                                    <button type="button" className='px-4 py-1 border border-black rounded-full border-1'>Link</button>
-                                                </div>
-                                            </article>
-                                        </section>
+                                    <section className='relative h-[16rem] aspect-square grid mt-4 overflow-hidden bg-white border rounded-2xl border-1'>
+                                    <div className='row-span-3'>
+                                      <img src={layout3} alt="BannerDummy" className='w-full h-full bg-cover' />
+                                    </div>
+                                    <section className='absolute bottom-0 flex items-center justify-between w-full px-2 '>
+                                      <article className='w-full p-2 mt-1 mb-2 bg-white rounded'>
+                                        <h1 className='text-sm'>Heading</h1>
+                                        <p className='my-1 text-xs'>{banner.description}</p>
+                                        <button type="button" className='w-full px-4 py-1 text-xs border border-black rounded-full border-1'>Link</button>
+                                      </article>
                                     </section>
+                                  </section>
                                 )}
                                 <br /><br />
                             </div>

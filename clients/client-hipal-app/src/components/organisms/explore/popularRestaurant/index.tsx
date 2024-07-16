@@ -5,7 +5,6 @@ import Section from "@/components/molecules/section";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import type { IDish } from "@/components/types/businessData";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import type { SpecialOfferType } from "@hi/db-models/src/validators";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import { useRouter } from "next/navigation";
 import { memo } from "react";

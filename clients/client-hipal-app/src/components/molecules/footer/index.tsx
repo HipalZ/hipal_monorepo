@@ -12,7 +12,6 @@ interface IFooter {
 }
 const Footer = (props: IFooter) => {
   const { themes } = props;
-
   const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
 
   useEffect(() => {

@@ -113,8 +113,8 @@ const settingsRouter = new Hono()
   )
   .get(
     '/banners/:businessId',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator('param', z.object({ businessId: z.string() })),
 

@@ -97,7 +97,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
 
     return (
         <section className='m-6 h-[80vh] overflow-y-auto'>
-            <center className='text-2xl'>Add Redirection</center>
+            <center className='mb-4 text-2xl'>Add Redirection</center>
             {selectedLink === '' ? (
                 <article>
                     <SubHeader text="Link Action Button" />

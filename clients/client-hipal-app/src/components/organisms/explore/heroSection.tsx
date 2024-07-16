@@ -5,7 +5,7 @@ import Image from "next/image";
 import { memo, useEffect } from "react";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import type {
-  IBiz,
+  BusinessDetails,
   IBusinessData,
   IExplore,
 } from "@/components/types/businessData";
@@ -19,7 +19,7 @@ interface IHeroSection {
 }
 function HeroSection({ data }: IHeroSection): JSX.Element {
   const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
-  const { businessName, logo, tags, description } = data.business as IBiz;
+  const { name, logoUrl, tags,address, description } = data.business as BusinessDetails;
   const { location, phone } = data.settings?.explore as IExplore;
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const goToLocaltion = () => {
@@ -40,14 +40,15 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       setBusinessDetails(data.business);
     }
   }, [data]);
+  console.log('data', data?.business)
 
   return (
     <div className="relative flex flex-col px-8">
       <figure className="absolute z-10 -top-[4rem] left-4 bg-base-100 rounded-full">
-        {data.business?.logo ? (
+        {logoUrl ? (
           <center className="p-1 w-[100px] h-[100px]">
             <Image
-              src={logo}
+              src={logoUrl}
               height={86}
               width={86}
               quality={95}
@@ -80,16 +81,32 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       )}
 
       <div className="pt-8 space-y-2">
-        {businessName && (
-          <h4 className="text-2xl font-semibold capitalize">{businessName}</h4>
+        {name && (
+          <h4 className="text-2xl font-semibold capitalize">{name}</h4>
         )}
-        <h3 className="flex text-sm font-bold line-clamp-2 divide-base-content">
-          {Array.isArray(tags) ? tags.join(" | ") : tags}
-        </h3>
+        {
+          address && (
+            <h6 className="text-base font-semibold capitalize">{address}</h6>
+          )
+        }
       </div>
-      <div className="mt-auto text-xs font-light">
+      <div className="mt-4 text-xs font-light">
         <ReadMore text={description} />
       </div>
+      <ul className="mt-4 text-2xl">
+        Features
+        <article className="flex flex-wrap space-x-12">
+        {
+          Array.isArray(tags) ? tags.map((tag)=>{
+            return <li className="ml-4 list-disc">
+              <h3 className="text-sm capitalize">
+                {tag}
+              </h3>
+            </li>
+          })
+          :tags}
+          </article>
+      </ul>
     </div>
   );
 }

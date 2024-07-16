@@ -2,7 +2,6 @@ import { lazy, memo, startTransition, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBannerStore } from '@/components/store/useBannerStore';
 import { useExploreStore } from '@/components/store/useExploreStore';
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { BannerType } from '@/components/templates/explorePage/explorePageStore';
 import type { Banner } from '@/components/types/businessData';
 import { apiRpc } from '@hi/common';
@@ -23,10 +22,6 @@ const MemoBanners = () => {
     const banners = useExploreStore((s) => s.banners)
     const setBanners = useExploreStore((s) => s.setBanners)
     const businessId = useParams()?.businessId
-    const { accessToken, refreshToken } = useUserToken(s => ({
-        accessToken: s.accessToken,
-        refreshToken: s.refreshToken
-    }))
     const { setSelectedBanner } = useBannerStore((s) => ({
         setSelectedBanner: s.setSelectedBanner
     }))

@@ -3,6 +3,7 @@ import type { ILoyaltySetting } from "../store/useLoyaltyData"
 
 export interface IBiz {
 	email: string;
+	businessId: string;
 	businessName: string;
 	registeredName: string;
 	businessType: string;
@@ -36,7 +37,7 @@ export interface IBiz {
 	serviceChargePercentage: number;
 	serviceChargeRemovalPass: string;
 	serviceControl: {
-	  discountPassword: string;
+		discountPassword: string;
 	};
 	status: boolean;
 	takeAwayName: string;
@@ -46,24 +47,59 @@ export interface IBiz {
 	withPopCorn: boolean;
 	location: string;
 	phone: string;
-	phoneNumber:string
+	phoneNumber: string
 	__v: number;
 	id: string;
-  }
-  
+}
+export interface IBanner {
+	_id: string;
+	businessId: string;
+	bannerType?: string;
+	bannerImage?: string;
+	headingColor?: string;
+	headingFontWeight?: string;
+	headingAlign?: string;
+	paragraphColor?: string;
+	paragraphFontWeight?: string;
+	paragraphAlign?: string;
+	callToAction?: string;
+	backgroundColor?: string;
+	redirectionId?: string;
+	redirectionType?: string;
+	isDeleted?: boolean;
+	buttonColor?: string;
+	redirectionName?: string;
+	heading?: string;
+	paragraph?: string;
+}
+
+export interface IUniquelyDishes {
+	_id: string;
+	name: string;
+	businessId: string;
+	dishId: string;
+	dishType: string;
+	images: string[];
+	isDeleted: boolean;
+	__v: number;
+}
 export interface IBusinessData {
+    businessId: string;
+	banners: IBannerPayload[];
 	_id: string
 	settings?: ISettings
-	business?: IBiz
+	business?: BusinessDetails
 	dishesData?: IDish[]
 	dishData?: IDish
+	theme?:HSLTheme
+	uniquelyDishes?: IUniquelyDishes[]
 	categoryData?: ICategory[]
 	categories?: ICategories[]
 	allCategoriesTypes?: {
 		main: ICategoryTypes
 		sub: ICategorySubTypes
 	}
-	loyalty:ILoyaltySetting
+	loyalty: ILoyaltySetting
 	cart?: ICart[]
 }
 
@@ -96,7 +132,7 @@ export interface IExplore {
 		stories: string[]
 	}[]
 }
-export interface IThemes{
+export interface IThemes {
 	primaryColor: string
 	secondaryColor: string
 	accentColor?: string
@@ -111,6 +147,10 @@ export interface IThemes{
 	youtubeLink?: string
 	linkedinLink?: string
 	footerText?: string
+}
+
+export interface HSLTheme{
+	[key: string]: string
 }
 export interface ISettings {
 	businessId: string
@@ -135,7 +175,7 @@ export interface IDish {
 	discount: null
 	avgTime: null
 	dishType: string
-	categories:ICategory[]
+	categories: ICategory[]
 	portions: IPortion[]
 	extras: IExtras[]
 	filters: {
@@ -153,7 +193,7 @@ export interface IDish {
 	tags: never[]
 	links: never[]
 	version: number
-	id:string
+	id: string
 	_id: string
 	dishId: string
 }
@@ -251,18 +291,86 @@ export interface User {
 	createdAt: string;
 	updatedAt: string;
 	__v: number;
-  };
-  
-export interface  CustomRole  {
+};
+
+export interface CustomRole {
 	businessId: string;
 	customRoleId: string;
 	role: string;
 	accessControl: AccessControl;
 	bookMark: boolean;
 	_id: string;
-  };
-  
-export interface  AccessControl {
+};
+
+export interface AccessControl {
 	hibiz: boolean;
 	_id: string;
-  };
+};
+
+
+export enum BannerType {
+	BANNER_TYPE_0 = 'BANNER_TYPE_0',
+	BANNER_TYPE_1 = 'BANNER_TYPE_1',
+	BANNER_TYPE_2 = 'BANNER_TYPE_2',
+	BANNER_TYPE_3 = 'BANNER_TYPE_3',
+  }
+  
+  export interface IBannerPayload {
+	businessId?: string;
+	isPublished?: boolean;
+	bannerType?: string;
+	bannerImage?: string;
+	heading?: string;
+	headingColor?: string;
+	headingFontWeight?: string;
+	headingAlign?: string;
+	paragraph?: string;
+	paragraphColor?: string;
+	paragraphFontWeight?: string;
+	paragraphAlign?: string;
+	buttonColor?: string;
+	callToAction?: string;
+	backgroundColor?: string;
+	redirectionId?: string;
+	redirectionType?: string;
+	redirectionName?: string;
+	_id?:string
+  }
+  export type TextAlign = 'center' | 'left' | 'right' | 'justify' | 'initial' | 'inherit'
+
+  interface SocialMediaLink {
+	icon: string;
+	link: string;
+	_id: string;
+  }
+  
+  export interface BusinessDetails {
+	_id: string;
+	businessId: string;
+	__v: number;
+	amenities: string[];
+	footerDescription: string;
+	fssai: string;
+	gst: string;
+	socialMediaLinks: SocialMediaLink[];
+	tags: string[];
+	timing: any[];
+	billingEndTime: string;
+	billingStartTime: string;
+	branchName: string;
+	brandName: string;
+	name: string;
+	customTiming: any[]; 
+	fixCloseTime: string;
+	fixOpenTime: string;
+	logoUrl: string;
+	specialBannerUrl: string;
+	endBannerUrl: string;
+	isCustomTime: boolean;
+	description: string;
+	avgPricingForTwo: number;
+	location: string;
+	phone: string;
+	address: string;
+	avgRating: number;
+  }

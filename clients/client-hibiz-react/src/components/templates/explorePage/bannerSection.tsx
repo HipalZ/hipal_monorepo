@@ -21,10 +21,10 @@ const MemoBannerSection = (props: IProps) => {
                     <section className="flex items-center h-[10rem] lg:h-[12rem] space-x-2 lg:space-x-4">
                         {banners.map((banner: IBannerPayload) => {
                             const headingStyles: CSSProperties = {
-                                color: banner?.headingColor, fontWeight: banner?.headingFontWeight, textAlign: banner?.headingAlign as TextAlign, scale:'0.75'
+                                color: banner?.headingColor, fontWeight: banner?.headingFontWeight, textAlign: banner?.headingAlign as TextAlign, scale: '0.75'
                             }
-                            const paragraphStyles: CSSProperties = { color: banner?.paragraphColor, fontWeight: banner?.paragraphFontWeight, textAlign: banner?.paragraphAlign as TextAlign, scale:'0.5' }
-                            const buttonStyles: CSSProperties = { color: banner?.buttonColor, border: `1px solid ${banner?.buttonColor}`, scale:'0.5' }
+                            const paragraphStyles: CSSProperties = { color: banner?.paragraphColor, fontWeight: banner?.paragraphFontWeight, textAlign: banner?.paragraphAlign as TextAlign, scale: '0.5' }
+                            const buttonStyles: CSSProperties = { color: banner?.buttonColor, border: `1px solid ${banner?.buttonColor}`, scale: '0.5' }
                             return (
                                 <div key={banner._id}>
                                     {banner.bannerType === BannerType.BANNER_TYPE_1 && (
@@ -37,7 +37,7 @@ const MemoBannerSection = (props: IProps) => {
                                         </article>
                                     )}
                                     {banner.bannerType === BannerType.BANNER_TYPE_2 && (
-                                        <article style={{ backgroundImage: `url(${banner?.bannerImage || BannerDummy})`}} className='aspect-square bg-cover flex flex-col justify-center flex-1 rounded-xl h-[8.5rem] lg:h-[12rem]'>
+                                        <article style={{ backgroundImage: `url(${banner?.bannerImage || BannerDummy})` }} className='aspect-square bg-cover flex flex-col justify-center flex-1 rounded-xl h-[8.5rem] lg:h-[12rem]'>
                                             <h1 style={headingStyles} className='text-xs'>{banner.heading || 'heading'}</h1>
                                             <p className="-ml-6 text-xs" style={paragraphStyles}>{banner.paragraph || 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
                                             <div>
@@ -46,19 +46,13 @@ const MemoBannerSection = (props: IProps) => {
                                         </article>
                                     )}
                                     {banner.bannerType === BannerType.BANNER_TYPE_3 && (
-                                        <section style={{ height:'8.5rem'}} className='flex flex-col justify-between flex-1 bg-white border aspect-square rounded-xl'>
+                                        <section style={{ height: '8.5rem' }} className='overflow-hidden bg-white border aspect-square rounded-xl'>
                                             <figure className='h-1/2'>
-                                                <img src={banner?.bannerImage || layout3} alt="banner" className='object-cover w-full h-full' />
+                                            <img src={banner?.bannerImage || layout3} alt="banner" className='object-cover w-full h-full' />
                                             </figure>
-                                            <article className='flex flex-col justify-between h-1/2'>
-                                                <div>
-                                                    <h1 style={headingStyles} className='text-xs'>{banner.heading || 'heading'}</h1>
-                                                    <p style={paragraphStyles}>{banner.paragraph || 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p>
-                                                </div>
-                                                <div>
-                                                    <button style={buttonStyles} type="button" className='p-2 py-1 text-xs border border-black rounded-full border-1'>{banner?.callToAction ? banner?.callToAction : 'LINK'}</button>
-                                                </div>
-                                            </article>
+                                            <h1 style={headingStyles} className='text-xs'>{banner.heading || 'heading'}</h1>
+                                            {/* <p style={paragraphStyles}>{banner.paragraph || 'Lorem Ipsum has been the industrys standard dummy text ever since the 1500s'}</p> */}
+                                            <button style={buttonStyles} type="button" className='p-2 py-1 text-xs border border-black rounded-full border-1'>{banner?.callToAction ? banner?.callToAction : 'LINK'}</button>
                                         </section>
                                     )}
                                 </div>
