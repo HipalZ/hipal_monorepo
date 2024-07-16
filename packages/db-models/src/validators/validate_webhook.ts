@@ -30,14 +30,14 @@ export const RazorpayWebhookBodySchema = z.object({
       entity: z.object({
         notes: z.object({
           businessId: z.string(),
-          tableName: z.string().optional(),
+          tableName: z.string(),
 
           total: z.string(),
 
           tips: z.string().optional(),
           claimedCoins: z.string().optional(),
-          billValue: z.string().optional(),
-          loyaltyId: z.string().optional(),
+          billValue: z.string(),
+          loyaltyId: z.string(),
         }),
         created_at: number().positive().optional(),
         id: z.string().optional(),

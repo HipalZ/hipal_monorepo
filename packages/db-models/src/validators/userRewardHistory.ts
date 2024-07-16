@@ -15,7 +15,7 @@ const UserRewardHistoryAttrs = z.object({
   date: z.coerce.number(),
   tableName: z.string(),
   loyaltyId: ObjectIdSchema,
-  orderId: ObjectIdSchema.optional(),
+  order_id: ObjectIdSchema.optional(),
 
 });
 

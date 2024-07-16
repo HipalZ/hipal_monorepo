@@ -1,6 +1,6 @@
 // books.ts
 import { Dish, UniquelyYours } from '@hi/db-models';
-import { paramsSchema, TokenValidator, uniquelyYoursSchema } from '@hi/db-models/src/validators';
+import { dishSchema, paramsSchema, TokenValidator, uniquelyYoursSchema } from '@hi/db-models/src/validators';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { string, z } from 'zod';
@@ -25,6 +25,15 @@ const dishesRouter = new Hono()
       }).populate(['categories', 'extras', 'filters.dishes']);
 
       return respond(c, 'Dishes fetched successfully', false, 200, existingDishes);
+    },
+  )
+  .post(
+    '/',
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    zValidator('json', dishSchema),
+    async (c) => {
+
     },
   )
   .post(

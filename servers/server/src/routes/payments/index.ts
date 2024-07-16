@@ -18,9 +18,11 @@ import { Hono } from 'hono';
 import type { ClientSession } from 'mongoose';
 import { nanoid } from 'nanoid';
 import { createHmac } from 'node:crypto';
+import { z } from 'zod';
 import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
 import { authTokenValidator } from '../../../middleware/tokenValidator';
 import { razorpayWrapper } from '../../../razorpay_wrapper';
+import { respond } from '../../utils/response';
 const { validateWebhookSignature } = require('../../utils/razorpay-utils');
 //dates
 const startOfToday = new Date();
@@ -54,7 +56,7 @@ const addRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
-  orderId: string,
+  order_id: string,
   userId: string,
   addCoins: number,
   session: ClientSession,
@@ -66,7 +68,7 @@ const addRewardHistory = async (
         rewards: addCoins,
         status: status,
         tableName,
-        orderId,
+        order_id,
         loyaltyId,
         date: Date.now(),
       },
@@ -81,7 +83,7 @@ const removeRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
-  orderId: string,
+  order_id: string,
   userId: string,
   addCoins: number,
   session: ClientSession,
@@ -93,7 +95,7 @@ const removeRewardHistory = async (
         rewards: addCoins,
         status: status,
         tableName,
-        orderId,
+        order_id,
         loyaltyId,
         date: Date.now(),
       },
@@ -104,17 +106,7 @@ const removeRewardHistory = async (
   return data;
 };
 
-const removeCoins = async (
-  claimedCoins: number,
-  tableName: string,
-  userPhone: string,
-  total: number,
-  loyaltyId: string,
-  billValue: number,
-  session: ClientSession,
-  orderId: string,
-  userId: string,
-) => {
+const removeCoins = async (claimedCoins: number, tableName: string, loyaltyId: string, order_id: string, userId: string, session: ClientSession) => {
   const existingUser = await UserReward.findOne({ userId, loyaltyId });
   if (existingUser && existingUser.rewards >= claimedCoins) {
     const updatedReward = await UserReward.findOneAndUpdate(
@@ -126,11 +118,11 @@ const removeCoins = async (
     );
 
     await removeRewardHistory(
-      'minus',
+      'MINUS',
       tableName,
       loyaltyId,
 
-      orderId,
+      order_id,
       userId,
 
       claimedCoins,
@@ -145,40 +137,38 @@ const removeCoins = async (
 
 const addCoins = async (
   coins: number,
-  userPhone: string,
+  userId: string,
+  order_id: string,
   tableName: string,
   businessId: string,
-  total: number,
+
   loyaltyId: string,
-  billValue: number,
+
   session: ClientSession,
 ) => {
-  const existingUser = await UserReward.findOne({ userPhone, loyaltyId }, null, { session }).select('rewards');
+  const existingUser = await UserReward.findOne({ userId, loyaltyId }, null, {
+    session,
+  }).select('rewards');
 
   const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId }, null, { session }).select('rewardLimit');
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(existingUser.rewards, coins, existingLoyalty?.rewardLimit as number, session);
 
-    const updatedReward = await UserReward.findOneAndUpdate(
-      { userPhone, loyaltyId },
+    await UserReward.findOneAndUpdate(
+      { userId, loyaltyId },
       {
-        $inc: { rewards: coinsCalculated.finalReward, count: 1 },
+        $inc: { rewards: coinsCalculated.finalReward },
       },
       { new: true, session },
-    ).select('userName userPhone rewards');
+    )
+      .select('rewards')
+      .populate('userId', {
+        phone: 1,
+        name: 1,
+        _id: 0,
+      });
     if (coinsCalculated.finalReward > 0) {
-      await addRewardHistory(
-        'plus',
-        tableName,
-        loyaltyId,
-        total,
-        updatedReward?.userName || '',
-        userPhone,
-        coinsCalculated.finalReward,
-        updatedReward?.rewards || 0,
-        billValue,
-        session,
-      );
+      await addRewardHistory('PLUS', tableName, loyaltyId, order_id, userId, coinsCalculated.finalReward, session);
     }
 
     return coinsCalculated.finalReward || 0;
@@ -187,17 +177,17 @@ const addCoins = async (
 };
 
 const calculatedCashbackCoins = async (businessId: string, billValue: number, claimedCoins: number) => {
-  const LoyaltySetting = await LoyaltySettings.findOne({ businessId }).select('rewardLimit setReward');
-  if (!LoyaltySetting || typeof LoyaltySetting.setReward !== 'number') {
+  const LoyaltySetting = await LoyaltySettings.findOne({ businessId }).select('rewardLimit setCashBackPercentage');
+  if (!LoyaltySetting || typeof LoyaltySetting.setCashBackPercentage !== 'number') {
     console.error('LoyaltySetting not found or setReward is not a number');
     return 0; // Or handle this case as appropriate for your application
   }
   const subTotal = billValue - claimedCoins;
-  const coinsToBeAdded = (LoyaltySetting.setReward / 100) * subTotal;
+  const coinsToBeAdded = (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
   if (coinsToBeAdded < 0) {
     return 0;
   }
-  return Math.floor(coinsToBeAdded);
+  return Math.round(coinsToBeAdded);
 };
 const paymentsRouter = new Hono()
   .post(
@@ -208,11 +198,10 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-      const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
+      const { total, billValue, tableName, tips, currency, userId, claimedCoins, businessId } = requestData;
 
-      let order_id = '';
       //@ts-ignore
-      const res = await runInTransaction(async (session: ClientSession) => {
+      return await runInTransaction(async (session: ClientSession) => {
         const uniqueOrderId = nanoid(15);
         const response = await razorpayWrapper.client.orders.create({
           amount: total * 100,
@@ -227,8 +216,7 @@ const paymentsRouter = new Hono()
               billValue,
               businessId,
               receipt: uniqueOrderId,
-              name,
-              phone,
+              userId,
               claimedCoins: claimedCoins,
               tableName,
               order_id: response.id,
@@ -238,14 +226,10 @@ const paymentsRouter = new Hono()
           ],
           { session },
         );
-        if (!saveOrder) {
-          return c.json({ err: true, message: 'Order not created', data: {} }, 400);
-        }
+        if (!saveOrder) return respond(c, 'Order not created', true, 400, {});
 
-        order_id = response.id;
+        return respond(c, 'Order created successfully', false, 200, { order_id: response.id });
       });
-
-      return c.json({ err: false, message: 'Order created successfully', data: order_id });
     },
   )
   .post(
@@ -256,37 +240,17 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-      const { businessId, reviewerPhone, reviewRating, order_id } = requestData || {};
-
-      if (!businessId || !reviewerPhone || !reviewRating || !order_id) {
-        return c.json({
-          err: true,
-          data: {},
-          message: 'businessId, reviewerPhone, reviewRating, order_id is required',
-        });
-      }
+      const { order_id } = requestData || {};
 
       const review = await Reviews.findOne({ order_id: order_id });
 
-      if (review) {
-        return c.json({
-          err: true,
-          message: 'Review already added',
-          data: {},
-        });
-      }
+      if (review) return respond(c, 'Review already exists', true, 400, {});
 
       const addReview = await Reviews.create(requestData);
 
-      if (!addReview) {
-        return c.json({
-          err: true,
-          message: 'Review not added',
-          data: {},
-        });
-      }
+      if (!addReview) return respond(c, 'Review not created', true, 400, {});
 
-      return c.json({ err: false, message: '', data: addReview._id, id: addReview._id });
+      return respond(c, 'Review created successfully', false, 200, addReview);
     },
   )
   .post(
@@ -297,21 +261,23 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-      const { total, billValue, tableName, tips, currency, name, phone, claimedCoins, businessId } = requestData;
+      const { total, billValue, tableName, tips, currency, userId, claimedCoins, businessId } = requestData;
       const uniqueOrderId = nanoid(15);
 
-      const orderAlreadyExist = await PaymentAlert.findOne({ businessId, tableName, alertType: 'OFFLINE', isAccepted: false });
+      const orderAlreadyExist = await PaymentAlert.findOne({
+        businessId,
+        tableName,
+        alertType: 'OFFLINE',
+        isAccepted: false,
+      });
 
-      if (orderAlreadyExist) {
-        return c.json({ err: true, message: 'Order already exists for this table please wait for waiter action!', data: {} }, 400);
-      }
+      if (orderAlreadyExist) return respond(c, 'Order already exists for this table please wait for waiter action!', true, 400, {});
 
       const saveOrder = await Order.create({
         total,
         currency,
         receipt: uniqueOrderId,
-        name,
-        phone,
+        userId,
         claimedCoins: claimedCoins,
         tableName,
         tips,
@@ -330,16 +296,13 @@ const paymentsRouter = new Hono()
         order_id: saveOrder?._id,
         status: 'SUCCESS',
         tableName: tableName,
-
-        coinsApplied: claimedCoins && claimedCoins > 0 ? true : false,
+        coinsApplied: !!(claimedCoins && claimedCoins > 0),
         message: `Paid ${total}`,
         date: Date.now(),
         posDiscount: posDiscount,
-
-        // comment : payload.payment.entity.notes.comment
       });
 
-      return c.json({ err: false, message: 'Order created successfully', data: { order_id: saveOrder._id } });
+      return respond(c, 'Order created successfully', false, 200, { order_id: saveOrder?._id });
     },
   )
   .post(
@@ -358,12 +321,16 @@ const paymentsRouter = new Hono()
         .digest('hex');
 
       if (signature === razorpay_signature) {
-        return c.json({ err: false, message: 'Payment is valid', data: razorpay_order_id });
+        return c.json({
+          err: false,
+          message: 'Payment is valid',
+          data: razorpay_order_id,
+        });
       }
       return c.json({ err: true, message: 'Payment is not valid' }, 400);
     },
   )
-  .post('/razorpay-webhook/:murchent', async (c) => {
+  .post('/razorpay-webhook', async (c) => {
     //@ts-ignore
     const res = await runInTransaction(async (session: ClientSession) => {
       console.log('yaha tak');
@@ -394,7 +361,9 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({ order_id: payload.payment.entity.order_id }, null, { session });
       if (event === 'payment.failed') {
         const claimCoins = Number(payload.payment.entity.notes.claimedCoins) || 0;
-        const alertExist = await PaymentAlert.findOne({ order_id: getOrder?._id });
+        const alertExist = await PaymentAlert.findOne({
+          order_id: getOrder?._id,
+        });
         if (!alertExist) {
           await PaymentAlert.create(
             [
@@ -427,9 +396,8 @@ const paymentsRouter = new Hono()
               total: payload.payment.entity.notes.total,
               billValue: payload.payment.entity.notes.billValue,
               mode: payload.payment.entity.method,
-              customerName: getOrder?.name,
+              userId: getOrder?.userId,
               order_id: getOrder?._id,
-              customerPhone: getOrder?.phone,
               paymentMode: 'online',
               tableName: payload.payment.entity.notes.tableName,
               claimedCoins: payload.payment.entity.notes.claimedCoins || 0,
@@ -470,13 +438,12 @@ const paymentsRouter = new Hono()
         );
         if (payload.payment.entity.notes.loyaltyId) {
           if (claimCoins > 0) {
-            const updateUser = await removeCoins(
+            await removeCoins(
               Number(payload.payment.entity.notes.claimedCoins),
-              payload.payment.entity.notes.tableName || '',
-              getOrder?.phone || '',
-              Number(payload.payment.entity.notes.total),
-              payload.payment.entity.notes.loyaltyId || '',
-              Number(payload.payment.entity.notes.billValue),
+              payload.payment.entity.notes.tableName,
+              payload.payment.entity.notes.loyaltyId,
+              getOrder?._id.toString() ?? '',
+              getOrder?.userId?.toString() ?? '',
               session,
             );
           }
@@ -489,12 +456,12 @@ const paymentsRouter = new Hono()
 
           const cashBackCoins = await addCoins(
             cashBack,
-            getOrder?.phone || '',
+            getOrder?.userId?.toString() ?? '',
+            getOrder?._id?.toString() ?? '',
             payload.payment.entity.notes.tableName || '',
             payload.payment.entity.notes.businessId || '',
-            Number(payload.payment.entity.notes.total),
             payload.payment.entity.notes.loyaltyId || '',
-            Number(payload.payment.entity.notes.billValue),
+
             session,
           );
 
@@ -503,7 +470,7 @@ const paymentsRouter = new Hono()
 
             {
               $inc: {
-                coinzIssued: cashBack,
+                coinzIssued: cashBackCoins,
                 coinzRedeemed: claimCoins,
               },
             },
@@ -513,7 +480,11 @@ const paymentsRouter = new Hono()
       }
     });
 
-    return c.json({ err: false, message: 'Webhook processed successfully', data: res });
+    return c.json({
+      err: false,
+      message: 'Webhook processed successfully',
+      data: res,
+    });
   })
 
   .post(
@@ -522,18 +493,18 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json();
-      const { businessId, tableName, message, name, phone } = requestData;
+      const { businessId, tableName, message, userId } = requestData;
 
       const alert = await PaymentAlert.create({
         businessId: businessId,
         alertType: 'WAITER',
-        name: name,
+        userId: userId,
         status: 'SUCCESS',
         tableName: tableName,
         message: message,
         date: Date.now(),
       });
-      return c.json({ message: 'Order verified successfully', err: false, data: alert });
+      return respond(c, 'Alert created successfully', false, 200, alert);
     },
   )
   .get(
@@ -545,29 +516,26 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId, alertType } = c.req.query();
 
-      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
+      const existingPaymentAlerts = await PaymentAlert.find({
+        businessId,
+        alertType,
+        isAccepted: false,
+      })
+        .sort({ _id: -1 })
+        .populate('order_id');
 
-      return c.json({
-        err: false,
-        data: existingPaymentAlerts,
-        message: 'existing payment alerts',
-      });
+      return respond(c, 'existing payment', false, 200, existingPaymentAlerts);
     },
   )
   .get(
     '/:id/orders',
-
     zValidator('query', paramsSchema),
     // ,
     async (c) => {
       const { businessId } = c.req.query();
       const existingOrders = await Order.find({ businessId });
 
-      return c.json({
-        data: existingOrders,
-        status: 200,
-        err: false,
-      });
+      return respond(c, 'existing orders', false, 200, existingOrders);
     },
   )
   .get(
@@ -579,7 +547,13 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId, alertType } = c.req.query();
 
-      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType, isAccepted: false }).sort({ _id: -1 }).populate('order_id');
+      const existingPaymentAlerts = await PaymentAlert.find({
+        businessId,
+        alertType,
+        isAccepted: false,
+      })
+        .sort({ _id: -1 })
+        .populate('order_id');
 
       return c.json({
         data: existingPaymentAlerts,
@@ -592,27 +566,27 @@ const paymentsRouter = new Hono()
     '/:id/offlineAlerts',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
-    zValidator('query', paramsSchema),
+    zValidator('query', z.object({ businessId: z.string() })),
 
     async (c) => {
-      const { businessId, orderId } = c.req.query();
+      const { businessId } = c.req.query();
 
-      const existingPaymentAlerts = await PaymentAlert.find({ businessId, alertType: ['OFFLINE', 'WAITER'], isAccepted: false })
+      const existingPaymentAlerts = await PaymentAlert.find({
+        businessId,
+        alertType: ['OFFLINE', 'WAITER'],
+        isAccepted: false,
+      })
         .sort({ _id: -1 })
         .populate('order_id');
 
-      return c.json({
-        data: existingPaymentAlerts,
-        status: 200,
-        err: false,
-      });
+      return respond(c, 'existing payment', false, 200, existingPaymentAlerts);
     },
   )
   .put(
     '/:pid/order/:alertId',
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
-    zValidator('param', paramsSchema),
+    zValidator('param', z.object({ alertId: z.string() })),
 
     zValidator('json', acceptOrderSchema),
     async (c) => {
@@ -635,13 +609,19 @@ const paymentsRouter = new Hono()
             { isAccepted: true, comment, waiterName },
             { new: true, session },
           ).populate('order_id');
-          return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+          return c.json({
+            message: 'Order accepted successfully',
+            err: false,
+            data: updateAlert,
+          });
         }
 
         if (alert.alertType === 'OFFLINE') {
           console.log('arra');
           if (alert && !alert.isAccepted) {
-            const order = await Order.findById(alert.order_id, null, { session });
+            const order = await Order.findById(alert.order_id, null, {
+              session,
+            });
 
             await Payment.create(
               [
@@ -652,9 +632,8 @@ const paymentsRouter = new Hono()
                   mode: 'offline',
                   status: 'SUCCESS',
                   paymentMode: 'offline',
-                  customerName: order?.name,
+                  userId: order?.userId,
                   claimedCoins: order?.claimedCoins,
-                  customerPhone: order?.phone,
                   billValue: order?.billValue,
                   tips: order?.tips,
                   tableName: order?.tableName,
@@ -666,29 +645,34 @@ const paymentsRouter = new Hono()
             );
 
             if (order?.claimedCoins && order?.claimedCoins > 0) {
-              const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+              const existingLoyalty = await LoyaltySettings.findOne({
+                businessId: alert.businessId,
+              }).select('loyaltyId');
               await removeCoins(
                 Number(order?.claimedCoins),
                 order.tableName || '',
-                order?.phone || '',
-                Number(order?.total),
-                existingLoyalty?.loyaltyId as string,
-                Number(order?.billValue),
+                existingLoyalty?.loyaltyId.toString() || '',
+                order._id.toString(),
+                order.userId.toString(),
+
                 session,
               );
             }
 
             if (order) {
               const cashBack = await calculatedCashbackCoins(order.businessId.toString(), Number(order.billValue), Number(order.claimedCoins));
-              const existingLoyalty = await LoyaltySettings.findOne({ businessId: alert.businessId }).select('loyaltyId');
+              const existingLoyalty = await LoyaltySettings.findOne({
+                businessId: alert.businessId,
+              }).select('loyaltyId');
               await addCoins(
                 cashBack,
-                order?.phone || '',
+                order.userId.toString(),
+                order._id.toString(),
                 order.tableName || '',
                 order.businessId.toString(),
-                Number(order.total),
-                existingLoyalty?.loyaltyId as string,
-                Number(order.billValue),
+
+                existingLoyalty?.loyaltyId.toString() || '',
+
                 session,
               );
 
@@ -706,19 +690,27 @@ const paymentsRouter = new Hono()
             }
           }
 
-          const pinCode = Math.floor(1000 + Math.random() * 9000);
+
           const updateAlert = await PaymentAlert.findByIdAndUpdate(
             alertId,
-            { isAccepted: true, completionCode: pinCode, comment, waiterName },
+            { isAccepted: true, comment, waiterName },
             { new: true, session },
           ).populate('order_id');
 
-          return c.json({ message: 'Order accepted successfully', err: false, data: updateAlert });
+          return c.json({
+            message: 'Order accepted successfully',
+            err: false,
+            data: updateAlert,
+          });
         }
         return c.json({ message: 'Invalid alert type', err: true, data: {} });
       });
 
-      return c.json({ message: 'Order accepted successfully', err: false, data: res });
+      return c.json({
+        message: 'Order accepted successfully',
+        err: false,
+        data: res,
+      });
     },
   )
   .put(
@@ -733,15 +725,20 @@ const paymentsRouter = new Hono()
       const { alertId } = c.req.param();
       const requestData = await c.req.json();
       const { waiterName } = requestData;
-      const alert = await PaymentAlert.findById(alertId);
-      const updateOrder = await Order.findByIdAndDelete(alert?.order_id?.toString());
-      const updateReview = await Reviews.findOneAndDelete({ order_id: alert?.order_id?.toString() });
+
+
 
       const updateAlert = await PaymentAlert.findByIdAndUpdate(alertId, { isRejected: true, isAccepted: true, waiterName }, { new: true }).populate(
         'order_id',
       );
 
-      return c.json({ message: 'Order rejected successfully', err: false, data: updateAlert });
+      if (!updateAlert) return c.json({ message: 'Alert not found', err: true, data: {} });
+
+      return c.json({
+        message: 'Order rejected successfully',
+        err: false,
+        data: updateAlert,
+      });
     },
   )
   .get(
@@ -832,7 +829,9 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({ businessId }).select('coinzIssued coinzRedeemed');
+      const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({
+        businessId,
+      }).select('coinzIssued coinzRedeemed');
       if (!from && !to) {
         const existingPayments = await Payment.find({
           businessId,

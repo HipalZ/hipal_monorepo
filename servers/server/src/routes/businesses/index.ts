@@ -496,6 +496,7 @@ const businessesRouter = new Hono()
         })) || {};
       return c.json({
         data: exitingSettings,
+        message: 'loyalty settings found',
         status: 200,
         error: false,
       });
@@ -518,23 +519,7 @@ const businessesRouter = new Hono()
       return respond(c, 'theme found', false, 200, existingTheme);
     },
   )
-  .get(
-    '/loyalty/:businessId',
-    zValidator(
-      'param',
-      z.object({
-        businessId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { businessId } = c.req.param();
 
-      const existingLoyalty = await LoyaltySettings.findOne({ businessId: businessId });
-      if (!existingLoyalty) return respond(c, 'theme not found', true, 404, {});
-
-      return respond(c, 'theme found', false, 200, existingLoyalty);
-    },
-  )
 
   .get(
     '/:businessId/users',

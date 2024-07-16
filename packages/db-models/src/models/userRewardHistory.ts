@@ -24,7 +24,7 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     tableName: {
       type: String,
     },
-    orderId: {
+    order_id: {
       type: ObjectId,
       ref: 'Order',
 

@@ -35,21 +35,18 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 }
 
 const addSignUpBonus = async (
-  phone: string,
   loyaltyId: string,
-
-  name: string,
+  userId: string,
   bonus: number,
 ) => {
   const existingReward = await UserReward.findOne({
-    userPhone: phone,
+    userId,
     loyaltyId,
   });
 
   if (!existingReward) {
     const newReward = new UserReward({
-      userPhone: phone,
-      userName: name,
+      userId,
       loyaltyId,
       rewards: bonus,
       password: Math.floor(Math.random() * 9000) + 10000,
@@ -57,7 +54,6 @@ const addSignUpBonus = async (
     });
     await LoyaltyCoinsInfo.findOneAndUpdate(
       { businessId: loyaltyId },
-
       {
         $inc: {
           coinzIssued: bonus,
@@ -67,18 +63,16 @@ const addSignUpBonus = async (
 
     await newReward.save();
     const data = new UserRewardHistory({
-      userName: name,
-      userPhone: phone,
-      status: 'plus',
+      userId,
+      status: 'PLUS',
       rewards: bonus,
-      currentBalance: bonus,
       loyaltyId,
       date: Date.now(),
     });
 
     await data.save();
   } else {
-    await UserReward.findOneAndUpdate({ userPhone: phone, loyaltyId }, { $inc: { scanCount: 2 } }, { new: true });
+    await UserReward.findOneAndUpdate({ userId, loyaltyId }, { $inc: { scanCount: 2 } }, { new: true });
   }
   return 1;
 };
@@ -522,7 +516,6 @@ const usersRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-
     zValidator(
       'param',
       z.object({
@@ -608,7 +601,6 @@ const usersRouter = new Hono()
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-
     zValidator(
       'param',
       z.object({
@@ -631,7 +623,7 @@ const usersRouter = new Hono()
         loyaltyId: z.string().optional(),
         signUpBonus: z.number().optional(),
         name: z.string().min(3).max(100).optional(),
-        userId: z.string().optional(),
+        userId: z.string(),
         phone: z.string().min(10).max(10),
       }),
     ),
@@ -647,7 +639,7 @@ const usersRouter = new Hono()
       //TODO: ROLE WHEN I ADD ROLE IN USER SCHEMA
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {
-          await addSignUpBonus(phone, loyaltyId, name, signUpBonus);
+          await addSignUpBonus(loyaltyId, userId, signUpBonus);
         }
       } catch (e) {
         return respond(c, 'Error in adding sign up bonus', true, 400, {});
@@ -686,7 +678,6 @@ const usersRouter = new Hono()
           refreshToken,
           rewards: signUpBonus,
         });
-
       }
 
       const accessToken = createAccessToken(existingUser._id?.toString() || '', 'HIPAL_CUSTOMER');
@@ -707,28 +698,28 @@ const usersRouter = new Hono()
     zValidator(
       'query',
       z.object({
-        userPhone: z.string(),
+        userId: z.string(),
         loyaltyId: z.string(),
       }),
     ),
 
     async (c) => {
-      const { userPhone, loyaltyId } = c.req.query();
+      const { userId, loyaltyId } = c.req.query();
 
       const existingUser = await UserRewardHistory.find({
-        userPhone,
+        userId,
         loyaltyId,
       }).select('rewards status date');
 
       const totalWin = existingUser.reduce((acc, item) => {
-        if (item.status === 'plus') {
+        if (item.status === 'PLUS') {
           return acc + (item.rewards || 0);
         }
         return acc;
       }, 0);
 
       const totalSave = existingUser.reduce((acc, item) => {
-        if (item.status === 'minus') {
+        if (item.status === 'MINUS') {
           return acc + (item?.rewards ?? 0);
         }
         return acc;
@@ -744,28 +735,24 @@ const usersRouter = new Hono()
   )
   .get(
     '/:businessId/getUserReward',
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
 
     zValidator(
       'query',
       z.object({
-        userPhone: z.string(),
+        userId: z.string(),
         loyaltyId: z.string(),
       }),
     ),
 
     async (c) => {
-      const { userPhone, loyaltyId } = c.req.query();
+      const { userId, loyaltyId } = c.req.query();
 
-      if (!loyaltyId) {
-        return c.json({
-          message: 'Loyalty Id is required',
-        });
-      }
+
       const userExist = await User.findOne({
-        phone: userPhone,
-        role: 'HIPAL_CUSTOMER',
+        _id: userId,
+
       });
       if (!userExist) {
         return c.json({
@@ -773,32 +760,25 @@ const usersRouter = new Hono()
         });
       }
 
-      const userRewards = await UserReward.findOne({ userPhone, loyaltyId });
+      const userRewards = await UserReward.findOne({ userId, loyaltyId }).populate('userId', {
+        name: 1,
+        phone: 1,
+        _id: 0
+      });
       if (!userRewards) {
         const data = new UserReward({
-          userPhone,
+          userId,
           loyaltyId,
-          userName: userExist?.name,
           rewards: 0,
           password: Math.floor(Math.random() * 9000) + 10000,
-          count: 0,
+          scanCount: 1,
         });
 
         const user = await data.save();
-        return c.json({
-          data: user,
-          status: true,
-          message: 'User reward fetched successfully',
-          err: false,
-        });
+        return respond(c, 'User reward fetched successfully', false, 200, user);
       }
 
-      return c.json({
-        data: userRewards,
-        status: true,
-        message: 'User reward fetched successfully',
-        err: false,
-      });
+      return respond(c, 'User reward fetched successfully', false, 200, userRewards);
     },
   )
   .get(
@@ -806,7 +786,7 @@ const usersRouter = new Hono()
     zValidator(
       'query',
       z.object({
-        userPhone: z.string(),
+        userId: z.string(),
         loyaltyId: z.string(),
         from: z.string().optional(),
         to: z.string().optional(),
@@ -814,28 +794,39 @@ const usersRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { userPhone, loyaltyId, from, to } = c.req.query();
+      const { userId, loyaltyId, from, to } = c.req.query();
 
-      const arr = [];
-
+      const fromDate = Number(from);
+      const toDate = Number(to);
       const PAGE_SIZE = 20;
-      const pageNumber = c.req.query('pageNumber') || 1;
+      const pageNumber = c.req.query('pageNumber') as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      if (fromDate > toDate) return respond(c, 'From date cannot be greater than to date', true, 400, {});
       const userRewards = await UserReward.findOne({
-        userPhone,
+        userId,
         loyaltyId,
+      }).populate('userId', {
+        name: 1,
+        phone: 1,
+        _id: 0
+
       });
       const totalReward = userRewards?.rewards;
-      const userName = userRewards?.userName;
+      const userName = userRewards?.userId.name || '';
+      const userPhone = userRewards?.userId.phone || '';
 
       if (!from && !to) {
         const userRewards = await UserRewardHistory.find({
-          userPhone,
+          userId,
           loyaltyId,
         })
-          .sort({ id: -1 })
+          .sort({ _id: -1 })
           .skip(skip)
-          .limit(PAGE_SIZE);
+          .limit(PAGE_SIZE).populate('userId', {
+            name: 1,
+            phone: 1,
+            _id: 0
+          });
 
         const newObje =
           {
@@ -845,60 +836,29 @@ const usersRouter = new Hono()
             items: userRewards,
           } || {};
 
-        return c.json({
-          data: newObje,
-          status: true,
-          message: 'User reward fetched successfully',
-          err: false,
-        });
+        return respond(c, 'User reward fetched successfully', false, 200, newObje);
       }
       if (from && to) {
-        if (from === to) {
-          const userRewards = await UserRewardHistory.find({
-            userPhone,
-            loyaltyId,
-          })
-            .sort({ id: -1 })
-            .skip(skip)
-            .limit(PAGE_SIZE);
-          const newObje =
-            {
-              totalReward,
-              userName,
-              userPhone,
-              items: userRewards,
-            } || {};
 
-          return c.json({
-            data: newObje,
-            status: true,
-            message: 'User reward fetched successfully',
-            err: false,
-          });
-        }
-        const fromDate = new Date(String(from).split('-').reverse().join('-'));
-        //@ts-ignore
-        const toDate = new Date(String(to).split('-').reverse().join('-') + ' 23:59:59');
-        if (fromDate > toDate) {
-          return c.json({
-            message: 'From date cannot be greater than to date',
-            err: true,
-            data: {},
-            status: false,
-          });
-        }
+
+
+
         const filteredRewards = await UserRewardHistory.find({
           userPhone,
           loyaltyId,
           date: {
-            $gte: fromDate.toISOString(),
-            $lte: toDate.toISOString(),
+            $gte: fromDate,
+            $lte: toDate,
           },
         })
 
           .sort({ id: -1 })
           .skip(skip)
-          .limit(PAGE_SIZE);
+          .limit(PAGE_SIZE).populate('userId', {
+            name: 1,
+            phone: 1,
+            _id: 0
+          });
         const newObje =
           {
             totalReward,
@@ -906,12 +866,7 @@ const usersRouter = new Hono()
             userPhone,
             items: filteredRewards,
           } || {};
-        return c.json({
-          data: newObje,
-          status: true,
-          message: 'User reward fetched successfully',
-          err: false,
-        });
+        return respond(c, 'User reward fetched successfully', false, 200, newObje);
       }
     },
   );
