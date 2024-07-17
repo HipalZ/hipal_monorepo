@@ -34,6 +34,32 @@ const categoriesRouter = new Hono()
         if (existingCategory)
           return respond(c, "Category already exists", true, 409, {});
 
+        if (
+          requestData.hierarchy === "PARENT" &&
+          parentCategoryIds.length > 0
+        ) {
+          return respond(
+            c,
+            "Parent category should not have parent category",
+            true,
+            400,
+            {},
+          );
+        }
+
+        if (
+          requestData.hierarchy === "CHILD" &&
+          requestData.subCategoryIds.length > 0
+        ) {
+          return respond(
+            c,
+            "Child category should not have sub category",
+            true,
+            400,
+            {},
+          );
+        }
+
         const menuType =
           await Business.findById(businessId).select("menuLayout");
         if (!menuType) return respond(c, "Business not found", true, 404, {});
@@ -114,6 +140,33 @@ const categoriesRouter = new Hono()
           const existingCategory = await Category.findOne({
             name: requestData.name,
           }).select("_id");
+
+          if (
+            existingCategory?.hierarchy === "PARENT" &&
+            requestData.parentCategoryIds.length > 0
+          ) {
+            return respond(
+              c,
+              "Parent category should not have parent category",
+              true,
+              400,
+              {},
+            );
+          }
+
+          if (
+            existingCategory?.hierarchy === "CHILD" &&
+            requestData.subCategoryIds.length > 0
+          ) {
+            return respond(
+              c,
+              "Child category should not have sub category",
+              true,
+              400,
+              {},
+            );
+          }
+
           if (existingCategory)
             return respond(c, "Category already exists", true, 409, {});
         }
@@ -166,18 +219,15 @@ const categoriesRouter = new Hono()
         if (requestData.parentCategoryIds.length > 0) {
           const findOnes =
             await Category.findById(id).select("parentCategoryIds");
-          const parentCategoryIds = requestData.parentCategoryIds;
-          let updateIds = parentCategoryIds.filter((id: string) =>
-            findOnes?.parentCategoryIds.includes(Object(id)),
-          );
 
-          if (updateIds.length === 0) {
-            updateIds = requestData.parentCategoryIds;
-          }
+          let a = findOnes?.parentCategoryIds;
+          let b = requestData.parentCategoryIds;
+
+          let uniqueFromB = b.filter((item) => !a.includes(item));
 
           await Category.findByIdAndUpdate(
             id,
-            { parentCategoryIds: updateIds },
+            { parentCategoryIds: uniqueFromB },
             { session },
           );
         }
@@ -241,6 +291,24 @@ const categoriesRouter = new Hono()
         isDeleted: true,
       });
 
+      const pullCategory = await Category.updateMany(
+        {
+          parentCategoryIds: id,
+        },
+        {
+          $pull: { parentCategoryIds: id },
+        },
+      );
+
+      const pullDish = await Dish.updateMany(
+        {
+          categoryIds: id,
+        },
+        {
+          $pull: { categoryIds: id },
+        },
+      );
+
       if (!deletedCategory)
         return respond(c, "Category not found", true, 404, {});
 
@@ -261,7 +329,10 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
 
-      const existingCategories = await Category.find({ businessId }).populate({
+      const existingCategories = await Category.find({
+        businessId,
+        isDeleted: false,
+      }).populate({
         path: "dishIds", // Populate dishes
         populate: {
           path: "addOns", // Within each dish, populate extras
