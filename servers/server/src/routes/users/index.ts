@@ -146,12 +146,14 @@ const usersRouter = new Hono()
     }
 
     if (existingUser) {
-      return respond(c, "User already exist", true, 409, existingUser);
+      return respond(c, "User already exist", true, 409, {
+        user: existingUser,
+      });
     }
 
     const user = await User.create({ ...requestData, role: roles });
 
-    return respond(c, "User created successfully", false, 201, user);
+    return respond(c, "User created successfully", false, 201, { user: user });
   })
   .post(
     "/ownerSignUp",
