@@ -14,10 +14,10 @@ function DishesTypes({
 	categories: ICategory[]
 }) {
 	return (
-		<>
+		<section className="sticky z-50 -top-1">
 			<MainTypes allCategoriesTypes={allCategoriesTypes}/>
 			<SubTypes allCategoriesTypes={allCategoriesTypes} categories={categories} />
-		</>
+		</section>
 	)
 }
 

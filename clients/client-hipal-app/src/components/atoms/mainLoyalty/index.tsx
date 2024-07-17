@@ -11,12 +11,12 @@ import {
 } from "../card/pathPattern"
 import Image from "next/image"
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import TitleTransition from "../titletransition"
 import useBusinessDetails from "@/components/store/useBusinessDetails"
 import PlaceholderImg from "../placeholder"
-import { PatternKeys } from "@/components/utils/helpers"
-import { ILoyaltySetting } from "@/components/store/useLoyaltyData"
+import type { PatternKeys } from "@/components/utils/helpers"
+import type { ILoyaltySetting } from "@/components/store/useLoyaltyData"
 
 interface ILoyaltyCard {
 	logo?: string
@@ -31,7 +31,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const [cardPattern, setCardPattern] = useState("")
 	const userName = useLogin((s) => s.userDetails.name)
 	const isLogin = useLogin((s) => s.isLogin)
-	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
+	const customLink = useParams()?.businessId as string
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
 
@@ -147,7 +147,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 				</div>
 			</div>
 			<div className="py-4 mx-6 text-sm text-center text-primary">
-				Get {loyaltySetting?.setReward}% cash back every time you Pay bill! It&#39;s our way of saying thanks for choosing us.
+				Get {loyaltySetting?.setCashBackPercentage}% cash back every time you Pay bill! It&#39;s our way of saying thanks for choosing us.
 				Simple savings, just for you!
 			</div>
 			{!hiCode && (

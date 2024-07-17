@@ -3,12 +3,10 @@ import { FLOW, FLOW_TYPES, PAGE_TYPES, routePaths } from "@/components/utils/rou
 import { useCallback, useMemo } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { _useAllBusiness } from "./useAllBusiness";
-import useBusinessDetails from "./useBusinessDetails";
 
 function useRoutingFlow() {
   const pathname = usePathname();
-  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
-  const { dishId } = useParams<{ customLink: string, dishId: string }>();
+  const { dishId, customLink } = useParams<{ customLink: string, dishId: string }>();
   const businessData = _useAllBusiness((s) => s.data);
 
   /**

@@ -14,6 +14,7 @@ import line from "@/assets/svg/Line.svg";
 import ellipse from "@/assets/svg/ellipse.svg";
 import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
+import { useParams } from "next/navigation";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(
@@ -26,7 +27,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   const { userDetails } = useLogin();
   const [itemData, setItemData] = useState<UserData[]>([]);
   const { userTotalHistory } = useUserReward();
-  const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
+  const customLink = useParams()?.businessId as string;
   const [hasMoreData, setHasMoreData] = useState(true);
 
   const getUserHistory = async (pageNumber) => {
@@ -43,7 +44,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
     ].getUserRewardHistory.$get({
       param: { businessId: data?.business?._id || "" },
       query: {
-        userPhone: userDetails.phone,
+        userId: userDetails._id,
         loyaltyId: data?.loyalty?.loyaltyId,
         pageNumber: pageNumber.toString(),
       },

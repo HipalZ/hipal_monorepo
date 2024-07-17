@@ -29,7 +29,6 @@ const DishesList: React.FC<IDishesProps> = (props) => {
 	  useEffect(() => {
 		const handleHashChange = () => {
 		  const { hash } = window.location;
-		  console.log(hash);
 		  if (hash) {
 			const categoryId = hash.substring(1); 
 			const element = document.getElementById(categoryId);

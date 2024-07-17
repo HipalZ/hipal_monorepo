@@ -5,13 +5,12 @@ import { Fragment, memo, useMemo, useRef, useState } from "react";
 import { BiDish } from "react-icons/bi";
 import Image from "next/image";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { ICategory, IDish } from "@/components/types/businessData";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { RxCross2 } from "react-icons/rx";
 
 // NOTE: A `relative` tag must be added to the parent of this component
@@ -21,7 +20,7 @@ const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => voi
     const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
     const [search, setSearchOpen] = useState(false);
     const router = useRouter();
-    const customLink = useBusinessDetails((s)=>s.businessDetails?.customLink)
+    const customLink = useParams()?.businessId as string;
     const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(e.target.value);
         setSearchOpen(true);

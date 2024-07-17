@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { BusinessDetails, IBiz, IBusinessData } from "@/components/types/businessData";
+import type { BusinessDetails, IBusinessData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -13,7 +13,6 @@ export async function fetchCommonData(businessId: string): Promise<{ data: IBusi
             param: { customLink: businessId }
         });
         const response = await res.json() as unknown as { data: IBusinessData; message: string; error: boolean };
-        console.log('ar',response)
         if (response.data !== null) {
             data["business"] = response.data as unknown as BusinessDetails; 
             bizId = response.data.businessId;
@@ -32,7 +31,7 @@ export async function fetchCommonData(businessId: string): Promise<{ data: IBusi
     })
     const settings = await settingsResponse.json();
     data["settings"] = settings?.data?.theme || {};
-
-
+    console.log('data',data)
+    console.log('bizId',bizId)
     return {data, bizId};
 }

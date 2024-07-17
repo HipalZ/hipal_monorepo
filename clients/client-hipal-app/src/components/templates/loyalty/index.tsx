@@ -12,7 +12,7 @@ import {
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { memo, useEffect, useState } from "react";
 import MainLoyalty from "@/components/atoms/mainLoyalty";
 import DishData from "@/components/atoms/dishDescription";
@@ -32,12 +32,11 @@ import RollingNumber from "@/components/rollingNumbers";
 import hipalBlurred from "@/assets/svg/hipal_blurred_logo.svg";
 import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
-  const [rewards, setRewards] = useState();
+  const [rewards, setRewards] = useState<number>();
   const { userDetails } = useLogin();
   const setUserReward = useUserReward((s) => s.setUserReward);
   const { setUserTotalHistory, userTotalHistory } = useUserReward();
@@ -48,7 +47,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
   const searchParams = useSearchParams();
   const claim = searchParams?.get("claim");
-  const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
+  const customLink = useParams()?.businessId as string
 
   useEffect(() => {
     const patterns = (cardPattern: PatternKeys, fontColor: string) => {
@@ -83,7 +82,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         businessId: userDetails.phone,
       },
       query: {
-        userPhone: userDetails.phone,
+        userId: userDetails?._id,
         loyaltyId: data?.loyalty?.loyaltyId,
       },
 

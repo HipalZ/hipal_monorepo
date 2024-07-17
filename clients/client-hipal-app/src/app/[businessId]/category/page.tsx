@@ -60,11 +60,10 @@ export default async function Page({
   return (
     <>
       <div className="relative flex flex-col w-full pb-14">
-        <TopBackground themes={data?.settings?.themes} />
+        <TopBackground specialBanner={data?.business?.specialBannerUrl} />
         <CategoryHeader
           categories={data?.categories}
           allCategoriesTypes={data?.allCategoriesTypes}
-          primaryColor={data?.settings?.themes?.primaryColor || ""}
         />
         <div>
           <div className="!mt-0 !scroll-smooth">
@@ -73,8 +72,8 @@ export default async function Page({
               categories={data?.categories || []}
             />
           </div>
-          <Footer themes={data?.settings?.themes || defaultThemes} />
-          <PageName />
+          <Footer themes={data?.settings || defaultThemes} socialMediaLinks={data?.business?.socialMediaLinks} footerDescription={data?.business?.footerDescription}/>
+          <PageName endBannerUrl={data?.business?.endBannerUrl}/>
         </div>
       </div>
       <CategoryPageBtn />

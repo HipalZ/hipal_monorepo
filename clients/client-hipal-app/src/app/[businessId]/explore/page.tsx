@@ -57,8 +57,8 @@ export default async function Page({
         <div className="overflow-auto">
           <UniquelyDishes uniquelyDishes={data?.uniquelyDishes}/>
         </div>
-        <Footer themes={data?.settings || defaultThemes} />
-        <PageName />
+        <Footer themes={data?.settings || defaultThemes} socialMediaLinks={data?.business?.socialMediaLinks} footerDescription={data?.business?.footerDescription}/>
+        <PageName endBannerUrl={data?.business?.endBannerUrl}/>
       </div>
       <BottomButton />
     </div>

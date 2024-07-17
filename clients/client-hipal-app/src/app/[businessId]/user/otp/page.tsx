@@ -2,7 +2,7 @@
 import { type IUserData, useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import Welcome from "@/assets/otp_image.png";
 import { BiArrowBack, BiEditAlt } from "react-icons/bi";
@@ -26,12 +26,12 @@ function OtpPage() {
   const { setIsLogin, setUserDetails, userDetails } = useLogin();
   const [coinZ, setCoinz] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [customerName, setCustomerName] = useState(userDetails.name);
+  const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
   const [logo, setLogo] = useState(businessLogo);
   const setAccessToken = useUserToken.getState().setAccessToken;
   const setRefreshToken = useUserToken.getState().setRefreshToken;
-  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+  const customLink = useParams()?.businessId as string;
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -179,7 +179,7 @@ function OtpPage() {
 				 bg-black bg-center bg-no-repeat bg-contain  mx-auto"
         style={{ backgroundImage: `url(${Welcome.src})` }}
       />
-      {userDetails.name === "" ? (
+      {userDetails?.name === "" ? (
         <section className="absolute text-white top-[10vh] left-9">
           <b className="block text-2xl gradient-text">You look new !</b>
           <b className="text-3xl capitalize gradient-text">Welcome...</b>
@@ -188,7 +188,7 @@ function OtpPage() {
       ) : (
         <section className="absolute text-white top-[10vh] left-9">
           <h4 className="text-2xl">Hello!</h4>
-          <b className="text-3xl capitalize">{userDetails.name}</b>
+          <b className="text-3xl capitalize">{userDetails?.name}</b>
           <b className="text-4xl wave-hand">👋</b>
         </section>
       )}
@@ -209,7 +209,7 @@ function OtpPage() {
           </section>
         )}
         <section className="space-y-4">
-          {userDetails.name === "" ? (
+          {userDetails?.name === "" ? (
             <>
               {" "}
               <div className="!-mb-4 text-sm font-semibold">

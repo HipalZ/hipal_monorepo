@@ -30,7 +30,7 @@ function SubTypes(props: ISubTypes) {
 	}, [allCategoriesTypes?.sub, parentCategory])
 
 	return (
-		<section className="overflow-x-auto no-scrollbar">
+		<section className="overflow-x-auto no-scrollbar bg-base-100">
 			{!!subTypes && (
 				<div
 					ref={subTypeContainerRef}

@@ -1,7 +1,7 @@
 "use client";
 import { memo, useCallback, useEffect, useState } from "react";
 import BottomButton from ".";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
@@ -23,10 +23,10 @@ const Cart = dynamic(() => import("@/components/organisms/cart"), {
 
 const CategoryPageBtn = () => {
   const { isLogin, isPayment } = useLogin();
-  const { businessId,customLink } = useBusinessDetails((s) => ({
+  const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?._id,
-    customLink: s.businessDetails?.customLink,
   }));
+  const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const [inputModal, setInputModal] = useState(false);
   const setDirection = useLogin((s) => s.setDirection);

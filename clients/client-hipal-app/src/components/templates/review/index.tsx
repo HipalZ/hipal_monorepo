@@ -2,7 +2,7 @@
 import { _useAllBusiness } from '@/components/store/useAllBusiness'
 import { useLogin } from '@/components/store/useLogin'
 import Image from 'next/image'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { type ChangeEvent, memo, useCallback, useEffect, useState } from 'react'
 import reviewIcon from '@/assets/svg/reviewz.svg'
 import success from '@/assets/svg/success-icon.svg'
@@ -42,7 +42,7 @@ interface Payload {
 function Review({ data }: { data: IBusinessData }) {
 	const router = useRouter()
 	const businessId = useBusinessDetails((s) => s.businessDetails?._id)
-	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
+	const customLink = useParams()?.businessId as string
 	const searchParams = useSearchParams()
 	const claim = searchParams?.get('claim')
 	const roundedOffClaim = Math.round(Number(claim))
@@ -194,7 +194,7 @@ function Review({ data }: { data: IBusinessData }) {
 						priority={true}
 						width={125}
 						height={125}
-						className='animate-pulse m-auto'
+						className='m-auto animate-pulse'
 					/>}
 					{mode === "online" ? <h1 className='text-xl'>Payment Success!</h1> : <h1 className='text-xl'>Waiting for confirmation</h1>}
 				</article>}

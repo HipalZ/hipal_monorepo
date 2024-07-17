@@ -15,8 +15,8 @@ import { createSrcColor, type PatternKeys } from "@/components/utils/helpers";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import type { IUserReward } from "@/components/store/useUserReward";
+import { useParams } from "next/navigation";
 interface ILoyaltyCard {
 	loyalty: ILoyaltySetting
 }
@@ -32,7 +32,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 	const ref = useRef(null);
 	const isInView = useInView(ref, { once: true });
 	const logo = useBusinessDetails((s) => s.businessDetails?.logo)
-	const customLink = useBusinessDetails((s) => s.businessDetails?.customLink)
+	const customLink = useParams()?.businessId as string
 	const login = useLogin((s) => s.isLogin)
 
 	const openModal = () => {
@@ -66,7 +66,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 				businessId: loyalty?.businessId || ''
 			},
 			query: {
-				userPhone: userDetails.phone,
+				userId: userDetails?._id,
 				loyaltyId: loyalty?.loyaltyId
 			},
 		})
@@ -78,9 +78,9 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 	}
 
 	useQuery({
-		queryKey: ['getUserReward', userDetails.phone, loyalty?.loyaltyId],
+		queryKey: ['getUserReward', userDetails._id, loyalty?.loyaltyId],
 		queryFn: handleUserCoinz,
-		enabled: !!userDetails.phone && !!loyalty?.loyaltyId,
+		enabled: !!userDetails._id && !!loyalty?.loyaltyId,
 	})
 
 	if (loyalty?._id) {
@@ -97,7 +97,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 			<section className="relative flex items-center justify-center gap-2 px-4 mt-4 overflow-hidden">
 				<center ref={ref} className="w-full relative p-4 bg-[#6A35FF] overflow-hidden max-w-[190px] h-[16.5rem] rounded-2xl">
 					<div className="text-xl font-semibold text-white">
-						{loyaltySetting.setReward}% Coinzback
+						{loyaltySetting.setCashBackPercentage}% Coinzback
 					</div>
 					<figure
 						className="absolute top-[67%] left-[6%] transform -translate-y-[13%] overflow-hidden"

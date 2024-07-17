@@ -9,8 +9,8 @@ export interface ILoyaltySetting {
 	cardColor: string
 	fontColor: string
 	cardPattern: any
-	setReward: number
-	setClaimAmount: number
+	setCashBackPercentage: number
+	setClaimRewards: number
 	logo?: string
 	signUpBonus: number
 	rewardLimit:number
@@ -25,8 +25,8 @@ export const useLoyaltyData = create(
 			loyaltySetting: {
 				loyaltyId: "",
 				businessId: "",
-				setReward: 10,
-				setClaimAmount: 20,
+				setCashBackPercentage: 10,
+				setClaimRewards: 20,
 				_id: "",
 				cardPattern: "",
 				cardColor: "",

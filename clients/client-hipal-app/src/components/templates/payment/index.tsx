@@ -2,7 +2,7 @@
 import { MdOutlineChevronLeft } from "react-icons/md";
 import { type ChangeEvent, memo, useEffect, useState } from "react";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { toast } from "react-toastify";
@@ -22,7 +22,6 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
     ssr: false,
@@ -57,6 +56,7 @@ const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
 const PaymentMemo = ({ data }: { data: IBusinessData }) => {
+    const customLink = useParams()?.businessId as string;
     const [isTipActive, setIsTipActive] = useState<boolean>(false)
     const [showInput, setShowInput] = useState(false);
     const [selectedTip, setSelectedTip] = useState('');
@@ -78,7 +78,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     useEffect(() => {
         if (!tableName) {
-            return router.push(`/${businessDetails?.customLink}/explore`)
+            return router.push(`/${customLink}/explore`)
         }
     }, [])
 
@@ -180,13 +180,13 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 event.preventDefault();
                 event.returnValue = ''; // Custom message is no longer supported in most browsers
                 // Redirect to a specific URL
-                window.location.href = `/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                window.location.href = `/${customLink}/payment?amount=${billValue}`; // Change to your desired URL
                 toast.error('Add the coinz to get the rewards')
             };
             window.onpopstate = (event) => {
                 event.preventDefault();
                 // Redirect to a specific URL
-                window.location.href = `/${businessDetails?.customLink}/payment?amount=${billValue}`; // Change to your desired URL
+                window.location.href = `/${customLink}/payment?amount=${billValue}`; // Change to your desired URL
                 toast.error('Add the coinz to get the rewards')
             };
 
@@ -216,7 +216,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         const orderId = data?.data as string
         console.log('orderId', orderId)
         const total = billValue - claimedCoinz + tips;
-        const coinsObtained = total * (loyaltySetting?.setReward / 100);
+        const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
         const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
         const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
         if (res.status === 200) {
@@ -225,7 +225,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             setRazorPayOrderId('')
             setRazorPayPaymentId('')
             setTableName('')
-            return router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=online&claim=${Math.round(finalReward?.finalReward)}&orderId=${orderId}`)
+            return router.push(`/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(finalReward?.finalReward)}&orderId=${orderId}`)
         }
         toast.error('Payment failed')
     }
@@ -241,7 +241,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     const handleCreateOfflineOrder = async () => {
         if (tableName === '') {
             toast.error('Please scan to start')
-            return router.push(`/${businessDetails?.customLink}/scan`)
+            return router.push(`/${customLink}/scan`)
         }
         if (isLoading) {
             return toast.error('Please wait for the previous transaction to complete')
@@ -267,12 +267,12 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         }
         if (response?.data?.order_id) {
             const total = billValue - claimedCoinz + tips;
-            const coinsObtained = total * (loyaltySetting?.setReward / 100);
+            const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
             const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz
             const finalReward = calculateReward(existingCoins, coinsObtained, loyaltySetting?.rewardLimit)
             toast.success('We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.')
             setTableName('')
-            router.push(`/${businessDetails?.customLink}/review?amount=${total}&mode=offline&claim=${Math.round(finalReward?.finalReward)}&orderId=${response?.data?.order_id}`)
+            router.push(`/${customLink}/review?amount=${total}&mode=offline&claim=${Math.round(finalReward?.finalReward)}&orderId=${response?.data?.order_id}`)
             setIsLoading(false)
         }
     }
@@ -304,7 +304,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         }
         if (tableName === '') {
             toast.error('Please scan to start')
-            return router.push(`/${businessDetails?.customLink}/scan`)
+            return router.push(`/${customLink}/scan`)
         }
         if (mode.toLowerCase() === 'offline') {
             await handleCreateOfflineOrder();
@@ -366,7 +366,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 businessId: data?.business?._id || ''
             },
             query: {
-                userPhone: userDetails.phone,
+                userId: userDetails?._id,
                 loyaltyId: data?.loyalty?.loyaltyId
             },
 
@@ -395,7 +395,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         if (selectedMode === 'MODE') {
             return setSelectedMode('INVOICE')
         }
-        router.push(`${routePaths[PAGE_TYPES.CATEGORY](businessDetails?.customLink || '')}`)
+        router.push(`${routePaths[PAGE_TYPES.CATEGORY](customLink || '')}`)
     }
 
     const handleCoins = async (claimedCoinz: number) => {
@@ -424,9 +424,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     }, [])
 
     useQuery({
-        queryKey: ['getUserReward', userDetails.phone, data?.loyalty?.loyaltyId],
+        queryKey: ['getUserReward', userDetails?._id, data?.loyalty?.loyaltyId],
         queryFn: handleUserCoinz,
-        enabled: !!userDetails.phone && !!data?.loyalty?.loyaltyId,
+        enabled: !!userDetails?._id && !!data?.loyalty?.loyaltyId,
     })
 
     return (
@@ -517,7 +517,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                         maxCoinz={maxCoinz}
                         setMaxCoinz={setMaxCoinz}
                         billValue={billValue}
-                        setClaimAmount={data?.loyalty?.setClaimAmount}
+                        setClaimAmount={data?.loyalty?.setClaimRewards}
                     />
                 </div>
             )}

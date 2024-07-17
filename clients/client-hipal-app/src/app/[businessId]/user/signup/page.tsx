@@ -7,7 +7,7 @@ import Welcome from "@/assets/login-background.png";
 import { BiArrowBack } from "react-icons/bi";
 import HipalLogo from "@/assets/hipalNewLogo.svg";
 import { useLogin } from "@/components/store/useLogin";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
 
@@ -16,7 +16,7 @@ const SignUp = memo(() => {
   const [phone, setPhone] = useState("");
   const { setUserDetails } = useLogin();
   const businessData = useBusinessDetails((s) => s.businessDetails);
-  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+  const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
 
@@ -108,7 +108,7 @@ const SignUp = memo(() => {
           className="w-full mt-4 text-white bg-black rounded-full on_active_bounce btn"
         >
           {loader ? (
-            <span className="loader_spinner text-white !border-t-base-100 "></span>
+            <span className="loader_spinner text-white !border-t-base-100 " />
           ) : (
             "Get Started"
           )}

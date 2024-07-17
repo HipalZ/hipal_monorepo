@@ -2,7 +2,7 @@ import React, { memo, useEffect, useMemo, useState } from "react"
 
 interface TitleTransitionProps {
 	loyaltySetting: {
-		setReward: number | null
+		setCashBackPercentage: number | null
 	}
 	data: string | null
 	align?: "left" | "center" | "right"
@@ -14,8 +14,8 @@ function TitleTransition({ loyaltySetting, data, align }: TitleTransitionProps) 
 	const combinedTexts: string[] = useMemo(() => {
 		let dynamicTexts: string[] = []
 
-		if (loyaltySetting?.setReward != null) {
-			dynamicTexts.push(`${loyaltySetting.setReward}% Cashback`)
+		if (loyaltySetting?.setCashBackPercentage != null) {
+			dynamicTexts.push(`${loyaltySetting.setCashBackPercentage}% Cashback`)
 		}
 
 		if (data) {
@@ -38,7 +38,7 @@ function TitleTransition({ loyaltySetting, data, align }: TitleTransitionProps) 
 		<div className="relative py-4 overflow-hidden text-center syne-font">
 			{combinedTexts.map((text, i) => (
 				<span
-					key={i}
+					key={`text-${i}`}
 					className={`absolute bottom-0 font-medium transition-all duration-700 ease-in-out ${align == "left" ? "left-0 text-2xl" : "left-0 right-0 mx-auto text-3xl"}  font-Montserrat text-accent`}
 					style={{
 						transform: `translateY(${index === i ? 0 : "100%"})`,

@@ -4,15 +4,14 @@ import Section from "@/components/molecules/section"
 import type { IUniquelyDishes } from '@/components/types/businessData'
 import DiscountDishCard from '@/components/molecules/discountDishCard';
 import { Splide, SplideSlide } from "@splidejs/react-splide";
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
-import useBusinessDetails from '@/components/store/useBusinessDetails';
 
 interface Props {
     uniquelyDishes: IUniquelyDishes[] | undefined
 }
 const MemoUniquelyDishes = (props: Props) => {
-    const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+    const customLink = useParams()?.businessId as string
     const { uniquelyDishes } = props
     const router = useRouter();
     const handleRecommendedDishClick = (id: string) => {

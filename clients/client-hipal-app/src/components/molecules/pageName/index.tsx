@@ -4,7 +4,12 @@ import Image from "next/image"
 import { memo } from "react"
 
 
-function PageComponent() {
+type Props = {
+	endBannerUrl: string | undefined;
+}
+
+function PageComponent(props:Props) {
+	const { endBannerUrl } = props;
 	const onBoardBusiness = () => {
 		window.open("https://wa.me/9177914130", "_blank");
 	}
@@ -12,7 +17,7 @@ function PageComponent() {
 		<div>
 			<Image
 				onClick={onBoardBusiness}
-				src={Footer}
+				src={endBannerUrl ?? Footer}
 				quality={95}
 				width={480}
 				height={480}

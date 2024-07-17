@@ -1,6 +1,6 @@
 import DishTag from "@/components/atoms/dishTag";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import type { ICategory, IDish, IExplore, IExtraItem } from "@/components/types/businessData";
+import type { ICategory, IDish, IExtraItem } from "@/components/types/businessData";
 import { calculateTotalPrice, getPrice } from "@/components/utils/helpers";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
@@ -35,7 +35,6 @@ const HorizontalCard = ({
   const { addToCart } = useDishCart();
   const { selectedExtras, selectedPortion, resetSelections } = useDishStore();
   const showRecommendations = false;
-console.log(selectedExtras,selectedPortion);
   const openModal = useCallback((dishData: IDish) => {
     setSelectedDish(dishData);
     setIsModalOpen(true);
@@ -46,20 +45,19 @@ console.log(selectedExtras,selectedPortion);
     setIsModalOpen(false);
   }, [isModalOpen]);
 
-  const watchingDish = useCallback((dish: IDish,portion:string,extra:IExtraItem) => {
+  const watchingDish = useCallback((dish: IDish, portion: string, extra: IExtraItem) => {
     const totalPrice = calculateTotalPrice(
       dish,
       portion,
       extra,
     );
-    console.log(extra);
     addToCart({
       dish: dish,
       quantity: 1,
-      selectedPortion:portion,
+      selectedPortion: portion,
       selectedPortionPrice:
         dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-        selectedExtras: Object.keys(extra)
+      selectedExtras: Object.keys(extra)
         .filter((extraId) => extra[extraId] > 0)
         .map((extraId) => {
           const extraItem = dish?.extras[0]?.items.find(
@@ -75,7 +73,7 @@ console.log(selectedExtras,selectedPortion);
       totalPrice,
     });
     resetSelections();
-  }, [selectedExtras,selectedPortion]);
+  }, [selectedExtras, selectedPortion]);
 
   return (
     <section
@@ -142,9 +140,8 @@ console.log(selectedExtras,selectedPortion);
                   width={125}
                   height={125}
                   objectFit="cover"
-                  className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${
-                    dishData.availability ? "" : "grayscale"
-                  }`}
+                  className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
+                    }`}
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(110, 110)}
                 />
@@ -171,20 +168,19 @@ console.log(selectedExtras,selectedPortion);
           </div>
           {!noAddBtn && (
             <div
-              className={`z-20 flex flex-col items-center w-full mx-auto ${
-                !!coverImage || noDescription ? " -mt-6" : " -mt-4 -ml-6"
-              }`}
+              className={`z-20 flex flex-col items-center w-full mx-auto ${!!coverImage || noDescription ? " -mt-6" : " -mt-4 -ml-6"
+                }`}
             >
               {isAvailable && (
                 <div
-                  className={`flex flex-col flex-shrink-0 items-center w-full ${
-                    !!coverImage ? "" : "-ml-6"
-                  }`}
+                  className={`flex flex-col flex-shrink-0 items-center w-full ${!!coverImage ? "" : "-ml-6"
+                    }`}
                 >
                   <DishQuantityButton
                     setSelectedDish={watchingDish}
                     dishData={dishData}
                   />
+                  <span className="text-sm opacity-50">{dishData?.extras?.length > 0  ? 'customizable': null}</span>
                 </div>
               )}
             </div>

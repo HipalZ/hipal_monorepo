@@ -1,67 +1,53 @@
 "use client";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import type { IThemes } from "@/components/types/businessData";
 import { updateTheme } from "@/components/utils/themes";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { memo, useEffect } from "react";
-import { IoLogoLinkedin, IoLogoYoutube } from "react-icons/io";
-import { IoLogoFacebook, IoLogoInstagram } from "react-icons/io5";
-
+import { FaTelegram } from "react-icons/fa";
+import { IoLogoFacebook, IoLogoLinkedin, IoLogoTwitter, IoLogoYoutube } from "react-icons/io5";
+import { PiInstagramLogoFill } from "react-icons/pi";
 interface IFooter {
   themes: IThemes;
+  socialMediaLinks: { _id: string, icon: string, link: string }[] | undefined;
+  footerDescription: string | undefined;
 }
-const Footer = (props: IFooter) => {
-  const { themes } = props;
-  const customLink = useBusinessDetails((s) => s?.businessDetails?.customLink);
 
+const iconMapping: { [key: string]: JSX.Element } = {
+  instagram: <PiInstagramLogoFill className="my-auto text-3xl text-base-content/80" />,
+  facebook: <IoLogoFacebook className="my-auto text-3xl text-base-content/80" />,
+  twitter: <IoLogoTwitter className="my-auto text-3xl text-base-content/80" />,
+  telegram: <FaTelegram  className="my-auto text-3xl text-base-content/80" />,
+  linkedin: <IoLogoLinkedin className="my-auto text-3xl text-base-content/80" />,
+  youtube: <IoLogoYoutube className="my-auto text-3xl text-base-content/80" />,
+};
+
+const Footer = (props: IFooter) => {
+  const { themes, socialMediaLinks,footerDescription } = props;
+  const customLink = useParams()?.businessId as string
+  
   useEffect(() => {
     updateTheme(themes);
   }, [themes]);
 
   return (
     <div className="">
-      {themes?.footerText && (
+      {footerDescription ? (
         <div className="px-4 text-lg text-justify text-base-100-content">
-          {themes?.footerText}
+          {footerDescription}
         </div>
-      )}
+      ):null}
       <section className="flex justify-center px-2 mt-4 space-x-2">
-        {themes?.instagramLink && (
+        {socialMediaLinks ? socialMediaLinks.map(({ _id, icon, link }) => (
           <a
-            href={themes?.instagramLink}
-            aria-label="instagram"
+            key={_id}
+            href={link}
+            aria-label={icon}
             className="btn btn-ghost !px-1 !py-0 my-auto"
           >
-            <IoLogoInstagram className="my-auto text-3xl text-base-content/80" />
+            {iconMapping[icon]}
           </a>
-        )}
-        {themes?.facebookLink && (
-          <a
-            href={themes?.facebookLink}
-            aria-label="facebook"
-            className="btn btn-ghost !px-1 !py-0 my-auto"
-          >
-            <IoLogoFacebook className="my-auto text-3xl text-base-content/80" />
-          </a>
-        )}
-        {themes?.youtubeLink && (
-          <a
-            href={themes?.youtubeLink}
-            aria-label="youtube"
-            className="btn btn-ghost !px-1 !py-0 my-auto"
-          >
-            <IoLogoYoutube className="my-auto text-3xl text-base-content/80" />
-          </a>
-        )}
-        {themes?.linkedinLink && (
-          <a
-            href={themes?.linkedinLink}
-            aria-label="youtube"
-            className="btn btn-ghost !px-1 !py-0 my-auto"
-          >
-            <IoLogoLinkedin className="my-auto text-3xl text-base-content/80" />
-          </a>
-        )}
+        )):null}
       </section>
       <center className="pb-4 my-8 bg-base-300">
         <Link className="text-sm" href={`/${customLink}/terms`}>

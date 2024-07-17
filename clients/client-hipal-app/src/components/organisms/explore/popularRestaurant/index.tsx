@@ -1,19 +1,17 @@
 "use client";
-import page from "@/app/[businessId]/user/otp/page";
 import DiscountDishCard from "@/components/molecules/discountDishCard";
 import Section from "@/components/molecules/section";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import type { IDish } from "@/components/types/businessData";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { memo } from "react";
 
 interface IPopularRestProps {
   popular: any | undefined;
 }
 function PopularRestaurant(props: IPopularRestProps) {
-  const customLink = useBusinessDetails((s) => s.businessDetails?.customLink);
+  const customLink = useParams()?.businessId as string
   const { popular } = props;
   const router = useRouter();
   const handleRecommendedDishClick = (id: string) => {

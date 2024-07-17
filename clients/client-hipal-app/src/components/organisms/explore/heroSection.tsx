@@ -40,7 +40,6 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       setBusinessDetails(data.business);
     }
   }, [data]);
-  console.log('data', data?.business)
 
   return (
     <div className="relative flex flex-col px-8">

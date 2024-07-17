@@ -9,6 +9,7 @@ import Backgrid from "@/assets/payment/backgrid";
 import Image from "next/image";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 const RewardCard = ({
 	bgColor,
@@ -36,7 +37,7 @@ const Rewards = () => {
 		userCoinZ: s.userCoinZ,
 		isLogin: s.isLogin,
 	}));
-	const customLink = useBusinessDetails((s) => s.businessDetails.customLink);
+	const customLink = useParams()?.businessId as string;
 
 	if(!isLogin)return;
 	return (

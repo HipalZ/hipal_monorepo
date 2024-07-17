@@ -2,19 +2,19 @@
 import BackButton from "@/components/atoms/backButton"
 import PlaceholderImg from "@/components/atoms/placeholder"
 import { useRoutingFlow } from "@/components/store/useRoutingFlow"
-import { IThemes } from "@/components/types/businessData"
 import { getRandomBlurImg } from "@/components/utils/images"
 import Image from "next/image"
 import { memo } from "react"
 
-function TopBackground({ themes}: { themes: IThemes | undefined }) {	
+function TopBackground({ specialBanner}: { specialBanner: string | undefined }) {	
 	const { getPreviousPath } = useRoutingFlow()
 	const onBackURL = `${getPreviousPath()}`
+	console.log('sp',specialBanner)
 	return (
-		<div className={`relative h-[20vh] w-screen overflow-hidden`}>
-			{themes?.miniBanner ? (
+		<div className={"relative h-[20vh] w-screen overflow-hidden"}>
+			{specialBanner ? (
 				<Image
-					src={themes?.miniBanner || ""}
+					src={specialBanner || ""}
 					width={700}
 					height={300}
 					quality={95}

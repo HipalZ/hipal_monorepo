@@ -16,6 +16,7 @@ import { apiRpc } from "@hi/common";
 const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const business = useBusinessDetails((s) => s.businessDetails);
+  const customLink = useParams()?.businessId as string
   const router = useRouter();
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -35,9 +36,9 @@ const AddAmountModal = memo(() => {
     setLoading(true);
     if (amount > 0) {
       setIsPayment(false);
-      router.push(`/${business.customLink}/payment?amount=${amount}`);
+      router.push(`/${customLink}/payment?amount=${amount}`);
     }
-  }, [amount, business.customLink, router]);
+  }, [amount, customLink, router]);
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
