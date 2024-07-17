@@ -25,8 +25,12 @@ const categoriesRouter = new Hono()
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
-        const { businessId, subCategoryIds, parentCategoryIds, dishIds } =
+        let { businessId, subCategoryIds, parentCategoryIds, dishIds } =
           requestData;
+
+        if (!parentCategoryIds) parentCategoryIds = [];
+        if (!subCategoryIds) subCategoryIds = [];
+        if (!dishIds) dishIds = [];
 
         const existingCategory = await Category.findOne({
           name: requestData.name,
@@ -110,6 +114,10 @@ const categoriesRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const { id } = c.req.param();
+        let { parentCategoryIds, subCategoryIds, dishIds } = requestData;
+        if (!requestData.parentCategoryIds) parentCategoryIds = [];
+        if (!requestData.subCategoryIds) subCategoryIds = [];
+        if (!requestData.dishIds) dishIds = [];
 
         if (requestData.name) {
           const existingCategory = await Category.findOne({
@@ -167,12 +175,12 @@ const categoriesRouter = new Hono()
         //   { session },
         // );
 
-        if (requestData.parentCategoryIds.length > 0) {
+        if (parentCategoryIds.length > 0) {
           const findOnes =
             await Category.findById(id).select("parentCategoryIds");
 
           let a = findOnes?.parentCategoryIds;
-          let b = requestData.parentCategoryIds;
+          let b = parentCategoryIds;
 
           let uniqueFromB = b.filter((item) => !a.includes(item));
 
@@ -183,7 +191,7 @@ const categoriesRouter = new Hono()
           );
         }
 
-        if (requestData.subCategoryIds.length > 0) {
+        if (subCategoryIds.length > 0) {
           /////////////////////////////////////////////////////////////////
           const findCategory = await Category.find({
             _id: { $in: requestData.subCategoryIds },
@@ -194,11 +202,9 @@ const categoriesRouter = new Hono()
           for (const category of findCategory) {
             a.push(category._id);
           }
-          let b = requestData.subCategoryIds;
+          let b = subCategoryIds;
 
           let uniqueFromB = b.filter((item) => !a.includes(item));
-
-          console.log("findCategory", findCategory);
 
           const removeCategoriesIds: string[] = [];
 
