@@ -1,23 +1,47 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { cn } from "@hi/common/src/error-handler";
 import { RiGitBranchLine, RiLinkUnlink } from "react-icons/ri";
 import { TbCircuitSwitchClosed } from "react-icons/tb";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
 import { apiRpc } from "@hi/common";
+import useBusinessData from "@/components/store/useBusinessData";
+import toast from "react-hot-toast";
 
 const MemoCategoryMainForm = () => {
-    const { selectedCategory, setSelectedCategory, categoryName, setCategoryName } = useMenuPageStore(s => ({
+    const { selectedCategory, setSelectedCategory, categoryName, setCategoryName, setCategoryStep } = useMenuPageStore(s => ({
         selectedCategory: s.selectedCategory,
         setSelectedCategory: s.setSelectedCategory,
         setOpenMenu: s.setOpenMenu,
         categoryName: s.categoryName,
-        setCategoryName: s.setCategoryName
+        setCategoryName: s.setCategoryName,
+        setCategoryStep: s.setCategoryStep
     }));
 
-    // const saveCatogory = async () => {
-    //     const res = await apiRpc.categories.
-    // }
+    const businessData = useBusinessData((s) => s.businessData);
+
+    const saveCategory = async () => {
+        const res = await apiRpc.categories.$post({
+            json: {
+                name: categoryName,
+                businessId: businessData?._id || "",
+                hierarchy: selectedCategory === "MAIN_CATEGORY" ? "PARENT" : "CHILD",
+            }
+        })
+
+        if (res.status === 400 || res.status === 409 || res.status === 403) {
+            toast.error("Category name already exists")
+        }
+
+        if (res.status === 201 || res.status === 200) {
+            toast.error("Category created successfully")
+        }
+
+    }
+
+    const goToNextStep = useCallback(() => {
+        setCategoryStep("CATEGORY_STEP_2")
+    }, [])
 
     return (
         <>
@@ -101,10 +125,10 @@ const MemoCategoryMainForm = () => {
             }
 
             <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-                {/* <button onClick={saveCatogory} type="button" className="w-full py-3 text-white bg-[#7D68FE] rounded-full">
+                <button onClick={saveCategory} type="button" className="w-full py-3 text-white bg-[#7D68FE] rounded-full">
                     Quick Save
-                </button> */}
-                <button type="button" className="w-full py-3 text-white bg-black rounded-full">
+                </button>
+                <button onClick={goToNextStep} type="button" className="w-full py-3 text-white bg-black rounded-full">
                     Next
                 </button>
             </footer>
