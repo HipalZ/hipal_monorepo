@@ -1,8 +1,10 @@
 // books.ts
-import { Dish, UniquelyYours } from "@hi/db-models";
+import { Category, Dish, UniquelyYours } from "@hi/db-models";
 import { dishSchema, uniquelyYoursSchema } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
 import { z } from "zod";
 import {
   ClientRoles,
@@ -20,15 +22,32 @@ const dishesRouter = new Hono()
       z.object({
         businessId: z.string(),
         UniquelyYours: z.string().optional(),
+        menu: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, UniquelyYours } = c.req.query();
+      const { businessId, UniquelyYours, menu } = c.req.query();
       if (UniquelyYours) {
         const existingDishes = await Dish.find({
           businessId,
-          "categories.0": { $exists: true },
+          "categoryIds.0": { $exists: true },
         }).select(" _id businessId name dishType images");
+        return respond(
+          c,
+          "Dishes fetched successfully",
+          false,
+          200,
+          existingDishes,
+        );
+      }
+
+      if (menu) {
+        const existingDishes = await Dish.find({
+          businessId,
+          isDeleted: false,
+        }).select(
+          " _id businessId name availability dishType visibility price ",
+        );
         return respond(
           c,
           "Dishes fetched successfully",
@@ -51,12 +70,35 @@ const dishesRouter = new Hono()
       );
     },
   )
+  .put(
+    "/",
+    zValidator("json", dishSchema),
+    zValidator("param", z.object({ id: z.string() })),
+
+    async (c) => {},
+  )
   .post(
     "/",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator("json", dishSchema),
-    async (c) => {},
+    async (c) => {
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const dish = await c.req.json();
+        const createDish = await Dish.create([dish], { session });
+        if (!createDish)
+          return respond(c, "Error in creating dish", true, 400, {});
+
+        await Category.updateMany(
+          { _id: { $in: dish.categoryIds ?? [] } },
+          { $push: { dishIds: createDish[0]._id } },
+          { session },
+        );
+
+        return respond(c, "Dish created successfully", false, 201, createDish);
+      });
+    },
   )
   .post(
     "/uniquelyYours",
@@ -116,9 +158,8 @@ const dishesRouter = new Hono()
     async (c) => {
       const { id } = c.req.param();
       const existingDish = await Dish.findById(id).populate([
-        "categories",
-        "extras",
-        "filters.dishes",
+        "categoryIds",
+        "addOnIds",
       ]);
       if (!existingDish) return respond(c, "Dish not found", true, 404, {});
       return respond(c, "Dish fetched successfully", false, 200, existingDish);

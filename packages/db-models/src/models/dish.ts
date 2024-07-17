@@ -72,11 +72,11 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
 
-    addOns: {
+    addOnIds: {
       type: [ObjectId],
       required: false,
       default: [],
-      ref: "Extra",
+      ref: "addon",
     },
     kitchenId: {
       type: ObjectId,

@@ -34,7 +34,9 @@ export const portionSchema = z.object({
     .positive({
       message: "price must be positive",
     }),
-  default: z.boolean().optional(),
+  default: z.boolean({
+    message: "default is required",
+  }),
   portionTypes: z.array(
     z.enum(DishTypeEnum, {
       message: "portionType is required",
@@ -84,9 +86,118 @@ export const dishSchema = z.object({
       message: "portions is required",
     })
     .optional(),
-  addOns: z
+  addOnIds: z
     .array(ObjectIdSchema, {
-      message: "extras is required",
+      message: "addOnIds is required",
+    })
+    .optional(),
+  kitchenId: ObjectIdSchema.optional(),
+
+  images: z
+    .array(
+      z
+        .string({
+          message: "images is required",
+        })
+        .url({
+          message: "images must be a valid url",
+        })
+        .min(6, {
+          message: "images must be atleast 6 characters long",
+        })
+        .max(100, {
+          message: "images must be atmost 100 characters long",
+        }),
+    )
+    .optional(),
+  description: z
+    .string({
+      message: "description is required",
+    })
+    .min(10, {
+      message: "description must be atleast 10 characters long",
+    })
+    .max(200, {
+      message: "description must be atmost 200 characters long",
+    })
+    .optional(),
+  calories: z
+    .string({
+      message: "calories is required",
+    })
+    .min(3, {
+      message: "calories must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "calories must be atmost 100 characters long",
+    })
+    .optional(),
+  tags: z
+    .array(
+      z
+        .string()
+        .min(3, {
+          message: "tags must be atleast 3 characters long",
+        })
+        .max(100, {
+          message: "tags must be atmost 100 characters long",
+        }),
+      {
+        message: "tags is required",
+      },
+    )
+    .optional(),
+  recommendations: z
+    .array(ObjectIdSchema, {
+      message: "recommendations is required",
+    })
+    .optional(),
+  delayTime: z.coerce.number().optional().default(0),
+  availability: z.boolean().default(true),
+  isDeleted: z.boolean().default(false),
+});
+
+export const updateDishSchema = z.object({
+  _id: ObjectIdSchema.optional(),
+  businessId: ObjectIdSchema,
+  name: z
+    .string({ message: "name is required " })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  price: z.coerce
+    .number({
+      message: "price is required",
+    })
+    .positive({
+      message: "price must be positive",
+    }),
+  visibility: z.boolean().default(true),
+  avgTime: z.coerce
+    .number({
+      message: "avgTime is required",
+    })
+    .optional(),
+  dishTypes: z.array(
+    z.enum(DishTypeEnum, {
+      message: "dishType is required",
+    }),
+    {
+      message: "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
+    },
+  ),
+  categoryIds: z.array(ObjectIdSchema).optional(),
+  portions: z
+    .array(portionSchema, {
+      message: "portions is required",
+    })
+    .optional(),
+  addOnIds: z
+    .array(ObjectIdSchema, {
+      message: "addOnIds is required",
     })
     .optional(),
   kitchenId: ObjectIdSchema.optional(),

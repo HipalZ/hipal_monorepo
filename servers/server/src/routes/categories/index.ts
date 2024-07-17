@@ -141,38 +141,6 @@ const categoriesRouter = new Hono()
         if (!updatedCategory)
           return respond(c, "Category not found", true, 404, {});
 
-        const allDishIds = requestData.dishIds || [];
-
-        // const findDishes = await Dish.find({
-        //   _id: { $in: allDishIds },
-        // }).select("_id categoryIds");
-
-        // const removeDishesIds: string[] = [];
-
-        // const filterDishes = findDishes.filter((dish) =>
-        //   dish.categoryIds?.includes(new ObjectId(id)),
-        // );
-
-        // for (const dish of filterDishes) {
-        //   removeDishesIds.push(dish._id.toString());
-        // }
-
-        // const filteredDishesIds = allDishIds.filter(
-        //   (id: string) => !removeDishesIds.includes(id),
-        // );
-
-        // await Dish.updateMany(
-        //   { _id: { $in: removeDishesIds } },
-        //   { $pull: { categoryIds: id } },
-        //   { session },
-        // );
-
-        // await Dish.updateMany(
-        //   { _id: { $in: filteredDishesIds } },
-        //   { $addToSet: { categoryIds: id } },
-        //   { session },
-        // );
-
         if (parentCategoryIds.length > 0) {
           const findOnes =
             await Category.findById(id).select("parentCategoryIds");
@@ -303,7 +271,7 @@ const categoriesRouter = new Hono()
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
-              path: "addOns", // Within each dish, populate extras
+              path: "addOnIds", // Within each dish, populate extras
             },
           });
 
@@ -317,16 +285,23 @@ const categoriesRouter = new Hono()
       }
 
       if (child) {
+        const menuType =
+          await Business.findById(businessId).select("menuLayout");
+        if (!menuType) return respond(c, "Business not found", true, 404, {});
+        let hierarchy = "CHILD";
+        if (menuType.menuLayout !== "MAIN_AND_SUB_CATEGORY") {
+          hierarchy = "PARENT";
+        }
         const existingCategories = await Category.find({
           businessId,
-          hierarchy: "CHILD",
+          hierarchy: hierarchy,
           isDeleted: false,
         })
           .select("_id name visibility availability dishIds")
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
-              path: "addOns", // Within each dish, populate extras
+              path: "addOnIds", // Within each dish, populate extras
             },
           });
 
@@ -348,7 +323,7 @@ const categoriesRouter = new Hono()
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
-              path: "addOns", // Within each dish, populate extras
+              path: "addOnIds", // Within each dish, populate extras
             },
           });
 
@@ -367,7 +342,7 @@ const categoriesRouter = new Hono()
       }).populate({
         path: "dishIds", // Populate dishes
         populate: {
-          path: "addOns", // Within each dish, populate extras
+          path: "addOnIds", // Within each dish, populate extras
         },
       });
 
@@ -390,7 +365,7 @@ const categoriesRouter = new Hono()
       const existingCategory = await Category.findById(id).populate({
         path: "dishIds", // Populate dishes
         populate: {
-          path: "addOns", // Within each dish, populate extras
+          path: "addOnIds", // Within each dish, populate extras
         },
       });
 
