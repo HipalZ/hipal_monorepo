@@ -121,7 +121,6 @@ const categoriesRouter = new Hono()
 
         if (requestData.name) {
           const existingCategory = await Category.findOne({
-            _id: id,
             name: requestData.name,
             businessId: requestData.businessId,
           }).select("_id");
@@ -194,44 +193,37 @@ const categoriesRouter = new Hono()
         if (subCategoryIds.length > 0) {
           /////////////////////////////////////////////////////////////////
           const findCategory = await Category.find({
-            _id: { $in: requestData.subCategoryIds },
+            _id: { $in: subCategoryIds },
           }).select("_id parentCategoryIds");
 
-          const a = [];
-
-          for (const category of findCategory) {
-            a.push(category._id);
-          }
-          let b = subCategoryIds;
-
-          let uniqueFromB = b.filter((item) => !a.includes(item));
+          console.log("findCategory", findCategory);
 
           const removeCategoriesIds: string[] = [];
 
-          // const filter = findCategory.filter((category) =>
-          //   category.parentCategoryIds
-          //     .map((id) => id.toString())
-          //     .includes(id.toString()),
-          // );
+          const filter = findCategory.filter((category) =>
+            category.parentCategoryIds
+              .map((id) => id.toString())
+              .includes(id.toString()),
+          );
 
-          // console.log("filter", filter);
+          console.log("filter", filter);
 
-          // for (const category of filter) {
-          //   removeCategoriesIds.push(category._id.toString());
-          // }
+          for (const category of filter) {
+            removeCategoriesIds.push(category._id.toString());
+          }
 
-          // const filteredCategoryIds = requestData.subCategoryIds.filter(
-          //   (id: string) => !removeCategoriesIds.includes(id),
-          // );
-
-          // await Category.updateMany(
-          //   { _id: { $in: removeCategoriesIds } },
-          //   { $pull: { parentCategoryIds: id } },
-          //   { session },
-          // );
+          const filteredCategoryIds = subCategoryIds.filter(
+            (id: string) => !removeCategoriesIds.includes(id),
+          );
 
           await Category.updateMany(
-            { _id: { $in: uniqueFromB } },
+            { _id: { $in: removeCategoriesIds } },
+            { $pull: { parentCategoryIds: id } },
+            { session },
+          );
+
+          await Category.updateMany(
+            { _id: { $in: filteredCategoryIds } },
             { $addToSet: { parentCategoryIds: id } },
             { session },
           );
