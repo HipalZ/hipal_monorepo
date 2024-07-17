@@ -284,15 +284,65 @@ const categoriesRouter = new Hono()
 
     zValidator(
       "query",
-      z.object({ businessId: z.string(), menu: z.string().optional() }),
+      z.object({
+        businessId: z.string(),
+        menu: z.string().optional(),
+        parent: z.string().optional(),
+        child: z.string().optional(),
+      }),
     ),
     async (c) => {
-      const { businessId, menu } = c.req.query();
+      const { businessId, menu, child, parent } = c.req.query();
 
       if (menu) {
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
+        })
+          .select("_id name")
+          .populate({
+            path: "dishIds", // Populate dishes
+            populate: {
+              path: "addOns", // Within each dish, populate extras
+            },
+          });
+
+        return respond(
+          c,
+          "Categories fetched successfully",
+          false,
+          200,
+          existingCategories,
+        );
+      }
+
+      if (child) {
+        const existingCategories = await Category.find({
+          businessId,
+          hierarchy: "CHILD",
+          isDeleted: false,
+        })
+          .select("_id name")
+          .populate({
+            path: "dishIds", // Populate dishes
+            populate: {
+              path: "addOns", // Within each dish, populate extras
+            },
+          });
+
+        return respond(
+          c,
+          "Categories fetched successfully",
+          false,
+          200,
+          existingCategories,
+        );
+      }
+      if (parent) {
+        const existingCategories = await Category.find({
+          businessId,
+          isDeleted: false,
+          hierarchy: "PARENT",
         })
           .select("_id name")
           .populate({
