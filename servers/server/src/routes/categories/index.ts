@@ -282,9 +282,34 @@ const categoriesRouter = new Hono()
   .get(
     "/",
 
-    zValidator("query", z.object({ businessId: z.string() })),
+    zValidator(
+      "query",
+      z.object({ businessId: z.string(), menu: z.string().optional() }),
+    ),
     async (c) => {
-      const { businessId } = c.req.query();
+      const { businessId, menu } = c.req.query();
+
+      if (menu) {
+        const existingCategories = await Category.find({
+          businessId,
+          isDeleted: false,
+        })
+          .select("_id name")
+          .populate({
+            path: "dishIds", // Populate dishes
+            populate: {
+              path: "addOns", // Within each dish, populate extras
+            },
+          });
+
+        return respond(
+          c,
+          "Categories fetched successfully",
+          false,
+          200,
+          existingCategories,
+        );
+      }
 
       const existingCategories = await Category.find({
         businessId,
