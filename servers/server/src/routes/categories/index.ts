@@ -299,7 +299,7 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
         })
-          .select("_id name")
+          .select("_id name visibility availability dishIds")
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
@@ -322,7 +322,7 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
           isDeleted: false,
         })
-          .select("_id name")
+          .select("_id name visibility availability dishIds")
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
@@ -344,7 +344,7 @@ const categoriesRouter = new Hono()
           isDeleted: false,
           hierarchy: "PARENT",
         })
-          .select("_id name")
+          .select("_id name visibility availability dishIds")
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
