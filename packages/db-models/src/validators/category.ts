@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 import { z } from "zod";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
-    .string()
+    .string({
+      message: "Invalid ObjectId",
+    })
     .refine((val) => mongoose.Schema.Types.ObjectId, {
       message: "Invalid ObjectId",
     })
@@ -29,7 +31,12 @@ export const categorySchema = z.object({
     message: "hierarchy is required",
   }),
 
-  parentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  parentCategoryIds: z
+    .array(ObjectIdSchema, {
+      message: "parentCategoryIds is required",
+    })
+    .optional()
+    .default([]),
   coverImage: z
     .string({
       message: "coverImage is required",
@@ -46,11 +53,16 @@ export const categorySchema = z.object({
     .optional(),
   dishIds: z
     .array(ObjectIdSchema, {
-      message: "dishes is required",
+      message: "dishIds is required",
     })
     .optional()
     .default([]),
-  subCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  subCategoryIds: z
+    .array(ObjectIdSchema, {
+      message: "subCategoryIds is required",
+    })
+    .optional()
+    .default([]),
 
   availability: z.boolean().default(true).optional(),
 });
@@ -83,11 +95,26 @@ export const updateCategorySchema = z.object({
       message: "coverImage must be atmost 100 characters long",
     })
     .optional(),
-  businessId: ObjectIdSchema,
-  dishIds: z.array(ObjectIdSchema).optional().default([]),
-  subCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  businessId: ObjectIdSchema.optional(),
+  dishIds: z
+    .array(ObjectIdSchema, {
+      message: "dishIds is required",
+    })
+    .optional()
+    .default([]),
+  subCategoryIds: z
+    .array(ObjectIdSchema, {
+      message: "subCategoryIds is required",
+    })
+    .optional()
+    .default([]),
   availability: z.boolean().default(true).optional(),
-  parentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  parentCategoryIds: z
+    .array(ObjectIdSchema, {
+      message: "parentCategoryIds is required",
+    })
+    .optional()
+    .default([]),
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;
