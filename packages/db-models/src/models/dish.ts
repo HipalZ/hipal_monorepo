@@ -42,7 +42,6 @@ const dishSchema = new mongoose.Schema<DishType>(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     price: {
       type: Number,

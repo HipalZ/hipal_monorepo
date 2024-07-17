@@ -14,7 +14,6 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     visibility: {
       type: Boolean,

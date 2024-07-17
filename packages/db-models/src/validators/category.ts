@@ -83,6 +83,7 @@ export const updateCategorySchema = z.object({
       message: "coverImage must be atmost 100 characters long",
     })
     .optional(),
+  businessId: ObjectIdSchema,
   dishIds: z.array(ObjectIdSchema).optional().default([]),
   subCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   availability: z.boolean().default(true).optional(),

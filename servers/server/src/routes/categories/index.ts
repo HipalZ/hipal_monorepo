@@ -30,6 +30,7 @@ const categoriesRouter = new Hono()
 
         const existingCategory = await Category.findOne({
           name: requestData.name,
+          businessId,
         }).select("_id");
         if (existingCategory)
           return respond(c, "Category already exists", true, 409, {});
@@ -139,6 +140,7 @@ const categoriesRouter = new Hono()
         if (requestData.name) {
           const existingCategory = await Category.findOne({
             name: requestData.name,
+            businessId: requestData.businessId,
           }).select("_id");
 
           if (
