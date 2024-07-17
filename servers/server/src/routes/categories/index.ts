@@ -35,32 +35,6 @@ const categoriesRouter = new Hono()
         if (existingCategory)
           return respond(c, "Category already exists", true, 409, {});
 
-        if (
-          requestData.hierarchy === "PARENT" &&
-          parentCategoryIds.length > 0
-        ) {
-          return respond(
-            c,
-            "Parent category should not have parent category",
-            true,
-            400,
-            {},
-          );
-        }
-
-        if (
-          requestData.hierarchy === "CHILD" &&
-          requestData.subCategoryIds.length > 0
-        ) {
-          return respond(
-            c,
-            "Child category should not have sub category",
-            true,
-            400,
-            {},
-          );
-        }
-
         const menuType =
           await Business.findById(businessId).select("menuLayout");
         if (!menuType) return respond(c, "Business not found", true, 404, {});
@@ -139,35 +113,10 @@ const categoriesRouter = new Hono()
 
         if (requestData.name) {
           const existingCategory = await Category.findOne({
+            _id: id,
             name: requestData.name,
             businessId: requestData.businessId,
           }).select("_id");
-
-          if (
-            existingCategory?.hierarchy === "PARENT" &&
-            requestData.parentCategoryIds.length > 0
-          ) {
-            return respond(
-              c,
-              "Parent category should not have parent category",
-              true,
-              400,
-              {},
-            );
-          }
-
-          if (
-            existingCategory?.hierarchy === "CHILD" &&
-            requestData.subCategoryIds.length > 0
-          ) {
-            return respond(
-              c,
-              "Child category should not have sub category",
-              true,
-              400,
-              {},
-            );
-          }
 
           if (existingCategory)
             return respond(c, "Category already exists", true, 409, {});
@@ -240,34 +189,43 @@ const categoriesRouter = new Hono()
             _id: { $in: requestData.subCategoryIds },
           }).select("_id parentCategoryIds");
 
+          const a = [];
+
+          for (const category of findCategory) {
+            a.push(category._id);
+          }
+          let b = requestData.subCategoryIds;
+
+          let uniqueFromB = b.filter((item) => !a.includes(item));
+
           console.log("findCategory", findCategory);
 
           const removeCategoriesIds: string[] = [];
 
-          const filter = findCategory.filter((category) =>
-            category.parentCategoryIds
-              .map((id) => id.toString())
-              .includes(id.toString()),
-          );
+          // const filter = findCategory.filter((category) =>
+          //   category.parentCategoryIds
+          //     .map((id) => id.toString())
+          //     .includes(id.toString()),
+          // );
 
-          console.log("filter", filter);
+          // console.log("filter", filter);
 
-          for (const category of filter) {
-            removeCategoriesIds.push(category._id.toString());
-          }
+          // for (const category of filter) {
+          //   removeCategoriesIds.push(category._id.toString());
+          // }
 
-          const filteredCategoryIds = requestData.subCategoryIds.filter(
-            (id: string) => !removeCategoriesIds.includes(id),
-          );
+          // const filteredCategoryIds = requestData.subCategoryIds.filter(
+          //   (id: string) => !removeCategoriesIds.includes(id),
+          // );
+
+          // await Category.updateMany(
+          //   { _id: { $in: removeCategoriesIds } },
+          //   { $pull: { parentCategoryIds: id } },
+          //   { session },
+          // );
 
           await Category.updateMany(
-            { _id: { $in: removeCategoriesIds } },
-            { $pull: { parentCategoryIds: id } },
-            { session },
-          );
-
-          await Category.updateMany(
-            { _id: { $in: filteredCategoryIds } },
+            { _id: { $in: uniqueFromB } },
             { $addToSet: { parentCategoryIds: id } },
             { session },
           );
