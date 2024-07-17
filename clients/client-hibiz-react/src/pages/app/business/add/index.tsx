@@ -15,7 +15,7 @@ const AddBusinessForm = () => {
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const { step, setStep } = useBusinessCtrl();
-  
+
   const handleBack = useCallback(() => {
     if (step === 0) {
       startTransition(() => {
@@ -25,12 +25,12 @@ const AddBusinessForm = () => {
       setStep(step - 1);
     }
   }, [navigate, businessId, step, setStep]);
-  
+
   const handleTitle = useCallback(() => {
     const titles = ["Business Type", "Outlet Type", "outlet Name"];
     return titles[step] || "";
   }, [step]);
-  
+
   const subHeading = useCallback(() => {
     const titles = [
       "What is your business type",
@@ -39,41 +39,45 @@ const AddBusinessForm = () => {
     ];
     return titles[step] || "";
   }, [step]);
-  
+
   return (
-    <main>
-      {step !== 3 && (
-        <>
-          <div className="linear_gradient_background">
-            <Header
-              title={handleTitle()}
-              onBack={handleBack}
-              leftIcon={<FaArrowLeft />}
-              centerImage={Hi}
-              rightImage={Hi}
-              isIconBusinessShow={false}
-            />
-          </div>
-
-          <header className="flex items-center justify-between p-4 ">
-            <h3 className="text-xl font-semibold">{subHeading()}</h3>
-            <h3 className="text-xl font-semibold">{step + 1} / 3</h3>
-          </header>
-        </>
-      )}
-
-      {step === 0 && <BusinessType />}
-
-      {step === 1 && <OutletType />}
-
-      {step === 2 && <AddName />}
+    <section>
 
       {step === 3 && (
         <SectionWithLogo>
           <Congratulation />
         </SectionWithLogo>
       )}
-    </main>
+      <main>
+        {step !== 3 && (
+          <>
+            <div className="linear_gradient_background">
+              <Header
+                title={handleTitle()}
+                onBack={handleBack}
+                leftIcon={<FaArrowLeft />}
+                centerImage={Hi}
+                rightImage={Hi}
+                isIconBusinessShow={false}
+              />
+            </div>
+
+            <header className="flex items-center justify-between p-4 ">
+              <h3 className="text-xl font-semibold">{subHeading()}</h3>
+              <h3 className="text-xl font-semibold">{step + 1} / 3</h3>
+            </header>
+          </>
+        )}
+
+        {step === 0 && <BusinessType />}
+
+        {step === 1 && <OutletType />}
+
+        {step === 2 && <AddName />}
+
+      </main>
+
+    </section>
   );
 };
 const MemoizedAddBusinessForm = memo(AddBusinessForm);

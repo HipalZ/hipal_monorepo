@@ -701,3 +701,52 @@ input[type="color" i] {
   content: "";
   display: block;
 }
+
+.sidebar {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+  height: 90vh;
+  background-color: #f0f0f0;
+}
+
+.sidebar-item {
+  padding: 16px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* Top navigation styles */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+@media (min-width: 1025px) {
+  .top-nav {
+    display: none;
+  }
+}
+
+@media (min-width: 1025px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .mobile-only {
+    display: block; 
+    background-color: white;
+  }
+}

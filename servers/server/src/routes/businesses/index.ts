@@ -465,7 +465,7 @@ const businessesRouter = new Hono()
       const business = await Permissions.find();
       if (!business) return respond(c, "permissions not found", true, 404, {});
 
-      return respond(c, "permissions found", false, 200, business);
+      return respond(c, "permissions found", false, 200, business[0]);
     },
   )
   .get(

@@ -62,10 +62,6 @@ const AddName = () => {
     setPaymentAndBusinessSettings: s.setPaymentAndBusinessSettings,
   }));
 
-  const { accessToken, refreshToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-    refreshToken: s.refreshToken,
-  }));
 
   const { user } = useOwnerLogin((s) => ({
     user: s.user,
@@ -81,7 +77,6 @@ const AddName = () => {
     setBusinessName(e.target.value);
   };
 
-  const navigate = useNavigate();
 
   const debouncedApiCall = useCallback(
     debounce(async (link) => {
@@ -100,7 +95,7 @@ const AddName = () => {
         setValidCustomLink(false);
       }
     }, 1500),
-    [accessToken, refreshToken]
+    []
   );
 
   const addCustomLink = (e: ChangeEvent<HTMLInputElement>) => {
@@ -136,8 +131,6 @@ const AddName = () => {
     step,
     businessName,
     customLink,
-    accessToken,
-    refreshToken,
     businessType,
     user,
     setStep
@@ -203,7 +196,7 @@ const AddName = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <section className="mx-6 mt-4 space-y-2">
+      <section className="w-full mx-6 mt-4 space-y-2 max-w-[30rem]">
         <label htmlFor="businessName" className="text-lg">
           Your Outlet name*
         </label>
@@ -221,13 +214,13 @@ const AddName = () => {
           <span className="text-red-500">Please enter a valid name</span>
         )}
       </section>
-      <section className="mx-6 mt-8 space-y-2">
+      <section className="mx-6 mt-8 space-y-2 max-w-[30rem]">
         <label htmlFor="customLink" className="text-lg">
           Your customized Link*
         </label>
-        <span className="opacity-50">
+        <h6 className="opacity-50">
           Your customers will access your website through this link
-        </span>
+        </h6>
         <div className="relative w-full overflow-hidden">
           <input
             type="text"

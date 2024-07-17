@@ -81,7 +81,7 @@ const Business = () => {
                 <figure>
                   <img width={200} height={146} src={item.image} alt={item.text} />
                 </figure>
-                <figcaption className="absolute bottom-0 left-0 p-2 w-full bg-[#F6E9E2] h-[55%]">
+                <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[55%]">
                   <section className="flex items-center justify-between">
                     <h4 className="font-semibold leading-4 text-black">{item.text}</h4>
                     <FaArrowRight />

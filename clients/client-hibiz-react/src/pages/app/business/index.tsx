@@ -13,7 +13,7 @@ import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
-////
+
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const user = useOwnerLogin((s) => s.user);
