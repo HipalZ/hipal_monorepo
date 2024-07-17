@@ -1,80 +1,63 @@
-import type { Model } from 'mongoose';
-import mongoose from 'mongoose';
-import type { CategoryType } from '../validators';
+import type { Model } from "mongoose";
+import mongoose from "mongoose";
+import type { CategoryType } from "../validators";
+import { HierarchyEnum } from "../validators/category";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const categorySchema = new mongoose.Schema<CategoryType>(
   {
     businessId: {
       type: ObjectId,
       required: true,
-      ref: 'Business',
+      ref: "Business",
       index: true,
     },
     name: {
       type: String,
       required: true,
+      unique: true,
     },
     visibility: {
       type: Boolean,
       required: true,
     },
-    timerOn: {
-      type: Boolean,
-      required: false,
-    },
-    timerStart: {
-      type: String,
-      required: false,
-    },
-    timerEnd: {
-      type: String,
-      required: false,
-    },
-    availableDays: {
-      type: [Number],
-      required: false,
-    },
+
     hierarchy: {
       type: String,
-      enum: ['PARENT', 'CHILD'],
+      enum: HierarchyEnum,
       required: true,
     },
-    parentCategory: {
-      type: String,
-      default: '',
-      required: false,
-    },
-    parentCategoryId: {
-      type: String,
-      default: '',
-      ref: 'category',
+
+    parentCategoryIds: {
+      type: [ObjectId],
+      default: [],
+      ref: "category",
       required: false,
     },
     coverImage: {
       type: String,
       required: false,
     },
-    links: {
-      type: [String],
-      required: true,
-    },
-    dishes: {
+
+    dishIds: {
       type: [ObjectId],
       required: false,
-      ref: 'Dish',
+      default: [],
+      ref: "Dish",
     },
     availability: {
       type: Boolean,
       required: false,
       default: true,
     },
-
   },
   {
     timestamps: true,
   },
 );
 
-const Category: Model<CategoryType> = mongoose.model<CategoryType>('category', categorySchema);
+const Category: Model<CategoryType> = mongoose.model<CategoryType>(
+  "category",
+  categorySchema,
+);
 
 export { Category };

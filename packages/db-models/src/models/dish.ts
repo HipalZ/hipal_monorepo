@@ -1,31 +1,9 @@
-import type { Model } from 'mongoose';
-import mongoose from 'mongoose';
-import type { DishType, FiltersType, PortionType, TagType } from '../validators';
+import type { Model } from "mongoose";
+import mongoose from "mongoose";
+import type { DishType, PortionType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-const tagsSchema = new mongoose.Schema<TagType>(
-  {
-    name: {
-      type: String,
-      required: false,
-    },
-    color: {
-      type: String,
-      required: false,
-    },
-    icon: {
-      type: String,
-      required: false,
-    },
-    fontColor: {
-      type: String,
-      required: false,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
+import { DishTypeEnum } from "../validators/dish";
 
 const portionSchema = new mongoose.Schema<PortionType>(
   {
@@ -42,58 +20,10 @@ const portionSchema = new mongoose.Schema<PortionType>(
       type: Boolean,
       required: false,
     },
-    portionType: {
-      type: String,
-      required: false,
-    },
-    id: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
-
-const filtersSchema = new mongoose.Schema<FiltersType>(
-  {
-    dishes: {
-      type: [ObjectId],
-      required: false,
-      ref: 'Dish',
-    },
-    timeToConsume: {
-      type: Number,
-      required: false,
-    },
-    portionBestSuited: {
-      type: String,
-      required: false,
-    },
-    bestWeather: {
-      type: String,
-      required: false,
-    },
-    levelOfSpice: {
-      type: String,
-      required: false,
-    },
-    bestOccasion: {
-      type: String,
-      required: false,
-    },
-    texture: {
-      type: String,
-      required: false,
-    },
-    time: {
-      type: Number,
-      required: false,
-    },
-    metaTags: {
+    portionTypes: {
       type: [String],
-      required: false,
+      enum: DishTypeEnum,
+      required: true,
     },
   },
   {
@@ -106,12 +36,13 @@ const dishSchema = new mongoose.Schema<DishType>(
     businessId: {
       type: ObjectId,
       required: true,
-      ref: 'Business',
+      ref: "Business",
       index: true,
     },
     name: {
       type: String,
       required: true,
+      unique: true,
     },
     price: {
       type: Number,
@@ -128,36 +59,32 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: Number,
       required: false,
     },
-    dishType: {
-      type: String,
+    dishTypes: {
+      type: [String],
+      enum: DishTypeEnum,
       required: true,
     },
-    categories: {
+    categoryIds: {
       type: [ObjectId],
       required: false,
-      ref: 'category',
     },
-    portions: [
-      {
-        type: portionSchema,
-        required: false,
-      },
-    ],
-    extras: {
+    portions: {
+      type: [portionSchema],
+      required: false,
+    },
+
+    addOns: {
       type: [ObjectId],
       required: false,
       default: [],
-      ref: 'Extra',
+      ref: "Extra",
     },
     kitchenId: {
       type: ObjectId,
-      required: true,
-      ref: 'Kitchen',
-    },
-    filters: {
-      type: filtersSchema,
       required: false,
+      ref: "Kitchen",
     },
+
     images: {
       type: [String],
       required: false,
@@ -167,7 +94,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
     tags: {
-      type: [tagsSchema],
+      type: [String],
       required: false,
     },
 
@@ -180,12 +107,26 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       default: true,
     },
+    calories: {
+      type: String,
+      required: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    recommendations: {
+      type: [ObjectId],
+      required: false,
+      ref: "Dish",
+    },
   },
   {
     timestamps: true,
   },
 );
 
-const Dish: Model<DishType> = mongoose.model<DishType>('Dish', dishSchema);
+const Dish: Model<DishType> = mongoose.model<DishType>("Dish", dishSchema);
 
 export { Dish };

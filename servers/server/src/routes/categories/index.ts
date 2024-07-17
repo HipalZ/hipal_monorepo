@@ -1,46 +1,307 @@
 // books.ts
-import { Category, Dish, User } from '@hi/db-models';
+import { Business, Category, Dish } from "@hi/db-models";
 
+import {
+  categorySchema,
+  updateCategorySchema,
+} from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { z } from "zod";
+import { respond } from "../../utils/response";
 
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { respond } from '../../utils/response';
+//updateCategories
 
-const categoriesRouter = new Hono().get(
-  '/',
+const categoriesRouter = new Hono()
+  .post(
+    "/",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
-  zValidator('query', z.object({ businessId: z.string() })),
-  async (c) => {
-    const { businessId } = c.req.query();
+    zValidator("json", categorySchema),
+    async (c) => {
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, subCategoryIds, parentCategoryIds, dishIds } =
+          requestData;
 
-    const existingCategories = await Category.find({ businessId }).populate({
-      path: 'dishes', // Populate dishes
-      populate: {
-        path: 'extras', // Within each dish, populate extras
-      },
-    });
+        const existingCategory = await Category.findOne({
+          name: requestData.name,
+        }).select("_id");
+        if (existingCategory)
+          return respond(c, "Category already exists", true, 409, {});
 
-    return respond(c, 'Categories fetched successfully', false, 200, existingCategories);
-  },
-).get(
-  '/:id',
+        const menuType =
+          await Business.findById(businessId).select("menuLayout");
+        if (!menuType) return respond(c, "Business not found", true, 404, {});
 
-  zValidator('param', z.object({ id: z.string() })),
-  async (c) => {
-    const { id } = c.req.param();
+        if (
+          (parentCategoryIds.length > 0 || subCategoryIds.length > 0) &&
+          menuType.menuLayout !== "MAIN_AND_SUB_CATEGORY"
+        ) {
+          return respond(
+            c,
+            "MAIN_AND_SUB_CATEGORY menuLayout is not enabled for this business",
+            true,
+            400,
+            {},
+          );
+        }
 
-    const existingCategory = await Category.findById(id).populate({
-      path: 'dishes', // Populate dishes
-      populate: {
-        path: 'extras', // Within each dish, populate extras
-      },
-    });
+        const creatingCategory = await Category.create(
+          [
+            {
+              businessId: businessId,
+              visibility: true,
+              availability: true,
+              name: requestData.name,
+              hierarchy: requestData.hierarchy,
+              coverImage: requestData.coverImage,
+              parentCategoryIds: parentCategoryIds || [],
+              dishIds: dishIds || [],
+            },
+          ],
+          {
+            session: session,
+          },
+        );
 
-    if (!existingCategory) return respond(c, 'Category not found', true, 404, {});
+        if (!creatingCategory)
+          return respond(c, "Category creation failed", true, 400, {});
 
-    return respond(c, 'Categories fetched successfully', false, 200, existingCategory);
-  },
-);
+        if (subCategoryIds.length > 0) {
+          await Category.updateMany(
+            { _id: { $in: subCategoryIds } },
+            { $addToSet: { parentCategoryIds: creatingCategory[0]._id } },
+            { session: session },
+          );
+        }
+        if (dishIds.length > 0) {
+          await Dish.updateMany(
+            { _id: { $in: dishIds } },
+            { $addToSet: { categoryIds: creatingCategory[0]._id } },
+            { session: session },
+          );
+        }
+
+        return respond(
+          c,
+          "Category created successfully",
+          false,
+          201,
+          creatingCategory,
+        );
+      });
+    },
+  )
+  .put(
+    "/:id",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
+    zValidator("json", updateCategorySchema),
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { id } = c.req.param();
+
+        if (requestData.name) {
+          const existingCategory = await Category.findOne({
+            name: requestData.name,
+          }).select("_id");
+          if (existingCategory)
+            return respond(c, "Category already exists", true, 409, {});
+        }
+
+        const updatedCategory = await Category.findByIdAndUpdate(
+          id,
+          {
+            name: requestData.name,
+            coverImage: requestData.coverImage,
+            visibility: requestData.visibility,
+            availability: requestData.availability,
+          },
+          { session },
+        );
+        if (!updatedCategory)
+          return respond(c, "Category not found", true, 404, {});
+
+        const allDishIds = requestData.dishIds || [];
+
+        // const findDishes = await Dish.find({
+        //   _id: { $in: allDishIds },
+        // }).select("_id categoryIds");
+
+        // const removeDishesIds: string[] = [];
+
+        // const filterDishes = findDishes.filter((dish) =>
+        //   dish.categoryIds?.includes(new ObjectId(id)),
+        // );
+
+        // for (const dish of filterDishes) {
+        //   removeDishesIds.push(dish._id.toString());
+        // }
+
+        // const filteredDishesIds = allDishIds.filter(
+        //   (id: string) => !removeDishesIds.includes(id),
+        // );
+
+        // await Dish.updateMany(
+        //   { _id: { $in: removeDishesIds } },
+        //   { $pull: { categoryIds: id } },
+        //   { session },
+        // );
+
+        // await Dish.updateMany(
+        //   { _id: { $in: filteredDishesIds } },
+        //   { $addToSet: { categoryIds: id } },
+        //   { session },
+        // );
+
+        if (requestData.parentCategoryIds.length > 0) {
+          const findOnes =
+            await Category.findById(id).select("parentCategoryIds");
+          const parentCategoryIds = requestData.parentCategoryIds;
+          let updateIds = parentCategoryIds.filter((id: string) =>
+            findOnes?.parentCategoryIds.includes(Object(id)),
+          );
+
+          if (updateIds.length === 0) {
+            updateIds = requestData.parentCategoryIds;
+          }
+
+          await Category.findByIdAndUpdate(
+            id,
+            { parentCategoryIds: updateIds },
+            { session },
+          );
+        }
+
+        if (requestData.subCategoryIds.length > 0) {
+          /////////////////////////////////////////////////////////////////
+          const findCategory = await Category.find({
+            _id: { $in: requestData.subCategoryIds },
+          }).select("_id parentCategoryIds");
+
+          console.log("findCategory", findCategory);
+
+          const removeCategoriesIds: string[] = [];
+
+          const filter = findCategory.filter((category) =>
+            category.parentCategoryIds
+              .map((id) => id.toString())
+              .includes(id.toString()),
+          );
+
+          console.log("filter", filter);
+
+          for (const category of filter) {
+            removeCategoriesIds.push(category._id.toString());
+          }
+
+          const filteredCategoryIds = requestData.subCategoryIds.filter(
+            (id: string) => !removeCategoriesIds.includes(id),
+          );
+
+          await Category.updateMany(
+            { _id: { $in: removeCategoriesIds } },
+            { $pull: { parentCategoryIds: id } },
+            { session },
+          );
+
+          await Category.updateMany(
+            { _id: { $in: filteredCategoryIds } },
+            { $addToSet: { parentCategoryIds: id } },
+            { session },
+          );
+        }
+
+        return respond(
+          c,
+          "Category updated successfully",
+          false,
+          200,
+          updatedCategory,
+        );
+      });
+    },
+  )
+  .delete(
+    "/:id",
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.param();
+
+      const deletedCategory = await Category.findByIdAndUpdate(id, {
+        isDeleted: true,
+      });
+
+      if (!deletedCategory)
+        return respond(c, "Category not found", true, 404, {});
+
+      return respond(
+        c,
+        "Category deleted successfully",
+        false,
+        200,
+        deletedCategory,
+      );
+    },
+  )
+
+  .get(
+    "/",
+
+    zValidator("query", z.object({ businessId: z.string() })),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const existingCategories = await Category.find({ businessId }).populate({
+        path: "dishIds", // Populate dishes
+        populate: {
+          path: "addOns", // Within each dish, populate extras
+        },
+      });
+
+      return respond(
+        c,
+        "Categories fetched successfully",
+        false,
+        200,
+        existingCategories,
+      );
+    },
+  )
+  .get(
+    "/:id",
+
+    zValidator("param", z.object({ id: z.string() })),
+    async (c) => {
+      const { id } = c.req.param();
+
+      const existingCategory = await Category.findById(id).populate({
+        path: "dishIds", // Populate dishes
+        populate: {
+          path: "addOns", // Within each dish, populate extras
+        },
+      });
+
+      if (!existingCategory)
+        return respond(c, "Category not found", true, 404, {});
+
+      return respond(
+        c,
+        "Categories fetched successfully",
+        false,
+        200,
+        existingCategory,
+      );
+    },
+  );
 
 export default categoriesRouter;

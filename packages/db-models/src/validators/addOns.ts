@@ -1,0 +1,79 @@
+import mongoose from "mongoose";
+import { z } from "zod";
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: "Invalid ObjectId",
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+
+import { DishTypeEnum } from "./dish";
+
+export const ChoiceTypeEnum = ["CHECKBOX", "NUMBER"] as const;
+const Choices = z.object({
+  name: z
+    .string({
+      message: "name is required",
+    })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  price: z.coerce.number({
+    message: "price is required",
+  }),
+  description: z
+    .string({
+      message: "description is required",
+    })
+    .min(6)
+    .max(100)
+    .optional(),
+  visibility: z.boolean().default(true).optional(),
+  availability: z.boolean().default(true).optional(),
+  maxQuantity: z.coerce.number().optional().default(1),
+  choiceDishType: z.array(z.enum(DishTypeEnum)),
+});
+
+export const AddOnsAttrs = z.object({
+  _id: z.string().optional(),
+  businessId: ObjectIdSchema,
+  name: z
+    .string({
+      message: "name is required",
+    })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  compulsory: z.coerce
+    .number({
+      message: "compulsory is required",
+    })
+    .default(0)
+    .optional(),
+  maxQuantity: z.coerce
+    .number({
+      message: "maxQuantity is required",
+    })
+    .default(1)
+    .optional(),
+  choiceType: z.enum(ChoiceTypeEnum, {
+    message: "choiceType is required",
+  }),
+  dishes: z.array(ObjectIdSchema).optional().default([]),
+  choices: z.array(Choices, {
+    message: "choices is required",
+  }),
+  availability: z.boolean().default(true),
+  visibility: z.boolean().default(true),
+});
+
+export type AddOnType = z.infer<typeof AddOnsAttrs>;
+export type ChoiceType = z.infer<typeof Choices>;

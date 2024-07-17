@@ -1,77 +1,159 @@
-import mongoose from 'mongoose';
-import { z } from 'zod';
+import mongoose from "mongoose";
+import { z } from "zod";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
     .string()
     .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: 'Invalid ObjectId',
+      message: "Invalid ObjectId",
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
-const portionSchema = z
-  .object({
-    name: z.string(),
-    price: z.coerce.number().positive(),
-    default: z.boolean().optional(),
-    portionType: z.string().optional(),
-    id: z.string(),
-  })
-  .optional();
 
-const filtersSchema = z.object({
-  dishes: z.array(ObjectIdSchema).optional(),
-  timeToConsume: z.coerce.number().optional(),
-  portionBestSuited: z.string().min(3).max(100).optional(),
-  bestWeather: z.string().min(3).max(100).optional(),
-  levelOfSpice: z.string().min(3).max(100).optional(),
-  bestOccasion: z.string().min(3).max(100).optional(),
-  texture: z.string().min(3).max(100).optional(),
-  time: z.coerce.number().optional(),
-  metaTags: z.array(z.string().min(3).max(50)).optional(),
-});
-
-const tagSchema = z.object({
-  name: z.string().min(3).max(50).optional(),
-  color: z.string().min(3).max(50).optional(),
-  icon: z.string().min(3).max(50).optional(),
-  fontColor: z.string().min(3).max(50).optional(),
+export const DishTypeEnum = [
+  "VEG",
+  "NON_VEG",
+  "EGG",
+  "VEGAN",
+  "GLUTEN_FREE",
+] as const;
+export const portionSchema = z.object({
+  name: z
+    .string({
+      message: "name is required",
+    })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  price: z.coerce
+    .number({
+      message: "price is required",
+    })
+    .positive({
+      message: "price must be positive",
+    }),
+  default: z.boolean().optional(),
+  portionTypes: z.array(
+    z.enum(DishTypeEnum, {
+      message: "portionType is required",
+    }),
+    {
+      message:
+        "portionType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
+    },
+  ),
 });
 
 export const dishSchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
-  name: z.string().min(3).max(100),
-  price: z.coerce.number().positive(),
+  name: z
+    .string({ message: "name is required " })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  price: z.coerce
+    .number({
+      message: "price is required",
+    })
+    .positive({
+      message: "price must be positive",
+    }),
   visibility: z.boolean().default(true),
-  avgTime: z.coerce.number().optional(),
-  dishType: z.string().min(3).max(100).optional(),
-  categories: z.array(ObjectIdSchema).optional(),
-  portions: z.array(portionSchema).optional(),
-  extras: z.array(ObjectIdSchema).optional(),
-  kitchenId: ObjectIdSchema,
-  filters: filtersSchema
-    .default({
-      timeToConsume: 0,
-      portionBestSuited: '',
-      bestWeather: '',
-      levelOfSpice: '',
-      bestOccasion: '',
-      texture: '',
-      time: 0,
-      dishes: [],
-      metaTags: [], // added this line
+  avgTime: z.coerce
+    .number({
+      message: "avgTime is required",
     })
     .optional(),
-  images: z.array(z.string().min(6).max(100)).optional(),
-  description: z.string().min(10).max(150).optional(),
-  tags: z.array(tagSchema).optional(),
+  dishTypes: z.array(
+    z.enum(DishTypeEnum, {
+      message: "dishType is required",
+    }),
+    {
+      message: "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
+    },
+  ),
+  categoryIds: z.array(ObjectIdSchema).optional(),
+  portions: z
+    .array(portionSchema, {
+      message: "portions is required",
+    })
+    .optional(),
+  addOns: z
+    .array(ObjectIdSchema, {
+      message: "extras is required",
+    })
+    .optional(),
+  kitchenId: ObjectIdSchema.optional(),
+
+  images: z
+    .array(
+      z
+        .string({
+          message: "images is required",
+        })
+        .url({
+          message: "images must be a valid url",
+        })
+        .min(6, {
+          message: "images must be atleast 6 characters long",
+        })
+        .max(100, {
+          message: "images must be atmost 100 characters long",
+        }),
+    )
+    .optional(),
+  description: z
+    .string({
+      message: "description is required",
+    })
+    .min(10, {
+      message: "description must be atleast 10 characters long",
+    })
+    .max(200, {
+      message: "description must be atmost 200 characters long",
+    })
+    .optional(),
+  calories: z
+    .string({
+      message: "calories is required",
+    })
+    .min(3, {
+      message: "calories must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "calories must be atmost 100 characters long",
+    })
+    .optional(),
+  tags: z
+    .array(
+      z
+        .string()
+        .min(3, {
+          message: "tags must be atleast 3 characters long",
+        })
+        .max(100, {
+          message: "tags must be atmost 100 characters long",
+        }),
+      {
+        message: "tags is required",
+      },
+    )
+    .optional(),
+  recommendations: z
+    .array(ObjectIdSchema, {
+      message: "recommendations is required",
+    })
+    .optional(),
   delayTime: z.coerce.number().optional().default(0),
   availability: z.boolean().default(true),
+  isDeleted: z.boolean().default(false),
 });
 
 export type DishType = z.infer<typeof dishSchema>;
 export type PortionType = z.infer<typeof portionSchema>;
-
-export type FiltersType = z.infer<typeof filtersSchema>;
-// export type CategoryType = z.infer<typeof categorySchema>;
-export type TagType = z.infer<typeof tagSchema>;

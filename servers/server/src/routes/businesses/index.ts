@@ -12,50 +12,48 @@ import {
   Role,
   Theme,
   UserReward,
-} from '@hi/db-models';
+} from "@hi/db-models";
 import {
-  BannerType,
   BranchSchema,
   BusinessSchema,
-  CategoryType,
-  DishType,
-  ExtraType,
-  LoyaltyType,
+  UpdateBusinessSchema,
   outLetInfoSchema,
   paramsSchema,
   permissionsSchema,
-  TokenValidator,
-  UpdateBusinessSchema,
-  UserRewardType,
-} from '@hi/db-models/src/validators';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
+} from "@hi/db-models/src/validators";
 //@ts-ignore
-import { runInTransaction } from '@hi/utils';
-import type { ClientSession } from 'mongoose';
-import { z } from 'zod';
-import { ClientRoles, requireAuthorization } from '../../../middleware/authorization';
-import { authTokenValidator } from '../../../middleware/tokenValidator';
-import { respond } from '../../utils/response';
-import { convertToHsl } from '../../utils/theme';
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { z } from "zod";
+import {
+  ClientRoles,
+  requireAuthorization,
+} from "../../../middleware/authorization";
+import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { respond } from "../../utils/response";
+import { convertToHsl } from "../../utils/theme";
 
 const businessesRouter = new Hono()
   .post(
-    '/',
+    "/",
     // authTokenValidator,
     // requireAuthorization([ClientRoles.OWNER]),
 
-    zValidator('json', BusinessSchema),
+    zValidator("json", BusinessSchema),
 
     async (c) => {
       const requestData = await c.req.json();
-      const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
+      const isCustomLinkExist = await Business.findOne({
+        customLink: requestData.customLink,
+      });
       if (isCustomLinkExist) {
         return c.json(
           {
             err: true,
             data: {},
-            message: 'customLink already exist',
+            message: "customLink already exist",
           },
           409,
         );
@@ -65,52 +63,70 @@ const businessesRouter = new Hono()
         return c.json({
           err: true,
           data: {},
-          message: 'business not created !',
+          message: "business not created !",
         });
       }
 
-      return respond(c, 'business created', false, 201, business);
+      return respond(c, "business created", false, 201, business);
     },
   )
   .post(
-    '/createBranch',
+    "/createBranch",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
-    zValidator('json', BranchSchema),
+    zValidator("json", BranchSchema),
 
     async (c) => {
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
-        const isCustomLinkExist = await Business.findOne({ customLink: requestData.customLink });
+        const isCustomLinkExist = await Business.findOne({
+          customLink: requestData.customLink,
+        });
 
-        if (isCustomLinkExist) return respond(c, 'customLink already exist', true, 409, {});
+        if (isCustomLinkExist)
+          return respond(c, "customLink already exist", true, 409, {});
 
-        const business = await Business.create([{ ...requestData, outlet: false }], { session });
+        const business = await Business.create(
+          [{ ...requestData, outlet: false }],
+          { session },
+        );
         if (requestData.parentBranchId) {
-          const { menu, themes, rewards, paymentAndBusinessSettings, parentOutLetId } = requestData;
+          const {
+            menu,
+            themes,
+            rewards,
+            paymentAndBusinessSettings,
+            parentOutLetId,
+          } = requestData;
           const currentBusinessId = business[0]._id;
-          console.log('currentBusinessId', currentBusinessId);
-          console.log('parentBranchId', parentOutLetId);
+          console.log("currentBusinessId", currentBusinessId);
+          console.log("parentBranchId", parentOutLetId);
 
           if (menu) {
-            const categories = await Category.find({ businessId: parentOutLetId }).lean();
+            const categories = await Category.find({
+              businessId: parentOutLetId,
+            }).lean();
 
             for (let i = 0; i < categories.length; i++) {
               const category = categories[i];
               delete category._id;
-              category['businessId'] = currentBusinessId;
+              category["businessId"] = currentBusinessId;
             }
 
             await Category.insertMany(categories, { session });
 
-            const dishes = await Dish.find({ businessId: parentOutLetId }).lean();
+            const dishes = await Dish.find({
+              businessId: parentOutLetId,
+            }).lean();
             dishes.forEach((dish) => {
               delete dish._id;
-              dish['businessId'] = currentBusinessId;
+              dish["businessId"] = currentBusinessId;
             });
             await Dish.insertMany(dishes, { session });
 
-            const extras = await Extra.find({ businessId: parentOutLetId }).lean();
+            const extras = await Extra.find({
+              businessId: parentOutLetId,
+            }).lean();
             extras.forEach((extra) => {
               delete extra._id;
               extra.businessId = currentBusinessId;
@@ -119,37 +135,57 @@ const businessesRouter = new Hono()
           }
 
           if (themes) {
-            console.log('themes', themes);
-            const outLet = await OutLetInfo.findOne({ businessId: parentOutLetId }).lean();
+            console.log("themes", themes);
+            const outLet = await OutLetInfo.findOne({
+              businessId: parentOutLetId,
+            }).lean();
 
-            if (!outLet) return respond(c, 'outLet not found', true, 404, {});
+            if (!outLet) return respond(c, "outLet not found", true, 404, {});
 
             delete outLet._id;
 
-            console.log('outLet', outLet);
-            await OutLetInfo.create([{ ...outLet, businessId: currentBusinessId }], { session });
+            console.log("outLet", outLet);
+            await OutLetInfo.create(
+              [{ ...outLet, businessId: currentBusinessId }],
+              { session },
+            );
 
-            const banners = await Banner.find({ businessId: parentOutLetId }).lean();
+            const banners = await Banner.find({
+              businessId: parentOutLetId,
+            }).lean();
             banners.forEach((banner) => {
               delete banner._id;
               banner.businessId = currentBusinessId;
             });
             await Banner.insertMany(banners, { session });
 
-            const themesData = await Theme.findOne({ businessId: parentOutLetId }).lean();
+            const themesData = await Theme.findOne({
+              businessId: parentOutLetId,
+            }).lean();
             if (themesData) {
               delete themesData._id;
-              await Theme.create([{ theme: themesData.theme, businessId: currentBusinessId }], { session });
+              await Theme.create(
+                [{ theme: themesData.theme, businessId: currentBusinessId }],
+                { session },
+              );
             }
           }
 
           if (rewards) {
-            const loyaltySettings = await LoyaltySettings.findOne({ businessId: parentOutLetId }).lean();
-            if (!loyaltySettings) return respond(c, 'loyaltySettings not found', true, 404, {});
+            const loyaltySettings = await LoyaltySettings.findOne({
+              businessId: parentOutLetId,
+            }).lean();
+            if (!loyaltySettings)
+              return respond(c, "loyaltySettings not found", true, 404, {});
             delete loyaltySettings._id;
-            await LoyaltySettings.create([{ ...loyaltySettings, businessId: currentBusinessId }], { session });
+            await LoyaltySettings.create(
+              [{ ...loyaltySettings, businessId: currentBusinessId }],
+              { session },
+            );
 
-            const loyaltyUsers = await UserReward.find({ loyaltyId: parentOutLetId }).lean();
+            const loyaltyUsers = await UserReward.find({
+              loyaltyId: parentOutLetId,
+            }).lean();
             loyaltyUsers.forEach((user) => {
               delete user._id;
               user.loyaltyId = currentBusinessId.toString();
@@ -158,59 +194,73 @@ const businessesRouter = new Hono()
           }
 
           if (paymentAndBusinessSettings) {
-            const businessSetting = await BusinessSettings.findOne({ businessId: parentOutLetId }).lean();
-            if (!businessSetting) return respond(c, 'businessSetting not found', true, 404, {});
+            const businessSetting = await BusinessSettings.findOne({
+              businessId: parentOutLetId,
+            }).lean();
+            if (!businessSetting)
+              return respond(c, "businessSetting not found", true, 404, {});
             delete businessSetting._id;
-            await BusinessSettings.create([{ ...businessSetting, businessId: currentBusinessId }], { session });
+            await BusinessSettings.create(
+              [{ ...businessSetting, businessId: currentBusinessId }],
+              { session },
+            );
           }
         }
 
-        return respond(c, 'branch created', false, 201, business);
+        return respond(c, "branch created", false, 201, business);
       });
     },
   )
   .post(
-    '/outletInfo',
+    "/outletInfo",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-    zValidator('json', outLetInfoSchema),
+    zValidator("json", outLetInfoSchema),
 
     async (c) => {
       const requestData = await c.req.json();
-      const isInfoAlreadyExist = await OutLetInfo.findOne({ businessId: requestData.businessId });
+      const isInfoAlreadyExist = await OutLetInfo.findOne({
+        businessId: requestData.businessId,
+      });
 
-      if (isInfoAlreadyExist) return respond(c, 'outletInfo already exists', true, 409, {});
+      if (isInfoAlreadyExist)
+        return respond(c, "outletInfo already exists", true, 409, {});
 
-      const outLetInfo = await OutLetInfo.findOneAndUpdate({ businessId: requestData.businessId }, requestData, { new: true, upsert: true });
-      if (!outLetInfo) return respond(c, 'outletInfo not created', true, 400, {});
+      const outLetInfo = await OutLetInfo.findOneAndUpdate(
+        { businessId: requestData.businessId },
+        requestData,
+        { new: true, upsert: true },
+      );
+      if (!outLetInfo)
+        return respond(c, "outletInfo not created", true, 400, {});
 
-      return respond(c, 'outletInfo created', false, 201, outLetInfo);
+      return respond(c, "outletInfo created", false, 201, outLetInfo);
     },
   )
   .post(
-    '/permissions',
+    "/permissions",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-    zValidator('json', permissionsSchema),
+    zValidator("json", permissionsSchema),
 
     async (c) => {
       const requestData = await c.req.json();
 
       const business = await Permissions.create(requestData);
-      if (!business) respond(c, 'permissions not created', true, 400, {});
+      if (!business) respond(c, "permissions not created", true, 400, {});
 
-      return respond(c, 'permissions created', false, 201, business);
+      return respond(c, "permissions created", false, 201, business);
     },
   )
   .post(
-    '/:customLink',
+    "/:customLink",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
-      'param',
+      "param",
       z.object({
         customLink: z.string(),
       }),
@@ -220,7 +270,15 @@ const businessesRouter = new Hono()
       let { customLink } = c.req.param();
       customLink = customLink.trim();
 
-      const reservedDomains = ['hipal', 'hipalz', 'hiclient', 'pro.hipal', 'hitable', 'hibiz', 'biz'];
+      const reservedDomains = [
+        "hipal",
+        "hipalz",
+        "hiclient",
+        "pro.hipal",
+        "hitable",
+        "hibiz",
+        "biz",
+      ];
       const validDomainRegex = /^[a-z0-9]+$/;
       //TODO: BADWORD
 
@@ -229,7 +287,7 @@ const businessesRouter = new Hono()
           {
             err: true,
             data: { exist: false },
-            message: 'Invalid domain link format',
+            message: "Invalid domain link format",
           },
           400,
         );
@@ -240,37 +298,47 @@ const businessesRouter = new Hono()
           {
             err: true,
             data: { exist: false },
-            message: 'Custom link is reserved',
+            message: "Custom link is reserved",
           },
           400,
         );
       }
 
       // Check if the custom link already exists in the database
-      const CustomLinkExist = await Business.findOne({ customLink: customLink });
+      const CustomLinkExist = await Business.findOne({
+        customLink: customLink,
+      });
       //TODO : SEPERATE FUNCTION RESPONSE
       return c.json({
         err: false,
         data: { exist: !!CustomLinkExist },
-        message: 'fetched',
+        message: "fetched",
       });
     },
   )
   .post(
-    '/:businessId/role',
+    "/:businessId/role",
     // authTokenValidator,
     // requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
     ),
     zValidator(
-      'json',
+      "json",
       z.object({
-        name: z.enum(['OWNER', 'CO_OWNER', 'MANAGER', 'CAPTAIN', 'MARKETING_AGENT', 'HIPAL_ADMIN', 'HIPAL_CUSTOMER']),
+        name: z.enum([
+          "OWNER",
+          "CO_OWNER",
+          "MANAGER",
+          "CAPTAIN",
+          "MARKETING_AGENT",
+          "HIPAL_ADMIN",
+          "HIPAL_CUSTOMER",
+        ]),
         description: z.string().optional(),
       }),
     ),
@@ -284,7 +352,7 @@ const businessesRouter = new Hono()
           {
             err: true,
             data: {},
-            message: 'already exist',
+            message: "already exist",
           },
           409,
         );
@@ -303,17 +371,17 @@ const businessesRouter = new Hono()
     },
   )
   .put(
-    '/:businessId',
+    "/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
     ),
-    zValidator('json', UpdateBusinessSchema),
+    zValidator("json", UpdateBusinessSchema),
 
     async (c) => {
       const { businessId } = c.req.param();
@@ -322,21 +390,29 @@ const businessesRouter = new Hono()
         const convertedColors = convertToHsl({
           primary: requestData.primaryColor,
           accent: requestData.primaryColor,
-          'base-100': requestData.secondaryColor,
+          "base-100": requestData.secondaryColor,
         });
 
-        const createTheme = await Theme.findOneAndUpdate({ businessId: businessId }, { theme: convertedColors }, { new: true, upsert: true });
+        const createTheme = await Theme.findOneAndUpdate(
+          { businessId: businessId },
+          { theme: convertedColors },
+          { new: true, upsert: true },
+        );
 
-        if (!createTheme) return respond(c, 'theme not created', true, 400, {});
+        if (!createTheme) return respond(c, "theme not created", true, 400, {});
       }
 
-      const updateBusiness = await Business.findByIdAndUpdate(businessId, requestData, { new: true });
+      const updateBusiness = await Business.findByIdAndUpdate(
+        businessId,
+        requestData,
+        { new: true },
+      );
       if (!updateBusiness) {
         return c.json(
           {
             err: true,
             data: {},
-            message: 'business not found ',
+            message: "business not found ",
           },
           404,
         );
@@ -344,60 +420,61 @@ const businessesRouter = new Hono()
       return c.json({
         err: false,
         data: updateBusiness,
-        message: 'update successfully',
+        message: "update successfully",
       });
     },
   )
   .put(
-    'outletInfo/update/:businessId',
+    "outletInfo/update/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
     ),
-    zValidator('json', outLetInfoSchema.partial()),
+    zValidator("json", outLetInfoSchema.partial()),
 
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
 
-      const updateOutletInfo = await OutLetInfo.findOneAndUpdate({ businessId: businessId }, requestData, { new: true, upsert: true });
+      const updateOutletInfo = await OutLetInfo.findOneAndUpdate(
+        { businessId: businessId },
+        requestData,
+        { new: true, upsert: true },
+      );
 
-      if (!updateOutletInfo) return respond(c, 'outletInfo not found', true, 404, {});
+      if (!updateOutletInfo)
+        return respond(c, "outletInfo not found", true, 404, {});
 
-      return respond(c, 'outletInfo updated', false, 200, updateOutletInfo);
+      return respond(c, "outletInfo updated", false, 200, updateOutletInfo);
     },
   )
 
-
   .get(
-    '/:businessId/permissions',
+    "/:businessId/permissions",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-
-    zValidator('param', z.object({ businessId: z.string() })),
+    zValidator("param", z.object({ businessId: z.string() })),
     async (c) => {
       const { businessId } = c.req.param();
 
       const business = await Permissions.find();
-      if (!business) return respond(c, 'permissions not found', true, 404, {});
+      if (!business) return respond(c, "permissions not found", true, 404, {});
 
-      return respond(c, 'permissions found', false, 200, business);
+      return respond(c, "permissions found", false, 200, business);
     },
   )
   .get(
-    '/getBranches/:ownerId',
+    "/getBranches/:ownerId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
-
-
     zValidator(
-      'param',
+      "param",
       z.object({
         ownerId: z.string(),
       }),
@@ -407,32 +484,31 @@ const businessesRouter = new Hono()
       const existingBusinesses = await Business.find({
         staffIds: ownerId,
         outlet: true,
-      }).select('name _id');
+      }).select("name _id");
 
-      return respond(c, 'businesses found', false, 200, existingBusinesses);
+      return respond(c, "businesses found", false, 200, existingBusinesses);
     },
   )
   .get(
-    '/outletInfo/:businessId',
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER]),
-    zValidator('param', z.object({ businessId: z.string() })),
-
+    "/outletInfo/:businessId",
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
+    zValidator("param", z.object({ businessId: z.string() })),
 
     async (c) => {
       const { businessId } = c.req.param();
 
       const outLetInfo = await OutLetInfo.findOne({ businessId: businessId });
 
-      if (!outLetInfo) return respond(c, 'outletInfo not found', true, 404, {});
+      if (!outLetInfo) return respond(c, "outletInfo not found", true, 404, {});
 
-      return respond(c, 'outletInfo found', false, 200, outLetInfo);
+      return respond(c, "outletInfo found", false, 200, outLetInfo);
     },
   )
   .get(
-    '/',
+    "/",
     zValidator(
-      'query',
+      "query",
       z.object({
         id: z.string(),
       }),
@@ -440,49 +516,57 @@ const businessesRouter = new Hono()
     async (c) => {
       const { id } = c.req.query();
 
-      console.log('id', id);
+      console.log("id", id);
 
       const existingBusinesses = await Business.find({
         staffIds: id,
-      }).populate('parentOutLetId', {
+      }).populate("parentOutLetId", {
         name: 1,
         _id: 0,
       });
 
-      return respond(c, 'businesses found', false, 200, existingBusinesses);
+      return respond(c, "businesses found", false, 200, existingBusinesses);
     },
   )
-  .get('/getAllbusinesses', async (c) => {
+  .get("/getAllbusinesses", async (c) => {
     const existingBusinesses = await Business.find({});
 
-    return respond(c, 'businesses found', false, 200, existingBusinesses);
+    return respond(c, "businesses found", false, 200, existingBusinesses);
   })
-  .get('/get/Single/:businessId', zValidator('param', paramsSchema), async (c) => {
-    const { businessId } = c.req.param();
+  .get(
+    "/get/Single/:businessId",
+    zValidator("param", paramsSchema),
+    async (c) => {
+      const { businessId } = c.req.param();
 
-    const existingBusiness = await Business.findById(businessId);
+      const existingBusiness = await Business.findById(businessId);
 
-    return c.json({
-      data: existingBusiness,
-      status: 200,
-      error: false,
-    });
-  })
-  .get('/n/:customLink', zValidator('param', paramsSchema), async (c) => {
+      return c.json({
+        data: existingBusiness,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  .get("/n/:customLink", zValidator("param", paramsSchema), async (c) => {
     let { customLink } = c.req.param();
 
     customLink = customLink.trim();
 
-    const getBusiness = await Business.findOne({ customLink: customLink }).select('_id');
-    const outLetInfo = await OutLetInfo.findOne({ businessId: getBusiness?._id });
+    const getBusiness = await Business.findOne({
+      customLink: customLink,
+    }).select("_id");
+    const outLetInfo = await OutLetInfo.findOne({
+      businessId: getBusiness?._id,
+    });
 
-    if (!outLetInfo) return respond(c, 'business not found', true, 404, {});
-    return respond(c, 'business found', false, 200, outLetInfo);
+    if (!outLetInfo) return respond(c, "business not found", true, 404, {});
+    return respond(c, "business found", false, 200, outLetInfo);
   })
   .get(
-    '/:businessId/loyalty',
+    "/:businessId/loyalty",
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
@@ -496,39 +580,38 @@ const businessesRouter = new Hono()
         })) || {};
       return c.json({
         data: exitingSettings,
-        message: 'loyalty settings found',
+        message: "loyalty settings found",
         status: 200,
         error: false,
       });
     },
   )
   .get(
-    '/themes/:businessId',
+    "/themes/:businessId",
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
     ),
     async (c) => {
       const { businessId } = c.req.param();
-      console.log("from fro",businessId)
+      console.log("from fro", businessId);
 
       const existingTheme = await Theme.findOne({ businessId: businessId });
-      if (!existingTheme) return respond(c, 'theme not found', true, 404, {});
+      if (!existingTheme) return respond(c, "theme not found", true, 404, {});
 
-      return respond(c, 'theme found', false, 200, existingTheme);
+      return respond(c, "theme found", false, 200, existingTheme);
     },
   )
 
-
   .get(
-    '/:businessId/users',
+    "/:businessId/users",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
-      'param',
+      "param",
       z.object({
         businessId: z.string(),
       }),
@@ -536,12 +619,12 @@ const businessesRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
-      const existingRoles = await Role.find({}).select('_id name description');
+      const existingRoles = await Role.find({}).select("_id name description");
 
-      return respond(c, 'roles found', false, 200, existingRoles);
+      return respond(c, "roles found", false, 200, existingRoles);
     },
   )
-  .get('/get/allbusiness', async (c) => {
+  .get("/get/allbusiness", async (c) => {
     const existingBusinesses = await Business.find({});
 
     return c.json({
@@ -550,7 +633,7 @@ const businessesRouter = new Hono()
       error: false,
     });
   })
-  .get('/', async (c) => {
+  .get("/", async (c) => {
     const existingBusinesses = await Business.find({});
 
     return c.json({

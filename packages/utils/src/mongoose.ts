@@ -1,4 +1,4 @@
-import mongoose, { ClientSession } from 'mongoose';
+import mongoose, { type ClientSession } from "mongoose";
 
 type TransactionCallback = (session: ClientSession) => Promise<void>;
 
