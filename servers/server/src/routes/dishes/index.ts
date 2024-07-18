@@ -35,7 +35,9 @@ const dishesRouter = new Hono()
         const existingDishes = await Dish.find({
           businessId,
           "categoryIds.0": { $exists: true },
-        }).select(" _id businessId name dishType images");
+        }).select(
+          "_id businessId name availability dishTypes visibility price categoryIds addOnIds recommendationIds",
+        );
         return respond(
           c,
           "Dishes fetched successfully",
@@ -50,7 +52,7 @@ const dishesRouter = new Hono()
           businessId,
           isDeleted: false,
         }).select(
-          " _id businessId name availability dishType visibility price ",
+          " _id businessId name availability dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(
           c,
@@ -63,7 +65,7 @@ const dishesRouter = new Hono()
 
       const existingDishes = await Dish.find({
         businessId,
-      }).populate(["categories", "extras", "filters.dishes"]);
+      }).populate(["categoryIds", "addOnIds"]);
 
       return respond(
         c,
@@ -223,19 +225,22 @@ const dishesRouter = new Hono()
     "/:id",
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
-      const { id } = c.req.param();
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const { id } = c.req.param();
 
-      const existingDish = await Dish.findByIdAndUpdate(id, {
-        isDeleted: true,
+        const existingDish = await Dish.findByIdAndUpdate(id, {
+          isDeleted: true,
+        });
+        if (!existingDish) return respond(c, "Dish not found", true, 404, {});
+
+        await Category.updateMany(
+          { _id: { $in: existingDish.categoryIds ?? [] } },
+          { $pull: { dishIds: id } },
+        );
+
+        return respond(c, "Dish deleted successfully", false, 200, {});
       });
-      if (!existingDish) return respond(c, "Dish not found", true, 404, {});
-
-      await Category.updateMany(
-        { _id: { $in: existingDish.categoryIds ?? [] } },
-        { $pull: { dishIds: id } },
-      );
-
-      return respond(c, "Dish deleted successfully", false, 200, {});
     },
   )
   .post(
@@ -318,7 +323,7 @@ const dishesRouter = new Hono()
     ),
     async (c) => {
       const { id } = c.req.param();
-      const existingDish = await Dish.findById(id).populate("categoryIds");
+      const existingDish = await Dish.findOne({ _id: id, isDeleted: false });
       if (!existingDish) return respond(c, "Dish not found", true, 404, {});
       return respond(c, "Dish fetched successfully", false, 200, existingDish);
     },

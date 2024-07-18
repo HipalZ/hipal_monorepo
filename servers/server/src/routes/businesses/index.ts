@@ -5,7 +5,6 @@ import {
   BusinessSettings,
   Category,
   Dish,
-  Extra,
   LoyaltySettings,
   OutLetInfo,
   Permissions,

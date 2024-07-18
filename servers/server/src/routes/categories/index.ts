@@ -287,40 +287,42 @@ const categoriesRouter = new Hono()
     "/:id",
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
-      const { id } = c.req.param();
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const { id } = c.req.param();
 
-      const deletedCategory = await Category.findByIdAndUpdate(id, {
-        isDeleted: true,
+        const deletedCategory = await Category.findByIdAndUpdate(id, {
+          isDeleted: true,
+        });
+        if (!deletedCategory)
+          return respond(c, "Category not found", true, 404, {});
+
+        const pullCategory = await Category.updateMany(
+          {
+            parentCategoryIds: id,
+          },
+          {
+            $pull: { parentCategoryIds: id },
+          },
+        );
+
+        const pullDish = await Dish.updateMany(
+          {
+            categoryIds: id,
+          },
+          {
+            $pull: { categoryIds: id },
+          },
+        );
+
+        return respond(
+          c,
+          "Category deleted successfully",
+          false,
+          200,
+          deletedCategory,
+        );
       });
-
-      const pullCategory = await Category.updateMany(
-        {
-          parentCategoryIds: id,
-        },
-        {
-          $pull: { parentCategoryIds: id },
-        },
-      );
-
-      const pullDish = await Dish.updateMany(
-        {
-          categoryIds: id,
-        },
-        {
-          $pull: { categoryIds: id },
-        },
-      );
-
-      if (!deletedCategory)
-        return respond(c, "Category not found", true, 404, {});
-
-      return respond(
-        c,
-        "Category deleted successfully",
-        false,
-        200,
-        deletedCategory,
-      );
     },
   )
 
@@ -343,19 +345,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
-        })
-
-          .populate({
-            path: "parentCategoryIds",
-          })
-          .populate({
-            path: "dishIds", // Populate dishes
-            populate: {
-              path: "addOnIds",
-
-              // Within each dish, populate extras
-            },
-          });
+        }).select("_id name visibility availability dishIds parentCategoryIds");
 
         return respond(
           c,
@@ -378,14 +368,7 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: hierarchy,
           isDeleted: false,
-        })
-          .select("_id name visibility availability dishIds")
-          .populate({
-            path: "dishIds", // Populate dishes
-            populate: {
-              path: "addOnIds", // Within each dish, populate extras
-            },
-          });
+        }).select("_id name visibility availability dishIds parentCategoryIds");
 
         return respond(
           c,
@@ -400,14 +383,7 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           hierarchy: "PARENT",
-        })
-          .select("_id name visibility availability dishIds")
-          .populate({
-            path: "dishIds", // Populate dishes
-            populate: {
-              path: "addOnIds", // Within each dish, populate extras
-            },
-          });
+        }).select("_id name visibility availability dishIds parentCategoryIds");
 
         return respond(
           c,
@@ -421,11 +397,6 @@ const categoriesRouter = new Hono()
       const existingCategories = await Category.find({
         businessId,
         isDeleted: false,
-      }).populate({
-        path: "dishIds", // Populate dishes
-        populate: {
-          path: "addOnIds", // Within each dish, populate extras
-        },
       });
 
       return respond(
@@ -444,11 +415,9 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { id } = c.req.param();
 
-      const existingCategory = await Category.findById(id).populate({
-        path: "dishIds", // Populate dishes
-        populate: {
-          path: "addOnIds", // Within each dish, populate extras
-        },
+      const existingCategory = await Category.findOne({
+        _id: id,
+        isDeleted: false,
       });
 
       if (!existingCategory)

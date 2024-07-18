@@ -56,11 +56,16 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: true,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-const Extra: Model<AddOnType> = mongoose.model<AddOnType>("addon", extraSchema);
-export { Extra };
+const AddOn: Model<AddOnType> = mongoose.model<AddOnType>("addon", extraSchema);
+export { AddOn };

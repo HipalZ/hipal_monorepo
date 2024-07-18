@@ -80,7 +80,11 @@ export const dishSchema = z.object({
       message: "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
     },
   ),
-  categoryIds: z.array(ObjectIdSchema).optional(),
+  categoryIds: z
+    .array(ObjectIdSchema, {
+      message: "categoryIds is required",
+    })
+    .optional(),
   portions: z
     .array(portionSchema, {
       message: "portions is required",
@@ -190,7 +194,11 @@ export const updateDishSchema = z.object({
       },
     )
     .optional(),
-  categoryIds: z.array(ObjectIdSchema).optional(),
+  categoryIds: z
+    .array(ObjectIdSchema, {
+      message: "categoryIds is required",
+    })
+    .optional(),
   portions: z
     .array(portionSchema, {
       message: "portions is required",
