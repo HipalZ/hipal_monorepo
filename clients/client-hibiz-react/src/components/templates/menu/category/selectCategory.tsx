@@ -1,62 +1,47 @@
-import useBusinessData from "@/components/store/useBusinessData";
-import { apiRpc } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
-import { useQuery } from "@tanstack/react-query";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useMenuPageStore from "@/components/store/useMenuStorage";
+import { useCategoryStore } from "@/components/store/useCategoryStore";
 
 const MemoSelectCategory = () => {
-    const businessData = useBusinessData((state) => state.businessData);
-    const [searchTerm, setSearchTerm] = useState("");
 
-    const { selectedIds, handleCategoryChange, setCategoryStep, setCategories, categories } = useMenuPageStore(state => ({
+    const { selectedIds, handleCategoryChange, setCategoryStep,search,setSearch } = useMenuPageStore(state => ({
         selectedIds: state.selectedIds,
         handleCategoryChange: state.handleCategoryChange,
         setCategoryStep: state.setCategoryStep,
-        setCategories: state.setCategories,
-        categories: state.categories
+        search:state.search,
+        setSearch:state.setSearch
     }));
 
-    const getAllParentCategory = useCallback(async () => {
-        if (!businessData?._id) return [];
-        const res = await apiRpc.categories.$get({
-            query: {
-                businessId: businessData._id,
-                parent: "true"
-            }
-        });
-        const data = (await res.json()).data as CategoryType[];
-        setCategories(data);
-        return data;
-    }, [businessData?._id]);
+    const { categories } = useCategoryStore(s=>({
+        categories: s.categories
+    }))
 
-    useQuery({
-        queryKey: ["categories", businessData?._id],
-        queryFn: getAllParentCategory,
-        enabled: !!businessData?._id
-    });
 
     const fuse = new Fuse(categories, {
         keys: ["name"],
         threshold: 0.3
     });
 
-    const filteredCategories = searchTerm ? fuse.search(searchTerm).map(result => result.item) : categories;
-
+    const filteredCategories = search ? fuse.search(search).map(result => result.item) : categories;
 
     const handleSave = useCallback(() => {
         setCategoryStep("CATEGORY_STEP_1")
     }, []);
+
+    // if(isLoading){
+    //     return <div><LoadingSpinner /></div>
+    // }
 
     return (
         <>
             <input
                 type="search"
                 placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className=" w-[92%] p-2 border rounded-2xl mx-6"
             />
             <div className="flex flex-wrap justify-center gap-4 mt-4">

@@ -112,8 +112,6 @@ const MemoiseDishAndCat = () => {
         {
           selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
         }
-
-
       </section>
 
       {openMenu &&

@@ -1,38 +1,25 @@
-import useBusinessData from "@/components/store/useBusinessData";
-import { apiRpc } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
-import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useMenuPageStore from "@/components/store/useMenuStorage";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { useParentCategories } from "@/hooks/useCategory";
+import { useCategoryStore } from "@/components/store/useCategoryStore";
 
 const MemoListOfParentCategory = () => {
-    const businessData = useBusinessData((state) => state.businessData);
     const { search,visibilityFilter,sortOrder } = useMenuPageStore(state => ({
         search: state.search,
         visibilityFilter: state.visibilityFilter,
         sortOrder: state.sortOrder,
+      
     }));
-
-
-    const getAllParentCategory = useCallback(async () => {
-        if (!businessData?._id) return [];
-        const res = await apiRpc.categories.$get({
-            query: {
-                businessId: businessData._id,
-                parent: "true"
-            }
-        });
-        const data = (await res.json()).data as CategoryType[];
-        return data;
-    }, [businessData?._id]);
-
-    const { data: categories = [] } = useQuery({
-        queryKey: ["categories", businessData?._id],
-        queryFn: getAllParentCategory,
-        enabled: !!businessData?._id
-    });
+    const {  categories } = useCategoryStore(state => ({
+        
+        setCategories: state.setCategories,
+        categories: state.categories
+    }));
+    const { isLoading } = useParentCategories()
 
     const fuse = useMemo(() => new Fuse(categories, {
         keys: ["name"],
@@ -50,6 +37,10 @@ const MemoListOfParentCategory = () => {
     const editCategory = useCallback((category: CategoryType) => {
         console.log(category);
     }, []);
+
+    if(isLoading){
+        return <div><LoadingSpinner /></div>
+    }
 
     return (
             <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">

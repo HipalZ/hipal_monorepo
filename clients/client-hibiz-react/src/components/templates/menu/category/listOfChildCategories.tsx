@@ -1,46 +1,46 @@
-import useBusinessData from "@/components/store/useBusinessData";
-import { apiRpc } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
-import { useQuery } from "@tanstack/react-query";
-import { memo, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import useMenuPageStore from "@/components/store/useMenuStorage";
+import { useChildCategories } from "@/hooks/useCategory";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { memo, useCallback, useMemo } from "react";
+import { useCategoryStore } from "@/components/store/useCategoryStore";
 
 const MemoListOfChildCategory = () => {
-    const businessData = useBusinessData((state) => state.businessData);
-    const { search } = useMenuPageStore(state => ({
+    const { search,sortOrder,visibilityFilter } = useMenuPageStore(state => ({
         search: state.search,
+        visibilityFilter: state.visibilityFilter,
+        sortOrder: state.sortOrder,
+    }))
+    const { subCategories } = useCategoryStore(state => ({
+        subCategories:state.subCategories,
     }))
 
-    const getAllChildCategory = useCallback(async () => {
-        if (!businessData?._id) return [];
-        const res = await apiRpc.categories.$get({
-            query: {
-                businessId: businessData._id,
-                child: "true"
-            }
-        });
-        const data = (await res.json()).data as CategoryType[];
-        return data;
-    }, [businessData?._id]);
+    
 
-    const { data: categories = [] } = useQuery({
-        queryKey: ["categories", businessData?._id],
-        queryFn: getAllChildCategory,
-        enabled: !!businessData?._id
-    });
 
-    const fuse = new Fuse(categories, {
+    const { isLoading} = useChildCategories()
+
+    const fuse = new Fuse(subCategories, {
         keys: ["name"],
         threshold: 0.3
     });
     const filteredCategories = useMemo(() => {
-        return search ? fuse.search(search).map(result => result.item) : categories;
-    }, [search, categories, fuse]);
+        let filtered = search ? fuse.search(search).map(result => result.item) : subCategories;
+        if (visibilityFilter !== 'all') {
+            filtered = filtered.filter(c => c.visibility === (visibilityFilter === 'visible'));
+        }
+        return sortOrder === 'asc' ? filtered.sort((a, b) => a.name.localeCompare(b.name)) : filtered.sort((a, b) => b.name.localeCompare(a.name));
+    }, [search, subCategories, fuse, visibilityFilter, sortOrder]);
+    
     const editCategory = useCallback((category: CategoryType) => {
         console.log(category);
     }, []);
+    
+    if(isLoading){
+        return <div><LoadingSpinner /></div>
+    }
 
 
     return (

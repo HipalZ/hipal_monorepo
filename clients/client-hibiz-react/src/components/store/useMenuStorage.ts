@@ -1,13 +1,9 @@
 // src/components/store/useMenuPageStore.ts
-import type { CategoryType } from '@hi/db-models/src/validators';
 import { create } from 'zustand';
 export type MenuPageType = "DISHES" | "MAIN_CATEGORY" | "SUB_CATEGORY" | "ADD_ON";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep = "CATEGORY_STEP_1" | "CATEGORY_STEP_2" | "CATEGORY_STEP_3" |"" | "LINK_MAIN_CATEGORY" | "LINK_SUB_CATEGORY" | "LINK_DISH";
 interface MenuPageStore {
-
-    categories: CategoryType[];
-    setCategories: (categories: CategoryType[]) => void;
 
     selectedPage: MenuPageType;
     setSelectedPage: (page: MenuPageType) => void;
@@ -43,9 +39,6 @@ interface MenuPageStore {
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
-
-    categories: [],
-    setCategories: (categories) => set({ categories }),
 
     selectedPage: "DISHES",
     setSelectedPage: (page: MenuPageType) => set({ selectedPage: page }),
