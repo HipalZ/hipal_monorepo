@@ -11,7 +11,7 @@ function MemoizedPopUp({ children, show, onClose, hide }: { children: React.Reac
   return (
     <Transition appear show={show} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={stopClosing}>
-        <div className="fixed inset-0 flex items-end justify-center bg-black lg:items-center bg-opacity-70 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[4rem]">
           <TransitionChild
             as={Fragment}
             enter="transition ease-out duration-200 transform"

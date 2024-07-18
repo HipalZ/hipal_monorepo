@@ -4,18 +4,15 @@ import { memo, useCallback } from "react"
 import { FaArrowLeft } from "react-icons/fa";
 import Hi from "@/assets/svg/hi.svg";
 import CategoryMainForm from "./categoryMainForm";
-
-
+import SelectCategory from "./selectCategory";
 
 const CreateCategoryMain = () => {
     const { setOpenMenu, categoryStep, setCategoryStep } = useMenuPageStore(s => ({
         setOpenMenu: s.setOpenMenu,
         categoryStep: s.categoryStep,
-        setCategoryStep: s.setCategoryStep
+        setCategoryStep: s.setCategoryStep,
+        selectedPage: s.selectedPage,
     }));
-    const closeCategory = useCallback(() => {
-        setOpenMenu(false);
-    }, [])
 
     const goBack = useCallback(() => {
         switch (categoryStep) {
@@ -28,6 +25,12 @@ const CreateCategoryMain = () => {
             case "CATEGORY_STEP_3":
                 setCategoryStep("CATEGORY_STEP_2")
                 break;
+            case "LINK_MAIN_CATEGORY":
+                setCategoryStep("CATEGORY_STEP_1")
+                break;
+            case "LINK_SUB_CATEGORY":
+                setCategoryStep("CATEGORY_STEP_1")
+                break;
             default:
                 setOpenMenu(false);
                 break;
@@ -35,17 +38,22 @@ const CreateCategoryMain = () => {
     }, [categoryStep])
 
     return (
-        <>
-            <MemoizedHeader
-                title="Create Category"
-                onBack={goBack}
-                leftIcon={<FaArrowLeft />}
-                centerImage={Hi}
-                rightImage={Hi}
-                isIconBusinessShow={false}
-            />
+        < >
+            <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
+                <MemoizedHeader
+                    title="Create Category"
+                    onBack={goBack}
+                    leftIcon={<FaArrowLeft />}
+                    centerImage={Hi}
+                    rightImage={Hi}
+                    isIconBusinessShow={false}
+                />
+            </header>
             {
                 categoryStep === "CATEGORY_STEP_1" && <CategoryMainForm />
+            }
+            {
+                categoryStep === "LINK_MAIN_CATEGORY" && <SelectCategory />
             }
             {
                 categoryStep === "CATEGORY_STEP_2" && <div>

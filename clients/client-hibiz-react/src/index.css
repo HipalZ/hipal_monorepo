@@ -671,12 +671,15 @@ input[type="color" i] {
   .masonry-layout {
     column-count: 3;
   }
+  
   .business_Control {
     margin: 2.5rem auto 1.5rem auto;
   }
+
   .business_Control_article {
     padding: 2rem 0 2rem 2rem;
   }
+  
   .business_Control_figure {
     position: absolute;
     right: 0;
@@ -703,12 +706,14 @@ input[type="color" i] {
 }
 
 .sidebar {
-  position: absolute;
+  position: fixed;
   display: flex;
   flex-direction: column;
   width: 100px;
-  height: 90vh;
+  height: 100vh;
   background-color: #f0f0f0;
+  left: 0;
+  top: 0;
 }
 
 .sidebar-item {
@@ -724,7 +729,6 @@ input[type="color" i] {
   }
 }
 
-/* Top navigation styles */
 .top-nav {
   display: flex;
   justify-content: space-between;

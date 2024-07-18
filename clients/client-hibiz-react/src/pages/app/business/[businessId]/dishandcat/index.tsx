@@ -12,6 +12,10 @@ import { BiPlus } from 'react-icons/bi';
 import PopUp from '@/components/atom/popUp';
 import CreateCategory from '@/components/templates/menu/category/createCategory';
 import { HiX } from 'react-icons/hi';
+import ListOfParentCategory from '@/components/templates/menu/category/listOfParentCategory';
+import ListOfChildCategory from '@/components/templates/menu/category/listOfChildCategories';
+import Search from '@/components/templates/menu/category/search';
+import Filter from '@/components/templates/menu/category/filter';
 
 const MemoiseDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -21,7 +25,9 @@ const MemoiseDishAndCat = () => {
     setSelectedCategory: s.setSelectedCategory,
     openMenu: s.openMenu,
     setOpenMenu: s.setOpenMenu,
-    resetStore: s.resetStore
+    resetStore: s.resetStore,
+    search: s.search,
+    setSearch: s.setSearch
   }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -31,7 +37,7 @@ const MemoiseDishAndCat = () => {
   };
 
   const openMenuModel = useCallback(() => {
-    
+
     if (selectedPage === "MAIN_CATEGORY") {
       setSelectedCategory("MAIN_CATEGORY")
     } else if (selectedPage === "SUB_CATEGORY") {
@@ -59,52 +65,56 @@ const MemoiseDishAndCat = () => {
   }, []);
 
   return (
-    <main className="">
-      <div className="sticky top-0 z-50 w-full linear_gradient_background">
-        <MemoizedHeader
-          title={`${selectedPage.split("_").join(" ")}`}
-          onBack={handleBack}
-          leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
-          rightImage={Hi}
-          isIconBusinessShow={false}
-        />
+    <main>
+      <div className="sticky top-0 z-50 w-full">
+        <article className='linear_gradient_background'>
+          <MemoizedHeader
+            title={`${selectedPage.split("_").join(" ")}`}
+            onBack={handleBack}
+            leftIcon={<FaArrowLeft />}
+            centerImage={Hi}
+            rightImage={Hi}
+            isIconBusinessShow={false}
+          />
+        </article>
+        <section className='absolute w-full px-4 space-x-4 text-sm mobile-only'>
+          {sidebarItems.map((item) => (
+            <button
+              className={cn(
+                "pb-3 pt-4",
+                removeAllUnwanted(selectedPage, item.text) ? "border-b-2 border-black transition-all" : ""
+              )}
+              key={item.text}
+              type='button'
+              onClick={item.onClick}
+            >
+              {item.text}
+            </button>
+          ))}
+        </section>
+        <Filter />
+        <Search />
       </div>
       <Sidebar items={sidebarItems} />
-      <section className='px-4 space-x-4 text-sm mobile-only'>
-        {sidebarItems.map((item) => (
-          <button
-            className={cn(
-              "pb-3 pt-4",
-              removeAllUnwanted(selectedPage, item.text) ? "border-b-2 border-black transition-all" : ""
-            )}
-            key={item.text}
-            type='button'
-            onClick={item.onClick}
-          >
-            {item.text}
-          </button>
-        ))}
+      <section className='min-h-[100dvh]'>
+        {
+          selectedPage === "DISHES" && <div className='m-4 text-3xl'>Dish Dishes</div>
+        }
+
+        {
+          selectedPage === "MAIN_CATEGORY" && <ListOfParentCategory />
+        }
+
+        {
+          selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />
+        }
+
+        {
+          selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
+        }
+
+
       </section>
-      {
-        selectedPage === "DISHES" && <div className='m-4 text-3xl'>Dish Dishes</div>
-      }
-
-      {
-        selectedPage === "MAIN_CATEGORY" && <div className='m-4 text-3xl'>Main-category</div>
-      }
-
-      {
-        selectedPage === "SUB_CATEGORY" && <div className='m-4 text-3xl'>Sub-category</div>
-      }
-
-      {
-        selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
-      }
-
-      <button onClick={openMenuModel} className='absolute flex items-center px-4 py-2 text-white bg-black rounded-full right-6 bottom-6' type='button'>
-        <BiPlus size={32} /> {selectedPage}
-      </button>
 
       {openMenu &&
         <PopUp show={openMenu} onClose={closeMenu} hide>
@@ -118,11 +128,9 @@ const MemoiseDishAndCat = () => {
             {
               selectedPage === "DISHES" && <div className='m-4 text-3xl'>Dish Dishes</div>
             }
+
             {
-              selectedPage === "MAIN_CATEGORY" && <CreateCategory />
-            }
-            {
-              selectedPage === "SUB_CATEGORY" && <CreateCategory />
+              (selectedPage === "MAIN_CATEGORY" || selectedPage === "SUB_CATEGORY") && <CreateCategory />
             }
             {
               selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
@@ -130,6 +138,10 @@ const MemoiseDishAndCat = () => {
           </section>
         </PopUp>
       }
+
+      <button onClick={openMenuModel} className='fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6' type='button'>
+        <BiPlus size={32} /> {selectedPage}
+      </button>
     </main>
   )
 }
