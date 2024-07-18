@@ -115,9 +115,10 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       default: false,
     },
-    recommendations: {
+    recommendationIds: {
       type: [ObjectId],
       required: false,
+      default: [],
       ref: "Dish",
     },
   },

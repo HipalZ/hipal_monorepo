@@ -142,17 +142,32 @@ const categoriesRouter = new Hono()
           return respond(c, "Category not found", true, 404, {});
 
         if (parentCategoryIds.length > 0) {
-          const findOnes =
-            await Category.findById(id).select("parentCategoryIds");
+          // Step 1: Create a set for efficient existence checks
+          const updatedCategoryIdsSet = new Set(
+            updatedCategory.parentCategoryIds.map((eid) => eid),
+          );
 
-          let a = findOnes?.parentCategoryIds;
-          let b = parentCategoryIds;
+          // Step 2: Filter out existing IDs from parentCategoryIds
+          const filteredParentCategoryIds = parentCategoryIds.filter(
+            (id) => !updatedCategoryIdsSet.has(id),
+          );
 
-          let uniqueFromB = b.filter((item) => !a.includes(item));
+          // Step 3: Add new IDs from updatedCategory.parentCategoryIds that are not in the original parentCategoryIds
+          const newParentCategoryIds = updatedCategory.parentCategoryIds.filter(
+            (id) => !parentCategoryIds.includes(id),
+          );
 
-          await Category.findByIdAndUpdate(
-            id,
-            { parentCategoryIds: uniqueFromB },
+          // Combine the filtered list with the new IDs
+          const finalParentCategoryIds = [
+            ...filteredParentCategoryIds,
+            ...newParentCategoryIds,
+          ];
+
+          // Update the category with
+
+          await Category.updateOne(
+            { _id: id },
+            { parentCategoryIds: finalParentCategoryIds },
             { session },
           );
         }
@@ -192,6 +207,68 @@ const categoriesRouter = new Hono()
           await Category.updateMany(
             { _id: { $in: filteredCategoryIds } },
             { $addToSet: { parentCategoryIds: id } },
+            { session },
+          );
+        }
+
+        if (dishIds.length > 0) {
+          const findDishes = await Dish.find({
+            _id: { $in: dishIds },
+          }).select("_id categoryIds");
+
+          console.log("findCategory", findDishes);
+
+          const removeDisheIds: string[] = [];
+
+          const filter = findDishes.filter((dish) =>
+            dish.categoryIds.map((id) => id.toString()).includes(id.toString()),
+          );
+
+          console.log("filter", filter);
+
+          for (const dish of filter) {
+            removeDisheIds.push(dish._id.toString());
+          }
+
+          const filteredDishIds = dishIds.filter(
+            (id: string) => !removeDisheIds.includes(id),
+          );
+
+          await Dish.updateMany(
+            { _id: { $in: dishIds } },
+            { $pull: { categoryIds: id } },
+            { session },
+          );
+
+          await Dish.updateMany(
+            { _id: { $in: filteredDishIds } },
+            { $addToSet: { categoryIds: id } },
+            { session },
+          );
+
+          // Step 1: Create a set for efficient existence checks
+          const updatedDishIdsSet = new Set(
+            updatedCategory.dishIds.map((eid) => eid.toString()),
+          );
+
+          // Step 2: Filter out existing IDs from parentCategoryIds
+          const filteredDish = dishIds.filter(
+            (id) => !updatedDishIdsSet.has(id),
+          );
+
+          // Step 3: Add new IDs from updatedCategory.parentCategoryIds that are not in the original parentCategoryIds
+          const newDishIds = updatedCategory.dishIds.filter(
+            (id) => !dishIds.includes(id.toString()),
+          );
+
+          // Combine the filtered list with the new IDs
+          const finalDishIds = [...filteredDish, ...newDishIds];
+
+          // Update the category with
+
+          await Category.updateOne(
+            { _id: id },
+            { dishIds: finalDishIds },
             { session },
           );
         }
@@ -267,11 +344,16 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
         })
-          .select("_id name visibility availability dishIds")
+
+          .populate({
+            path: "parentCategoryIds",
+          })
           .populate({
             path: "dishIds", // Populate dishes
             populate: {
-              path: "addOnIds", // Within each dish, populate extras
+              path: "addOnIds",
+
+              // Within each dish, populate extras
             },
           });
 

@@ -29,8 +29,8 @@ const categorySchema = new mongoose.Schema<CategoryType>(
     parentCategoryIds: {
       type: [ObjectId],
       default: [],
-      ref: "category",
       required: false,
+      ref: "category",
     },
     coverImage: {
       type: String,

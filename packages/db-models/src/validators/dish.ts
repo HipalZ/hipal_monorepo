@@ -147,19 +147,19 @@ export const dishSchema = z.object({
       },
     )
     .optional(),
-  recommendations: z
+  recommendationIds: z
     .array(ObjectIdSchema, {
-      message: "recommendations is required",
+      message: "recommendationids is required",
     })
+    .default([])
     .optional(),
   delayTime: z.coerce.number().optional().default(0),
-  availability: z.boolean().default(true),
-  isDeleted: z.boolean().default(false),
+  availability: z.boolean().default(true).optional(),
+  isDeleted: z.boolean().default(false).optional(),
 });
 
 export const updateDishSchema = z.object({
   _id: ObjectIdSchema.optional(),
-  businessId: ObjectIdSchema,
   name: z
     .string({ message: "name is required " })
     .min(3, {
@@ -167,28 +167,29 @@ export const updateDishSchema = z.object({
     })
     .max(100, {
       message: "name must be atmost 100 characters long",
-    }),
+    })
+    .optional(),
   price: z.coerce
     .number({
       message: "price is required",
     })
     .positive({
       message: "price must be positive",
-    }),
-  visibility: z.boolean().default(true),
-  avgTime: z.coerce
-    .number({
-      message: "avgTime is required",
     })
     .optional(),
-  dishTypes: z.array(
-    z.enum(DishTypeEnum, {
-      message: "dishType is required",
-    }),
-    {
-      message: "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
-    },
-  ),
+  visibility: z.boolean().default(true).optional(),
+
+  dishTypes: z
+    .array(
+      z.enum(DishTypeEnum, {
+        message: "dishType is required",
+      }),
+      {
+        message:
+          "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
+      },
+    )
+    .optional(),
   categoryIds: z.array(ObjectIdSchema).optional(),
   portions: z
     .array(portionSchema, {
@@ -256,14 +257,15 @@ export const updateDishSchema = z.object({
       },
     )
     .optional(),
-  recommendations: z
+  recommendationIds: z
     .array(ObjectIdSchema, {
       message: "recommendations is required",
     })
+    .default([])
     .optional(),
-  delayTime: z.coerce.number().optional().default(0),
-  availability: z.boolean().default(true),
-  isDeleted: z.boolean().default(false),
+
+  availability: z.boolean().default(true).optional(),
+  isDeleted: z.boolean().default(false).optional(),
 });
 
 export type DishType = z.infer<typeof dishSchema>;
