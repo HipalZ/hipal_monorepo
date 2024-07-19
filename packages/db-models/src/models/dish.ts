@@ -3,8 +3,7 @@ import mongoose from "mongoose";
 import type { DishType, PortionType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-import { DishTypeEnum } from "../validators/dish";
-
+import { DishTypeEnum, TagsEnum } from "../validators/dish";
 const portionSchema = new mongoose.Schema<PortionType>(
   {
     name: {
@@ -93,7 +92,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
     tags: {
-      type: [String],
+      type: [TagsEnum],
       required: false,
     },
 

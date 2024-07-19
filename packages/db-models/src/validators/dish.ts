@@ -9,13 +9,17 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
-export const DishTypeEnum = [
-  "VEG",
-  "NON_VEG",
-  "EGG",
-  "VEGAN",
-  "GLUTEN_FREE",
+export const DishTypeEnum = ["VEG", "NON_VEG", "EGG", "VEGAN"] as const;
+
+export const TagsEnum = [
+  "NEW",
+  "BEST_SELLER",
+  "SPICY",
+  "OCCASIONAL",
+  "POPULAR",
 ] as const;
+export type TagsEnumType = (typeof TagsEnum)[number];
+export type DishTypeEnumType = (typeof DishTypeEnum)[number];
 export const portionSchema = z.object({
   name: z
     .string({
@@ -137,20 +141,11 @@ export const dishSchema = z.object({
     })
     .optional(),
   tags: z
-    .array(
-      z
-        .string()
-        .min(3, {
-          message: "tags must be atleast 3 characters long",
-        })
-        .max(100, {
-          message: "tags must be atmost 100 characters long",
-        }),
-      {
-        message: "tags is required",
-      },
-    )
+    .enum(TagsEnum, {
+      message: "tags is required",
+    })
     .optional(),
+
   recommendationIds: z
     .array(ObjectIdSchema, {
       message: "recommendationids is required",
@@ -251,19 +246,9 @@ export const updateDishSchema = z.object({
     })
     .optional(),
   tags: z
-    .array(
-      z
-        .string()
-        .min(3, {
-          message: "tags must be atleast 3 characters long",
-        })
-        .max(100, {
-          message: "tags must be atmost 100 characters long",
-        }),
-      {
-        message: "tags is required",
-      },
-    )
+    .enum(TagsEnum, {
+      message: "tags is required",
+    })
     .optional(),
   recommendationIds: z
     .array(ObjectIdSchema, {

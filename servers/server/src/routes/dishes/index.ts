@@ -213,6 +213,7 @@ const dishesRouter = new Hono()
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const dish = await c.req.json();
+        console.log("dish", dish);
         const createDish = await Dish.create([dish], { session });
         if (!createDish)
           return respond(c, "Error in creating dish", true, 400, {});

@@ -1,25 +1,36 @@
-import MemoizedHeader from '@/components/molecules/header'
-import useBusinessData from '@/components/store/useBusinessData';
-import { routeToDashboard } from '@/components/utils/routes';
-import { memo, startTransition, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom';
+import MemoizedHeader from "@/components/molecules/header";
+import useBusinessData from "@/components/store/useBusinessData";
+import { routeToDashboard } from "@/components/utils/routes";
+import { memo, startTransition, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
-import { FaArrowLeft } from 'react-icons/fa';
-import useMenuPageStore, { type MenuPageType } from '@/components/store/useMenuStorage';
-import Sidebar from '@/components/templates/menu/sideNavbaar';
-import { cn } from '@hi/common/src/error-handler';
-import { BiPlus } from 'react-icons/bi';
-import PopUp from '@/components/atom/popUp';
-import CreateCategory from '@/components/templates/menu/category/createCategory';
-import { HiX } from 'react-icons/hi';
-import ListOfParentCategory from '@/components/templates/menu/category/listOfParentCategory';
-import ListOfChildCategory from '@/components/templates/menu/category/listOfChildCategories';
-import Search from '@/components/templates/menu/category/search';
-import Filter from '@/components/templates/menu/category/filter';
+import { FaArrowLeft } from "react-icons/fa";
+import useMenuPageStore, {
+  type MenuPageType,
+} from "@/components/store/useMenuStorage";
+import Sidebar from "@/components/templates/menu/sideNavbaar";
+import { cn } from "@hi/common/src/error-handler";
+import { BiPlus } from "react-icons/bi";
+import PopUp from "@/components/atom/popUp";
+import CreateCategory from "@/components/templates/menu/category/createCategory";
+import { HiX } from "react-icons/hi";
+import ListOfParentCategory from "@/components/templates/menu/category/listOfParentCategory";
+import ListOfChildCategory from "@/components/templates/menu/category/listOfChildCategories";
+import Search from "@/components/templates/menu/category/search";
+import Filter from "@/components/templates/menu/category/filter";
+import CreateDish from "@/components/templates/menu/dish/createDish";
+import ListOfDishes from "@/components/templates/menu/dish/dishesList";
 
 const MemoiseDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
-  const { selectedPage, setSelectedPage, openMenu, setOpenMenu, resetStore, setSelectedCategory } = useMenuPageStore(s => ({
+  const {
+    selectedPage,
+    setSelectedPage,
+    openMenu,
+    setOpenMenu,
+    resetStore,
+    setSelectedCategory,
+  } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
     setSelectedCategory: s.setSelectedCategory,
@@ -27,7 +38,7 @@ const MemoiseDishAndCat = () => {
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
     search: s.search,
-    setSearch: s.setSearch
+    setSearch: s.setSearch,
   }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -37,29 +48,37 @@ const MemoiseDishAndCat = () => {
   };
 
   const openMenuModel = useCallback(() => {
-
     if (selectedPage === "MAIN_CATEGORY") {
-      setSelectedCategory("MAIN_CATEGORY")
+      setSelectedCategory("MAIN_CATEGORY");
     } else if (selectedPage === "SUB_CATEGORY") {
-      setSelectedCategory("SUB_CATEGORY")
+      setSelectedCategory("SUB_CATEGORY");
     }
     setOpenMenu(true);
-  }, [selectedPage])
+  }, [selectedPage]);
 
   const closeMenu = useCallback(() => {
-    resetStore()
+    resetStore();
     setOpenMenu(false);
-  }, [openMenu])
+  }, [openMenu]);
 
   const sidebarItems = [
-    { icon: Hi, text: 'Dishes', onClick: () => setSelectedPage("DISHES") },
-    { icon: Hi, text: 'Main-category', onClick: () => setSelectedPage("MAIN_CATEGORY") },
-    { icon: Hi, text: 'Sub-category', onClick: () => setSelectedPage("SUB_CATEGORY") },
-    { icon: Hi, text: 'Add On', onClick: () => setSelectedPage("ADD_ON") },
+    { icon: Hi, text: "Dishes", onClick: () => setSelectedPage("DISHES") },
+    {
+      icon: Hi,
+      text: "Main-category",
+      onClick: () => setSelectedPage("MAIN_CATEGORY"),
+    },
+    {
+      icon: Hi,
+      text: "Sub-category",
+      onClick: () => setSelectedPage("SUB_CATEGORY"),
+    },
+    { icon: Hi, text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
   ];
 
   const removeAllUnwanted = useCallback((page: MenuPageType, text: string) => {
-    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalize = (str: string) =>
+      str.toLowerCase().replace(/[^a-z0-9]/g, "");
     const isMatch = normalize(page) === normalize(text);
     return isMatch;
   }, []);
@@ -67,7 +86,7 @@ const MemoiseDishAndCat = () => {
   return (
     <main>
       <div className="sticky top-0 z-50 w-full">
-        <article className='linear_gradient_background'>
+        <article className="linear_gradient_background">
           <MemoizedHeader
             title={`${selectedPage.split("_").join(" ")}`}
             onBack={handleBack}
@@ -77,15 +96,17 @@ const MemoiseDishAndCat = () => {
             isIconBusinessShow={false}
           />
         </article>
-        <section className='absolute w-full px-4 space-x-4 text-sm mobile-only'>
+        <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
           {sidebarItems.map((item) => (
             <button
               className={cn(
                 "pb-3 pt-4",
-                removeAllUnwanted(selectedPage, item.text) ? "border-b-2 border-black transition-all" : ""
+                removeAllUnwanted(selectedPage, item.text)
+                  ? "border-b-2 border-black transition-all"
+                  : "",
               )}
               key={item.text}
-              type='button'
+              type="button"
               onClick={item.onClick}
             >
               {item.text}
@@ -96,53 +117,49 @@ const MemoiseDishAndCat = () => {
         <Search />
       </div>
       <Sidebar items={sidebarItems} />
-      <section className='min-h-[100dvh]'>
-        {
-          selectedPage === "DISHES" && <div className='m-4 text-3xl'>Dish Dishes</div>
-        }
+      <section className="min-h-[100dvh]">
+        {selectedPage === "DISHES" && <ListOfDishes />}
 
-        {
-          selectedPage === "MAIN_CATEGORY" && <ListOfParentCategory />
-        }
+        {selectedPage === "MAIN_CATEGORY" && <ListOfParentCategory />}
 
-        {
-          selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />
-        }
+        {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
-        {
-          selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
-        }
+        {selectedPage === "ADD_ON" && (
+          <div className="m-4 text-3xl">Add On-addon</div>
+        )}
       </section>
 
-      {openMenu &&
+      {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>
-          <section className='min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar'>
+          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
             <button
               className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
               type="button"
-              onClick={closeMenu}>
+              onClick={closeMenu}
+            >
               <HiX />
             </button>
-            {
-              selectedPage === "DISHES" && <div className='m-4 text-3xl'>Dish Dishes</div>
-            }
+            {selectedPage === "DISHES" && <CreateDish />}
 
-            {
-              (selectedPage === "MAIN_CATEGORY" || selectedPage === "SUB_CATEGORY") && <CreateCategory />
-            }
-            {
-              selectedPage === "ADD_ON" && <div className='m-4 text-3xl'>Add On-addon</div>
-            }
+            {(selectedPage === "MAIN_CATEGORY" ||
+              selectedPage === "SUB_CATEGORY") && <CreateCategory />}
+            {selectedPage === "ADD_ON" && (
+              <div className="m-4 text-3xl">Add On-addon</div>
+            )}
           </section>
         </PopUp>
-      }
+      )}
 
-      <button onClick={openMenuModel} className='fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6' type='button'>
+      <button
+        onClick={openMenuModel}
+        className="fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6"
+        type="button"
+      >
         <BiPlus size={32} /> {selectedPage}
       </button>
     </main>
-  )
-}
+  );
+};
 
-const DishAndCat = memo(MemoiseDishAndCat)
-export default DishAndCat
+const DishAndCat = memo(MemoiseDishAndCat);
+export default DishAndCat;
