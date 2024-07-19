@@ -104,6 +104,7 @@ const UpdateChoices = z.object({
   availability: z.boolean().default(true).optional(),
   maxQuantity: z.coerce.number().optional().default(1),
   choiceDishType: z.array(z.enum(DishTypeEnum)).optional(),
+  removeDishIds: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export const updateAddOnSchema = z.object({
@@ -145,6 +146,8 @@ export const updateAddOnSchema = z.object({
     .optional(),
   availability: z.boolean().default(true).optional(),
   visibility: z.boolean().default(true).optional(),
+  isDeleted: z.boolean().default(true).optional(),
+  removeDishIds: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export type AddOnType = z.infer<typeof AddOnsAttrs>;

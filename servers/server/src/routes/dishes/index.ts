@@ -95,9 +95,12 @@ const dishesRouter = new Hono()
           images,
           description,
           tags,
-          categoryIds,
-          addOnIds,
-          recommendationIds,
+          categoryIds = [],
+          addOnIds = [],
+          recommendationIds = [],
+          removeCategoryIds = [],
+          removeAddOnIds = [],
+          removeRecommendationIds = [],
         } = dish;
         const existingDish = await Dish.findById(id);
         if (!existingDish) return respond(c, "Dish not found", true, 404, {});
@@ -122,97 +125,55 @@ const dishesRouter = new Hono()
         if (!updatedDish)
           return respond(c, "Error in updating dish", true, 400, {});
 
-        const existingCategoryIds = existingDish.categoryIds || [];
-        const updatedCategoryIds = categoryIds || [];
-
-        const existingAddOnIds = existingDish.addOnIds || [];
-        const updatedAddOnIds = addOnIds || [];
-
-        const existingRecommendationIds = existingDish.recommendationIds || [];
-        const updatedRecommendationIds = recommendationIds || [];
-
-        if (updatedCategoryIds.length > 0) {
-          const uniqueFromUpdatedCategoryIds = updatedCategoryIds.filter(
-            (id: string) =>
-              !existingCategoryIds.map((eid) => eid.toString()).includes(id),
-          );
-          const sameFromUpdatedCategoryIds = updatedCategoryIds.filter(
-            (id: string) =>
-              existingCategoryIds.map((eid) => eid.toString()).includes(id),
-          );
-          await Dish.findByIdAndUpdate(
-            id,
-            { categoryIds: uniqueFromUpdatedCategoryIds },
-            { session },
-          );
-
+        if (removeCategoryIds.length) {
           await Category.updateMany(
-            { _id: { $in: sameFromUpdatedCategoryIds } },
-            { $pull: { dishIds: updatedDish._id } },
-            { session },
+            { _id: { $in: removeCategoryIds } },
+            { $pull: { dishIds: id } },
           );
 
-          await Category.updateMany(
-            { _id: { $in: uniqueFromUpdatedCategoryIds } },
-            { $push: { dishIds: updatedDish._id } },
-            { session },
-          );
-        }
-
-        if (updatedAddOnIds?.length > 0) {
-          // Convert existingAddOnIds to a Set for efficient lookup
-          const addOnIdsSet = new Set(
-            existingAddOnIds.map((eid) => eid.toString()),
-          );
-
-          // Iterate over updatedAddOnIds to toggle their presence
-          updatedAddOnIds.forEach((id) => {
-            if (addOnIdsSet.has(id)) {
-              // If ID exists, remove it (toggle off)
-              addOnIdsSet.delete(id);
-            } else {
-              // If ID doesn't exist, add it (toggle on)
-              addOnIdsSet.add(id);
-            }
+          await Dish.findByIdAndUpdate(id, {
+            $pull: { categoryIds: { $in: removeCategoryIds } },
           });
+        }
 
-          // Convert the Set back to an array
-          const finalAddOnIds = Array.from(addOnIdsSet);
+        if (removeAddOnIds.length) {
+          await Dish.findByIdAndUpdate(id, {
+            $pull: { addOnIds: { $in: removeAddOnIds } },
+          });
+        }
 
-          console.log("addOnIdsSet", finalAddOnIds);
+        if (removeRecommendationIds.length) {
+          await Dish.findByIdAndUpdate(id, {
+            $pull: { recommendationIds: { $in: removeRecommendationIds } },
+          });
+        }
 
-          // Update the Dish with the new set of addOnIds
+        if (categoryIds.length) {
+          await Category.updateMany(
+            { _id: { $in: categoryIds } },
+            { $addToSet: { dishIds: id } },
+            { session },
+          );
+
           await Dish.findByIdAndUpdate(
             id,
-            { addOnIds: finalAddOnIds },
+            { $addToSet: { categoryIds: { $each: categoryIds } } },
             { session },
           );
         }
 
-        if (updatedRecommendationIds.length > 0) {
-          const updatedRecommendationIdsSet = new Set(
-            updatedDish?.recommendationIds.map((eid) => eid.toString()),
+        if (addOnIds.length) {
+          await Dish.findByIdAndUpdate(
+            id,
+            { $addToSet: { addOnIds: { $each: addOnIds } } },
+            { session },
           );
+        }
 
-          // Step 2: Filter out existing IDs from parentCategoryIds
-          const filteredRecommendationIds = updatedRecommendationIds.filter(
-            (id) => !updatedRecommendationIdsSet.has(id),
-          );
-
-          // Step 3: Add new IDs from updatedCategory.parentCategoryIds that are not in the original parentCategoryIds
-          const newRecommendationIds = updatedDish?.recommendationIds.filter(
-            (id) => !updatedRecommendationIds.includes(id.toString()),
-          );
-
-          // Combine the filtered list with the new IDs
-          const finalRecommendationIds = [
-            ...filteredRecommendationIds,
-            ...newRecommendationIds,
-          ];
-
-          await Dish.updateOne(
-            { _id: id },
-            { recommendationIds: finalRecommendationIds },
+        if (recommendationIds.length) {
+          await Dish.findByIdAndUpdate(
+            id,
+            { $addToSet: { recommendationIds: { $each: recommendationIds } } },
             { session },
           );
         }

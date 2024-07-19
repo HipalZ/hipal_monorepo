@@ -274,6 +274,9 @@ export const updateDishSchema = z.object({
 
   availability: z.boolean().default(true).optional(),
   isDeleted: z.boolean().default(false).optional(),
+  removeCategoryIds: z.string(ObjectIdSchema).optional(),
+  removeAddOnIds: z.string(ObjectIdSchema).optional(),
+  removeRecommendationIds: z.string(ObjectIdSchema).optional(),
 });
 
 export type DishType = z.infer<typeof dishSchema>;

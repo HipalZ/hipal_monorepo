@@ -51,47 +51,47 @@ const addonRouter = new Hono()
     zValidator("param", z.object({ id: z.string() })),
     zValidator("json", updateAddOnSchema),
     async (c) => {
+      //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const { id } = c.req.param();
-        const requestData = (await c.req.json()) as AddOnType;
-
-        const { dishIds } = requestData;
+        const requestData = await c.req.json();
+        const { dishIds = [], removeDishIds = [] } = requestData;
 
         const addOn = await AddOn.findById(id);
 
-        if (dishIds && dishIds.length > 0) {
-          const findDishes = await Dish.find({
-            _id: { $in: dishIds },
-          }).select("_id addOnIds");
+        if (!addOn) return respond(c, "not found", true, 404, {});
 
-          const removeDisheIds: string[] = [];
+        const updatedAddOn = await AddOn.findByIdAndUpdate(
+          id,
+          {
+            visibility: requestData.visibility,
+            availability: requestData.availability,
+            name: requestData.name,
+            choices: requestData.choices,
+            choiceType: requestData.choiceType,
+          },
+          {
+            session,
+          },
+        );
 
-          const filter = findDishes.filter((dish) =>
-            dish.addOnIds.map((id) => id.toString()).includes(id.toString()),
-          );
+        if (!updatedAddOn) return respond(c, "failed", true, 400, {});
 
-          for (const dish of filter) {
-            removeDisheIds.push(dish._id.toString());
-          }
-
-          const filteredDishIds = dishIds.filter(
-            (id: string) => !removeDisheIds.includes(id),
-          );
-
+        if (removeDishIds.length > 0) {
           await Dish.updateMany(
-            { _id: { $in: dishIds } },
+            { _id: { $in: removeDishIds } },
             { $pull: { addOnIds: id } },
-            { session },
-          );
-
-          await Dish.updateMany(
-            { _id: { $in: filteredDishIds } },
-            { $addToSet: { addOnIds: id } },
             { session },
           );
         }
 
-        return respond(c, "success", false, 200, addOn);
+        if (dishIds.length > 0) {
+          await Dish.updateMany(
+            { _id: { $in: dishIds } },
+            { $push: { addOnIds: id } },
+            { session },
+          );
+        }
       });
     },
   )
