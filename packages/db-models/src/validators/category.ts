@@ -113,6 +113,10 @@ export const updateCategorySchema = z.object({
     })
     .optional()
     .default([]),
+
+  removeSubCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  removeDishIds: z.array(ObjectIdSchema).optional().default([]),
+  removeParentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;

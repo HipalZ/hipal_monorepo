@@ -114,10 +114,14 @@ const categoriesRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const { id } = c.req.param();
-        let { parentCategoryIds, subCategoryIds, dishIds } = requestData;
-        if (!requestData.parentCategoryIds) parentCategoryIds = [];
-        if (!requestData.subCategoryIds) subCategoryIds = [];
-        if (!requestData.dishIds) dishIds = [];
+        const {
+          parentCategoryIds = [],
+          subCategoryIds = [],
+          dishIds = [],
+          removeSubCategoryIds = [],
+          removeDishIds = [],
+          removeParentCategoryIds = [],
+        } = requestData;
 
         if (requestData.name) {
           const existingCategory = await Category.findOne({
@@ -141,134 +145,50 @@ const categoriesRouter = new Hono()
         if (!updatedCategory)
           return respond(c, "Category not found", true, 404, {});
 
+        if (removeSubCategoryIds.length > 0) {
+          await Category.updateMany(
+            { _id: { $in: removeSubCategoryIds } },
+            { $pull: { parentCategoryIds: id } },
+            { session },
+          );
+        }
+
+        if (removeDishIds.length > 0) {
+          await Dish.updateMany(
+            { _id: { $in: removeDishIds } },
+            { $pull: { categoryIds: id } },
+            { session },
+          );
+        }
+
+        if (removeParentCategoryIds.length > 0) {
+          await Category.findByIdAndUpdate(
+            id,
+            { $pull: { parentCategoryIds: { $in: removeParentCategoryIds } } },
+            { session },
+          );
+        }
+
         if (parentCategoryIds.length > 0) {
-          // Step 1: Create a set for efficient existence checks
-          const updatedCategoryIdsSet = new Set(
-            updatedCategory.parentCategoryIds.map((eid) => eid),
-          );
-
-          // Step 2: Filter out existing IDs from parentCategoryIds
-          const filteredParentCategoryIds = parentCategoryIds.filter(
-            (id) => !updatedCategoryIdsSet.has(id),
-          );
-
-          // Step 3: Add new IDs from updatedCategory.parentCategoryIds that are not in the original parentCategoryIds
-          const newParentCategoryIds = updatedCategory.parentCategoryIds.filter(
-            (id) => !parentCategoryIds.includes(id),
-          );
-
-          // Combine the filtered list with the new IDs
-          const finalParentCategoryIds = [
-            ...filteredParentCategoryIds,
-            ...newParentCategoryIds,
-          ];
-
-          // Update the category with
-
-          await Category.updateOne(
-            { _id: id },
-            { parentCategoryIds: finalParentCategoryIds },
+          await Category.findByIdAndUpdate(
+            id,
+            { $addToSet: { parentCategoryIds: { $each: parentCategoryIds } } },
             { session },
           );
         }
 
         if (subCategoryIds.length > 0) {
-          /////////////////////////////////////////////////////////////////
-          const findCategory = await Category.find({
-            _id: { $in: subCategoryIds },
-          }).select("_id parentCategoryIds");
-
-          console.log("findCategory", findCategory);
-
-          const removeCategoriesIds: string[] = [];
-
-          const filter = findCategory.filter((category) =>
-            category.parentCategoryIds
-              .map((id) => id.toString())
-              .includes(id.toString()),
-          );
-
-          console.log("filter", filter);
-
-          for (const category of filter) {
-            removeCategoriesIds.push(category._id.toString());
-          }
-
-          const filteredCategoryIds = subCategoryIds.filter(
-            (id: string) => !removeCategoriesIds.includes(id),
-          );
-
           await Category.updateMany(
-            { _id: { $in: removeCategoriesIds } },
-            { $pull: { parentCategoryIds: id } },
-            { session },
-          );
-
-          await Category.updateMany(
-            { _id: { $in: filteredCategoryIds } },
+            { _id: { $in: subCategoryIds } },
             { $addToSet: { parentCategoryIds: id } },
             { session },
           );
         }
 
         if (dishIds.length > 0) {
-          const findDishes = await Dish.find({
-            _id: { $in: dishIds },
-          }).select("_id categoryIds");
-
-          console.log("findCategory", findDishes);
-
-          const removeDisheIds: string[] = [];
-
-          const filter = findDishes.filter((dish) =>
-            dish.categoryIds.map((id) => id.toString()).includes(id.toString()),
-          );
-
-          console.log("filter", filter);
-
-          for (const dish of filter) {
-            removeDisheIds.push(dish._id.toString());
-          }
-
-          const filteredDishIds = dishIds.filter(
-            (id: string) => !removeDisheIds.includes(id),
-          );
-
           await Dish.updateMany(
             { _id: { $in: dishIds } },
-            { $pull: { categoryIds: id } },
-            { session },
-          );
-
-          await Dish.updateMany(
-            { _id: { $in: filteredDishIds } },
             { $addToSet: { categoryIds: id } },
-            { session },
-          );
-
-          // Step 1: Create a set for efficient existence checks
-          const updatedDishIdsSet = new Set(
-            updatedCategory.dishIds.map((eid) => eid.toString()),
-          );
-
-          // Step 2: Filter out existing IDs from parentCategoryIds
-          const filteredDish = dishIds.filter(
-            (id) => !updatedDishIdsSet.has(id),
-          );
-
-          // Step 3: Add new IDs from updatedCategory.parentCategoryIds that are not in the original parentCategoryIds
-          const newDishIds = updatedCategory.dishIds.filter(
-            (id) => !dishIds.includes(id.toString()),
-          );
-
-          // Combine the filtered list with the new IDs
-          const finalDishIds = [...filteredDish, ...newDishIds];
-
-          // Update the category with
-
-          await Category.updateOne(
-            { _id: id },
-            { dishIds: finalDishIds },
             { session },
           );
         }
