@@ -5,8 +5,9 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import { apiRpc } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
+import toast from "react-hot-toast";
 
 export const useParentCategories = () => {
     const businessData = useBusinessData((state) => state.businessData);
@@ -64,3 +65,22 @@ export const useChildCategories = () => {
     return { categories, isLoading };
 };
 
+export const useSaveCategory = () => {
+    return useMutation({
+        mutationFn: async (payload: any) => {
+            const res = await apiRpc.categories.$post({
+                json: payload
+            });
+            return res.json();
+        },
+        onSuccess: (data) => {
+            toast.success("Category created successful");
+            console.log(data);
+        },
+        onError: (error) => {
+            toast.error("Category name already exists");
+        }
+
+    }
+    );
+};

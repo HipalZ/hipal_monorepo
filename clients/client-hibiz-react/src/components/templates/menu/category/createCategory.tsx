@@ -5,6 +5,8 @@ import { FaArrowLeft } from "react-icons/fa";
 import Hi from "@/assets/svg/hi.svg";
 import CategoryMainForm from "./categoryMainForm";
 import SelectCategory from "./selectCategory";
+import SelectSubCategory from "./selectSubCategory";
+import AddCatImage from "./addCatImage";
 
 const CreateCategoryMain = () => {
     const { setOpenMenu, categoryStep, setCategoryStep } = useMenuPageStore(s => ({
@@ -56,9 +58,10 @@ const CreateCategoryMain = () => {
                 categoryStep === "LINK_MAIN_CATEGORY" && <SelectCategory />
             }
             {
-                categoryStep === "CATEGORY_STEP_2" && <div>
-                    Welcome to step 2
-                </div>
+                categoryStep === "LINK_SUB_CATEGORY" && <SelectSubCategory />
+            }
+            {
+                categoryStep === "CATEGORY_STEP_2" && <AddCatImage />
             }
         </>
     )

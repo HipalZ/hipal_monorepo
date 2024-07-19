@@ -9,6 +9,7 @@ interface ICatStore {
 
   subCategories: CategoryType[];
   setSubCategories: (subCategories: CategoryType[]) => void;
+
 }
 
 export const useCategoryStore = create(
@@ -19,6 +20,7 @@ export const useCategoryStore = create(
 
       subCategories: [],
       setSubCategories: (subCategories) => set({ subCategories }),
+
     }),
     {
       name: 'category-store', 

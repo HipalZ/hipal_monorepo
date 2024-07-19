@@ -100,18 +100,11 @@ export async function storeImageFiles(image: File) {
   }
 }
 
-export async function storeImageAfterSave(image: File) {
+export async function storeImageAfterSave(image: File,imagePreview:string|null) {
   if (!image) return;
-  const reader = new FileReader();
-  reader.readAsDataURL(image);
   const imageId = crypto.randomUUID();
-  await new Promise((resolve, reject) => {
-    reader.onload = () => {
-      resolve(reader.result);
-    };
-  });
-  if (reader.result) {
-    const blobBin = atob(reader.result.toString().split(',')[1]);
+  if (imagePreview) {
+    const blobBin = atob(imagePreview.toString().split(',')[1]);
     const array = [];
     for (let i = 0; i < blobBin.length; i++) {
       array.push(blobBin.charCodeAt(i));

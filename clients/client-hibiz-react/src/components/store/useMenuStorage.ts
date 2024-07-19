@@ -35,6 +35,14 @@ interface MenuPageStore {
     sortOrder:string;
     setSortOrder: (order: string) => void;
 
+    imagePreview: string | null;
+    setImagePreview: (image: string | null) => void;
+
+    selectedFile: File | null;
+    setSelectedFile: (file: File | null) => void;
+
+
+
     resetStore: () => void;
 }
 
@@ -55,8 +63,6 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
     categoryStep: "CATEGORY_STEP_1",
     setCategoryStep: (step: CategoryStep) => set({ categoryStep: step }),
 
-   
-
     selectedIds: [],
     handleCategoryChange: (newId: string) => set(state => ({
         selectedIds: state.selectedIds.includes(newId)
@@ -75,13 +81,22 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
     sortOrder:"asc",
     setSortOrder: (order: string) => set({ sortOrder: order }),
+
+    imagePreview: null,
+    setImagePreview: (image) => set({ imagePreview: image }),
+
+    selectedFile: null,
+    setSelectedFile: (file) => set({ selectedFile: file }),
     
     resetStore: () => set({
-        openMenu: false,
         selectedCategory: "",
         categoryName: "",
         selectedIds: [],
-        categoryStep:"CATEGORY_STEP_1"
+        categoryStep:"CATEGORY_STEP_1",
+        search:"",
+        searchVisible:false,
+        imagePreview:null,
+        selectedFile:null,
     })
 }));
 

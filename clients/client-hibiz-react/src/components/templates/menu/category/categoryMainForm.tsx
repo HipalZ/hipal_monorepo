@@ -4,9 +4,9 @@ import { RiGitBranchLine, RiLinkUnlink } from "react-icons/ri";
 import { TbCircuitSwitchClosed } from "react-icons/tb";
 import useMenuPageStore, { type CategoryTypeToggle } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
-import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
+import { useSaveCategory } from "@/hooks/useCategory";
 
 const CategoryMainForm = memo(() => {
     const { selectedCategory, setSelectedCategory, setOpenMenu, categoryName, setCategoryName, setCategoryStep, resetStore, selectIds } = useMenuPageStore(s => ({
@@ -21,6 +21,7 @@ const CategoryMainForm = memo(() => {
     }));
 
     const businessData = useBusinessData((s) => s.businessData);
+    const { mutate: createCategory, isPending } = useSaveCategory();
 
     const handleApiResponse = useCallback((res) => {
         if (res.status === 400 || res.status === 409 || res.status === 403) {
@@ -30,32 +31,42 @@ const CategoryMainForm = memo(() => {
             setOpenMenu(false);
             resetStore();
         }
-    }, []);
+    }, [setOpenMenu, resetStore]);
 
-    const saveCategory = async () => {
+    const categoryChange = useCallback((type: CategoryTypeToggle) => {
+        if (type !== selectedCategory) {
+            resetStore();
+        }
+        setSelectedCategory(type);
+    }, [selectedCategory, resetStore, setSelectedCategory]);
+
+    const handleSaveCategory = () => {
         if (!categoryName) {
             toast.error("Category name is required");
             return;
         }
-        if(selectedCategory === "SUB_CATEGORY" && selectIds.length === 0) {
+        if (selectedCategory === "SUB_CATEGORY" && selectIds.length === 0) {
             toast.error("Please select main category");
             return;
         }
 
-        const payload: {
-            name: string;
-            businessId: string;
-            hierarchy: "PARENT" | "CHILD";
-            parentCategoryIds?: string[];
-        } = {
-            name: categoryName,
-            businessId: businessData?._id.toString() || "",
-            hierarchy: selectedCategory === "MAIN_CATEGORY" ? "PARENT" : "CHILD",
-            parentCategoryIds: selectedCategory === "SUB_CATEGORY" ? selectIds : undefined,
-        };
-
-        const res = await apiRpc.categories.$post({ json: payload });
-        handleApiResponse(res);
+        let payload = {};
+        if (selectedCategory === "MAIN_CATEGORY") {
+            payload = {
+                name: categoryName,
+                businessId: businessData?._id.toString() || "",
+                hierarchy: "PARENT",
+                subCategoryIds: selectIds,
+            };
+        } else if (selectedCategory === "SUB_CATEGORY") {
+            payload = {
+                name: categoryName,
+                businessId: businessData?._id.toString() || "",
+                hierarchy: "CHILD",
+                parentCategoryIds: selectIds || [],
+            };
+        }
+        createCategory(payload);
     };
 
     const goToNextStep = useCallback(() => {
@@ -78,50 +89,47 @@ const CategoryMainForm = memo(() => {
                 </Background>
             </article>
 
-            <SelectionArea selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+            <SelectionArea selectedCategory={selectedCategory} categoryChange={categoryChange} />
             {selectedCategory === "MAIN_CATEGORY" && (
                 <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
-                    <label className="font-semibold opacity-50" htmlFor="name">Link Sub-Categories</label>
+                    <label className="font-semibold opacity-50" htmlFor="name">Link Sub-Categories({selectIds?.length})</label>
                     <Background>
-                        <button type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
+                        <button onClick={() => setCategoryStep("LINK_SUB_CATEGORY")} type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
                             <RiLinkUnlink className="mr-2" />  Link Sub Categories
                         </button>
                     </Background>
                 </section>
-            )
-            }
+            )}
 
-            {
-                selectedCategory === "SUB_CATEGORY" && (
-                    <>
-                        <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
-                            <label className="font-semibold opacity-50" htmlFor="name">Link Sub-Categories({selectIds?.length})</label>
-                            <Background>
-                                <button onClick={() => setCategoryStep("LINK_MAIN_CATEGORY")} type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
-                                    <RiLinkUnlink className="mr-2" />  Link Main Categories
-                                </button>
-                            </Background>
-                        </section>
+            {selectedCategory === "SUB_CATEGORY" && (
+                <>
+                    <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
+                        <label className="font-semibold opacity-50" htmlFor="name">Link Sub-Categories({selectIds?.length})</label>
+                        <Background>
+                            <button onClick={() => setCategoryStep("LINK_MAIN_CATEGORY")} type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
+                                <RiLinkUnlink className="mr-2" />  Link Main Categories
+                            </button>
+                        </Background>
+                    </section>
 
-                        <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
-                            <label className="font-semibold opacity-50" htmlFor="name">Link Dishes</label>
-                            <Background>
-                                <button type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
-                                    <RiLinkUnlink className="mr-2" />  Link Dishes
-                                </button>
-                            </Background>
-                        </section>
-                    </>
-                )
-            }
-            <FooterButtons saveCategory={saveCategory} goToNextStep={goToNextStep} />
+                    <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
+                        <label className="font-semibold opacity-50" htmlFor="name">Link Dishes</label>
+                        <Background>
+                            <button type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
+                                <RiLinkUnlink className="mr-2" />  Link Dishes
+                            </button>
+                        </Background>
+                    </section>
+                </>
+            )}
+            <FooterButtons saveCategory={handleSaveCategory} goToNextStep={goToNextStep} isLoading={isPending} />
         </>
-    )
+    );
 });
 
-const SelectionArea = memo(({ selectedCategory, setSelectedCategory }: {
+const SelectionArea = memo(({ selectedCategory, categoryChange }: {
     selectedCategory: CategoryTypeToggle;
-    setSelectedCategory: (category: CategoryTypeToggle) => void;
+    categoryChange: (type: CategoryTypeToggle) => void;
 }) => {
     return (
         <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
@@ -135,7 +143,7 @@ const SelectionArea = memo(({ selectedCategory, setSelectedCategory }: {
                             "p-6 rounded-2xl flex-1 mx-2 text-left",
                             selectedCategory === "MAIN_CATEGORY" ? "bg-[#F1E9FB] text-[#8C63FF]" : "bg-[#f4f4f490]"
                         )}
-                        onClick={() => setSelectedCategory("MAIN_CATEGORY")}>
+                        onClick={() => categoryChange("MAIN_CATEGORY")}>
                         <RiGitBranchLine className="rotate-180" size={28} />
                         Main categories
                     </button>
@@ -145,7 +153,7 @@ const SelectionArea = memo(({ selectedCategory, setSelectedCategory }: {
                             "p-6 rounded-2xl flex-1 mx-2 text-left",
                             selectedCategory === "SUB_CATEGORY" ? "bg-[#F1E9FB] text-[#8C63FF]" : "bg-[#f4f4f490]"
                         )}
-                        onClick={() => setSelectedCategory("SUB_CATEGORY")}>
+                        onClick={() => categoryChange("SUB_CATEGORY")}>
                         <TbCircuitSwitchClosed size={28} className="-ml-2 rotate-90" />
                         Sub Categories
                     </button>
@@ -155,9 +163,9 @@ const SelectionArea = memo(({ selectedCategory, setSelectedCategory }: {
     );
 });
 
-const FooterButtons = memo(({ saveCategory, goToNextStep }: { saveCategory: () => void; goToNextStep: () => void }) => (
+const FooterButtons = memo(({ saveCategory, goToNextStep, isLoading }: { saveCategory: () => void; goToNextStep: () => void; isLoading: boolean }) => (
     <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button onClick={saveCategory} type="button" className="w-full py-3 text-white bg-[#7D68FE] rounded-full">
+        <button onClick={saveCategory} type="button" className="w-full py-3 text-white bg-[#7D68FE] rounded-full" disabled={isLoading}>
             Quick Save
         </button>
         <button onClick={goToNextStep} type="button" className="w-full py-3 text-white bg-black rounded-full">
