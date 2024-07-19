@@ -30,7 +30,7 @@ function MemoMiddlePopUp({
         className="fixed inset-0 z-50 overflow-y-auto"
         onClose={(e) => closeModalNothing(e)}
       >
-        <div className="fixed inset-0 flex items-center justify-center px-6 bg-black bg-opacity-70 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center px-6 bg-black z-100 bg-opacity-70 backdrop-blur-sm">
           <TransitionChild
             as={Fragment}
             enter="transition ease-out duration-200 transform"
@@ -40,7 +40,7 @@ function MemoMiddlePopUp({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <DialogPanel className="bg-base-100 relative w-full max-w-md rounded-[1.5rem] shadow-md ">
+            <DialogPanel className="bg-base-100 z-100 relative w-full max-w-md rounded-[1.5rem] shadow-md ">
               {children}
               {onlyPopUp ? null : (
                 <>

@@ -58,20 +58,22 @@ const ReactCropper = forwardRef(({ image, width, height }, ref) => {
   };
 
   return (
-    <FixedCropper
-      ref={cropperRef}
-      src={image}
-      onChange={onChange}
-      stencilProps={{
-        movable: false,
-        resizable: false,
-      }}
-      stencilSize={{
-        width: width ? width : 100,
-        height: height ? height : 100,
-      }}
-      imageRestriction={ImageRestriction.stencil}
-    />
+    <section className="z-100">
+      <FixedCropper
+        ref={cropperRef}
+        src={image}
+        onChange={onChange}
+        stencilProps={{
+          movable: false,
+          resizable: false,
+        }}
+        stencilSize={{
+          width: width ? width : 100,
+          height: height ? height : 100,
+        }}
+        imageRestriction={ImageRestriction.stencil}
+      />
+    </section>
   );
 });
 

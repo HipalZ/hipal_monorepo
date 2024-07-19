@@ -25,7 +25,7 @@ const MemoPortionStep = () => {
   const [sections, setSections] = useState([
     {
       portionTypes: [foodTypes[0].name],
-      portionName: "",
+      name: "",
       price: dishPrice || 0,
       default: true,
     },
@@ -36,7 +36,7 @@ const MemoPortionStep = () => {
       ...sections,
       {
         portionTypes: [foodTypes[0].name],
-        portionName: "",
+        name: "",
         price: 0,
         default: false,
       },
@@ -132,12 +132,12 @@ const MemoPortionStep = () => {
                   <input
                     type="text"
                     id={`name-${index}`}
-                    name="portionName"
+                    name="name"
                     placeholder="Enter Portion Name"
                     maxLength={21}
                     minLength={3}
                     required
-                    value={section.portionName}
+                    value={section.name}
                     onChange={(e) => handleInputChange(index, e)}
                     className="w-full p-2 border border-black rounded-xl focus:outline-none focus:ring-0 focus:ring-indigo-500 focus:border-indigo-500"
                   />
