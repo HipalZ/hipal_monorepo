@@ -85,12 +85,7 @@ export const updateCategorySchema = z.object({
     .string({
       message: "coverImage is required",
     })
-    .url({
-      message: "coverImage must be a valid url",
-    })
-    .min(10, {
-      message: "coverImage must be atleast 10 characters long",
-    })
+
     .max(100, {
       message: "coverImage must be atmost 100 characters long",
     })
