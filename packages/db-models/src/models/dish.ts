@@ -92,7 +92,8 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
     },
     tags: {
-      type: [TagsEnum],
+      type: [String],
+      enum: TagsEnum,
       required: false,
     },
 
