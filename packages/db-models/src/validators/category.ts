@@ -35,6 +35,7 @@ export const categorySchema = z.object({
     })
     .optional()
     .default([]),
+  //TODO: ADD MULTIPLE
   coverImage: z
     .string({
       message: "coverImage is required",

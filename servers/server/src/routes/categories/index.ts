@@ -10,11 +10,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -22,8 +17,8 @@ import { respond } from "../../utils/response";
 const categoriesRouter = new Hono()
   .post(
     "/",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", categorySchema),
     async (c) => {
@@ -110,8 +105,8 @@ const categoriesRouter = new Hono()
   )
   .put(
     "/:id",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", updateCategorySchema),
     zValidator("param", z.object({ id: z.string() })),
@@ -266,7 +261,6 @@ const categoriesRouter = new Hono()
 
   .get(
     "/",
-
     zValidator(
       "query",
       z.object({
