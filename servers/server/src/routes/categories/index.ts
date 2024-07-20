@@ -347,6 +347,32 @@ const categoriesRouter = new Hono()
     },
   )
   .get(
+    "/menu",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const existingCategories = await Category.find({
+        businessId,
+        isDeleted: false,
+        hierarchy: "CHILD",
+      }).populate("dishIds");
+
+      return respond(
+        c,
+        "Categories fetched successfully",
+        false,
+        200,
+        existingCategories,
+      );
+    },
+  )
+  .get(
     "/:id",
 
     zValidator("param", z.object({ id: z.string() })),
