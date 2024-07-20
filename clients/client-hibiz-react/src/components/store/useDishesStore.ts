@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 interface IDishStore {
   dishes: DishType[];
   setDishes: (dishes: DishType[]) => void;
+  resetDishesStore: () => void;
 }
 
 export const useDishesStore = create(
@@ -12,6 +13,10 @@ export const useDishesStore = create(
     (set) => ({
       dishes: [],
       setDishes: (dishes) => set({ dishes: dishes }),
+      resetDishesStore: () =>
+        set({
+          dishes: [],
+        }),
     }),
     {
       name: "dishes-store",

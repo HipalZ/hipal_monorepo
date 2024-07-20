@@ -5,18 +5,18 @@ import DishStepOne from "./dishStepOne";
 import { memo, useCallback } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import DishStepTwo from "./dishStepTwo";
-import PortionStep from "./portionStep";
-import LinkItems from "./linkItems";
 import {
   useAddons,
   useChildCategories,
   useDishStore,
 } from "@/hooks/useDishStore";
-import LinkTags from "./linkTags";
-import LinkAddons from "./linkAddons";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import ReactCropper from "@/components/cropper";
 import { handleCrop } from "@/components/utils/helper";
+import LinkItems from "./[editDish]/linkItems";
+import LinkTags from "./[editDish]/linkTags";
+import LinkAddons from "./[editDish]/linkAddons";
+import PortionStep from "./[editDish]/portionStep";
 
 const MemoCreateDish = () => {
   const {
@@ -62,7 +62,7 @@ const MemoCreateDish = () => {
         setDishStep(DishSteps.DISH_STEP_1);
         break;
       case DishSteps.LINK_ADDON_STEP:
-        setDishStep(DishSteps.DISH_STEP_2);
+        setDishStep(DishSteps.DISH_STEP_1);
         break;
       case DishSteps.LINK_RECOMMENDATION_STEP:
         setDishStep(DishSteps.DISH_STEP_2);

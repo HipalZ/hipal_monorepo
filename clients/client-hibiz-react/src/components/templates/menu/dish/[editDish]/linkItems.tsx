@@ -11,7 +11,9 @@ interface Props {
 }
 const MemoLinkItems = (props: Props) => {
   const { categoryData, dishesData } = props;
+  console.log("dis", dishesData);
   const [tempIds, setTempIds] = useState<string[]>([]);
+  const [removeIds, setRemoveIds] = useState<string[]>([]);
   const {
     setSelectedCatIds,
     dishStep,
@@ -19,6 +21,9 @@ const MemoLinkItems = (props: Props) => {
     setDishStep,
     recommendationIds,
     setRecommendationIds,
+    setRemoveCategoryIds,
+    setRemoveRecommendationIds,
+    removeCategoryIds,
   } = useMenuPageStore((s) => ({
     setSelectedCatIds: s.setSelectedCatIds,
     selectedCatIds: s.selectedCatIds,
@@ -26,6 +31,10 @@ const MemoLinkItems = (props: Props) => {
     setDishStep: s.setDishStep,
     recommendationIds: s.recommendationIds,
     setRecommendationIds: s.setRecommendationIds,
+    setRemoveCategoryIds: s.setRemoveCategoryIds,
+    setRemoveAddOnIds: s.setRemoveAddOnIds,
+    setRemoveRecommendationIds: s.setRemoveRecommendationIds,
+    removeCategoryIds: s.removeCategoryIds,
   }));
   const [searchTerm, setSearchTerm] = useState("");
   const fuse = new Fuse(categoryData || dishesData, {
@@ -46,18 +55,23 @@ const MemoLinkItems = (props: Props) => {
     if (dishStep === "LINK_CATEGORY_STEP") {
       setSelectedCatIds(tempIds);
       setDishStep(DishSteps.DISH_STEP_1);
+      setRemoveCategoryIds(removeIds);
     } else if (dishStep === "LINK_RECOMMENDATION_STEP") {
       setRecommendationIds(tempIds);
       setDishStep(DishSteps.DISH_STEP_2);
+      setRemoveRecommendationIds(removeIds);
     }
-    console.log("tempIds", tempIds);
   };
 
   const handleDataChange = (id: string) => {
     if (tempIds.includes(id)) {
       setTempIds(tempIds.filter((catId) => catId !== id));
+      if (!removeIds.includes(id)) {
+        setRemoveIds([...removeIds, id]);
+      }
     } else {
       setTempIds([...tempIds, id]);
+      setRemoveIds(removeCategoryIds.filter((catId) => catId !== id));
     }
   };
 

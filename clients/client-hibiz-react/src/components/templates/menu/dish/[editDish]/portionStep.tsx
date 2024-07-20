@@ -1,4 +1,10 @@
-import { type ChangeEvent, memo, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  memo,
+  useEffect,
+  useState,
+} from "react";
 import { Listbox } from "@headlessui/react";
 import { foodTypes } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
@@ -12,6 +18,16 @@ import {
 import { IoMdArrowDropdown } from "react-icons/io";
 import { CheckmarkIcon } from "react-hot-toast";
 
+type Section = {
+  portionTypes: ("VEG" | "NON_VEG" | "EGG" | "VEGAN")[];
+  name: string;
+  price: number;
+  default: boolean;
+};
+
+type ExtendedSection = Section & {
+  [key: string]: any;
+};
 const MemoPortionStep = () => {
   const { setPortions, setDishStep, portions, dishPrice } = useMenuPageStore(
     (state) => ({
@@ -22,14 +38,18 @@ const MemoPortionStep = () => {
     }),
   );
 
-  const [sections, setSections] = useState([
-    {
-      portionTypes: [foodTypes[0].name],
-      name: "",
-      price: dishPrice || 0,
-      default: true,
-    },
-  ]);
+  const [sections, setSections] = useState(
+    portions.map((p) => ({
+      ...p,
+    })) ?? [
+      {
+        portionTypes: [foodTypes[0].name],
+        name: "",
+        price: dishPrice || 0,
+        default: true,
+      },
+    ],
+  );
 
   const addSection = () => {
     setSections([
@@ -43,10 +63,6 @@ const MemoPortionStep = () => {
     ]);
   };
 
-  useEffect(() => {
-    setSections(portions);
-  }, []);
-
   const handleSelectionChange = (index: number, newValue) => {
     const newSections = [...sections];
     newSections[index].portionTypes = [newValue.name];
@@ -58,25 +74,25 @@ const MemoPortionStep = () => {
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = event.target;
-    const newSections = [...sections];
-    newSections[index][name] = value;
+    const newSections: ExtendedSection[] = [...sections];
+    newSections[index][name] = name === "price" ? Number(value) : value;
     setSections(newSections);
   };
 
   const handleSave = () => {
-    setPortions(sections);
+    setPortions(structuredClone(sections));
     setDishStep("DISH_STEP_1");
   };
 
-  const handleDragStart = (event, index) => {
-    event.dataTransfer.setData("text/plain", index);
+  const handleDragStart = (event: DragEvent<HTMLElement>, index: number) => {
+    event.dataTransfer.setData("text/plain", index.toString());
   };
 
-  const handleDragOver = (event) => {
+  const handleDragOver = (event: DragEvent<HTMLElement>) => {
     event.preventDefault();
   };
 
-  const handleDrop = (event, dropIndex) => {
+  const handleDrop = (event: DragEvent<HTMLElement>, dropIndex: number) => {
     event.preventDefault();
     const dragIndex = Number(event.dataTransfer.getData("text/plain"));
     if (dragIndex !== dropIndex) {
@@ -88,6 +104,15 @@ const MemoPortionStep = () => {
       setSections(newSections);
     }
   };
+
+  // useEffect(() => {
+  //   if (portions.length > 0) {
+  //     setSections([...portions]);
+  //   }
+  // }, [portions]);
+
+  console.log("sections", sections.at(0)?.name);
+  console.log("portions", portions.at(0)?.name);
 
   return (
     <section className="mx-6 rounded-2xl lg:mx-16 lg:mt-6">
@@ -102,6 +127,8 @@ const MemoPortionStep = () => {
           onDragStart={(event) => handleDragStart(event, index)}
           onDragOver={handleDragOver}
           onDrop={(event) => handleDrop(event, index)}
+          role="button"
+          tabIndex={0}
         >
           <Listbox
             value={foodTypes.find((type) =>

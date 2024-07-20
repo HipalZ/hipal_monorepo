@@ -501,3 +501,14 @@ export const handleCrop = async (
     }
   }
 };
+
+export const updateImage = async (
+  file: File,
+  preview: string | undefined,
+  currentImage: string | undefined,
+) => {
+  if (preview !== "" && file) {
+    return await storeImageAfterSave(file, preview);
+  }
+  return currentImage;
+};

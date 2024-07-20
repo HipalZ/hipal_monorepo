@@ -5,6 +5,7 @@ import type { ICategory } from "@/components/types/businessData";
 import type { AddOnType, DishType } from "@hi/db-models/src/validators";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import { QueryClient } from "@tanstack/react-query";
 
 export const useChildCategories = (dishStep: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
@@ -37,11 +38,15 @@ export const useChildCategories = (dishStep: string) => {
 
 export const useDishStore = (dishStep: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
-  const { setDishes } = useDishesStore((s) => ({
+  const { setDishes, dishes } = useDishesStore((s) => ({
+    dishes: s.dishes,
     setDishes: s.setDishes,
   }));
 
   const getAllDishes = async (businessId: string): Promise<DishType[]> => {
+    if (dishes.length > 0) {
+      return dishes;
+    }
     const dishResponse = await apiRpc.dishes.$get({
       query: {
         businessId: businessId,
@@ -55,7 +60,10 @@ export const useDishStore = (dishStep: string) => {
   const { data, isLoading, isError } = useQuery<DishType[]>({
     queryKey: ["dishes", businessId, dishStep === "LINK_RECOMMENDATION_STEP"],
     queryFn: () => getAllDishes(businessId ?? ""),
-    enabled: !!businessId && dishStep === "LINK_RECOMMENDATION_STEP",
+    enabled:
+      !!businessId &&
+      dishStep === "LINK_RECOMMENDATION_STEP" &&
+      dishes.length === 0,
   });
 
   return { data, isLoading, isError };
@@ -93,5 +101,27 @@ export async function postDishData(filteredPayload: any): Promise<any> {
     json: filteredPayload,
   });
   const data = await dishResponse.json();
-  return data;
+  return { data, dishResponse };
+}
+
+export async function putDishData(filteredPayload: any): Promise<any> {
+  const dishResponse = await apiRpc.dishes[":id"].$put({
+    param: {
+      id: filteredPayload._id,
+    },
+    json: filteredPayload,
+  });
+  const data = await dishResponse.json();
+  return { data, dishResponse };
+}
+
+export async function deleteDishData(id: string): Promise<any> {
+  const dishResponse = await apiRpc.dishes[":id"].$delete({
+    param: {
+      id: id,
+    },
+  });
+  const data = await dishResponse.json();
+  console.log("data", data);
+  return { data, dishResponse };
 }

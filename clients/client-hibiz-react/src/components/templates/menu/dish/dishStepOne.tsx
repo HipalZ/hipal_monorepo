@@ -9,14 +9,24 @@ import {
 import { RiLinkUnlink } from "react-icons/ri";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
-import { cn, filterPayload, foodTypes } from "@/components/utils/helper";
+import {
+  cn,
+  filterPayload,
+  foodTypes,
+  storeImageAfterSave,
+} from "@/components/utils/helper";
 import type { DishType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDishStore";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
+  const { resetDishesStore } = useDishesStore((s) => ({
+    resetDishesStore: s.resetDishesStore,
+  }));
   const {
     setDishName,
     setDishTypes,
@@ -34,6 +44,10 @@ const MemoDishForm = () => {
     portions,
     selectedCatIds,
     addonIds,
+    resetStore,
+    resetDishStore,
+    imageFiles,
+    imagePreviews,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     setDishName: s.setDishName,
@@ -54,6 +68,10 @@ const MemoDishForm = () => {
     portions: s.portions,
     selectedCatIds: s.selectedCatIds,
     addonIds: s.addonIds,
+    resetStore: s.resetStore,
+    resetDishStore: s.resetDishStore,
+    imageFiles: s.imageFiles,
+    imagePreviews: s.imagePreviews,
   }));
 
   const [displayedPrice, setDisplayedPrice] = useState("");
@@ -95,7 +113,35 @@ const MemoDishForm = () => {
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
+      return toast.error("Please fill all the required fields");
+    }
+    let firstImage: string | undefined;
+    let secondImage: string | undefined;
+    let thirdImage: string | undefined;
 
+    if (imagePreviews?.first !== "") {
+      firstImage = await storeImageAfterSave(
+        imageFiles?.first as File,
+        imagePreviews?.first as string,
+      );
+    }
+    if (imagePreviews?.second !== "") {
+      secondImage = await storeImageAfterSave(
+        imageFiles?.second as File,
+        imagePreviews?.second as string,
+      );
+    }
+    if (imagePreviews?.third !== "") {
+      thirdImage = await storeImageAfterSave(
+        imageFiles?.third as File,
+        imagePreviews?.third as string,
+      );
+    }
+
+    const images: string[] = [firstImage, secondImage, thirdImage].filter(
+      Boolean,
+    );
     const payload: DishType = {
       businessId: Object(businessId),
       name: dishName,
@@ -110,10 +156,16 @@ const MemoDishForm = () => {
       addOnIds: Object(addonIds),
       recommendationIds: Object(recommendationIds),
       tags: tags,
+      images: images,
     };
     const filteredPayload = filterPayload(payload);
-    const data = await postDishData(filteredPayload);
-    console.log("data", data);
+    const { data, dishResponse } = await postDishData(filteredPayload);
+    if (dishResponse?.status === 201) {
+      resetStore();
+      resetDishesStore();
+      resetDishStore();
+      return toast.success(data?.message);
+    }
     if (!data?.success) {
       errorToasts(data?.error);
     }
@@ -131,7 +183,7 @@ const MemoDishForm = () => {
             id="name"
             placeholder="Enter Dish Name"
             value={dishName}
-            maxLength={21}
+            maxLength={30}
             minLength={3}
             required
             onChange={(e) => setDishName(e.target.value)}
@@ -197,6 +249,33 @@ const MemoDishForm = () => {
             </Background>
           </section>
         </div>
+        {portions.length > 0 ? (
+          <div className="relative mb-4 overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Portion Name
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Price
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {portions.map((portion, index) => (
+                  <tr
+                    key={`${portion?.name}+${index}`}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                  >
+                    <td className="px-6 py-4">{portion.name}</td>
+                    <td className="px-6 py-4">{portion?.price ?? "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
         <section
           onClick={() => redirectToSection(DishSteps.LINK_CATEGORY_STEP)}
         >

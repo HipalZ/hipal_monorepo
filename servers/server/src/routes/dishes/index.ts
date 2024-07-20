@@ -36,7 +36,7 @@ const dishesRouter = new Hono()
           businessId,
           "categoryIds.0": { $exists: true },
         }).select(
-          "_id businessId name availability dishTypes visibility price categoryIds addOnIds recommendationIds",
+          "_id businessId name availability tags images dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(
           c,
@@ -52,7 +52,7 @@ const dishesRouter = new Hono()
           businessId,
           isDeleted: false,
         }).select(
-          " _id businessId name availability dishTypes visibility price categoryIds addOnIds recommendationIds",
+          " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(
           c,
@@ -65,7 +65,8 @@ const dishesRouter = new Hono()
 
       const existingDishes = await Dish.find({
         businessId,
-      }).populate(["categoryIds", "addOnIds"]);
+        isDeleted: false,
+      });
 
       return respond(
         c,

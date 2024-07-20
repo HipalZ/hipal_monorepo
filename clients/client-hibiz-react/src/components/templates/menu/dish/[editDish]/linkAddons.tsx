@@ -1,5 +1,5 @@
 import Fuse from "fuse.js";
-import { memo, useEffect, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
@@ -10,13 +10,25 @@ interface Props {
 
 const MemoLinkAddons = (props: Props) => {
   const { data } = props;
-  const [tempIds, setTempIds] = useState<string[]>([]);
-  const { setAddonIds, setDishStep } = useMenuPageStore((s) => ({
+  const {
+    setAddonIds,
+    setDishStep,
+    addonIds,
+    setRemoveAddOnIds,
+    removeAddOnIds,
+  } = useMenuPageStore((s) => ({
     setAddonIds: s.setAddonIds,
     setDishStep: s.setDishStep,
+    addonIds: s.addonIds,
+    setRemoveAddOnIds: s.setRemoveAddOnIds,
+    removeAddOnIds: s.removeAddOnIds,
   }));
+  console.log("add", addonIds);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  const initialTempIds = useMemo(() => [...addonIds], [addonIds]);
+  const [tempIds, setTempIds] = useState<string[]>(initialTempIds);
 
   const fuse = new Fuse(data, {
     keys: ["name"],
@@ -34,14 +46,19 @@ const MemoLinkAddons = (props: Props) => {
 
   const handleSave = () => {
     setAddonIds(tempIds);
+    setRemoveAddOnIds(removeAddOnIds);
     setDishStep(DishSteps.DISH_STEP_1);
   };
 
   const handleDataChange = (id: string) => {
     if (tempIds.includes(id)) {
       setTempIds(tempIds.filter((catId) => catId !== id));
+      if (!removeAddOnIds.includes(id)) {
+        setRemoveAddOnIds([...removeAddOnIds, id]);
+      }
     } else {
       setTempIds([...tempIds, id]);
+      setRemoveAddOnIds(removeAddOnIds.filter((catId) => catId !== id));
     }
   };
 

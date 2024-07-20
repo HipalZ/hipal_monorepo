@@ -33,7 +33,9 @@ export type DishStep =
   | "LINK_CATEGORY_STEP"
   | "LINK_RECOMMENDATION_STEP"
   | "LINK_ADDON_STEP"
-  | "LINK_ADD_TAGS";
+  | "LINK_ADD_TAGS"
+  | "CONFIRM_DELETE";
+
 export enum DishSteps {
   DISH_STEP_1 = "DISH_STEP_1",
   DISH_STEP_2 = "DISH_STEP_2",
@@ -42,6 +44,7 @@ export enum DishSteps {
   LINK_RECOMMENDATION_STEP = "LINK_RECOMMENDATION_STEP",
   LINK_ADDON_STEP = "LINK_ADDON_STEP",
   LINK_ADD_TAGS = "LINK_ADD_TAGS",
+  CONFIRM_DELETE = "CONFIRM_DELETE",
 }
 export type ImageFiles = {
   first: File | null;
@@ -94,6 +97,7 @@ interface MenuPageStore {
   setSortOrder: (order: string) => void;
 
   resetStore: () => void;
+  setEditDishFunction: (data: DishType) => void;
 
   imagePreview: string | null;
   setImagePreview: (image: string | null) => void;
@@ -104,6 +108,9 @@ interface MenuPageStore {
   //dishes
   dishes: DishType[];
   setDishes: (dishes: DishType[]) => void;
+
+  editDish: DishType;
+  setEditDish: (dish: DishType) => void;
 
   selectedDish: string;
   setSelectedDish: (dish: string) => void;
@@ -117,14 +124,8 @@ interface MenuPageStore {
   visibility: boolean;
   setVisibility: (visibility: boolean) => void;
 
-  avgTime: number;
-  setAvgTime: (time: number) => void;
-
   dishTypes: DishTypeEnumType[];
   setDishTypes: (types: DishTypeEnumType[]) => void;
-
-  categoryIds: string[];
-  setCategoryIds: (ids: string[]) => void;
 
   portions: PortionType[];
   setPortions: (portions: PortionType[]) => void;
@@ -137,9 +138,6 @@ interface MenuPageStore {
 
   tags: TagsEnumType[];
   setTags: (tags: TagsEnumType[]) => void;
-
-  delayTime: number;
-  setDelayTime: (time: number) => void;
 
   availability: boolean;
   setAvailability: (avail: boolean) => void;
@@ -178,6 +176,23 @@ interface MenuPageStore {
   setCropping: (crop: { image: string; type: string }) => void;
 
   cropperRef: React.MutableRefObject<any>;
+
+  editOpenMenu: boolean;
+  setEditOpenMenu: (menu: boolean) => void;
+
+  removeCategoryIds: string[];
+  removeAddOnIds: string[];
+  removeRecommendationIds: string[];
+
+  setRemoveCategoryIds: (ids: string[]) => void;
+  setRemoveAddOnIds: (ids: string[]) => void;
+  setRemoveRecommendationIds: (ids: string[]) => void;
+
+  resetDishStore: () => void;
+  showDeleteDish: boolean;
+  setShowDeleteDish: (show: boolean) => void;
+
+  resetEditDish: () => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -242,6 +257,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   dishes: [],
   setDishes: (dishes: DishType[]) => set({ dishes }),
 
+  editDish: {},
+  setEditDish: (dish: DishType) => set({ editDish: dish }),
+
   selectedDish: "",
   setSelectedDish: (dish: string) => set({ selectedDish: dish }),
 
@@ -254,14 +272,8 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   visibility: true,
   setVisibility: (visibility: boolean) => set({ visibility: visibility }),
 
-  avgTime: 0,
-  setAvgTime: (time: number) => set({ avgTime: time }),
-
   dishTypes: [],
   setDishTypes: (types: DishTypeEnumType[]) => set({ dishTypes: types }),
-
-  categoryIds: [],
-  setCategoryIds: (ids: string[]) => set({ categoryIds: ids }),
 
   portions: [],
   setPortions: (portions: PortionType[]) => set({ portions }),
@@ -274,9 +286,6 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   tags: [],
   setTags: (tags: TagsEnumType[]) => set({ tags: tags }),
-
-  delayTime: 0,
-  setDelayTime: (time: number) => set({ delayTime: time }),
 
   availability: true,
   setAvailability: (avail: boolean) => set({ availability: avail }),
@@ -328,6 +337,90 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
     set({ cropping: crop }),
 
   cropperRef: { current: null },
+
+  removeCategoryIds: [],
+  removeAddOnIds: [],
+  removeRecommendationIds: [],
+
+  setRemoveCategoryIds: (ids: string[]) => set({ removeCategoryIds: ids }),
+  setRemoveAddOnIds: (ids: string[]) => set({ removeAddOnIds: ids }),
+  setRemoveRecommendationIds: (ids: string[]) =>
+    set({ removeRecommendationIds: ids }),
+
+  resetDishStore: () =>
+    set({
+      dishName: "",
+      dishPrice: 0,
+      visibility: true,
+      dishTypes: [],
+      portions: [],
+      addons: [],
+      dishImages: [],
+      tags: [],
+      availability: true,
+      calories: "",
+      recommendationIds: [],
+      dishDescription: "",
+      addonIds: [],
+      imageFiles: { first: null, second: null, third: null },
+      imagePreviews: { first: null, second: null, third: null },
+      showCropper: false,
+      cropping: { image: "", type: "" },
+      selectedCatIds: [],
+    }),
+
+  editOpenMenu: false,
+
+  setEditOpenMenu: (menu: boolean) => set({ editOpenMenu: menu }),
+
+  showDeleteDish: false,
+
+  setShowDeleteDish: (show: boolean) => set({ showDeleteDish: show }),
+
+  setEditDishFunction: (editDish) => {
+    set({
+      _id: Object(editDish?._id),
+      dishName: editDish?.name,
+      dishPrice: editDish?.price,
+      dishTypes: editDish?.dishTypes || [],
+      portions: editDish?.portions || [],
+      tags: Object(editDish?.tags) || [],
+      availability: editDish?.availability,
+      calories: editDish?.calories ?? "",
+      dishDescription: editDish?.description ?? "",
+      recommendationIds: Object(editDish?.recommendationIds) ?? [],
+      addonIds: Object(editDish?.addOnIds) || [],
+      selectedCatIds: Object(editDish?.categoryIds) || [],
+      imagePreviews: {
+        first: editDish?.images?.[0] ?? null,
+        second: editDish?.images?.[1] ?? null,
+        third: editDish?.images?.[2] ?? null,
+      },
+      visibility: editDish?.visibility,
+    });
+  },
+
+  resetEditDish: () => {
+    set({
+      _id: "",
+      dishName: "",
+      dishPrice: 0,
+      dishTypes: [],
+      portions: [],
+      tags: [],
+      availability: true,
+      visibility: true,
+      calories: "",
+      dishDescription: "",
+      recommendationIds: [],
+      addonIds: [],
+      selectedCatIds: [],
+      imageFiles: { first: null, second: null, third: null },
+      imagePreviews: { first: null, second: null, third: null },
+      showCropper: false,
+      cropping: { image: "", type: "" },
+    });
+  },
 }));
 
 export default useMenuPageStore;

@@ -20,6 +20,7 @@ import Search from "@/components/templates/menu/category/search";
 import Filter from "@/components/templates/menu/category/filter";
 import CreateDish from "@/components/templates/menu/dish/createDish";
 import ListOfDishes from "@/components/templates/menu/dish/dishesList";
+import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
 
 const MemoiseDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -29,16 +30,22 @@ const MemoiseDishAndCat = () => {
     openMenu,
     setOpenMenu,
     resetStore,
+    editOpenMenu,
+    setEditOpenMenu,
     setSelectedCategory,
+    resetEditDish,
   } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
     setSelectedCategory: s.setSelectedCategory,
     openMenu: s.openMenu,
     setOpenMenu: s.setOpenMenu,
+    editOpenMenu: s.editOpenMenu,
+    setEditOpenMenu: s.setEditOpenMenu,
     resetStore: s.resetStore,
     search: s.search,
     setSearch: s.setSearch,
+    resetEditDish: s.resetEditDish,
   }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -54,12 +61,17 @@ const MemoiseDishAndCat = () => {
       setSelectedCategory("SUB_CATEGORY");
     }
     setOpenMenu(true);
+    resetEditDish();
   }, [selectedPage]);
 
   const closeMenu = useCallback(() => {
     resetStore();
     setOpenMenu(false);
   }, [openMenu]);
+
+  const closeEditMenu = useCallback(() => {
+    setEditOpenMenu(false);
+  }, [editOpenMenu]);
 
   const sidebarItems = [
     { icon: Hi, text: "Dishes", onClick: () => setSelectedPage("DISHES") },
@@ -128,6 +140,21 @@ const MemoiseDishAndCat = () => {
           <div className="m-4 text-3xl">Add On-addon</div>
         )}
       </section>
+
+      {editOpenMenu && (
+        <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
+          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+            <button
+              className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
+              type="button"
+              onClick={closeEditMenu}
+            >
+              <HiX />
+            </button>
+            {selectedPage === "DISHES" && <EditDish />}
+          </section>
+        </PopUp>
+      )}
 
       {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>

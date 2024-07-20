@@ -2,15 +2,20 @@ import { type ChangeEvent, memo } from "react";
 import { RiLinkUnlink } from "react-icons/ri";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
-import DishImages from "./dishImages";
 import { useParams } from "react-router-dom";
 import type { DishType } from "@hi/db-models/src/validators";
 import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDishStore";
+import toast from "react-hot-toast";
+import { useDishesStore } from "@/components/store/useDishesStore";
+import DishImages from "./[editDish]/dishImages";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
+  const { resetDishesStore } = useDishesStore((s) => ({
+    resetDishesStore: s.resetDishesStore,
+  }));
   const {
     setDishStep,
     dishDescription,
@@ -31,6 +36,8 @@ const MemoDishFormTwo = () => {
     imagePreviews,
     setCropping,
     setShowCropper,
+    resetStore,
+    resetDishStore,
   } = useMenuPageStore((s) => ({
     setDishStep: s.setDishStep,
     calories: s.calories,
@@ -51,11 +58,16 @@ const MemoDishFormTwo = () => {
     imagePreviews: s.imagePreviews,
     setShowCropper: s.setShowCropper,
     setCropping: s.setCropping,
+    resetStore: s.resetStore,
+    resetDishStore: s.resetDishStore,
   }));
 
   const errorToasts = useErrorToasts();
 
   const handleAddDish = async () => {
+    if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
+      return toast.error("Please fill all the required fields");
+    }
     let firstImage: string | undefined;
     let secondImage: string | undefined;
     let thirdImage: string | undefined;
@@ -100,7 +112,13 @@ const MemoDishFormTwo = () => {
       images: images,
     };
     const filteredPayload = filterPayload(payload);
-    const data = await postDishData(filteredPayload);
+    const { data, dishResponse } = await postDishData(filteredPayload);
+    if (dishResponse?.status === 201) {
+      resetStore();
+      resetDishesStore();
+      resetDishStore();
+      return toast.success(data?.message);
+    }
     if (!data?.success) {
       errorToasts(data?.error);
     }
