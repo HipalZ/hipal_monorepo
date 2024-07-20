@@ -9,7 +9,7 @@ const choicesSchema = new mongoose.Schema<ChoiceType>({
   description: { type: String, required: false },
   visibility: { type: Boolean, required: true, default: true },
   availability: { type: Boolean, required: true, default: true },
-  maxQuantity: { type: Number, required: true, default: 1 },
+  choiceMaxQuantity: { type: Number, required: true, default: 1 },
   choiceDishType: { type: [String], enum: DishTypeEnum, required: false },
 });
 
@@ -32,7 +32,7 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: true,
       default: 0,
     },
-    maxQuantity: {
+    addOnMaxQuantity: {
       type: Number,
       required: true,
       default: 1,

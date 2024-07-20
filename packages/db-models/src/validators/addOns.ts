@@ -35,7 +35,7 @@ const Choices = z.object({
     .optional(),
   visibility: z.boolean().default(true).optional(),
   availability: z.boolean().default(true).optional(),
-  maxQuantity: z.coerce.number().optional().default(1),
+  choiceMaxQuantity: z.coerce.number().optional().default(1),
   choiceDishType: z.array(z.enum(DishTypeEnum)),
 });
 
@@ -58,7 +58,7 @@ export const AddOnsAttrs = z.object({
     })
     .default(0)
     .optional(),
-  maxQuantity: z.coerce
+  addOnMaxQuantity: z.coerce
     .number({
       message: "maxQuantity is required",
     })
