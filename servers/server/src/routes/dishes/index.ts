@@ -129,23 +129,36 @@ const dishesRouter = new Hono()
           await Category.updateMany(
             { _id: { $in: removeCategoryIds } },
             { $pull: { dishIds: id } },
+            { session },
           );
 
-          await Dish.findByIdAndUpdate(id, {
-            $pull: { categoryIds: { $in: removeCategoryIds } },
-          });
+          await Dish.findByIdAndUpdate(
+            id,
+            {
+              $pull: { categoryIds: { $in: removeCategoryIds } },
+            },
+            { session },
+          );
         }
 
         if (removeAddOnIds.length) {
-          await Dish.findByIdAndUpdate(id, {
-            $pull: { addOnIds: { $in: removeAddOnIds } },
-          });
+          await Dish.findByIdAndUpdate(
+            id,
+            {
+              $pull: { addOnIds: { $in: removeAddOnIds } },
+            },
+            { session },
+          );
         }
 
         if (removeRecommendationIds.length) {
-          await Dish.findByIdAndUpdate(id, {
-            $pull: { recommendationIds: { $in: removeRecommendationIds } },
-          });
+          await Dish.findByIdAndUpdate(
+            id,
+            {
+              $pull: { recommendationIds: { $in: removeRecommendationIds } },
+            },
+            { session },
+          );
         }
 
         if (categoryIds.length) {

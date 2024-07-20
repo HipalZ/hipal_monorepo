@@ -10,13 +10,18 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
+import {
+  ClientRoles,
+  requireAuthorization,
+} from "../../../middleware/authorization";
+import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 const addonRouter = new Hono()
   .post(
     "/",
 
-    //   authTokenValidator,
-    //   requireAuthorization([ClientRoles.OWNER, ClientRoles.CO_OWNER]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.CO_OWNER]),
     zValidator("json", AddOnsAttrs),
 
     async (c) => {
@@ -42,7 +47,7 @@ const addonRouter = new Hono()
           );
         }
 
-        return respond(c, "success", false, 201, addon);
+        return respond(c, "addon created successFully !", false, 201, addon);
       });
     },
   )

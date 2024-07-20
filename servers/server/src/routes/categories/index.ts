@@ -10,6 +10,11 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
+import {
+  ClientRoles,
+  requireAuthorization,
+} from "../../../middleware/authorization";
+import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -17,20 +22,20 @@ import { respond } from "../../utils/response";
 const categoriesRouter = new Hono()
   .post(
     "/",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", categorySchema),
     async (c) => {
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
-        let { businessId, subCategoryIds, parentCategoryIds, dishIds } =
-          requestData;
-
-        if (!parentCategoryIds) parentCategoryIds = [];
-        if (!subCategoryIds) subCategoryIds = [];
-        if (!dishIds) dishIds = [];
+        const {
+          businessId,
+          subCategoryIds = [],
+          parentCategoryIds = [],
+          dishIds = [],
+        } = requestData;
 
         const existingCategory = await Category.findOne({
           name: requestData.name,
@@ -67,6 +72,7 @@ const categoriesRouter = new Hono()
               coverImage: requestData.coverImage,
               parentCategoryIds: parentCategoryIds || [],
               dishIds: dishIds || [],
+              subCategoryIds: subCategoryIds || [],
             },
           ],
           {
@@ -104,8 +110,8 @@ const categoriesRouter = new Hono()
   )
   .put(
     "/:id",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", updateCategorySchema),
     zValidator("param", z.object({ id: z.string() })),
@@ -146,6 +152,12 @@ const categoriesRouter = new Hono()
           return respond(c, "Category not found", true, 404, {});
 
         if (removeSubCategoryIds.length > 0) {
+          //extra check for subCategoryIds
+          await Category.findByIdAndUpdate(
+            id,
+            { $pull: { subCategoryIds: { $in: removeSubCategoryIds } } },
+            { session },
+          );
           await Category.updateMany(
             { _id: { $in: removeSubCategoryIds } },
             { $pull: { parentCategoryIds: id } },
@@ -178,6 +190,12 @@ const categoriesRouter = new Hono()
         }
 
         if (subCategoryIds.length > 0) {
+          //extra check for subCategoryIds
+          await Category.findByIdAndUpdate(
+            id,
+            { $addToSet: { subCategoryIds: { $each: subCategoryIds } } },
+            { session },
+          );
           await Category.updateMany(
             { _id: { $in: subCategoryIds } },
             { $addToSet: { parentCategoryIds: id } },
@@ -265,7 +283,9 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
-        }).select("_id name visibility availability dishIds parentCategoryIds");
+        }).select(
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+        );
 
         return respond(
           c,
@@ -288,7 +308,9 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: hierarchy,
           isDeleted: false,
-        }).select("_id name visibility availability dishIds parentCategoryIds");
+        }).select(
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+        );
 
         return respond(
           c,
@@ -303,7 +325,9 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           hierarchy: "PARENT",
-        }).select("_id name visibility availability dishIds parentCategoryIds");
+        }).select(
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+        );
 
         return respond(
           c,

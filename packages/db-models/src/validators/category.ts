@@ -55,6 +55,7 @@ export const categorySchema = z.object({
     })
     .optional()
     .default([]),
+  //no need to add in model
   subCategoryIds: z
     .array(ObjectIdSchema, {
       message: "subCategoryIds is required",

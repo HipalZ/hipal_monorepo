@@ -36,6 +36,12 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       type: String,
       required: false,
     },
+    subCategoryIds: {
+      type: [ObjectId],
+      required: false,
+      default: [],
+      ref: "category",
+    },
 
     dishIds: {
       type: [ObjectId],

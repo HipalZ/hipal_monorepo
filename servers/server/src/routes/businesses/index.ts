@@ -1,5 +1,6 @@
 // books.ts
 import {
+  AddOn,
   Banner,
   Business,
   BusinessSettings,
@@ -37,8 +38,8 @@ import { convertToHsl } from "../../utils/theme";
 const businessesRouter = new Hono()
   .post(
     "/",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER]),
+    authTokenValidator,
+    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator("json", BusinessSchema),
 
@@ -76,6 +77,7 @@ const businessesRouter = new Hono()
     zValidator("json", BranchSchema),
 
     async (c) => {
+      //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const isCustomLinkExist = await Business.findOne({
@@ -98,8 +100,6 @@ const businessesRouter = new Hono()
             parentOutLetId,
           } = requestData;
           const currentBusinessId = business[0]._id;
-          console.log("currentBusinessId", currentBusinessId);
-          console.log("parentBranchId", parentOutLetId);
 
           if (menu) {
             const categories = await Category.find({
@@ -108,8 +108,9 @@ const businessesRouter = new Hono()
 
             for (let i = 0; i < categories.length; i++) {
               const category = categories[i];
+
               delete category._id;
-              category["businessId"] = currentBusinessId;
+              category.businessId = currentBusinessId;
             }
 
             await Category.insertMany(categories, { session });
@@ -117,20 +118,21 @@ const businessesRouter = new Hono()
             const dishes = await Dish.find({
               businessId: parentOutLetId,
             }).lean();
-            dishes.forEach((dish) => {
+            for (let i = 0; i < dishes.length; i++) {
+              const dish = dishes[i];
               delete dish._id;
-              dish["businessId"] = currentBusinessId;
-            });
+              dish.businessId = currentBusinessId;
+            }
             await Dish.insertMany(dishes, { session });
 
-            const extras = await Extra.find({
+            const extras = await AddOn.find({
               businessId: parentOutLetId,
             }).lean();
-            extras.forEach((extra) => {
+            for (const extra of extras) {
               delete extra._id;
               extra.businessId = currentBusinessId;
-            });
-            await Extra.insertMany(extras, { session });
+            }
+            await AddOn.insertMany(extras, { session });
           }
 
           if (themes) {
@@ -152,10 +154,10 @@ const businessesRouter = new Hono()
             const banners = await Banner.find({
               businessId: parentOutLetId,
             }).lean();
-            banners.forEach((banner) => {
+            for (const banner of banners) {
               delete banner._id;
               banner.businessId = currentBusinessId;
-            });
+            }
             await Banner.insertMany(banners, { session });
 
             const themesData = await Theme.findOne({
@@ -185,10 +187,10 @@ const businessesRouter = new Hono()
             const loyaltyUsers = await UserReward.find({
               loyaltyId: parentOutLetId,
             }).lean();
-            loyaltyUsers.forEach((user) => {
+            for (const user of loyaltyUsers) {
               delete user._id;
               user.loyaltyId = currentBusinessId.toString();
-            });
+            }
             await UserReward.insertMany(loyaltyUsers, { session });
           }
 

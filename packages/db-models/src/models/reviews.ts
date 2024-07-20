@@ -1,5 +1,5 @@
-import mongoose, { type Model } from 'mongoose';
-import type { ReviewsType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { ReviewsType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
@@ -8,20 +8,20 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       required: true,
       type: ObjectId,
       index: true,
-      ref: 'Business',
+      ref: "Business",
     },
     userId: {
       required: true,
       type: ObjectId,
       index: true,
-      ref: 'User',
+      ref: "User",
     },
 
     reviewRating: {
       required: true,
       type: Number,
-      min: [1, 'Review rating must be at least 1'],
-      max: [5, 'Review rating must be at most 5'],
+      min: [1, "Review rating must be at least 1"],
+      max: [5, "Review rating must be at most 5"],
     },
     description: {
       type: String,
@@ -30,16 +30,20 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       type: [String],
     },
     foodTaste: {
-      type: Boolean,
+      type: Number,
+      required: false,
     },
     ambience: {
-      type: Boolean,
+      type: Number,
+      required: false,
     },
     hygiene: {
-      type: Boolean,
+      type: Number,
+      required: false,
     },
     service: {
-      type: Boolean,
+      type: Number,
+      required: false,
     },
     staffs: {
       type: [String],
@@ -50,7 +54,7 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     },
     order_id: {
       type: ObjectId,
-      ref: 'Order',
+      ref: "Order",
       required: true,
     },
   },
@@ -59,6 +63,9 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
   },
 );
 
-const Reviews: Model<ReviewsType> = mongoose.model<ReviewsType>('customerReviews', reviewsSchema);
+const Reviews: Model<ReviewsType> = mongoose.model<ReviewsType>(
+  "customerReviews",
+  reviewsSchema,
+);
 
 export { Reviews };

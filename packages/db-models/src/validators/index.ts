@@ -1,4 +1,5 @@
 export * from "./acceptOrder";
+export * from "./addOns";
 export * from "./addStaffValidator";
 export * from "./appconfig";
 export * from "./banner";
@@ -7,7 +8,6 @@ export * from "./businessSetting";
 export * from "./category";
 export * from "./create_order";
 export * from "./dish";
-export * from "./addOns";
 export * from "./kitchen";
 
 export * from "./license";
@@ -34,3 +34,5 @@ export * from "./userRoles";
 export * from "./validate_signature";
 export * from "./validate_webhook";
 export * from "./waiterPaymentAlert";
+
+export * from "./analytic";
