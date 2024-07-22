@@ -165,8 +165,13 @@ interface MenuPageStore {
   portions: PortionType[];
   setPortions: (portions: PortionType[]) => void;
 
-  addons: string[];
+  addons: string[]; 
   setAddons: (addons: string[]) => void;
+
+
+
+
+  //hello
 
   dishImages: string[];
   setDishImages: (images: string[]) => void;
