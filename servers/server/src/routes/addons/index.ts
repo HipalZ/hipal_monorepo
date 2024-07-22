@@ -92,6 +92,8 @@ const addonRouter = new Hono()
             { session },
           );
         }
+
+        return respond(c, "success", false, 200, updatedAddOn);
       });
     },
   )
