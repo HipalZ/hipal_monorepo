@@ -71,7 +71,7 @@ const MemoDishForm = () => {
     recommendationIds: s.recommendationIds,
     dishName: s.dishName,
     dishPrice: s.dishPrice,
-    visibility: s.catVisibility,
+    visibility: s.visibility,
     dishTypes: s.dishTypes,
     availability: s.availability,
     portions: s.portions,
@@ -89,8 +89,12 @@ const MemoDishForm = () => {
   useEffect(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
   }, []);
-  const toggleSelection = (type: DishTypeEnumType) => {
-    const isSelected = dishTypes.includes(type);
+
+  const toggleSelection = (type: string) => {
+    const isSelected = dishTypes.includes(type as DishTypeEnumType);
+    if (isSelected && dishTypes.length === 1) {
+      return;
+    }
     const newSelectedTypes = isSelected
       ? dishTypes.filter((t) => t !== type)
       : [...dishTypes, type];

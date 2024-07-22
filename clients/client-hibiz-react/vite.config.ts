@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import Pages from "vite-plugin-pages";
+import svgr from "vite-plugin-svgr";
 
 const ReactCompilerConfig = {
   compilationMode: "annotation",
@@ -23,6 +24,7 @@ export default defineConfig({
     Pages({
       importMode: "async",
     }),
+    svgr(),
     // VitePWA({
     //   registerType: 'autoUpdate',
     //   includeAssets: ['favicon.ico', 'android-chrome-192x192.png', 'mstile-70x70.png'],

@@ -51,6 +51,7 @@
     "unimported": "^1.31.1",
     "vite-plugin-babel": "^1.2.0",
     "vite-plugin-pages": "^0.32.2",
+    "vite-plugin-svgr": "^4.2.0",
     "xlsx": "^0.18.5",
     "zustand": "^4.5.2"
   },
