@@ -19,8 +19,11 @@ export type CategoryStep =
   | ""
   | "LINK_MAIN_CATEGORY"
   | "LINK_SUB_CATEGORY"
+  | "EDIT_MAIN_CATEGORY"
+  | "EDIT_SUB_CATEGORY"
   | "LINK_DISH";
 export type categoryType = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
+export type Addon = "ADD_ON" | "ADD_CHOICE" | "LINK_DISHES" |"EDIT_ADDON";
 export type categorySubtypes =
   | ""
   | "LINK_MAIN_CATEGORY"
@@ -52,6 +55,19 @@ export type ImageFiles = {
   third: File | null;
 };
 
+export interface Choice {
+  uuid: string;
+  name: string;
+  price: number;
+  description: string;
+  visibility: boolean;
+  availability: boolean;
+  maxQuantity: number;
+  choiceDishType: string[];
+}
+
+export type AddonChoice = "CHECKBOX" | "NUMBER";
+
 export type ImagePreviews = {
   first: string | ArrayBuffer | null;
   second: string | ArrayBuffer | null;
@@ -82,7 +98,17 @@ interface MenuPageStore {
   setCategoryStep: (step: CategoryStep) => void;
 
   selectedIds: string[];
+  setSelectedIds: (ids: string[]) => void;
   handleCategoryChange: (categoryId: string) => void;
+
+  editingMainCat: boolean;
+  setEditingMainCat: (editing: boolean) => void;
+
+  editingSubCat: boolean;
+  setEditingSubCat: (editing: boolean) => void;
+
+  catId: string;
+  setCatId: (id: string) => void;
 
   search: string;
   setSearch: (search: string) => void;
@@ -126,6 +152,12 @@ interface MenuPageStore {
 
   dishTypes: DishTypeEnumType[];
   setDishTypes: (types: DishTypeEnumType[]) => void;
+
+  categoryIds: string[];
+  setCategoryIds: (ids: string[]) => void;
+
+  idCheck: string[];
+  setIdCheck: (id: string[]) => void;
 
   portions: PortionType[];
   setPortions: (portions: PortionType[]) => void;
@@ -172,7 +204,10 @@ interface MenuPageStore {
   showCropper: boolean;
   setShowCropper: (show: boolean) => void;
 
-  cropping: { image: string; type: string };
+  cropping: {
+    image: string;
+    type: string;
+  };
   setCropping: (crop: { image: string; type: string }) => void;
 
   cropperRef: React.MutableRefObject<any>;
@@ -193,6 +228,56 @@ interface MenuPageStore {
   setShowDeleteDish: (show: boolean) => void;
 
   resetEditDish: () => void;
+  addOnToggle: Addon;
+  setAddOnToggle: (addon: Addon) => void;
+
+  addOnId: string;
+  setAddOnId: (id: string) => void;
+
+  addOnName: string;
+  setAddOnName: (name: string) => void;
+
+  minChoices: number;
+  setMinChoices: (choices: number) => void;
+
+  maxChoices: number;
+  setMaxChoices: (choices: number) => void;
+
+  addOnChoice: AddonChoice;
+  setAddOnChoice: (choice: AddonChoice) => void;
+
+  choiceName: string;
+  setChoiceName: (name: string) => void;
+
+  choicePrice: number;
+  setChoicePrice: (price: number) => void;
+
+  choiceQuantity: number;
+  setChoiceQuantity: (quantity: number) => void;
+
+  choiceDishTypes: DishTypeEnumType[];
+  setChoiceDishTypes: (types: DishTypeEnumType[]) => void;
+
+  addOnVisible: boolean;
+  setAddOnVisible: (visible: boolean) => void;
+
+  choiceVisible: boolean;
+  setChoiceVisible: (visible: boolean) => void;
+
+  addOnAvailable: boolean;
+  setAddOnAvailable: (available: boolean) => void;
+
+  choiceAvailable: boolean;
+  setChoiceAvailable: (available: boolean) => void;
+
+  choices: Choice[];
+  setChoices: (choices: Choice[]) => void;
+  addChoice: (choice: Choice) => void;
+  resetChoiceFields: () => void;
+  deleteChoice: (choiceId: string) => void;
+  editChoiceId: string;
+  setEditChoiceId: (id: string) => void;
+  updateChoice: (updatedChoice: Choice) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -212,13 +297,26 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   categoryStep: "CATEGORY_STEP_1",
   setCategoryStep: (step: CategoryStep) => set({ categoryStep: step }),
 
+  idCheck: [],
+  setIdCheck: (id: string[]) => set({ idCheck: id }),
+
   selectedIds: [],
+  setSelectedIds: (ids: string[]) => set({ selectedIds: ids }),
   handleCategoryChange: (newId: string) =>
     set((state) => ({
       selectedIds: state.selectedIds.includes(newId)
         ? state.selectedIds.filter((id) => id !== newId)
         : [...state.selectedIds, newId],
     })),
+
+  editingMainCat: false,
+  setEditingMainCat: (editing: boolean) => set({ editingMainCat: editing }),
+
+  editingSubCat: false,
+  setEditingSubCat: (editing: boolean) => set({ editingSubCat: editing }),
+
+  catId: "",
+  setCatId: (id: string) => set({ catId: id }),
 
   search: "",
   setSearch: (search: string) => set({ search }),
@@ -229,8 +327,14 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   visibilityFilter: "all",
   setVisibilityFilter: (filter: string) => set({ visibilityFilter: filter }),
 
+  availability: true,
+  setAvailability: (avail: boolean) => set({ availability: avail }),
+
   sortOrder: "asc",
   setSortOrder: (order: string) => set({ sortOrder: order }),
+
+  selectedFile: null,
+  setSelectedFile: (file) => set({ selectedFile: file }),
 
   resetStore: () =>
     set({
@@ -246,12 +350,50 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       searchVisible: false,
       imagePreview: null,
       selectedFile: null,
+      dishes: [],
+      dishTypes: [],
+      categoryIds: [],
+      portions: [],
+      addons: [],
+      dishImages: [],
+      tags: [],
+      recommendations: [],
+      selectedCatIds: [],
+      recommendationIds: [],
+      dishDescription: "",
+      addonIds: [],
+      catId: "",
+      idCheck: [],
+      imageFiles: { first: null, second: null, third: null },
+      imagePreviews: { first: null, second: null, third: null },
+      showCropper: false,
+      cropping: { image: "", type: "" },
+      cropperRef: { current: null },
+      addOnToggle: "ADD_ON",
+      addOnName: "",
+      minChoices: 0,
+      maxChoices: 0,
+      addOnChoice: "CHECKBOX",
+      choiceName: "",
+      choicePrice: 0,
+      choiceQuantity: 0,
+      choiceDishTypes: [],
+      addOnVisible: false,
+      choiceVisible: false,
+      addOnAvailable: true,
+      choiceAvailable: true,
+      choices: [],
+      editChoiceId: "",
+      removeCategoryIds: [],
+      removeAddOnIds: [],
+      removeRecommendationIds: [],
+      editOpenMenu: false,
+      showDeleteDish: false,
+      addOnId: "",
     }),
+
   imagePreview: null,
   setImagePreview: (image) => set({ imagePreview: image }),
-
-  selectedFile: null,
-  setSelectedFile: (file) => set({ selectedFile: file }),
 
   //dishes
   dishes: [],
@@ -287,8 +429,8 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   tags: [],
   setTags: (tags: TagsEnumType[]) => set({ tags: tags }),
 
-  availability: true,
-  setAvailability: (avail: boolean) => set({ availability: avail }),
+  delayTime: 0,
+  setDelayTime: (time: number) => set({ delayTime: time }),
 
   calories: "",
   setCalories: (calories: string) => set({ calories }),
@@ -421,6 +563,67 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       cropping: { image: "", type: "" },
     });
   },
+  addOnToggle: "ADD_ON",
+  setAddOnToggle: (addon: Addon) => set({ addOnToggle: addon }),
+
+  addOnId: "",
+  setAddOnId: (id: string) => set({ addOnId: id }),
+
+  addOnName: "",
+  setAddOnName: (name: string) => set({ addOnName: name }),
+
+  minChoices: 0,
+  setMinChoices: (choices: number) => set({ minChoices: choices }),
+
+  maxChoices: 0,
+  setMaxChoices: (choices: number) => set({ maxChoices: choices }),
+
+  addOnChoice: "CHECKBOX",
+  setAddOnChoice: (choice: AddonChoice) => set({ addOnChoice: choice }),
+
+  choiceName: "",
+  setChoiceName: (name: string) => set({ choiceName: name }),
+
+  choicePrice: 0,
+  setChoicePrice: (price: number) => set({ choicePrice: price }),
+
+  choiceQuantity: 0,
+  setChoiceQuantity: (quantity: number) => set({ choiceQuantity: quantity }),
+
+  choiceDishTypes: [],
+  setChoiceDishTypes: (types: DishTypeEnumType[]) =>
+    set({ choiceDishTypes: types }),
+
+  addOnVisible: false,
+  setAddOnVisible: (visible: boolean) => set({ addOnVisible: visible }),
+
+  choiceVisible: false,
+  setChoiceVisible: (visible: boolean) => set({ choiceVisible: visible }),
+
+  addOnAvailable: true,
+  setAddOnAvailable: (available: boolean) => set({ addOnAvailable: available }),
+
+  choiceAvailable: true,
+  setChoiceAvailable: (available: boolean) =>
+    set({ choiceAvailable: available }),
+
+  choices: [],
+  setChoices: (choices: Choice[]) => set({ choices }),
+  addChoice: (choice) =>
+    set((state) => ({ choices: [...state.choices, choice] })),
+  deleteChoice: (choiceId) =>
+    set((state) => ({
+      choices: state.choices.filter((choice) => choice.uuid !== choiceId),
+    })),
+  updateChoice: (updatedChoice) =>
+    set((state) => ({
+      choices: state.choices.map((choice) =>
+        choice.uuid === updatedChoice.uuid ? updatedChoice : choice,
+      ),
+    })),
+  setEditChoiceId: (id) => set({ editChoiceId: id }),
+  resetChoiceFields: () =>
+    set({ choiceName: "", choicePrice: 0, dishTypes: [], editChoiceId: "" }),
 }));
 
 export default useMenuPageStore;

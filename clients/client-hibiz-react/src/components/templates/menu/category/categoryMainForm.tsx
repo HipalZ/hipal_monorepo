@@ -6,41 +6,31 @@ import useMenuPageStore, { type CategoryTypeToggle } from "@/components/store/us
 import Background from "@/components/atom/feildBackground";
 import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
-import { useSaveCategory } from "@/hooks/useCategory";
+import {  useSaveCategory } from "@/hooks/useCategory";
 
 const CategoryMainForm = memo(() => {
-    const { selectedCategory, setSelectedCategory, setOpenMenu, categoryName, setCategoryName, setCategoryStep, resetStore, selectIds } = useMenuPageStore(s => ({
+    const { selectedCategory, setSelectedCategory,categoryStep, categoryName, setCategoryName, setCategoryStep, resetStore, selectIds } = useMenuPageStore(s => ({
         selectedCategory: s.selectedCategory,
         setSelectedCategory: s.setSelectedCategory,
-        setOpenMenu: s.setOpenMenu,
         categoryName: s.categoryName,
         setCategoryName: s.setCategoryName,
         setCategoryStep: s.setCategoryStep,
         resetStore: s.resetStore,
-        selectIds: s.selectedIds
+        selectIds: s.selectedIds,
+        categoryStep: s.categoryStep
     }));
 
     const businessData = useBusinessData((s) => s.businessData);
     const { mutate: createCategory, isPending } = useSaveCategory();
-
-    const handleApiResponse = useCallback((res) => {
-        if (res.status === 400 || res.status === 409 || res.status === 403) {
-            toast.error("Category name already exists");
-        } else if (res.status === 201 || res.status === 200) {
-            toast.success("Category created successfully");
-            setOpenMenu(false);
-            resetStore();
-        }
-    }, [setOpenMenu, resetStore]);
 
     const categoryChange = useCallback((type: CategoryTypeToggle) => {
         if (type !== selectedCategory) {
             resetStore();
         }
         setSelectedCategory(type);
-    }, [selectedCategory, resetStore, setSelectedCategory]);
+    }, []);
 
-    const handleSaveCategory = () => {
+    const handleSaveCategory = useCallback(() => {
         if (!categoryName) {
             toast.error("Category name is required");
             return;
@@ -49,29 +39,26 @@ const CategoryMainForm = memo(() => {
             toast.error("Please select main category");
             return;
         }
-
-        let payload = {};
-        if (selectedCategory === "MAIN_CATEGORY") {
-            payload = {
-                name: categoryName,
-                businessId: businessData?._id.toString() || "",
-                hierarchy: "PARENT",
-                subCategoryIds: selectIds,
-            };
-        } else if (selectedCategory === "SUB_CATEGORY") {
-            payload = {
-                name: categoryName,
-                businessId: businessData?._id.toString() || "",
-                hierarchy: "CHILD",
-                parentCategoryIds: selectIds || [],
-            };
-        }
+    
+        const commonPayload = {
+            name: categoryName,
+            businessId: businessData?._id.toString() || "",
+        };
+    
+        const payload = selectedCategory === "MAIN_CATEGORY" 
+            ? { ...commonPayload, hierarchy: "PARENT", subCategoryIds: selectIds }
+            : { ...commonPayload, hierarchy: "CHILD", parentCategoryIds: selectIds || [] };
+    
         createCategory(payload);
-    };
+    },[selectedCategory, categoryName, selectIds, businessData?._id]);
 
     const goToNextStep = useCallback(() => {
+        if(categoryName?.trim() === ""){
+            toast.error("Category name is required");
+            return;
+        }
         setCategoryStep("CATEGORY_STEP_2");
-    }, [setCategoryStep]);
+    }, [categoryStep,categoryName]);
 
     return (
         <>
@@ -104,7 +91,7 @@ const CategoryMainForm = memo(() => {
             {selectedCategory === "SUB_CATEGORY" && (
                 <>
                     <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
-                        <label className="font-semibold opacity-50" htmlFor="name">Link Sub-Categories({selectIds?.length})</label>
+                        <label className="font-semibold opacity-50" htmlFor="name">Link Main Categories({selectIds?.length})</label>
                         <Background>
                             <button onClick={() => setCategoryStep("LINK_MAIN_CATEGORY")} type="button" className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center">
                                 <RiLinkUnlink className="mr-2" />  Link Main Categories

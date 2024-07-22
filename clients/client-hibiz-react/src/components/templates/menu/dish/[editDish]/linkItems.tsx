@@ -1,6 +1,6 @@
 import type { ICategory } from "@/components/types/businessData";
 import Fuse from "fuse.js";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import type { DishType } from "@hi/db-models/src/validators";
@@ -24,6 +24,9 @@ const MemoLinkItems = (props: Props) => {
     setRemoveCategoryIds,
     setRemoveRecommendationIds,
     removeCategoryIds,
+    addOnToggle,
+    setAddOnToggle,
+    addOnId,
   } = useMenuPageStore((s) => ({
     setSelectedCatIds: s.setSelectedCatIds,
     selectedCatIds: s.selectedCatIds,
@@ -35,6 +38,9 @@ const MemoLinkItems = (props: Props) => {
     setRemoveAddOnIds: s.setRemoveAddOnIds,
     setRemoveRecommendationIds: s.setRemoveRecommendationIds,
     removeCategoryIds: s.removeCategoryIds,
+    addOnToggle: s.addOnToggle,
+    setAddOnToggle: s.setAddOnToggle,
+    addOnId: s.addOnId,
   }));
   const [searchTerm, setSearchTerm] = useState("");
   const fuse = new Fuse(categoryData || dishesData, {
@@ -61,9 +67,19 @@ const MemoLinkItems = (props: Props) => {
       setDishStep(DishSteps.DISH_STEP_2);
       setRemoveRecommendationIds(removeIds);
     }
-  };
+    if (addOnId !== "" && addOnToggle === "LINK_DISHES") {
+      setRecommendationIds(tempIds);
+      setAddOnToggle("EDIT_ADDON");
+      return;
+    }
+    if (addOnToggle === "LINK_DISHES" && addOnId === "") {
+      setRecommendationIds(tempIds);
+      setAddOnToggle("ADD_ON");
+      return;
+    }
+  }
 
-  const handleDataChange = (id: string) => {
+  const handleDataChange = useCallback((id: string) => {
     if (tempIds.includes(id)) {
       setTempIds(tempIds.filter((catId) => catId !== id));
       if (!removeIds.includes(id)) {
@@ -73,12 +89,15 @@ const MemoLinkItems = (props: Props) => {
       setTempIds([...tempIds, id]);
       setRemoveIds(removeCategoryIds.filter((catId) => catId !== id));
     }
-  };
+  },[tempIds, removeIds]);
 
   useEffect(() => {
     if (dishStep === "LINK_CATEGORY_STEP") {
       setTempIds(selectedCatIds);
     } else if (dishStep === "LINK_RECOMMENDATION_STEP") {
+      setTempIds(recommendationIds);
+    }
+    if (addOnToggle === "LINK_DISHES") {
       setTempIds(recommendationIds);
     }
   }, [dishStep]);

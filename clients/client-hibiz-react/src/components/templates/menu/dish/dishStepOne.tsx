@@ -62,7 +62,7 @@ const MemoDishForm = () => {
     recommendationIds: s.recommendationIds,
     dishName: s.dishName,
     dishPrice: s.dishPrice,
-    visibility: s.visibility,
+    visibility: s.catVisibility,
     dishTypes: s.dishTypes,
     availability: s.availability,
     portions: s.portions,
@@ -78,7 +78,7 @@ const MemoDishForm = () => {
   useEffect(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
   }, []);
-  const toggleSelection = (type: string) => {
+  const toggleSelection = (type: DishTypeEnumType) => {
     const isSelected = dishTypes.includes(type);
     const newSelectedTypes = isSelected
       ? dishTypes.filter((t) => t !== type)
@@ -201,7 +201,8 @@ const MemoDishForm = () => {
             {foodTypes?.map((type) => {
               const isSelected = dishTypes.includes(type?.name);
               return (
-                <article
+                <button 
+                type="button"
                   onClick={() => toggleSelection(type?.name)}
                   key={type?.name}
                   className={cn(
@@ -211,7 +212,7 @@ const MemoDishForm = () => {
                 >
                   <img src={type?.icon} loading="lazy" alt={type?.name} />
                   <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
-                </article>
+                </button>
               );
             })}
           </section>

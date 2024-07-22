@@ -52,9 +52,11 @@ const MemoListOfDishes = () => {
         (c) => c.visibility === (visibilityFilter === "visible"),
       );
     }
+    console.log(filtered);
+    if(Object.keys(filtered).length === 0) return [];
     return sortOrder === "asc"
-      ? filtered.sort((a, b) => a.name.localeCompare(b.name))
-      : filtered.sort((a, b) => b.name.localeCompare(a.name));
+      ? filtered?.sort((a, b) => a.name.localeCompare(b.name))
+      : filtered?.sort((a, b) => b.name.localeCompare(a.name));
   }, [search, dishes, fuse, visibilityFilter, sortOrder]);
 
   const handleEditDish = useCallback(
@@ -77,7 +79,7 @@ const MemoListOfDishes = () => {
 
   return (
     <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
-      {filteredDishes.map((dish) => (
+      {filteredDishes?.map((dish) => (
         <button
           onClick={() => handleEditDish(dish)}
           type="button"

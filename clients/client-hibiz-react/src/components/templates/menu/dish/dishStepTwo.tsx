@@ -48,7 +48,7 @@ const MemoDishFormTwo = () => {
     recommendationIds: s.recommendationIds,
     dishName: s.dishName,
     dishPrice: s.dishPrice,
-    visibility: s.visibility,
+    visibility: s.catVisibility,
     dishTypes: s.dishTypes,
     availability: s.availability,
     portions: s.portions,

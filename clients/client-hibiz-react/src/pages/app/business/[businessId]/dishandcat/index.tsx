@@ -21,6 +21,8 @@ import Filter from "@/components/templates/menu/category/filter";
 import CreateDish from "@/components/templates/menu/dish/createDish";
 import ListOfDishes from "@/components/templates/menu/dish/dishesList";
 import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
+import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
+import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
 
 const MemoiseDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -55,6 +57,7 @@ const MemoiseDishAndCat = () => {
   };
 
   const openMenuModel = useCallback(() => {
+    resetStore()
     if (selectedPage === "MAIN_CATEGORY") {
       setSelectedCategory("MAIN_CATEGORY");
     } else if (selectedPage === "SUB_CATEGORY") {
@@ -137,7 +140,7 @@ const MemoiseDishAndCat = () => {
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
         {selectedPage === "ADD_ON" && (
-          <div className="m-4 text-3xl">Add On-addon</div>
+          <ListOfAddOn />
         )}
       </section>
 
@@ -167,12 +170,9 @@ const MemoiseDishAndCat = () => {
               <HiX />
             </button>
             {selectedPage === "DISHES" && <CreateDish />}
-
             {(selectedPage === "MAIN_CATEGORY" ||
               selectedPage === "SUB_CATEGORY") && <CreateCategory />}
-            {selectedPage === "ADD_ON" && (
-              <div className="m-4 text-3xl">Add On-addon</div>
-            )}
+            {selectedPage === "ADD_ON" && <AddOnForm />}
           </section>
         </PopUp>
       )}

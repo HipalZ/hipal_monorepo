@@ -26,13 +26,7 @@ const Choices = z.object({
   price: z.coerce.number({
     message: "price is required",
   }),
-  description: z
-    .string({
-      message: "description is required",
-    })
-    .min(6)
-    .max(100)
-    .optional(),
+
   visibility: z.boolean().default(true).optional(),
   availability: z.boolean().default(true).optional(),
   choiceMaxQuantity: z.coerce.number().optional().default(1),
@@ -93,13 +87,6 @@ const UpdateChoices = z.object({
     .number({
       message: "price is required",
     })
-    .optional(),
-  description: z
-    .string({
-      message: "description is required",
-    })
-    .min(6)
-    .max(100)
     .optional(),
   visibility: z.boolean().default(true).optional(),
   availability: z.boolean().default(true).optional(),
