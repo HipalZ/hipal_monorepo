@@ -1,26 +1,25 @@
-import { type ChangeEvent, memo } from "react";
+import { type ChangeEvent, memo, useCallback } from "react";
 import { RiLinkUnlink } from "react-icons/ri";
-import useMenuPageStore from "@/components/store/useMenuStorage";
+import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
 import DishImages from "./dishImages";
 import { useParams } from "react-router-dom";
 import type { DishType } from "@hi/db-models/src/validators";
-import {
-  filterPayload,
-  storeImageAfterSave,
-  updateImage,
-} from "@/components/utils/helper";
+import { filterPayload, updateImage } from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
 import { putDishData } from "@/hooks/useDishStore";
 import toast from "react-hot-toast";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { MdDelete } from "react-icons/md";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
+
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
+
   const {
     setDishStep,
     dishDescription,
@@ -40,12 +39,14 @@ const MemoDishFormTwo = () => {
     imageFiles,
     imagePreviews,
     setCropping,
-    setShowCropper,
+    isLoading,
     editDish,
     resetStore,
     resetDishStore,
     setEditOpenMenu,
     setShowDeleteDish,
+    dishStep,
+    setIsLoading,
   } = useMenuPageStore((s) => ({
     setDishStep: s.setDishStep,
     calories: s.calories,
@@ -64,18 +65,24 @@ const MemoDishFormTwo = () => {
     addonIds: s.addonIds,
     imageFiles: s.imageFiles,
     imagePreviews: s.imagePreviews,
-    setShowCropper: s.setShowCropper,
+    isLoading: s.isLoading,
     setCropping: s.setCropping,
     editDish: s.editDish,
     resetStore: s.resetStore,
     resetDishStore: s.resetDishStore,
     setEditOpenMenu: s.setEditOpenMenu,
     setShowDeleteDish: s.setShowDeleteDish,
+    dishStep: s.dishStep,
+    setIsLoading: s.setIsLoading,
   }));
 
   const errorToasts = useErrorToasts();
 
   const handleAddDish = async () => {
+    if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
+      return toast.error("Please fill all the required fields");
+    }
+    setIsLoading(true);
     let firstImage: string = editDish?.images?.[0] ?? "";
     let secondImage: string = editDish?.images?.[1] ?? "";
     let thirdImage: string = editDish?.images?.[2] ?? "";
@@ -125,11 +132,13 @@ const MemoDishFormTwo = () => {
       resetDishStore();
       toast.success(data?.message);
       setEditOpenMenu(false);
+      setIsLoading(false);
       return;
     }
     if (!data?.success) {
       errorToasts(data?.error);
     }
+    setIsLoading(false);
   };
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -140,43 +149,49 @@ const MemoDishFormTwo = () => {
       reader.readAsDataURL(file);
       reader.onloadend = () => {
         setCropping({ image: reader.result, type });
-        setShowCropper(true);
+        setDishStep(DishSteps.SHOW_CROPPER);
       };
     }
   };
 
-  const handleDescription = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    if (e.target.value.length > 100) return;
-    setDishDescription(e.target.value);
-  };
+  const handleDescription = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      if (e.target.value.length > 100) return;
+      setDishDescription(e.target.value);
+    },
+    [dishDescription],
+  );
 
-  const handleCalories = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length > 6) return;
-    setCalories(value);
-  };
+  const handleCalories = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value.length > 6) return;
+      setCalories(value);
+    },
+    [calories],
+  );
 
-  const redirectRecommendations = () => {
+  const redirectRecommendations = useCallback(() => {
     setDishStep("LINK_RECOMMENDATION_STEP");
-  };
+  }, [dishStep]);
 
-  const redirectTags = () => {
+  const redirectTags = useCallback(() => {
     setDishStep("LINK_ADD_TAGS");
-  };
+  }, [dishStep]);
 
   return (
     <>
       <button
         type="button"
         onClick={() => setShowDeleteDish(true)}
-        className="absolute top-8 right-16"
+        className="absolute top-7 right-16"
       >
         <MdDelete
           size={30}
           className="px-2 py-1 text-red-500 bg-red-100 rounded-lg"
         />
       </button>
-      <article className="mx-6 mb-4 lg:mx-16 lg:mt-6">
+      <article id="uploadImages" className="mx-6 mb-4 lg:mx-16 lg:mt-6">
         <label className="font-semibold opacity-50" htmlFor="name">
           Dish Images
         </label>
@@ -187,7 +202,7 @@ const MemoDishFormTwo = () => {
           />
         </Background>
       </article>
-      <article className="mx-6 lg:mx-16 lg:mt-6">
+      <article id="writeDescription" className="mx-6 lg:mx-16 lg:mt-6">
         <label className="font-semibold opacity-50" htmlFor="type">
           Dish Description
         </label>
@@ -220,7 +235,7 @@ const MemoDishFormTwo = () => {
             <small className="absolute bottom-2 right-4">Kcal</small>
           </div>
         </Background>
-        <section onClick={redirectRecommendations}>
+        <section id="addRecommendations" onClick={redirectRecommendations}>
           <label className="font-semibold opacity-50" htmlFor="name">
             Recommendation ({recommendationIds.length})
           </label>
@@ -249,11 +264,19 @@ const MemoDishFormTwo = () => {
       </article>
       <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
         <button
+          type="button"
           onClick={handleAddDish}
-          type="submit"
           className="w-full py-3 text-white bg-black rounded-full"
+          disabled={isLoading}
         >
-          Save
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <SectionLoader />
+              Loading...
+            </div>
+          ) : (
+            "Save"
+          )}
         </button>
       </footer>
     </>

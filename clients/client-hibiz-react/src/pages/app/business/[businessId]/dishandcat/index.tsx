@@ -24,7 +24,7 @@ import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
 import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
 import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
 
-const MemoiseDishAndCat = () => {
+const MemoizeDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const {
     selectedPage,
@@ -176,7 +176,6 @@ const MemoiseDishAndCat = () => {
           </section>
         </PopUp>
       )}
-
       <button
         onClick={openMenuModel}
         className="fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6"
@@ -188,5 +187,5 @@ const MemoiseDishAndCat = () => {
   );
 };
 
-const DishAndCat = memo(MemoiseDishAndCat);
+const DishAndCat = memo(MemoizeDishAndCat);
 export default DishAndCat;

@@ -1,4 +1,5 @@
 import type {
+  CategoryType,
   DishType,
   DishTypeEnumType,
   PortionType,
@@ -23,7 +24,7 @@ export type CategoryStep =
   | "EDIT_SUB_CATEGORY"
   | "LINK_DISH";
 export type categoryType = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
-export type Addon = "ADD_ON" | "ADD_CHOICE" | "LINK_DISHES" |"EDIT_ADDON";
+export type Addon = "ADD_ON" | "ADD_CHOICE" | "LINK_DISHES" | "EDIT_ADDON";
 export type categorySubtypes =
   | ""
   | "LINK_MAIN_CATEGORY"
@@ -37,7 +38,8 @@ export type DishStep =
   | "LINK_RECOMMENDATION_STEP"
   | "LINK_ADDON_STEP"
   | "LINK_ADD_TAGS"
-  | "CONFIRM_DELETE";
+  | "CONFIRM_DELETE"
+  | "SHOW_CROPPER";
 
 export enum DishSteps {
   DISH_STEP_1 = "DISH_STEP_1",
@@ -48,6 +50,7 @@ export enum DishSteps {
   LINK_ADDON_STEP = "LINK_ADDON_STEP",
   LINK_ADD_TAGS = "LINK_ADD_TAGS",
   CONFIRM_DELETE = "CONFIRM_DELETE",
+  SHOW_CROPPER = "SHOW_CROPPER",
 }
 export type ImageFiles = {
   first: File | null;
@@ -278,6 +281,15 @@ interface MenuPageStore {
   editChoiceId: string;
   setEditChoiceId: (id: string) => void;
   updateChoice: (updatedChoice: Choice) => void;
+
+  linkedDishes: CategoryType[];
+  setLinkedDishes: (dishes: CategoryType[]) => void;
+
+  isMenuManager: boolean;
+  setIsMenuManager: (isMenuManager: boolean) => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -414,7 +426,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   visibility: true,
   setVisibility: (visibility: boolean) => set({ visibility: visibility }),
 
-  dishTypes: [],
+  dishTypes: ["VEG"],
   setDishTypes: (types: DishTypeEnumType[]) => set({ dishTypes: types }),
 
   portions: [],
@@ -624,6 +636,16 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   setEditChoiceId: (id) => set({ editChoiceId: id }),
   resetChoiceFields: () =>
     set({ choiceName: "", choicePrice: 0, dishTypes: [], editChoiceId: "" }),
+
+  linkedDishes: [],
+  setLinkedDishes: (dishes: CategoryType[]) => set({ linkedDishes: dishes }),
+
+  isMenuManager: false,
+  setIsMenuManager: (isMenuManager: boolean) =>
+    set({ isMenuManager: isMenuManager }),
+
+  isLoading: false,
+  setIsLoading: (loading: boolean) => set({ isLoading: loading }),
 }));
 
 export default useMenuPageStore;

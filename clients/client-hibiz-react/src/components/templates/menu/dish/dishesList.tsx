@@ -15,6 +15,7 @@ const MemoListOfDishes = () => {
     setEditDish,
     setDishStep,
     dishStep,
+    editOpenMenu,
     setEditOpenMenu,
     setEditDishFunction,
   } = useMenuPageStore((state) => ({
@@ -24,6 +25,7 @@ const MemoListOfDishes = () => {
     setEditDish: state.setEditDish,
     dishStep: state.dishStep,
     setDishStep: state.setDishStep,
+    editOpenMenu: state.editOpenMenu,
     setEditOpenMenu: state.setEditOpenMenu,
     setEditDishFunction: state.setEditDishFunction,
   }));
@@ -52,11 +54,10 @@ const MemoListOfDishes = () => {
         (c) => c.visibility === (visibilityFilter === "visible"),
       );
     }
-    console.log(filtered);
-    if(Object.keys(filtered).length === 0) return [];
+    if (Object.keys(filtered).length === 0) return [];
     return sortOrder === "asc"
-      ? filtered?.sort((a, b) => a.name.localeCompare(b.name))
-      : filtered?.sort((a, b) => b.name.localeCompare(a.name));
+      ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
+      : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
   }, [search, dishes, fuse, visibilityFilter, sortOrder]);
 
   const handleEditDish = useCallback(
@@ -66,7 +67,7 @@ const MemoListOfDishes = () => {
       setEditOpenMenu(true);
       setEditDishFunction(dish);
     },
-    [dishStep],
+    [dishStep, editOpenMenu],
   );
 
   if (isLoading) {
@@ -79,23 +80,25 @@ const MemoListOfDishes = () => {
 
   return (
     <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
-      {filteredDishes?.map((dish) => (
-        <button
-          onClick={() => handleEditDish(dish)}
-          type="button"
-          key={dish.name}
-          className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
-        >
-          <h3 className="mb-2 text-lg font-semibold">{dish.name}</h3>
-          <div className="mb-2 text-gray-500">
-            {dish.visibility ? (
-              <FaEye className="text-green-500" />
-            ) : (
-              <FaEyeSlash className="text-red-500" />
-            )}
-          </div>
-        </button>
-      ))}
+      {filteredDishes
+        ? filteredDishes?.map((dish) => (
+            <button
+              onClick={() => handleEditDish(dish)}
+              type="button"
+              key={dish.name}
+              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+            >
+              <h3 className="mb-2 text-lg font-semibold">{dish.name}</h3>
+              <div className="mb-2 text-gray-500">
+                {dish.visibility ? (
+                  <FaEye className="text-green-500" />
+                ) : (
+                  <FaEyeSlash className="text-red-500" />
+                )}
+              </div>
+            </button>
+          ))
+        : null}
     </section>
   );
 };

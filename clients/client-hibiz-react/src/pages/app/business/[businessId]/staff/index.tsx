@@ -14,7 +14,11 @@ import Avatar from "@/assets/avtarStaff.png";
 import NewAddStaff from "@/components/molecules/addStaffpopup/addStaff";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
-import { getUserPermissionsForRole, type role, useAddStaffStore } from "@/components/store/useAddStaffStore";
+import {
+  getUserPermissionsForRole,
+  type role,
+  useAddStaffStore,
+} from "@/components/store/useAddStaffStore";
 import EditStaff from "@/components/molecules/addStaffpopup/editStaff";
 import toast from "react-hot-toast";
 
@@ -36,7 +40,7 @@ const StaffPage = () => {
     isEditStaffOpen,
     setIsEditStaffOpen,
     isAddStaffOpen,
-    setIsAddStaffOpen
+    setIsAddStaffOpen,
   } = useAddStaffStore();
 
   const fetchPermissions = async () => {
@@ -47,7 +51,6 @@ const StaffPage = () => {
     });
     const data = await res.json();
     if (res.status === 200 || res.status === 201) {
-    
       setPermissions(data.data);
     } else {
       toast.error("Failed to fetch permissions");
@@ -56,14 +59,20 @@ const StaffPage = () => {
   };
 
   const handleStaffDetails = async (staff: UserProfile) => {
-    const matchingData = staff.customRole.filter((item: CustomRole) => item.businessId === businessData?._id)
-    const role = matchingData[0].role as role
+    const matchingData = staff.customRole.filter(
+      (item: CustomRole) => item.businessId === businessData?._id,
+    );
+    const role = matchingData[0].role as role;
     console.log(matchingData);
     setSelectedRole(role);
     setPermissionsBasedOnRole(staff.role);
     const permissionsData = await fetchPermissions();
-    const userPermissions = permissionsData[role as keyof typeof permissionsData];
-    const userSelectedPermissions = getUserPermissionsForRole(userPermissions, matchingData[0].permissions);
+    const userPermissions =
+      permissionsData[role as keyof typeof permissionsData];
+    const userSelectedPermissions = getUserPermissionsForRole(
+      userPermissions,
+      matchingData[0].permissions,
+    );
     setPermissions(userPermissions);
     setSelectedPermissions(userSelectedPermissions);
     setEditStaffId(staff._id);
@@ -86,7 +95,7 @@ const StaffPage = () => {
   };
 
   const addStaff = () => {
-    setPageToggle("ADD_STAFF")
+    setPageToggle("ADD_STAFF");
     setIsAddStaffOpen(true);
   };
 
@@ -113,7 +122,7 @@ const StaffPage = () => {
     });
   };
 
-  const { isLoading,refetch } = useQuery({
+  const { isLoading, refetch } = useQuery({
     queryKey: ["staff", businessData?._id],
     queryFn: getStaff,
     enabled: !!businessData?._id,
@@ -166,7 +175,7 @@ const StaffPage = () => {
 
       {isAddStaffOpen && (
         <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
-          <NewAddStaff  refetch={refetch} />
+          <NewAddStaff refetch={refetch} />
         </PopUp>
       )}
 

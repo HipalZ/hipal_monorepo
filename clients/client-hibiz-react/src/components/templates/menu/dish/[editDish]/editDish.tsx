@@ -27,6 +27,7 @@ const MemoEditDish = () => {
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
+
   const {
     setEditOpenMenu,
     setDishStep,
@@ -41,7 +42,6 @@ const MemoEditDish = () => {
     resetStore,
     editDish,
     resetDishStore,
-    showDeleteDish,
   } = useMenuPageStore((s) => ({
     setEditOpenMenu: s.setEditOpenMenu,
     setDishStep: s.setDishStep,
@@ -57,9 +57,10 @@ const MemoEditDish = () => {
     resetStore: s.resetStore,
     editDish: s.editDish,
     resetDishStore: s.resetDishStore,
-    showDeleteDish: s.showDeleteDish,
   }));
+
   const errorToasts = useErrorToasts();
+
   const { data: categories } = useChildCategories(dishStep);
   const { data: dishes } = useDishStore(dishStep);
   const { data: addons } = useAddons(dishStep);
@@ -126,6 +127,17 @@ const MemoEditDish = () => {
     }
   };
 
+  const handleSaveCropper = () => {
+    handleCrop(
+      cropping,
+      cropperRef,
+      imageFiles,
+      setImageFiles,
+      setImagePreviews,
+      setDishStep,
+    );
+  };
+
   return (
     <>
       <div
@@ -156,29 +168,25 @@ const MemoEditDish = () => {
           <DeleteDish handleDelete={handleDelete} />
         )}
       </div>
-      <MiddlePopUp
-        show={showCropper}
-        onSave={() =>
-          handleCrop(
-            cropping,
-            cropperRef,
-            imageFiles,
-            setImageFiles,
-            setImagePreviews,
-            setShowCropper,
-          )
-        }
-        onClose={() => {
-          setShowCropper(false);
-        }}
-      >
-        <ReactCropper
-          image={cropping.image}
-          ref={cropperRef}
-          width={400}
-          height={400}
-        />
-      </MiddlePopUp>
+      {dishStep === "SHOW_CROPPER" && (
+        <section>
+          <ReactCropper
+            image={cropping.image}
+            ref={cropperRef}
+            width={400}
+            height={400}
+          />
+          <center
+            role="button"
+            tabIndex={0}
+            onClick={handleSaveCropper}
+            onKeyUp={handleSaveCropper}
+            className="px-4 py-2 mx-4 mt-4 text-white bg-black rounded-full"
+          >
+            Save
+          </center>
+        </section>
+      )}
     </>
   );
 };

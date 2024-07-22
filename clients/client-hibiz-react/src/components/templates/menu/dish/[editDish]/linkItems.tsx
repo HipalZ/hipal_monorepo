@@ -1,19 +1,14 @@
-import type { ICategory } from "@/components/types/businessData";
 import Fuse from "fuse.js";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import type { DishType } from "@hi/db-models/src/validators";
+import { useChildCategories, useDishStore } from "@/hooks/useDishStore";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
-interface Props {
-  categoryData?: ICategory[];
-  dishesData?: DishType[];
-}
-const MemoLinkItems = (props: Props) => {
-  const { categoryData, dishesData } = props;
-  console.log("dis", dishesData);
+const MemoLinkItems = () => {
   const [tempIds, setTempIds] = useState<string[]>([]);
   const [removeIds, setRemoveIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const {
     setSelectedCatIds,
     dishStep,
@@ -42,8 +37,13 @@ const MemoLinkItems = (props: Props) => {
     setAddOnToggle: s.setAddOnToggle,
     addOnId: s.addOnId,
   }));
-  const [searchTerm, setSearchTerm] = useState("");
-  const fuse = new Fuse(categoryData || dishesData, {
+
+  const { dishes } = useDishesStore((s) => ({
+    dishes: s.dishes,
+  }));
+
+  const { data: categoryData } = useChildCategories(dishStep);
+  const fuse = new Fuse(categoryData || dishes, {
     keys: ["name"],
     threshold: 0.3,
   });
@@ -51,12 +51,16 @@ const MemoLinkItems = (props: Props) => {
   // Original filteredData computation with added sorting to bring selected items to the top
   let filteredData = searchTerm
     ? fuse.search(searchTerm).map((result) => result.item)
-    : categoryData || dishesData;
-  filteredData = [...filteredData].sort((a, b) => {
-    const aIsSelected = tempIds.includes(a._id?.toString() ?? "");
-    const bIsSelected = tempIds.includes(b._id?.toString() ?? "");
-    return aIsSelected === bIsSelected ? 0 : aIsSelected ? -1 : 1;
-  });
+    : categoryData || dishes;
+  // Check if filteredData is not empty before sorting
+  if (filteredData && filteredData.length > 0) {
+    filteredData = [...filteredData].sort((a, b) => {
+      const aIsSelected = tempIds.includes(a._id?.toString() ?? "");
+      const bIsSelected = tempIds.includes(b._id?.toString() ?? "");
+      return aIsSelected === bIsSelected ? 0 : aIsSelected ? -1 : 1;
+    });
+  }
+
   const handleSave = () => {
     if (dishStep === "LINK_CATEGORY_STEP") {
       setSelectedCatIds(tempIds);
@@ -138,7 +142,11 @@ const MemoLinkItems = (props: Props) => {
           </div>
         ))}
       </div>
-      <button type="button" onClick={handleSave} className="bottom_btn">
+      <button
+        type="button"
+        onClick={handleSave}
+        className="bottom_btn lg:bottom-36"
+      >
         Save
       </button>
     </>

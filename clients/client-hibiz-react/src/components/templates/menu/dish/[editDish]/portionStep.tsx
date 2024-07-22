@@ -1,10 +1,4 @@
-import {
-  type ChangeEvent,
-  type DragEvent,
-  memo,
-  useEffect,
-  useState,
-} from "react";
+import { type ChangeEvent, type DragEvent, memo, useState } from "react";
 import { Listbox } from "@headlessui/react";
 import { foodTypes } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
@@ -104,15 +98,6 @@ const MemoPortionStep = () => {
       setSections(newSections);
     }
   };
-
-  // useEffect(() => {
-  //   if (portions.length > 0) {
-  //     setSections([...portions]);
-  //   }
-  // }, [portions]);
-
-  console.log("sections", sections.at(0)?.name);
-  console.log("portions", portions.at(0)?.name);
 
   return (
     <section className="mx-6 rounded-2xl lg:mx-16 lg:mt-6">
