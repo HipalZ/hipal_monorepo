@@ -1,12 +1,14 @@
+export * from "./addOns";
 export * from "./appConfig";
 export * from "./banner";
 export * from "./business";
 export * from "./businessSetting";
 export * from "./category";
 export * from "./dish";
-export * from "./addOns";
 export * from "./kitchen";
 
+export * from "./businessSubscriber";
+export * from "./group";
 export * from "./loyaltyCoinsInfo";
 export * from "./loyaltySetting";
 export * from "./order";
@@ -15,6 +17,8 @@ export * from "./payment";
 export * from "./paymentAlert";
 export * from "./reviews";
 export * from "./role";
+export * from "./tags";
+export * from "./tagType";
 export * from "./theme";
 export * from "./uniquelyYours";
 export * from "./user";

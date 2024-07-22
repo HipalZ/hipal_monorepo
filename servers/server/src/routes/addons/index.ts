@@ -69,6 +69,8 @@ const addonRouter = new Hono()
             name: requestData.name,
             choices: requestData.choices,
             choiceType: requestData.choiceType,
+            compulsory: requestData.compulsory,
+            addOnMaxQuantity: requestData.addOnMaxQuantity,
           },
           {
             session,

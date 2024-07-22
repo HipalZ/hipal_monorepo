@@ -25,6 +25,11 @@ export * from "./rewardsValidator";
 export * from "./role";
 export * from "./staffValidator";
 
+export * from "./analytic";
+export * from "./businessSubscriber";
+export * from "./group";
+export * from "./tags";
+export * from "./tagType";
 export * from "./token";
 export * from "./uniquelyYours";
 export * from "./user";
@@ -34,5 +39,3 @@ export * from "./userRoles";
 export * from "./validate_signature";
 export * from "./validate_webhook";
 export * from "./waiterPaymentAlert";
-
-export * from "./analytic";

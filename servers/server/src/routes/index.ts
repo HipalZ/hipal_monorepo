@@ -3,8 +3,10 @@ import addonRouter from "./addons";
 import businessRouter from "./businesses";
 import categoryRouter from "./categories";
 import dishesRouter from "./dishes";
+import groupRouter from "./group";
 import paymentsRouter from "./payments";
 import settingsRouter from "./settings";
+import subsCriberRouter from "./subscriber";
 import usersRouter from "./users";
 
 const app = new Hono();
@@ -18,6 +20,8 @@ export const routes = app
   .route("/users", usersRouter)
   .route("/payments", paymentsRouter)
   .route("/settings", settingsRouter)
-  .route("/addons", addonRouter);
+  .route("/addons", addonRouter)
+  .route("/subscribers", subsCriberRouter)
+  .route("/groups", groupRouter);
 
 export type AppType = typeof routes;

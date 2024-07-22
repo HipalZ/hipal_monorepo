@@ -52,7 +52,7 @@ async function verifyPassword(
   }
 }
 
-const addSignUpBonus = async (
+export const addSignUpBonus = async (
   loyaltyId: string,
   userId: string,
   bonus: number,
