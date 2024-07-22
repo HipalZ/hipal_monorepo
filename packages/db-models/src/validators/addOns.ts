@@ -103,7 +103,7 @@ const UpdateChoices = z.object({
     .optional(),
   visibility: z.boolean().default(true).optional(),
   availability: z.boolean().default(true).optional(),
-  maxQuantity: z.coerce.number().optional().default(1),
+  choiceMaxQuantity: z.coerce.number().optional().default(1),
   choiceDishType: z.array(z.enum(DishTypeEnum)).optional(),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
   uuid: z.string().optional(),
@@ -129,7 +129,7 @@ export const updateAddOnSchema = z.object({
     })
     .default(0)
     .optional(),
-  maxQuantity: z.coerce
+  addOnMaxQuantity: z.coerce
     .number({
       message: "maxQuantity is required",
     })
