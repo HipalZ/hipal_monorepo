@@ -37,6 +37,7 @@ const Choices = z.object({
   availability: z.boolean().default(true).optional(),
   choiceMaxQuantity: z.coerce.number().optional().default(1),
   choiceDishType: z.array(z.enum(DishTypeEnum)),
+  uuid: z.string().optional(),
 });
 
 export const AddOnsAttrs = z.object({
@@ -105,6 +106,7 @@ const UpdateChoices = z.object({
   maxQuantity: z.coerce.number().optional().default(1),
   choiceDishType: z.array(z.enum(DishTypeEnum)).optional(),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
+  uuid: z.string().optional(),
 });
 
 export const updateAddOnSchema = z.object({

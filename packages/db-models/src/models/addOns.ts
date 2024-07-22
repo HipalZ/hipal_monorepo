@@ -11,6 +11,7 @@ const choicesSchema = new mongoose.Schema<ChoiceType>({
   availability: { type: Boolean, required: true, default: true },
   choiceMaxQuantity: { type: Number, required: true, default: 1 },
   choiceDishType: { type: [String], enum: DishTypeEnum, required: false },
+  uuid: { type: String, required: true },
 });
 
 const extraSchema = new mongoose.Schema<AddOnType>(
