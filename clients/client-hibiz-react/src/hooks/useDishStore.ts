@@ -2,10 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { apiRpc } from "@hi/common";
 import type { ICategory } from "@/components/types/businessData";
-import type { AddOnType, DishType } from "@hi/db-models/src/validators";
+import type {
+  AddOnType,
+  CategoryType,
+  DishType,
+} from "@hi/db-models/src/validators";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
-import { QueryClient } from "@tanstack/react-query";
 
 export const useChildCategories = (dishStep: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
@@ -45,6 +48,7 @@ export const useDishStore = (dishStep: string) => {
 
   const getAllDishes = async (businessId: string): Promise<DishType[]> => {
     if (dishes.length > 0) {
+      setDishes(dishes);
       return dishes;
     }
     const dishResponse = await apiRpc.dishes.$get({
@@ -69,6 +73,34 @@ export const useDishStore = (dishStep: string) => {
   return { data, isLoading, isError };
 };
 
+export const useLinkedDishes = () => {
+  const { businessId } = useParams<{ businessId?: string }>();
+  const { setLinkedDishes, linkedDishes } = useMenuPageStore((s) => ({
+    linkedDishes: s.linkedDishes,
+    setLinkedDishes: s.setLinkedDishes,
+  }));
+
+  const getAllLinkedDishes = async (
+    businessId: string,
+  ): Promise<CategoryType[]> => {
+    const categoryResponse = await apiRpc.categories.menu.$get({
+      query: {
+        businessId: businessId,
+      },
+    });
+    const data = await categoryResponse.json();
+    setLinkedDishes(data?.data as CategoryType[]);
+    return data?.data as CategoryType[];
+  };
+
+  const { data, isLoading, isError } = useQuery<CategoryType[]>({
+    queryKey: ["linkedDishes", businessId],
+    queryFn: () => getAllLinkedDishes(businessId ?? ""),
+    enabled: !!businessId && linkedDishes.length === 0,
+  });
+  return { data, isLoading, isError };
+};
+
 export const useAddons = (dishStep: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
   const { setAddons } = useMenuPageStore((s) => ({
@@ -82,7 +114,6 @@ export const useAddons = (dishStep: string) => {
       },
     });
     const data = await addonResponse.json();
-    console.log("dtaa", data?.data);
     setAddons(data?.data as AddOnType[]);
     return data?.data as AddOnType[];
   };

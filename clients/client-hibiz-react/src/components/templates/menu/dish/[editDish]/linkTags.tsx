@@ -1,19 +1,20 @@
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import newTag from "@/assets/dishTypes/new.png";
 import bestseller from "@/assets/dishTypes/bestseller.png";
 import spicy from "@/assets/dishTypes/spicy.png";
 import popular from "@/assets/dishTypes/popular.png";
 import occasional from "@/assets/dishTypes/occasional.png";
-import { TagsEnum } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
+import { RxCross2 } from "react-icons/rx";
+import { TagsEnum } from "@/components/utils/helper";
 
 const tagImageMap = {
-  NEW: newTag,
-  BEST_SELLER: bestseller,
-  SPICY: spicy,
-  OCCASIONAL: occasional,
-  POPULAR: popular,
+  New: newTag,
+  Best_seller: bestseller,
+  Spicy: spicy,
+  Occasional: occasional,
+  Popular: popular,
 };
 
 const MemoLinkTags = () => {
@@ -100,7 +101,7 @@ const MemoLinkTags = () => {
         </article>
       </section>
       {isAdding && (
-        <div className="flex">
+        <div className="flex space-x-1 lg:space-x-4">
           <input
             type="text"
             value={newTag}
@@ -122,11 +123,11 @@ const MemoLinkTags = () => {
           <div key={tag} className="flex my-4">
             <span className="px-4 py-2 border rounded-full">{tag}</span>
             <button
-              className="w-4 h-4 px-[0.5] -ml-2 text-xs bg-gray-300 rounded-full"
+              className="w-4 h-4 px-0.5 -ml-2 text-xs text-white bg-black rounded-full"
               type="button"
               onClick={() => removeCustomTag(tag)}
             >
-              X
+              <RxCross2 />
             </button>
           </div>
         ))}

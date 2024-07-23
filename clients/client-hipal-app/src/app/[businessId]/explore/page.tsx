@@ -1,8 +1,11 @@
 import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import BannerCards from "@/components/organisms/explore/bannerCards";
+import BannerLayouts from "@/components/organisms/explore/bannerNewCards";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
-import type { IBusinessData } from "@/components/types/businessData";
+import type {
+  IBannerPayload,
+  IBusinessData,
+} from "@/components/types/businessData";
 import { defaultThemes } from "@/components/utils/helpers";
 import dynamic from "next/dynamic";
 
@@ -52,13 +55,36 @@ export default async function Page({
       <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
         <HeroSection data={data} />
         <Rewards />
-        <BannerCards banners={data?.banners} />
+        {data?.banners?.map((banner: IBannerPayload, index: number) => {
+          return (
+            <BannerLayouts
+              key={`banner?._id+${index.toString()}`}
+              selectedLayout={banner?.layout || ""}
+              heading={banner?.heading || ""}
+              paragraph={banner?.paragraph || ""}
+              callToAction={banner?.callToAction || ""}
+              img={{ logo: banner?.bannerImage || "" }}
+              selectedColor={{
+                bgColor: banner?.backgroundColor || "",
+                textColor: banner?.backgroundColor || "",
+              }}
+              paragraphStyle={{ color: banner?.paragraphColor || "" }}
+              buttonStyle={{
+                color: banner?.buttonColor || "",
+              }}
+            />
+          );
+        })}
         <SubLoyalty loyalty={data?.loyalty} />
         <div className="overflow-auto">
-          <UniquelyDishes uniquelyDishes={data?.uniquelyDishes}/>
+          <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
         </div>
-        <Footer themes={data?.settings || defaultThemes} socialMediaLinks={data?.business?.socialMediaLinks} footerDescription={data?.business?.footerDescription}/>
-        <PageName endBannerUrl={data?.business?.endBannerUrl}/>
+        <Footer
+          themes={data?.settings || defaultThemes}
+          socialMediaLinks={data?.business?.socialMediaLinks}
+          footerDescription={data?.business?.footerDescription}
+        />
+        <PageName endBannerUrl={data?.business?.endBannerUrl} />
       </div>
       <BottomButton />
     </div>

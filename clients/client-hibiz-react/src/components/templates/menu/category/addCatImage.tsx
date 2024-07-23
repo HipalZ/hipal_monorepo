@@ -1,7 +1,8 @@
 import Background from "@/components/atom/feildBackground";
+import useBusinessData from "@/components/store/useBusinessData";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
-import { useMutation } from "@tanstack/react-query";
+import { useSaveCategory } from "@/hooks/useCategory";
 import { memo, type ChangeEvent } from 'react';
 import { BiImageAdd } from "react-icons/bi";
 
@@ -11,7 +12,25 @@ const MIME_TYPE = "image/jpeg";
 const QUALITY = 0.9;
 
 const MemoAddCatImage = () => {
-    const { imagePreview, setImagePreview, selectedFile, setSelectedFile } = useMenuPageStore();
+    const { imagePreview, setImagePreview, selectedFile, setSelectedFile, selectedCategory, categoryName, selectIds } = useMenuPageStore(s => ({
+        selectedCategory: s.selectedCategory,
+        setSelectedCategory: s.setSelectedCategory,
+        categoryName: s.categoryName,
+        setCategoryName: s.setCategoryName,
+        setCategoryStep: s.setCategoryStep,
+        resetStore: s.resetStore,
+        selectIds: s.selectedIds,
+        categoryStep: s.categoryStep,
+        imagePreview: s.imagePreview,
+        setImagePreview: s.setImagePreview,
+        selectedFile: s.selectedFile,
+        setSelectedFile: s.setSelectedFile,
+    }));
+
+    const { mutate: createCategory, isPending } = useSaveCategory();
+
+
+    const businessData = useBusinessData((s) => s.businessData);
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -79,10 +98,6 @@ const MemoAddCatImage = () => {
         return [width, height];
     };
 
-    // const {} = useMutation({
-        
-    // })
-
     const handleRemoveImage = () => {
         setImagePreview(null);
         setSelectedFile(null);
@@ -96,12 +111,23 @@ const MemoAddCatImage = () => {
         if (selectedFile) {
             const imageUrl = await storeImageAfterSave(selectedFile, imagePreview);
             if (imageUrl) {
-                console.log("Image URL:", imageUrl);
+                const commonPayload = {
+                    name: categoryName,
+                    businessId: Object(businessData?._id) || "",
+                    coverImage:imageUrl
+                };
+
+                const payload = selectedCategory === "MAIN_CATEGORY"
+                    ? { ...commonPayload, hierarchy: "PARENT", subCategoryIds: selectIds }
+                    : { ...commonPayload, hierarchy: "CHILD", parentCategoryIds: selectIds || [] };
+
+                    createCategory(payload);
             } else {
                 console.error("Failed to upload image");
             }
-        }
+        
     };
+}
 
     return (
         <section className='mx-6'>
@@ -110,10 +136,10 @@ const MemoAddCatImage = () => {
                 <div className="flex justify-between gap-4 mx-4">
                     <div className="rounded-full w-[7rem] h-[7rem]">
                         {imagePreview ? (
-                            <img src={imagePreview} alt="Preview" className="w-full h-auto rounded-full" />
+                            <img src={imagePreview} alt="Preview" className="w-[7rem] h-[7rem] rounded-full object-contain" />
                         ) : (
                             <div className="flex items-center justify-center w-full h-full rounded-full" style={{ background: 'linear-gradient(45deg, #D9CCFF, #FCD6CF)' }}>
-                                <BiImageAdd className="text-gray-600 opacity-50" size={36}/>
+                                <BiImageAdd className="text-gray-600 opacity-50" size={36} />
                             </div>
                         )}
                     </div>

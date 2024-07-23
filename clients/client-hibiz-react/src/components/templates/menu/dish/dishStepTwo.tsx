@@ -1,6 +1,6 @@
-import { type ChangeEvent, memo } from "react";
+import { type ChangeEvent, memo, useCallback } from "react";
 import { RiLinkUnlink } from "react-icons/ri";
-import useMenuPageStore from "@/components/store/useMenuStorage";
+import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
 import { useParams } from "react-router-dom";
 import type { DishType } from "@hi/db-models/src/validators";
@@ -10,14 +10,18 @@ import { postDishData } from "@/hooks/useDishStore";
 import toast from "react-hot-toast";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import DishImages from "./[editDish]/dishImages";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
+
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
+
   const {
     setDishStep,
+    dishStep,
     dishDescription,
     calories,
     setDishDescription,
@@ -35,10 +39,12 @@ const MemoDishFormTwo = () => {
     imageFiles,
     imagePreviews,
     setCropping,
-    setShowCropper,
     resetStore,
     resetDishStore,
+    isLoading,
+    setIsLoading,
   } = useMenuPageStore((s) => ({
+    dishStep: s.dishStep,
     setDishStep: s.setDishStep,
     calories: s.calories,
     dishDescription: s.dishDescription,
@@ -48,7 +54,7 @@ const MemoDishFormTwo = () => {
     recommendationIds: s.recommendationIds,
     dishName: s.dishName,
     dishPrice: s.dishPrice,
-    visibility: s.visibility,
+    visibility: s.catVisibility,
     dishTypes: s.dishTypes,
     availability: s.availability,
     portions: s.portions,
@@ -56,10 +62,11 @@ const MemoDishFormTwo = () => {
     addonIds: s.addonIds,
     imageFiles: s.imageFiles,
     imagePreviews: s.imagePreviews,
-    setShowCropper: s.setShowCropper,
     setCropping: s.setCropping,
     resetStore: s.resetStore,
     resetDishStore: s.resetDishStore,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
   }));
 
   const errorToasts = useErrorToasts();
@@ -68,6 +75,7 @@ const MemoDishFormTwo = () => {
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
       return toast.error("Please fill all the required fields");
     }
+    setIsLoading(true);
     let firstImage: string | undefined;
     let secondImage: string | undefined;
     let thirdImage: string | undefined;
@@ -117,11 +125,13 @@ const MemoDishFormTwo = () => {
       resetStore();
       resetDishesStore();
       resetDishStore();
+      setIsLoading(false);
       return toast.success(data?.message);
     }
     if (!data?.success) {
       errorToasts(data?.error);
     }
+    setIsLoading(false);
   };
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -132,29 +142,35 @@ const MemoDishFormTwo = () => {
       reader.readAsDataURL(file);
       reader.onloadend = () => {
         setCropping({ image: reader.result, type });
-        setShowCropper(true);
+        setDishStep(DishSteps.SHOW_CROPPER);
       };
     }
   };
 
-  const handleDescription = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    if (e.target.value.length > 100) return;
-    setDishDescription(e.target.value);
-  };
+  const handleDescription = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      if (e.target.value.length > 100) return;
+      setDishDescription(e.target.value);
+    },
+    [dishDescription],
+  );
 
-  const handleCalories = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length > 6) return;
-    setCalories(value);
-  };
+  const handleCalories = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value.length > 6) return;
+      setCalories(value);
+    },
+    [calories],
+  );
 
-  const redirectRecommendations = () => {
+  const redirectRecommendations = useCallback(() => {
     setDishStep("LINK_RECOMMENDATION_STEP");
-  };
+  }, [dishStep]);
 
-  const redirectTags = () => {
+  const redirectTags = useCallback(() => {
     setDishStep("LINK_ADD_TAGS");
-  };
+  }, [dishStep]);
 
   return (
     <>
@@ -231,11 +247,19 @@ const MemoDishFormTwo = () => {
       </article>
       <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
         <button
+          type="button"
           onClick={handleAddDish}
-          type="submit"
           className="w-full py-3 text-white bg-black rounded-full"
+          disabled={isLoading}
         >
-          Save
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <SectionLoader />
+              Loading...
+            </div>
+          ) : (
+            "Save"
+          )}
         </button>
       </footer>
     </>

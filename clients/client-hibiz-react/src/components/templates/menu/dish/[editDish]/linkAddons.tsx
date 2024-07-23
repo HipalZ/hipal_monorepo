@@ -127,7 +127,11 @@ const MemoLinkAddons = (props: Props) => {
           </div>
         ))}
       </div>
-      <button type="button" onClick={handleSave} className="bottom_btn">
+      <button
+        type="button"
+        onClick={handleSave}
+        className="bottom_btn lg:bottom-36"
+      >
         Save
       </button>
     </>

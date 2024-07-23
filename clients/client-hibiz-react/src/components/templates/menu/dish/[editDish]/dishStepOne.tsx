@@ -13,29 +13,31 @@ import {
   cn,
   filterPayload,
   foodTypes,
-  storeImageAfterSave,
   updateImage,
 } from "@/components/utils/helper";
 import type { DishType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
 import { putDishData } from "@/hooks/useDishStore";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Switch } from "@headlessui/react";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { MdDelete } from "react-icons/md";
+import PendingActions from "./pendingActions";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
+
   const {
     setDishName,
     setDishTypes,
     setDishPrice,
     setDishStep,
+    dishStep,
     dishDescription,
     calories,
     tags,
@@ -60,6 +62,10 @@ const MemoDishForm = () => {
     resetDishStore,
     imageFiles,
     imagePreviews,
+    isMenuManager,
+    isLoading,
+    setIsMenuManager,
+    setIsLoading,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     setDishName: s.setDishName,
@@ -68,6 +74,7 @@ const MemoDishForm = () => {
     setDishTypes: s.setDishTypes,
     setDishPrice: s.setDishPrice,
     setDishStep: s.setDishStep,
+    dishStep: s.dishStep,
     calories: s.calories,
     dishDescription: s.dishDescription,
     tags: s.tags,
@@ -92,14 +99,26 @@ const MemoDishForm = () => {
     setShowDeleteDish: s.setShowDeleteDish,
     imageFiles: s.imageFiles,
     imagePreviews: s.imagePreviews,
+    isMenuManager: s.isMenuManager,
+    setIsMenuManager: s.setIsMenuManager,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
   }));
-
+  const pathname = useLocation()?.pathname;
+  const isManagerExists = pathname.includes("manager");
   const [displayedPrice, setDisplayedPrice] = useState("");
+  const errorToasts = useErrorToasts();
+
   useEffect(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
+    setIsMenuManager(isManagerExists);
   }, []);
+
   const toggleSelection = (type: string) => {
     const isSelected = dishTypes.includes(type);
+    if (isSelected && dishTypes.length === 1) {
+      return;
+    }
     const newSelectedTypes = isSelected
       ? dishTypes.filter((t) => t !== type)
       : [...dishTypes, type];
@@ -107,20 +126,23 @@ const MemoDishForm = () => {
     setDishTypes(newSelectedTypes);
   };
 
-  const handleDishPrice = (e: ChangeEvent<HTMLInputElement>) => {
-    const numericValue = e.target.value.replace(/[^0-9.]/g, "");
-    const newPrice = numericValue ? Number(numericValue) : null;
-    setDishPrice(newPrice ?? 0);
-    setDisplayedPrice(newPrice?.toLocaleString("en-IN") ?? "");
-  };
+  const handleDishPrice = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const numericValue = e.target.value.replace(/[^0-9.]/g, "");
+      const newPrice = numericValue ? Number(numericValue) : null;
+      setDishPrice(newPrice ?? 0);
+      setDisplayedPrice(newPrice?.toLocaleString("en-IN") ?? "");
+    },
+    [dishPrice, displayedPrice],
+  );
 
-  const handleFocus = () => {
+  const handleFocus = useCallback(() => {
     setDisplayedPrice(dishPrice?.toString() || "");
-  };
+  }, [dishPrice, displayedPrice]);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
-  };
+  }, [dishPrice, displayedPrice]);
 
   const redirectToSection = useCallback((step) => {
     setDishStep(step);
@@ -128,14 +150,14 @@ const MemoDishForm = () => {
 
   const goToNextStep = useCallback(() => {
     setDishStep(DishSteps.DISH_STEP_2);
-  }, []);
-  const errorToasts = useErrorToasts();
+  }, [dishStep]);
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
       return toast.error("Please fill all the required fields");
     }
+    setIsLoading(true);
     let firstImage: string = editDish?.images?.[0] ?? "";
     let secondImage: string = editDish?.images?.[1] ?? "";
     let thirdImage: string = editDish?.images?.[2] ?? "";
@@ -180,8 +202,6 @@ const MemoDishForm = () => {
       images: images,
     };
     const filteredPayload = filterPayload(payload);
-    console.log("payload", filteredPayload);
-    console.log("pay", payload);
     const { data, dishResponse } = await putDishData(filteredPayload);
     if (dishResponse?.status === 200) {
       resetStore();
@@ -189,78 +209,85 @@ const MemoDishForm = () => {
       resetDishStore();
       toast.success(data?.message);
       setEditOpenMenu(false);
+      setIsLoading(false);
       return;
     }
     if (!data?.success) {
       errorToasts(data?.error);
     }
+    setIsLoading(false);
   };
 
-  const handleVisibility = () => {
+  const handleVisibility = useCallback(() => {
     setVisibility(!visibility);
-  };
+  }, [visibility]);
 
-  const handleDishPage = () => {
+  const handleDishPage = useCallback(() => {
     setShowDeleteDish(true);
     setDishStep(DishSteps.CONFIRM_DELETE);
-  };
+  }, [dishStep]);
 
   return (
     <form onSubmit={handleSubmitDish}>
       <button
         type="button"
         onClick={handleDishPage}
-        className="absolute top-8 right-16"
+        className="absolute top-7 right-16"
       >
         <MdDelete
           size={30}
           className="px-2 py-1 text-red-500 bg-red-100 rounded-lg"
         />
       </button>
-      <article className="mx-6 lg:mx-16 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="name">
-          Dish Name*
-        </label>
-        <Background>
-          <input
-            type="text"
-            id="name"
-            placeholder="Enter Dish Name"
-            value={dishName}
-            maxLength={30}
-            minLength={3}
-            required
-            onChange={(e) => setDishName(e.target.value)}
-            className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-          />
-        </Background>
-      </article>
-      <article className="mx-6 lg:mx-16 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="type">
-          Dish Type*
-        </label>
-        <Background>
-          <p className="text-sm text-gray-500">Choose Minimum 1 type</p>
-          <section className="flex flex-wrap gap-2 mt-2">
-            {foodTypes?.map((type) => {
-              const isSelected = dishTypes.includes(type?.name);
-              return (
-                <article
-                  onClick={() => toggleSelection(type?.name)}
-                  key={type?.name}
-                  className={cn(
-                    "capitalize flex justify-between items-center px-4 py-2 rounded-full gap-1 border border-[#CACACA]",
-                    `${isSelected ? "bg-blue-200" : ""}`,
-                  )}
-                >
-                  <img src={type?.icon} loading="lazy" alt={type?.name} />
-                  <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
-                </article>
-              );
-            })}
-          </section>
-        </Background>
-      </article>
+      {isMenuManager ? <PendingActions /> : null}
+      {isMenuManager ? null : (
+        <article className="mx-6 lg:mx-16 lg:mt-6">
+          <label className="font-semibold opacity-50" htmlFor="name">
+            Dish Name*
+          </label>
+          <Background>
+            <input
+              type="text"
+              id="name"
+              placeholder="Enter Dish Name"
+              value={dishName}
+              maxLength={30}
+              minLength={3}
+              required
+              onChange={(e) => setDishName(e.target.value)}
+              className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+            />
+          </Background>
+        </article>
+      )}
+      {isMenuManager ? null : (
+        <article className="mx-6 lg:mx-16 lg:mt-6">
+          <label className="font-semibold opacity-50" htmlFor="type">
+            Dish Type*
+          </label>
+          <Background>
+            <p className="text-sm text-gray-500">Choose Minimum 1 type</p>
+            <section className="flex flex-wrap gap-2 mt-2">
+              {foodTypes?.map((type) => {
+                const isSelected = dishTypes.includes(type?.name);
+                return (
+                  <article
+                    onClick={() => toggleSelection(type?.name)}
+                    key={type?.name}
+                    className={cn(
+                      "capitalize flex justify-between items-center px-4 py-2 rounded-full gap-1 border border-[#CACACA]",
+                      `${isSelected ? "bg-blue-200" : ""}`,
+                    )}
+                  >
+                    <img src={type?.icon} loading="lazy" alt={type?.name} />
+                    <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
+                  </article>
+                );
+              })}
+            </section>
+          </Background>
+        </article>
+      )}
       <article className="flex justify-between px-4 py-3 mx-6 my-4 bg-white rounded-full lg:mx-16 lg:mt-6">
         <h1 className="font-semibold opacity-50">Hide Dish</h1>
         <Switch
@@ -282,37 +309,43 @@ const MemoDishForm = () => {
         </Switch>
       </article>
       <article className="mx-6 lg:mx-16 lg:mt-6">
-        <label className="font-semibold opacity-50" htmlFor="price">
-          Prices & Portions*
-        </label>
-        <div className="bg-white rounded-2xl">
-          <div className="relative p-3 mt-2">
-            <small className="absolute ml-2 text-lg bottom-5 left-4">₹</small>
-            <input
-              minLength={1}
-              maxLength={6}
-              onChange={handleDishPrice}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              value={displayedPrice}
-              placeholder="Enter Price"
-              type="text"
-              required
-              className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-            />
-          </div>
-          <section>
-            <Background>
-              <button
-                onClick={() => redirectToSection(DishSteps.PORTION_STEP)}
-                type="button"
-                className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-              >
-                + Add more portions
-              </button>
-            </Background>
-          </section>
-        </div>
+        {isManagerExists ? null : (
+          <article>
+            <label className="font-semibold opacity-50" htmlFor="price">
+              Prices & Portions*
+            </label>
+            <div className="bg-white rounded-2xl">
+              <div className="relative p-3 mt-2">
+                <small className="absolute ml-2 text-lg bottom-5 left-4">
+                  ₹
+                </small>
+                <input
+                  minLength={1}
+                  maxLength={6}
+                  onChange={handleDishPrice}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  value={displayedPrice}
+                  placeholder="Enter Price"
+                  type="text"
+                  required
+                  className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+                />
+              </div>
+              <section>
+                <Background>
+                  <button
+                    onClick={() => redirectToSection(DishSteps.PORTION_STEP)}
+                    type="button"
+                    className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
+                  >
+                    + Add more portions
+                  </button>
+                </Background>
+              </section>
+            </div>
+          </article>
+        )}
         {portions.length > 0 ? (
           <div className="relative mb-4 overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -341,6 +374,7 @@ const MemoDishForm = () => {
           </div>
         ) : null}
         <section
+          id="linkCategories"
           onClick={() => redirectToSection(DishSteps.LINK_CATEGORY_STEP)}
         >
           <label className="font-semibold opacity-50" htmlFor="name">
@@ -373,8 +407,16 @@ const MemoDishForm = () => {
         <button
           type="submit"
           className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
+          disabled={isLoading}
         >
-          Quick Save
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <SectionLoader />
+              Loading...
+            </div>
+          ) : (
+            "Quick Save"
+          )}
         </button>
         <button
           onClick={goToNextStep}

@@ -22,6 +22,7 @@ const bannerSchema = new Schema<BannerType>({
   paragraphAlign: { type: String, enum: Alignment, required: false },
   buttonName: { type: String, required: false },
   buttonColor: { type: String, required: false },
+  buttonTextColor: { type: String, required: false },
   callToAction: { type: String, required: false },
   backgroundColor: { type: String, required: false },
   redirectionId: { type: String, required: false },

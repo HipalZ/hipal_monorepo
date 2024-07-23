@@ -1,11 +1,11 @@
 import { startTransition, useCallback, lazy, memo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import useBusinessCtrl from '@/components/store/useBusinessCtrl';
 import Header from '@/components/molecules/header';
-import { routeToDashboard } from '@/components/utils/routes';
 import SectionWithLogo from "@/components/atom/sectionWithLogo"
 import Hi from '@/assets/svg/hi.svg';
+import useBusinessData from '@/components/store/useBusinessData';
 
 // Lazy load the components
 const ExplorePage = lazy(() => import('@/components/templates/businessForm/explorePage'));
@@ -16,14 +16,13 @@ const Setting = lazy(() => import('@/components/templates/businessForm/setting')
 
 const MainBusinessPage: React.FC = () => {
 	const navigate = useNavigate();
-	const { businessId } = useParams<{ businessId: string }>();
 	const { step, setStep } = useBusinessCtrl();
+	const businessId = useBusinessData((s) => s.businessData?._id);
 
 	const handleBack = useCallback(() => {
-		console.log(step);
 		if (step === 0) {
 			startTransition(() => {
-				navigate(routeToDashboard(businessId as string));
+				navigate(`/app/business/${businessId}`);
 			});
 		} else {
 			setStep(step - 1);

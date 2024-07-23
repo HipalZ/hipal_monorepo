@@ -63,7 +63,7 @@ const OutletType = () => {
   return (
     <main>
       {businessTypeArray.map((ele, index) => (
-        <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6  border rounded-2xl">
+        <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6  border rounded-2xl bg-white">
           <article className="flex items-center p-4">
             <input
               type="radio"
@@ -80,7 +80,7 @@ const OutletType = () => {
             <h3 className="text-lg font-semibold">{ele.title}</h3>
           </article>
 
-          <article className="p-4" style={{ background: ele.gradient }}>
+          <article className="p-4 rounded-b-2xl" style={{ background: ele.gradient }}>
             <p className="text-sm">{ele.description}</p>
           </article>
 

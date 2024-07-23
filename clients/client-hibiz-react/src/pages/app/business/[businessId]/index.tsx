@@ -4,7 +4,10 @@ import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import { type ILiteVersionCardButton, liteVersionCardButtons } from "@/components/types/businessId";
+import {
+  type ILiteVersionCardButton,
+  liteVersionCardButtons,
+} from "@/components/types/businessId";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import Stairs from "@/assets/Stairs.png";
@@ -44,16 +47,26 @@ const Business = () => {
   return (
     <main className="relative">
       <section className=" linear_gradient_background">
-        <Header onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={HiPeopleLogo} isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"} />
+        <Header
+          onBack={handleBack}
+          leftIcon={<FaArrowLeft />}
+          centerImage={HiPeopleLogo}
+          isIconBusinessShow={user.role !== "RESTAURANT_MANAGER"}
+        />
         <center className="pb-4 -mt-8 space-y-2">
-          {
-            businessData?.logo && (
-              <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
-                <img width={64} height={64} src={businessData?.logo} alt="Business_Logo" />
-              </figure>
-            )
-          }
-          <figcaption className="mt-4 text-xl font-bold capitalize">{businessData?.name}</figcaption>
+          {businessData?.logo && (
+            <figure className="w-[4rem] h-[4rem] mt-[5vh] overflow-hidden rounded-full">
+              <img
+                width={64}
+                height={64}
+                src={businessData?.logo}
+                alt="Business_Logo"
+              />
+            </figure>
+          )}
+          <figcaption className="mt-4 text-xl font-bold capitalize">
+            {businessData?.name}
+          </figcaption>
         </center>
       </section>
       <section className="mx-4">
@@ -62,7 +75,10 @@ const Business = () => {
             <article className="business_Control_article">
               <h3 className="text-lg font-semibold">Business Control</h3>
               <p>All Controls in one panel</p>
-              <button type="button" className="px-6 py-2 mt-4 text-white bg-black rounded-3xl">
+              <button
+                type="button"
+                className="px-6 py-2 mt-4 text-white bg-black rounded-3xl"
+              >
                 Settings
               </button>
             </article>
@@ -77,18 +93,30 @@ const Business = () => {
           <h3 className="px-4 pt-4 text-2xl">Shortcuts</h3>
           <section className="business_system_cards">
             {liteVersionCardButtons.map((item: ILiteVersionCardButton) => (
-              <article onClick={() => handleClick(item?.navigateTo)} key={item.text} className="relative mt-4 overflow-hidden rounded-2xl">
+              <button
+              type="button"
+                onClick={() => handleClick(item?.navigateTo)}
+                key={item.text}
+                className="relative mt-4 overflow-hidden rounded-2xl"
+              >
                 <figure>
-                  <img width={200} height={146} src={item.image} alt={item.text} />
+                  <img
+                    width={200}
+                    height={146}
+                    src={item.image}
+                    alt={item.text}
+                  />
                 </figure>
                 <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[55%]">
                   <section className="flex items-center justify-between">
-                    <h4 className="font-semibold leading-4 text-black">{item.text}</h4>
-                    <FaArrowRight />
+                    <h4 className="font-semibold leading-4 text-black">
+                      {item.text}
+                    </h4>
+                    <FaArrowRight className="-rotate-45" />
                   </section>
-                  <small className="opacity-50">{item.description}</small>
+                  <small className="mt-2 opacity-50 float-start">{item.description}</small>
                 </figcaption>
-              </article>
+              </button>
             ))}
           </section>
         </>

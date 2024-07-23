@@ -124,14 +124,15 @@ const categoriesRouter = new Hono()
           removeParentCategoryIds = [],
         } = requestData;
 
-        if (requestData.name) {
-          const existingCategory = await Category.findOne({
-            name: requestData.name,
-          }).select("_id");
+        // if (requestData.name) {
+        //   const existingCategory = await Category.findOne({
+        //     name: requestData.name,
+        //     _id: { $ne: id },
+        //   }).select("_id");
 
-          if (existingCategory)
-            return respond(c, "Category already exists", true, 409, {});
-        }
+        //   if (existingCategory)
+        //     return respond(c, "Category already exists", true, 409, {});
+        // }
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
@@ -278,7 +279,7 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
 
         return respond(
@@ -303,7 +304,7 @@ const categoriesRouter = new Hono()
           hierarchy: hierarchy,
           isDeleted: false,
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
 
         return respond(
@@ -320,7 +321,7 @@ const categoriesRouter = new Hono()
           isDeleted: false,
           hierarchy: "PARENT",
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
 
         return respond(

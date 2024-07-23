@@ -1,19 +1,14 @@
-import type { ICategory } from "@/components/types/businessData";
 import Fuse from "fuse.js";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import type { DishType } from "@hi/db-models/src/validators";
+import { useChildCategories, useDishStore } from "@/hooks/useDishStore";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
-interface Props {
-  categoryData?: ICategory[];
-  dishesData?: DishType[];
-}
-const MemoLinkItems = (props: Props) => {
-  const { categoryData, dishesData } = props;
-  console.log("dis", dishesData);
+const MemoLinkItems = () => {
   const [tempIds, setTempIds] = useState<string[]>([]);
   const [removeIds, setRemoveIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const {
     setSelectedCatIds,
     dishStep,
@@ -24,6 +19,14 @@ const MemoLinkItems = (props: Props) => {
     setRemoveCategoryIds,
     setRemoveRecommendationIds,
     removeCategoryIds,
+    addOnToggle,
+    setAddOnToggle,
+    addOnId,
+    selectedPage,
+    setSelectedPage,
+    editingSubCat,
+    categoryStep,
+    setCategoryStep
   } = useMenuPageStore((s) => ({
     setSelectedCatIds: s.setSelectedCatIds,
     selectedCatIds: s.selectedCatIds,
@@ -35,9 +38,22 @@ const MemoLinkItems = (props: Props) => {
     setRemoveAddOnIds: s.setRemoveAddOnIds,
     setRemoveRecommendationIds: s.setRemoveRecommendationIds,
     removeCategoryIds: s.removeCategoryIds,
+    addOnToggle: s.addOnToggle,
+    setAddOnToggle: s.setAddOnToggle,
+    addOnId: s.addOnId,
+    selectedPage:s.selectedPage,
+    setSelectedPage:s.setSelectedPage,
+    editingSubCat: s.editingSubCat,
+    categoryStep:s.categoryStep,
+    setCategoryStep:s.setCategoryStep,
   }));
-  const [searchTerm, setSearchTerm] = useState("");
-  const fuse = new Fuse(categoryData || dishesData, {
+
+  const { dishes } = useDishesStore((s) => ({
+    dishes: s.dishes,
+  }));
+
+  const { data: categoryData } = useChildCategories(dishStep);
+  const fuse = new Fuse(categoryData || dishes, {
     keys: ["name"],
     threshold: 0.3,
   });
@@ -45,12 +61,16 @@ const MemoLinkItems = (props: Props) => {
   // Original filteredData computation with added sorting to bring selected items to the top
   let filteredData = searchTerm
     ? fuse.search(searchTerm).map((result) => result.item)
-    : categoryData || dishesData;
-  filteredData = [...filteredData].sort((a, b) => {
-    const aIsSelected = tempIds.includes(a._id?.toString() ?? "");
-    const bIsSelected = tempIds.includes(b._id?.toString() ?? "");
-    return aIsSelected === bIsSelected ? 0 : aIsSelected ? -1 : 1;
-  });
+    : categoryData || dishes;
+  // Check if filteredData is not empty before sorting
+  if (filteredData && filteredData.length > 0) {
+    filteredData = [...filteredData].sort((a, b) => {
+      const aIsSelected = tempIds.includes(a._id?.toString() ?? "");
+      const bIsSelected = tempIds.includes(b._id?.toString() ?? "");
+      return aIsSelected === bIsSelected ? 0 : aIsSelected ? -1 : 1;
+    });
+  }
+
   const handleSave = () => {
     if (dishStep === "LINK_CATEGORY_STEP") {
       setSelectedCatIds(tempIds);
@@ -61,9 +81,28 @@ const MemoLinkItems = (props: Props) => {
       setDishStep(DishSteps.DISH_STEP_2);
       setRemoveRecommendationIds(removeIds);
     }
-  };
+    if (addOnId !== "" && addOnToggle === "LINK_DISHES") {
+      setRecommendationIds(tempIds);
+      setAddOnToggle("EDIT_ADDON");
+      return;
+    }
+    if (addOnToggle === "LINK_DISHES" && addOnId === "") {
+      setRecommendationIds(tempIds);
+      setAddOnToggle("ADD_ON");
+    }
 
-  const handleDataChange = (id: string) => {
+    if(categoryStep === "LINK_DISH"){
+      if(editingSubCat){
+        setRecommendationIds(tempIds);
+        setCategoryStep("EDIT_SUB_CATEGORY");
+        return
+      }
+      setRecommendationIds(tempIds);
+      setCategoryStep("CATEGORY_STEP_1");
+    }
+}
+
+  const handleDataChange = useCallback((id: string) => {
     if (tempIds.includes(id)) {
       setTempIds(tempIds.filter((catId) => catId !== id));
       if (!removeIds.includes(id)) {
@@ -73,7 +112,7 @@ const MemoLinkItems = (props: Props) => {
       setTempIds([...tempIds, id]);
       setRemoveIds(removeCategoryIds.filter((catId) => catId !== id));
     }
-  };
+  },[tempIds, removeIds]);
 
   useEffect(() => {
     if (dishStep === "LINK_CATEGORY_STEP") {
@@ -81,7 +120,10 @@ const MemoLinkItems = (props: Props) => {
     } else if (dishStep === "LINK_RECOMMENDATION_STEP") {
       setTempIds(recommendationIds);
     }
-  }, [dishStep]);
+    if (addOnToggle === "LINK_DISHES" || categoryStep === "LINK_DISH") {
+      setTempIds(recommendationIds);
+    }
+  }, [dishStep,categoryStep, recommendationIds, addOnToggle]);
 
   return (
     <>
@@ -119,7 +161,11 @@ const MemoLinkItems = (props: Props) => {
           </div>
         ))}
       </div>
-      <button type="button" onClick={handleSave} className="bottom_btn">
+      <button
+        type="button"
+        onClick={handleSave}
+        className="bottom_btn lg:bottom-36"
+      >
         Save
       </button>
     </>

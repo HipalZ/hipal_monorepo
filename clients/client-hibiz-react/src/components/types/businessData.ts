@@ -1,9 +1,13 @@
-import type { businessType, exploreLayout, MenuLayout } from "../store/useBusinessCtrl";
+import type {
+  businessType,
+  exploreLayout,
+  MenuLayout,
+} from "../store/useBusinessCtrl";
 import type { User } from "../store/useOwnerLogin";
 
 interface IAcessControl {
   [key: string]: string;
-  _id: string
+  _id: string;
 }
 
 export interface CustomRole {
@@ -13,7 +17,7 @@ export interface CustomRole {
   role: string;
   bookmark: boolean;
   _id: string;
-  accessControl: IAcessControl
+  accessControl: IAcessControl;
 }
 
 export interface UserProfile {
@@ -58,7 +62,7 @@ export interface IBusinessData {
   serviceCharge: boolean;
   serviceChargePercentage: number;
   serviceChargeRemovalPass: number;
-  exploreLayout:exploreLayout;
+  exploreLayout: exploreLayout;
   menuLayout: MenuLayout;
   primaryColor: string;
   secondaryColor: string;
@@ -70,10 +74,10 @@ export interface IBusinessData {
   withPopCorn: boolean;
   createdAt: string;
   updatedAt: string;
-  isActive:boolean;
+  isActive: boolean;
   parentOutLetId: {
-    name: string
-  }
+    name: string;
+  };
   __v: number;
   serviceControl: {
     discountPassword: string;
@@ -190,44 +194,44 @@ export interface NavigatorWithNetworkInformation extends Navigator {
 }
 
 export interface ILoginProps {
-  user: User
+  user: User;
   accessToken: string;
   refreshToken: string;
   existingUser: User;
 }
 
 export interface IDish {
-  _id: string,
-  name: string,
-  images: string[],
-  dishType: string,
+  _id: string;
+  name: string;
+  images: string[];
+  dishType: string;
 }
 export interface ICategory {
-  _id: string
-  businessId: string
-  name: string
-  visibility: boolean
-  timerOn: boolean
-  timerStart: null
-  timerEnd: null
-  availableDays: never[]
-  hierarchy: string | "PARENT"
-  parentCategory: string
-  parentCategoryId?: string
-  coverImage: string
-  links: never[]
+  _id: string;
+  businessId: string;
+  name: string;
+  visibility: boolean;
+  timerOn: boolean;
+  timerStart: null;
+  timerEnd: null;
+  availableDays: never[];
+  hierarchy: string | "PARENT";
+  parentCategory: string;
+  parentCategoryId?: string;
+  coverImage: string;
+  links: never[];
   dishes: {
-    _id: string,
-    name: string,
-    images: string[],
-    businessId: string,
-  }[]
-  version: number
-  id: string
+    _id: string;
+    name: string;
+    images: string[];
+    businessId: string;
+  }[];
+  version: number;
+  id: string;
 }
 
 export interface IBizInfo {
-  _id: string,
+  _id: string;
   logoUrl: string;
   endBannerUrl: string;
   specialBannerUrl: string;
@@ -238,9 +242,9 @@ export interface IBizInfo {
   location: string;
   avgPricingForTwo: string;
   socialMediaLinks: {
-    icon: string,
-    link: string
-  }[]
+    icon: string;
+    link: string;
+  }[];
   amenities: string[];
   tags: string[];
   fssai: string;
@@ -248,7 +252,7 @@ export interface IBizInfo {
   footerDescription: string;
   fixOpenTime: string;
   fixCloseTime: string;
-  customTiming: Array<Record<string,string>>;
+  customTiming: Array<Record<string, string>>;
   isCustomTime: boolean;
   address: string;
 }
@@ -258,50 +262,57 @@ export type Banner = {
   title: string;
   description: string;
   bannerType: string;
-}
+};
 
 export type Color = {
-  textColor: string
-  bgColor: string
-}
+  textColor: string;
+  bgColor: string;
+};
 
 export type IStyles = {
-  textAlign: string,
-  fontWeight: number,
-  color: string
+  color: string;
+  buttonColor?: string;
+};
+
+export interface IBanner {
+  _id: string;
+  layout: string;
+  businessId: string;
+  bannerType?: string;
+  bannerImage?: string;
+  headingColor?: string;
+  headingFontWeight?: string;
+  headingAlign?: string;
+  paragraphColor?: string;
+  paragraphFontWeight?: string;
+  paragraphAlign?: string;
+  callToAction?: string;
+  backgroundColor?: string;
+  redirectionId?: string;
+  redirectionType?: string;
+  isDeleted?: boolean;
+  buttonColor?: string;
+  redirectionName?: string;
+  heading?: string;
+  paragraph?: string;
+  patternType?: string;
 }
 
-  export interface IBanner {
-    _id: string;
-    businessId: string;
-    bannerType?: string;
-    bannerImage?: string;
-    headingColor?: string;
-    headingFontWeight?: string;
-    headingAlign?: string;
-    paragraphColor?: string;
-    paragraphFontWeight?: string;
-    paragraphAlign?: string;
-    callToAction?: string;
-    backgroundColor?: string;
-    redirectionId?: string;
-    redirectionType?: string;
-    isDeleted?: boolean;
-    buttonColor?: string;
-    redirectionName?: string;
-    heading?: string;
-    paragraph?: string;
-  }
-
-export type TextAlign = 'center' | 'left' | 'right' | 'justify' | 'initial' | 'inherit'
+export type TextAlign =
+  | "center"
+  | "left"
+  | "right"
+  | "justify"
+  | "initial"
+  | "inherit";
 
 export interface IBizPayload {
-  customTiming?: { day: string; openTime: string; closeTime: string; }[];
+  customTiming?: { day: string; openTime: string; closeTime: string }[];
   fixCloseTime?: string;
   fixOpenTime?: string;
-  socialMediaLinks?: { icon: string; link: string; }[];
-  name?:string;
-  socialMedia?: { icon: string; link: string; }[];
+  socialMediaLinks?: { icon: string; link: string }[];
+  name?: string;
+  socialMedia?: { icon: string; link: string }[];
   footerDescription?: string;
   businessId: string;
   specialBannerUrl?: string;
@@ -314,34 +325,32 @@ export interface IBizPayload {
   location?: string;
   amenities?: string[];
   tags?: string[];
-  avgPricingForTwo?:string;
+  avgPricingForTwo?: string;
   isCustomTime?: boolean;
   address?: string;
 }
 
 export interface IBannerPayload {
+  layout: string;
   businessId?: string;
   isPublished?: boolean;
   bannerType?: string;
   bannerImage?: string;
   heading?: string;
   headingColor?: string;
-  headingFontWeight?: string;
-  headingAlign?: string;
   paragraph?: string;
   paragraphColor?: string;
-  paragraphFontWeight?: string;
-  paragraphAlign?: string;
   buttonColor?: string;
   callToAction?: string;
   backgroundColor?: string;
   redirectionId?: string;
   redirectionType?: string;
   redirectionName?: string;
-  _id?:string
+  patternType?: string;
+  _id?: string;
 }
 
-export interface BasicInfo{
-  _id:number
-  text:string
+export interface BasicInfo {
+  _id: number;
+  text: string;
 }

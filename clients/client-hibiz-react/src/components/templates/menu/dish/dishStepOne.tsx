@@ -15,18 +15,24 @@ import {
   foodTypes,
   storeImageAfterSave,
 } from "@/components/utils/helper";
-import type { DishType } from "@hi/db-models/src/validators";
+import type { DishType, DishTypeEnumType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDishStore";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
+  const [displayedPrice, setDisplayedPrice] = useState("");
+
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
+
+  const errorToasts = useErrorToasts();
+
   const {
     setDishName,
     setDishTypes,
@@ -48,6 +54,9 @@ const MemoDishForm = () => {
     resetDishStore,
     imageFiles,
     imagePreviews,
+    dishStep,
+    setIsLoading,
+    isLoading,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     setDishName: s.setDishName,
@@ -72,35 +81,44 @@ const MemoDishForm = () => {
     resetDishStore: s.resetDishStore,
     imageFiles: s.imageFiles,
     imagePreviews: s.imagePreviews,
+    dishStep: s.dishStep,
+    setIsLoading: s.setIsLoading,
+    isLoading: s.isLoading,
   }));
 
-  const [displayedPrice, setDisplayedPrice] = useState("");
   useEffect(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
   }, []);
+
   const toggleSelection = (type: string) => {
-    const isSelected = dishTypes.includes(type);
+    const isSelected = dishTypes.includes(type as DishTypeEnumType);
+    if (isSelected && dishTypes.length === 1) {
+      return;
+    }
     const newSelectedTypes = isSelected
       ? dishTypes.filter((t) => t !== type)
       : [...dishTypes, type];
 
-    setDishTypes(newSelectedTypes);
+    setDishTypes(newSelectedTypes as DishTypeEnumType[]);
   };
 
-  const handleDishPrice = (e: ChangeEvent<HTMLInputElement>) => {
-    const numericValue = e.target.value.replace(/[^0-9.]/g, "");
-    const newPrice = numericValue ? Number(numericValue) : null;
-    setDishPrice(newPrice ?? 0);
-    setDisplayedPrice(newPrice?.toLocaleString("en-IN") ?? "");
-  };
+  const handleDishPrice = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const numericValue = e.target.value.replace(/[^0-9.]/g, "");
+      const newPrice = numericValue ? Number(numericValue) : null;
+      setDishPrice(newPrice ?? 0);
+      setDisplayedPrice(newPrice?.toLocaleString("en-IN") ?? "");
+    },
+    [dishPrice, displayedPrice],
+  );
 
-  const handleFocus = () => {
+  const handleFocus = useCallback(() => {
     setDisplayedPrice(dishPrice?.toString() || "");
-  };
+  }, [dishPrice, displayedPrice]);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
-  };
+  }, [displayedPrice, dishPrice]);
 
   const redirectToSection = useCallback((step) => {
     setDishStep(step);
@@ -108,14 +126,14 @@ const MemoDishForm = () => {
 
   const goToNextStep = useCallback(() => {
     setDishStep(DishSteps.DISH_STEP_2);
-  }, []);
-  const errorToasts = useErrorToasts();
+  }, [dishStep]);
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
       return toast.error("Please fill all the required fields");
     }
+    setIsLoading(true);
     let firstImage: string | undefined;
     let secondImage: string | undefined;
     let thirdImage: string | undefined;
@@ -164,11 +182,13 @@ const MemoDishForm = () => {
       resetStore();
       resetDishesStore();
       resetDishStore();
+      setIsLoading(false);
       return toast.success(data?.message);
     }
     if (!data?.success) {
       errorToasts(data?.error);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -201,7 +221,8 @@ const MemoDishForm = () => {
             {foodTypes?.map((type) => {
               const isSelected = dishTypes.includes(type?.name);
               return (
-                <article
+                <button
+                  type="button"
                   onClick={() => toggleSelection(type?.name)}
                   key={type?.name}
                   className={cn(
@@ -211,7 +232,7 @@ const MemoDishForm = () => {
                 >
                   <img src={type?.icon} loading="lazy" alt={type?.name} />
                   <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
-                </article>
+                </button>
               );
             })}
           </section>
@@ -309,8 +330,16 @@ const MemoDishForm = () => {
         <button
           type="submit"
           className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
+          disabled={isLoading}
         >
-          Quick Save
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <SectionLoader />
+              Loading...
+            </div>
+          ) : (
+            "Quick Save"
+          )}
         </button>
         <button
           onClick={goToNextStep}

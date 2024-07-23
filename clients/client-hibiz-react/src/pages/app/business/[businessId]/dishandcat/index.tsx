@@ -1,8 +1,8 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { memo, startTransition, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
 import useMenuPageStore, {
@@ -21,8 +21,10 @@ import Filter from "@/components/templates/menu/category/filter";
 import CreateDish from "@/components/templates/menu/dish/createDish";
 import ListOfDishes from "@/components/templates/menu/dish/dishesList";
 import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
+import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
+import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
 
-const MemoiseDishAndCat = () => {
+const MemoizeDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const {
     selectedPage,
@@ -34,6 +36,7 @@ const MemoiseDishAndCat = () => {
     setEditOpenMenu,
     setSelectedCategory,
     resetEditDish,
+    setIsMenuManager
   } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
@@ -46,6 +49,7 @@ const MemoiseDishAndCat = () => {
     search: s.search,
     setSearch: s.setSearch,
     resetEditDish: s.resetEditDish,
+    setIsMenuManager: s.setIsMenuManager
   }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -54,7 +58,15 @@ const MemoiseDishAndCat = () => {
     });
   };
 
+  const pathname = useLocation().pathname;
+  
+  useEffect(() => {
+    const isManagerExists = pathname.includes("dishandcat");
+    setIsMenuManager(!isManagerExists);
+  },[])
+
   const openMenuModel = useCallback(() => {
+    resetStore()
     if (selectedPage === "MAIN_CATEGORY") {
       setSelectedCategory("MAIN_CATEGORY");
     } else if (selectedPage === "SUB_CATEGORY") {
@@ -137,7 +149,7 @@ const MemoiseDishAndCat = () => {
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
         {selectedPage === "ADD_ON" && (
-          <div className="m-4 text-3xl">Add On-addon</div>
+          <ListOfAddOn />
         )}
       </section>
 
@@ -167,16 +179,12 @@ const MemoiseDishAndCat = () => {
               <HiX />
             </button>
             {selectedPage === "DISHES" && <CreateDish />}
-
             {(selectedPage === "MAIN_CATEGORY" ||
               selectedPage === "SUB_CATEGORY") && <CreateCategory />}
-            {selectedPage === "ADD_ON" && (
-              <div className="m-4 text-3xl">Add On-addon</div>
-            )}
+            {selectedPage === "ADD_ON" && <AddOnForm />}
           </section>
         </PopUp>
       )}
-
       <button
         onClick={openMenuModel}
         className="fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6"
@@ -188,5 +196,5 @@ const MemoiseDishAndCat = () => {
   );
 };
 
-const DishAndCat = memo(MemoiseDishAndCat);
+const DishAndCat = memo(MemoizeDishAndCat);
 export default DishAndCat;

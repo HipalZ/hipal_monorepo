@@ -7,12 +7,13 @@ import { useCategoryStore } from "@/components/store/useCategoryStore";
 
 const MemoSelectSubCategory = () => {
 
-    const { selectedIds, handleCategoryChange, setCategoryStep,search,setSearch } = useMenuPageStore(state => ({
+    const { selectedIds, handleCategoryChange,catId, setCategoryStep,search,setSearch } = useMenuPageStore(state => ({
         selectedIds: state.selectedIds,
         handleCategoryChange: state.handleCategoryChange,
         setCategoryStep: state.setCategoryStep,
         search:state.search,
-        setSearch:state.setSearch
+        setSearch:state.setSearch,
+        catId: state.catId,
     }));
 
     const { subCategories } = useCategoryStore(s=>({
@@ -28,9 +29,12 @@ const MemoSelectSubCategory = () => {
     const filteredsubCategories = search ? fuse.search(search).map(result => result.item) : subCategories;
 
     const handleSave = useCallback(() => {
-        setCategoryStep("CATEGORY_STEP_1")
-    }, []);
-
+        if (catId !== "") {
+          setCategoryStep("EDIT_MAIN_CATEGORY");
+          return;
+        }
+        setCategoryStep("CATEGORY_STEP_1");
+      }, [catId]);
     // if(isLoading){
     //     return <div><LoadingSpinner /></div>
     // }

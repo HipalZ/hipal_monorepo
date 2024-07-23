@@ -23,14 +23,14 @@ const AddPermissions = () => {
     permissions,
     setPermissions,
     selectedRole,
-    isEditing
+    isEditing,
   } = useAddStaffStore();
   const businessData = useBusinessData((s) => s.businessData);
 
   const goBack = useCallback(() => {
     if (isEditing) {
-      setPageToggle("EDIT_STAFF")
-      return
+      setPageToggle("EDIT_STAFF");
+      return;
     }
     setPageToggle("ADD_STAFF");
   }, [setPageToggle]);
@@ -74,7 +74,7 @@ const AddPermissions = () => {
     queryFn: fetchPermissions,
     enabled: !!businessData?._id,
   });
-  console.log("permissions", selectedRole, permissions, permissions.selectedRole);
+
   return (
     <section className="relative px-4 rounded">
       <center className="sticky top-0 z-20 p-2 mt-4 text-xl font-semibold bg-[#f4f4f4]">
@@ -99,7 +99,9 @@ const AddPermissions = () => {
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    defaultChecked={selectedPermissions.includes(permission.title)}
+                    defaultChecked={selectedPermissions.includes(
+                      permission.title,
+                    )}
                     defaultValue={selectedPermissions}
                     value={permission.title}
                     checked={selectedPermissions.includes(permission.title)}
@@ -165,7 +167,8 @@ const AddPermissions = () => {
           },
           {
             text: "Save",
-            onClick: () => setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"),
+            onClick: () =>
+              setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"),
             className: "bg-black text-white",
           },
         ]}
