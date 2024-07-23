@@ -303,6 +303,21 @@ const dishesRouter = new Hono()
       if (!existingDish) return respond(c, "Dish not found", true, 404, {});
       return respond(c, "Dish fetched successfully", false, 200, existingDish);
     },
+  )
+  .post(
+    "/:businessId/bulkUpload",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    //
+    async (c) => {
+      //@ts-ignore
+      return await runInTransaction(async (session: ClientSession) => {
+        const body = await c.req.parseBody();
+        // const files = body.file;
+        // console.log("files", files);
+        return respond(c, "Dish created successfully", false, 201, {});
+      });
+    },
   );
 
 export default dishesRouter;
