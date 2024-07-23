@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { lazy, memo, useState } from "react";
 import {
   bannerLayouts,
   bannerLayouts2,
@@ -6,24 +6,39 @@ import {
   bannerLayouts4,
   bannerLayouts5,
   bannerLayouts6,
-} from "@/components/utils/helper";
+  BannerType,
+} from "@hi/common/src/bannerLayouts";
+import pastaDummy from "@/assets/pastaDummy.png";
 import { LuArrowUpRight } from "react-icons/lu";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import { BannerType } from "./explorePageStore";
 import { FaFilter } from "react-icons/fa";
 import PopUp from "@/components/atom/popUp";
+const SelectingCardLayout = lazy(() => import("./selectingCardLayout"));
 
 const MemoBannerLayouts = () => {
-  const [bannerLayout, setBannerLayout] = useState<string>("");
   const [openFilter, setOpenFilter] = useState<boolean>(false);
-  const { setSelectedBannerType } = useBannerStore((s) => ({
+  const {
+    setSelectedBannerType,
+    setIsButtonExists,
+    selectedBannerType,
+    setPatternType,
+    createBannerPage,
+    setCreateBannerPage,
+  } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
+    setIsButtonExists: s.setIsButtonExists,
+    selectedBannerType: s.selectedBannerType,
+    setPatternType: s.setPatternType,
+    createBannerPage: s.createBannerPage,
+    setCreateBannerPage: s.setCreateBannerPage,
   }));
-  const handleBannerType = (id: string) => {
-    setBannerLayout(id);
+  const handleBannerType = (id: string, isButton: boolean, pattern: string) => {
+    setIsButtonExists(isButton);
+    setSelectedBannerType(id);
+    setPatternType(pattern);
   };
   const handleCreateBanner = () => {
-    setSelectedBannerType(bannerLayout);
+    setCreateBannerPage(!createBannerPage);
   };
 
   const handleOpenFilters = () => {
@@ -35,13 +50,13 @@ const MemoBannerLayouts = () => {
       <div onClick={handleOpenFilters} className="absolute right-4 -top-10">
         <FaFilter />
       </div>
-      <section className="mt-36 relative grid content-center grid-cols-2 gap-2 mx-4 gap-y-4 place-items md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 pb-[5rem]">
+      <section className="mt-36 relative grid content-center grid-cols-2 gap-2 mx-4 gap-y-4 place-items md:grid-cols-3 lg:grid-cols-4 pb-[5rem]">
         {bannerLayouts.map((layout) => (
           <div className="flex flex-col" key={layout?._id}>
             <article key={layout?._id} className="max-h-[11.5rem]">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
-                  src={layout?.image}
+                  src={layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-t-xl w-[12rem] h-[8.5rem]"
                 />
@@ -71,20 +86,11 @@ const MemoBannerLayouts = () => {
                 </p>
               </article>
             </article>
-            <article className="mt-4 mb-2">
-              <input
-                type="radio"
-                className="text-[#8C63FF]"
-                name="banner_layout"
-                onClick={() => handleBannerType(layout?._id)}
-              />
-              <span className="text-[#807C83] text-sm ml-2">
-                {layout?.title}
-              </span>
-            </article>
-            <span className="text-xs text-[#999999]">
-              {layout?.description}
-            </span>
+            <SelectingCardLayout
+              layout={layout}
+              bannerLayout={selectedBannerType}
+              handleBannerType={handleBannerType}
+            />
           </div>
         ))}
         {bannerLayouts2.map((layout) => (
@@ -92,12 +98,12 @@ const MemoBannerLayouts = () => {
             <article className="relative flex justify-start shrink-0">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
-                  src={layout?.image}
+                  src={layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl w-[12rem] h-[11rem] bg-cover"
                 />
               </figure>
-              <article className="absolute bottom-2 bg-white w-[90%] md:max-w-[11rem] mx-2 p-2 rounded-xl h-[3rem]">
+              <article className="absolute bottom-2 bg-white w-100% max-w-[11rem] mx-2 p-2 rounded-xl h-[3rem]">
                 <div className="flex justify-between">
                   <h1 className="text-[0.7rem] truncate">{layout?.heading}</h1>
                   {layout?.isButton && (
@@ -122,20 +128,11 @@ const MemoBannerLayouts = () => {
                 </p>
               </article>
             </article>
-            <article className="mt-4 mb-2">
-              <input
-                type="radio"
-                className="text-[#8C63FF]"
-                name="banner_layout"
-                onClick={() => handleBannerType(layout?._id)}
-              />
-              <span className="text-[#807C83] text-sm ml-2">
-                {layout?.title}
-              </span>
-            </article>
-            <span className="text-xs text-[#999999] leading-none">
-              {layout?.description}
-            </span>
+            <SelectingCardLayout
+              layout={layout}
+              bannerLayout={selectedBannerType}
+              handleBannerType={handleBannerType}
+            />
           </section>
         ))}
         {bannerLayouts3.map((layout) => (
@@ -143,7 +140,7 @@ const MemoBannerLayouts = () => {
             <article className="relative flex justify-center shrink-0 max-w-[12rem]">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
-                  src={layout?.image}
+                  src={layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl w-[12rem] h-[11rem] bg-cover"
                 />
@@ -181,20 +178,11 @@ const MemoBannerLayouts = () => {
                 </p>
               </article>
             </article>
-            <article className="mt-4 mb-2">
-              <input
-                type="radio"
-                className="text-[#8C63FF]"
-                name="banner_layout"
-                onClick={() => handleBannerType(layout?._id)}
-              />
-              <span className="text-[#807C83] text-sm ml-2">
-                {layout?.title}
-              </span>
-            </article>
-            <span className="text-xs text-[#999999] leading-none">
-              {layout?.description}
-            </span>
+            <SelectingCardLayout
+              layout={layout}
+              bannerLayout={selectedBannerType}
+              handleBannerType={handleBannerType}
+            />
           </section>
         ))}
         {bannerLayouts4.map((layout) => (
@@ -202,7 +190,7 @@ const MemoBannerLayouts = () => {
             <article className="relative flex justify-center shrink-0 max-w-[12rem]">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
-                  src={layout?.image}
+                  src={layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl w-[12rem] h-[11rem] bg-cover"
                 />
@@ -231,27 +219,18 @@ const MemoBannerLayouts = () => {
                 {layout?.isButton && (
                   <div className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
                     <button type="button">{layout?.buttonText}</button>{" "}
-                    <span className="text-[0.6         rem]">
+                    <span className="text-[0.6rem]">
                       <LuArrowUpRight />
                     </span>
                   </div>
                 )}
               </article>
             </article>
-            <article className="mt-4 mb-2">
-              <input
-                type="radio"
-                className="text-[#8C63FF]"
-                name="banner_layout"
-                onClick={() => handleBannerType(layout?._id)}
-              />
-              <span className="text-[#807C83] text-sm ml-2">
-                {layout?.title}
-              </span>
-            </article>
-            <span className="text-xs text-[#999999] leading-none">
-              {layout?.description}
-            </span>
+            <SelectingCardLayout
+              layout={layout}
+              bannerLayout={selectedBannerType}
+              handleBannerType={handleBannerType}
+            />
           </section>
         ))}
         {bannerLayouts5.map((layout) => (
@@ -259,7 +238,7 @@ const MemoBannerLayouts = () => {
             <article className="relative flex justify-center shrink-0 max-w-[12rem]">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
-                  src={layout?.image}
+                  src={layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl w-[12rem] h-[11rem] bg-cover"
                 />
@@ -295,20 +274,11 @@ const MemoBannerLayouts = () => {
                 )}
               </article>
             </article>
-            <article className="mt-4 mb-2">
-              <input
-                type="radio"
-                className="text-[#8C63FF]"
-                name="banner_layout"
-                onClick={() => handleBannerType(layout?._id)}
-              />
-              <span className="text-[#807C83] text-sm ml-2">
-                {layout?.title}
-              </span>
-            </article>
-            <span className="text-xs text-[#999999] leading-none">
-              {layout?.description}
-            </span>
+            <SelectingCardLayout
+              layout={layout}
+              bannerLayout={selectedBannerType}
+              handleBannerType={handleBannerType}
+            />
           </section>
         ))}
         {bannerLayouts6.map((layout) => {
@@ -333,7 +303,7 @@ const MemoBannerLayouts = () => {
                   </h1>
                   <p
                     style={{
-                      WebkitLineClamp: layout?._id === "13" ? 3 : 2,
+                      WebkitLineClamp: BannerType.BANNER_TYPE_13 ? 3 : 2,
                       display: "-webkit-box",
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
@@ -352,20 +322,11 @@ const MemoBannerLayouts = () => {
                   )}
                 </article>
               </article>
-              <article className="mt-4 mb-2">
-                <input
-                  type="radio"
-                  className="text-[#8C63FF]"
-                  name="banner_layout"
-                  onClick={() => handleBannerType(layout?._id)}
-                />
-                <span className="text-[#807C83] text-sm ml-2">
-                  {layout?.title}
-                </span>
-              </article>
-              <span className="text-xs text-[#999999] leading-none">
-                {layout?.description}
-              </span>
+              <SelectingCardLayout
+                layout={layout}
+                bannerLayout={selectedBannerType}
+                handleBannerType={handleBannerType}
+              />
             </section>
           );
         })}

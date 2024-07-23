@@ -33,4 +33,4 @@ const MemoArrowPattern = ({ color }) => (
 );
 
 const ArrowPattern = memo(MemoArrowPattern);
-export default ArrowPattern;
+export { ArrowPattern };

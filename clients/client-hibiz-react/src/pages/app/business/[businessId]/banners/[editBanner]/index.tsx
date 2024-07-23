@@ -1,9 +1,9 @@
-import CreateBanner from '@/components/templates/explorePage/createBanner'
+import CreateBanner from "@/components/templates/explorePage/createBanner";
+import { memo } from "react";
 
-const EditBanner = () => {
-    return (
-        <CreateBanner />
-    )
-}
+const MemoEditBanner = () => {
+  return <CreateBanner />;
+};
 
-export default EditBanner
+const EditBanner = memo(MemoEditBanner);
+export default EditBanner;

@@ -1,11 +1,8 @@
 import { type CSSProperties, memo } from "react";
-import { BannerType } from "./explorePageStore";
-import type {
-  IBannerPayload,
-  TextAlign,
-} from "@/components/types/businessData";
+import type { IBannerPayload } from "@/components/types/businessData";
 import BannerDummy from "@/assets/hisite/bannerDummy.jpg";
 import layout3 from "@/assets/hisite/layout3.jpg";
+import { BannerType } from "@hi/common";
 interface IBanner {
   banners: IBannerPayload[];
   handleEditBanner?: (banner: IBannerPayload) => void;
@@ -18,13 +15,9 @@ const MemoBannerCards = (props: IBanner) => {
       {banners?.map((banner: IBannerPayload) => {
         const headingStyles: CSSProperties = {
           color: banner?.headingColor,
-          fontWeight: banner?.headingFontWeight,
-          textAlign: banner?.headingAlign as TextAlign,
         };
         const paragraphStyles: CSSProperties = {
           color: banner?.paragraphColor,
-          fontWeight: banner?.paragraphFontWeight,
-          textAlign: banner?.paragraphAlign as TextAlign,
         };
         const buttonStyles: CSSProperties = {
           color: banner?.buttonColor,

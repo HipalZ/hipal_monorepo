@@ -2,15 +2,15 @@ import { lazy, memo, startTransition, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { BannerType } from "@/components/templates/explorePage/explorePageStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { BannerType } from "@hi/common/src/bannerLayouts";
 
 // Lazy load components
-const BannerCards = lazy(
-  () => import("@/components/templates/explorePage/bannerCards"),
+const CreatedBannersLayouts = lazy(
+  () => import("@/components/templates/explorePage/createdBannerLayouts"),
 );
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
@@ -53,6 +53,7 @@ const MemoBanners = () => {
 
   const handleEditBanner = (banner: IBannerPayload) => {
     setSelectedBanner(banner);
+    setSelectedBannerType(banner?.layout);
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/${banner?._id}`);
     });
@@ -90,14 +91,35 @@ const MemoBanners = () => {
         &nbsp;
         <section className="mx-6">
           <SubHeader text="Spotlights" color="#000" />
-          <Paragraph text="Create amazing new design and promote it with your customers" />
+          <Paragraph text="Size matters ! Express limitless with your customers about all the happenings at your place.  " />
           &nbsp;
-          <h1>Banners</h1>
-          <BannerCards
-            banners={banners}
-            handleEditBanner={handleEditBanner}
-            sizeInPx="268px"
-          />
+          <h1 className="mb-2">Banners</h1>
+          <section className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-5 pb-[5rem]">
+            {banners
+              ? banners?.map((banner: IBannerPayload, index: number) => {
+                  return (
+                    <CreatedBannersLayouts
+                      key={`banner?._id+${index.toString()}`}
+                      selectedLayout={banner?.layout || ""}
+                      heading={banner?.heading || ""}
+                      paragraph={banner?.paragraph || ""}
+                      callToAction={banner?.callToAction || ""}
+                      img={{ logo: banner?.bannerImage || "" }}
+                      selectedColor={{
+                        bgColor: banner?.backgroundColor || "",
+                        textColor: banner?.backgroundColor || "",
+                      }}
+                      paragraphStyle={{ color: banner?.paragraphColor || "" }}
+                      buttonStyle={{
+                        color: banner?.buttonColor || "",
+                      }}
+                      banner={banner}
+                      handleEditBanner={handleEditBanner}
+                    />
+                  );
+                })
+              : null}
+          </section>
           <BottomButton text="Add New Spotlight" onClick={handleNewSpotlight} />
         </section>
         {addSpotlight ? (

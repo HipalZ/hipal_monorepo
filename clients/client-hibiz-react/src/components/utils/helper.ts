@@ -6,63 +6,25 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
-import useMenuPageStore, {
+import {
   DishSteps,
   type SetImageFilesFunction,
   type SetImagePreviewsFunction,
 } from "../store/useMenuStorage";
-import pastaDummy from "@/assets/pastaDummy.png";
 import { cropImage } from "../cropper";
-import ArrowPattern from "../templates/explorePage/dynamicArrowPattern";
-import BowPattern from "../templates/explorePage/dynamicBowPattern";
-import DotsPattern from "../templates/explorePage/dynamicDotsPattern";
-import { BannerType } from "../templates/explorePage/explorePageStore";
-
-export async function storeImageFiles(image: File) {
-  if (image === undefined) return;
-  const reader = new FileReader();
-  reader?.readAsDataURL(image);
-  const imageId = crypto.randomUUID();
-  await new Promise((resolve, reject) => {
-    reader.onload = () => {
-      resolve(reader.result);
-    };
-  });
-  if (reader.result) {
-    const blobBin = atob(reader.result.toString().split(",")[1]);
-    const array = [];
-    for (let i = 0; i < blobBin.length; i++) {
-      array.push(blobBin.charCodeAt(i));
-    }
-    const file = new Blob([new Uint8Array(array)], {
-      type: image.type,
-    });
-    const formdata = new FormData();
-    formdata.append("fileData", file);
-    formdata.append("fileName", `${imageId}`);
-    formdata.append("bucketName", "assets");
-    try {
-      const res = await axios.post(
-        `https://api.hipal.life/v1/storage`,
-        formdata,
-      );
-      console.log("res", res);
-      return `https://storage.hipal.life/minio/assets/${imageId}`;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-}
+import toast from "react-hot-toast";
 
 export async function storeImageAfterSave(
   image: File,
   imagePreview: string | null,
   setImageUploading: (value: boolean) => void,
+  setIsLoading?: (loading: boolean) => void,
 ) {
   if (!image) return;
   setImageUploading(true);
   const imageId = crypto.randomUUID();
   if (imagePreview) {
+    setIsLoading?.(true);
     const blobBin = atob(imagePreview.toString().split(",")[1]);
     const array = [];
     for (let i = 0; i < blobBin.length; i++) {
@@ -76,13 +38,21 @@ export async function storeImageAfterSave(
     formdata.append("fileName", `${imageId}`);
     formdata.append("bucketName", "assets");
     try {
-      await axios.post("https://api.hipal.life/v1/storage", formdata);
-      setImageUploading(false);
-      return `https://storage.hipal.life/minio/assets/${imageId}`;
+      const response = await axios.post(
+        "https://api.hipal.life/v1/storage",
+        formdata,
+      );
+      if (response.status === 201) {
+        setIsLoading?.(false);
+        return `https://storage.hipal.life/minio/assets/${imageId}`;
+      }
+      setIsLoading?.(false);
+      return toast.error("Failed to upload image");
     } catch (error) {
       setImageUploading(false);
       console.log(error);
     }
+    setIsLoading?.(false);
   }
 }
 
@@ -292,168 +262,4 @@ export const updateImage = async (
   return currentImage;
 };
 
-export const bannerLayouts = [
-  {
-    _id: BannerType.BANNER_TYPE_1,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Fit With Link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_2,
-    heading: "Pasta with Bun, No actions are long",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "",
-    title: "Fit No Link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
-
-export const bannerLayouts2 = [
-  {
-    _id: BannerType.BANNER_TYPE_3,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Hanging card with link",
-    image: pastaDummy,
-    description: "Works best with 680x920 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_4,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "",
-    title: "Hanging card no link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
-
-export const bannerLayouts3 = [
-  {
-    _id: BannerType.BANNER_TYPE_5,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Expand with link",
-    image: pastaDummy,
-    description: "Works best with 680x920 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_6,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    title: "Expand no link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
-
-export const bannerLayouts4 = [
-  {
-    _id: BannerType.BANNER_TYPE_7,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Expand center banner",
-    image: pastaDummy,
-    description: "Works best with 680x920 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_8,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "Explore",
-    title: "Expand center no link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
-
-export const bannerLayouts5 = [
-  {
-    _id: BannerType.BANNER_TYPE_9,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Expand top banner",
-    image: pastaDummy,
-    description: "Works best with 680x920 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_10,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "",
-    title: "Expand top no link",
-    image: pastaDummy,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
-
-export const bannerLayouts6 = [
-  {
-    _id: BannerType.BANNER_TYPE_11,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: true,
-    buttonText: "Explore",
-    title: "Cool text link",
-    image: pastaDummy,
-    isPattern: true,
-    pattern: ArrowPattern,
-    description: "Works best with 680x920 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_12,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "",
-    title: "Cool text no link",
-    image: pastaDummy,
-    isPattern: true,
-    pattern: BowPattern,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-  {
-    _id: BannerType.BANNER_TYPE_13,
-    heading: "Pasta with Bun",
-    paragraph:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
-    isButton: false,
-    buttonText: "",
-    title: "Cool text no link",
-    image: pastaDummy,
-    isPattern: true,
-    pattern: DotsPattern,
-    description: "Works best with 680x680 -1:1 Images with desc & link",
-  },
-];
+export const preDefinedButtons = ["Explore", "Buy now", "Book"];

@@ -76,4 +76,4 @@ const MemoDotsPattern = ({ color }) => (
 );
 
 const DotsPattern = memo(MemoDotsPattern);
-export default DotsPattern;
+export { DotsPattern };

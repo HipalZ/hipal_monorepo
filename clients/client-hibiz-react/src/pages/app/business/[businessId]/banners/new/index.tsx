@@ -1,7 +1,6 @@
 import { lazy, memo, startTransition, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import { BannerType } from "@/components/templates/explorePage/explorePageStore";
 import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 
 // Lazy load components
@@ -13,21 +12,19 @@ const CreateBanner = lazy(
 const MemoNewBanner = () => {
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
-  const { setSelectedBannerType, selectedBannerType } = useBannerStore((s) => ({
-    setSelectedBannerType: s.setSelectedBannerType,
-    selectedBannerType: s.selectedBannerType,
+  const { createBannerPage } = useBannerStore((s) => ({
+    createBannerPage: s.createBannerPage,
+    setCreateBannerPage: s.setCreateBannerPage,
   }));
 
   const handleBack = () => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners`);
     });
-    setSelectedBannerType(BannerType.BANNER_TYPE_0);
   };
-
   return (
     <Suspense fallback={<div>Loading ...</div>}>
-      {selectedBannerType === BannerType.BANNER_TYPE_0 ? (
+      {createBannerPage ? (
         <section className="max-w-[69rem] m-auto">
           <article
             onClick={handleBack}

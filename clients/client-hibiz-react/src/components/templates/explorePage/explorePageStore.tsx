@@ -1,5 +1,6 @@
 import { apiRpc } from "@hi/common";
 import type { ICategory } from "@/components/types/businessData";
+import { BannerType } from "@hi/common/src/bannerLayouts";
 
 export const basicInfos = [
   {
@@ -19,22 +20,7 @@ export const basicInfos = [
     text: "Tags",
   },
 ];
-export enum BannerType {
-  BANNER_TYPE_0 = "BANNER_TYPE_0",
-  BANNER_TYPE_1 = "BANNER_TYPE_1",
-  BANNER_TYPE_2 = "BANNER_TYPE_2",
-  BANNER_TYPE_3 = "BANNER_TYPE_3",
-  BANNER_TYPE_4 = "BANNER_TYPE_4",
-  BANNER_TYPE_5 = "BANNER_TYPE_5",
-  BANNER_TYPE_6 = "BANNER_TYPE_6",
-  BANNER_TYPE_7 = "BANNER_TYPE_7",
-  BANNER_TYPE_8 = "BANNER_TYPE_8",
-  BANNER_TYPE_9 = "BANNER_TYPE_9",
-  BANNER_TYPE_10 = "BANNER_TYPE_10",
-  BANNER_TYPE_11 = "BANNER_TYPE_11",
-  BANNER_TYPE_12 = "BANNER_TYPE_12",
-  BANNER_TYPE_13 = "BANNER_TYPE_13",
-}
+
 export interface IBannerType {
   _id: string;
   title: string;
