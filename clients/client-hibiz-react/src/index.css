@@ -185,10 +185,11 @@ input[type="color" i] {
   max-width: 30rem;
   background-color: #000;
   color: #fff;
-  padding:0.75rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 3rem;
-  transform: translate(-50%, 0);
-  }
+  transform: translateX(-50%);
+}
+
 
   .linear_gradient_background{
     position: sticky;
@@ -203,7 +204,7 @@ input[type="color" i] {
 
   .business_system_cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(10rem, 2fr));
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
     gap:0 1rem;
     padding: 0 1rem 5rem 1rem;
     width: 100%;
@@ -415,12 +416,16 @@ input[type="color" i] {
       background-color: #fff;
   }
 
+  .business_system_cards{
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  }
+
   .card-background {
       height: 12rem;
       max-height: 12rem;
-      width: 100%;
+      width: 97%;
       max-width: 69rem;
-      margin: 2rem 0;
+      margin: 2rem 1rem;
   }
 
   .card {
@@ -455,6 +460,19 @@ input[type="color" i] {
   }
   .explore_page_selection {
       width: 50%;
+  }
+  .bottom_btn {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    z-index: 10;
+    width: 90%;
+    max-width: 30rem;
+    background-color: #000;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 3rem;
+    transform: translateX(-50%);
   }
 }
 

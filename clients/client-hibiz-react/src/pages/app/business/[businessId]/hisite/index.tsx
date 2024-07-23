@@ -35,17 +35,17 @@ const MemoHiSites = () => {
                     <p className='mx-16 text-[#7D7D7D]'>Manage Your business, dishes, offers, rewards and many more</p>
                 </HisiteHeader>
             </header>
-            <section className='p-6 space-y-6'>
+            <section className='flex flex-col gap-4 p-6 lg:flex-row'>
                 {hisiteServices.map((service) => {
                     return (
-                        <article onClick={()=>handleRoute(service?.navigateTo)} key={service?._id} className='bg-white h-[7rem] rounded-2xl p-4'>
+                        <button type='button' onClick={()=>handleRoute(service?.navigateTo)} key={service?._id} className='bg-white h-[7rem] w-full max-w-[28rem] rounded-2xl p-4'>
                             <header className='relative flex items-center mb-6 space-x-4'>
                                 <img src={service?.icon} alt={service?.icon} loading="lazy" />
-                                <h1 className='text-2xl'>{service?.title}</h1>
+                                <h1 className='text-2xl '>{service?.title}</h1>
                                 <div className="absolute -rotate-45 right-2 top-2"><FaArrowRight /></div>
                             </header>
-                            <p>{service?.description}</p>
-                        </article>
+                            <p className='float-start'>{service?.description}</p>
+                        </button>
                     )
                 })}
             </section>

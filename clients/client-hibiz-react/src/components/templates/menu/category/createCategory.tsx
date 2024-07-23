@@ -10,6 +10,7 @@ import SelectCategory from "./selectCategory";
 import SelectSubCategory from "./selectSubCategory";
 import AddCatImage from "./addCatImage";
 import EditMainCategory from "./editCategory";
+import LinkItems from "../dish/[editDish]/linkItems";
 
 const CreateCategoryMain = () => {
   const {
@@ -19,6 +20,7 @@ const CreateCategoryMain = () => {
     catId,
     isMainEditing,
     isSubCategoryEditing,
+    openMenu,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     categoryStep: s.categoryStep as CategoryStep,
@@ -27,6 +29,7 @@ const CreateCategoryMain = () => {
     isMainEditing: s.editingMainCat,
     isSubCategoryEditing: s.editingSubCat,
     catId: s.catId,
+    openMenu: s.openMenu,
   }));
 
   const goBack = useCallback(() => {
@@ -56,7 +59,12 @@ const CreateCategoryMain = () => {
         setCategoryStep("EDIT_SUB_CATEGORY");
         return;
       }
+      if (categoryStep === "LINK_DISH") {
+        setCategoryStep("EDIT_SUB_CATEGORY");
+        return;
+      }
     }
+
     switch (categoryStep) {
       case "CATEGORY_STEP_1":
         setOpenMenu(false);
@@ -71,11 +79,14 @@ const CreateCategoryMain = () => {
       case "LINK_SUB_CATEGORY":
         setCategoryStep("CATEGORY_STEP_1");
         break;
+      case "LINK_DISH":
+        setCategoryStep("CATEGORY_STEP_1");
+        break;
       default:
         setOpenMenu(false);
         break;
     }
-  }, [categoryStep, isMainEditing]);
+  }, [categoryStep, isMainEditing,openMenu]);
 
   return (
     <>
@@ -95,6 +106,7 @@ const CreateCategoryMain = () => {
       {categoryStep === "CATEGORY_STEP_2" && <AddCatImage />}
       {(categoryStep === "EDIT_MAIN_CATEGORY" ||
         categoryStep === "EDIT_SUB_CATEGORY") && <EditMainCategory />}
+      {categoryStep === "LINK_DISH" && <LinkItems />}
     </>
   );
 };

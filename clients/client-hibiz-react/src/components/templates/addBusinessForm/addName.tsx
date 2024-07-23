@@ -6,6 +6,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import PopUp from "@/components/atom/popUp";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import BottomButton from "@/components/atom/bottomButton";
 
 const parentBranchCopy = [
   {
@@ -196,7 +197,7 @@ const AddName = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <section className="w-full mx-6 mt-4 space-y-2 max-w-[30rem]">
+      <section className="w-[90%] mx-4 mt-4 space-y-2 max-w-[30rem] overflow-hidden">
         <label htmlFor="businessName" className="text-lg">
           Your Outlet name*
         </label>
@@ -204,7 +205,7 @@ const AddName = () => {
           type="text"
           id="businessName"
           value={businessName}
-          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-0"
           placeholder="Enter your name"
           maxLength={20}
           onChange={addBusinessName}
@@ -249,15 +250,17 @@ const AddName = () => {
       </button>
       {openCopyModal && (
         <PopUp show={openCopyModal} onClose={closeCopyModal}>
-          <section className="max-h-[85dvh] overflow-auto">
+          <section className="max-h-[85dvh] overflow-auto relative pb-4">
             <h2 className="mt-4 ml-4 text-2xl ">
               Copy from parent branch
             </h2>
             <h2 className="mt-4 ml-4 opacity-80">
               You may select the following points to copy from the parent outlet
             </h2>
+            <section className="flex flex-wrap">
+              
             {parentBranchCopy.map((ele) => (
-              <section key={ele.title} className="flex flex-col w-[90%] max-w-[30rem] m-6 border rounded-2xl">
+              <section key={ele.title} className=" w-[90%] max-w-[30rem] lg:max-w-[20rem] m-6 border rounded-2xl bg-white">
                 <article className="flex items-center p-4 ">
                   <input
                     type="checkbox"
@@ -281,15 +284,10 @@ const AddName = () => {
               </section>
 
             ))}
+            </section>
             <br />
             <br />
-            <button
-              type="button"
-              className="bottom_btn"
-              onClick={createBranch}
-            >
-              Next
-            </button>
+            <BottomButton onClick={createBranch} text="Save" />
           </section>
         </PopUp>
       )}

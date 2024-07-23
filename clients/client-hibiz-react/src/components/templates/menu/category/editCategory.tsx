@@ -5,6 +5,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
 import { useUpdateCategory } from "@/hooks/useCategory";
 import { Switch } from "@headlessui/react";
+
 import { memo, useCallback, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
 import { RiLinkUnlink } from "react-icons/ri";
@@ -31,6 +32,11 @@ const MemoEditCategory = () => {
     visibility,
     setVisibility,
     idCheck,
+    recommendationIds,
+    removeRecommendationIds,
+    imageUploading,
+    setImageUploading,
+    isMenuManager,
   } = useMenuPageStore((s) => ({
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
@@ -47,9 +53,12 @@ const MemoEditCategory = () => {
     setSelectedFile: s.setSelectedFile,
     setCategoryName: s.setCategoryName,
     idCheck: s.idCheck,
+    recommendationIds: s.recommendationIds,
+    removeRecommendationIds: s.removeRecommendationIds,
+    imageUploading: s.imageUploading,
+    setImageUploading: s.setImageUploading,
+    isMenuManager: s.isMenuManager,
   }));
-
-  console.log("selectedCategory", idCheck);
 
   const { mutate, isPending } = useUpdateCategory();
 
@@ -137,16 +146,19 @@ const MemoEditCategory = () => {
   };
 
   const handleSave = async () => {
-    let imageUrl;
+    let imageUrl = imagePreview || "";
     if (selectedFile) {
-       imageUrl = await storeImageAfterSave(selectedFile, imagePreview);
+      imageUrl = await storeImageAfterSave(
+        selectedFile,
+        imagePreview,
+        setImageUploading,
+      );
     }
-    const removedIds = getRemovedIds(idCheck, selectIds);
-    console.log("removedIds", {
-        removedIds,
-        idCheck,
-        selectIds,
-    });
+    const removedCatIds = getRemovedIds(idCheck, selectIds);
+    const removeDishIds = getRemovedIds(
+      removeRecommendationIds,
+      recommendationIds,
+    );
     const commonPayload = {
       name: categoryName,
       businessId: businessData?._id.toString() || "",
@@ -155,18 +167,20 @@ const MemoEditCategory = () => {
       visibility: visibility,
       _id: catId,
     };
-    
+
     const payload =
       categoryStep === "EDIT_MAIN_CATEGORY"
         ? {
             ...commonPayload,
             subCategoryIds: selectIds,
-            removeSubCategoryIds:removedIds
+            removeSubCategoryIds: removedCatIds,
           }
         : {
             ...commonPayload,
             parentCategoryIds: selectIds || [],
-            removeParentCategoryIds:removedIds
+            removeParentCategoryIds: removedCatIds,
+            dishIds: recommendationIds,
+            removeDishIds: removeDishIds,
           };
     mutate(payload);
   };
@@ -179,14 +193,20 @@ const MemoEditCategory = () => {
     );
   }
 
-  console.log("selectedCategory", visibility, availability);
+  if (imageUploading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <section className="mx-6">
       <article className="lg:flex">
         <section className="flex-1">
           <h1 className="font-semibold opacity-50"> Category Image</h1>
-           
+
           <Background>
             <div className="flex justify-between gap-4 mx-4">
               <div className="rounded-full w-[7rem] h-[7rem]">
@@ -235,24 +255,26 @@ const MemoEditCategory = () => {
             </div>
           </Background>
         </section>
-        <section className="flex-1">
-          <article className="lg:mx-4">
-            <label className="font-semibold opacity-50" htmlFor="name">
-              Category Name*
-            </label>
-            <Background>
-              <input
-                type="text"
-                id="name"
-                placeholder="Enter Category Name"
-                value={categoryName}
-                maxLength={21}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-              />
-            </Background>
-          </article>
-        </section>
+        {!isMenuManager && (
+          <section className="flex-1">
+            <article className="lg:mx-4">
+              <label className="font-semibold opacity-50" htmlFor="name">
+                Category Name*
+              </label>
+              <Background>
+                <input
+                  type="text"
+                  id="name"
+                  placeholder="Enter Category Name"
+                  value={categoryName}
+                  maxLength={21}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+                />
+              </Background>
+            </article>
+          </section>
+        )}
       </article>
       <section className="gap-4 lg:flex">
         <article className="flex justify-between px-4 py-3 my-4 bg-white rounded-full lg:flex-1 lg:mt-6">
@@ -312,11 +334,12 @@ const MemoEditCategory = () => {
 
           <section className="mt-4 lg:mt-6">
             <label className="font-semibold opacity-50" htmlFor="name">
-              Link Dishes
+              Link Dishes ({recommendationIds?.length})
             </label>
             <Background>
               <button
                 type="button"
+                onClick={() => setCategoryStep("LINK_DISH")}
                 className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
               >
                 <RiLinkUnlink className="mr-2" /> Link Dishes

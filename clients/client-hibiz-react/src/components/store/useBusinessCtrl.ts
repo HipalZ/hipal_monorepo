@@ -37,6 +37,7 @@ interface BusinessCtrl {
   setRewards: (value: boolean) => void;
   paymentAndBusinessSettings: boolean;
   setPaymentAndBusinessSettings: (value: boolean) => void;
+  reset: () => void;
 }
 
 const useBusinessCtrl = create<BusinessCtrl>((set) => ({
@@ -70,6 +71,23 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => ({
   setRewards: (value: boolean) => set({ rewards: value }),
   paymentAndBusinessSettings: false,
   setPaymentAndBusinessSettings: (value: boolean) => set({ paymentAndBusinessSettings: value }),
+  reset: () => set({
+    step: 0,
+    exploreLayout: 'BUTTER',
+    menuLayout: 'MAIN_AND_SUB_CATEGORY',
+    primaryColor: '',
+    secondaryColor: '',
+    businessType: '',
+    outletType: '',
+    businessName: '',
+    customLink: '',
+    branches: [],
+    selectedBranch: '',
+    menu: false,
+    themes: false,
+    rewards: false,
+    paymentAndBusinessSettings: false,
+  }),
 }));
 
 export default useBusinessCtrl;

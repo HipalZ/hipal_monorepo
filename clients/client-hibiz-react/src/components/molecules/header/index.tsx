@@ -29,7 +29,9 @@ const Header: React.FC<HeaderProps> = memo(
       if (onBack) {
         onBack();
       } else {
-        navigate(-1);
+        startTransition(() => {
+          navigate(-1);
+        });
       }
     };
 

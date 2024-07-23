@@ -22,6 +22,11 @@ const MemoLinkItems = () => {
     addOnToggle,
     setAddOnToggle,
     addOnId,
+    selectedPage,
+    setSelectedPage,
+    editingSubCat,
+    categoryStep,
+    setCategoryStep
   } = useMenuPageStore((s) => ({
     setSelectedCatIds: s.setSelectedCatIds,
     selectedCatIds: s.selectedCatIds,
@@ -36,6 +41,11 @@ const MemoLinkItems = () => {
     addOnToggle: s.addOnToggle,
     setAddOnToggle: s.setAddOnToggle,
     addOnId: s.addOnId,
+    selectedPage:s.selectedPage,
+    setSelectedPage:s.setSelectedPage,
+    editingSubCat: s.editingSubCat,
+    categoryStep:s.categoryStep,
+    setCategoryStep:s.setCategoryStep,
   }));
 
   const { dishes } = useDishesStore((s) => ({
@@ -79,9 +89,18 @@ const MemoLinkItems = () => {
     if (addOnToggle === "LINK_DISHES" && addOnId === "") {
       setRecommendationIds(tempIds);
       setAddOnToggle("ADD_ON");
-      return;
     }
-  }
+
+    if(categoryStep === "LINK_DISH"){
+      if(editingSubCat){
+        setRecommendationIds(tempIds);
+        setCategoryStep("EDIT_SUB_CATEGORY");
+        return
+      }
+      setRecommendationIds(tempIds);
+      setCategoryStep("CATEGORY_STEP_1");
+    }
+}
 
   const handleDataChange = useCallback((id: string) => {
     if (tempIds.includes(id)) {
@@ -101,10 +120,10 @@ const MemoLinkItems = () => {
     } else if (dishStep === "LINK_RECOMMENDATION_STEP") {
       setTempIds(recommendationIds);
     }
-    if (addOnToggle === "LINK_DISHES") {
+    if (addOnToggle === "LINK_DISHES" || categoryStep === "LINK_DISH") {
       setTempIds(recommendationIds);
     }
-  }, [dishStep]);
+  }, [dishStep,categoryStep, recommendationIds, addOnToggle]);
 
   return (
     <>

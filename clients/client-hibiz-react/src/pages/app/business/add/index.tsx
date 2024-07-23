@@ -1,8 +1,7 @@
 import Header from "@/components/molecules/header";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import { routeToDashboard } from "@/components/utils/routes";
 import { memo, startTransition, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
 import BusinessType from "@/components/templates/addBusinessForm/businessType";
@@ -13,18 +12,17 @@ import SectionWithLogo from "@/components/atom/sectionWithLogo";
 
 const AddBusinessForm = () => {
   const navigate = useNavigate();
-  const { businessId } = useParams<{ businessId: string }>();
   const { step, setStep } = useBusinessCtrl();
 
   const handleBack = useCallback(() => {
     if (step === 0) {
       startTransition(() => {
-        navigate(routeToDashboard(businessId as string));
+        navigate("/app/business");
       });
     } else {
       setStep(step - 1);
     }
-  }, [navigate, businessId, step, setStep]);
+  }, [navigate, step, setStep]);
 
   const handleTitle = useCallback(() => {
     const titles = ["Business Type", "Outlet Type", "outlet Name"];
@@ -69,7 +67,7 @@ const AddBusinessForm = () => {
           </>
         )}
 
-        {step === 0 && <BusinessType />}
+        {step === 0 &&  <BusinessType />}
 
         {step === 1 && <OutletType />}
 

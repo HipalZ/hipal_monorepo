@@ -93,7 +93,8 @@ const Business = () => {
           <h3 className="px-4 pt-4 text-2xl">Shortcuts</h3>
           <section className="business_system_cards">
             {liteVersionCardButtons.map((item: ILiteVersionCardButton) => (
-              <article
+              <button
+              type="button"
                 onClick={() => handleClick(item?.navigateTo)}
                 key={item.text}
                 className="relative mt-4 overflow-hidden rounded-2xl"
@@ -111,11 +112,11 @@ const Business = () => {
                     <h4 className="font-semibold leading-4 text-black">
                       {item.text}
                     </h4>
-                    <FaArrowRight />
+                    <FaArrowRight className="-rotate-45" />
                   </section>
-                  <small className="opacity-50">{item.description}</small>
+                  <small className="mt-2 opacity-50 float-start">{item.description}</small>
                 </figcaption>
-              </article>
+              </button>
             ))}
           </section>
         </>

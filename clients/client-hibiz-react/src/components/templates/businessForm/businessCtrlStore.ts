@@ -49,22 +49,6 @@ export const businessCtrlServices = [
 	},
 	{
 		image: PlaceHolder,
-		Title: "Manage Pages",
-		tags: [
-			"Explore Page",
-			"Blogz",
-		]
-	},
-	{
-		image: PlaceHolder,
-		Title: "Manage Menu",
-		tags: [
-			"Menu creator",
-			"Menu manager",
-		]
-	},
-	{
-		image: PlaceHolder,
 		Title: "Hi Sites",
 		tags: [
 			"Explore Page",
@@ -80,6 +64,22 @@ export const businessCtrlServices = [
 			"Business Info",
 		],
 		navigation: "settings",
+	},
+	{
+		image: PlaceHolder,
+		Title: "Manage Pages",
+		tags: [
+			"Explore Page",
+			"Blogz",
+		]
+	},
+	{
+		image: PlaceHolder,
+		Title: "Manage Menu",
+		tags: [
+			"creator",
+			"manager",
+		]
 	},
 ]
 

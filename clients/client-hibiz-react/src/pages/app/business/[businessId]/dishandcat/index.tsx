@@ -1,8 +1,8 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { memo, startTransition, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
 import useMenuPageStore, {
@@ -36,6 +36,7 @@ const MemoizeDishAndCat = () => {
     setEditOpenMenu,
     setSelectedCategory,
     resetEditDish,
+    setIsMenuManager
   } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
@@ -48,6 +49,7 @@ const MemoizeDishAndCat = () => {
     search: s.search,
     setSearch: s.setSearch,
     resetEditDish: s.resetEditDish,
+    setIsMenuManager: s.setIsMenuManager
   }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -55,6 +57,13 @@ const MemoizeDishAndCat = () => {
       navigate(routeToDashboard(businessData?._id as string));
     });
   };
+
+  const pathname = useLocation().pathname;
+  
+  useEffect(() => {
+    const isManagerExists = pathname.includes("dishandcat");
+    setIsMenuManager(!isManagerExists);
+  },[])
 
   const openMenuModel = useCallback(() => {
     resetStore()

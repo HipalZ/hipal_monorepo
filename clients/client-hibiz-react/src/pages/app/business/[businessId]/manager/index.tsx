@@ -1,8 +1,8 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { memo, startTransition, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
 import useMenuPageStore, {
@@ -16,16 +16,28 @@ import Search from "@/components/templates/menu/category/search";
 import Filter from "@/components/templates/menu/category/filter";
 import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
 import DishesManager from "@/components/templates/manager/dish/dishesManager";
+import ListOfParentCategory from "@/components/templates/menu/category/listOfParentCategory";
+import ListOfChildCategory from "@/components/templates/menu/category/listOfChildCategories";
+import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
+import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
+import CreateCategory from "@/components/templates/menu/category/createCategory";
+import CreateDish from "@/components/templates/menu/dish/createDish";
 
 const MemoiseManager = () => {
   const businessData = useBusinessData((s) => s.businessData);
 
-  const { selectedPage, setSelectedPage, editOpenMenu, setEditOpenMenu } =
+  const { selectedPage, setIsMenuManager,setSelectedPage,resetStore, editOpenMenu, setEditOpenMenu,openMenu,setOpenMenu } =
     useMenuPageStore((s) => ({
       selectedPage: s.selectedPage,
       setSelectedPage: s.setSelectedPage,
       editOpenMenu: s.editOpenMenu,
       setEditOpenMenu: s.setEditOpenMenu,
+      setSelectedCategory: s.setSelectedCategory,
+      openMenu: s.openMenu,
+      setOpenMenu: s.setOpenMenu,
+      resetStore: s.resetStore,
+      resetEditDish: s.resetEditDish,
+      setIsMenuManager: s.setIsMenuManager,
     }));
   const navigate = useNavigate();
   const handleBack = () => {
@@ -33,6 +45,18 @@ const MemoiseManager = () => {
       navigate(routeToDashboard(businessData?._id as string));
     });
   };
+
+  const pathname = useLocation().pathname;
+  
+  useEffect(() => {
+    const isManagerExists = pathname.includes("manager");
+    setIsMenuManager(isManagerExists);
+  },[])
+
+  const closeMenu = useCallback(() => {
+    resetStore();
+    setOpenMenu(false);
+  }, [openMenu]);
 
   const closeEditMenu = useCallback(() => {
     setEditOpenMenu(false);
@@ -96,6 +120,14 @@ const MemoiseManager = () => {
       <Sidebar items={sidebarItems} />
       <section className="min-h-[100dvh]">
         {selectedPage === "DISHES" && <DishesManager />}
+        
+        {selectedPage === "MAIN_CATEGORY" && <ListOfParentCategory />}
+
+        {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
+
+        {selectedPage === "ADD_ON" && (
+          <ListOfAddOn />
+        )}
       </section>
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
@@ -108,6 +140,24 @@ const MemoiseManager = () => {
               <HiX />
             </button>
             {selectedPage === "DISHES" && <EditDish />}
+          </section>
+        </PopUp>
+      )}
+      
+      {openMenu && (
+        <PopUp show={openMenu} onClose={closeMenu} hide>
+          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+            <button
+              className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
+              type="button"
+              onClick={closeMenu}
+            >
+              <HiX />
+            </button>
+            {selectedPage === "DISHES" && <CreateDish />}
+            {(selectedPage === "MAIN_CATEGORY" ||
+              selectedPage === "SUB_CATEGORY") && <CreateCategory />}
+            {selectedPage === "ADD_ON" && <AddOnForm />}
           </section>
         </PopUp>
       )}

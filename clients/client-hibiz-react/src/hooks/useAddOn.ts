@@ -21,7 +21,6 @@ export const useAddOnList = () => {
       },
     });
     const data = (await res.json()).data as AddOnType[];
-    console.log(data);
     setAddOnTypes(data);
     return data;
   }, [businessData?._id]);
@@ -51,9 +50,9 @@ export const useSaveAddOn = () => {
     }
     if (!res.err) {
       toast.success(res.message);
-      setOpenMenu(false);
       queryClient.invalidateQueries({ queryKey: ["getAllAddOn"] });
       resetStore();
+      setOpenMenu(false);
     }
   }, []);
 
@@ -94,9 +93,9 @@ export const useUpdateAddon = () => {
     }
     if (!res.err) {
       toast.success(res.message);
-      setOpenMenu(false);
       queryClient.invalidateQueries({ queryKey: ["getAllAddOn"] });
       resetStore();
+      setOpenMenu(false);
     }
   }, []);
 

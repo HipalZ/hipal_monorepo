@@ -31,7 +31,9 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
       if (onBack) {
         onBack();
       } else {
-        navigate(-1);
+        startTransition(() => {
+          navigate(-1);
+        });
       }
     };
 
@@ -51,22 +53,22 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
     return (
       <>
         <div className="flex items-center justify-between px-6 pt-6">
-          <div
-            onClick={onBack ? onBack : handleBackClick}
-            onKeyDown={onBack ? onBack : handleBackClick}
+          <button
+            type="button"
+            onClick={handleBackClick}
             className="px-4 py-2 bg-[#FFFFFF] border border-[#00000050] rounded-3xl on_active_bounce"
           >
             {leftIcon || <FaArrowLeft />}
-          </div>
+          </button>
           <div
             className={`${
               centerImage ? "flex items-center justify-center" : ""
             } `}
           >
             {centerImage && (
-              <div onKeyDown={logoutUser} onClick={logoutUser}>
+              <button type="button" onClick={logoutUser}>
                 <img src={centerImage} alt="Center img" loading="lazy" />
-              </div>
+              </button>
             )}
             &nbsp;
             <span
@@ -76,7 +78,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
                   : "absolute w-max transform -translate-x-1/2 left-1/2"
               } text-2xl font-medium capitalize`}
             >
-              {dropDown ? dropDown : title}
+              {title}
             </span>
           </div>
           {rightButton ? (

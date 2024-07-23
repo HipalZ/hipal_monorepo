@@ -292,6 +292,9 @@ interface MenuPageStore {
 
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+
+  imageUploading : boolean;
+  setImageUploading : (loading: boolean) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -352,7 +355,6 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   resetStore: () =>
     set({
-      openMenu: false,
       selectedCategory: "",
       categoryName: "",
       selectedIds: [],
@@ -402,6 +404,8 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       removeAddOnIds: [],
       removeRecommendationIds: [],
       editOpenMenu: false,
+      editingSubCat: false,
+      editingMainCat: false,
       showDeleteDish: false,
       addOnId: "",
     }),
@@ -648,6 +652,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   isLoading: false,
   setIsLoading: (loading: boolean) => set({ isLoading: loading }),
+
+  imageUploading: false,
+  setImageUploading: (loading: boolean) => set({ imageUploading: loading }),
 }));
 
 export default useMenuPageStore;

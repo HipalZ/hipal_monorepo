@@ -6,7 +6,7 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
-import {
+import useMenuPageStore, {
   DishSteps,
   type SetImageFilesFunction,
   type SetImagePreviewsFunction,
@@ -57,8 +57,10 @@ export async function storeImageFiles(image: File) {
 export async function storeImageAfterSave(
   image: File,
   imagePreview: string | null,
+  setImageUploading: (value: boolean) => void,
 ) {
   if (!image) return;
+  setImageUploading(true);
   const imageId = crypto.randomUUID();
   if (imagePreview) {
     const blobBin = atob(imagePreview.toString().split(",")[1]);
@@ -75,8 +77,10 @@ export async function storeImageAfterSave(
     formdata.append("bucketName", "assets");
     try {
       await axios.post("https://api.hipal.life/v1/storage", formdata);
+      setImageUploading(false);
       return `https://storage.hipal.life/minio/assets/${imageId}`;
     } catch (error) {
+      setImageUploading(false);
       console.log(error);
     }
   }

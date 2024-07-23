@@ -7,7 +7,7 @@ import useMenuPageStore, {
 } from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
-import { BiEdit } from "react-icons/bi";
+import { BiSolidEditAlt } from "react-icons/bi";
 import { useAddOnList } from "@/hooks/useAddOn";
 import type { AddOnType } from "@hi/db-models/src/validators";
 
@@ -25,7 +25,7 @@ const MemoListOfAddon = () => {
     setChoices,
     setMaxChoices,
     setMinChoices,
-    setAddOnToggle
+    setAddOnToggle,
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -116,7 +116,7 @@ const MemoListOfAddon = () => {
               type="button"
               className="pl-8 text-black"
             >
-              <BiEdit />
+              <BiSolidEditAlt />
             </button>
           </article>
         </button>

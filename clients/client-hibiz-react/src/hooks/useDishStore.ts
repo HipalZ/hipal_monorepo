@@ -9,7 +9,6 @@ import type {
 } from "@hi/db-models/src/validators";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
-import { QueryClient } from "@tanstack/react-query";
 
 export const useChildCategories = (dishStep: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
