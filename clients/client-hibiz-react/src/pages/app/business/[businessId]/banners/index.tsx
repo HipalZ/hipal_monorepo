@@ -6,7 +6,7 @@ import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { BannerType } from "@hi/common/src/bannerLayouts";
+import { BannerType } from "@/components/utils/bannerLayouts";
 
 // Lazy load components
 const CreatedBannersLayouts = lazy(

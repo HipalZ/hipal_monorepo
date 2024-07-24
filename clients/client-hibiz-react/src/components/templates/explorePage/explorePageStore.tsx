@@ -1,6 +1,6 @@
 import { apiRpc } from "@hi/common";
 import type { ICategory } from "@/components/types/businessData";
-import { BannerType } from "@hi/common/src/bannerLayouts";
+import { BannerType } from "@/components/utils/bannerLayouts";
 
 export const basicInfos = [
   {

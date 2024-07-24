@@ -1,4 +1,9 @@
 import { lazy, memo, useState } from "react";
+import pastaDummy from "@/assets/pastaDummy.png";
+import { LuArrowUpRight } from "react-icons/lu";
+import { useBannerStore } from "@/components/store/useBannerStore";
+import { FaFilter } from "react-icons/fa";
+import PopUp from "@/components/atom/popUp";
 import {
   bannerLayouts,
   bannerLayouts2,
@@ -7,12 +12,7 @@ import {
   bannerLayouts5,
   bannerLayouts6,
   BannerType,
-} from "@hi/common/src/bannerLayouts";
-import pastaDummy from "@/assets/pastaDummy.png";
-import { LuArrowUpRight } from "react-icons/lu";
-import { useBannerStore } from "@/components/store/useBannerStore";
-import { FaFilter } from "react-icons/fa";
-import PopUp from "@/components/atom/popUp";
+} from "@/components/utils/bannerLayouts";
 const SelectingCardLayout = lazy(() => import("./selectingCardLayout"));
 
 const MemoBannerLayouts = () => {

@@ -45,36 +45,39 @@ export async function generateMetadata() {
     description: "Explore page for businesses",
   };
 }
-export default async function Page({
+export default async function Explore({
   params,
 }: { params: { businessId: string } }) {
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
+  console.log("data", data);
   return (
     <div className="relative flex flex-col w-full pb-16 ">
       <MainBackground explore={data?.business} />
       <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
         <HeroSection data={data} />
         <Rewards />
-        {data?.banners?.map((banner: IBannerPayload, index: number) => {
-          return (
-            <BannerLayouts
-              key={`banner?._id+${index.toString()}`}
-              selectedLayout={banner?.layout || ""}
-              heading={banner?.heading || ""}
-              paragraph={banner?.paragraph || ""}
-              callToAction={banner?.callToAction || ""}
-              img={{ logo: banner?.bannerImage || "" }}
-              selectedColor={{
-                bgColor: banner?.backgroundColor || "",
-                textColor: banner?.backgroundColor || "",
-              }}
-              paragraphStyle={{ color: banner?.paragraphColor || "" }}
-              buttonStyle={{
-                color: banner?.buttonColor || "",
-              }}
-            />
-          );
-        })}
+        <article className="flex items-center gap-4 p-2 overflow-x-auto bg-white rounded-lg flex-nowrap">
+          {data?.banners?.map((banner: IBannerPayload, index: number) => {
+            return (
+              <BannerLayouts
+                key={`banner?._id+${index.toString()}`}
+                selectedLayout={banner?.layout || ""}
+                heading={banner?.heading || ""}
+                paragraph={banner?.paragraph || ""}
+                callToAction={banner?.callToAction || ""}
+                img={{ logo: banner?.bannerImage || "" }}
+                selectedColor={{
+                  bgColor: banner?.backgroundColor || "",
+                  textColor: banner?.backgroundColor || "",
+                }}
+                paragraphStyle={{ color: banner?.paragraphColor || "" }}
+                buttonStyle={{
+                  color: banner?.buttonColor || "",
+                }}
+              />
+            );
+          })}
+        </article>
         <SubLoyalty loyalty={data?.loyalty} />
         <div className="overflow-auto">
           <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />

@@ -1,6 +1,7 @@
 import { type CSSProperties, memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
-import type { IBannerPayload } from "@/components/types/businessData";
+import pastaDummy from "@/assets/pastaDummy.png";
+import Image from "next/image";
 import {
   bannerLayouts,
   bannerLayouts2,
@@ -8,11 +9,9 @@ import {
   bannerLayouts4,
   bannerLayouts5,
   bannerLayouts6,
-  truncateDescription,
   BannerType,
-} from "@hi/common/src/bannerLayouts";
-import pastaDummy from "@/assets/pastaDummy.png";
-import Image from "next/image";
+  truncateDescription,
+} from "@/components/utils/bannerLayouts";
 
 interface Props {
   heading?: string;
@@ -22,9 +21,7 @@ interface Props {
   selectedColor?: { bgColor: string; textColor: string };
   paragraphStyle?: CSSProperties;
   buttonStyle?: { color: string; buttonColor?: string };
-  handleEditBanner?: (banner: IBannerPayload) => void;
   selectedLayout?: string;
-  banner?: IBannerPayload;
 }
 const MemoBannersLayout = (props: Props) => {
   const {
@@ -35,28 +32,23 @@ const MemoBannersLayout = (props: Props) => {
     selectedColor,
     paragraphStyle,
     buttonStyle,
-    handleEditBanner,
     selectedLayout,
-    banner,
   } = props;
 
   return (
     <>
       {bannerLayouts.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
-        console.log("selectedLayout", selectedLayout, layout?._id);
         return (
-          <div
-            className="flex flex-col shrink-0"
-            key={layout?._id}
-            onClick={() => handleEditBanner(banner)}
-          >
+          <div className="flex flex-col shrink-0" key={layout?._id}>
             <article key={layout?._id} className="max-h-[13rem]">
               <figure className="w-full rounded-2xl">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-t-xl w-[12rem] h-[8.5rem]"
+                  width={136}
+                  height={192}
                 />
               </figure>
               <article
@@ -65,7 +57,7 @@ const MemoBannersLayout = (props: Props) => {
                 }}
                 className="w-full max-w-[12rem] p-2 rounded-b-xl h-[3.5rem] shadow-2xl"
               >
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <h1 style={paragraphStyle} className="text-[0.7rem]">
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
@@ -74,18 +66,9 @@ const MemoBannersLayout = (props: Props) => {
                       style={{
                         backgroundColor: buttonStyle?.color || "red",
                       }}
-                      className="flex items-center px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                      className="px-2 h-4 flex items-center text-[0.6rem] text-white rounded-full space-x-0.5 -mr-1"
                     >
-                      <button
-                        style={{
-                          border: `1px solid ${
-                            buttonStyle?.color || selectedColor?.textColor
-                          }`,
-                        }}
-                        type="button"
-                      >
-                        {callToAction || "Explore"}
-                      </button>{" "}
+                      <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
                         <LuArrowUpRight />
                       </span>
@@ -115,15 +98,14 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section key={layout?._id} className="shrink-0">
-            <article
-              className="relative flex justify-start"
-              onClick={() => handleEditBanner(banner)}
-            >
+            <article className="relative flex justify-start">
               <figure className="w-full max-h-[12rem] rounded-2xl">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] bg-cover aspect-square"
+                  className="rounded-xl h-[12rem] bg-cover aspect-square shrink-0"
+                  height={136}
+                  width={136}
                 />
               </figure>
               <article
@@ -168,15 +150,14 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section key={layout?._id} className="shrink-0">
-            <article
-              className="relative flex justify-center shrink-0 max-w-[12rem] "
-              onClick={() => handleEditBanner(banner)}
-            >
+            <article className="relative flex justify-center shrink-0 max-w-[12rem]">
               <figure className="w-full max-w-[14rem] rounded-2xl max-h-[12rem] ">
                 <Image
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl aspect-square h-[12rem] bg-cover"
+                  className="rounded-xl aspect-square h-[12rem] bg-cover shrink-0"
+                  width={136}
+                  height={136}
                 />
               </figure>
               <article
@@ -239,15 +220,14 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section key={layout?._id} className="shrink-0">
-            <article
-              className="relative flex justify-center max-w-[12rem]"
-              onClick={() => handleEditBanner(banner)}
-            >
-              <figure className="w-full max-w-[12rem] rounded-2xl">
+            <article className="relative flex justify-center max-w-[12rem]">
+              <figure className="w-full max-w-[12rem] rounded-2xl aspect-square">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] aspect-square bg-cover"
+                  className="rounded-xl h-[12rem] aspect-square bg-cover w-full"
+                  width={136}
+                  height={136}
                 />
               </figure>
               <article
@@ -308,15 +288,14 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section key={layout?._id}>
-            <article
-              className="relative flex justify-center shrink-0 max-w-[12rem]"
-              onClick={() => handleEditBanner(banner)}
-            >
+            <article className="relative flex justify-center shrink-0 max-w-[12rem]">
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl h-[12rem] aspce-square bg-cover"
+                  width={136}
+                  height={136}
                 />
               </figure>
               <article
@@ -382,7 +361,6 @@ const MemoBannersLayout = (props: Props) => {
           <section key={layout?._id} className="w-[12rem] h-[12rem] shrink-0">
             <article
               className="relative h-[12rem] max-w-[12rem] rounded-xl"
-              onClick={() => handleEditBanner(banner)}
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >
               <figure className="absolute top-2 left-2">

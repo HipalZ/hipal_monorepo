@@ -8,9 +8,9 @@ import {
   bannerLayouts4,
   bannerLayouts5,
   bannerLayouts6,
-  truncateDescription,
   BannerType,
-} from "@hi/common/src/bannerLayouts";
+  truncateDescription,
+} from "@/components/utils/bannerLayouts";
 
 interface Props {
   heading?: string;
@@ -238,7 +238,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <section key={layout?._id} className="shrink-0">
             <article
               className="relative flex justify-center max-w-[12rem]"
-              onClick={() => handleEditBanner(banner)}
+              onClick={() => handleEditBanner(banner || {})}
             >
               <figure className="w-[11rem] max-w-[12rem] rounded-2xl lg:max-w-[13rem]">
                 <img
@@ -307,7 +307,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <section key={layout?._id}>
             <article
               className="relative flex justify-center shrink-0 max-w-[12rem]"
-              onClick={() => handleEditBanner(banner)}
+              onClick={() => handleEditBanner(banner || {})}
             >
               <figure className="w-full max-w-[12rem] rounded-2xl">
                 <img
@@ -382,7 +382,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
           >
             <article
               className="relative w-full h-full min-h-[11rem] max-h-[12rem] lg:max-w-[12rem] w-full max-w-[11rem] rounded-xl"
-              onClick={() => handleEditBanner(banner)}
+              onClick={() => handleEditBanner(banner || {})}
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >
               <figure className="absolute top-2 left-2">

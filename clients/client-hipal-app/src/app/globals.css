@@ -907,7 +907,8 @@ html, body {
 
 * {
     font-weight: 500; /* Assuming font-medium maps to 500 */
-    letter-spacing: .05em; /* Adjust based on tracking-wide value */
+    letter-spacing: .05em; 
+	/* Adjust based on tracking-wide value */
     /* font-family: 'Inter', sans-serif; Uncomment and adjust as needed */
     /* font-family: 'Montserrat', sans-serif; Uncomment and adjust as needed */
 }

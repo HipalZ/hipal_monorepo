@@ -1,4 +1,5 @@
 import { useBannerStore } from "@/components/store/useBannerStore";
+import { type CSSProperties, memo } from "react";
 import {
   bannerLayouts,
   bannerLayouts2,
@@ -6,10 +7,7 @@ import {
   bannerLayouts4,
   bannerLayouts5,
   bannerLayouts6,
-  truncateDescription,
-  BannerType,
-} from "@hi/common/src/bannerLayouts";
-import { type CSSProperties, memo } from "react";
+} from "@/components/utils/bannerLayouts";
 import { LuArrowUpRight } from "react-icons/lu";
 import type { IBannerPayload } from "@/components/types/businessData";
 import pastaDummy from "@/assets/pastaDummy.png";

@@ -11,6 +11,7 @@ interface IProps {
 const MemoBannerSection = (props: IProps) => {
   const { handleNavigation } = props;
   const banners = useExploreStore((s) => s.banners);
+  console.log("banner", banners);
   return (
     <section className="mb-4">
       <SubHeader text="Banners" />
