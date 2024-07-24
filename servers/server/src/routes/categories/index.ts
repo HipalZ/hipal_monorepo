@@ -167,6 +167,11 @@ const categoriesRouter = new Hono()
             { $pull: { categoryIds: id } },
             { session },
           );
+          await Category.findByIdAndUpdate(
+            id,
+            { $pull: { dishIds: { $in: removeDishIds } } },
+            { session },
+          );
         }
 
         if (removeParentCategoryIds.length > 0) {
