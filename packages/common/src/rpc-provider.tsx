@@ -28,7 +28,7 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
 const accessToken = useUserToken.getState().accessToken;
 const refreshToken = useUserToken.getState().refreshToken;
 
-export const apiRpc = hc<AppType>("http://localhost:4500", {
+export const apiRpc = hc<AppType>("https://api.test.hipalz.com", {
   headers: {
     Authorization: `Bearer ${accessToken}`,
     "x-refresh-token": refreshToken,
