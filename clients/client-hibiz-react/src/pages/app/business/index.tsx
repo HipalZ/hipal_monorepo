@@ -13,7 +13,7 @@ import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
-
+//
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const user = useOwnerLogin((s) => s.user);
@@ -31,9 +31,7 @@ const Business = () => {
     });
   }
 
-  const {
-    data: sample,
-  } = useQuery({
+  const { data: sample } = useQuery({
     queryKey: ["getBusinesses", user._id],
     queryFn: () =>
       apiRpc.businesses
@@ -78,10 +76,11 @@ const Business = () => {
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${ele?.status || ele.isActive
-              ? "pointer-events-auto"
-              : "pointer-events-none opacity-90"
-              } child_business_card`}
+            className={`${
+              ele?.status || ele.isActive
+                ? "pointer-events-auto"
+                : "pointer-events-none opacity-90"
+            } child_business_card`}
           >
             <div className="text-xl capitalize">
               {!ele?.status && (
@@ -106,14 +105,16 @@ const Business = () => {
                   loading="lazy"
                   className="aspect-square h-[4rem] w-[4rem]"
                 />
-              ) : <img
-                src={logoPlaceholder}
-                width={66}
-                height={66}
-                alt="Business_logo"
-                loading="lazy"
-                className="aspect-square h-[4rem] w-[4rem]"
-              />}
+              ) : (
+                <img
+                  src={logoPlaceholder}
+                  width={66}
+                  height={66}
+                  alt="Business_logo"
+                  loading="lazy"
+                  className="aspect-square h-[4rem] w-[4rem]"
+                />
+              )}
             </div>
           </button>
         ))}
