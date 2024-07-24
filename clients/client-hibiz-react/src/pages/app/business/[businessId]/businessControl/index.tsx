@@ -18,6 +18,7 @@ const MainBusinessPage: React.FC = () => {
 	const navigate = useNavigate();
 	const { step, setStep } = useBusinessCtrl();
 	const businessId = useBusinessData((s) => s.businessData?._id);
+	const businessData = useBusinessData((s) => s.businessData);
 
 	const handleBack = useCallback(() => {
 		if (step === 0) {

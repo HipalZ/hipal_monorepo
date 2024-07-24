@@ -43,6 +43,11 @@ const Login: React.FC = () => {
       setValidPhone(isPhoneValid);
       return;
     }
+    if (password === "") {
+      setValidPassword(false);
+      return;
+    }
+
     const response = await apiRpc.users.ownerSignIn.$post({
       query: {
         verifyOtp: "false",
@@ -56,6 +61,15 @@ const Login: React.FC = () => {
       data: ILoginProps;
       message: string;
     };
+
+    if (
+      response.status === 409 ||
+      response.status === 400 ||
+      response.status === 401
+    ) {
+      toast.error(user?.message || "Check credentials");
+      return;
+    }
     if (response.status === 200) {
       console.log("user", user);
       setAccessToken(user.data.accessToken);
@@ -66,9 +80,6 @@ const Login: React.FC = () => {
       startTransition(() => {
         navigate(routePaths[PAGE_TYPES.BUSINESS]());
       });
-    } else {
-      setValidPassword(true);
-      toast.error(user?.message || "Check credentials");
     }
   };
 

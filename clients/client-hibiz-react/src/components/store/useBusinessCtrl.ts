@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+export type bussinessControlPages = 'BUSINESS_CONTROL' | 'EXPLORE_PAGE' | 'MENU_PAGE' | 'SETTING' | 'CONGRATULATION';
 export type businessType = 'FOOD' | 'OTHER' | '';
 export type MenuLayout = 'MAIN_CATEGORY' | 'MAIN_AND_SUB_CATEGORY';
 export type exploreLayout = 'BUTTER' | 'SUNFLOWER';

@@ -32,7 +32,9 @@ const Otp = ({ login }: { login?: boolean }) => {
     useRef<HTMLInputElement>(null),
   ];
   const handleSubmit = useCallback(async () => {
-    const endpoint = login ? apiRpc.users.ownerSignIn : apiRpc.users.ownerSignUp;
+    const endpoint = login
+      ? apiRpc.users.ownerSignIn
+      : apiRpc.users.ownerSignUp;
 
     const res = await endpoint.$post({
       json: {
@@ -46,6 +48,10 @@ const Otp = ({ login }: { login?: boolean }) => {
     });
 
     const response = await res.json();
+    if (res.status === 409 || res.status === 400 || res.status === 401) {
+      toast.error("Please try again");
+      return;
+    }
 
     if (res.status === 200) {
       setAccessToken(response.data.accessToken);
@@ -62,8 +68,6 @@ const Otp = ({ login }: { login?: boolean }) => {
       }
 
       setStep(step + 1);
-    } else if (res.status === 409) {
-      toast.error("Please try again");
     }
   }, [step, name, phone, otp]);
 
