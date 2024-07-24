@@ -228,10 +228,15 @@ const usersRouter = new Hono()
         };
 
         const response = await axios(options);
+        console.log("responsesss", response.data.message);
 
         if (
           response?.data?.message === "Mobile no. not found" ||
-          response?.data?.message === "OTP not match"
+          response?.data?.message === "OTP not match" ||
+          response?.data?.message === "OTP expired" ||
+          response?.data?.message === "Otp empty or not numeric" ||
+          response?.data?.message ===
+            "Max limit reached for this otp verification"
         ) {
           return c.json(
             { err: true, status: false, message: "Please enter valid Otp !!" },
@@ -283,10 +288,11 @@ const usersRouter = new Hono()
             404,
           );
         }
-        const comparePass = verifyPassword(
+        const comparePass = await verifyPassword(
           password,
           existingUser?.password || "",
         );
+        console.log("comparePass", comparePass);
 
         if (!comparePass) {
           return c.json(
@@ -324,7 +330,11 @@ const usersRouter = new Hono()
 
         if (
           response?.data?.message === "Mobile no. not found" ||
-          response?.data?.message === "OTP not match"
+          response?.data?.message === "OTP not match" ||
+          response?.data?.message === "OTP expired" ||
+          response?.data?.message === "Otp empty or not numeric" ||
+          response?.data?.message ===
+            "Max limit reached for this otp verification"
         ) {
           return c.json(
             { err: true, status: false, message: "Please enter valid Otp !!" },

@@ -27,8 +27,6 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
 };
 const accessToken = useUserToken.getState().accessToken;
 const refreshToken = useUserToken.getState().refreshToken;
-console.log("accessToken", accessToken);
-console.log("refreshToken", refreshToken);
 
 export const apiRpc = hc<AppType>("https://api.test.hipalz.com", {
   headers: {
