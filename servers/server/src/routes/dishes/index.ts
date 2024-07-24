@@ -306,15 +306,25 @@ const dishesRouter = new Hono()
   )
   .post(
     "/:businessId/bulkUpload",
-
+    zValidator("param", z.object({ businessId: z.string() })),
+    zValidator("json", z.array(dishSchema)),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const body = await c.req.parseBody();
-        console.log("body", body);
-        // const files = body.file;
-        // console.log("files", files);
-        return c.json({ message: "File uploaded successfully" }, 200);
+        const dishes = await c.req.json();
+
+        const createDishes = await Dish.insertMany(dishes, { session });
+        if (!createDishes) {
+          return c.json(
+            { err: true, message: "Error in creating dishes", data: {} },
+            400,
+          );
+        }
+
+        return c.json(
+          { err: false, message: "dishes created successfully", data: {} },
+          200,
+        );
       });
     },
   );
