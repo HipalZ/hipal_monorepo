@@ -306,16 +306,15 @@ const dishesRouter = new Hono()
   )
   .post(
     "/:businessId/bulkUpload",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    //
+
     async (c) => {
       //@ts-ignore
-      return await runInTransaction(async (session: ClientSession) => {
+      return runInTransaction(async (session: ClientSession) => {
         const body = await c.req.parseBody();
+        console.log("body", body);
         // const files = body.file;
         // console.log("files", files);
-        return respond(c, "Dish created successfully", false, 201, {});
+        return c.json({ message: "File uploaded successfully" }, 200);
       });
     },
   );

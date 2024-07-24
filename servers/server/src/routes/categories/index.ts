@@ -205,6 +205,11 @@ const categoriesRouter = new Hono()
             { $addToSet: { categoryIds: id } },
             { session },
           );
+          await Category.findByIdAndUpdate(
+            id,
+            { $addToSet: { dishIds: { $each: dishIds } } },
+            { session },
+          );
         }
 
         return respond(
