@@ -279,10 +279,11 @@ const categoriesRouter = new Hono()
         menu: z.string().optional(),
         parent: z.string().optional(),
         child: z.string().optional(),
+        dishes: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, menu, child, parent } = c.req.query();
+      const { businessId, menu, child, parent, dishes } = c.req.query();
 
       if (menu) {
         const existingCategories = await Category.find({
@@ -333,6 +334,22 @@ const categoriesRouter = new Hono()
         }).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
+
+        return respond(
+          c,
+          "Categories fetched successfully",
+          false,
+          200,
+          existingCategories,
+        );
+      }
+
+      if (dishes) {
+        const existingCategories = await Category.find({
+          businessId,
+          isDeleted: false,
+          hierarchy: "CHILD",
+        }).populate("dishIds");
 
         return respond(
           c,

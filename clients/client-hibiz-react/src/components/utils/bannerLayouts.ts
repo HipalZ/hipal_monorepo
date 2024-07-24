@@ -18,6 +18,12 @@ export enum BannerType {
   BANNER_TYPE_12 = "BANNER_TYPE_12",
   BANNER_TYPE_13 = "BANNER_TYPE_13",
 }
+
+export enum BannerPage {
+  CREATE = "CREATE",
+  VIEW = "VIEW",
+}
+
 export const bannerLayouts = [
   {
     _id: BannerType.BANNER_TYPE_1,

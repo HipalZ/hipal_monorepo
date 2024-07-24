@@ -84,7 +84,7 @@ export const colors = [
 
 export const combineAllDishes = async (categories: ICategory[]) => {
   return categories.reduce((dishes, category) => {
-    return dishes.concat(category?.dishes);
+    return dishes.concat(category?.dishIds);
   }, []);
 };
 

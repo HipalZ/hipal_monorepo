@@ -331,7 +331,7 @@ export interface IBizPayload {
 }
 
 export interface IBannerPayload {
-  layout: string;
+  layout?: string;
   businessId?: string;
   isPublished?: boolean;
   bannerType?: string;
@@ -341,6 +341,7 @@ export interface IBannerPayload {
   paragraph?: string;
   paragraphColor?: string;
   buttonColor?: string;
+  buttonTextColor?: string;
   callToAction?: string;
   backgroundColor?: string;
   redirectionId?: string;

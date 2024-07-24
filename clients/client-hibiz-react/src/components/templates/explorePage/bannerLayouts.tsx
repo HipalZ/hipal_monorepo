@@ -3,7 +3,6 @@ import pastaDummy from "@/assets/pastaDummy.png";
 import { LuArrowUpRight } from "react-icons/lu";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { FaFilter } from "react-icons/fa";
-import PopUp from "@/components/atom/popUp";
 import {
   bannerLayouts,
   bannerLayouts2,
@@ -11,6 +10,7 @@ import {
   bannerLayouts4,
   bannerLayouts5,
   bannerLayouts6,
+  BannerPage,
   BannerType,
 } from "@/components/utils/bannerLayouts";
 const SelectingCardLayout = lazy(() => import("./selectingCardLayout"));
@@ -20,25 +20,29 @@ const MemoBannerLayouts = () => {
   const {
     setSelectedBannerType,
     setIsButtonExists,
+    setIsPatternExists,
     selectedBannerType,
     setPatternType,
-    createBannerPage,
-    setCreateBannerPage,
+    setBannerPage,
+    setIsLoading,
   } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
     setIsButtonExists: s.setIsButtonExists,
+    setIsPatternExists: s.setIsPatternExists,
     selectedBannerType: s.selectedBannerType,
     setPatternType: s.setPatternType,
-    createBannerPage: s.createBannerPage,
-    setCreateBannerPage: s.setCreateBannerPage,
+    setBannerPage: s.setBannerPage,
+    setIsLoading: s.setIsLoading,
   }));
   const handleBannerType = (id: string, isButton: boolean, pattern: string) => {
     setIsButtonExists(isButton);
+    setIsPatternExists(pattern?.length > 0);
     setSelectedBannerType(id);
     setPatternType(pattern);
   };
   const handleCreateBanner = () => {
-    setCreateBannerPage(!createBannerPage);
+    setBannerPage(BannerPage.CREATE);
+    setIsLoading(false);
   };
 
   const handleOpenFilters = () => {
@@ -340,9 +344,6 @@ const MemoBannerLayouts = () => {
           Save
         </button>
       </footer>
-      {openFilter ? (
-        <PopUp show={openFilter} onClose={handleOpenFilters}></PopUp>
-      ) : null}
     </section>
   );
 };

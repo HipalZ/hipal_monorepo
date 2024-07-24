@@ -13,6 +13,7 @@ import { TfiPaintBucket } from "react-icons/tfi";
 import { apiRpc } from "@hi/common";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  cn,
   preDefinedButtons,
   storeImageAfterSave,
 } from "@/components/utils/helper";
@@ -26,9 +27,10 @@ import { useBannerStore } from "@/components/store/useBannerStore";
 import { cropImage } from "@/components/cropper";
 import { BsGrid } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
-import BannerDynamicLayout from "./bannerDynamicLayout";
+import { BannerPage } from "@/components/utils/bannerLayouts";
 
 // Lazy load components
+const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
 const ReactCropper = lazy(() => import("@/components/cropper"));
 const PopUp = lazy(() => import("@/components/atom/popUp"));
 const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
@@ -76,25 +78,18 @@ const MemoCreateBanner = () => {
     selectedBannerType,
     isButtonExists,
     patternType,
-    isLoading,
-    setIsLoading,
-    setCreateBannerPage,
+    setBannerPage,
+    isPatternExists,
   } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
     selectedBannerType: s.selectedBannerType,
-    buttonStyle: s.buttonStyle,
-    setButtonStyle: s.setButtonStyle,
-    paragraphStyle: s.paragraphStyle,
-    setParagraphStyle: s.setParagraphStyle,
-    selectedColor: s.selectedColor,
-    setSelectedColor: s.setSelectedColor,
     isButtonExists: s.isButtonExists,
     patternType: s.patternType,
-    setCreateBannerPage: s.setCreateBannerPage,
-    isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
+    setBannerPage: s.setBannerPage,
+    isPatternExists: s.isPatternExists,
   }));
 
+  const [isLoading, setIsLoading] = useState(false);
   const [paragraphStyle, setParagraphStyle] = useState<IStyles>({
     color: "",
   });
@@ -212,6 +207,8 @@ const MemoCreateBanner = () => {
         color,
         buttonColor,
       }));
+    } else {
+      setSelectedColor((prev) => ({ ...prev, bgColor: color }));
     }
   };
 
@@ -227,6 +224,12 @@ const MemoCreateBanner = () => {
 
   const handleCreateBanner = async () => {
     if (!businessId) return;
+    if (heading.length === 0) {
+      return toast.error("Heading and Description are required");
+    }
+    if (img && !img.logo && !isPatternExists) {
+      return toast.error("Please upload an image");
+    }
     let bannerImage: string | undefined;
     if (imageFiles?.logo) {
       bannerImage = await storeImageAfterSave(
@@ -244,6 +247,7 @@ const MemoCreateBanner = () => {
       paragraph,
       paragraphColor: paragraphStyle.color,
       buttonColor: buttonStyle.color,
+      buttonTextColor: buttonStyle?.buttonColor,
       callToAction,
       backgroundColor: selectedColor.bgColor,
       redirectionId,
@@ -274,18 +278,23 @@ const MemoCreateBanner = () => {
       toast.success("Banner Created Successfully");
       navigate(`/app/business/${businessId}/banners`);
     }
+    setBannerPage(BannerPage.VIEW);
   };
 
   const handleBackClick = () => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/new`);
     });
-    setCreateBannerPage(true);
+    setBannerPage(BannerPage.VIEW);
   };
 
-  const handleRemoveImage = useCallback((type: string) => {
-    setImageFiles((prev) => ({ ...prev, [type]: null }));
-  }, []);
+  const handleRemoveImage = useCallback(
+    (type: string) => {
+      setImageFiles((prev) => ({ ...prev, [type]: null }));
+      setImg((prev) => ({ ...prev, [type]: "" }));
+    },
+    [imageFiles],
+  );
 
   const handleParagraphColor = useCallback(() => {
     setColorWheelParagraph(!colorWheelParagraph);
@@ -294,7 +303,7 @@ const MemoCreateBanner = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main className="relative h-screen">
-        <section className="fixed top-0 bg-white w-full h-[20rem] md:h-[17rem] z-10 max-w-[69rem]">
+        <section className="fixed top-0 bg-white w-full h-[17rem] z-10 max-w-[69rem]">
           <HisiteHeader isIconBusinessShow={false} onBack={handleBackClick} />
           <section className="absolute flex justify-center mt-[4rem] -translate-x-1/2 -top-8 left-1/2 bg-white">
             <BannerDynamicLayout
@@ -319,15 +328,22 @@ const MemoCreateBanner = () => {
           </center>
         </section>
         <section>
-          <section className="mt-[22rem] md:mt-[18rem] mx-6">
+          <section className="mt-[18rem] mx-4">
             <SubHeader text="Banner Details" />
             <section className="bg-white md:flex md:items-center">
               <section className="flex items-center justify-between flex-1 p-4 mt-4 space-x-4 md:justify-start">
-                <section className="flex flex-1 gap-6">
+                <section className="flex items-center flex-1 gap-6">
                   {patternType ? null : (
                     <article>
                       <h1 className="mb-2 text-gray-500">Add an Image</h1>
-                      <article className="shrink-0 relative rounded-xl h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] border-dashed border-2 inline-block border-[#8C63FF]">
+                      <article
+                        className={cn(
+                          "shrink-0 relative rounded-xl h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] inline-block",
+                          img?.logo
+                            ? ""
+                            : "border-dashed border-2  border-[#8C63FF]",
+                        )}
+                      >
                         <input
                           onClick={() =>
                             document.getElementById("logoInput")?.click()
@@ -342,7 +358,7 @@ const MemoCreateBanner = () => {
                           htmlFor="logoInput"
                           className="relative flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
                         >
-                          {img.logo ? (
+                          {img?.logo ? (
                             <>
                               <img src={img.logo} alt="Logo" />
                               <button
@@ -369,7 +385,12 @@ const MemoCreateBanner = () => {
                       style={{
                         background: selectedColor.bgColor || "transparent",
                       }}
-                      className="relative px-3 py-2 border-dashed border-2 inline-block border-[#8C63FF] rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center"
+                      className={cn(
+                        "relative px-3 py-2 inline-block rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
+                        selectedColor?.bgColor?.length
+                          ? ""
+                          : "border-dashed border-2  border-[#8C63FF]",
+                      )}
                     >
                       <PlusButton />
                       <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
@@ -377,10 +398,56 @@ const MemoCreateBanner = () => {
                       </span>
                     </article>
                   </article>
+                  <section className="mb-4">
+                    <h1 className="mb-2 text-gray-500">Suggested Colors</h1>
+                    <article className="grid grid-cols-2 gap-4">
+                      {preDefinedColors.map((color) => {
+                        return (
+                          <article
+                            key={color}
+                            onClick={() => handleCustomColor("banner", color)}
+                            style={{ background: color }}
+                            className="w-8 h-8 rounded-full"
+                          />
+                        );
+                      })}
+                    </article>
+                  </section>
                 </section>
               </section>
+              <article className="">
+                <section className="m-4">
+                  <div className="relative">
+                    <input
+                      maxLength={20}
+                      type="text"
+                      className="w-full rounded-2xl"
+                      value={heading}
+                      onChange={handleHeadingChange}
+                      placeholder="Heading"
+                    />
+                    <small className="absolute text-gray-700 bottom-3 right-2">
+                      {heading.length}/20
+                    </small>
+                  </div>
+                </section>
+                <section className="m-4">
+                  <div className="relative">
+                    <textarea
+                      maxLength={70}
+                      className="w-full h-24 resize-none md:w-72 lg:w-96 rounded-2xl"
+                      value={paragraph}
+                      onChange={handleDescriptionChange}
+                      placeholder="Description"
+                    />
+                    <small className="absolute text-gray-700 bottom-4 right-2">
+                      {paragraph.length}/70
+                    </small>
+                  </div>
+                </section>
+              </article>
             </section>
-            <article className="flex justify-around bg-white md:justify-start md:gap-10 md:space-x-10">
+            <article className="flex justify-around p-4 bg-white md:justify-start md:gap-10 md:space-x-10">
               <h1 className="text-gray-500">Text Color</h1>
               <h1 className="text-gray-500">Suggested Colors</h1>
             </article>
@@ -391,7 +458,12 @@ const MemoCreateBanner = () => {
                   style={{
                     background: paragraphStyle?.color || "transparent",
                   }}
-                  className="relative px-3 py-2 border-dashed border-2 inline-block border-[#8C63FF] rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center"
+                  className={cn(
+                    "relative px-3 py-2 inline-block rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
+                    paragraphStyle?.color?.length
+                      ? ""
+                      : "border-dashed border-2  border-[#8C63FF]",
+                  )}
                 >
                   <PlusButton />
                   <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
@@ -414,37 +486,7 @@ const MemoCreateBanner = () => {
                 </article>
               </section>
             </section>
-            <article className="flex-2">
-              <section className="m-4">
-                <div className="relative">
-                  <input
-                    maxLength={20}
-                    type="text"
-                    className="w-full rounded-2xl"
-                    value={heading}
-                    onChange={handleHeadingChange}
-                    placeholder="Heading"
-                  />
-                  <small className="absolute text-gray-700 bottom-3 right-2">
-                    {heading.length}/15
-                  </small>
-                </div>
-              </section>
-              <section className="m-4">
-                <div className="relative">
-                  <textarea
-                    maxLength={70}
-                    className="w-full h-24 resize-none md:w-72 lg:w-96 rounded-2xl"
-                    value={paragraph}
-                    onChange={handleDescriptionChange}
-                    placeholder="Description"
-                  />
-                  <small className="absolute text-gray-700 bottom-4 right-2">
-                    {paragraph.length}/70
-                  </small>
-                </div>
-              </section>
-            </article>
+            <article className="flex-2"></article>
           </section>
           {isButtonExists ? (
             <section className="m-6">
@@ -471,7 +513,7 @@ const MemoCreateBanner = () => {
                           key={btn}
                           type="button"
                           onClick={() => setCallToAction(btn)}
-                          className="px-6 py-2 bg-[#8C63FF40] text-[#8C63FF] rounded-full"
+                          className="px-6 py-2 text-[0.75rem] bg-[#8C63FF40] text-[#8C63FF] rounded-full"
                         >
                           {btn}
                         </button>
@@ -517,7 +559,7 @@ const MemoCreateBanner = () => {
                 className="w-full py-2 bg-gray-100 rounded-full"
               >
                 <h1>
-                  &#128279; Categories or dish{" "}
+                  &#128279; Categories | dish{" "}
                   <span className="font-semibold">{itemName}</span>
                 </h1>
               </button>
@@ -536,6 +578,8 @@ const MemoCreateBanner = () => {
                 <SectionLoader />
                 Loading...
               </div>
+            ) : isPublished ? (
+              "Unpublish"
             ) : (
               "Publish"
             )}
@@ -543,9 +587,19 @@ const MemoCreateBanner = () => {
           <button
             onClick={handleCreateBanner}
             type="button"
+            disabled={isLoading}
             className="w-full py-3 text-white bg-black rounded-full"
           >
-            Save
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <SectionLoader />
+                Loading...
+              </div>
+            ) : isPublished ? (
+              "Click Save to Continue"
+            ) : (
+              "Save"
+            )}
           </button>
         </footer>
       </main>

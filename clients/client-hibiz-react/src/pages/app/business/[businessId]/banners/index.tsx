@@ -1,14 +1,14 @@
-import { lazy, memo, startTransition, Suspense } from "react";
+import { lazy, memo, startTransition, Suspense, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { BannerType } from "@/components/utils/bannerLayouts";
+import { BannerPage } from "@/components/utils/bannerLayouts";
 
 // Lazy load components
+const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const CreatedBannersLayouts = lazy(
   () => import("@/components/templates/explorePage/createdBannerLayouts"),
 );
@@ -23,37 +23,32 @@ const MemoBanners = () => {
   const banners = useExploreStore((s) => s.banners);
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner } = useBannerStore((s) => ({
+  const { setSelectedBanner, setBannerPage } = useBannerStore((s) => ({
     setSelectedBanner: s.setSelectedBanner,
+    setBannerPage: s.setBannerPage,
   }));
-  const {
-    addSpotlight,
-    setAddSpotlight,
-    setSelectedNewBanner,
-    setSelectedBannerType,
-  } = useBannerStore((s) => ({
-    selectedNewBanner: s.selectedNewBanner,
-    setSelectedNewBanner: s.setSelectedNewBanner,
-    addSpotlight: s.addSpotlight,
-    setAddSpotlight: s.setAddSpotlight,
+
+  const [addSpotlight, setAddSpotlight] = useState(false);
+
+  const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
   }));
+
   const handleNewSpotlight = () => {
     setAddSpotlight(true);
-    setSelectedBannerType(BannerType.BANNER_TYPE_0);
+    setBannerPage(BannerPage.VIEW);
   };
 
   const handleNewBanner = () => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/new`);
     });
-    setSelectedNewBanner(true);
     setAddSpotlight(false);
   };
 
   const handleEditBanner = (banner: IBannerPayload) => {
     setSelectedBanner(banner);
-    setSelectedBannerType(banner?.layout);
+    setSelectedBannerType(banner?.layout || "");
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/${banner?._id}`);
     });
@@ -112,6 +107,7 @@ const MemoBanners = () => {
                       paragraphStyle={{ color: banner?.paragraphColor || "" }}
                       buttonStyle={{
                         color: banner?.buttonColor || "",
+                        buttonColor: banner?.buttonTextColor || "",
                       }}
                       banner={banner}
                       handleEditBanner={handleEditBanner}

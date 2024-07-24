@@ -1,94 +1,70 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { Color, IBannerPayload } from "../types/businessData";
-
-type Style = {
-  textAlign: string;
-  fontWeight: number;
-  color: string;
-};
+import type { IBannerPayload, ICategory, IDish } from "../types/businessData";
+import { BannerPage } from "../utils/bannerLayouts";
 
 interface IBannerStore {
-  selectedNewBanner: boolean;
-  setSelectedNewBanner: (banner: boolean) => void;
-  addSpotlight: boolean;
-  setAddSpotlight: (spotlight: boolean) => void;
   selectedBannerType: string;
   setSelectedBannerType: (bannerType: string) => void;
-  headingStyle: Style;
-  paragraphStyle: Style;
-  buttonStyle: Style;
-  selectedColor: Color;
-  setSelectedColor: (color: Partial<Color>) => void;
-  setHeadingStyle: (style: Partial<Style>) => void;
-  setParagraphStyle: (style: Partial<Style>) => void;
-  setButtonStyle: (style: Partial<Style>) => void;
+
   selectedBanner: IBannerPayload;
   setSelectedBanner: (banner: IBannerPayload) => void;
+
   isButtonExists: boolean;
   setIsButtonExists: (buttonExists: boolean) => void;
+
+  isPatternExists: boolean;
+  setIsPatternExists: (patternExists: boolean) => void;
+
   patternType: string;
   setPatternType: (patternType: string) => void;
-  createBannerPage: boolean;
-  setCreateBannerPage: (toggleLayouts: boolean) => void;
+
+  bannerPage: string;
+  setBannerPage: (toggleLayouts: string) => void;
+
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+
+  redirectCategories: ICategory[];
+  setRedirectCategories: (categories: ICategory[]) => void;
+
+  redirectDishes: IDish[];
+  setRedirectDishes: (dishes: IDish[]) => void;
 }
 
 export const useBannerStore = create(
   persist<IBannerStore>(
     (set) => ({
-      selectedNewBanner: false,
-      setSelectedNewBanner: (banner) =>
-        set(() => ({ selectedNewBanner: banner })),
-      addSpotlight: false,
-      setAddSpotlight: (spotlight) => set(() => ({ addSpotlight: spotlight })),
       selectedBannerType: "BANNER_TYPE_0",
       setSelectedBannerType: (bannerType) =>
         set(() => ({ selectedBannerType: bannerType })),
-      headingStyle: {
-        textAlign: "left",
-        fontWeight: 400,
-        color: "",
-      },
-      paragraphStyle: {
-        textAlign: "left",
-        fontWeight: 400,
-        color: "",
-      },
-      buttonStyle: {
-        textAlign: "left",
-        fontWeight: 400,
-        color: "",
-      },
-      selectedColor: {
-        textColor: "",
-        bgColor: "",
-      },
-      setHeadingStyle: (style) =>
-        set((state) => ({ headingStyle: { ...state.headingStyle, ...style } })),
-      setParagraphStyle: (style) =>
-        set((state) => ({
-          paragraphStyle: { ...state.paragraphStyle, ...style },
-        })),
-      setButtonStyle: (style) =>
-        set((state) => ({ buttonStyle: { ...state.buttonStyle, ...style } })),
-      setSelectedColor: (color) =>
-        set((state) => ({
-          selectedColor: { ...state.selectedColor, ...color },
-        })),
+
       selectedBanner: {},
       setSelectedBanner: (banner) => set(() => ({ selectedBanner: banner })),
+
       isButtonExists: true,
       setIsButtonExists: (buttonExists) =>
         set(() => ({ isButtonExists: buttonExists })),
+
       patternType: "",
       setPatternType: (patternType) => set(() => ({ patternType })),
-      createBannerPage: true,
-      setCreateBannerPage: (toggleLayouts) =>
-        set({ createBannerPage: toggleLayouts }),
+
+      isPatternExists: false,
+      setIsPatternExists: (patternExists) =>
+        set(() => ({ isPatternExists: patternExists })),
+
+      bannerPage: BannerPage.CREATE,
+      setBannerPage: (toggleLayouts) => set({ bannerPage: toggleLayouts }),
+
       isLoading: false,
       setIsLoading: (loading) => set(() => ({ isLoading: loading })),
+
+      redirectCategories: [],
+      setRedirectCategories: (categories) =>
+        set(() => ({ redirectCategories: categories })),
+
+      redirectDishes: [],
+      setRedirectDishes: (dishes) => set(() => ({ redirectDishes: dishes })),
     }),
     {
       name: "banner-store",

@@ -262,4 +262,4 @@ export const updateImage = async (
   return currentImage;
 };
 
-export const preDefinedButtons = ["Explore", "Buy now", "Book"];
+export const preDefinedButtons = ["Explore", "Buy", "Book"];

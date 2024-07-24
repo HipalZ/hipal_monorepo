@@ -307,6 +307,8 @@ export interface AccessControl {
 }
 
 export interface IBannerPayload {
+  buttonTextColor: string;
+  layout: string;
   businessId?: string;
   isPublished?: boolean;
   bannerType?: string;

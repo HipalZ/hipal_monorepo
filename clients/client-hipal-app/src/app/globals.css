@@ -1464,3 +1464,46 @@ input[type='password'] {
 .splide__pagination__page.custom-pagination__page.is-active {
     background-color: #333; /* Adjust color as needed */
 }
+
+  .embla__slide {
+	flex: 0 0 100%;
+	min-width: 0;
+  }
+
+  .embla {
+	max-width: 48rem;
+	margin: auto;
+	--slide-height: 19rem;
+	--slide-spacing: 1rem;
+	--slide-size: 70%;
+	overflow: hidden;
+  }
+
+  .embla__container {
+	backface-visibility: hidden;
+	display: flex;
+	touch-action: pan-y pinch-zoom;
+  }
+  .embla__button-container {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+  }
+  
+  .embla__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background-color: #ccc;
+	margin: 0 4px;
+	transition: transform 0.3s ease;
+  }
+  
+  .embla__dot--active {
+	background-color: #333;
+	transform: scale(1); /* Scale up the active dot */
+  }
+  
+  .embla__dot--inactive {
+	transform: scale(0.8); /* Scale down the inactive dots */
+  }

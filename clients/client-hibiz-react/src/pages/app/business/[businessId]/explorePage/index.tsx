@@ -23,7 +23,11 @@ import type {
   IDish,
 } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
+import {
+  cn,
+  filterPayload,
+  storeImageAfterSave,
+} from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { BsInstagram } from "react-icons/bs";
 import { CiFacebook } from "react-icons/ci";
@@ -34,6 +38,7 @@ import { cropImage } from "@/components/cropper";
 import PopUp from "@/components/atom/popUp";
 import BizInformation from "@/components/templates/explorePage/businessInformation";
 import useShowErrorToasts from "@/components/atom/errorToasts";
+import FooterBanner from "@/components/templates/explorePage/footerBanner";
 
 // Lazy loading components
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
@@ -103,7 +108,6 @@ const MemoExplorePage = () => {
     { _id: 4, icon: "telegram", logo: <TbBrandTelegram size={30} />, link: "" },
     { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
   ]);
-  const [uploadsPopUp, setUploadsPopUp] = useState(false);
   const [showUniquePopUp, setShowUniquePopUp] = useState(false);
   const [img, setImg] = useState({
     banner: bizInfo?.specialBannerUrl,
@@ -374,7 +378,6 @@ const MemoExplorePage = () => {
       const outletInfoData = await outletInfo.json();
       console.log("outletInfo", outletInfoData?.error);
       if (outletInfo.status === 200) {
-        setUploadsPopUp(false);
         toast.success("Data saved successfully");
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
@@ -397,10 +400,6 @@ const MemoExplorePage = () => {
     queryFn: fetchCategories,
     enabled: !!businessId,
   });
-
-  const handleUploads = useCallback(() => {
-    setUploadsPopUp(!uploadsPopUp);
-  }, [uploadsPopUp]);
 
   const handleIconClick = useCallback((icon: string) => {
     setSelectedSocialMedia(icon);
@@ -480,23 +479,12 @@ const MemoExplorePage = () => {
           <BizInformation />
         ) : (
           <form onSubmit={handleSaveExplorePage} className="px-4">
-            <SubHeader text="Business Explore" />
-            <section
-              onClick={handleUploads}
-              className="p-4 bg-white rounded-2xl"
-            >
-              <h1>Click and upload banners and business name here</h1>
-            </section>
-            &nbsp;
             <Suspense fallback={<LoadingSpinner />}>
-              <PopUp show={uploadsPopUp} onClose={handleUploads}>
-                <ExplorePageTopSection
-                  handleImageChange={handleImageChange}
-                  img={img}
-                  handleBizName={handleBizName}
-                  handleSaveExplorePage={handleSaveExplorePage}
-                />
-              </PopUp>
+              <ExplorePageTopSection
+                handleImageChange={handleImageChange}
+                img={img}
+                handleBizName={handleBizName}
+              />
             </Suspense>
             <br />
             <Suspense fallback={<LoadingSpinner />}>
@@ -507,6 +495,9 @@ const MemoExplorePage = () => {
             </Suspense>
             <Suspense fallback={<LoadingSpinner />}>
               <UniquelyYoursSection handleOpenPopUp={handleOpenPopUp} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <FooterBanner img={img} handleImageChange={handleImageChange} />
             </Suspense>
             <Suspense fallback={<LoadingSpinner />}>
               <FooterSection

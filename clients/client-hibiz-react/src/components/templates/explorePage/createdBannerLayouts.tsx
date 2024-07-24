@@ -38,6 +38,11 @@ const MemoCreatedBannersLayout = (props: Props) => {
     banner,
   } = props;
 
+  const buttonStyleTags = {
+    backgroundColor: buttonStyle?.color || "red",
+    color: buttonStyle?.buttonColor || "white",
+  };
+
   return (
     <>
       {bannerLayouts.map((layout) => {
@@ -68,21 +73,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   </h1>
                   {layout?.isButton && (
                     <div
-                      style={{
-                        backgroundColor: buttonStyle?.color || "red",
-                      }}
+                      style={buttonStyleTags}
                       className="flex items-center px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
                     >
-                      <button
-                        style={{
-                          border: `1px solid ${
-                            buttonStyle?.color || selectedColor?.textColor
-                          }`,
-                        }}
-                        type="button"
-                      >
-                        {callToAction || "Explore"}
-                      </button>{" "}
+                      <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
                         <LuArrowUpRight />
                       </span>
@@ -134,7 +128,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
-                    <div className="flex items-center bg-red-700 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
+                    <div
+                      style={buttonStyleTags}
+                      className="flex items-center bg-red-700 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                    >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
                         <LuArrowUpRight />
@@ -178,8 +175,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
               </figure>
               <article
                 style={{
-                  background:
-                    "linear-gradient(to bottom, transparent 10%, black 90%)",
+                  background: `linear-gradient(to bottom, transparent 10%, ${
+                    selectedColor?.bgColor ? selectedColor?.bgColor : "black"
+                  } 90%)`,
                 }}
                 className="absolute bottom-0 w-full p-2 rounded-xl h-[3rem]"
               >
@@ -192,21 +190,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   </h1>
                   {layout?.isButton && (
                     <div
-                      style={{
-                        backgroundColor: buttonStyle?.color || "red",
-                      }}
+                      style={buttonStyleTags}
                       className="flex items-center border border-1 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
                     >
-                      <button
-                        style={{
-                          border: `1px solid ${
-                            buttonStyle?.color || selectedColor?.textColor
-                          }`,
-                        }}
-                        type="button"
-                      >
-                        {callToAction || "Explore"}
-                      </button>{" "}
+                      <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
                         <LuArrowUpRight />
                       </span>
@@ -249,8 +236,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
               </figure>
               <article
                 style={{
-                  background:
-                    "linear-gradient(to bottom, transparent 10% , black 50%, transparent 80%)",
+                  background: `linear-gradient(to bottom, transparent 10%, ${
+                    selectedColor?.bgColor ? selectedColor?.bgColor : "black"
+                  } 50%, transparent 80%)`,
                 }}
                 className="bg-black absolute bottom-1/2 translate-y-1/2 w-full max-w-[11rem] flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
               >
@@ -276,21 +264,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </p>
                 {layout?.isButton && (
                   <div
-                    style={{
-                      backgroundColor: buttonStyle?.color || "red",
-                    }}
+                    style={buttonStyleTags}
                     className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
                   >
-                    <button
-                      style={{
-                        border: `1px solid ${
-                          buttonStyle?.color || selectedColor?.textColor
-                        }`,
-                      }}
-                      type="button"
-                    >
-                      {callToAction || "Explore"}
-                    </button>{" "}
+                    <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.6rem]">
                       <LuArrowUpRight />
                     </span>
@@ -304,7 +281,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
       {bannerLayouts5.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id}>
+          <section key={layout?._id} className="shrink-0">
             <article
               className="relative flex justify-center shrink-0 max-w-[12rem]"
               onClick={() => handleEditBanner(banner || {})}
@@ -318,8 +295,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
               </figure>
               <article
                 style={{
-                  background:
-                    "linear-gradient(to bottom, transparent 10% , black 50%, transparent 80%)",
+                  background: `linear-gradient(to bottom, transparent 10% , ${
+                    selectedColor?.bgColor ? selectedColor?.bgColor : "black"
+                  } 50%, transparent 80%)`,
                 }}
                 className="absolute top-0 flex flex-col items-start justify-center w-full p-2 bg-black rounded-xl"
               >
@@ -345,21 +323,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </p>
                 {layout?.isButton && (
                   <div
-                    style={{
-                      backgroundColor: buttonStyle?.color || "red",
-                    }}
+                    style={buttonStyleTags}
                     className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
                   >
-                    <button
-                      style={{
-                        border: `1px solid ${
-                          buttonStyle?.color || selectedColor?.textColor
-                        }`,
-                      }}
-                      type="button"
-                    >
-                      {callToAction || "Explore"}
-                    </button>{" "}
+                    <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.6rem]">
                       <LuArrowUpRight />
                     </span>
@@ -378,10 +345,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <section
             key={layout?._id}
-            className="w-full h-full max-h-[12rem] lg:max-w-[12rem] shrink-0"
+            className="h-[12rem] aspect-square lg:max-w-[12rem] shrink-0"
           >
             <article
-              className="relative w-full h-full min-h-[11rem] max-h-[12rem] lg:max-w-[12rem] w-full max-w-[11rem] rounded-xl"
+              className="relative w-full h-full min-h-[11rem] max-h-[12rem] lg:max-w-[12rem] w-full max-w-[12rem] rounded-xl"
               onClick={() => handleEditBanner(banner || {})}
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >
@@ -414,22 +381,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </p>
                 {layout?.isButton && (
                   <div
-                    style={{
-                      backgroundColor: buttonStyle?.color || "red",
-                      color: buttonStyle?.buttonColor || "white",
-                    }}
+                    style={buttonStyleTags}
                     className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] rounded-full space-x-0.5 scale-75 -mr-1"
                   >
-                    <button
-                      style={{
-                        border: `1px solid ${
-                          buttonStyle?.color || selectedColor?.textColor
-                        }`,
-                      }}
-                      type="button"
-                    >
-                      {callToAction || "Explore"}
-                    </button>{" "}
+                    <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.6rem]">
                       <LuArrowUpRight />
                     </span>

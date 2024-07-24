@@ -1,12 +1,13 @@
 import type { ICategory, IDish } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { combineAllDishes } from "./explorePageStore";
 import { useQuery } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
 import { IoIosSearch } from "react-icons/io";
 import SubHeader from "@/components/atom/subHeader";
+import { useBannerStore } from "@/components/store/useBannerStore";
 
 interface IProps {
   setClickRedirect: (value: boolean) => void;
@@ -20,10 +21,18 @@ interface IProps {
 enum RedirectionType {
   CATEGORIES = "CATEGORY",
   DISHES = "DISH",
+  EXTERNAL = "EXTERNAL",
 }
 
 const MemoRedirectionPopUp = (props: IProps) => {
   const { handleSaveRedirections, setClickRedirect } = props;
+  const { setRedirectCategories, setRedirectDishes, redirectCategories } =
+    useBannerStore((s) => ({
+      setRedirectCategories: s.setRedirectCategories,
+      setRedirectDishes: s.setRedirectDishes,
+      redirectCategories: s.redirectCategories,
+      redirectDishes: s.redirectDishes,
+    }));
   const businessId = useParams()?.businessId;
   const [selectedLink, setSelectedLink] = useState("");
   const [itemName, setItemName] = useState("");
@@ -34,54 +43,73 @@ const MemoRedirectionPopUp = (props: IProps) => {
   const [selectedId, setSelectedId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const handleSelectCategory = () => {
+  const handleSelectCategory = useCallback(() => {
     setSelectedLink(RedirectionType.CATEGORIES);
-  };
+  }, [selectedLink]);
 
   const [isVisible, setIsVisible] = useState(false);
 
-  const toggleSearch = () => {
+  const toggleSearch = useCallback(() => {
     setIsVisible(!isVisible);
-  };
+  }, [isVisible]);
 
-  const handleSelectDish = () => {
+  const handleSelectDish = useCallback(() => {
     setSelectedLink(RedirectionType.DISHES);
-  };
+  }, [selectedLink]);
+
+  const handleExternalLink = useCallback(() => {
+    setSelectedLink(RedirectionType.EXTERNAL);
+  }, [selectedLink]);
 
   const handleSave = () => {
     handleSaveRedirections(selectedLink, selectedId, itemName);
     setClickRedirect(false);
   };
 
-  const handleItem = (id: string, name: string) => {
+  const handleItem = useCallback((id: string, name: string) => {
     setSelectedId(id);
     setItemName(name);
-  };
+  }, []);
 
-  const getAllCategoryData = async (businessId: string) => {
+  const getAllCategoryData = async (businessId: string): Promise<IDish[]> => {
+    if (redirectCategories.length > 0) {
+      setCategories(redirectCategories);
+      const allDishes = await combineAllDishes(redirectCategories);
+      setDishes(allDishes);
+      return allDishes || [];
+    }
+
     const categoryResponse = await apiRpc.categories.$get({
       query: {
         businessId: businessId,
+        dishes: "true",
       },
     });
-    const data = await categoryResponse.json();
+    const data = (await categoryResponse.json()) as {
+      data: ICategory[];
+      err: boolean;
+      message: string;
+    };
     console.log("data", data);
     const categories = data?.data;
-    setCategories(categories);
-    setFilteredCategories(categories);
-    const allDishes = combineAllDishes(categories);
-    return allDishes;
+
+    if (redirectCategories.length === 0) {
+      setCategories(categories);
+      setRedirectCategories(categories);
+      setFilteredCategories(categories);
+    }
+
+    const allDishes = await combineAllDishes(categories);
+    setDishes(allDishes);
+    setRedirectDishes(allDishes);
+    setFilteredDishes(allDishes);
+    return allDishes || [];
   };
 
   useQuery<ICategory[]>({
     queryKey: ["categories", businessId],
-    queryFn: async () => {
-      const res = await getAllCategoryData(businessId ?? "");
-      setDishes(res);
-      setFilteredDishes(res);
-      return res;
-    },
-    enabled: !!businessId && dishes.length === 0,
+    queryFn: () => getAllCategoryData(businessId ?? ""),
+    enabled: !!businessId,
   });
 
   useEffect(() => {
@@ -120,6 +148,13 @@ const MemoRedirectionPopUp = (props: IProps) => {
               className="w-full py-2 bg-gray-100 rounded-full"
             >
               <h1>&#128279; Direct to Dish</h1>
+            </button>
+            <button
+              onClick={handleExternalLink}
+              type="button"
+              className="w-full py-2 bg-gray-100 rounded-full"
+            >
+              <h1>&#128279; External Link</h1>
             </button>
           </article>
         </article>
@@ -178,6 +213,21 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   </label>
                 </section>
               ))}
+            {selectedLink === RedirectionType.EXTERNAL && (
+              <>
+                <span className="ml-4 text-xl truncate">External Link</span>
+                <section className="flex items-center gap-4 p-4 m-2 bg-white rounded-2xl">
+                  <label className="flex items-center w-full gap-4 cursor-pointer">
+                    <input
+                      type="text"
+                      name="external"
+                      className="w-full text-2xl text-black rounded-2xl"
+                      onChange={(e) => handleItem(e.target.value, "EXTERNAL")}
+                    />
+                  </label>
+                </section>
+              </>
+            )}
           </article>
           <BottomButton text="Save" onClick={handleSave} />
         </>
