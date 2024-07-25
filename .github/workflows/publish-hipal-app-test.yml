@@ -10,7 +10,7 @@ on:
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
-      - 'clients/client-hipal-app/**'
+      - '*'
 
       
     
