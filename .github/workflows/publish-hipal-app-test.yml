@@ -6,10 +6,14 @@ env:
 
 on:
   push:
-    branches: ['testing']
+    branches: ['test']
     paths:
-      - 'package.json'
-      - '*'
+      - 'Dockerfile'
+      - 'bun.lockb'
+      - 'clients/client-hipal-app/**'
+
+      
+    
 
 jobs:
   build:

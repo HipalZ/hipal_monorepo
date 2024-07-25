@@ -40,6 +40,7 @@ const categoriesRouter = new Hono()
           return respond(c, "Category already exists", true, 409, {});
 
         const menuType = await Business.findOne({ businessId });
+        console.log("menuType", menuType);
         if (!menuType) return respond(c, "Business not found", true, 404, {});
 
         if (
