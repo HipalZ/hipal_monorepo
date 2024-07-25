@@ -23,11 +23,6 @@ import { Hono } from "hono";
 //@ts-ignore
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 
 // Hash a password
@@ -481,8 +476,7 @@ const usersRouter = new Hono()
   //TODO: ADD PERMISSION DONE
   .post(
     "/addStaff",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+
     zValidator("json", addStaffValidator),
 
     async (c) => {
@@ -523,8 +517,7 @@ const usersRouter = new Hono()
   )
   .put(
     "/:staffId/staff",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+
     zValidator(
       "json",
       z
@@ -593,8 +586,6 @@ const usersRouter = new Hono()
 
   .delete(
     "/:staffId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
@@ -703,8 +694,6 @@ const usersRouter = new Hono()
   })
   .get(
     "/getStaff/:staffId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
@@ -817,8 +806,7 @@ const usersRouter = new Hono()
   )
   .get(
     "/:id/loyaltyUserHistory",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator(
       "query",
       z.object({

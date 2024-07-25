@@ -7,11 +7,6 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 
 const settingsRouter = new Hono()
@@ -30,8 +25,7 @@ const settingsRouter = new Hono()
   // )
   .post(
     "/banner",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
     zValidator("json", bannerSchema),
 
     async (c) => {
@@ -50,8 +44,7 @@ const settingsRouter = new Hono()
   )
   .post(
     "/",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
     zValidator("json", BusinessSettingsSchema),
 
     async (c) => {
@@ -75,8 +68,7 @@ const settingsRouter = new Hono()
   )
   .put(
     "/update/:settingsId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
     zValidator("json", BusinessSettingsSchema.partial()),
     zValidator("param", z.object({ settingsId: z.string() })),
 
@@ -101,8 +93,7 @@ const settingsRouter = new Hono()
   )
   .get(
     "/:businessId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
     zValidator("param", z.object({ businessId: z.string() })),
 
     async (c) => {
@@ -122,8 +113,7 @@ const settingsRouter = new Hono()
 
   .put(
     "/banner/:bannerId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
     zValidator("json", bannerSchema.partial()),
     zValidator("param", z.object({ bannerId: z.string() })),
 
@@ -148,8 +138,6 @@ const settingsRouter = new Hono()
   )
   .get(
     "/banner/:bannerId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("param", z.object({ bannerId: z.string() })),
 

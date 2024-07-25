@@ -246,8 +246,7 @@ const calculatedCashbackCoins = async (
 const paymentsRouter = new Hono()
   .post(
     "/createOrder",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator("json", orderSchema),
 
     async (c) => {
@@ -299,8 +298,7 @@ const paymentsRouter = new Hono()
   )
   .post(
     "/reviews",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator("json", ReviewsSchema),
 
     async (c) => {
@@ -320,8 +318,7 @@ const paymentsRouter = new Hono()
   )
   .post(
     "/createOfflineOrder",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator("json", orderSchema),
 
     async (c) => {
@@ -394,8 +391,7 @@ const paymentsRouter = new Hono()
   )
   .post(
     "/validPayment",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+
     zValidator("json", validatePaymentSchema),
 
     async (c) => {
@@ -622,8 +618,7 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/paymentAlerts",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("query", paramsSchema),
 
     async (c) => {
@@ -653,8 +648,7 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/orders/:orderId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("query", paramsSchema),
 
     async (c) => {
@@ -677,8 +671,7 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/offlineAlerts",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("query", z.object({ businessId: z.string() })),
 
     async (c) => {
@@ -697,8 +690,7 @@ const paymentsRouter = new Hono()
   )
   .put(
     "/:pid/order/:alertId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("param", z.object({ alertId: z.string() })),
 
     zValidator("json", acceptOrderSchema),
@@ -932,8 +924,7 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/salesDashboard",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("query", paramsSchema),
 
     async (c) => {
@@ -1045,8 +1036,7 @@ const paymentsRouter = new Hono()
 
   .get(
     "/:id/bills",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+
     zValidator("query", paramsSchema),
 
     async (c) => {

@@ -27,19 +27,12 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import {
-  ClientRoles,
-  requireAuthorization,
-} from "../../../middleware/authorization";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 import { convertToHsl } from "../../utils/theme";
 
 const businessesRouter = new Hono()
   .post(
     "/",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator("json", BusinessSchema),
 
@@ -72,8 +65,7 @@ const businessesRouter = new Hono()
   )
   .post(
     "/createBranch",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+
     zValidator("json", BranchSchema),
 
     async (c) => {
@@ -214,8 +206,6 @@ const businessesRouter = new Hono()
   )
   .post(
     "/outletInfo",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator("json", outLetInfoSchema),
 
@@ -241,8 +231,6 @@ const businessesRouter = new Hono()
   )
   .post(
     "/permissions",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator("json", permissionsSchema),
 
@@ -257,8 +245,6 @@ const businessesRouter = new Hono()
   )
   .post(
     "/:customLink",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
@@ -373,8 +359,6 @@ const businessesRouter = new Hono()
   )
   .put(
     "/:businessId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
@@ -427,8 +411,7 @@ const businessesRouter = new Hono()
   )
   .put(
     "outletInfo/update/:businessId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+
     zValidator(
       "param",
       z.object({
@@ -456,8 +439,6 @@ const businessesRouter = new Hono()
 
   .get(
     "/:businessId/permissions",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator("param", z.object({ businessId: z.string() })),
     async (c) => {
@@ -471,8 +452,6 @@ const businessesRouter = new Hono()
   )
   .get(
     "/getBranches/:ownerId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
@@ -492,8 +471,7 @@ const businessesRouter = new Hono()
   )
   .get(
     "/outletInfo/:businessId",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
+
     zValidator("param", z.object({ businessId: z.string() })),
 
     async (c) => {
@@ -608,8 +586,6 @@ const businessesRouter = new Hono()
 
   .get(
     "/:businessId/users",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER]),
 
     zValidator(
       "param",
