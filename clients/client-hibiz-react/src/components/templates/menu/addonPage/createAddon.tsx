@@ -13,6 +13,8 @@ import { RiLinkUnlink } from "react-icons/ri";
 import EditChoice from "./editChoice";
 import { useSaveAddOn } from "@/hooks/useAddOn";
 import useBusinessData from "@/components/store/useBusinessData";
+import BottomButton from "@/components/atom/bottomButton";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const count = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -107,6 +109,13 @@ const MemoCreateAddon = () => {
     minChoices,
     businessData?._id,
   ]);
+  if (isPending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -268,9 +277,7 @@ const MemoCreateAddon = () => {
         </Background>
       </article>
       {choices.length > 0 && (
-        <button onClick={saveAddOnData} className="bottom_btn" type="button">
-          Save Addon
-        </button>
+        <BottomButton text="Save" onClick={saveAddOnData} />
       )}
     </>
   );

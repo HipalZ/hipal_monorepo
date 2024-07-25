@@ -14,6 +14,8 @@ import EditChoice from "./editChoice";
 import toast from "react-hot-toast";
 import { useUpdateAddon } from "@/hooks/useAddOn";
 import useBusinessData from "@/components/store/useBusinessData";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import BottomButton from "@/components/atom/bottomButton";
 
 const count = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -114,6 +116,14 @@ const MemoEditAddon = () => {
     addOnId,
     businessData,
   ]);
+
+  if (isPending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -229,9 +239,7 @@ const MemoEditAddon = () => {
       </section>
       <EditChoice />
       {choices.length > 0 && (
-        <button onClick={saveAddOnData} className="bottom_btn" type="button">
-          Update Addon
-        </button>
+        <BottomButton text="Update" onClick={saveAddOnData} />
       )}
     </div>
   );

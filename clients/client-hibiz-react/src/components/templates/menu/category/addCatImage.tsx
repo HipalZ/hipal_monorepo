@@ -1,5 +1,6 @@
 import BottomButton from "@/components/atom/bottomButton";
 import Background from "@/components/atom/feildBackground";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 import useBusinessData from "@/components/store/useBusinessData";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
@@ -22,6 +23,7 @@ const MemoAddCatImage = () => {
     selectedCategory,
     categoryName,
     selectIds,
+    isLoading,
   } = useMenuPageStore((s) => ({
     selectedCategory: s.selectedCategory,
     setSelectedCategory: s.setSelectedCategory,
@@ -35,6 +37,7 @@ const MemoAddCatImage = () => {
     setImagePreview: s.setImagePreview,
     selectedFile: s.selectedFile,
     setSelectedFile: s.setSelectedFile,
+    isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
   }));
 
@@ -154,9 +157,17 @@ const MemoAddCatImage = () => {
       }
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
-    <section className="mx-6">
+    <section className="mx-6 ">
       <label className="font-medium" htmlFor="cat">
         Category Image
       </label>

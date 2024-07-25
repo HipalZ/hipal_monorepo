@@ -37,10 +37,10 @@ export const useAddOnList = () => {
 export const useSaveAddOn = () => {
   const queryClient = useQueryClient();
 
-  const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
+  const { setOpenMenu, resetStore,setIsLoading } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
-    addOnToggle: s.addOnToggle,
+    setIsLoading: s.setIsLoading,
   }));
 
   const handleApiResponse = useCallback((res) => {

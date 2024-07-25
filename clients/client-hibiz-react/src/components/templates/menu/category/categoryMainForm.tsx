@@ -9,6 +9,7 @@ import Background from "@/components/atom/feildBackground";
 import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useSaveCategory } from "@/hooks/useCategory";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const CategoryMainForm = memo(() => {
   const {
@@ -78,6 +79,14 @@ const CategoryMainForm = memo(() => {
     }
     setCategoryStep("CATEGORY_STEP_2");
   }, [categoryStep, categoryName]);
+
+  if (isPending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <>

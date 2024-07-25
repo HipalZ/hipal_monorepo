@@ -1,3 +1,4 @@
+import BottomButton from "@/components/atom/bottomButton";
 import Background from "@/components/atom/feildBackground";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -150,7 +151,7 @@ const MemoEditCategory = () => {
     if (selectedFile) {
       imageUrl = await storeImageAfterSave(
         selectedFile,
-        imagePreview ,
+        imagePreview,
         setIsLoading,
       );
     }
@@ -348,10 +349,7 @@ const MemoEditCategory = () => {
           </section>
         </>
       )}
-
-      <button type="button" className="bottom_btn" onClick={handleSave}>
-        Save
-      </button>
+      <BottomButton text="Update" onClick={handleSave} />
     </section>
   );
 };

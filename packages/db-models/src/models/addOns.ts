@@ -25,7 +25,6 @@ const extraSchema = new mongoose.Schema<AddOnType>(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
 
     compulsory: {
