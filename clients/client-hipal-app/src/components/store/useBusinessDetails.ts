@@ -9,6 +9,7 @@ export const useBusinessDetails = create(
   }>(
     (set) => ({
       businessDetails: {
+        businessId: "",
         businessName: "",
         registeredName: "",
         businessType: "",
@@ -55,15 +56,16 @@ export const useBusinessDetails = create(
         phone: "",
         __v: 0,
         id: "",
-        phoneNumber:'',
+        phoneNumber: "",
       },
-      setBusinessDetails: (businessDetails: IBiz) => set({ businessDetails: businessDetails }),
+      setBusinessDetails: (businessDetails: IBiz) =>
+        set({ businessDetails: businessDetails }),
     }),
     {
       name: "useBusinessDetails",
-      storage:createJSONStorage(()=>localStorage)
-    }
-  )
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
 );
 
 export default useBusinessDetails;

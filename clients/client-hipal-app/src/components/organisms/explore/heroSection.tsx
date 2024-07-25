@@ -10,19 +10,24 @@ import type {
   IExplore,
 } from "@/components/types/businessData";
 import { TiLocationOutline } from "react-icons/ti";
-import { MdOutlineCall } from "react-icons/md";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import RestaurantTimeMemo from "@/components/atoms/time/restaurant";
+import { preDefinedHeroButtons } from "@/components/utils/helpers";
+import { MdOutlineCall } from "react-icons/md";
 
 interface IHeroSection {
   data: IBusinessData;
 }
+
 function HeroSection({ data }: IHeroSection): JSX.Element {
   const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
-  const { name, logoUrl, tags,address, description } = data.business as BusinessDetails;
+  const { name, logoUrl, tags, address, description } =
+    data.business as BusinessDetails;
+  const business = data.business as BusinessDetails;
   const { location, phone } = data.settings?.explore as IExplore;
   const setBusinessData = _useAllBusiness((s) => s.setData);
-  const goToLocaltion = () => {
+  const goToLocation = () => {
     if (typeof window !== "undefined") {
       window.location.href = location;
     }
@@ -36,35 +41,73 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   useEffect(() => {
     setBusinessData(data);
-    if (data?.business) {
-      setBusinessDetails(data.business);
+    if (business) {
+      setBusinessDetails(business);
     }
   }, [data]);
 
   return (
-    <div className="relative flex flex-col px-8">
-      <figure className="absolute z-10 -top-[4rem] left-4 bg-base-100 rounded-full">
-        {logoUrl ? (
-          <center className="p-1 w-[100px] h-[100px]">
-            <Image
-              src={logoUrl}
-              height={86}
-              width={86}
-              quality={95}
-              objectFit="cover"
-              alt="logo-business"
-              className="object-center rounded-full aspect-square"
-              placeholder="blur"
-              blurDataURL={getRandomBlurImg(100, 100)}
-            />
-          </center>
-        ) : (
-          <PlaceholderImg />
-        )}
-      </figure>
+    <div className="relative flex flex-col items-center px-8">
+      <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-3xl p-4 text-base-100">
+        <article className="flex space-x-4">
+          <figure>
+            {logoUrl ? (
+              <center className="w-[65px] h-[65px]">
+                <Image
+                  src={logoUrl}
+                  height={86}
+                  width={86}
+                  quality={95}
+                  objectFit="cover"
+                  alt="logo-business"
+                  className="object-center rounded-full aspect-square"
+                  placeholder="blur"
+                  blurDataURL={getRandomBlurImg(65, 65)}
+                />
+              </center>
+            ) : (
+              <PlaceholderImg />
+            )}
+          </figure>
+          <div>
+            {name && (
+              <h4 className="-mt-1 text-lg font-semibold capitalize">{name}</h4>
+            )}
+            {address && (
+              <>
+                <h6 className="w-48 text-xs font-semibold capitalize truncate line-clamp-1 ">
+                  {address}
+                </h6>
+                <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-base-200 text-primary z-20">
+                  OPEN
+                </h6>
+                <div className="absolute top-[2.5rem] px-2 py-1 text-xs rounded-md -right-1 w-5 h-10 rotate-45 bg-base-300 text-primary z-[-1]" />
+              </>
+            )}
+            <article className="flex gap-1 mt-1">
+              <h6 className="text-xs">⭐ 4.5</h6>
+              <RestaurantTimeMemo business={data?.business} />
+            </article>
+          </div>
+        </article>
+        <article className="flex items-center justify-between gap-2 mt-5">
+          {preDefinedHeroButtons.map((button) => {
+            return (
+              <div
+                key={button?._id}
+                className="h-[2rem] text-xs bg-base-100 text-primary rounded-full flex justify-center items-center px-2 space-x-2"
+              >
+                <button.icon size={16} />
+                <span className="pr-1">{button?.label}</span>
+              </div>
+            );
+          })}
+        </article>
+      </section>
       {location && (
         <section
           onClick={callTheOwner}
+          onKeyDown={callTheOwner}
           className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-4 flex justify-center items-center"
         >
           <MdOutlineCall size={24} className="text-white" />
@@ -72,40 +115,20 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       )}
       {phone && (
         <section
-          onClick={goToLocaltion}
+          onClick={goToLocation}
+          onKeyDown={goToLocation}
           className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-[4.5rem] flex justify-center items-center"
         >
           <TiLocationOutline size={24} className="text-white" />
         </section>
       )}
-
-      <div className="pt-8 space-y-2">
-        {name && (
-          <h4 className="text-2xl font-semibold capitalize">{name}</h4>
-        )}
-        {
-          address && (
-            <h6 className="text-base font-semibold capitalize">{address}</h6>
-          )
-        }
-      </div>
-      <div className="mt-4 text-xs font-light">
+      <div className="mt-36" />
+      <h3 className="flex text-xl font-bold line-clamp-2 divide-base-content">
+        {Array.isArray(tags) ? tags.join(" | ") : tags}
+      </h3>
+      <div className="mt-4 text-xs font-light text-center">
         <ReadMore text={description} />
       </div>
-      <ul className="mt-4 text-2xl">
-        Features
-        <article className="flex flex-wrap space-x-12">
-        {
-          Array.isArray(tags) ? tags.map((tag)=>{
-            return <li className="ml-4 list-disc">
-              <h3 className="text-sm capitalize">
-                {tag}
-              </h3>
-            </li>
-          })
-          :tags}
-          </article>
-      </ul>
     </div>
   );
 }

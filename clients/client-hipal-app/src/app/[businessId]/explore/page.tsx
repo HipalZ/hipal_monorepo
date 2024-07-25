@@ -64,60 +64,71 @@ export default async function Explore({
   console.log("data", data);
 
   return (
-    <div className="relative flex flex-col w-full pb-16 ">
+    <div className="relative flex flex-col w-full pb-16 overflow-hidden">
       <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
         <MainBackground explore={data?.business} />
       </Suspense>
-      <div className="z-10 flex flex-col w-full -mt-10 space-y-6 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
+      <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <HeroSection data={data} />
         </Suspense>
         <Suspense fallback={<SkeletonLoader height={100} count={1} />}>
           <Rewards />
         </Suspense>
+        <div className="bg-base-200">
+          <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
+        </div>
         {data?.banners?.some(
           (banner: IBannerPayload) => banner?.isPublished,
         ) && (
           <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
-            <h2 className="text-2xl font-bold text-center">In SpotLight</h2>
-            <article className="h-[24rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-transparent rounded-lg flex-nowrap">
-              <EmblaCarousel>
-                {data?.banners?.map((banner: IBannerPayload, index: number) => {
-                  if (banner?.isPublished === false) return null;
-                  return (
-                    <BannerLayouts
-                      key={`banner?._id+${index.toString()}`}
-                      selectedLayout={banner?.layout || ""}
-                      heading={banner?.heading || ""}
-                      paragraph={banner?.paragraph || ""}
-                      callToAction={banner?.callToAction || ""}
-                      img={{ logo: banner?.bannerImage || "" }}
-                      selectedColor={{
-                        bgColor: banner?.backgroundColor || "",
-                        textColor: banner?.backgroundColor || "",
-                      }}
-                      paragraphStyle={{
-                        color: banner?.paragraphColor || "",
-                      }}
-                      buttonStyle={{
-                        color: banner?.buttonColor || "",
-                        buttonColor: banner?.buttonTextColor || "",
-                      }}
-                    />
-                  );
-                })}
-              </EmblaCarousel>
+            <article className="bg-base-200">
+              <h2 className="mt-4 text-2xl font-bold text-center bg-base-200">
+                In Spotlight
+              </h2>
+              <article className="h-[25rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap">
+                <EmblaCarousel>
+                  {data?.banners?.map(
+                    (banner: IBannerPayload, index: number) => {
+                      if (banner?.isPublished === false) return null;
+                      return (
+                        <BannerLayouts
+                          key={`banner?._id+${index.toString()}`}
+                          selectedLayout={banner?.layout || ""}
+                          heading={banner?.heading || ""}
+                          paragraph={banner?.paragraph || ""}
+                          callToAction={banner?.callToAction || ""}
+                          img={{ logo: banner?.bannerImage || "" }}
+                          selectedColor={{
+                            bgColor: banner?.backgroundColor || "",
+                            textColor: banner?.backgroundColor || "",
+                          }}
+                          paragraphStyle={{
+                            color: banner?.paragraphColor || "",
+                          }}
+                          buttonStyle={{
+                            color: banner?.buttonColor || "",
+                            buttonColor: banner?.buttonTextColor || "",
+                          }}
+                        />
+                      );
+                    },
+                  )}
+                </EmblaCarousel>
+              </article>
             </article>
           </Suspense>
         )}
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <SubLoyalty loyalty={data?.loyalty} />
         </Suspense>
-        <div className="overflow-auto">
-          <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
-            <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
-          </Suspense>
-        </div>
+        {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
+          <div className="overflow-auto">
+            <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
+              <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
+            </Suspense>
+          </div>
+        ) : null}
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <Footer
             themes={data?.settings || defaultThemes}

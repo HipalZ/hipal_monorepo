@@ -13,7 +13,10 @@ import {
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { IDish, IExtraItem } from "../types/businessData";
+import type { IDish, IExtraItem } from "../types/businessData";
+import { FaWhatsapp } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
+import { MdOutlineCall } from "react-icons/md";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -107,14 +110,17 @@ export function timestampToDateTime(timestamp: number): string {
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
 
+export const calculateReward = (
+  exist: number,
+  reward: number,
+  limit: number,
+) => {
+  console.log("exist", exist, "reward", reward, "limit", limit);
+  let total = exist + reward;
 
-export const calculateReward = (exist: number, reward: number, limit: number) => {
-	console.log('exist', exist, 'reward', reward, 'limit', limit);
-	let total = exist + reward;
-
-	const sum = Math.min(total, limit);
-	const finalReward = Number(sum - exist)
-	return { finalReward, curentBalance: sum };
+  const sum = Math.min(total, limit);
+  const finalReward = Number(sum - exist);
+  return { finalReward, curentBalance: sum };
 };
 
 interface InputObject {
@@ -390,23 +396,43 @@ export const defaultThemes: IThemes = {
 export function calculateTotalPrice(
   dishData: IDish,
   selectedPortion: string | null,
-  selectedExtras: IExtraItem
+  selectedExtras: IExtraItem,
 ): number {
   let totalPrice = 0;
 
   if (selectedPortion) {
-      const portion = dishData?.portions?.find(p => p.name === selectedPortion);
-      totalPrice = portion?.price ?? dishData.price;  
+    const portion = dishData?.portions?.find((p) => p.name === selectedPortion);
+    totalPrice = portion?.price ?? dishData.price;
   } else {
-      totalPrice = dishData.price;  
+    totalPrice = dishData.price;
   }
 
   for (const extraId of Object.keys(selectedExtras)) {
-      const extra = dishData?.extras?.[0]?.items?.find(item => item._id === extraId);
-      if (extra) {
-          totalPrice += extra.price * selectedExtras[extraId];
-      }
+    const extra = dishData?.extras?.[0]?.items?.find(
+      (item) => item._id === extraId,
+    );
+    if (extra) {
+      totalPrice += extra.price * selectedExtras[extraId];
+    }
   }
 
   return totalPrice;
 }
+
+export const preDefinedHeroButtons = [
+  {
+    _id: "1",
+    label: "Direction",
+    icon: FaMapMarkerAlt,
+  },
+  {
+    _id: "2",
+    label: "Call",
+    icon: MdOutlineCall,
+  },
+  {
+    _id: "3",
+    label: "WhatsApp",
+    icon: FaWhatsapp,
+  },
+];

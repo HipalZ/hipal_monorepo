@@ -32,7 +32,7 @@ function MemoEmblaCarousel({ children }) {
       <div className="mt-3 embla__button-container">
         <button
           type="button"
-          className="border rounded-full embla__button embla__button--prev border-1"
+          className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"
           onClick={onPrevClick}
         >
           <FaAngleLeft size={24} />
@@ -53,7 +53,7 @@ function MemoEmblaCarousel({ children }) {
         </div>
         <button
           type="button"
-          className="border rounded-full embla__button embla__button--next border-1"
+          className="px-2 border rounded-full border-primary embla__button embla__button--next border-1"
           onClick={onNextClick}
         >
           <FaAngleRight size={24} />

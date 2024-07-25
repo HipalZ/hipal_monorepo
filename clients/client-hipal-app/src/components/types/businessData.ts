@@ -1,6 +1,6 @@
 import type { ICart } from "@/components/store/useCart";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
-import { CategoryType } from "@hi/db-models/src/validators";
+import type { CategoryType } from "@hi/db-models/src/validators";
 
 export interface IBiz {
   email: string;
@@ -94,8 +94,8 @@ export interface IBusinessData {
   dishData?: IDish;
   theme?: HSLTheme;
   uniquelyDishes?: IUniquelyDishes[];
- parentCategories?: CategoryType[];
- childCategories?: CategoryType[];
+  parentCategories?: CategoryType[];
+  childCategories?: CategoryType[];
   loyalty: ILoyaltySetting;
   cart?: ICart[];
 }
@@ -356,7 +356,13 @@ export interface BusinessDetails {
   branchName: string;
   brandName: string;
   name: string;
-  customTiming: any[];
+  fixOpenTime: string;
+  fixCloseTime: string;
+  customTiming?: {
+    day: string;
+    openTime: string;
+    closeTime: string;
+  }[];
   fixCloseTime: string;
   fixOpenTime: string;
   logoUrl: string;

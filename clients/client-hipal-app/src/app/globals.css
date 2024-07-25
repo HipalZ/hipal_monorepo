@@ -1494,7 +1494,7 @@ input[type='password'] {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background-color: #ccc;
+	background-color: #CACACA;
 	margin: 0 4px;
 	transition: transform 0.3s ease;
   }
@@ -1510,5 +1510,5 @@ input[type='password'] {
 
   .listbox-button:hover {
 	background-color: #f0f0f0; /* Change to your desired highlight color */
-	border-color: #ccc; /* Optional: Change border color on hover */
+	border-color: #CACACA; /* Optional: Change border color on hover */
   }
