@@ -23,6 +23,7 @@ import ListOfDishes from "@/components/templates/menu/dish/dishesList";
 import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
 import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
 import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
+import AlertClosePopup from "@/components/common/alertClosePopup";
 
 const MemoizeDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -36,7 +37,9 @@ const MemoizeDishAndCat = () => {
     setEditOpenMenu,
     setSelectedCategory,
     resetEditDish,
-    setIsMenuManager
+    setIsMenuManager,
+    showAlertPopUp,
+    setTempPage,
   } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
@@ -49,8 +52,11 @@ const MemoizeDishAndCat = () => {
     search: s.search,
     setSearch: s.setSearch,
     resetEditDish: s.resetEditDish,
-    setIsMenuManager: s.setIsMenuManager
+    setIsMenuManager: s.setIsMenuManager,
+    showAlertPopUp: s.showAlertPopUp,
+    setTempPage: s.setTempPage,
   }));
+
   const navigate = useNavigate();
   const handleBack = () => {
     startTransition(() => {
@@ -59,14 +65,14 @@ const MemoizeDishAndCat = () => {
   };
 
   const pathname = useLocation().pathname;
-  
+
   useEffect(() => {
     const isManagerExists = pathname.includes("dishandcat");
     setIsMenuManager(!isManagerExists);
-  },[])
+  }, []);
 
   const openMenuModel = useCallback(() => {
-    resetStore()
+    resetStore();
     if (selectedPage === "MAIN_CATEGORY") {
       setSelectedCategory("MAIN_CATEGORY");
     } else if (selectedPage === "SUB_CATEGORY") {
@@ -77,13 +83,18 @@ const MemoizeDishAndCat = () => {
   }, [selectedPage]);
 
   const closeMenu = useCallback(() => {
-    resetStore();
-    setOpenMenu(false);
+    setTempPage(selectedPage);
+    setSelectedPage("ALERT");
   }, [openMenu]);
 
   const closeEditMenu = useCallback(() => {
     setEditOpenMenu(false);
   }, [editOpenMenu]);
+
+  const showPopUp = useCallback(() => {
+    setTempPage(selectedPage);
+    setSelectedPage("ALERT");
+  }, [showAlertPopUp]);
 
   const sidebarItems = [
     { icon: Hi, text: "Dishes", onClick: () => setSelectedPage("DISHES") },
@@ -148,22 +159,23 @@ const MemoizeDishAndCat = () => {
 
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
-        {selectedPage === "ADD_ON" && (
-          <ListOfAddOn />
-        )}
+        {selectedPage === "ADD_ON" && <ListOfAddOn />}
       </section>
 
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
           <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
-            <button
-              className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
-              type="button"
-              onClick={closeEditMenu}
-            >
-              <HiX />
-            </button>
+            {selectedPage !== "ALERT" && (
+              <button
+                className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
+                type="button"
+                onClick={showPopUp}
+              >
+                <HiX />
+              </button>
+            )}
             {selectedPage === "DISHES" && <EditDish />}
+            {selectedPage === "ALERT" && <AlertClosePopup />}
           </section>
         </PopUp>
       )}
@@ -171,20 +183,24 @@ const MemoizeDishAndCat = () => {
       {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>
           <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
-            <button
-              className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
-              type="button"
-              onClick={closeMenu}
-            >
-              <HiX />
-            </button>
+            {selectedPage !== "ALERT" && (
+              <button
+                className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
+                type="button"
+                onClick={closeMenu}
+              >
+                <HiX />
+              </button>
+            )}
             {selectedPage === "DISHES" && <CreateDish />}
             {(selectedPage === "MAIN_CATEGORY" ||
               selectedPage === "SUB_CATEGORY") && <CreateCategory />}
             {selectedPage === "ADD_ON" && <AddOnForm />}
+            {selectedPage === "ALERT" && <AlertClosePopup />}
           </section>
         </PopUp>
       )}
+
       <button
         onClick={openMenuModel}
         className="fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6"

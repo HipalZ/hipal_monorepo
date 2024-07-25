@@ -21,16 +21,14 @@ import { putDishData } from "@/hooks/useDishStore";
 import { useLocation, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Switch } from "@headlessui/react";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import { MdDelete } from "react-icons/md";
 import PendingActions from "./pendingActions";
 import SectionLoader from "@/components/atom/sectionLoader";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-  const { resetDishesStore } = useDishesStore((s) => ({
-    resetDishesStore: s.resetDishesStore,
-  }));
+  const queryClient = useQueryClient();
 
   const {
     setDishName,
@@ -66,6 +64,7 @@ const MemoDishForm = () => {
     isLoading,
     setIsMenuManager,
     setIsLoading,
+    setOpenMenu,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     setDishName: s.setDishName,
@@ -205,11 +204,12 @@ const MemoDishForm = () => {
     const { data, dishResponse } = await putDishData(filteredPayload);
     if (dishResponse?.status === 200) {
       resetStore();
-      resetDishesStore();
       resetDishStore();
-      toast.success(data?.message);
       setEditOpenMenu(false);
       setIsLoading(false);
+      setOpenMenu(false);
+      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      toast.success(data?.message);
       return;
     }
     if (!data?.success) {

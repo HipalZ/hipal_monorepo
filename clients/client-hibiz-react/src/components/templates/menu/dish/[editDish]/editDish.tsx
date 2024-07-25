@@ -15,13 +15,13 @@ import {
 } from "@/hooks/useDishStore";
 import LinkTags from "./linkTags";
 import LinkAddons from "./linkAddons";
-import MiddlePopUp from "@/components/atom/middlePopUp";
 import ReactCropper from "@/components/cropper";
 import { cn, handleCrop } from "@/components/utils/helper";
 import DeleteDish from "./deleteDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import toast from "react-hot-toast";
 import useErrorToasts from "@/hooks/useError";
+import AlertClosePopup from "@/components/common/alertClosePopup";
 
 const MemoEditDish = () => {
   const { resetDishesStore } = useDishesStore((s) => ({
@@ -34,7 +34,6 @@ const MemoEditDish = () => {
     cropperRef,
     cropping,
     dishStep,
-    setShowCropper,
     setImageFiles,
     setImagePreviews,
     imageFiles,
@@ -46,7 +45,6 @@ const MemoEditDish = () => {
     setEditOpenMenu: s.setEditOpenMenu,
     setDishStep: s.setDishStep,
     dishStep: s.dishStep,
-    setShowCropper: s.setShowCropper,
     showCropper: s.showCropper,
     cropping: s.cropping,
     cropperRef: s.cropperRef,
@@ -61,8 +59,8 @@ const MemoEditDish = () => {
 
   const errorToasts = useErrorToasts();
 
-  const { data: categories } = useChildCategories(dishStep);
-  const { data: dishes } = useDishStore(dishStep);
+  useChildCategories(dishStep);
+  useDishStore();
   const { data: addons } = useAddons(dishStep);
 
   const goBack = useCallback(() => {
@@ -156,17 +154,14 @@ const MemoEditDish = () => {
         {dishStep === "DISH_STEP_1" && <DishStepOne />}
         {dishStep === "DISH_STEP_2" && <DishStepTwo />}
         {dishStep === "PORTION_STEP" && <PortionStep />}
-        {dishStep === "LINK_CATEGORY_STEP" && (
-          <LinkItems categoryData={categories || []} />
-        )}
-        {dishStep === "LINK_RECOMMENDATION_STEP" && (
-          <LinkItems dishesData={dishes || []} />
-        )}
+        {dishStep === "LINK_CATEGORY_STEP" && <LinkItems />}
+        {dishStep === "LINK_RECOMMENDATION_STEP" && <LinkItems />}
         {dishStep === "LINK_ADD_TAGS" && <LinkTags />}
         {dishStep === "LINK_ADDON_STEP" && <LinkAddons data={addons || []} />}
         {dishStep === "CONFIRM_DELETE" && (
           <DeleteDish handleDelete={handleDelete} />
         )}
+        {dishStep === "ALERT" && <AlertClosePopup />}
       </div>
       {dishStep === "SHOW_CROPPER" && (
         <section>

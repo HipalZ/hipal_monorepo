@@ -105,6 +105,7 @@ const MemoLinkTags = () => {
           <input
             type="text"
             value={newTag}
+            maxLength={10}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="Enter custom tag"
             className="bg-white rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"

@@ -75,33 +75,41 @@ export default async function Explore({
         <Suspense fallback={<SkeletonLoader height={100} count={1} />}>
           <Rewards />
         </Suspense>
-        <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
-          <article className="h-[24rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-transparent rounded-lg flex-nowrap">
-            <EmblaCarousel>
-              {data?.banners?.map((banner: IBannerPayload, index: number) => {
-                return (
-                  <BannerLayouts
-                    key={`banner?._id+${index.toString()}`}
-                    selectedLayout={banner?.layout || ""}
-                    heading={banner?.heading || ""}
-                    paragraph={banner?.paragraph || ""}
-                    callToAction={banner?.callToAction || ""}
-                    img={{ logo: banner?.bannerImage || "" }}
-                    selectedColor={{
-                      bgColor: banner?.backgroundColor || "",
-                      textColor: banner?.backgroundColor || "",
-                    }}
-                    paragraphStyle={{ color: banner?.paragraphColor || "" }}
-                    buttonStyle={{
-                      color: banner?.buttonColor || "",
-                      buttonColor: banner?.buttonTextColor || "",
-                    }}
-                  />
-                );
-              })}
-            </EmblaCarousel>
-          </article>
-        </Suspense>
+        {data?.banners?.some(
+          (banner: IBannerPayload) => banner?.isPublished,
+        ) && (
+          <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
+            <h2 className="text-2xl font-bold text-center">In SpotLight</h2>
+            <article className="h-[24rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-transparent rounded-lg flex-nowrap">
+              <EmblaCarousel>
+                {data?.banners?.map((banner: IBannerPayload, index: number) => {
+                  if (banner?.isPublished === false) return null;
+                  return (
+                    <BannerLayouts
+                      key={`banner?._id+${index.toString()}`}
+                      selectedLayout={banner?.layout || ""}
+                      heading={banner?.heading || ""}
+                      paragraph={banner?.paragraph || ""}
+                      callToAction={banner?.callToAction || ""}
+                      img={{ logo: banner?.bannerImage || "" }}
+                      selectedColor={{
+                        bgColor: banner?.backgroundColor || "",
+                        textColor: banner?.backgroundColor || "",
+                      }}
+                      paragraphStyle={{
+                        color: banner?.paragraphColor || "",
+                      }}
+                      buttonStyle={{
+                        color: banner?.buttonColor || "",
+                        buttonColor: banner?.buttonTextColor || "",
+                      }}
+                    />
+                  );
+                })}
+              </EmblaCarousel>
+            </article>
+          </Suspense>
+        )}
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <SubLoyalty loyalty={data?.loyalty} />
         </Suspense>

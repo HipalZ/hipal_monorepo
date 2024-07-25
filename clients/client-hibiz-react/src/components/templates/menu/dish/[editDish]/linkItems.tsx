@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import { useChildCategories, useDishStore } from "@/hooks/useDishStore";
+import { useChildCategories } from "@/hooks/useDishStore";
 import { useDishesStore } from "@/components/store/useDishesStore";
 
 const MemoLinkItems = () => {
@@ -22,11 +22,9 @@ const MemoLinkItems = () => {
     addOnToggle,
     setAddOnToggle,
     addOnId,
-    selectedPage,
-    setSelectedPage,
     editingSubCat,
     categoryStep,
-    setCategoryStep
+    setCategoryStep,
   } = useMenuPageStore((s) => ({
     setSelectedCatIds: s.setSelectedCatIds,
     selectedCatIds: s.selectedCatIds,
@@ -41,11 +39,9 @@ const MemoLinkItems = () => {
     addOnToggle: s.addOnToggle,
     setAddOnToggle: s.setAddOnToggle,
     addOnId: s.addOnId,
-    selectedPage:s.selectedPage,
-    setSelectedPage:s.setSelectedPage,
     editingSubCat: s.editingSubCat,
-    categoryStep:s.categoryStep,
-    setCategoryStep:s.setCategoryStep,
+    categoryStep: s.categoryStep,
+    setCategoryStep: s.setCategoryStep,
   }));
 
   const { dishes } = useDishesStore((s) => ({
@@ -91,28 +87,31 @@ const MemoLinkItems = () => {
       setAddOnToggle("ADD_ON");
     }
 
-    if(categoryStep === "LINK_DISH"){
-      if(editingSubCat){
+    if (categoryStep === "LINK_DISH") {
+      if (editingSubCat) {
         setRecommendationIds(tempIds);
         setCategoryStep("EDIT_SUB_CATEGORY");
-        return
+        return;
       }
       setRecommendationIds(tempIds);
       setCategoryStep("CATEGORY_STEP_1");
     }
-}
+  };
 
-  const handleDataChange = useCallback((id: string) => {
-    if (tempIds.includes(id)) {
-      setTempIds(tempIds.filter((catId) => catId !== id));
-      if (!removeIds.includes(id)) {
-        setRemoveIds([...removeIds, id]);
+  const handleDataChange = useCallback(
+    (id: string) => {
+      if (tempIds.includes(id)) {
+        setTempIds(tempIds.filter((catId) => catId !== id));
+        if (!removeIds.includes(id)) {
+          setRemoveIds([...removeIds, id]);
+        }
+      } else {
+        setTempIds([...tempIds, id]);
+        setRemoveIds(removeCategoryIds.filter((catId) => catId !== id));
       }
-    } else {
-      setTempIds([...tempIds, id]);
-      setRemoveIds(removeCategoryIds.filter((catId) => catId !== id));
-    }
-  },[tempIds, removeIds]);
+    },
+    [tempIds, removeIds],
+  );
 
   useEffect(() => {
     if (dishStep === "LINK_CATEGORY_STEP") {
@@ -123,7 +122,7 @@ const MemoLinkItems = () => {
     if (addOnToggle === "LINK_DISHES" || categoryStep === "LINK_DISH") {
       setTempIds(recommendationIds);
     }
-  }, [dishStep,categoryStep, recommendationIds, addOnToggle]);
+  }, [dishStep, categoryStep, recommendationIds, addOnToggle]);
 
   return (
     <>

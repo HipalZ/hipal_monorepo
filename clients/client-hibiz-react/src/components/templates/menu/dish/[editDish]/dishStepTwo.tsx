@@ -5,20 +5,20 @@ import Background from "@/components/atom/feildBackground";
 import DishImages from "./dishImages";
 import { useParams } from "react-router-dom";
 import type { DishType } from "@hi/db-models/src/validators";
-import { filterPayload, updateImage } from "@/components/utils/helper";
+import {
+  compressImage,
+  filterPayload,
+  updateImage,
+} from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
 import { putDishData } from "@/hooks/useDishStore";
 import toast from "react-hot-toast";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import { MdDelete } from "react-icons/md";
 import SectionLoader from "@/components/atom/sectionLoader";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-
-  const { resetDishesStore } = useDishesStore((s) => ({
-    resetDishesStore: s.resetDishesStore,
-  }));
 
   const {
     setDishStep,
@@ -76,6 +76,8 @@ const MemoDishFormTwo = () => {
     setIsLoading: s.setIsLoading,
   }));
 
+  const queryClient = useQueryClient();
+
   const errorToasts = useErrorToasts();
 
   const handleAddDish = async () => {
@@ -128,11 +130,11 @@ const MemoDishFormTwo = () => {
     const { data, dishResponse } = await putDishData(filteredPayload);
     if (dishResponse?.status === 200) {
       resetStore();
-      resetDishesStore();
       resetDishStore();
-      toast.success(data?.message);
       setEditOpenMenu(false);
       setIsLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      toast.success(data?.message);
       return;
     }
     if (!data?.success) {
@@ -145,12 +147,14 @@ const MemoDishFormTwo = () => {
     const type = event?.target?.dataset?.type;
     const file = event?.target?.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setCropping({ image: reader.result, type });
-        setDishStep(DishSteps.SHOW_CROPPER);
-      };
+      compressImage(file, (compressedFile) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedFile);
+        reader.onloadend = () => {
+          setCropping({ image: reader.result, type });
+          setDishStep(DishSteps.SHOW_CROPPER);
+        };
+      });
     }
   };
 
@@ -225,7 +229,6 @@ const MemoDishFormTwo = () => {
         <Background>
           <div className="relative">
             <input
-              maxLength={6}
               placeholder="Add calories"
               type="number"
               value={calories}

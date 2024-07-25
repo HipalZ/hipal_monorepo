@@ -20,17 +20,14 @@ import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDishStore";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import SectionLoader from "@/components/atom/sectionLoader";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
   const [displayedPrice, setDisplayedPrice] = useState("");
 
-  const { resetDishesStore } = useDishesStore((s) => ({
-    resetDishesStore: s.resetDishesStore,
-  }));
-
+  const queryClient = useQueryClient();
   const errorToasts = useErrorToasts();
 
   const {
@@ -57,6 +54,7 @@ const MemoDishForm = () => {
     dishStep,
     setIsLoading,
     isLoading,
+    setOpenMenu,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     setDishName: s.setDishName,
@@ -180,9 +178,10 @@ const MemoDishForm = () => {
     const { data, dishResponse } = await postDishData(filteredPayload);
     if (dishResponse?.status === 201) {
       resetStore();
-      resetDishesStore();
       resetDishStore();
       setIsLoading(false);
+      setOpenMenu(false);
+      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
       return toast.success(data?.message);
     }
     if (!data?.success) {

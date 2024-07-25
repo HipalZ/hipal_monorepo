@@ -68,8 +68,18 @@ const MemoPortionStep = () => {
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = event.target;
+
+    if (name === "price" && Number.isNaN(Number(value))) {
+      return;
+    }
+
     const newSections: ExtendedSection[] = [...sections];
     newSections[index][name] = name === "price" ? Number(value) : value;
+    if (index === 0) {
+      newSections.forEach((section, idx) => {
+        section.default = idx === 0;
+      });
+    }
     setSections(newSections);
   };
 
@@ -162,9 +172,9 @@ const MemoPortionStep = () => {
                     minLength={1}
                     maxLength={6}
                     placeholder="Enter Price"
-                    type="text"
+                    type="tel"
                     name="price"
-                    value={section.price}
+                    value={section.price || 0}
                     onChange={(e) => handleInputChange(index, e)}
                     required
                     className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
@@ -226,7 +236,7 @@ const MemoPortionStep = () => {
         <button
           onClick={addSection}
           type="button"
-          className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
+          className="bg-white w-full py-2 rounded-full flex items-center justify-center border-1 border border-[#F4F4F4]"
         >
           + Add
         </button>

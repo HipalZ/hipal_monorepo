@@ -23,7 +23,6 @@ const MemoLinkAddons = (props: Props) => {
     setRemoveAddOnIds: s.setRemoveAddOnIds,
     removeAddOnIds: s.removeAddOnIds,
   }));
-  console.log("add", addonIds);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 

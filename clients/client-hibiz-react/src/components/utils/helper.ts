@@ -138,7 +138,7 @@ export const TagsEnum = [
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
-const MIME_TYPE = "image/jpeg";
+const MIME_TYPE = "image/webp";
 const QUALITY = 0.9;
 
 export const compressArrayOfImages = (
@@ -190,6 +190,41 @@ export const compressArrayOfImages = (
   };
 };
 
+export const compressImage = (file, callback) => {
+  const blobURL = URL.createObjectURL(file);
+  const img = new Image();
+  img.src = blobURL;
+  img.onerror = () => {
+    URL.revokeObjectURL(img.src);
+    console.log("Cannot load image");
+  };
+  img.onload = () => {
+    URL.revokeObjectURL(img.src);
+    const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
+    const canvas = document.createElement("canvas");
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: MIME_TYPE,
+              lastModified: Date.now(),
+            });
+            console.log("test compressedFile", compressedFile);
+            callback(compressedFile);
+          }
+        },
+        MIME_TYPE,
+        QUALITY,
+      );
+    }
+  };
+};
+
 const calculateSize = (
   img: HTMLImageElement,
   maxWidth: number,
@@ -223,6 +258,7 @@ export const handleCrop = async (
   const { image, type } = cropping;
   const cropper = cropperRef.current;
   if (cropper && image && type) {
+    console.log("test type", type);
     const coordinates = cropper?.getCoordinates();
     if (coordinates) {
       try {
@@ -232,13 +268,20 @@ export const handleCrop = async (
           const croppedFile = new File([blob], imageFiles[type]?.name, {
             type: "image/png",
           });
-          compressArrayOfImages(
-            croppedFile,
-            type,
-            setImageFiles,
-            setImagePreviews,
-          );
-          setDishStep(DishSteps.DISH_STEP_2);
+          console.log("test croppedfile", croppedFile);
+          // Save the cropped image
+          setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (reader.result) {
+              setImagePreviews((prev) => ({
+                ...prev,
+                [type]: reader.result,
+              }));
+              setDishStep(DishSteps.DISH_STEP_2);
+            }
+          };
+          reader.readAsDataURL(croppedFile);
         }
       } catch (err) {
         console.error(err);

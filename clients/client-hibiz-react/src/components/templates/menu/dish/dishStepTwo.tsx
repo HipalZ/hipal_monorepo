@@ -4,20 +4,20 @@ import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
 import { useParams } from "react-router-dom";
 import type { DishType } from "@hi/db-models/src/validators";
-import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
+import {
+  compressImage,
+  filterPayload,
+  storeImageAfterSave,
+} from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDishStore";
 import toast from "react-hot-toast";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import DishImages from "./[editDish]/dishImages";
 import SectionLoader from "@/components/atom/sectionLoader";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-
-  const { resetDishesStore } = useDishesStore((s) => ({
-    resetDishesStore: s.resetDishesStore,
-  }));
 
   const {
     setDishStep,
@@ -43,6 +43,7 @@ const MemoDishFormTwo = () => {
     resetDishStore,
     isLoading,
     setIsLoading,
+    setOpenMenu,
   } = useMenuPageStore((s) => ({
     dishStep: s.dishStep,
     setDishStep: s.setDishStep,
@@ -54,7 +55,7 @@ const MemoDishFormTwo = () => {
     recommendationIds: s.recommendationIds,
     dishName: s.dishName,
     dishPrice: s.dishPrice,
-    visibility: s.catVisibility,
+    visibility: s.visibility,
     dishTypes: s.dishTypes,
     availability: s.availability,
     portions: s.portions,
@@ -67,7 +68,10 @@ const MemoDishFormTwo = () => {
     resetDishStore: s.resetDishStore,
     isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
+    setOpenMenu: s.setOpenMenu,
   }));
+
+  const queryClient = useQueryClient();
 
   const errorToasts = useErrorToasts();
 
@@ -123,9 +127,10 @@ const MemoDishFormTwo = () => {
     const { data, dishResponse } = await postDishData(filteredPayload);
     if (dishResponse?.status === 201) {
       resetStore();
-      resetDishesStore();
       resetDishStore();
       setIsLoading(false);
+      setOpenMenu(false);
+      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
       return toast.success(data?.message);
     }
     if (!data?.success) {
@@ -138,12 +143,14 @@ const MemoDishFormTwo = () => {
     const type = event?.target?.dataset?.type;
     const file = event?.target?.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setCropping({ image: reader.result, type });
-        setDishStep(DishSteps.SHOW_CROPPER);
-      };
+      compressImage(file, (compressedFile) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedFile);
+        reader.onloadend = () => {
+          setCropping({ image: reader.result, type });
+          setDishStep(DishSteps.SHOW_CROPPER);
+        };
+      });
     }
   };
 
@@ -208,7 +215,6 @@ const MemoDishFormTwo = () => {
         <Background>
           <div className="relative">
             <input
-              maxLength={6}
               placeholder="Add calories"
               type="number"
               value={calories}

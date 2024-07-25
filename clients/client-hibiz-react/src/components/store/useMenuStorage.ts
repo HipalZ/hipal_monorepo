@@ -11,7 +11,8 @@ export type MenuPageType =
   | "DISHES"
   | "MAIN_CATEGORY"
   | "SUB_CATEGORY"
-  | "ADD_ON";
+  | "ADD_ON"
+  | "ALERT";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep =
   | "CATEGORY_STEP_1"
@@ -87,6 +88,9 @@ export type SetImagePreviewsFunction = (
 interface MenuPageStore {
   selectedPage: MenuPageType;
   setSelectedPage: (page: MenuPageType) => void;
+
+  tempPage: MenuPageType;
+  setTempPage: (page: MenuPageType) => void;
 
   openMenu: boolean;
   setOpenMenu: (open: boolean) => void;
@@ -293,11 +297,16 @@ interface MenuPageStore {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 
+  showAlertPopUp: boolean;
+  setShowAlertPopUp: (show: boolean) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
   selectedPage: "DISHES",
   setSelectedPage: (page: MenuPageType) => set({ selectedPage: page }),
+
+  tempPage: "",
+  setTempPage: (page: MenuPageType) => set({ tempPage: page }),
 
   openMenu: false,
   setOpenMenu: (open: boolean) => set({ openMenu: open }),
@@ -650,6 +659,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   isLoading: false,
   setIsLoading: (loading: boolean) => set({ isLoading: loading }),
+
+  showAlertPopUp: false,
+  setShowAlertPopUp: (show: boolean) => set({ showAlertPopUp: show }),
 }));
 
 export default useMenuPageStore;

@@ -39,18 +39,13 @@ export const useChildCategories = (dishStep: string) => {
   return { data, isLoading, isError };
 };
 
-export const useDishStore = (dishStep: string) => {
+export const useDishStore = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-  const { setDishes, dishes } = useDishesStore((s) => ({
-    dishes: s.dishes,
+  const { setDishes } = useDishesStore((s) => ({
     setDishes: s.setDishes,
   }));
 
   const getAllDishes = async (businessId: string): Promise<DishType[]> => {
-    if (dishes.length > 0) {
-      setDishes(dishes);
-      return dishes;
-    }
     const dishResponse = await apiRpc.dishes.$get({
       query: {
         businessId: businessId,
@@ -62,12 +57,9 @@ export const useDishStore = (dishStep: string) => {
   };
 
   const { data, isLoading, isError } = useQuery<DishType[]>({
-    queryKey: ["dishes", businessId, dishStep === "LINK_RECOMMENDATION_STEP"],
+    queryKey: ["getAlldishes", businessId],
     queryFn: () => getAllDishes(businessId ?? ""),
-    enabled:
-      !!businessId &&
-      dishStep === "LINK_RECOMMENDATION_STEP" &&
-      dishes.length === 0,
+    enabled: !!businessId,
   });
 
   return { data, isLoading, isError };

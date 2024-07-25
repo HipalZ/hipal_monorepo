@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo } from "react";
 import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
+import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
@@ -34,7 +34,7 @@ const MemoListOfDishes = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishStore(DishSteps.LINK_RECOMMENDATION_STEP);
+  const { isLoading } = useDishStore();
 
   const fuse = useMemo(
     () =>
@@ -79,7 +79,7 @@ const MemoListOfDishes = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+    <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       {filteredDishes
         ? filteredDishes?.map((dish) => (
             <button

@@ -1,5 +1,5 @@
 import PlusButton from "@/components/atom/plusButton";
-import type { ChangeEvent } from "react";
+import { memo, type ChangeEvent } from "react";
 import { FaTimes } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 
@@ -8,7 +8,7 @@ type Props = {
   img: { first: string; second: string; third: string };
 };
 
-const DishImages = (props: Props) => {
+const MemoDishImages = (props: Props) => {
   const { handleImageChange, img } = props;
 
   const { setImageFiles, setImagePreviews } = useMenuPageStore((s) => ({
@@ -33,7 +33,11 @@ const DishImages = (props: Props) => {
           data-type="first"
         />
         <label htmlFor="firstImage">
-          {img?.first ? <img src={img?.first} alt="First" /> : <PlusButton />}
+          {img?.first ? (
+            <img src={img?.first} alt="First" className="w-[200px] h-[200px]" />
+          ) : (
+            <PlusButton />
+          )}
         </label>
         {img?.first && (
           <button
@@ -97,4 +101,5 @@ const DishImages = (props: Props) => {
   );
 };
 
+const DishImages = memo(MemoDishImages);
 export default DishImages;

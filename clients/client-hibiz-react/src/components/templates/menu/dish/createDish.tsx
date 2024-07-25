@@ -13,6 +13,7 @@ import LinkTags from "./[editDish]/linkTags";
 import LinkAddons from "./[editDish]/linkAddons";
 import PortionStep from "./[editDish]/portionStep";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoCreateDish = () => {
   const {
@@ -121,23 +122,31 @@ const MemoCreateDish = () => {
       {dishStep === "LINK_ADD_TAGS" && <LinkTags />}
       {dishStep === "LINK_ADDON_STEP" && <LinkAddons data={addons || []} />}
       {dishStep === "SHOW_CROPPER" && (
-        <section>
+        <>
           <ReactCropper
             image={cropping.image}
             ref={cropperRef}
             width={400}
             height={400}
           />
-          <center
-            role="button"
-            tabIndex={0}
-            onClick={handleSaveCropper}
-            onKeyUp={handleSaveCropper}
-            className="px-4 py-2 mx-4 mt-4 text-white bg-black rounded-full"
-          >
-            Save
-          </center>
-        </section>
+          <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
+            <button
+              type="button"
+              onClick={handleSaveCropper}
+              className="w-full py-3 text-white rounded-full bg-[#7D68FE]"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <SectionLoader />
+                  Loading...
+                </div>
+              ) : (
+                "Save"
+              )}
+            </button>
+          </footer>
+        </>
       )}
       {isLoading ? <LoadingSpinner /> : null}
     </>

@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = memo(
             } `}
           >
             {centerImage && (
-              <button type="button"  onClick={logoutUser}>
+              <button type="button" onClick={logoutUser}>
                 <img src={centerImage} alt="Center img" loading="lazy" />
               </button>
             )}
@@ -96,5 +96,4 @@ const Header: React.FC<HeaderProps> = memo(
 );
 
 const MemoizedHeader = memo(Header);
-
 export default MemoizedHeader;
