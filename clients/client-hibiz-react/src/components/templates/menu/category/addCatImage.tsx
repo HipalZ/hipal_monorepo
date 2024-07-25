@@ -12,7 +12,7 @@ const MIME_TYPE = "image/jpeg";
 const QUALITY = 0.9;
 
 const MemoAddCatImage = () => {
-    const { imagePreview, setImagePreview, selectedFile, setSelectedFile, selectedCategory, categoryName, selectIds } = useMenuPageStore(s => ({
+    const { imagePreview, setImagePreview, selectedFile, setSelectedFile,setIsLoading, selectedCategory, categoryName, selectIds } = useMenuPageStore(s => ({
         selectedCategory: s.selectedCategory,
         setSelectedCategory: s.setSelectedCategory,
         categoryName: s.categoryName,
@@ -25,6 +25,7 @@ const MemoAddCatImage = () => {
         setImagePreview: s.setImagePreview,
         selectedFile: s.selectedFile,
         setSelectedFile: s.setSelectedFile,
+        setIsLoading: s.setIsLoading
     }));
 
     const { mutate: createCategory, isPending } = useSaveCategory();
@@ -109,7 +110,7 @@ const MemoAddCatImage = () => {
 
     const handleSave = async () => {
         if (selectedFile) {
-            const imageUrl = await storeImageAfterSave(selectedFile, imagePreview);
+            const imageUrl = await storeImageAfterSave(selectedFile, imagePreview,setIsLoading);
             if (imageUrl) {
                 const commonPayload = {
                     name: categoryName,

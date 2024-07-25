@@ -1,93 +1,90 @@
-//@ts-nocheck
-import PlaceholderImg from "@/components/atoms/placeholder"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import type { ICategory } from "@/components/types/businessData"
-import { getRandomBlurImg } from "@/components/utils/images"
-import Image from "next/image"
-import Link from "next/link"
-import { memo, useMemo, useRef } from "react"
+import PlaceholderImg from "@/components/atoms/placeholder";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import { getRandomBlurImg } from "@/components/utils/images";
+import { cn } from "@hi/common";
+import type { CategoryType } from "@hi/db-models/src/validators";
+import Image from "next/image";
+import { memo, useCallback, useEffect, useMemo } from "react";
 
 interface ISubTypes {
-	allCategoriesTypes: {
-		sub: any
-	},
-	categories: ICategory[]
+  childCategory: CategoryType[];
 }
 function SubTypes(props: ISubTypes) {
-	const { allCategoriesTypes, categories } = props
-	const subTypeContainerRef = useRef(null)
-	const setActiveCategory = useActiveClass((s) => s.setActiveCategory)
-	const isActiveCategory = useActiveClass((s) => s.isActiveCategory)
-	const setActiveParentCategory = useActiveClass((s) => s.setActiveParentCategory)
-	const parentCategory = useMemo(
-		() =>
-			categories?.filter((ele: any) => ele?._id === isActiveCategory)?.[0]?.parentCategoryId,
-		[isActiveCategory, categories],
-	)
+  const { childCategory } = props;
 
-	const subTypes = useMemo(() => {
-		return allCategoriesTypes?.sub?.[parentCategory || ""] || null
-	}, [allCategoriesTypes?.sub, parentCategory])
+  const {
+    isActiveCategory,
+    setActiveCategory,
+    isActiveParentCategory,
+    setActiveParentCategory,
+  } = useActiveClass();
 
-	return (
-		<section className="overflow-x-auto no-scrollbar bg-base-100">
-			{!!subTypes && (
-				<div
-					ref={subTypeContainerRef}
-					className="flex flex-nowrap -webkit-flex snap-proximity snap-x no-scrollbar"
-				>
-					{Object.values(subTypes).map((item: ICategory, index: number) => (
-						<div
-							id={"subType" + item?._id}
-							className="relative px-2 py-4 snap-center"
-							key={item.name + index}
-						>
-							<Link
-								href={`#${item?._id}`}
-								onClick={() => {
-									setActiveCategory(item?._id)
-									setActiveParentCategory(item?.parentCategoryId ? item?.parentCategoryId : "")
-								}}
-							>
-								<article
-									className={` ${isActiveCategory === item?._id ? "scale-110 bg-primary/10" : ""
-										} flex w-full border border-primary rounded-full items-center justify-between px-2 py-1`}
-								>
-									{!!item.coverImage ? (
-										<figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
-											<Image
-												src={item.coverImage}
-												alt="dish"
-												quality={95}
-												width={35}
-												height={35}
-												objectFit="cover"
-												blurDataURL={getRandomBlurImg(50, 50)}
-											/>
-										</figure>
-									)
-										: (
-											<figure className="w-[1.5rem] h-[1.5rem] rounded-full overflow-hidden">
-											<PlaceholderImg className="rounded-full" />
-											</figure>
-										)}
-									<h6
-										className={` ${isActiveCategory === item?._id ? "text-primary " : ""
-											} text-sm w-full whitespace-nowrap text-nowrap`}
-									>
-										{item?.name}
-									</h6>
-								</article>
+  const subTypes = useMemo(() => 
+    childCategory.filter(category => 
+      category.hierarchy === "CHILD" &&
+      category.parentCategoryIds.includes(isActiveParentCategory) &&
+      category.dishIds.length > 0 
+    ), [childCategory, isActiveParentCategory]);
 
+  const setActiveCategories = useCallback((category: CategoryType) => {
+    setActiveCategory(category._id?.toString() ?? "");
+  }, []);
 
-							</Link>
-						</div>
-					))}
-				</div>
-			)}
-		</section>
-	)
+  useEffect(() => {
+    if (subTypes.length > 0) {
+      setActiveCategory(subTypes[0]._id?.toString() ?? "");
+    }
+  }, [isActiveParentCategory, subTypes]);
+
+  return (
+    <section className="overflow-x-auto no-scrollbar bg-base-100">
+      {subTypes?.length > 0 && (
+        <div className="flex flex-nowrap -webkit-flex snap-proximity snap-x no-scrollbar">
+          {subTypes.map((item: CategoryType, index: number) => (
+            <button
+              type="button"
+              id={item?._id?.toString() + index.toString()}
+              className="relative px-2 py-4 snap-center"
+              key={item.name}
+              onClick={() => setActiveCategories(item)}
+            >
+              <a href={`#${item?._id}`}>
+                <article
+                  className={cn( isActiveCategory === item._id?.toString() ? "bg-primary text-white" :"",
+                    "flex w-full border border-primary rounded-full items-center justify-between px-2 py-1"
+                  )}
+                >
+                  {item.coverImage ? (
+                    <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
+                      <Image
+                        src={item.coverImage || ""}
+                        alt="dish"
+                        quality={95}
+                        width={35}
+                        height={35}
+                        objectFit="cover"
+                        blurDataURL={getRandomBlurImg(50, 50)}
+                      />
+                    </figure>
+                  ) : (
+                    <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
+                      <PlaceholderImg className="rounded-full" />
+                    </figure>
+                  )}
+                  <h6
+                    className={" text-sm w-full whitespace-nowrap text-nowrap"}
+                  >
+                    {item?.name}
+                  </h6>
+                </article>
+              </a>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
-const MemoSubTypes = memo(SubTypes)
-export default MemoSubTypes
+const MemoSubTypes = memo(SubTypes);
+export default MemoSubTypes;

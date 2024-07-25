@@ -1,7 +1,6 @@
 import DishTag from "@/components/atoms/dishTag";
 import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
 import ReadMore from "@/components/atoms/readMore";
-import type { IDish } from "@/components/types/businessData";
 import { calculateTotalPrice, getPrice } from "@/components/utils/helpers";
 import { isEmpty } from "lodash-es";
 import { memo, useCallback } from "react";
@@ -11,12 +10,13 @@ import { BsFillCircleFill } from "react-icons/bs";
 import { IoFastFoodSharp } from "react-icons/io5";
 import { useDishStore } from "@/components/store/useDishStore";
 import { useDishCart } from "@/components/store/useDishCart";
+import type { DishType } from "@hi/db-models/src/validators";
 
-function FoodDescription({ dishData }: { dishData: IDish }) {
+function FoodDescription({ dishData }: { dishData: DishType }) {
   const { selectedExtras, selectedPortion } = useDishStore();
   const { addToCart } = useDishCart();
   
-  const watchingDish = useCallback((dish: IDish) => {
+  const watchingDish = useCallback((dish: DishType) => {
     const totalPrice = calculateTotalPrice(
       dish,
       selectedPortion,
@@ -46,9 +46,9 @@ function FoodDescription({ dishData }: { dishData: IDish }) {
     <div className="flex flex-col !mt-0 space-y-4 no-scrollbar">
       <div className="flex flex-col">
         <div className="flex flex-row flex-wrap flex-1 w-full">
-          {dishData?.dishType && (
+          {dishData?.dishType.length>0 && (
             <div className="my-auto">
-              <FoodType type={dishData?.dishType as FOOD_TYPES} />
+              <FoodType types={dishData.dishTypes} />
             </div>
           )}
 

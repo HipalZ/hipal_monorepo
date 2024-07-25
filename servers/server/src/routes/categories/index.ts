@@ -352,7 +352,7 @@ const categoriesRouter = new Hono()
         }).populate({
           path: "dishIds",
           populate: {
-            path: "addOnIds",
+            path: "addOnIds recommendationIds",
           },
         });
 

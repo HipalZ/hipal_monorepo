@@ -293,8 +293,6 @@ interface MenuPageStore {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 
-  imageUploading : boolean;
-  setImageUploading : (loading: boolean) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -652,9 +650,6 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   isLoading: false,
   setIsLoading: (loading: boolean) => set({ isLoading: loading }),
-
-  imageUploading: false,
-  setImageUploading: (loading: boolean) => set({ imageUploading: loading }),
 }));
 
 export default useMenuPageStore;

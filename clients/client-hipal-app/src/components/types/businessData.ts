@@ -1,5 +1,6 @@
 import type { ICart } from "@/components/store/useCart";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
+import { CategoryType } from "@hi/db-models/src/validators";
 
 export interface IBiz {
   email: string;
@@ -93,12 +94,8 @@ export interface IBusinessData {
   dishData?: IDish;
   theme?: HSLTheme;
   uniquelyDishes?: IUniquelyDishes[];
-  categoryData?: ICategory[];
-  categories?: ICategories[];
-  allCategoriesTypes?: {
-    main: ICategoryTypes;
-    sub: ICategorySubTypes;
-  };
+ parentCategories?: CategoryType[];
+ childCategories?: CategoryType[];
   loyalty: ILoyaltySetting;
   cart?: ICart[];
 }

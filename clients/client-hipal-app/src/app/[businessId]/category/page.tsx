@@ -62,14 +62,14 @@ export default async function Page({
       <div className="relative flex flex-col w-full pb-14">
         <TopBackground specialBanner={data?.business?.specialBannerUrl} />
         <CategoryHeader
-          categories={data?.categories}
-          allCategoriesTypes={data?.allCategoriesTypes}
+          parentCategory={data?.parentCategories}
+          childCategory={data?.childCategories}
         />
         <div>
           <div className="!mt-0 !scroll-smooth">
             <DishesList
-              allCategoriesTypes={data?.allCategoriesTypes}
-              categories={data?.categories || []}
+               parentCategory={data?.parentCategories}
+               childCategory={data?.childCategories}
             />
           </div>
           <Footer themes={data?.settings || defaultThemes} socialMediaLinks={data?.business?.socialMediaLinks} footerDescription={data?.business?.footerDescription}/>

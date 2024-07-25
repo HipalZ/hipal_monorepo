@@ -34,8 +34,8 @@ const MemoEditCategory = () => {
     idCheck,
     recommendationIds,
     removeRecommendationIds,
-    imageUploading,
-    setImageUploading,
+    isLoading,
+    setIsLoading,
     isMenuManager,
   } = useMenuPageStore((s) => ({
     selectIds: s.selectedIds,
@@ -55,8 +55,8 @@ const MemoEditCategory = () => {
     idCheck: s.idCheck,
     recommendationIds: s.recommendationIds,
     removeRecommendationIds: s.removeRecommendationIds,
-    imageUploading: s.imageUploading,
-    setImageUploading: s.setImageUploading,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
     isMenuManager: s.isMenuManager,
   }));
 
@@ -150,8 +150,8 @@ const MemoEditCategory = () => {
     if (selectedFile) {
       imageUrl = await storeImageAfterSave(
         selectedFile,
-        imagePreview,
-        setImageUploading,
+        imagePreview ,
+        setIsLoading,
       );
     }
     const removedCatIds = getRemovedIds(idCheck, selectIds);
@@ -193,7 +193,7 @@ const MemoEditCategory = () => {
     );
   }
 
-  if (imageUploading) {
+  if (isLoading) {
     return (
       <div>
         <LoadingSpinner />

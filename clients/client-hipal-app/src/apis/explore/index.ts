@@ -15,18 +15,20 @@ async function fetchBusinessData(customLink: string) {
     param: {
       businessId: bizId,
     },
-  });
+    }
+  );
   const loyaltyResponse = await apiRpc.businesses[":businessId"].loyalty.$get({
     param: {
       businessId: bizId,
     },
-  });
+    }
+  );
   const bannersResponse = await apiRpc.settings.banners[":businessId"].$get({
     param: {
       businessId: bizId,
     },
   });
-  console.log("bannersResponse", bannersResponse);
+  
   const uniquelyDishes = await uniquelyDishesResponse.json();
   const loyalty = await loyaltyResponse.json();
   const banners = await bannersResponse.json();

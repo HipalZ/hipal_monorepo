@@ -31,7 +31,7 @@ const nextConfig = {
     return [
       {
         source:
-          "/:all*(svg|jpg|png|ico|webp|woff|woff2|ttf|otf|eot|map|txt|xml)",
+          "/:all*(svg|jpg|png|webp|woff|woff2|ttf|otf|eot|map|txt|xml)",
         locale: false,
         headers: [
           {

@@ -1,6 +1,5 @@
-import DishTag from "@/components/atoms/dishTag";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import type { ICategory, IDish, IExtraItem } from "@/components/types/businessData";
+import type {  IDish, IExtraItem } from "@/components/types/businessData";
 import { calculateTotalPrice, getPrice } from "@/components/utils/helpers";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
@@ -14,38 +13,34 @@ import PlaceholderImg from "../placeholder";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import { useDishStore } from "@/components/store/useDishStore";
 import { useDishCart } from "@/components/store/useDishCart";
+import type { DishType } from "@hi/db-models/src/validators";
 
 const HorizontalCard = ({
   dishData,
   noAddBtn,
   noDescription,
-  isTopScrollWithSubTypes,
-  redirection,
 }: {
-  dishData: IDish;
+  dishData: DishType;
   noAddBtn?: boolean;
   noDescription?: boolean;
-  isTopScrollWithSubTypes?: boolean;
-  redirection?: (id: string, categories: ICategory[]) => void;
 }) => {
-  const coverImage = dishData?.images?.[0];
-  const isAvailable = dishData?.availability;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState({} as IDish);
+  const [selectedDish, setSelectedDish] = useState({} as DishType);
   const { addToCart } = useDishCart();
   const { selectedExtras, selectedPortion, resetSelections } = useDishStore();
   const showRecommendations = false;
-  const openModal = useCallback((dishData: IDish) => {
-    setSelectedDish(dishData);
-    setIsModalOpen(true);
+  const openModal = useCallback((dishData: DishType) => {
+    console.log("dishData", dishData);
+    // setSelectedDish(dishData);
+    // setIsModalOpen(true);
   }, []);
 
   const closeModal = useCallback(() => {
-    setSelectedDish({} as IDish);
+    setSelectedDish({} as DishType);
     setIsModalOpen(false);
   }, [isModalOpen]);
 
-  const watchingDish = useCallback((dish: IDish, portion: string, extra: IExtraItem) => {
+  const watchingDish = useCallback((dish: DishType, portion: string, extra: IExtraItem) => {
     const totalPrice = calculateTotalPrice(
       dish,
       portion,
@@ -79,19 +74,18 @@ const HorizontalCard = ({
     <section
       id={`${dishData?._id}`}
       className={`
-  ${isAvailable ? "mx-6" : "opacity-80 px-6"}
-  ${!isTopScrollWithSubTypes ? "scroll-mt-[15rem]" : "scroll-mt-[13.2rem]"}
+  ${dishData.availability ? "mx-6" : "opacity-80 px-6"}
 `}
     >
       <div className="flex flex-row py-6 space-x-12 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
-            {dishData?.dishType && (
+            {dishData?.dishTypes && (
               <div className="my-auto">
-                <FoodType type={dishData.dishType as FOOD_TYPES} />
+                <FoodType types={dishData?.dishTypes} />
               </div>
             )}
-            {!isAvailable && (
+            {!dishData.availability && (
               <>
                 <span>
                   <AiOutlineWarning className="ml-2 -mr-1 mt-[0.125rem] text-primary" />
@@ -99,7 +93,7 @@ const HorizontalCard = ({
                 <span className="ml-2 text-sm text-primary">Not available</span>
               </>
             )}
-            <DishTag tags={dishData.tags} />
+            {/* <DishTag tags={dishData.tags} /> */}
           </div>
 
           <div className="w-full overflow-hidden text-lg font-medium capitalize">
@@ -127,25 +121,25 @@ const HorizontalCard = ({
         </div>
         <div className={"flex flex-col"}>
           <div>
-            {!!coverImage ? (
+            {dishData?.images[0] ? (
               <div
-                className="relative w-[7rem] h-[7rem] overflow-hidden"
+                className="relative w-[7.5rem] h-[7.5rem] overflow-hidden"
                 onClick={() => openModal(dishData)}
               >
                 <Image
-                  src={coverImage}
+                  src={dishData.images[0]}
                   layout={"intrinsic"}
                   alt="dish"
                   quality={95}
-                  width={125}
-                  height={125}
+                  width={150}
+                  height={150}
                   objectFit="cover"
                   className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
                     }`}
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(110, 110)}
                 />
-                {!isAvailable && (
+                {!dishData.availability && (
                   <>
                     <div className="absolute z-20 text-sm text-white bottom-4 left-2">
                       Not Available
@@ -154,7 +148,7 @@ const HorizontalCard = ({
                   </>
                 )}
               </div>
-            ) : !isAvailable ? (
+            ) : !dishData.availability ? (
               <div className="pb-2">
                 <NotAvailable className="w-32 h-32 overflow-hidden rounded-xl" />
               </div>
@@ -168,19 +162,19 @@ const HorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={`z-20 flex flex-col items-center w-full mx-auto ${!!coverImage || noDescription ? " -mt-6" : " -mt-4 -ml-6"
+              className={`z-20 flex flex-col items-center w-full mx-auto ${!!dishData.images[0] || noDescription ? " -mt-6" : " -mt-4 -ml-6"
                 }`}
             >
-              {isAvailable && (
+              {dishData.availability && (
                 <div
-                  className={`flex flex-col flex-shrink-0 items-center w-full ${!!coverImage ? "" : "-ml-6"
+                  className={`flex flex-col flex-shrink-0 items-center w-full ${!!dishData.images[0] ? "" : "-ml-6"
                     }`}
                 >
                   <DishQuantityButton
                     setSelectedDish={watchingDish}
                     dishData={dishData}
                   />
-                  <span className="text-sm opacity-50">{dishData?.extras?.length > 0  ? 'customizable': null}</span>
+                  {/* <span className="text-sm opacity-50">{dishData?.extras?.length > 0  ? 'customizable': null}</span> */}
                 </div>
               )}
             </div>

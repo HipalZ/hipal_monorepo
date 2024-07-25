@@ -3,7 +3,7 @@ import Globe from "@/assets/payment/globe.png";
 import style from "./addAmount.module.css";
 import Image from "next/image";
 import { TfiPlus } from "react-icons/tfi";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";

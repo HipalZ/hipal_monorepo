@@ -65,53 +65,6 @@ function Header({
     backURL && router.prefetch(`${backURL}`);
   }, [backURL, router]);
 
-//   useEffect(() => {
-//     let scrolling;
-//     let lastScrollTop = 0;
-//     const delta = 5;
-//     const headerHeight = 70;
-
-//     const handleScroll = () => {
-//       if (typeof window !== 'undefined') {
-//         scrolling = true;
-//       }
-//     };
-
-//     const scrollFunction = () => {
-// 		console.log('scrollFunction');
-//       if (typeof window !== 'undefined') {
-//         const st = window.scrollY;
-// 		console.log('st', st);
-//         if (Math.abs(lastScrollTop - st) <= delta) return;
-
-//         if (st > lastScrollTop && st > headerHeight) {
-//           // Scroll down
-//           setIsHeaderVisible(false);
-//         } else {
-//           // Scroll up
-//           if (st + window.innerHeight < document.documentElement.scrollHeight) {
-//             setIsHeaderVisible(true);
-//           }
-//         }
-//         lastScrollTop = st;
-//       }
-//     };
-
-//     const interval = setInterval(() => {
-//       if (scrolling) {
-//         scrollFunction();
-//         scrolling = false;
-//       }
-//     }, 250);
-
-//     window.addEventListener("scroll", handleScroll);
-
-//     return () => {
-//       clearInterval(interval);
-//       window.removeEventListener("scroll", handleScroll);
-//     };
-//   }, [isHeaderVisible]);
-
   return (
     <div
       className={`bg-base-100 transition-transform duration-300 z-50 sticky top-0 flex flex-col ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'} space-y-2 text-4xl py-4`}

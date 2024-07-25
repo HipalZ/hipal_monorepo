@@ -12,6 +12,7 @@ export async function fetchCommonData(businessId: string): Promise<{ data: IBusi
         const res = await apiRpc.businesses.n[":customLink"].$get({
             param: { customLink: businessId }
         });
+        console.log('res',res);
         const response = await res.json() as unknown as { data: IBusinessData; message: string; error: boolean };
         if (response.data !== null) {
             data["business"] = response.data as unknown as BusinessDetails; 

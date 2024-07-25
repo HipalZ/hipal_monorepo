@@ -17,11 +17,9 @@ import toast from "react-hot-toast";
 export async function storeImageAfterSave(
   image: File,
   imagePreview: string | null,
-  setImageUploading: (value: boolean) => void,
   setIsLoading?: (loading: boolean) => void,
 ) {
   if (!image) return;
-  setImageUploading(true);
   const imageId = crypto.randomUUID();
   if (imagePreview) {
     setIsLoading?.(true);
@@ -42,17 +40,15 @@ export async function storeImageAfterSave(
         "https://api.hipal.life/v1/storage",
         formdata,
       );
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         setIsLoading?.(false);
         return `https://storage.hipal.life/minio/assets/${imageId}`;
       }
+    } catch (error) {
+      console.log(error);
       setIsLoading?.(false);
       return toast.error("Failed to upload image");
-    } catch (error) {
-      setImageUploading(false);
-      console.log(error);
     }
-    setIsLoading?.(false);
   }
 }
 

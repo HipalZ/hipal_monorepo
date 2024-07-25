@@ -45,7 +45,7 @@ const MenuPage = () => {
       </center>
 
       <section className="space-y-4 explore_page_selection h-[50vh]">
-        <label className="p-4 mx-4 bg-[#F4F4F4] rounded-xl">
+        {/* <label className="p-4 mx-4 bg-[#F4F4F4] rounded-xl">
           <article className="flex items-center space-x-2">
             <input
               type="radio"
@@ -59,7 +59,7 @@ const MenuPage = () => {
           <small className="opacity-50">
             Perfect for menus under 50 dishes, easily navigable with a top-tier category followed by individual items.
           </small>
-        </label>
+        </label> */}
         <label className="p-4 mx-4 rounded-xl bg-[#F4F4F4]">
           <article className="flex items-center space-x-2">
             <input

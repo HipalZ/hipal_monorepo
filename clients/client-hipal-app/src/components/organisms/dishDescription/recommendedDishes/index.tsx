@@ -7,20 +7,20 @@ import { ImSpoonKnife } from "react-icons/im";
 import DishQuantityButton from "../dishQuantityButton";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import type { IDish } from "@/components/types/businessData";
+import { DishType } from "@hi/db-models/src/validators";
 
 function RecommendedDishes({
   dishData,
   openModal,
-}: { dishData: IDish; openModal: (dish: IDish) => void }) {
+}: { dishData: DishType; openModal: (dish: DishType) => void }) {
   // Use useMemo to prepare the dishes for rendering
   const processedDishes = useMemo(() => {
-    return dishData.filters.dishes.map((dish:IDish) => ({
+    return dishData?.recommendationIds?.map((dish:DishType) => ({
       ...dish,
       image: dish.images.length > 0 ? dish.images[0] : "",
       blurDataURL: getRandomBlurImg(150, 150),
     }));
-  }, [dishData.filters.dishes]);
+  }, [dishData.recommendationIds]);
   if (processedDishes.length === 0) return null;
 
   return (
@@ -49,12 +49,12 @@ function RecommendedDishes({
 							<button type="button" className="splide__arrow splide__arrow--prev">Prev</button>
 							<button type="button" className="splide__arrow splide__arrow--next">Next</button>
 						</div>
-            {processedDishes.map((dish, key) => (
-              <SplideSlide key={dish._id}>
+            {processedDishes?.map((dish) => (
+              <SplideSlide key={dish._id?.toString()}>
                 {dish && (
                   <div className="relative">
                     <div className="absolute bg-white left-2 top-2">
-                      <FoodType type={dish.dishType as FOOD_TYPES} />
+                      <FoodType types={dish?.dishType as FOOD_TYPES[]} />
                     </div>
                     <div className="z-10 flex flex-col overflow-hidden bg-white border w-[8.5rem] rounded-xl h-44 border-base-200">
                       <div
