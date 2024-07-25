@@ -549,7 +549,13 @@ const MemoExplorePage = () => {
               </PopUp>
             )}
             <Suspense fallback={<LoadingSpinner />}>
-              <BottomButton text="Save" type={"submit"} />
+              <button
+                className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
+         md:left-0 md:right-0 md:mx-auto"
+                type="submit"
+              >
+                Save
+              </button>
             </Suspense>
             <br />
             <br />
