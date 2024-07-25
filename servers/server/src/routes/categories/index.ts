@@ -349,7 +349,12 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           hierarchy: "CHILD",
-        }).populate("dishIds");
+        }).populate({
+          path: "dishIds",
+          populate: {
+            path: "addOnIds",
+          },
+        });
 
         return respond(
           c,
