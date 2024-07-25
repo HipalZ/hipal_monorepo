@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import BottomButton from "@/components/atom/bottomButton";
 
 const AddTeam = ({ getUser }: { getUser: () => void }) => {
   const {
@@ -16,31 +17,32 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
     selectedRole,
     selectedPermissions,
     permissions,
-    setIsAddStaffOpen
+    setIsAddStaffOpen,
   } = useAddStaffStore();
   const businessData = useBusinessData((s) => s.businessData);
-
 
   const formatPermissions = useCallback(() => {
     if (!selectedRole) return [];
     const perms = permissions[selectedRole] || [];
-    return perms.map(permission => ({
-      title: permission.title,
-      subPermissions: permission.subPermissions
-        .filter(sp => selectedPermissions.includes(sp.subTitle))
-        .map(sp => sp.subTitle)
-    })).filter(p => p.subPermissions.length > 0);
+    return perms
+      .map((permission) => ({
+        title: permission.title,
+        subPermissions: permission.subPermissions
+          .filter((sp) => selectedPermissions.includes(sp.subTitle))
+          .map((sp) => sp.subTitle),
+      }))
+      .filter((p) => p.subPermissions.length > 0);
   }, [permissions, selectedPermissions, selectedRole]);
-  
+
   const formattedPermissions = formatPermissions();
 
   const addStaff = async () => {
     if (!name || !phone || !selectedRole) {
       toast.error("Please fill all the fields");
-      return
+      return;
     }
     if (phone.length !== 10) {
-      toast.error("Phone number should be of 10 digits")
+      toast.error("Phone number should be of 10 digits");
     }
     const res = await apiRpc.users.addStaff.$post({
       json: {
@@ -48,12 +50,11 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
         name: name,
         phone: phone,
         role: selectedRole || "CAPTAIN",
-        permissions: formatPermissions()
-
+        permissions: formatPermissions(),
       },
     });
     if (res.status === 400 || res.status === 403 || res.status === 409) {
-      toast.error("Failed to add staff")
+      toast.error("Failed to add staff");
     }
     if (res.status === 201 || res.status === 200) {
       toast.success("Staff added successfully");
@@ -118,7 +119,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
             Customize Permissions for Co owner
           </h6>
           <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-            {formattedPermissions.length > 0 && (
+            {formattedPermissions.length > 0 &&
               formattedPermissions.map((permission) => (
                 <button
                   type="button"
@@ -127,8 +128,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
                 >
                   {permission.title}
                 </button>
-              ))
-            )}
+              ))}
             <button
               type="button"
               onClick={() => setPageToggle("ADD_PERMISSIONS")}
@@ -140,9 +140,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
         </>
       )}
 
-      <button onClick={addStaff} type="button" className="bottom_btn">
-        Send Invite
-      </button>
+      <BottomButton onClick={addStaff} text="Send Invite" />
     </>
   );
 };
