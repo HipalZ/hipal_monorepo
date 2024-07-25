@@ -66,12 +66,21 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                       }
                     }}
                   />
-                  <img
-                    loading="lazy"
-                    src={dish.images[0] || dummyImage}
-                    alt={`Dish ${dish._id}`}
-                    className="h-[5rem] w-[5rem] border-2 rounded-md"
-                  />
+                  {dish?.images && dish?.images?.length > 0 ? (
+                    <img
+                      loading="lazy"
+                      src={dish.images[0]}
+                      alt={`Dish ${dish._id}`}
+                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                    />
+                  ) : (
+                    <img
+                      loading="lazy"
+                      src={dummyImage}
+                      alt={`Dish ${dish._id}`}
+                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                    />
+                  )}
                   <h1>{dish?.name}</h1>
                 </div>
               );
@@ -97,12 +106,21 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                       }
                     }}
                   />
-                  <img
-                    loading="lazy"
-                    src={dish.images[0] || dummyImage}
-                    alt={`Dish ${dish._id}`}
-                    className="h-[5rem] w-[5rem] border-2 rounded-md"
-                  />
+                  {dish?.images && dish?.images?.length > 0 ? (
+                    <img
+                      loading="lazy"
+                      src={dish.images[0]}
+                      alt={`Dish ${dish._id}`}
+                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                    />
+                  ) : (
+                    <img
+                      loading="lazy"
+                      src={dummyImage}
+                      alt={`Dish ${dish._id}`}
+                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                    />
+                  )}
                   <h1>{dish?.name}</h1>
                 </div>
               );

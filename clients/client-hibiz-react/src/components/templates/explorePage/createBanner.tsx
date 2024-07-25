@@ -77,14 +77,12 @@ const MemoCreateBanner = () => {
     setSelectedBannerType,
     selectedBannerType,
     isButtonExists,
-    patternType,
     setBannerPage,
     isPatternExists,
   } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
     selectedBannerType: s.selectedBannerType,
     isButtonExists: s.isButtonExists,
-    patternType: s.patternType,
     setBannerPage: s.setBannerPage,
     isPatternExists: s.isPatternExists,
   }));
@@ -333,7 +331,7 @@ const MemoCreateBanner = () => {
             <section className="bg-white md:flex md:items-center">
               <section className="flex items-center justify-between flex-1 p-4 mt-4 space-x-4 md:justify-start">
                 <section className="flex items-center flex-1 gap-6">
-                  {patternType ? null : (
+                  {isPatternExists ? null : (
                     <article>
                       <h1 className="mb-2 text-gray-500">Add an Image</h1>
                       <article

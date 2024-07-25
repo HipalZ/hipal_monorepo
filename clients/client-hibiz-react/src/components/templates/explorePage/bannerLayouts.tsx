@@ -22,7 +22,6 @@ const MemoBannerLayouts = () => {
     setIsButtonExists,
     setIsPatternExists,
     selectedBannerType,
-    setPatternType,
     setBannerPage,
     setIsLoading,
   } = useBannerStore((s) => ({
@@ -30,15 +29,17 @@ const MemoBannerLayouts = () => {
     setIsButtonExists: s.setIsButtonExists,
     setIsPatternExists: s.setIsPatternExists,
     selectedBannerType: s.selectedBannerType,
-    setPatternType: s.setPatternType,
     setBannerPage: s.setBannerPage,
     setIsLoading: s.setIsLoading,
   }));
-  const handleBannerType = (id: string, isButton: boolean, pattern: string) => {
+  const handleBannerType = (
+    id: string,
+    isButton: boolean,
+    isPatternExists: boolean,
+  ) => {
     setIsButtonExists(isButton);
-    setIsPatternExists(pattern?.length > 0);
+    setIsPatternExists(isPatternExists);
     setSelectedBannerType(id);
-    setPatternType(pattern);
   };
   const handleCreateBanner = () => {
     setBannerPage(BannerPage.CREATE);

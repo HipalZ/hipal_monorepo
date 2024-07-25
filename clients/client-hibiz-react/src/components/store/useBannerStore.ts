@@ -47,7 +47,8 @@ export const useBannerStore = create(
         set(() => ({ isButtonExists: buttonExists })),
 
       patternType: "",
-      setPatternType: (patternType) => set(() => ({ patternType })),
+      setPatternType: (patternType) =>
+        set(() => ({ patternType: patternType })),
 
       isPatternExists: false,
       setIsPatternExists: (patternExists) =>

@@ -34,6 +34,7 @@ export const bannerLayouts = [
     buttonText: "Explore",
     title: "Fit With Link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
   {
@@ -45,6 +46,7 @@ export const bannerLayouts = [
     buttonText: "",
     title: "Fit No Link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];
@@ -59,6 +61,7 @@ export const bannerLayouts2 = [
     buttonText: "Explore",
     title: "Hanging card with link",
     image: "",
+    pattern: "",
     description: "Works best with 680x920 -1:1 Images with desc & link",
   },
   {
@@ -70,6 +73,7 @@ export const bannerLayouts2 = [
     buttonText: "",
     title: "Hanging card no link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];
@@ -84,6 +88,7 @@ export const bannerLayouts3 = [
     buttonText: "Explore",
     title: "Expand with link",
     image: "",
+    pattern: "",
     description: "Works best with 680x920 -1:1 Images with desc & link",
   },
   {
@@ -94,6 +99,7 @@ export const bannerLayouts3 = [
     isButton: false,
     title: "Expand no link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];
@@ -108,6 +114,7 @@ export const bannerLayouts4 = [
     buttonText: "Explore",
     title: "Expand center banner",
     image: "",
+    pattern: "",
     description: "Works best with 680x920 -1:1 Images with desc & link",
   },
   {
@@ -119,6 +126,7 @@ export const bannerLayouts4 = [
     buttonText: "Explore",
     title: "Expand center no link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];
@@ -133,6 +141,7 @@ export const bannerLayouts5 = [
     buttonText: "Explore",
     title: "Expand top banner",
     image: "",
+    pattern: "",
     description: "Works best with 680x920 -1:1 Images with desc & link",
   },
   {
@@ -144,6 +153,7 @@ export const bannerLayouts5 = [
     buttonText: "",
     title: "Expand top no link",
     image: "",
+    pattern: "",
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];

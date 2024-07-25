@@ -10,11 +10,7 @@ type Props = {
     pattern?: string;
   };
   bannerLayout: string;
-  handleBannerType: (
-    id: string,
-    isButton: boolean,
-    patternType: string,
-  ) => void;
+  handleBannerType: (id: string, isButton: boolean, isPattern: boolean) => void;
 };
 
 const MemoSelectingCardLayout = (props: Props) => {
@@ -37,7 +33,7 @@ const MemoSelectingCardLayout = (props: Props) => {
             handleBannerType(
               layout?._id,
               layout?.isButton,
-              layout?.pattern || "",
+              layout?.isPattern || false,
             )
           }
         />
