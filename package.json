@@ -2,13 +2,8 @@
   "name": "@hipal/parent",
   "version": "1.0.0",
   "description": "",
-  "workspaces": [
-    "servers/*",
-    "packages/*",
-    "clients/*"
-  ],
+  "workspaces": ["servers/*", "packages/*", "clients/*"],
   "scripts": {
-    "preinstall": "npx only-allow bun",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
