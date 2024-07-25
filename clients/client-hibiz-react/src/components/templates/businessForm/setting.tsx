@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, startTransition } from "react";
 import { IphoneCategory, IphoneExplore } from "@/components/atom/svgtheme";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { colors } from "./businessCtrlStore";
@@ -7,6 +7,8 @@ import PopUp from "@/components/atom/popUp";
 import ColorWheel from "@/components/atom/colorWheel";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const Setting = () => {
   const {
@@ -24,10 +26,12 @@ const Setting = () => {
     setSecondaryColor: s.setSecondaryColor,
     setStep: s.setStep,
     exploreLayout: s.exploreLayout,
-    menuLayout: s.menuLayout
+    menuLayout: s.menuLayout,
   }));
 
-  const businessData = useBusinessData(s => s.businessData)
+  const navigate = useNavigate();
+
+  const businessData = useBusinessData((s) => s.businessData);
 
   const [selectedPrimaryColor, setSelectedPrimaryColor] =
     useState(primaryColor);
@@ -71,21 +75,28 @@ const Setting = () => {
   };
 
   const apiCall = async () => {
-
     const res = await apiRpc.businesses[":businessId"].$put({
       json: {
         exploreLayout: exploreLayout,
         menuLayout: menuLayout,
         primaryColor: primaryColor,
         secondaryColor: secondaryColor,
-        businessType: businessData?.businessType || "FOOD"
+        businessType: businessData?.businessType || "FOOD",
       },
       param: {
-        businessId: businessData?._id
-      }
-    })
+        businessId: businessData?._id,
+      },
+    });
+    if (res.status === 400 || res.status === 403 || res.status === 409) {
+      toast.error("Please try again");
+      return;
+    }
     if (res.status === 200 || res.status === 201) {
-      setStep(4);
+      toast.success("Colors saved successfully");
+      setStep(0);
+      startTransition(() => {
+        navigate(`/app/business/${businessData?._id}`);
+      });
     }
   };
 
@@ -203,11 +214,7 @@ const Setting = () => {
           <ColorWheel close={handleClose} colorType={colorType} />
         </PopUp>
       )}
-      <button
-        type="button"
-        className="bottom_btn"
-        onClick={apiCall}
-      >
+      <button type="button" className="bottom_btn" onClick={apiCall}>
         Save Colors
       </button>
     </>

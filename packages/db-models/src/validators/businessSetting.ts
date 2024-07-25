@@ -27,6 +27,7 @@ export const BusinessSettingsSchema = z.object({
   razorpayMerchantId: z.string().min(4).max(50).optional(),
   razorpayKeyId: z.string().min(4).max(50).optional(),
   razorpayKeySecret: z.string().min(4).max(50).optional(),
+  
 });
 
 export type BusinessSettingsType = z.infer<typeof BusinessSettingsSchema>;

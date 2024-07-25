@@ -11,6 +11,9 @@ import {
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import Stairs from "@/assets/Stairs.png";
+import { cn } from "@hi/common";
+import { CiWarning } from "react-icons/ci";
+import { PiSealWarningFill } from "react-icons/pi";
 
 const Business = () => {
   const setSelectedIcon = useSelectedIcon((s) => s.setSelectedIcon);
@@ -71,8 +74,12 @@ const Business = () => {
       </section>
       <section className="mx-4">
         {!businessData?.withPopCorn && (
-          <section onClick={goToBusinessControl} className="business_Control">
-            <article className="business_Control_article">
+          <button
+            type="button"
+            onClick={goToBusinessControl}
+            className="business_Control"
+          >
+            <article className="text-left business_Control_article">
               <h3 className="text-lg font-semibold">Business Control</h3>
               <p>All Controls in one panel</p>
               <button
@@ -85,19 +92,36 @@ const Business = () => {
             <figure className="business_Control_figure">
               <img className="stair_img" src={Stairs} alt="Stairs" />
             </figure>
-          </section>
+          </button>
         )}
       </section>
       {!businessData?.withPopCorn && (
         <>
-          <h3 className="px-4 pt-4 text-2xl">Shortcuts</h3>
+          <h6 className="px-4 mt-4 text-2xl">Shortcuts</h6>
+          {!businessData?.themeApplied && (
+            <center className="px-4 py-2 mt-2 text-sm font-semibold text-[#da0606] bg-[#da060630] flex items-center justify-center">
+              <PiSealWarningFill size={32} className="mr-2" />
+              Unlock all services after setting the Theme
+            </center>
+          )}
           <section className="business_system_cards">
             {liteVersionCardButtons.map((item: ILiteVersionCardButton) => (
               <button
-              type="button"
-                onClick={() => handleClick(item?.navigateTo)}
+                type="button"
+                onClick={() => handleClick(item?.navigateTo || "")}
                 key={item.text}
-                className="relative mt-4 overflow-hidden rounded-2xl"
+                className={cn(
+                  "relative mt-4 overflow-hidden rounded-2xl text-left",
+                  {
+                    "bg-gray-400 cursor-not-allowed":
+                      item.navigateTo !== "businessControl" &&
+                      !businessData?.themeApplied,
+                  },
+                )}
+                disabled={
+                  item.navigateTo !== "businessControl" &&
+                  !businessData?.themeApplied
+                }
               >
                 <figure>
                   <img
@@ -105,16 +129,52 @@ const Business = () => {
                     height={146}
                     src={item.image}
                     alt={item.text}
+                    className={cn({
+                      "opacity-50":
+                        item.navigateTo !== "businessControl" &&
+                        !businessData?.themeApplied,
+                    })}
                   />
                 </figure>
                 <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[55%]">
                   <section className="flex items-center justify-between">
-                    <h4 className="font-semibold leading-4 text-black">
+                    <h4
+                      className={cn("font-semibold leading-6", {
+                        "text-gray-500":
+                          item.navigateTo !== "businessControl" &&
+                          !businessData?.themeApplied,
+                        "text-black":
+                          businessData?.themeApplied ||
+                          item.navigateTo === "businessControl",
+                      })}
+                    >
                       {item.text}
                     </h4>
-                    <FaArrowRight className="-rotate-45" />
+                    <FaArrowRight
+                      className={cn("-rotate-45", {
+                        "text-gray-500":
+                          item.navigateTo !== "businessControl" &&
+                          !businessData?.themeApplied,
+                        "text-black":
+                          businessData?.themeApplied ||
+                          item.navigateTo === "businessControl",
+                      })}
+                    />
                   </section>
-                  <small className="mt-2 opacity-50 float-start">{item.description}</small>
+                  <h4
+                    className={cn("opacity-50 mt-1 text-xs", {
+                      "text-gray-500":
+                        item.navigateTo !== "businessControl" &&
+                        !businessData?.themeApplied,
+                      "text-black":
+                        businessData?.themeApplied ||
+                        item.navigateTo === "businessControl",
+                    })}
+                  >
+                    {businessData?.themeApplied
+                      ? "Activate after Themes"
+                      : item.description}
+                  </h4>
                 </figcaption>
               </button>
             ))}

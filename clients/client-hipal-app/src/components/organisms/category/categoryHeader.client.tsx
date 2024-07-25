@@ -1,8 +1,10 @@
 "use client";
 import Header from "@/components/molecules/header";
 import DishesTypes from "@/components/organisms/category/dishTypes";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useRoutingFlow } from "@/components/store/useRoutingFlow";
 import type { CategoryType } from "@hi/db-models/src/validators";
+import { useRouter } from "next/navigation";
 import { memo, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
@@ -12,6 +14,8 @@ interface ICategoryProps {
 }
 function CategoryHeader(props: ICategoryProps) {
   const { parentCategory, childCategory } = props;
+  const businessData = useBusinessDetails((s) => s.businessDetails);
+  const router = useRouter();
   const [data, setData] = useState({
     roundedHeader: false,
   }); // roundedHeader is false when the header is scrolled to the top
@@ -19,18 +23,21 @@ function CategoryHeader(props: ICategoryProps) {
     threshold: 1,
   });
 
-  const { getPreviousPath } = useRoutingFlow();
 
   useEffect(() => {
     changeHeaderStyle();
   }, [entry]);
+
+  const goBack = () => {
+    router.push(`/${businessData.customLink}/explore`);
+  };
 
   return (
     <>
       <Header
         hideBackBtn={data.roundedHeader}
         // categories={categories}
-        backURL={`${getPreviousPath()}`}
+        backURL={goBack}
         title={<div className="text-xl">Menu</div>}
         showOtherButtons
       />

@@ -4,6 +4,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import { useCallback, useState } from "react";
+import toast from "react-hot-toast";
 import { LuArrowLeft } from "react-icons/lu";
 
 const Password = () => {
@@ -11,14 +12,14 @@ const Password = () => {
     step: state.step,
     setStep: state.setStep,
   }));
-  const {user} = useOwnerLogin()
+  const { user } = useOwnerLogin();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const goBack = useCallback(() => {
     setStep(step - 1);
-  },[step]);
-  
+  }, [step]);
+
   const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
   };
@@ -27,40 +28,51 @@ const Password = () => {
     setConfirmPassword(e.target.value);
   };
 
-  const saveThePassword = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const saveThePassword = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
 
-    if (password.length < 8 || confirmPassword.length < 8) {
-      alert("Password must be at least 8 characters long");
-      return;
-    }
-    if (password === confirmPassword) {
-      const res = await apiRpc.users[":ownerId"].$put({
-        json:{
-          password:password
-        },
-        param:{
-          ownerId:user._id
-        }
-      })
-      const response = await res.json()
-      if(res.status === 200 || res.status === 201){
-        
-        setStep(step + 1);
+      if (password.length < 8 || confirmPassword.length < 8) {
+        toast.error("Password must be at least 8 characters long");
+        return;
       }
-    } else {
-      alert("Password does not match");
-    }
-  },[password,confirmPassword,step,user]);
+      if (password === confirmPassword) {
+        const res = await apiRpc.users[":ownerId"].$put({
+          json: {
+            password: password,
+          },
+          param: {
+            ownerId: user._id,
+          },
+        });
+        if (res.status === 409 || res.status === 400 || res.status === 401) {
+          toast.error("Please try again");
+          return;
+        }
+        if (res.status === 200 || res.status === 201) {
+          setStep(step + 1);
+        }
+      }
+    },
+    [password, confirmPassword, step, user],
+  );
 
   return (
     <form onSubmit={saveThePassword}>
-      <img className="absolute left-0 right-0 m-auto -top-[6.5rem]" width={63} height={73} src={Hand} alt="Hipal_hand" />
-      <h3 onClick={goBack} className="flex items-center font-semibold leading-8 text-[#1C4EFF]">
+      <img
+        className="absolute left-0 right-0 m-auto -top-[6.5rem]"
+        width={63}
+        height={73}
+        src={Hand}
+        alt="Hipal_hand"
+      />
+      {/* <h3 onClick={goBack} className="flex items-center font-semibold leading-8 text-[#1C4EFF]">
         <LuArrowLeft size={16} />
         &nbsp; Back
+      </h3> */}
+      <h3 className="mt-2 text-xl font-semibold leading-8">
+        Security comes first*
       </h3>
-      <h3 className="mt-2 text-xl font-semibold leading-8">Security comes first</h3>
       <h3 className="flex leading-8">Door without a lock ? !</h3>
       <section className="mt-4 space-y-4">
         <input
@@ -68,22 +80,28 @@ const Password = () => {
           value={password}
           className={cn(
             "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-            password.length < 8 ? "border-red-500 focus:ring-red-500" : "border-black focus:ring-black",
+            password.length < 8
+              ? "border-red-500 focus:ring-red-500"
+              : "border-black focus:ring-black",
           )}
           type="password"
           placeholder="Enter your password"
           autoComplete="new-password"
+          required
         />
         <input
           onChange={handleConfirmPassword}
           value={confirmPassword}
           className={cn(
             "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
-            confirmPassword.length < 8 ? "border-red-500 focus:ring-red-500" : "border-black focus:ring-black",
+            confirmPassword.length < 8
+              ? "border-red-500 focus:ring-red-500"
+              : "border-black focus:ring-black",
           )}
           type="password"
           placeholder="Confirm your password"
           autoComplete="new-password"
+          required
         />
       </section>
       <button type="submit" className="action_btn">

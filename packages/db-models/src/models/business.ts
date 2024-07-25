@@ -58,6 +58,10 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: Boolean,
       default: true,
     },
+    themeApplied: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

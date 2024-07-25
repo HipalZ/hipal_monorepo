@@ -1,6 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { memo, useEffect, useMemo } from "react";
+import { type FC, memo, useEffect, useMemo } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -10,7 +10,7 @@ interface IDishesProps {
   childCategory: CategoryType[];
 }
 
-const DishesList: React.FC<IDishesProps> = (props) => {
+const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory } = props;
   const {
     isActiveDishType,
@@ -27,6 +27,24 @@ const DishesList: React.FC<IDishesProps> = (props) => {
   }));
 
   console.log("isActiveCategory", isActiveDishType);
+
+  const normalizeType = (type: string): string => {
+    console.log("type", type);
+    switch (type) {
+      case "NON_VEG":
+        return "nonveg";
+      case "VEGAN":
+        return "vegan";
+      case "VEG":
+        return "veg";
+      case "EGG":
+        return "egg";
+        case "ALL":
+          return "all";
+      default:
+        return "all";
+    }
+  };
 
   const subTypes = useMemo(
     () =>
@@ -75,10 +93,13 @@ const DishesList: React.FC<IDishesProps> = (props) => {
               {category?.dishIds?.length}
             </h4>
           </div>
-          <div className="flex flex-col divide-y divide-base-base-300">
-            {category?.dishIds
+          <div className="flex flex-col divide-y divide-base-300">
+          {category?.dishIds
               ?.filter((dishData: DishType) => 
-                dishData.dishTypes.includes(isActiveDishType.toUpperCase())
+                normalizeType(isActiveDishType) === "all" ||
+                dishData.dishTypes
+                  .map(normalizeType)
+                  .includes(normalizeType(isActiveDishType))
               )
               ?.map(
                 (dishData: DishType, dishIndex) =>

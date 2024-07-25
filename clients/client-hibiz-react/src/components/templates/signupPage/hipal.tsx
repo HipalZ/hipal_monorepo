@@ -50,6 +50,7 @@ const MemoHipal = () => {
           </button>
         </article>
       </section>
+
       <button onClick={() => setStep(2)} type="button" className="bottom_btn">
         <div className="flex items-center justify-between px-4">
           <span>Get Started</span>

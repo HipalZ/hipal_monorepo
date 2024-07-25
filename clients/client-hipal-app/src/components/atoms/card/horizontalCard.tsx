@@ -131,8 +131,8 @@ const HorizontalCard = ({
                   layout={"intrinsic"}
                   alt="dish"
                   quality={95}
-                  width={150}
-                  height={150}
+                  width={125}
+                  height={125}
                   objectFit="cover"
                   className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
                     }`}
@@ -162,19 +162,19 @@ const HorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={`z-20 flex flex-col items-center w-full mx-auto ${!!dishData.images[0] || noDescription ? " -mt-6" : " -mt-4 -ml-6"
+              className={`z-20 flex flex-col items-center w-full mx-auto ${dishData?.images?.length >0 || noDescription ? " -mt-6" : " -mt-4 -ml-6"
                 }`}
             >
               {dishData.availability && (
                 <div
-                  className={`flex flex-col flex-shrink-0 items-center w-full ${!!dishData.images[0] ? "" : "-ml-6"
+                  className={`flex flex-col flex-shrink-0 items-center w-full ${dishData?.images?.length>0 ? "" : "-ml-6"
                     }`}
                 >
                   <DishQuantityButton
                     setSelectedDish={watchingDish}
                     dishData={dishData}
                   />
-                  {/* <span className="text-sm opacity-50">{dishData?.extras?.length > 0  ? 'customizable': null}</span> */}
+                  <span className="text-sm opacity-50">{dishData?.addOnIds?.length > 0  ? 'customizable': null}</span>
                 </div>
               )}
             </div>

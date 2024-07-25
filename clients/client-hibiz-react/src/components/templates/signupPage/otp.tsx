@@ -123,9 +123,10 @@ const Otp = ({ login }: { login?: boolean }) => {
         &nbsp; Back
       </button>
       <h3 className="mt-2 text-xl font-semibold leading-8">
-        Forgot your Password
+        {login ? "Welcome back" : "Please Enter the OTP"}
       </h3>
-      <h3 className="flex leading-8">No worriez !</h3>
+      {login ? <h3 className="flex leading-8">No worriez !</h3> : null}
+
       <section className="mt-4">
         <small>
           <span className="opacity-40">OTP sent to +91</span>{" "}

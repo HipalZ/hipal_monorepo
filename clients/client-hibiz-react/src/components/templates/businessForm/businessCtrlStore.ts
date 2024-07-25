@@ -1,6 +1,5 @@
 import PlaceHolder from "@/assets/businessControl.png";
 import ExploreIcon from "@/assets/hisite/exploreIcon.png";
-import MenuIcon from "@/assets/hisite/menuIcon.png";
 export const colors = [
   {
     primaryColor: "#FFF7F1",
@@ -58,13 +57,14 @@ export const businessCtrlServices = [
   },
   {
     image: PlaceHolder,
-    Title: "Manage Pages",
-    tags: ["Explore Page", "Blogz"],
+    Title: "Manage Menu",
+    tags: ["creator", "manager"],
+    navigation: "menu",
   },
   {
     image: PlaceHolder,
-    Title: "Manage Menu",
-    tags: ["creator", "manager"],
+    Title: "Manage Pages",
+    tags: ["Explore Page", "Blogz"],
   },
 ];
 

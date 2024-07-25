@@ -462,7 +462,7 @@ input[type="color" i] {
       width: 50%;
   }
   .bottom_btn {
-    position: sticky;
+    position: fixed;
     bottom: 1rem;
     left: 50%;
     z-index: 50;
@@ -472,7 +472,7 @@ input[type="color" i] {
     color: #fff;
     padding: 0.75rem 1rem;
     border-radius: 3rem;
-    transform: translateX(-25%);
+    transform: translateX(-50%);
   }
 }
 

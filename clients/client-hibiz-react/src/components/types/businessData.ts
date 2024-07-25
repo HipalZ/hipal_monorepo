@@ -75,6 +75,7 @@ export interface IBusinessData {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  themeApplied: boolean;
   parentOutLetId: {
     name: string;
   };

@@ -33,6 +33,8 @@ function Header({
   });
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
+  
+
   const closeSearchBox = () => {
     if (!title) {
       return;
@@ -48,30 +50,22 @@ function Header({
   };
 
   const _onBack = () => {
-    if (typeof onBack !== "undefined") {
+    if (onBack) {
       onBack();
     } else {
-      if (backURL) {
-        router.push(backURL);
-      } else {
-        router.back();
-      }
-    }
+      router.back();
   };
+}
 
   const CustomTag = tag ? (`${tag}` as React.ElementType) : ("h4" as React.ElementType);
 
-  useEffect(() => {
-    backURL && router.prefetch(`${backURL}`);
-  }, [backURL, router]);
 
   return (
     <div
       className={`bg-base-100 transition-transform duration-300 z-50 sticky top-0 flex flex-col ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'} space-y-2 text-4xl py-4`}
     >
       <div className="relative flex w-full">
-        {/* Back Button */}
-        <div className={"flex w-full"}>
+        <div className="flex w-full">
           <button
             type="button"
             className="swap swap-rotate my-auto btn btn-ghost !h-8 !min-h-8 aspect-square !px-0 py-0 rounded-full"
@@ -95,7 +89,7 @@ function Header({
           </button>
 
           {!state.showSearchBox && title ? (
-            <div className={`my-auto prose capitalize ${"ml-4"}`}>
+            <div className="my-auto prose capitalize">
               <CustomTag>
                 {typeof title === "function"
                   ? title({ isRounded: false })
@@ -109,9 +103,9 @@ function Header({
 
         {!state.showSearchBox && otherButtons && otherButtons}
         {showOtherButtons && (
-          <div className="flex flex-row ml-auto ">
+          <div className="flex flex-row">
             {!state.showSearchBox && (
-              <div className="flex items-center justify-around pl-2 ml-auto">
+              <div className="flex items-center justify-around px-2">
                 <div className="mt-1 mr-2">
                   <QuickFilter />
                 </div>

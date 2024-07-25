@@ -25,6 +25,7 @@ export const BusinessSchema = z.object({
   secondaryColor: z.string().min(4).max(30).optional(),
   parentOutLetId: ObjectIdSchema.optional(),
   outlet: z.boolean().optional().default(true),
+  themeApplied: z.boolean().optional().default(false),
 });
 
 export const BranchSchema = z.object({
