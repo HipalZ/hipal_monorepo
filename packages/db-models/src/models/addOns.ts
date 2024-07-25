@@ -6,7 +6,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const choicesSchema = new mongoose.Schema<ChoiceType>({
   name: { type: String, required: true },
   price: { type: Number, required: true },
-  description: { type: String, required: false },
+
   visibility: { type: Boolean, required: true, default: true },
   availability: { type: Boolean, required: true, default: true },
   choiceMaxQuantity: { type: Number, required: true, default: 1 },

@@ -1,5 +1,5 @@
 // books.ts
-import { Category, Dish, UniquelyYours } from "@hi/db-models";
+import { Business, Category, Dish, UniquelyYours } from "@hi/db-models";
 import {
   dishSchema,
   uniquelyYoursSchema,
@@ -227,7 +227,10 @@ const dishesRouter = new Hono()
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const dish = await c.req.json();
-        console.log("dish", dish);
+        const menuLayout = await Business.findOne({
+          businessId: dish.businessId,
+        });
+        if (!menuLayout) return respond(c, "Business not found", true, 404, {});
         const createDish = await Dish.create([dish], { session });
         if (!createDish)
           return respond(c, "Error in creating dish", true, 400, {});
