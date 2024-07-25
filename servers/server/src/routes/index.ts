@@ -11,7 +11,7 @@ import usersRouter from "./users";
 //
 const app = new Hono();
 // ** import routes here & chain them **
-///////
+////////
 export const routes = app
 
   .route("/businesses", businessRouter)

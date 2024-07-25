@@ -30,7 +30,7 @@ const refreshToken = useUserToken.getState().refreshToken;
 console.log("accessToken", accessToken);
 console.log("refreshToken", refreshToken);
 
-export const apiRpc = hc<AppType>("http://localhost:4500", {
+export const apiRpc = hc<AppType>("https://api.test.hipalz.com", {
   headers: {
     Authorization: `Bearer ${accessToken}`,
     "x-refresh-token": refreshToken,
