@@ -174,6 +174,27 @@ const settingsRouter = new Hono()
         existingBanners,
       );
     },
+  )
+  .delete(
+    "/banners/:bannerId",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
+    zValidator("param", z.object({ bannerId: z.string() })),
+
+    async (c) => {
+      const { bannerId } = c.req.param();
+      const existingBanners = await Banner.deleteOne({
+        _id: bannerId,
+      });
+      return respond(
+        c,
+        "Banners delete successfully",
+        false,
+        200,
+        existingBanners,
+      );
+    },
   );
 
 export default settingsRouter;
