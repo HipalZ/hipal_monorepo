@@ -25,14 +25,33 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
+const getBaseUrl = () => {
+  if (
+    typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    import.meta.env.VITE_API_URL
+  ) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (
+    typeof process !== "undefined" &&
+    process.env &&
+    process.env.NEXT_PUBLIC_API_URL
+  ) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  throw new Error("API URL is not defined");
+};
+
+const baseUrl = getBaseUrl();
 const accessToken = useUserToken.getState().accessToken;
 const refreshToken = useUserToken.getState().refreshToken;
-console.log("accessToken", accessToken);
-console.log("refreshToken", refreshToken);
+console.log("accessTokenfrontend", accessToken);
+console.log("refreshTokenfrontend", refreshToken);
 
-// const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:4500";
+console.log("baseUrl", baseUrl);
 
-export const apiRpc = hc<AppType>("http://localhost:4500", {
+export const apiRpc = hc<AppType>(baseUrl, {
   headers: {
     Authorization: `Bearer ${accessToken}`,
     "x-refresh-token": refreshToken,
