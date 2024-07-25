@@ -95,7 +95,7 @@ const MemoListOfAddon = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+    <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       {filteredAddOns.map((addon) => (
         <button
           type="button"

@@ -23,11 +23,7 @@ import type {
   IDish,
 } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import {
-  cn,
-  filterPayload,
-  storeImageAfterSave,
-} from "@/components/utils/helper";
+import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { BsInstagram } from "react-icons/bs";
 import { CiFacebook } from "react-icons/ci";
@@ -553,7 +549,7 @@ const MemoExplorePage = () => {
               </PopUp>
             )}
             <Suspense fallback={<LoadingSpinner />}>
-              <BottomButton text="Save" />
+              <BottomButton text="Save" type={"submit"} />
             </Suspense>
             <br />
             <br />

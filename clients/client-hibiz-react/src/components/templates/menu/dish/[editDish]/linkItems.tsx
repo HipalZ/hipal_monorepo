@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import { useChildCategories } from "@/hooks/useDishStore";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import BottomButton from "@/components/atom/bottomButton";
 
 const MemoLinkItems = () => {
   const [tempIds, setTempIds] = useState<string[]>([]);
@@ -133,7 +134,7 @@ const MemoLinkItems = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
+      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4">
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}
@@ -160,13 +161,7 @@ const MemoLinkItems = () => {
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={handleSave}
-        className="bottom_btn lg:bottom-36"
-      >
-        Save
-      </button>
+      <BottomButton text="Save" onClick={handleSave} />
     </>
   );
 };

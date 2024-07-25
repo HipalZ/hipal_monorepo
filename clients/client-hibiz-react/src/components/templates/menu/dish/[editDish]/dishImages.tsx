@@ -60,7 +60,11 @@ const MemoDishImages = (props: Props) => {
         />
         <label htmlFor="secondImage">
           {img?.second ? (
-            <img src={img?.second} alt="Second" />
+            <img
+              src={img?.second}
+              alt="Second"
+              className="w-[200px] h-[200px]"
+            />
           ) : (
             <PlusButton />
           )}
@@ -85,7 +89,11 @@ const MemoDishImages = (props: Props) => {
           data-type="third"
         />
         <label htmlFor="thirdImage">
-          {img?.third ? <img src={img?.third} alt="Third" /> : <PlusButton />}
+          {img?.third ? (
+            <img src={img?.third} alt="Third" className="w-[200px] h-[200px]" />
+          ) : (
+            <PlusButton />
+          )}
         </label>
         {img?.third && (
           <button

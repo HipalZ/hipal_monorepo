@@ -8,6 +8,7 @@ import { cn } from "@hi/common";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import { RxCross2 } from "react-icons/rx";
 import { TagsEnum } from "@/components/utils/helper";
+import BottomButton from "@/components/atom/bottomButton";
 
 const tagImageMap = {
   New: newTag,
@@ -79,7 +80,7 @@ const MemoLinkTags = () => {
                 onClick={() => toggleSelection(tag)}
                 key={tag}
                 className={cn(
-                  "capitalize flex justify-between items-center px-4 py-2 rounded-full gap-1 border border-[#CACACA]",
+                  "capitalize flex justify-between items-center px-4 py-2 rounded-full gap-1 border border-[#CACACA] cursor-pointer",
                   `${isSelected ? "bg-blue-200" : ""}`,
                 )}
               >
@@ -121,7 +122,7 @@ const MemoLinkTags = () => {
       )}
       <section className="flex gap-2">
         {customTagsState.map((tag) => (
-          <div key={tag} className="flex my-4">
+          <div key={tag} className="flex my-4 cursor-pointer">
             <span className="px-4 py-2 border rounded-full">{tag}</span>
             <button
               className="w-4 h-4 px-0.5 -ml-2 text-xs text-white bg-black rounded-full"
@@ -133,9 +134,7 @@ const MemoLinkTags = () => {
           </div>
         ))}
       </section>
-      <button type="button" onClick={handleSave} className="bottom_btn">
-        Save
-      </button>
+      <BottomButton text="Save" onClick={handleSave} />
     </section>
   );
 };

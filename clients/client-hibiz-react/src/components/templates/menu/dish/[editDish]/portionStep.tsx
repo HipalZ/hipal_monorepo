@@ -134,7 +134,7 @@ const MemoPortionStep = () => {
             {({ open }) => (
               <div className="relative mt-1">
                 <section className="flex">
-                  <ListboxButton className="relative flex items-center py-2 text-left bg-white rounded-lg cursor-default sm:text-sm">
+                  <ListboxButton className="relative flex items-center py-2 text-left bg-white rounded-lg cursor-pointer listbox-button sm:text-sm">
                     <span className="flex items-center">
                       <img
                         src={
@@ -200,11 +200,11 @@ const MemoPortionStep = () => {
                         }
                         value={foodType}
                       >
-                        {({ selected }) => (
+                        {({ selected, focus }) => (
                           <>
                             <span
-                              className={`block truncate ${
-                                selected ? "font-medium" : "font-normal"
+                              className={`block truncate cursor-pointer ${
+                                focus ? "font-medium" : "font-normal"
                               }`}
                             >
                               {foodType.name}
