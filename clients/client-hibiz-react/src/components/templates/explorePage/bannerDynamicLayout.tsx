@@ -295,7 +295,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 </h1>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",

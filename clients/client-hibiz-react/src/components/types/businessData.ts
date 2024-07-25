@@ -275,6 +275,7 @@ export type IStyles = {
 };
 
 export interface IBanner {
+  isPublished: boolean;
   _id: string;
   layout: string;
   businessId: string;

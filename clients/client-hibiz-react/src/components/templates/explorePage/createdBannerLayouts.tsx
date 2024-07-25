@@ -1,4 +1,4 @@
-import { type CSSProperties, memo } from "react";
+import { type CSSProperties, memo, useEffect, useMemo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import type { IBannerPayload } from "@/components/types/businessData";
 import {
@@ -11,6 +11,8 @@ import {
   BannerType,
   truncateDescription,
 } from "@/components/utils/bannerLayouts";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/components/utils/helper";
 
 interface Props {
   heading?: string;
@@ -43,6 +45,11 @@ const MemoCreatedBannersLayout = (props: Props) => {
     color: buttonStyle?.buttonColor || "white",
   };
 
+  const location = useLocation();
+  const isExplorePage = useMemo(() => {
+    return location?.pathname.includes("explorePage");
+  }, [location.pathname]);
+
   return (
     <>
       {bannerLayouts.map((layout) => {
@@ -58,7 +65,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-t-xl w-[12rem] h-[8.5rem]"
+                  className="rounded-t-xl w-[12rem] h-[8.5rem] bg-cover"
                 />
               </figure>
               <article
@@ -110,18 +117,18 @@ const MemoCreatedBannersLayout = (props: Props) => {
               className="relative flex justify-center"
               onClick={() => handleEditBanner(banner)}
             >
-              <figure className="w-full max-h-[12rem] rounded-2xl">
+              <figure className="w-full max-h-[12rem] max-w-[12rem] rounded-2xl">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl w-full h-[12rem] bg-cover aspect-square"
+                  className="rounded-xl w-full h-[12rem] bg-contain aspect-square"
                 />
               </figure>
               <article
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
                 }}
-                className="absolute bottom-2 w-[90%] max-h-[12rem] md:max-w-[11rem] p-2 rounded-xl h-[3rem]"
+                className="absolute bottom-2 w-[90%] max-w-[11rem] max-h-[12rem] md:max-w-[11rem] p-2 rounded-xl h-[3rem]"
               >
                 <div className="flex justify-between">
                   <h1 style={paragraphStyle} className="text-[0.7rem] truncate">
@@ -250,7 +257,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </h1>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
@@ -290,7 +297,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] aspce-square bg-cover"
+                  className="rounded-xl h-[12rem] aspcet-square bg-cover"
                 />
               </figure>
               <article
@@ -309,7 +316,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </h1>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
@@ -345,7 +352,11 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <section
             key={layout?._id}
-            className="h-[12rem] aspect-square lg:max-w-[12rem] shrink-0"
+            className={cn(
+              isExplorePage
+                ? "h-[12rem] aspect-square lg:max-w-[12rem] shrink-0"
+                : "flex-1 flex-shrink-0 w-full lg:max-w-[12rem]",
+            )}
           >
             <article
               className="relative w-full h-full min-h-[11rem] max-h-[12rem] lg:max-w-[12rem] w-full max-w-[12rem] rounded-xl"

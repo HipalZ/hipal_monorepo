@@ -1,4 +1,12 @@
-import { lazy, memo, startTransition, Suspense, useState } from "react";
+import {
+  lazy,
+  memo,
+  startTransition,
+  Suspense,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { useExploreStore } from "@/components/store/useExploreStore";
@@ -6,6 +14,11 @@ import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { BannerPage } from "@/components/utils/bannerLayouts";
+
+enum ViewType {
+  BANNERS = "Banners",
+  DRAFTS = "Drafts",
+}
 
 // Lazy load components
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
@@ -23,21 +36,25 @@ const MemoBanners = () => {
   const banners = useExploreStore((s) => s.banners);
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner, setBannerPage } = useBannerStore((s) => ({
-    setSelectedBanner: s.setSelectedBanner,
-    setBannerPage: s.setBannerPage,
-  }));
+  const { setSelectedBanner, setBannerPage, bannerPage } = useBannerStore(
+    (s) => ({
+      setSelectedBanner: s.setSelectedBanner,
+      bannerPage: s.bannerPage,
+      setBannerPage: s.setBannerPage,
+    }),
+  );
 
   const [addSpotlight, setAddSpotlight] = useState(false);
+  const [view, setView] = useState(ViewType.BANNERS);
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
   }));
 
-  const handleNewSpotlight = () => {
+  const handleNewSpotlight = useCallback(() => {
     setAddSpotlight(true);
     setBannerPage(BannerPage.VIEW);
-  };
+  }, [bannerPage, addSpotlight]);
 
   const handleNewBanner = () => {
     startTransition(() => {
@@ -46,19 +63,19 @@ const MemoBanners = () => {
     setAddSpotlight(false);
   };
 
-  const handleEditBanner = (banner: IBannerPayload) => {
+  const handleEditBanner = useCallback((banner: IBannerPayload) => {
     setSelectedBanner(banner);
     setSelectedBannerType(banner?.layout || "");
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/${banner?._id}`);
     });
-  };
+  }, []);
 
-  const handleNavigate = () => {
+  const handleNavigate = useCallback(() => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/explorePage`);
     });
-  };
+  }, [businessId]);
 
   useQuery({
     queryKey: ["banners", businessId],
@@ -75,9 +92,17 @@ const MemoBanners = () => {
     enabled: !!businessId,
   });
 
+  const filteredBanners = useMemo(() => {
+    return banners.filter((banner) => {
+      return view === ViewType.BANNERS
+        ? banner.isPublished
+        : !banner.isPublished;
+    });
+  }, [banners, view]);
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <main className="h-screen mb-[2rem]">
+      <main className="relative h-screen mb-[2rem]">
         <HisiteHeader
           title="Banners"
           isIconBusinessShow={false}
@@ -86,39 +111,59 @@ const MemoBanners = () => {
         &nbsp;
         <section className="mx-6">
           <SubHeader text="Spotlights" color="#000" />
-          <Paragraph text="Size matters ! Express limitless with your customers about all the happenings at your place.  " />
+          <Paragraph text="Size matters! Express limitless with your customers about all the happenings at your place." />
           &nbsp;
-          <h1 className="mb-2">Banners</h1>
-          <section className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-5 pb-[5rem]">
-            {banners
-              ? banners?.map((banner: IBannerPayload, index: number) => {
-                  return (
-                    <CreatedBannersLayouts
-                      key={`banner?._id+${index.toString()}`}
-                      selectedLayout={banner?.layout || ""}
-                      heading={banner?.heading || ""}
-                      paragraph={banner?.paragraph || ""}
-                      callToAction={banner?.callToAction || ""}
-                      img={{ logo: banner?.bannerImage || "" }}
-                      selectedColor={{
-                        bgColor: banner?.backgroundColor || "",
-                        textColor: banner?.backgroundColor || "",
-                      }}
-                      paragraphStyle={{ color: banner?.paragraphColor || "" }}
-                      buttonStyle={{
-                        color: banner?.buttonColor || "",
-                        buttonColor: banner?.buttonTextColor || "",
-                      }}
-                      banner={banner}
-                      handleEditBanner={handleEditBanner}
-                    />
-                  );
-                })
-              : null}
+          <div className="flex justify-between mb-2">
+            <button
+              type="button"
+              onClick={() => setView(ViewType.BANNERS)}
+              className={`mr-2 ${
+                view === ViewType.BANNERS ? "font-bold underline" : ""
+              }`}
+            >
+              Banners
+            </button>
+            <button
+              type="button"
+              onClick={() => setView(ViewType.DRAFTS)}
+              className={`${
+                view === ViewType.DRAFTS ? "font-bold underline" : ""
+              }`}
+            >
+              Drafts
+            </button>
+          </div>
+          <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5 pb-[5rem]">
+            {filteredBanners && filteredBanners?.length > 0 ? (
+              filteredBanners.map((banner: IBannerPayload, index: number) => (
+                <CreatedBannersLayouts
+                  key={`banner?._id+${index.toString()}`}
+                  selectedLayout={banner?.layout || ""}
+                  heading={banner?.heading || ""}
+                  paragraph={banner?.paragraph || ""}
+                  callToAction={banner?.callToAction || ""}
+                  img={{ logo: banner?.bannerImage || "" }}
+                  selectedColor={{
+                    bgColor: banner?.backgroundColor || "",
+                    textColor: banner?.backgroundColor || "",
+                  }}
+                  paragraphStyle={{ color: banner?.paragraphColor || "" }}
+                  buttonStyle={{
+                    color: banner?.buttonColor || "",
+                    buttonColor: banner?.buttonTextColor || "",
+                  }}
+                  banner={banner}
+                  handleEditBanner={handleEditBanner}
+                />
+              ))
+            ) : (
+              <center className="absolute -translate-x-1/2 top-1/2 left-1/2">
+                No Banners
+              </center>
+            )}
           </section>
-          <BottomButton text="Add New Spotlight" onClick={handleNewSpotlight} />
         </section>
-        {addSpotlight ? (
+        {addSpotlight && (
           <MiddlePopUp
             show={addSpotlight}
             onClose={() => {
@@ -139,18 +184,14 @@ const MemoBanners = () => {
                 >
                   New Banner
                 </button>
-                <button
-                  type="button"
-                  disabled={true}
-                  className="bg-[#F1EAFA] opacity-50 text-black rounded-2xl w-full p-2"
-                >
-                  From Drafts
-                </button>
               </article>
             </section>
           </MiddlePopUp>
-        ) : null}
+        )}
       </main>
+      <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
+        <BottomButton text="Add New Spotlight" onClick={handleNewSpotlight} />
+      </footer>
     </Suspense>
   );
 };

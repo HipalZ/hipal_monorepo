@@ -13,6 +13,7 @@ import {
   BannerPage,
   BannerType,
 } from "@/components/utils/bannerLayouts";
+import BottomButton from "@/components/atom/bottomButton";
 const SelectingCardLayout = lazy(() => import("./selectingCardLayout"));
 
 const MemoBannerLayouts = () => {
@@ -337,13 +338,11 @@ const MemoBannerLayouts = () => {
         })}
       </section>
       <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button
-          onClick={handleCreateBanner}
+        <BottomButton
+          text="Create"
           type="button"
-          className="w-full py-3 text-white bg-black rounded-full lg:w-1/2"
-        >
-          Save
-        </button>
+          onClick={handleCreateBanner}
+        />
       </footer>
     </section>
   );

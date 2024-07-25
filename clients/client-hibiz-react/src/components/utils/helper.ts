@@ -141,62 +141,12 @@ const MAX_HEIGHT = 500;
 const MIME_TYPE = "image/webp";
 const QUALITY = 0.9;
 
-export const compressArrayOfImages = (
-  file: File,
-  type: string,
-  setImageFiles: SetImageFilesFunction,
-  setImagePreviews: SetImagePreviewsFunction,
-) => {
-  const blobURL = URL.createObjectURL(file);
-  const img = new Image();
-  img.src = blobURL;
-  img.onerror = () => {
-    URL.revokeObjectURL(img.src);
-    console.log("Cannot load image");
-  };
-  img.onload = () => {
-    URL.revokeObjectURL(img.src);
-    const [newWidth, newHeight] = calculateSize(img, MAX_WIDTH, MAX_HEIGHT);
-    const canvas = document.createElement("canvas");
-    canvas.width = newWidth;
-    canvas.height = newHeight;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(img, 0, 0, newWidth, newHeight);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: MIME_TYPE,
-              lastModified: Date.now(),
-            });
-            setImageFiles((prev) => ({ ...prev, [type]: compressedFile }));
-            const reader = new FileReader();
-            reader.onload = () => {
-              if (reader.result) {
-                setImagePreviews((prev) => ({
-                  ...prev,
-                  [type]: reader.result,
-                }));
-              }
-            };
-            reader.readAsDataURL(compressedFile);
-          }
-        },
-        MIME_TYPE,
-        QUALITY,
-      );
-    }
-  };
-};
-
 export const compressImage = (file, callback) => {
   const blobURL = URL.createObjectURL(file);
   const img = new Image();
   img.src = blobURL;
   img.onerror = () => {
     URL.revokeObjectURL(img.src);
-    console.log("Cannot load image");
   };
   img.onload = () => {
     URL.revokeObjectURL(img.src);
@@ -214,7 +164,6 @@ export const compressImage = (file, callback) => {
               type: MIME_TYPE,
               lastModified: Date.now(),
             });
-            console.log("test compressedFile", compressedFile);
             callback(compressedFile);
           }
         },
@@ -258,7 +207,6 @@ export const handleCrop = async (
   const { image, type } = cropping;
   const cropper = cropperRef.current;
   if (cropper && image && type) {
-    console.log("test type", type);
     const coordinates = cropper?.getCoordinates();
     if (coordinates) {
       try {
@@ -268,7 +216,6 @@ export const handleCrop = async (
           const croppedFile = new File([blob], imageFiles[type]?.name, {
             type: "image/png",
           });
-          console.log("test croppedfile", croppedFile);
           // Save the cropped image
           setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
           const reader = new FileReader();
