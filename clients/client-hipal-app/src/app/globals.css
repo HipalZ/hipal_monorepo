@@ -1507,3 +1507,8 @@ input[type='password'] {
   .embla__dot--inactive {
 	transform: scale(0.8); /* Scale down the inactive dots */
   }
+
+  .listbox-button:hover {
+	background-color: #f0f0f0; /* Change to your desired highlight color */
+	border-color: #ccc; /* Optional: Change border color on hover */
+  }

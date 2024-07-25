@@ -3,6 +3,7 @@ import { memo, useMemo, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
+import BottomButton from "@/components/atom/bottomButton";
 
 interface Props {
   data: any;
@@ -78,7 +79,7 @@ const MemoLinkAddons = (props: Props) => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
+      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4">
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}
@@ -126,13 +127,8 @@ const MemoLinkAddons = (props: Props) => {
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={handleSave}
-        className="bottom_btn lg:bottom-36"
-      >
-        Save
-      </button>
+
+      <BottomButton text="Save" onClick={handleSave} />
     </>
   );
 };

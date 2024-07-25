@@ -23,11 +23,7 @@ import type {
   IDish,
 } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import {
-  cn,
-  filterPayload,
-  storeImageAfterSave,
-} from "@/components/utils/helper";
+import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { BsInstagram } from "react-icons/bs";
 import { CiFacebook } from "react-icons/ci";
@@ -435,7 +431,7 @@ const MemoExplorePage = () => {
   const bannersRef = useRef(false);
   const uniquelyYoursRef = useRef(false);
 
-  useQuery({
+  const { refetch } = useQuery({
     queryKey: ["bizInfo", businessId],
     queryFn: async () => {
       const res = await getAllBizInfo();
@@ -476,7 +472,7 @@ const MemoExplorePage = () => {
           isIconBusinessShow={false}
         />
         {toggleBizInfo ? (
-          <BizInformation />
+          <BizInformation refetch={refetch} />
         ) : (
           <form onSubmit={handleSaveExplorePage} className="px-4">
             <Suspense fallback={<LoadingSpinner />}>
@@ -553,7 +549,13 @@ const MemoExplorePage = () => {
               </PopUp>
             )}
             <Suspense fallback={<LoadingSpinner />}>
-              <BottomButton text="Save" />
+              <button
+                className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
+         md:left-0 md:right-0 md:mx-auto"
+                type="submit"
+              >
+                Save
+              </button>
             </Suspense>
             <br />
             <br />

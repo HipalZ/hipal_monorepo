@@ -17,7 +17,6 @@ import Paragraph from "@/components/atom/paragraph";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import BottomButton from "@/components/atom/bottomButton";
 import toast from "react-hot-toast";
 import PopUp from "@/components/atom/popUp";
 import { convertTo12HourFormat } from "@/components/templates/settingsForm/outletForm";
@@ -34,7 +33,7 @@ const amenitiesArr = [
   { _id: 5, text: "ALCOHOL", image: <IoBeerOutline /> },
 ];
 
-const MemoBizInfo = () => {
+const MemoBizInfo = ({ refetch }) => {
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   const [openTimings, setOpenTimings] = useState(false);
@@ -96,7 +95,7 @@ const MemoBizInfo = () => {
       setCustomTimings([...bizInfo.customTiming]);
     }
     setTempAddress(bizInfo?.address || "");
-  }, [bizInfo]);
+  }, []);
 
   const handleDescriptionChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -238,7 +237,9 @@ const MemoBizInfo = () => {
           businessId: businessId,
         },
       });
-      if (outletInfo.status === 200) {
+      const outletInfoData: IBizPayload = await outletInfo.json();
+      if (outletInfo.status === 200 || outletInfo.status === 201) {
+        refetch();
         toast.success("Data saved successfully");
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
@@ -371,14 +372,24 @@ const MemoBizInfo = () => {
             </article>
           </section>
           {(fixedTime?.openTime || fixedTime?.closeTime) && (
-            <div className="px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full">
+            <div
+              style={{ width: "max-content" }}
+              className="px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full"
+            >
               Business time from {convertTo12HourFormat(fixedTime?.openTime)} to{" "}
               {convertTo12HourFormat(fixedTime?.closeTime)}
             </div>
           )}
         </article>
       </section>
-      <BottomButton text="Save" onClick={handleCreateInfo} />
+      <button
+        className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
+         md:left-0 md:right-0 md:mx-auto"
+        onClick={handleCreateInfo}
+        type="button"
+      >
+        Save
+      </button>
       <br />
       <PopUp show={openTimings} onClose={handleTimings}>
         <section className="p-4 h-[80vh] overflow-y-scroll bg-gray-100 rounded-2xl pb-[5rem]">
@@ -464,7 +475,14 @@ const MemoBizInfo = () => {
               ))}
             </section>
           )}
-          <BottomButton text="Save" onClick={handleSaveChanges} />
+          <button
+            className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
+         md:left-0 md:right-0 md:mx-auto"
+            onClick={handleSaveChanges}
+            type="button"
+          >
+            Save
+          </button>
         </section>
       </PopUp>
     </main>

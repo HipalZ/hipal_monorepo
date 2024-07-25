@@ -21,6 +21,7 @@ import {
 } from "@/components/store/useAddStaffStore";
 import EditStaff from "@/components/molecules/addStaffpopup/editStaff";
 import toast from "react-hot-toast";
+import BottomButton from "@/components/atom/bottomButton";
 
 const StaffPage = () => {
   const user = useOwnerLogin((s) => s.user);
@@ -169,9 +170,7 @@ const StaffPage = () => {
         )}
       </main>
 
-      <button type="button" onClick={addStaff} className="bottom_btn">
-        Add Staff
-      </button>
+      <BottomButton onClick={addStaff} text="Add Staff" />
 
       {isAddStaffOpen && (
         <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
