@@ -431,7 +431,7 @@ const MemoExplorePage = () => {
   const bannersRef = useRef(false);
   const uniquelyYoursRef = useRef(false);
 
-  useQuery({
+  const { refetch } = useQuery({
     queryKey: ["bizInfo", businessId],
     queryFn: async () => {
       const res = await getAllBizInfo();
@@ -472,7 +472,7 @@ const MemoExplorePage = () => {
           isIconBusinessShow={false}
         />
         {toggleBizInfo ? (
-          <BizInformation />
+          <BizInformation refetch={refetch} />
         ) : (
           <form onSubmit={handleSaveExplorePage} className="px-4">
             <Suspense fallback={<LoadingSpinner />}>

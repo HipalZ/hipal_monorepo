@@ -21,7 +21,7 @@ interface IProps {
 enum RedirectionType {
   CATEGORIES = "CATEGORY",
   DISHES = "DISH",
-  EXTERNAL = "EXTERNAL",
+  LINK = "LINK",
 }
 
 const MemoRedirectionPopUp = (props: IProps) => {
@@ -58,7 +58,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
   }, [selectedLink]);
 
   const handleExternalLink = useCallback(() => {
-    setSelectedLink(RedirectionType.EXTERNAL);
+    setSelectedLink(RedirectionType.LINK);
   }, [selectedLink]);
 
   const handleSave = () => {
@@ -213,7 +213,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   </label>
                 </section>
               ))}
-            {selectedLink === RedirectionType.EXTERNAL && (
+            {selectedLink === RedirectionType.LINK && (
               <>
                 <span className="ml-4 text-xl truncate">External Link</span>
                 <section className="flex items-center gap-4 p-4 m-2 bg-white rounded-2xl">
