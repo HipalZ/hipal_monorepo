@@ -248,6 +248,7 @@ const dishesRouter = new Hono()
         const dishAlreadyExists = await Dish.findOne({
           businessId: dish.businessId,
           name: dish.name,
+          isDeleted: false,
         });
         if (dishAlreadyExists)
           return respond(c, "Dish already exists", true, 400, {});

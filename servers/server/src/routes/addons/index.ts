@@ -26,6 +26,7 @@ const addonRouter = new Hono()
 
         const existingAddon = await AddOn.findOne({
           name: requestData.name,
+          isDeleted: false,
           businessId: requestData.businessId,
         });
 
