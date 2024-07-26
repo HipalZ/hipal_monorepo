@@ -27,7 +27,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { respond } from "../../utils/response";
 import { convertToHsl } from "../../utils/theme";
 
@@ -246,7 +245,6 @@ const businessesRouter = new Hono()
   )
   .post(
     "/:customLink",
-    authTokenValidator,
 
     zValidator(
       "param",
