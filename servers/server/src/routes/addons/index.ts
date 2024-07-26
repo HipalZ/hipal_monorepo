@@ -59,8 +59,11 @@ const addonRouter = new Hono()
 
         const addOn = await AddOn.findOne({
           name: requestData.name,
+          isDeleted: false,
           _id: { $ne: id },
         });
+
+        console.log("yaha aya");
 
         if (addOn) return respond(c, "add On already exist", true, 409, {});
 
@@ -80,16 +83,18 @@ const addonRouter = new Hono()
           },
         );
 
+        console.log("sssssss", updatedAddOn);
+
         if (!updatedAddOn) return respond(c, "failed", true, 400, {});
 
         if (removeDishIds.length > 0) {
           await AddOn.findByIdAndUpdate(
-            {
-              _id: id,
-            },
+            id,
+
             {
               $pull: { dishIds: { $in: removeDishIds } },
             },
+            { session },
           );
 
           await Dish.updateMany(
@@ -101,12 +106,12 @@ const addonRouter = new Hono()
 
         if (dishIds.length > 0) {
           await AddOn.findByIdAndUpdate(
-            {
-              _id: id,
-            },
+            id,
+
             {
               $addToSet: { dishIds: { $each: dishIds } },
             },
+            { session },
           );
 
           await Dish.updateMany(

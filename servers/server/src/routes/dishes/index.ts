@@ -103,7 +103,11 @@ const dishesRouter = new Hono()
           removeAddOnIds = [],
           removeRecommendationIds = [],
         } = dish;
-        const existingDish = await Dish.findOne({ name, _id: { $ne: id } });
+        const existingDish = await Dish.findOne({
+          name,
+          isDeleted: false,
+          _id: { $ne: id },
+        });
         if (existingDish)
           return respond(c, "Dish Already exist", true, 409, {});
         const updatedDish = await Dish.findByIdAndUpdate(

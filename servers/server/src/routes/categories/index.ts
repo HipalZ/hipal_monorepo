@@ -127,6 +127,7 @@ const categoriesRouter = new Hono()
         const existingCategory = await Category.findOne({
           name: requestData.name,
           _id: { $ne: id },
+          isDeleted: false,
         }).select("_id");
 
         if (existingCategory)
