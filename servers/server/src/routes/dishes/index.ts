@@ -346,6 +346,7 @@ const dishesRouter = new Hono()
           const dishAlreadyExists = await Dish.findOne({
             businessId: dish.businessId,
             name: dish.name,
+            isDeleted: false,
           });
           if (!dishAlreadyExists) {
             const createDish = await Dish.create([dish], { session });
@@ -357,6 +358,11 @@ const dishesRouter = new Hono()
             }
           }
         }
+        return c.json({
+          err: false,
+          message: "Dishes created successfully",
+          data: {},
+        });
       });
     },
   );

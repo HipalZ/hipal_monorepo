@@ -23,6 +23,7 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import { addHours, startOfDay, subDays } from "date-fns";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -243,6 +244,19 @@ const calculatedCashbackCoins = async (
   }
   return Math.round(coinsToBeAdded);
 };
+
+function getBillingPeriod(billingHour: number) {
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const billingStartToday = addHours(todayStart, billingHour);
+  const billingStartYesterday = subDays(billingStartToday, 1);
+  const billingEndToday = addHours(billingStartToday, 24);
+
+  return {
+    billingStartToday,
+    billingEndToday,
+  };
+}
 const paymentsRouter = new Hono()
   .post(
     "/createOrder",
