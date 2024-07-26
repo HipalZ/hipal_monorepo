@@ -1,4 +1,4 @@
-name: Build and Push hipal
+name: Build and Push hipal test
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -8,12 +8,8 @@ on:
   push:
     branches: ['test']
     paths:
-      - 'Dockerfile'
-      - 'bun.lockb'
+      - 'package.json'
       - '*'
-
-      
-    
 
 jobs:
   build:
