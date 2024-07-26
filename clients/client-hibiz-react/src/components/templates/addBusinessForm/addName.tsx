@@ -287,7 +287,15 @@ const AddName = () => {
             </section>
             <br />
             <br />
-            <BottomButton onClick={createBranch} text="Save" />
+            <BottomButton
+            buttons={[
+              {
+                text: "Save",
+                onClick: createBranch,
+                type: "button",
+              },
+            ]}
+            />
           </section>
         </PopUp>
       )}

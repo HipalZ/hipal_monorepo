@@ -190,7 +190,11 @@ const MemoBanners = () => {
         )}
       </main>
       <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
-        <BottomButton text="Add New Spotlight" onClick={handleNewSpotlight} />
+        <BottomButton
+          buttons={[
+            { text: "Add New Spotlight", onClick: handleNewSpotlight, type: "button" },
+          ]}
+        />
       </footer>
     </Suspense>
   );

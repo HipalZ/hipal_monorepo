@@ -2,10 +2,11 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { apiRpc } from "@hi/common";
-import type { CategoryType } from "@hi/db-models/src/validators";
+import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { parse } from "papaparse";
 
 export const useParentCategories = () => {
   const businessData = useBusinessData((state) => state.businessData);
@@ -106,13 +107,12 @@ export const useSaveCategory = () => {
 
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
-  const { setOpenMenu, resetStore, categoryStep } =
-    useMenuPageStore((s) => ({
-      setOpenMenu: s.setOpenMenu,
-      resetStore: s.resetStore,
-      selectedPage: s.selectedPage,
-      categoryStep: s.categoryStep,
-    }));
+  const { setOpenMenu, resetStore, categoryStep } = useMenuPageStore((s) => ({
+    setOpenMenu: s.setOpenMenu,
+    resetStore: s.resetStore,
+    selectedPage: s.selectedPage,
+    categoryStep: s.categoryStep,
+  }));
 
   const handleApiResponse = useCallback((res) => {
     if (res.err) {
@@ -138,6 +138,124 @@ export const useUpdateCategory = () => {
         json: payload,
         param: {
           id: payload._id,
+        },
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      handleApiResponse(data);
+    },
+  });
+  return { mutate: mutateAsync, isPending };
+};
+
+export const useBulkUploadDishes = () => {
+  const queryClient = useQueryClient();
+  const businessData = useBusinessData((state) => state.businessData);
+  const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
+    setOpenMenu: s.setOpenMenu,
+    resetStore: s.resetStore,
+  }));
+
+  const handleApiResponse = useCallback(
+    (res: any) => {
+      if (res.status === 400 || res.status === 403) {
+        toast.error("Please upload a valid format");
+      } else if (res.status === 201 || res.status === 200) {
+        toast.success("Dishes uploaded successfully");
+        setOpenMenu(false);
+        queryClient.invalidateQueries({
+          queryKey: ["getAllDishes", businessData?._id],
+        });
+        resetStore();
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+    },
+    [queryClient, setOpenMenu, resetStore, businessData?._id],
+  );
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (file: File) => {
+      return new Promise((resolve, reject) => {
+        parse(file, {
+          header: true,
+          complete: async (result) => {
+            const data = result.data as DishType[];
+            const validData = data
+              .filter(
+                (item: DishType) => item.name && Object.keys(item).length > 0,
+              )
+              .map((item: DishType) => ({
+                ...item,
+                dishTypes: [item.dishTypes],
+                businessId: businessData?._id,
+              }));
+
+            const formData = new FormData();
+            formData.append("data", JSON.stringify(validData));
+            const dishes = JSON.parse(
+              formData.get("data") as string,
+            ) as DishType[];
+
+            try {
+              const res = await apiRpc.dishes[":businessId"].bulkUpload.$post({
+                param: {
+                  businessId: businessData?._id,
+                },
+                json: dishes,
+              });
+
+              resolve(res);
+            } catch (error) {
+              reject(error);
+            }
+          },
+        });
+      });
+    },
+    onSuccess: (data) => {
+      handleApiResponse(data);
+    },
+    onError: (error) => {
+      toast.error("Failed to upload dishes");
+      console.error("Error uploading dishes:", error);
+    },
+  });
+
+  return { mutate: mutateAsync, isPending };
+};
+
+export const useDeleteCategory = () => {
+  const queryClient = useQueryClient();
+  const { setOpenMenu, resetStore, categoryStep } = useMenuPageStore((s) => ({
+    setOpenMenu: s.setOpenMenu,
+    resetStore: s.resetStore,
+    categoryStep: s.categoryStep,
+  }));
+
+  const handleApiResponse = useCallback((res) => {
+    if (res.err) {
+      toast.error(res.message);
+      return;
+    }
+    if (!res.err) {
+      toast.success(res.message);
+      setOpenMenu(false);
+      if (categoryStep === "EDIT_MAIN_CATEGORY") {
+        queryClient.invalidateQueries({ queryKey: ["getAllParentCategory"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["getAllChildCategory"] });
+      }
+      resetStore();
+    }
+  }, []);
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRpc.categories[":id"].$delete({
+        param: {
+          id,
         },
       });
       return res.json();

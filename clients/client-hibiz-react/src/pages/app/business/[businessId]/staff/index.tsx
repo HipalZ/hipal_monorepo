@@ -170,7 +170,11 @@ const StaffPage = () => {
         )}
       </main>
 
-      <BottomButton onClick={addStaff} text="Add Staff" />
+      <BottomButton
+          buttons={[
+            { text: "Add Staff", onClick: addStaff, type: "button" },
+          ]}
+        />
 
       {isAddStaffOpen && (
         <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>

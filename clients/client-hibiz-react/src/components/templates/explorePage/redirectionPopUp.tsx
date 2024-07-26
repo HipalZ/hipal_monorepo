@@ -229,7 +229,11 @@ const MemoRedirectionPopUp = (props: IProps) => {
               </>
             )}
           </article>
-          <BottomButton text="Save" onClick={handleSave} />
+          <BottomButton
+          buttons={[
+            { text: "Save", onClick: handleSave, type: "button" },
+          ]}
+        />
         </>
       )}
     </section>

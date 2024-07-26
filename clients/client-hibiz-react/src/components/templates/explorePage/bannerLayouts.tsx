@@ -338,10 +338,11 @@ const MemoBannerLayouts = () => {
         })}
       </section>
       <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
-        <BottomButton
-          text="Create"
-          type="button"
-          onClick={handleCreateBanner}
+       
+         <BottomButton
+          buttons={[
+            { text: "Create", onClick: handleCreateBanner, type: "button" },
+          ]}
         />
       </footer>
     </section>

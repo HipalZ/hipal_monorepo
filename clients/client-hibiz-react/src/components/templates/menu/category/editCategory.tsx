@@ -4,12 +4,12 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import useBusinessData from "@/components/store/useBusinessData";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
-import { useUpdateCategory } from "@/hooks/useCategory";
+import { useDeleteCategory, useUpdateCategory } from "@/hooks/useCategory";
 import { Switch } from "@headlessui/react";
 
 import { memo, useCallback, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
-import { RiLinkUnlink } from "react-icons/ri";
+import LinkingCategoryComp from "./linkingCategoryComp";
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
@@ -26,7 +26,6 @@ const MemoEditCategory = () => {
     selectedFile,
     categoryStep,
     setCategoryName,
-    setCategoryStep,
     setSelectedFile,
     categoryName,
     selectIds,
@@ -38,6 +37,8 @@ const MemoEditCategory = () => {
     isLoading,
     setIsLoading,
     isMenuManager,
+    isCatDelete,
+    setIsCatDelete,
   } = useMenuPageStore((s) => ({
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
@@ -48,7 +49,6 @@ const MemoEditCategory = () => {
     visibility: s.visibility,
     setAvailability: s.setAvailability,
     setVisibility: s.setVisibility,
-    setCategoryStep: s.setCategoryStep,
     setImagePreview: s.setImagePreview,
     selectedFile: s.selectedFile,
     setSelectedFile: s.setSelectedFile,
@@ -59,9 +59,13 @@ const MemoEditCategory = () => {
     isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
     isMenuManager: s.isMenuManager,
+    isCatDelete: s.isCatDelete,
+    setIsCatDelete: s.setIsCatDelete,
   }));
 
   const { mutate, isPending } = useUpdateCategory();
+
+  const {isPending:deletePending,mutate:deleteCat} = useDeleteCategory();
 
   const businessData = useBusinessData((s) => s.businessData);
 
@@ -202,6 +206,14 @@ const MemoEditCategory = () => {
     );
   }
 
+  if (deletePending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <section className="mx-6">
       <article className="lg:flex">
@@ -299,57 +311,21 @@ const MemoEditCategory = () => {
           </Switch>
         </article>
       </section>
-      {categoryStep === "EDIT_MAIN_CATEGORY" && (
-        <section className="mt-4 lg:mt-6">
-          <label className="font-semibold opacity-50" htmlFor="name">
-            Link Sub-Categories({selectIds?.length})
-          </label>
-          <Background>
-            <button
-              onClick={() => setCategoryStep("LINK_SUB_CATEGORY")}
-              type="button"
-              className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-            >
-              <RiLinkUnlink className="mr-2" /> Link Sub Categories
-            </button>
-          </Background>
-        </section>
+      <LinkingCategoryComp />
+      {isCatDelete ? (
+        <BottomButton
+          buttons={[
+            { text: "Cancel", onClick: ()=>setIsCatDelete(false), type: "button" },
+            { text: "Confirm", onClick: ()=>deleteCat(catId), type: "button" },
+          ]}
+        />
+      ) : (
+        <BottomButton
+          buttons={[
+            { text: "Update", onClick: handleSave, type: "button" },
+          ]}
+        />
       )}
-
-      {categoryStep === "EDIT_SUB_CATEGORY" && (
-        <>
-          <section className="mt-4 lg:mt-6">
-            <label className="font-semibold opacity-50" htmlFor="name">
-              Link Main Categories({selectIds?.length})
-            </label>
-            <Background>
-              <button
-                onClick={() => setCategoryStep("LINK_MAIN_CATEGORY")}
-                type="button"
-                className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-              >
-                <RiLinkUnlink className="mr-2" /> Link Main Categories
-              </button>
-            </Background>
-          </section>
-
-          <section className="mt-4 lg:mt-6">
-            <label className="font-semibold opacity-50" htmlFor="name">
-              Link Dishes ({recommendationIds?.length})
-            </label>
-            <Background>
-              <button
-                type="button"
-                onClick={() => setCategoryStep("LINK_DISH")}
-                className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
-              >
-                <RiLinkUnlink className="mr-2" /> Link Dishes
-              </button>
-            </Background>
-          </section>
-        </>
-      )}
-      <BottomButton text="Update" onClick={handleSave} />
     </section>
   );
 };

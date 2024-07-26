@@ -54,6 +54,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

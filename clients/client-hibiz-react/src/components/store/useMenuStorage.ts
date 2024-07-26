@@ -299,6 +299,9 @@ interface MenuPageStore {
 
   showAlertPopUp: boolean;
   setShowAlertPopUp: (show: boolean) => void;
+
+  isCatDelete: boolean;
+  setIsCatDelete: (isDelete: boolean) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -662,6 +665,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   showAlertPopUp: false,
   setShowAlertPopUp: (show: boolean) => set({ showAlertPopUp: show }),
+
+  isCatDelete: false,
+  setIsCatDelete: (isDelete: boolean) => set({ isCatDelete: isDelete }),
 }));
 
 export default useMenuPageStore;

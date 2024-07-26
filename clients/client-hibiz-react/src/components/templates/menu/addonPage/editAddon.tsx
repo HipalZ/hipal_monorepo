@@ -239,7 +239,9 @@ const MemoEditAddon = () => {
       </section>
       <EditChoice />
       {choices.length > 0 && (
-        <BottomButton text="Update" onClick={saveAddOnData} />
+        <BottomButton
+          buttons={[{ text: "Update", onClick: saveAddOnData, type: "button" }]}
+        />
       )}
     </div>
   );
