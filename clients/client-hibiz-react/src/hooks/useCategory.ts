@@ -149,6 +149,23 @@ export const useUpdateCategory = () => {
   return { mutate: mutateAsync, isPending };
 };
 
+const normalizeAndMapKeys = (obj: any, keyMap: { [key: string]: string }) => {
+  const normalizeKey = (key: string) => {
+    return key
+      .replace(/([a-z])([A-Z])/g, '$1 $2') 
+      .replace(/[\s-_]+/g, ' ') 
+      .toLowerCase() 
+      .replace(/\s+/g, ''); 
+  };
+
+  return Object.keys(obj).reduce((acc, key) => {
+    const normalizedKey = normalizeKey(key);
+    const newKey = keyMap[normalizedKey] || key;
+    acc[newKey] = obj[key];
+    return acc;
+  }, {} as any);
+};
+
 export const useBulkUploadDishes = () => {
   const queryClient = useQueryClient();
   const businessData = useBusinessData((state) => state.businessData);
@@ -181,23 +198,34 @@ export const useBulkUploadDishes = () => {
         parse(file, {
           header: true,
           complete: async (result) => {
-            const data = result.data as DishType[];
+            const keyMap = {
+              name: "name",
+              price: "price",
+              dishtypes: "dishTypes",
+              "dish types": "dishTypes",
+              description: "description"
+            };
+            
+            const data = result.data.map((item: any) => normalizeAndMapKeys(item, keyMap)) as DishType[];
+              
             const validData = data
-              .filter(
-                (item: DishType) => item.name && Object.keys(item).length > 0,
-              )
-              .map((item: DishType) => ({
-                ...item,
-                dishTypes: [item.dishTypes],
-                businessId: businessData?._id,
-              }));
+            .filter(
+              (item: DishType) => item.name && Object.keys(item).length > 0
+            )
+            .map((item: DishType) => ({
+              ...item,
+              dishTypes: [item.dishTypes],
+              businessId: businessData?._id,
+              name: item.name,
+              description: item.description?.slice(0, 190),
+            }));
 
             const formData = new FormData();
-            formData.append("data", JSON.stringify(validData));
-            const dishes = JSON.parse(
-              formData.get("data") as string,
-            ) as DishType[];
-
+              formData.append("data", JSON.stringify(validData));
+              const dishes = JSON.parse(
+                formData.get("data") as string
+              ) as DishType[];
+            console.log(dishes);
             try {
               const res = await apiRpc.dishes[":businessId"].bulkUpload.$post({
                 param: {

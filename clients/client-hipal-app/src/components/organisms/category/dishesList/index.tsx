@@ -39,8 +39,8 @@ const DishesList: FC<IDishesProps> = (props) => {
         return "veg";
       case "EGG":
         return "egg";
-        case "ALL":
-          return "all";
+      case "ALL":
+        return "all";
       default:
         return "all";
     }
@@ -94,12 +94,11 @@ const DishesList: FC<IDishesProps> = (props) => {
             </h4>
           </div>
           <div className="flex flex-col divide-y divide-base-300">
-          {category?.dishIds
-              ?.filter((dishData: DishType) => 
-                normalizeType(isActiveDishType) === "all" ||
+            {category?.dishIds
+              ?.filter((dishData: DishType) =>
                 dishData.dishTypes
                   .map(normalizeType)
-                  .includes(normalizeType(isActiveDishType))
+                  .includes(normalizeType(isActiveDishType)),
               )
               ?.map(
                 (dishData: DishType, dishIndex) =>
