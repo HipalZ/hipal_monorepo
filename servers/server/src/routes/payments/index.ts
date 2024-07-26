@@ -253,10 +253,13 @@ function getBillingPeriod(billingHour: number) {
   const billingEndToday = addHours(billingStartToday, 24);
 
   return {
-    billingStartToday,
-    billingEndToday,
+    billingStartToday: billingStartYesterday.getTime(),
+    billingEndToday: billingEndToday.getTime(),
+    billingStartYesterday: billingStartYesterday.getTime(),
+    billingEndYesterday: billingStartToday.getTime(),
   };
 }
+
 const paymentsRouter = new Hono()
   .post(
     "/createOrder",
@@ -956,12 +959,24 @@ const paymentsRouter = new Hono()
       const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({
         businessId,
       }).select("coinzIssued coinzRedeemed");
+      const {
+        billingStartToday,
+        billingEndToday,
+        billingStartYesterday,
+        billingEndYesterday,
+      } = getBillingPeriod(18);
+
+      const startDate = billingStartYesterday;
+      const endDate = billingEndToday;
+
+      console.log("startDate", startDate, "endDate", endDate);
+
       if (!from && !to) {
         const existingPayments = await Payment.find({
           businessId,
           date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
+            $gte: startDate,
+            $lte: endDate,
           },
         }).select("total claimedCoins paymentMode");
         const totalSale = existingPayments.reduce(
