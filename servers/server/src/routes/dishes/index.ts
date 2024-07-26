@@ -227,6 +227,11 @@ const dishesRouter = new Hono()
           { $pull: { dishIds: id } },
         );
 
+        await AddOn.updateMany(
+          { _id: { $in: existingDish.addOnIds ?? [] } },
+          { $pull: { dishIds: id } },
+        );
+
         return respond(c, "Dish deleted successfully", false, 200, {});
       });
     },
