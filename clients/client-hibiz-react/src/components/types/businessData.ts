@@ -202,6 +202,7 @@ export interface ILoginProps {
 }
 
 export interface IDish {
+  dishTypes: string[];
   _id: string;
   name: string;
   images: string[];

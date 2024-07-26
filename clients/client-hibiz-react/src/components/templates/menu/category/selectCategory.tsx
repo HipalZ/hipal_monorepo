@@ -4,6 +4,7 @@ import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
+import BottomButton from "@/components/atom/bottomButton";
 
 const MemoSelectCategory = () => {
   const {
@@ -13,7 +14,7 @@ const MemoSelectCategory = () => {
     search,
     setSearch,
     catId,
-    categoryStep
+    categoryStep,
   } = useMenuPageStore((state) => ({
     selectedIds: state.selectedIds,
     handleCategoryChange: state.handleCategoryChange,
@@ -43,11 +44,8 @@ const MemoSelectCategory = () => {
       return;
     }
     setCategoryStep("CATEGORY_STEP_1");
-  }, [catId,categoryStep]);
+  }, [catId, categoryStep]);
 
-  // if(isLoading){
-  //     return <div><LoadingSpinner /></div>
-  // }
 
   return (
     <>
@@ -87,9 +85,15 @@ const MemoSelectCategory = () => {
           </div>
         ))}
       </div>
-      <button type="button" onClick={handleSave} className="bottom_btn">
-        Save
-      </button>
+      <BottomButton
+        buttons={[
+          {
+            text: "Save",
+            onClick: handleSave,
+            type: "button",
+          },
+        ]}
+      />
     </>
   );
 };

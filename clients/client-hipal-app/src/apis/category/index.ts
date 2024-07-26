@@ -18,21 +18,14 @@ async function fetchCategoryPageData(customLink: string) {
 			dishes: "true"
 		}
 });
-	const parentCategories = await parentCategoriesResponse.json();
-	const childCategories = await childCategoriesResponse.json();
-	console.log('parentCategories',parentCategories, 'childCategories',childCategories);
+const parentCategories = await parentCategoriesResponse.json();
+const childCategories = await childCategoriesResponse.json();
+console.log('parentCategoriesResponse',parentCategories, 'childCategoriesResponse',childCategories);
 	data["parentCategories"] = parentCategories?.data as unknown as CategoryType[];
 	data["childCategories"] = childCategories?.data as unknown as CategoryType[];
-	
 	return data
 }
 
 export const categoryApis = {
 	all: fetchCategoryPageData
 };
-
-// export async function fetchAllBusinessIds() {
-// 	const res = await apiRpc.businesses.get.allbusiness.$get({});
-// 	const response = await res.json()
-// 	return response?.data.map((business: { _id: string }) => business._id);
-// }

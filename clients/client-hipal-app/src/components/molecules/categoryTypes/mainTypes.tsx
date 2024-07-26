@@ -17,6 +17,8 @@ function MainTypes(props: IMainTypes) {
     [parentCategory],
   );
 
+  console.log("mainTypes", mainTypes);
+
   const {
     isActiveParentCategory,
     setActiveParentCategory,

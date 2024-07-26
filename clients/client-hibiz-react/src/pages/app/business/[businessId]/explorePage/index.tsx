@@ -8,7 +8,6 @@ import {
   useState,
   Suspense,
   lazy,
-  useEffect,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoMdArrowUp } from "react-icons/io";
@@ -52,17 +51,12 @@ const UniquelyYoursPopUp = lazy(
 const ExplorePageTopSection = lazy(
   () => import("@/components/templates/explorePage/explorePageTopSection"),
 );
-const BizInfo = lazy(
-  () => import("@/components/templates/explorePage/bizInfo"),
-);
+
 const BannerSection = lazy(
   () => import("@/components/templates/explorePage/bannerSection"),
 );
 const UniquelyYoursSection = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursSection"),
-);
-const FooterSection = lazy(
-  () => import("@/components/templates/explorePage/footerSection"),
 );
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
@@ -473,7 +467,7 @@ const MemoExplorePage = () => {
 
   useQuery({
     queryKey: ["categoriez", businessId, showUniquePopUp],
-    queryFn: () => getAllCategoryData(businessId || ""),
+    queryFn: () => getAllCategoryData(businessId ?? ""),
     enabled: !!businessId && showUniquePopUp,
   });
 
@@ -494,13 +488,15 @@ const MemoExplorePage = () => {
               handleImageChange={handleImageChange}
               img={img}
               handleBizName={handleBizName}
+              handleBizInfo={handleBizInfo}
+              basicInfos={basicInfos}
             />
             <br />
-            <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />
             <BannerSection handleNavigation={handleNavigation} />
             <UniquelyYoursSection handleOpenPopUp={handleOpenPopUp} />
-            <FooterBanner img={img} handleImageChange={handleImageChange} />
-            <FooterSection
+            <FooterBanner
+              img={img}
+              handleImageChange={handleImageChange}
               handleFooterComment={handleFooterComment}
               handleFssaiNumber={handleFssaiNumber}
               handlegst={handlegst}

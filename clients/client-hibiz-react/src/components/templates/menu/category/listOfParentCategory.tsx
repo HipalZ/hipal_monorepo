@@ -132,6 +132,7 @@ const MemoListOfParentCategory = () => {
 
           <article className="flex">
             {!isMenuManager ? (
+              
               <div>
                 {category.visibility ? (
                   <FaEye className="text-green-500" />
@@ -139,6 +140,7 @@ const MemoListOfParentCategory = () => {
                   <FaEyeSlash className="text-red-500" />
                 )}
               </div>
+              
             ) : (
               <div className="flex items-center gap-1 font-semibold opacity-50">
                 <FaCodeBranch className="rotate-180" />

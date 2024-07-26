@@ -112,6 +112,7 @@ export const useUpdateAddon = () => {
           visibility: data.visibility,
           compulsory: data.compulsory,
           addOnMaxQuantity: data.addOnMaxQuantity,
+          removeDishIds: data.removeDishIds,
         },
         param: {
           id: data._id,
@@ -125,3 +126,41 @@ export const useUpdateAddon = () => {
   });
   return { mutate: mutateAsync, isPending };
 };
+
+export const useDeleteAddon = () => {
+  const queryClient = useQueryClient();
+  const { setOpenMenu, resetStore,setIsCatDelete } = useMenuPageStore((s) => ({
+    setOpenMenu: s.setOpenMenu,
+    resetStore: s.resetStore,
+    setIsCatDelete:s.setIsCatDelete
+  }));
+
+  const handleApiResponse = useCallback((res) => {
+    if (res.err) {
+      toast.error(res.message);
+      return;
+    }
+    if (!res.err) {
+      toast.success(res.message);
+      queryClient.invalidateQueries({ queryKey: ["getAllAddOn"] });
+      resetStore();
+      setOpenMenu(false);
+      setIsCatDelete(false);
+    }
+  }, []);
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiRpc.addons[":id"].$delete({
+        param: {
+          id,
+        },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      handleApiResponse(data);
+    },
+  });
+  return { mutate: mutateAsync, isPending };
+}

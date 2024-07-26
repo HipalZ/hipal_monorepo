@@ -138,7 +138,7 @@ const MemoLinkItems = () => {
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}
-            className="flex relative items-center justify-between w-[90%] p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
+            className="flex relative items-center justify-between w-full p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
           >
             <label className="flex items-center">
               <input

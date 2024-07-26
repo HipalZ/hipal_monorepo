@@ -184,6 +184,12 @@ const categoriesRouter = new Hono()
         }
 
         if (parentCategoryIds.length > 0) {
+          await Category.updateMany(
+            { _id: { $in: parentCategoryIds } },
+            { $addToSet: { subCategoryIds: id } },
+            { session },
+          );
+
           await Category.findByIdAndUpdate(
             id,
             { $addToSet: { parentCategoryIds: { $each: parentCategoryIds } } },

@@ -2,7 +2,6 @@
 import Header from "@/components/molecules/header";
 import DishesTypes from "@/components/organisms/category/dishTypes";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useRoutingFlow } from "@/components/store/useRoutingFlow";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { useRouter } from "next/navigation";
 import { memo, useEffect, useState } from "react";
@@ -14,6 +13,7 @@ interface ICategoryProps {
 }
 function CategoryHeader(props: ICategoryProps) {
   const { parentCategory, childCategory } = props;
+  console.log("parentCategory", parentCategory, childCategory);
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const router = useRouter();
   const [data, setData] = useState({

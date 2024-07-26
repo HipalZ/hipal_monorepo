@@ -12,7 +12,7 @@ const MemoiseEditStaff = ({ refetch }: { refetch: () => void }) => {
 
 
   return (
-    <section className="min-h-auto relative h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4] pb-[7rem]">
+    <section className="h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
 
       {pageToggle === "EDIT_STAFF" && (
         <EditTeam refetch={refetch} />

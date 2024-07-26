@@ -13,7 +13,7 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
   return (
     <article
       className={cn(
-        "absolute bottom-0 w-full px-4 py-2 -mx-6 bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
+        "absolute bottom-0 w-full px-4 py-2  bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
       )}
     >
       <div

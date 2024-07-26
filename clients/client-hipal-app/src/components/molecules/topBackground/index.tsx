@@ -1,22 +1,18 @@
 "use client";
 import PlaceholderImg from "@/components/atoms/placeholder";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { memo } from "react";
 import { BiArrowBack } from "react-icons/bi";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 function TopBackground({
   specialBanner,
 }: { specialBanner: string | undefined }) {
-  const router = useRouter();
 
-  const businessData = useBusinessDetails((s) => s.businessDetails);
-
-  const goBack = () => {
-    router.push(`/${businessData.customLink}/explore`);
-  };
+  const customLink = useParams()?.businessId as string;
 
   return (
     <div className={"relative h-[20vh] w-screen overflow-hidden"}>
@@ -35,11 +31,13 @@ function TopBackground({
       ) : (
         <PlaceholderImg className="w-full h-full" />
       )}
-      <div className="top-4  w-full absolute z-[60] flex flex-row px-4">
-        <button onClick={goBack} type="button" className="">
-          <BiArrowBack />
-        </button>
-      </div>
+      <Link href={`/${customLink}/explore`}>
+        <div className="top-4  w-full absolute z-[60] flex flex-row px-4">
+          <button type="button" className="">
+            <BiArrowBack />
+          </button>
+        </div>
+      </Link>
     </div>
   );
 }

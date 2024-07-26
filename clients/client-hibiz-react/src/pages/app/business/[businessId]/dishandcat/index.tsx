@@ -234,7 +234,7 @@ const MemoizeDishAndCat = () => {
         <>
           <button
             onClick={bulkUpload}
-            className="absolute z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:float-right bottom-[6rem] right-6 lg:right-0"
+            className="absolute z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-[6rem] right-6 lg:right-0"
             type="button"
           >
             <BiPlus size={32} /> BULK UPLOAD DISHES

@@ -1,38 +1,41 @@
 import { categoryApis } from "@/apis/category";
-import dynamic from "next/dynamic";
+import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { defaultThemes } from "@/components/utils/helpers";
 
-const CategoryHeader = dynamic(
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
+const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader.client"),
   {
     ssr: false,
     loading: () => <SkeletonLoader height={200} />,
   },
 );
-const PageName = dynamic(() => import("@/components/molecules/pageName"), {
+const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
-const Footer = dynamic(() => import("@/components/molecules/footer"), {
+const Footer = dynamics(() => import("@/components/molecules/footer"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
-const DishesList = dynamic(
+const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
     ssr: false,
     loading: () => <SkeletonLoader height={200} />,
   },
 );
-const CategoryPageBtn = dynamic(
+const CategoryPageBtn = dynamics(
   () => import("@/components/molecules/bottomButton/categoryPageBtn"),
   {
     ssr: false,
     loading: () => <SkeletonLoader height={200} />,
   },
 );
-const TopBackground = dynamic(
+const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
     ssr: false,
@@ -57,6 +60,7 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await fetchData(params.businessId);
+  console.log("this sios my child  cate", data.childCategories);
   return (
     <>
       <div className="relative flex flex-col w-full pb-14">
