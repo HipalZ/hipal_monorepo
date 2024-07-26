@@ -33,7 +33,7 @@ const amenitiesArr = [
   { _id: 5, text: "ALCOHOL", image: <IoBeerOutline /> },
 ];
 
-const MemoBizInfo = ({ refetch }) => {
+const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   const [openTimings, setOpenTimings] = useState(false);
@@ -65,7 +65,6 @@ const MemoBizInfo = ({ refetch }) => {
   const [tempTags, setTempTags] = useState(["", "", ""]);
   const [tempAmenities, setTempAmenities] = useState<string[]>([]);
   const [tempAddress, setTempAddress] = useState("");
-
   useEffect(() => {
     if (bizInfo?.description) {
       setTempDescription(bizInfo.description || "");
@@ -91,10 +90,18 @@ const MemoBizInfo = ({ refetch }) => {
         closeTime: bizInfo.fixCloseTime,
       });
     }
-    if (bizInfo?.customTiming && bizInfo?.customTiming.length > 0) {
-      setCustomTimings([...bizInfo.customTiming]);
-    }
     setTempAddress(bizInfo?.address || "");
+    if (bizInfo?.customTiming && bizInfo.customTiming.length > 0) {
+      const flattenedCustomTimings = bizInfo.customTiming.flat();
+
+      const updatedTimings = customTimings.map((timing) => {
+        const matchingBizTiming = flattenedCustomTimings.find(
+          (bizTiming) => bizTiming.day === timing.day,
+        );
+        return matchingBizTiming ? { ...timing, ...matchingBizTiming } : timing;
+      });
+      setCustomTimings(updatedTimings);
+    }
   }, []);
 
   const handleDescriptionChange = useCallback(
@@ -116,7 +123,7 @@ const MemoBizInfo = ({ refetch }) => {
   );
 
   const handleChangeAddress = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
       setTempAddress(e.target.value);
     },
     [],
@@ -252,14 +259,19 @@ const MemoBizInfo = ({ refetch }) => {
       <section>
         <SubHeader text="Basic Information" />
         <article className="p-4 bg-white rounded-2xl">
-          <textarea
-            minLength={30}
-            maxLength={90}
-            value={tempDescription}
-            onChange={handleDescriptionChange}
-            className="w-full resize-none h-28 rounded-2xl"
-            placeholder="Add description"
-          />
+          <div className="relative">
+            <textarea
+              minLength={30}
+              maxLength={90}
+              value={tempDescription}
+              onChange={handleDescriptionChange}
+              className="w-full pr-16 resize-none h-28 rounded-2xl"
+              placeholder="Add description"
+            />
+            <small className="absolute bottom-3 right-4">
+              {tempDescription?.length}/{90}
+            </small>
+          </div>
           &nbsp;
           <Paragraph text="Describe Your business with 3 words" />
           {tempTags.map((tag, index) => (
@@ -268,15 +280,20 @@ const MemoBizInfo = ({ refetch }) => {
               className="flex items-center my-4 space-x-4"
             >
               <h1>{index + 1}</h1>
-              <input
-                minLength={4}
-                maxLength={30}
-                placeholder={`Tag ${index + 1}`}
-                type="text"
-                className="w-full rounded-xl"
-                value={tag}
-                onChange={(e) => handleTagChange(e, index)}
-              />
+              <div className="relative">
+                <input
+                  minLength={4}
+                  maxLength={30}
+                  placeholder={`Tag ${index + 1}`}
+                  type="text"
+                  className="w-full rounded-xl"
+                  value={tag}
+                  onChange={(e) => handleTagChange(e, index)}
+                />
+                <small className="absolute bottom-3 right-4">
+                  {tag?.length}/{30}
+                </small>
+              </div>
             </section>
           ))}
         </article>
@@ -284,15 +301,20 @@ const MemoBizInfo = ({ refetch }) => {
       <section className="my-6">
         <SubHeader text="Contact" />
         <article className="p-4 space-y-4 bg-white rounded-2xl">
-          <input
-            type="tel"
-            value={tempPhone}
-            onChange={handlePhoneChange}
-            className="w-full rounded-2xl"
-            placeholder="Enter phone number"
-            maxLength={10}
-            minLength={10}
-          />
+          <div className="relative">
+            <input
+              type="tel"
+              value={tempPhone}
+              onChange={handlePhoneChange}
+              className="w-full rounded-2xl"
+              placeholder="Enter phone number"
+              maxLength={10}
+              minLength={10}
+            />
+            <small className="absolute bottom-3 right-4">
+              {tempPhone?.length}/{10}
+            </small>
+          </div>
           <div className="relative">
             <input
               minLength={10}
@@ -300,22 +322,26 @@ const MemoBizInfo = ({ refetch }) => {
               placeholder="Add Location on map"
               type="text"
               value={tempLocation}
-              className="w-full rounded-2xl"
+              className="w-full pr-10 rounded-2xl"
               onChange={handleLocationChange}
             />
             <small className="absolute bottom-4 right-4">
               <FaLocationDot />
             </small>
           </div>
-          <input
-            minLength={10}
-            maxLength={100}
-            placeholder="Add Address"
-            type="text"
-            value={tempAddress}
-            className="w-full rounded-2xl"
-            onChange={handleChangeAddress}
-          />
+          <div className="relative">
+            <textarea
+              minLength={10}
+              maxLength={100}
+              placeholder="Add Address"
+              value={tempAddress}
+              className="w-full h-24 pr-16 resize-none rounded-2xl"
+              onChange={handleChangeAddress}
+            />
+            <small className="absolute bottom-3 right-4">
+              {tempAddress?.length}/{100}
+            </small>
+          </div>
         </article>
       </section>
       <article>
@@ -324,16 +350,21 @@ const MemoBizInfo = ({ refetch }) => {
       <section className="mb-[5rem]">
         <article className="p-4 bg-white rounded-2xl">
           <section className="p-4 border border-1 rounded-2xl">
-            <input
-              value={tempAvgPricingForTwo}
-              type="tel"
-              maxLength={10}
-              onChange={handlePricingChange}
-              className="w-full mb-2 outline-none rounded-2xl"
-              placeholder="Add Average Pricing For Two"
-            />
+            <div className="relative">
+              <input
+                value={tempAvgPricingForTwo}
+                type="tel"
+                maxLength={10}
+                onChange={handlePricingChange}
+                className="w-full mb-2 outline-none rounded-2xl"
+                placeholder="Add Average Pricing For Two"
+              />
+              <small className="absolute bottom-5 right-4">
+                {tempAvgPricingForTwo?.toString().length}/{10}
+              </small>
+            </div>
             {amenitiesArr && amenitiesArr.length > 0 ? (
-              <SubHeader text="Add Amenities" />
+              <h6 className="my-2 text-base text-gray-500">Add Amenities</h6>
             ) : null}
             <section className="flex flex-wrap gap-4">
               {amenitiesArr
@@ -349,7 +380,7 @@ const MemoBizInfo = ({ refetch }) => {
                         onKeyDown={() =>
                           handleSelectAmenitiesChange(amenity.text)
                         }
-                        className={`capitalize flex items-center space-x-4 rounded-full border border-1 px-2 py-1 cursor-pointer ${
+                        className={`capitalize flex items-center space-x-1 rounded-full border border-1 px-2 py-1 cursor-pointer ${
                           isSelected ? "bg-[#FFE7AB]" : "bg-gray-100"
                         }`}
                       >
@@ -361,8 +392,7 @@ const MemoBizInfo = ({ refetch }) => {
                 : null}
             </section>
           </section>
-          <br />
-          <section className="flex gap-6 my-2">
+          <section className="flex gap-6 my-4">
             <article
               onClick={handleTimings}
               className="flex items-center px-2 py-1 space-x-4 bg-gray-100 border rounded-full border-1"
@@ -444,7 +474,7 @@ const MemoBizInfo = ({ refetch }) => {
                   key={`timing${index.toString()}`}
                   className="flex items-center justify-between p-2 my-2"
                 >
-                  <h1 className="w-[3rem]">{timing.day}</h1>
+                  <h1 className="w-[3rem]">{timing?.day?.slice(0, 3)}</h1>
                   <input
                     type="time"
                     id={`customTimingOpen${index}`}

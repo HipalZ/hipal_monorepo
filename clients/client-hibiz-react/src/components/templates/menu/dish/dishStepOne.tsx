@@ -14,6 +14,7 @@ import {
   filterPayload,
   foodTypes,
   storeImageAfterSave,
+  validateDish,
 } from "@/components/utils/helper";
 import type { DishType, DishTypeEnumType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
@@ -85,6 +86,7 @@ const MemoDishForm = () => {
   }));
 
   useEffect(() => {
+    setDishTypes(["VEG"]);
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
   }, []);
 
@@ -123,14 +125,13 @@ const MemoDishForm = () => {
   }, []);
 
   const goToNextStep = useCallback(() => {
+    validateDish(dishName, dishPrice, dishTypes);
     setDishStep(DishSteps.DISH_STEP_2);
   }, [dishStep]);
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
-      return toast.error("Please fill all the required fields");
-    }
+    validateDish(dishName, dishPrice, dishTypes);
     setIsLoading(true);
     let firstImage: string | undefined;
     let secondImage: string | undefined;
@@ -185,9 +186,9 @@ const MemoDishForm = () => {
       return toast.success(data?.message);
     }
     if (!data?.success) {
+      setIsLoading(false);
       errorToasts(data?.error);
     }
-    setIsLoading(false);
   };
 
   return (

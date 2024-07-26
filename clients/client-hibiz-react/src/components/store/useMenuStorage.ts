@@ -40,6 +40,7 @@ export type DishStep =
   | "LINK_ADDON_STEP"
   | "LINK_ADD_TAGS"
   | "CONFIRM_DELETE"
+  | "ALERT"
   | "SHOW_CROPPER";
 
 export enum DishSteps {

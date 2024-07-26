@@ -81,7 +81,7 @@ const MemoListOfDishes = () => {
   return (
     <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       {filteredDishes
-        ? filteredDishes?.map((dish) => (
+        ? filteredDishes.map((dish) => (
             <button
               onClick={() => handleEditDish(dish)}
               type="button"
@@ -89,11 +89,14 @@ const MemoListOfDishes = () => {
               className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
             >
               <h3 className="mb-2 text-lg font-semibold">{dish.name}</h3>
-              <div className="mb-2 text-gray-500">
+              <div className="flex items-center mb-2 text-gray-500">
                 {dish.visibility ? (
                   <FaEye className="text-green-500" />
                 ) : (
                   <FaEyeSlash className="text-red-500" />
+                )}
+                {!dish.availability && (
+                  <span className="ml-2 text-red-500">N/A</span>
                 )}
               </div>
             </button>

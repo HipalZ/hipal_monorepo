@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 import { BannerPage } from "@/components/utils/bannerLayouts";
+import MemoizedHeader from "@/components/molecules/header";
+import { FaArrowLeft } from "react-icons/fa";
 
 // Lazy load components
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
@@ -29,16 +31,14 @@ const MemoNewBanner = () => {
     <Suspense fallback={<div>Loading ...</div>}>
       {bannerPage === BannerPage.VIEW ? (
         <section className="max-w-[69rem] m-auto">
-          <article
-            onClick={handleBack}
-            className="absolute top-0 w-full bg-white shadow-sm lg:w-[69rem]"
-          >
-            <HisiteHeader
-              onBack={handleBack}
+          <header className="sticky top-0 z-10 w-full bg-white rounded-t-2xl bg-base-100">
+            <MemoizedHeader
               title="Choose Layout"
+              onBack={handleBack}
+              leftIcon={<FaArrowLeft />}
               isIconBusinessShow={false}
             />
-          </article>
+          </header>
           <BannerLayouts />
         </section>
       ) : (

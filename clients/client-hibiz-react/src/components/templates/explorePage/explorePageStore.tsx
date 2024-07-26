@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import type { ICategory } from "@/components/types/businessData";
+import type { ICategory, IDish } from "@/components/types/businessData";
 import { BannerType } from "@/components/utils/bannerLayouts";
 
 export const basicInfos = [
@@ -82,10 +82,23 @@ export const colors = [
   },
 ];
 
+// export const combineAllDishes = async (categories: ICategory[]) => {
+//   return categories.reduce((dishes, category) => {
+//     return dishes.concat(category?.dishIds);
+//   }, []);
+// };
 export const combineAllDishes = async (categories: ICategory[]) => {
-  return categories.reduce((dishes, category) => {
-    return dishes.concat(category?.dishIds);
-  }, []);
+  const uniqueDishesMap = new Map<string, IDish>();
+
+  categories.forEach((category) => {
+    category?.dishIds.forEach((dish) => {
+      if (dish?._id && !uniqueDishesMap.has(dish._id)) {
+        uniqueDishesMap.set(dish._id, dish);
+      }
+    });
+  });
+
+  return Array.from(uniqueDishesMap.values());
 };
 
 export const getAllCategoryData = async (businessId: string) => {

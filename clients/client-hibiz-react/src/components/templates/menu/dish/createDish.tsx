@@ -106,14 +106,16 @@ const MemoCreateDish = () => {
 
   return (
     <>
-      <MemoizedHeader
-        title={handleHeader()}
-        onBack={goBack}
-        leftIcon={<FaArrowLeft />}
-        centerImage={Hi}
-        rightImage={Hi}
-        isIconBusinessShow={false}
-      />
+      <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
+        <MemoizedHeader
+          title={handleHeader()}
+          onBack={goBack}
+          leftIcon={<FaArrowLeft />}
+          centerImage={Hi}
+          rightImage={Hi}
+          isIconBusinessShow={false}
+        />
+      </header>
       {dishStep === "DISH_STEP_1" && <DishStepOne />}
       {dishStep === "DISH_STEP_2" && <DishStepTwo />}
       {dishStep === "PORTION_STEP" && <PortionStep />}

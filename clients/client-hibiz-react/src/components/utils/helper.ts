@@ -249,3 +249,23 @@ export const updateImage = async (
 };
 
 export const preDefinedButtons = ["Explore", "Buy", "Book"];
+
+export const validateDish = (
+  dishName: string,
+  dishPrice: number,
+  dishTypes: string[],
+) => {
+  if (dishName.length === 0) {
+    toast.error("Please enter dish name");
+    return false;
+  }
+  if (dishPrice === 0) {
+    toast.error("Please enter dish price");
+    return false;
+  }
+  if (dishTypes.length === 0) {
+    toast.error("Please select dish type");
+    return false;
+  }
+  return true;
+};

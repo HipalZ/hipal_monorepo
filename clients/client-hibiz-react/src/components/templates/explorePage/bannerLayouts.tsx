@@ -14,6 +14,7 @@ import {
   BannerType,
 } from "@/components/utils/bannerLayouts";
 import BottomButton from "@/components/atom/bottomButton";
+import PopUp from "@/components/atom/popUp";
 const SelectingCardLayout = lazy(() => import("./selectingCardLayout"));
 
 const MemoBannerLayouts = () => {
@@ -56,7 +57,7 @@ const MemoBannerLayouts = () => {
       <div onClick={handleOpenFilters} className="absolute right-4 -top-10">
         <FaFilter />
       </div>
-      <section className="mt-36 relative grid content-center grid-cols-2 gap-2 mx-4 gap-y-4 place-items md:grid-cols-3 lg:grid-cols-4 pb-[5rem]">
+      <section className="mt-14 relative grid content-center grid-cols-2 gap-2 mx-4 gap-y-4 place-items md:grid-cols-3 lg:grid-cols-4 pb-[5rem]">
         {bannerLayouts.map((layout) => (
           <div className="flex flex-col" key={layout?._id}>
             <article key={layout?._id} className="max-h-[11.5rem]">
@@ -337,14 +338,12 @@ const MemoBannerLayouts = () => {
           );
         })}
       </section>
-      <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
-       
-         <BottomButton
-          buttons={[
-            { text: "Create", onClick: handleCreateBanner, type: "button" },
-          ]}
-        />
-      </footer>
+      <button className="bottom_btn" onClick={handleCreateBanner} type="button">
+        Create
+      </button>
+      {openFilter && (
+        <PopUp show={openFilter} onClose={handleOpenFilters}></PopUp>
+      )}
     </section>
   );
 };
