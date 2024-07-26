@@ -1,7 +1,14 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition, useCallback, useEffect } from "react";
+import {
+  type ChangeEvent,
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
@@ -24,6 +31,8 @@ import EditDish from "@/components/templates/menu/dish/[editDish]/editDish";
 import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
 import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
 import AlertClosePopup from "@/components/common/alertClosePopup";
+import { useBulkUploadDishes } from "@/hooks/useCategory";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoizeDishAndCat = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -56,6 +65,16 @@ const MemoizeDishAndCat = () => {
     showAlertPopUp: s.showAlertPopUp,
     setTempPage: s.setTempPage,
   }));
+
+  const fileInputRef = useRef(null);
+
+  const { mutate: handleFileUpload, isPending } = useBulkUploadDishes();
+
+  const bulkUpload = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, []);
 
   const navigate = useNavigate();
   const handleBack = () => {
@@ -118,6 +137,14 @@ const MemoizeDishAndCat = () => {
     return isMatch;
   }, []);
 
+  if (isPending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <main>
       <div className="sticky top-0 z-50 w-full">
@@ -148,8 +175,10 @@ const MemoizeDishAndCat = () => {
             </button>
           ))}
         </section>
-        <Filter />
-        <Search />
+        <section className="w-full bg-base-100">
+          <Filter />
+          <Search />
+        </section>
       </div>
       <Sidebar items={sidebarItems} />
       <section className="min-h-[100dvh]">
@@ -199,6 +228,29 @@ const MemoizeDishAndCat = () => {
             {selectedPage === "ALERT" && <AlertClosePopup />}
           </section>
         </PopUp>
+      )}
+
+      {selectedPage === "DISHES" && (
+        <>
+          <button
+            onClick={bulkUpload}
+            className="absolute z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:float-right bottom-[6rem] right-6 lg:right-0"
+            type="button"
+          >
+            <BiPlus size={32} /> BULK UPLOAD DISHES
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleFileUpload(file);
+              }
+            }}
+            style={{ display: "none" }}
+          />
+        </>
       )}
 
       <button

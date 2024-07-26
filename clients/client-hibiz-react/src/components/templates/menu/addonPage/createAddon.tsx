@@ -277,7 +277,9 @@ const MemoCreateAddon = () => {
         </Background>
       </article>
       {choices.length > 0 && (
-        <BottomButton text="Save" onClick={saveAddOnData} />
+        <BottomButton
+          buttons={[{ text: "Save", onClick: saveAddOnData, type: "button" }]}
+        />
       )}
     </>
   );

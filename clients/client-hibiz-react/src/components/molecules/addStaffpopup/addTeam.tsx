@@ -140,7 +140,9 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
         </>
       )}
 
-      <BottomButton onClick={addStaff} text="Send Invite" />
+      <BottomButton  buttons={[
+            { text: "Send Invite", onClick: addStaff, type: "button" },
+          ]} />
     </>
   );
 };

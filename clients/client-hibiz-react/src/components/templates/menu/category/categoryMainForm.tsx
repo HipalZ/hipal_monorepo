@@ -10,6 +10,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useSaveCategory } from "@/hooks/useCategory";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import BottomButton from "@/components/atom/bottomButton";
 
 const CategoryMainForm = memo(() => {
   const {
@@ -21,7 +22,7 @@ const CategoryMainForm = memo(() => {
     setCategoryStep,
     resetStore,
     selectIds,
-    recommendationIds
+    recommendationIds,
   } = useMenuPageStore((s) => ({
     selectedCategory: s.selectedCategory,
     setSelectedCategory: s.setSelectedCategory,
@@ -31,7 +32,7 @@ const CategoryMainForm = memo(() => {
     resetStore: s.resetStore,
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
-    recommendationIds: s.recommendationIds
+    recommendationIds: s.recommendationIds,
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
@@ -70,7 +71,13 @@ const CategoryMainForm = memo(() => {
           };
 
     createCategory(payload);
-  }, [selectedCategory, categoryName, selectIds, businessData?._id,recommendationIds]);
+  }, [
+    selectedCategory,
+    categoryName,
+    selectIds,
+    businessData?._id,
+    recommendationIds,
+  ]);
 
   const goToNextStep = useCallback(() => {
     if (categoryName?.trim() === "") {
@@ -161,11 +168,12 @@ const CategoryMainForm = memo(() => {
           </section>
         </>
       )}
-      <FooterButtons
-        saveCategory={handleSaveCategory}
-        goToNextStep={goToNextStep}
-        isLoading={isPending}
-      />
+      <section className="mx-6">
+        <FooterButtons
+          saveCategory={handleSaveCategory}
+          goToNextStep={goToNextStep}
+        />
+      </section>
     </>
   );
 });
@@ -225,29 +233,16 @@ const FooterButtons = memo(
   ({
     saveCategory,
     goToNextStep,
-    isLoading,
   }: {
     saveCategory: () => void;
     goToNextStep: () => void;
-    isLoading: boolean;
   }) => (
-    <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-      <button
-        onClick={saveCategory}
-        type="button"
-        className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
-        disabled={isLoading}
-      >
-        Quick Save
-      </button>
-      <button
-        onClick={goToNextStep}
-        type="button"
-        className="w-full py-3 text-white bg-black rounded-full"
-      >
-        Next
-      </button>
-    </footer>
+    <BottomButton
+      buttons={[
+        { text: "Quick Save", onClick: saveCategory, type: "button" },
+        { text: "Next", onClick: goToNextStep, type: "button" },
+      ]}
+    />
   ),
 );
 

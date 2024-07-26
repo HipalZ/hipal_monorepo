@@ -137,7 +137,7 @@ const Otp = ({ login }: { login?: boolean }) => {
             <input
               key={index}
               ref={ref}
-              type="text"
+              type="tel"
               value={otp[index]}
               onChange={(e) => handleChange(e, index)}
               className="w-12 px-4 py-3 text-center border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"

@@ -1,20 +1,50 @@
 import { memo } from "react";
+import { cn } from "@hi/common";
 
-const MemoBottomButton = (props: {
+interface ButtonConfig {
   text: string;
   onClick?: () => void;
   type?: "button" | "reset" | "submit";
-}) => {
-  const { text, onClick, type } = props;
+}
+
+const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
+  const { buttons } = props;
+
   return (
-    <button
-      className="absolute w-[88%] rounded-full bg-black text-white text-center py-3  bottom-4 left-6 right-6 md:max-w-[26rem]
-         md:left-0 md:right-0 md:mx-auto"
-      onClick={onClick}
-      type={type ?? "button"}
+    <article
+      className={cn(
+        "absolute bottom-0 w-full px-4 py-2 -mx-6 bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
+      )}
     >
-      {text}
-    </button>
+      <div
+        className={cn("flex", {
+          "justify-between": buttons.length === 2,
+          "justify-center": buttons.length !== 2,
+        })}
+      >
+        {buttons.map((button, index) => (
+          <button
+            key={button.text}
+            className={cn(
+              "rounded-full  text-center py-3",
+              {
+                "bg-custom-gradient text-white":
+                  index === 1,
+                "bg-black text-white": index !== 1,
+              },
+              {
+                "w-[48%]": buttons.length === 2,
+                "w-[100%]": buttons.length !== 2,
+              },
+            )}
+            onClick={button.onClick}
+            type={button.type ?? "button"}
+          >
+            {button.text}
+          </button>
+        ))}
+      </div>
+    </article>
   );
 };
 

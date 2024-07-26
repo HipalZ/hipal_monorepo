@@ -161,7 +161,12 @@ const MemoLinkItems = () => {
           </div>
         ))}
       </div>
-      <BottomButton text="Save" onClick={handleSave} />
+    
+      <BottomButton
+          buttons={[
+            { text: "Save", onClick: handleSave, type: "button" },
+          ]}
+        />
     </>
   );
 };

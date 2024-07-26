@@ -24,6 +24,7 @@ const MemoAddCatImage = () => {
     categoryName,
     selectIds,
     isLoading,
+    recommendationIds,
   } = useMenuPageStore((s) => ({
     selectedCategory: s.selectedCategory,
     setSelectedCategory: s.setSelectedCategory,
@@ -39,6 +40,7 @@ const MemoAddCatImage = () => {
     setSelectedFile: s.setSelectedFile,
     isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
+    recommendationIds: s.recommendationIds,
   }));
 
   const { mutate: createCategory, isPending } = useSaveCategory();
@@ -149,6 +151,7 @@ const MemoAddCatImage = () => {
                 ...commonPayload,
                 hierarchy: "CHILD",
                 parentCategoryIds: selectIds || [],
+                dishIds: recommendationIds,
               };
 
         createCategory(payload);
@@ -157,8 +160,15 @@ const MemoAddCatImage = () => {
       }
     }
   };
-  
+
   if (isLoading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+  if (isPending) {
     return (
       <div>
         <LoadingSpinner />
@@ -215,7 +225,12 @@ const MemoAddCatImage = () => {
           </div>
         </div>
       </Background>
-      <BottomButton text="Save" onClick={handleSave} />
+      
+      <BottomButton
+          buttons={[
+            { text: "save", onClick: handleSave, type: "button" },
+          ]}
+        />
     </section>
   );
 };

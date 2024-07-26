@@ -128,7 +128,12 @@ const MemoLinkAddons = (props: Props) => {
         ))}
       </div>
 
-      <BottomButton text="Save" onClick={handleSave} />
+  
+      <BottomButton
+          buttons={[
+            { text: "Save", onClick: handleSave, type: "button" },
+          ]}
+        />
     </>
   );
 };

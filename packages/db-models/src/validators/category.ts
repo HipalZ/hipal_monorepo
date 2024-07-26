@@ -63,6 +63,7 @@ export const categorySchema = z.object({
     })
     .optional()
     .default([]),
+  isDeleted: z.boolean().default(false).optional(),
 
   availability: z.boolean().default(true).optional(),
 });
@@ -110,6 +111,7 @@ export const updateCategorySchema = z.object({
     })
     .optional()
     .default([]),
+  isDeleted: z.boolean().default(false).optional(),
 
   removeSubCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
