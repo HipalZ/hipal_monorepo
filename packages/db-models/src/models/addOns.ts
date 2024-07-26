@@ -61,6 +61,11 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: true,
       default: false,
     },
+    dishIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "Dish",
+    },
   },
   {
     timestamps: true,

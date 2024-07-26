@@ -57,9 +57,12 @@ const addonRouter = new Hono()
         const requestData = await c.req.json();
         const { dishIds = [], removeDishIds = [] } = requestData;
 
-        const addOn = await AddOn.findById(id);
+        const addOn = await AddOn.findOne({
+          name: requestData.name,
+          _id: { $ne: id },
+        });
 
-        if (!addOn) return respond(c, "not found", true, 404, {});
+        if (addOn) return respond(c, "add On already exist", true, 409, {});
 
         const updatedAddOn = await AddOn.findByIdAndUpdate(
           id,
@@ -80,6 +83,15 @@ const addonRouter = new Hono()
         if (!updatedAddOn) return respond(c, "failed", true, 400, {});
 
         if (removeDishIds.length > 0) {
+          await AddOn.findByIdAndUpdate(
+            {
+              _id: id,
+            },
+            {
+              $pull: { dishIds: { $in: removeDishIds } },
+            },
+          );
+
           await Dish.updateMany(
             { _id: { $in: removeDishIds } },
             { $pull: { addOnIds: id } },
@@ -88,9 +100,18 @@ const addonRouter = new Hono()
         }
 
         if (dishIds.length > 0) {
+          await AddOn.findByIdAndUpdate(
+            {
+              _id: id,
+            },
+            {
+              $addToSet: { dishIds: { $each: dishIds } },
+            },
+          );
+
           await Dish.updateMany(
             { _id: { $in: dishIds } },
-            { $push: { addOnIds: id } },
+            { $addToSet: { addOnIds: id } },
             { session },
           );
         }

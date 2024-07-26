@@ -124,15 +124,13 @@ const categoriesRouter = new Hono()
           removeParentCategoryIds = [],
         } = requestData;
 
-        // if (requestData.name) {
-        //   const existingCategory = await Category.findOne({
-        //     name: requestData.name,
-        //     _id: { $ne: id },
-        //   }).select("_id");
+        const existingCategory = await Category.findOne({
+          name: requestData.name,
+          _id: { $ne: id },
+        }).select("_id");
 
-        //   if (existingCategory)
-        //     return respond(c, "Category already exists", true, 409, {});
-        // }
+        if (existingCategory)
+          return respond(c, "Category already exists", true, 409, {});
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,

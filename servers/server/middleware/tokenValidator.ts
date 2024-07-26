@@ -12,11 +12,10 @@ export const authTokenValidator = async (c: Context, next: Next) => {
   const authHeader = c.req.header("Authorization");
   const accessToken = authHeader ? authHeader.split(" ")[1] : null;
 
-  console.log("authHeader", authHeader);
-  console.log("accessToken", accessToken);
-
   const refreshToken = c.req.header("x-refresh-token");
-  console.log("headers", c.req.header());
+  console.log("accessToken", accessToken);
+  console.log("refreshToken", refreshToken);
+  // console.log("headers", c.req.header());
 
   if (!accessToken && !refreshToken) {
     return c.json(

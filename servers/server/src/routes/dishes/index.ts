@@ -1,5 +1,5 @@
 // books.ts
-import { Business, Category, Dish, UniquelyYours } from "@hi/db-models";
+import { AddOn, Business, Category, Dish, UniquelyYours } from "@hi/db-models";
 import {
   dishSchema,
   uniquelyYoursSchema,
@@ -103,8 +103,9 @@ const dishesRouter = new Hono()
           removeAddOnIds = [],
           removeRecommendationIds = [],
         } = dish;
-        const existingDish = await Dish.findById(id);
-        if (!existingDish) return respond(c, "Dish not found", true, 404, {});
+        const existingDish = await Dish.findOne({ name, _id: { $ne: id } });
+        if (existingDish)
+          return respond(c, "Dish Already exist", true, 409, {});
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
           {
@@ -143,6 +144,12 @@ const dishesRouter = new Hono()
         }
 
         if (removeAddOnIds.length) {
+          await AddOn.updateMany(
+            { _id: { $in: removeAddOnIds } },
+            { $pull: { dishIds: id } },
+            { session },
+          );
+
           await Dish.findByIdAndUpdate(
             id,
             {
@@ -177,6 +184,12 @@ const dishesRouter = new Hono()
         }
 
         if (addOnIds.length) {
+          await AddOn.updateMany(
+            { _id: { $in: addOnIds } },
+            { $addToSet: { dishIds: id } },
+            { session },
+          );
+
           await Dish.findByIdAndUpdate(
             id,
             { $addToSet: { addOnIds: { $each: addOnIds } } },
@@ -227,6 +240,13 @@ const dishesRouter = new Hono()
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const dish = await c.req.json();
+
+        const dishAlreadyExists = await Dish.findOne({
+          businessId: dish.businessId,
+          name: dish.name,
+        });
+        if (dishAlreadyExists)
+          return respond(c, "Dish already exists", true, 400, {});
         const menuLayout = await Business.findOne({
           businessId: dish.businessId,
         });
@@ -237,6 +257,12 @@ const dishesRouter = new Hono()
 
         await Category.updateMany(
           { _id: { $in: dish.categoryIds ?? [] } },
+          { $push: { dishIds: createDish[0]._id } },
+          { session },
+        );
+
+        await AddOn.updateMany(
+          { _id: { $in: dish.addOnIds ?? [] } },
           { $push: { dishIds: createDish[0]._id } },
           { session },
         );
@@ -316,18 +342,21 @@ const dishesRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const dishes = await c.req.json();
 
-        const createDishes = await Dish.insertMany(dishes, { session });
-        if (!createDishes) {
-          return c.json(
-            { err: true, message: "Error in creating dishes", data: {} },
-            400,
-          );
+        for (const dish of dishes) {
+          const dishAlreadyExists = await Dish.findOne({
+            businessId: dish.businessId,
+            name: dish.name,
+          });
+          if (!dishAlreadyExists) {
+            const createDish = await Dish.create([dish], { session });
+            if (!createDish) {
+              return c.json(
+                { err: true, message: "Error in creating dishes", data: {} },
+                400,
+              );
+            }
+          }
         }
-
-        return c.json(
-          { err: false, message: "dishes created successfully", data: {} },
-          200,
-        );
       });
     },
   );

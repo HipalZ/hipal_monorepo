@@ -165,7 +165,7 @@ const settingsRouter = new Hono()
       const { businessId } = c.req.param();
       const existingBanners = await Banner.find({
         businessId,
-      });
+      }).sort({ sequence: 1 });
       return respond(
         c,
         "Banners fetched successfully",
@@ -194,6 +194,30 @@ const settingsRouter = new Hono()
         200,
         existingBanners,
       );
+    },
+  )
+  .put(
+    "/banners/sequence",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+
+    zValidator("json", z.object({ sequenceOfBannerIds: z.array(z.string()) })),
+
+    async (c) => {
+      const { sequenceOfBannerIds = [] } = await c.req.json();
+
+      // Update each banner's sequence according to the order in bannerIds
+      for (let i = 0; i < sequenceOfBannerIds.length; i++) {
+        console.log("sequenceOfBannerIds[i]", sequenceOfBannerIds[i], i);
+        await Banner.updateOne(
+          { _id: sequenceOfBannerIds[i] },
+          { $set: { sequence: i + 1 } },
+        );
+      }
+
+      return respond(c, "Banners sequence updated successfully", false, 200, {
+        updatedBannerIds: sequenceOfBannerIds,
+      });
     },
   );
 

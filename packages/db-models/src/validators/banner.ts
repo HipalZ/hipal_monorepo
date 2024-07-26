@@ -86,6 +86,7 @@ export const bannerSchema = z.object({
   patternType: z.string().optional(),
   redirectionName: z.string().optional(),
   isDeleted: z.boolean().default(false).optional(),
+  sequence: z.number().optional(),
 });
 
 export type BannerType = z.infer<typeof bannerSchema>;
