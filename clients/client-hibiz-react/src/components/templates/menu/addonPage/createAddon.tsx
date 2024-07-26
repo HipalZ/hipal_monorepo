@@ -144,6 +144,27 @@ const MemoCreateAddon = () => {
           <Background>
             <section className="flex flex-col">
               <article className="flex w-full mb-2">
+                <label htmlFor="max-choice">Max no. of choices</label>
+                <Menu as="div" className="relative ml-auto">
+                  <MenuButton className="inline-flex items-center gap-2 rounded-xl bg-white border border-black py-1.5 px-4 text-sm font-semibold text-black">
+                    {maxChoices}
+                    <FaAngleDown className="w-4 h-4" />
+                  </MenuButton>
+                  <MenuItems className="absolute top-0 z-20 w-24 origin-top-right bg-white border right-16 rounded-xl">
+                    {count.map((choice) => (
+                      <MenuItem
+                        key={choice}
+                        as="button"
+                        onClick={() => handleSetMaxChoices(choice)}
+                        className="w-full px-4 py-2 text-sm text-left text-black hover:bg-gray-100"
+                      >
+                        {choice}
+                      </MenuItem>
+                    ))}
+                  </MenuItems>
+                </Menu>
+              </article>
+              <article className="flex w-full">
                 <article className="relative">
                   <label htmlFor="min-choice">Min no. of choices</label>
                   {maxValueError && (
@@ -163,27 +184,6 @@ const MemoCreateAddon = () => {
                         key={choice}
                         as="button"
                         onClick={() => handleSetMinChoices(choice)}
-                        className="w-full px-4 py-2 text-sm text-left text-black hover:bg-gray-100"
-                      >
-                        {choice}
-                      </MenuItem>
-                    ))}
-                  </MenuItems>
-                </Menu>
-              </article>
-              <article className="flex w-full">
-                <label htmlFor="max-choice">Max no. of choices</label>
-                <Menu as="div" className="relative ml-auto">
-                  <MenuButton className="inline-flex items-center gap-2 rounded-xl bg-white border border-black py-1.5 px-4 text-sm font-semibold text-black">
-                    {maxChoices}
-                    <FaAngleDown className="w-4 h-4" />
-                  </MenuButton>
-                  <MenuItems className="absolute top-0 z-20 w-24 origin-top-right bg-white border right-16 rounded-xl">
-                    {count.map((choice) => (
-                      <MenuItem
-                        key={choice}
-                        as="button"
-                        onClick={() => handleSetMaxChoices(choice)}
                         className="w-full px-4 py-2 text-sm text-left text-black hover:bg-gray-100"
                       >
                         {choice}
@@ -264,7 +264,7 @@ const MemoCreateAddon = () => {
       <EditChoice />
       <article className="mx-6 mt-4 lg:mt-6">
         <label className="font-semibold opacity-50" htmlFor="name">
-          Recommendation ({recommendationIds?.length})
+          Dishes ({recommendationIds?.length})
         </label>
         <Background>
           <button
@@ -272,7 +272,7 @@ const MemoCreateAddon = () => {
             onClick={() => setAddOnToggle("LINK_DISHES")}
             className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
           >
-            <RiLinkUnlink className="mr-2" /> Link Recommendation
+            <RiLinkUnlink className="mr-2" /> Link Dishes
           </button>
         </Background>
       </article>

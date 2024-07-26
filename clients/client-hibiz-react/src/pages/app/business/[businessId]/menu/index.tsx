@@ -51,9 +51,15 @@ const MemoMenu = () => {
         <div className="flex flex-wrap">
           {menuArray.map((menu) => {
             return (
-              <div
+              <button
+                type="button"
                 key={menu.id}
-                className="w-[90%] md:w-[45%] lg:w-[30%] m-4 bg-white shadow-md rounded-lg"
+                className="w-[90%] md:w-[45%] lg:w-[30%] m-4 bg-white shadow-md rounded-lg text-left"
+                onClick={() =>
+                  navigate(
+                    `/app/business/${businessData?._id}/${menu.navigate}`,
+                  )
+                }
               >
                 <img
                   src={menu.image}
@@ -65,17 +71,12 @@ const MemoMenu = () => {
                   <p className="text-sm text-gray-500">{menu.subTitle}</p>
                   <button
                     type="button"
-                    onClick={() =>
-                      navigate(
-                        `/app/business/${businessData?._id}/${menu.navigate}`,
-                      )
-                    }
                     className="px-4 py-2 mt-2 text-white bg-black rounded-lg"
                   >
                     Go to {menu.title}
                   </button>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

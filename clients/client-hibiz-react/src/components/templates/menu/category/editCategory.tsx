@@ -65,7 +65,7 @@ const MemoEditCategory = () => {
 
   const { mutate, isPending } = useUpdateCategory();
 
-  const {isPending:deletePending,mutate:deleteCat} = useDeleteCategory();
+  const { isPending: deletePending, mutate: deleteCat } = useDeleteCategory();
 
   const businessData = useBusinessData((s) => s.businessData);
 
@@ -215,8 +215,8 @@ const MemoEditCategory = () => {
   }
 
   return (
-    <section className="mx-6">
-      <article className="lg:flex">
+    <>
+      <article className="mx-6 lg:flex">
         <section className="flex-1">
           <h1 className="font-semibold opacity-50"> Category Image</h1>
 
@@ -289,7 +289,7 @@ const MemoEditCategory = () => {
           </section>
         )}
       </article>
-      <section className="gap-4 lg:flex">
+      <section className="gap-4 mx-6 lg:flex">
         <article className="flex justify-between px-4 py-3 my-4 bg-white rounded-full lg:flex-1 lg:mt-6">
           <h1 className="font-semibold opacity-50">Category visibility</h1>
           <Switch
@@ -300,33 +300,31 @@ const MemoEditCategory = () => {
             <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
           </Switch>
         </article>
-        <article className="flex justify-between px-4 py-3 my-4 bg-white rounded-full lg:flex-1 lg:mt-6">
-          <h1 className="font-semibold opacity-50">Category Availability</h1>
-          <Switch
-            checked={availability}
-            onChange={setAvailability}
-            className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-green-400"
-          >
-            <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
-          </Switch>
-        </article>
       </section>
-      <LinkingCategoryComp />
+      <section className="mx-6">
+        <LinkingCategoryComp />
+      </section>
       {isCatDelete ? (
         <BottomButton
           buttons={[
-            { text: "Cancel", onClick: ()=>setIsCatDelete(false), type: "button" },
-            { text: "Confirm", onClick: ()=>deleteCat(catId), type: "button" },
+            {
+              text: "Cancel",
+              onClick: () => setIsCatDelete(false),
+              type: "button",
+            },
+            {
+              text: "Confirm Delete",
+              onClick: () => deleteCat(catId),
+              type: "button",
+            },
           ]}
         />
       ) : (
         <BottomButton
-          buttons={[
-            { text: "Update", onClick: handleSave, type: "button" },
-          ]}
+          buttons={[{ text: "Update", onClick: handleSave, type: "button" }]}
         />
       )}
-    </section>
+    </>
   );
 };
 

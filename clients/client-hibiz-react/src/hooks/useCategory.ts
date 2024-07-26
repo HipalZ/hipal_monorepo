@@ -228,10 +228,12 @@ export const useBulkUploadDishes = () => {
 
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
-  const { setOpenMenu, resetStore, categoryStep } = useMenuPageStore((s) => ({
+  const { setOpenMenu, resetStore, categoryStep,setIsCatDelete } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
     categoryStep: s.categoryStep,
+    isCatDelete:s.isCatDelete,
+    setIsCatDelete:s.setIsCatDelete
   }));
 
   const handleApiResponse = useCallback((res) => {
@@ -242,6 +244,7 @@ export const useDeleteCategory = () => {
     if (!res.err) {
       toast.success(res.message);
       setOpenMenu(false);
+      setIsCatDelete(false);
       if (categoryStep === "EDIT_MAIN_CATEGORY") {
         queryClient.invalidateQueries({ queryKey: ["getAllParentCategory"] });
       } else {

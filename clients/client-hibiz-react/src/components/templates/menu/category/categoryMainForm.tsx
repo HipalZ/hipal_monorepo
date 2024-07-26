@@ -168,12 +168,10 @@ const CategoryMainForm = memo(() => {
           </section>
         </>
       )}
-      <section className="mx-6">
         <FooterButtons
           saveCategory={handleSaveCategory}
           goToNextStep={goToNextStep}
         />
-      </section>
     </>
   );
 });

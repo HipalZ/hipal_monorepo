@@ -26,6 +26,8 @@ const MemoListOfAddon = () => {
     setMaxChoices,
     setMinChoices,
     setAddOnToggle,
+    setRecommendationIds,
+    setRemoveRecommendationIds,
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -40,10 +42,13 @@ const MemoListOfAddon = () => {
     setAddOnChoice: state.setAddOnChoice,
     setChoices: state.setChoices,
     setAddOnToggle: state.setAddOnToggle,
+    setRecommendationIds: state.setRecommendationIds,
+    setRemoveRecommendationIds: state.setRemoveRecommendationIds,
   }));
   const { addOns } = useCategoryStore((state) => ({
     addOns: state.addOns,
   }));
+  console.log(addOns);
   const { isLoading } = useAddOnList();
 
   const fuse = useMemo(
@@ -76,10 +81,12 @@ const MemoListOfAddon = () => {
       setAvailability(addon.availability ?? false);
       setAddOnId(addon._id?.toString() ?? "");
       setAddOnName(addon.name);
-      setChoices(addon.choices as Choice[]);
+      setChoices(addon.choices);
       setMaxChoices(addon.addOnMaxQuantity ?? 0);
       setMinChoices(addon.compulsory ?? 0);
       setAddOnChoice(addon.choiceType as AddonChoice);
+      setRecommendationIds(addon.dishIds);
+      setRemoveRecommendationIds(addon.dishIds);
       setAddOnToggle("EDIT_ADDON");
       setOpenMenu(true);
     },
@@ -104,17 +111,18 @@ const MemoListOfAddon = () => {
         >
           <h3 className="mb-2 text-lg font-semibold">{addon.name}</h3>
           <article className="flex">
-            <div>
+            <div className="flex items-center space-x-4">
               {addon.visibility ? (
                 <FaEye className="text-green-500" />
               ) : (
                 <FaEyeSlash className="text-red-500" />
               )}
+              <div>{addon.availability ? null : <div className="font-semibold text-red-500">N/A</div>}</div>
             </div>
             <button
               onClick={() => editAddOn(addon)}
               type="button"
-              className="pl-8 text-black"
+              className="pl-4 text-black"
             >
               <BiSolidEditAlt />
             </button>

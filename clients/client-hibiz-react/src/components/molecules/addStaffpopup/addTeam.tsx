@@ -67,7 +67,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
   }, [pageToggle]);
 
   return (
-    <>
+    <div className="pb-[5rem]">
       <center className="pt-6 text-2xl font-semibold">Add Staff</center>
       <h6 className="mx-4 mt-4 -mb-2 opacity-50">Staff</h6>
 
@@ -143,7 +143,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
       <BottomButton  buttons={[
             { text: "Send Invite", onClick: addStaff, type: "button" },
           ]} />
-    </>
+    </div>
   );
 };
 

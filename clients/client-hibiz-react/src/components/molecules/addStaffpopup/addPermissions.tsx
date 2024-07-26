@@ -7,12 +7,12 @@ import {
 } from "@headlessui/react";
 import { IoChevronDown } from "react-icons/io5";
 import { AnimatePresence, easeOut, motion } from "framer-motion";
-import MultipleBottomButtons from "@/components/atom/multipleButtons";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { apiRpc } from "@hi/common";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
+import BottomButton from "@/components/atom/bottomButton";
 
 const AddPermissions = () => {
   const {
@@ -76,7 +76,7 @@ const AddPermissions = () => {
   });
 
   return (
-    <section className="relative px-4 rounded">
+    <section className="relative pb-[7rem] rounded">
       <center className="sticky top-0 z-20 p-2 mt-4 text-xl font-semibold bg-[#f4f4f4]">
         {isEditing ? "Edit" : "Add"} Permissions
       </center>
@@ -86,7 +86,7 @@ const AddPermissions = () => {
           as="div"
           key={permission.title}
           defaultOpen={false}
-          className="pt-4"
+          className="pt-4 mx-4"
         >
           {({ open }) => (
             <>
@@ -158,21 +158,16 @@ const AddPermissions = () => {
         </Disclosure>
       ))}
 
-      <MultipleBottomButtons
+      
+<BottomButton
         buttons={[
-          {
-            text: "Back",
-            onClick: goBack,
-            className: "bg-white border border-black text-black",
-          },
-          {
-            text: "Save",
-            onClick: () =>
-              setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"),
-            className: "bg-black text-white",
-          },
+          { text: "Back", onClick: goBack, type: "button" },
+          { text: "Save",     onClick: () =>
+            setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"), type: "button" },
         ]}
       />
+
+   
     </section>
   );
 };

@@ -11,6 +11,7 @@ import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { cn } from "@hi/common";
 import toast from "react-hot-toast";
+import BottomButton from "@/components/atom/bottomButton";
 
 export const foodTypes = [
   { name: DishTypeEnum[0], icon: veg },
@@ -178,9 +179,9 @@ const MemoCreateChoice = () => {
           />
         </Background>
       </article>
-      <button type="button" onClick={handleSaveChoice} className="bottom_btn">
-        Save
-      </button>
+      <BottomButton
+        buttons={[{ text: "Save", onClick: handleSaveChoice, type: "button" }]}
+      />
     </>
   );
 };

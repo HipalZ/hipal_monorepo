@@ -9,7 +9,7 @@ const NewAddStaff = ({refetch}:{refetch:()=>void}) => {
     refetch()
    }
   return (
-    <section className="min-h-auto h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4] pb-[7rem]">
+    <section className="max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
       {pageToggle === "ADD_STAFF" && <AddTeam getUser={getUser} />}
       {pageToggle === "ADD_ROLE" && <AddRole />}
       {pageToggle === "ADD_PERMISSIONS" &&  <AddPermissions />}
