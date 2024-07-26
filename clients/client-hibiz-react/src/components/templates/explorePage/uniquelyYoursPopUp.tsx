@@ -28,31 +28,33 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
     handleDishSelect,
     handleSaveDish,
   } = props;
-  console.log("selectedDise", selectedDishes);
+
   useEffect(() => {
     setSelectedDishes(uniquelyDishes);
   }, [uniquelyDishes]);
+
   return (
     <div className="p-4 h-[80vh] overflow-auto">
       <center className="mb-4 text-2xl">
         Uniquely Yours{" "}
         <span className="text-sm">( {selectedDishes?.length}/7 )</span>
       </center>
+      <span className="text-gray-500">Add Best dishes to explore page</span>
       <input
         type="search"
         onChange={handleSearch}
         value={searchQuery}
-        className="w-full p-2 mb-4 border border-gray-300 rounded-2xl"
+        className="w-full px-4 py-2 mt-4 mb-4 border border-gray-300 rounded-2xl"
         placeholder="Search for a dish"
       />
-      <div className="gap-4">
+      <div className="gap-4 space-y-4">
         {dishes.length > 0
           ? dishes.map((dish) => {
               const isSelected = selectedDishes.some((d) => d._id === dish._id);
               return (
                 <div
                   key={dish._id}
-                  className="flex items-center space-x-4 space-y-4 cursor-pointer"
+                  className="flex items-center space-x-4 cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -71,17 +73,17 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                       loading="lazy"
                       src={dish.images[0]}
                       alt={`Dish ${dish._id}`}
-                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                      className="h-[4rem] w-[4rem] border-2 rounded-md"
                     />
                   ) : (
                     <img
                       loading="lazy"
                       src={dummyImage}
                       alt={`Dish ${dish._id}`}
-                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                      className="h-[4rem] w-[4rem] border-2 rounded-md"
                     />
                   )}
-                  <h1>{dish?.name}</h1>
+                  <h6>{dish?.name}</h6>
                 </div>
               );
             })
@@ -90,9 +92,7 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
               return (
                 <div
                   key={dish._id}
-                  className={cn(
-                    "flex items-center space-x-4 space-y-4 cursor-pointer",
-                  )}
+                  className={cn("flex items-center space-x-4 cursor-pointer")}
                 >
                   <input
                     type="checkbox"
@@ -111,17 +111,17 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                       loading="lazy"
                       src={dish.images[0]}
                       alt={`Dish ${dish._id}`}
-                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                      className="h-[4rem] w-[4rem] border-2 rounded-md"
                     />
                   ) : (
                     <img
                       loading="lazy"
                       src={dummyImage}
                       alt={`Dish ${dish._id}`}
-                      className="h-[5rem] w-[5rem] border-2 rounded-md"
+                      className="h-[4rem] w-[4rem] border-2 rounded-md"
                     />
                   )}
-                  <h1>{dish?.name}</h1>
+                  <h6>{dish?.name}</h6>
                 </div>
               );
             })}

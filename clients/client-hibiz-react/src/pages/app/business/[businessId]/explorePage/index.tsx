@@ -8,6 +8,7 @@ import {
   useState,
   Suspense,
   lazy,
+  useEffect,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoMdArrowUp } from "react-icons/io";
@@ -31,12 +32,16 @@ import { FaXTwitter } from "react-icons/fa6";
 import { TbBrandTelegram } from "react-icons/tb";
 import { RiDiscordLine } from "react-icons/ri";
 import { cropImage } from "@/components/cropper";
-import PopUp from "@/components/atom/popUp";
-import BizInformation from "@/components/templates/explorePage/businessInformation";
 import useShowErrorToasts from "@/components/atom/errorToasts";
-import FooterBanner from "@/components/templates/explorePage/footerBanner";
 
 // Lazy loading components
+const PopUp = lazy(() => import("@/components/atom/popUp"));
+const BizInformation = lazy(
+  () => import("@/components/templates/explorePage/businessInformation"),
+);
+const FooterBanner = lazy(
+  () => import("@/components/templates/explorePage/footerBanner"),
+);
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 const ReactCropper = lazy(() => import("@/components/cropper"));
@@ -62,7 +67,6 @@ const FooterSection = lazy(
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
 );
-const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const RightButton = lazy(() => import("@/components/atom/rightButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const Paragraph = lazy(() => import("@/components/atom/paragraph"));
@@ -83,6 +87,10 @@ const MemoExplorePage = () => {
     setSelectedDishes,
     selectedDishes,
     clearOriginalDishes,
+    // img,
+    // setImg,
+    // imageFiles,
+    // setImageFiles,
   } = useExploreStore((state) => ({
     bizInfo: state.bizInfo,
     setBizInfo: state.setBizInfo,
@@ -94,6 +102,10 @@ const MemoExplorePage = () => {
     setUniquelyDishes: state.setUniquelyDishes,
     clearOriginalDishes: state.clearOriginalDishes,
     setBanners: state.setBanners,
+    // img: state.img,
+    // setImg: state.setImg,
+    // imageFiles: state.imageFiles,
+    // setImageFiles: state.setImageFiles,
   }));
   const cropperRef = useRef(null);
   const [toggleBizInfo, setToggleBizInfo] = useState(false);
@@ -105,6 +117,7 @@ const MemoExplorePage = () => {
     { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
   ]);
   const [showUniquePopUp, setShowUniquePopUp] = useState(false);
+
   const [img, setImg] = useState({
     banner: bizInfo?.specialBannerUrl,
     logo: bizInfo?.logoUrl,
@@ -115,6 +128,7 @@ const MemoExplorePage = () => {
     logo: null,
     footer: null,
   });
+
   const [selectedSocialMedia, setSelectedSocialMedia] = useState("");
   const [showCropper, setShowCropper] = useState(false);
   const [cropping, setCropping] = useState({ image: null, type: null });
@@ -159,7 +173,7 @@ const MemoExplorePage = () => {
             dishId: dish._id,
             name: dish.name,
             images: dish.images,
-            dishType: dish?.dishType,
+            dishTypes: dish?.dishTypes,
             businessId,
           };
         }),
@@ -185,6 +199,7 @@ const MemoExplorePage = () => {
   const handleCrop = async () => {
     const { image, type } = cropping;
     const cropper = cropperRef.current;
+
     if (cropper && image && type) {
       const coordinates = cropper?.getCoordinates();
       if (coordinates) {
@@ -280,14 +295,18 @@ const MemoExplorePage = () => {
   );
 
   const getAllCategoryData = async (businessId: string) => {
+    if (originalDishes.length > 0) return setDishes(originalDishes);
     const categoryResponse = await apiRpc.categories.$get({
       query: {
         businessId: businessId,
+        dishes: "true",
       },
     });
     const data = await categoryResponse.json();
     const categories = data?.data;
     const allDishes = await combineAllDishes(categories);
+    setDishes(allDishes);
+    setOriginalDishes(allDishes);
     return allDishes;
   };
 
@@ -381,22 +400,6 @@ const MemoExplorePage = () => {
     }
   };
 
-  const fetchCategories = useCallback(async () => {
-    if (originalDishes && originalDishes.length > 0) {
-      setOriginalDishes(originalDishes);
-      return originalDishes;
-    }
-    const res = await getAllCategoryData(businessId as string);
-    setDishes(res);
-    setOriginalDishes(res);
-  }, [businessId, originalDishes]);
-
-  useQuery({
-    queryKey: ["categories", businessId],
-    queryFn: fetchCategories,
-    enabled: !!businessId,
-  });
-
   const handleIconClick = useCallback((icon: string) => {
     setSelectedSocialMedia(icon);
   }, []);
@@ -436,6 +439,12 @@ const MemoExplorePage = () => {
     queryFn: async () => {
       const res = await getAllBizInfo();
       const response = await res.json();
+      setImg({
+        banner: response?.data?.specialBannerUrl,
+        logo: response?.data?.logoUrl,
+        footer: response?.data?.endBannerUrl,
+      });
+
       setBizInfo(response?.data as IBizInfo);
       setSocialMediaLinks((prevLinks) =>
         prevLinks.map((link) => {
@@ -462,6 +471,12 @@ const MemoExplorePage = () => {
     enabled: !!businessId && !uniquelyYoursRef.current,
   });
 
+  useQuery({
+    queryKey: ["categoriez", businessId, showUniquePopUp],
+    queryFn: () => getAllCategoryData(businessId || ""),
+    enabled: !!businessId && showUniquePopUp,
+  });
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main>
@@ -475,41 +490,27 @@ const MemoExplorePage = () => {
           <BizInformation refetch={refetch} />
         ) : (
           <form onSubmit={handleSaveExplorePage} className="px-4">
-            <Suspense fallback={<LoadingSpinner />}>
-              <ExplorePageTopSection
-                handleImageChange={handleImageChange}
-                img={img}
-                handleBizName={handleBizName}
-              />
-            </Suspense>
+            <ExplorePageTopSection
+              handleImageChange={handleImageChange}
+              img={img}
+              handleBizName={handleBizName}
+            />
             <br />
-            <Suspense fallback={<LoadingSpinner />}>
-              <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />
-            </Suspense>
-            <Suspense fallback={<LoadingSpinner />}>
-              <BannerSection handleNavigation={handleNavigation} />
-            </Suspense>
-            <Suspense fallback={<LoadingSpinner />}>
-              <UniquelyYoursSection handleOpenPopUp={handleOpenPopUp} />
-            </Suspense>
-            <Suspense fallback={<LoadingSpinner />}>
-              <FooterBanner img={img} handleImageChange={handleImageChange} />
-            </Suspense>
-            <Suspense fallback={<LoadingSpinner />}>
-              <FooterSection
-                handleFooterComment={handleFooterComment}
-                handleFssaiNumber={handleFssaiNumber}
-                handlegst={handlegst}
-              />
-            </Suspense>
-            <Suspense fallback={<LoadingSpinner />}>
-              <SocialMediaLinks
-                handleSaveSocialMediaLink={handleSaveSocialMediaLink}
-                selectedSocialMedia={selectedSocialMedia}
-                handleIconClick={handleIconClick}
-                socialMediaLinks={socialMediaLinks}
-              />
-            </Suspense>
+            <BizInfo handleBizInfo={handleBizInfo} basicInfos={basicInfos} />
+            <BannerSection handleNavigation={handleNavigation} />
+            <UniquelyYoursSection handleOpenPopUp={handleOpenPopUp} />
+            <FooterBanner img={img} handleImageChange={handleImageChange} />
+            <FooterSection
+              handleFooterComment={handleFooterComment}
+              handleFssaiNumber={handleFssaiNumber}
+              handlegst={handlegst}
+            />
+            <SocialMediaLinks
+              handleSaveSocialMediaLink={handleSaveSocialMediaLink}
+              selectedSocialMedia={selectedSocialMedia}
+              handleIconClick={handleIconClick}
+              socialMediaLinks={socialMediaLinks}
+            />
             <section className="mt-4 opacity-30">
               <SubHeader text="Terms & Condition" />
               <article className="flex items-center justify-between p-4 bg-white rounded-2xl">
@@ -517,20 +518,21 @@ const MemoExplorePage = () => {
                 <IoMdArrowUp size={20} className="rotate-45" />
               </article>
             </section>
-            <Suspense fallback={<LoadingSpinner />}>
-              <MiddlePopUp
-                show={showCropper}
-                onSave={handleCrop}
-                onClose={() => setShowCropper(false)}
-              >
-                <ReactCropper
-                  image={cropping.image}
-                  ref={cropperRef}
-                  width={250}
-                  height={250}
-                />
-              </MiddlePopUp>
-            </Suspense>
+            <MiddlePopUp
+              show={showCropper}
+              onSave={handleCrop}
+              onClose={() => setShowCropper(false)}
+            >
+              <ReactCropper
+                image={cropping.image}
+                ref={cropperRef}
+                width={250}
+                height={250}
+              />
+            </MiddlePopUp>
+            <button type="submit" className="bottom_btn">
+              Save
+            </button>
             {showUniquePopUp && (
               <PopUp
                 show={showUniquePopUp}
@@ -548,21 +550,6 @@ const MemoExplorePage = () => {
                 />
               </PopUp>
             )}
-            <Suspense fallback={<LoadingSpinner />}>
-              <button
-                className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
-         md:left-0 md:right-0 md:mx-auto"
-                type="submit"
-              >
-                Save
-              </button>
-            </Suspense>
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
-            <br />
           </form>
         )}
       </main>

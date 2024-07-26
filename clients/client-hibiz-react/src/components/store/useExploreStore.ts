@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { IBanner, IBizInfo, IDish } from "../types/businessData";
-
+export type ImageFiles = {
+  banner: File | null;
+  logo: File | null;
+  footer: File | null;
+};
 interface IExploreStore {
   clearOriginalDishes: () => void;
   dishes: IDish[];
@@ -18,6 +22,28 @@ interface IExploreStore {
   setBanners: (banners: IBanner[]) => void;
   bannerObj: IBanner;
   setBannerObj: (banner: IBanner) => void;
+
+  img: {
+    banner: string | undefined;
+    logo: string | undefined;
+    footer: string | undefined;
+  };
+  setImg: (img: {
+    banner: string | undefined;
+    logo: string | undefined;
+    footer: string | undefined;
+  }) => void;
+
+  imageFiles: {
+    banner: File | null;
+    logo: File | null;
+    footer: File | null;
+  };
+  setImageFiles: (files: {
+    banner: File | null;
+    logo: File | null;
+    footer: File | null;
+  }) => void;
 }
 
 export const useExploreStore = create(
@@ -59,6 +85,7 @@ export const useExploreStore = create(
       setBanners: (banners) => set(() => ({ banners })),
       bannerObj: {
         _id: "",
+        isPublished: false,
         layout: "",
         businessId: "",
         bannerType: "",
@@ -81,6 +108,19 @@ export const useExploreStore = create(
       },
       setBannerObj: (banner: IBanner) => set(() => ({ bannerObj: banner })),
       clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
+
+      img: {
+        banner: "",
+        logo: "",
+        footer: "",
+      },
+      setImg: (img) => set({ img }),
+      imageFiles: { banner: null, logo: null, footer: null } as ImageFiles,
+      setImageFiles: (files: ImageFiles | ((prev: ImageFiles) => ImageFiles)) =>
+        set((state) => ({
+          imageFiles:
+            typeof files === "function" ? files(state.imageFiles) : files,
+        })),
     }),
     {
       name: "explore-store",

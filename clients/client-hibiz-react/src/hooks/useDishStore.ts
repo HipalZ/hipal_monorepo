@@ -56,13 +56,13 @@ export const useDishStore = () => {
     return data?.data as DishType[];
   };
 
-  const { data, isLoading, isError } = useQuery<DishType[]>({
+  const { data, isLoading, isError, refetch } = useQuery<DishType[]>({
     queryKey: ["getAlldishes", businessId],
     queryFn: () => getAllDishes(businessId ?? ""),
     enabled: !!businessId,
   });
 
-  return { data, isLoading, isError };
+  return { data, isLoading, isError, refetch };
 };
 
 export const useLinkedDishes = () => {

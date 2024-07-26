@@ -277,8 +277,8 @@ const dishesRouter = new Hono()
   )
   .post(
     "/uniquelyYours",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator(
       "json",
       z.object({

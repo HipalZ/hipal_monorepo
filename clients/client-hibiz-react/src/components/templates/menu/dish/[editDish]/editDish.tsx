@@ -60,7 +60,7 @@ const MemoEditDish = () => {
   const errorToasts = useErrorToasts();
 
   useChildCategories(dishStep);
-  useDishStore();
+  const { refetch } = useDishStore();
   const { data: addons } = useAddons(dishStep);
 
   const goBack = useCallback(() => {
@@ -117,6 +117,7 @@ const MemoEditDish = () => {
       resetStore();
       resetDishesStore();
       resetDishStore();
+      refetch();
       toast.success(data?.message);
       setEditOpenMenu(false);
     }

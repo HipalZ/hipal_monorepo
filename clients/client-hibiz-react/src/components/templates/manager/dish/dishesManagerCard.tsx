@@ -58,22 +58,25 @@ const MemoDishButton = ({ dish, onEdit }: DishButtonProps) => {
             />
           )}
         </figure>
-        <article className="flex flex-col justify-center ">
+        <article className="flex flex-col items-start justify-center ">
           <h3
             title={dish?.name}
             className="text-lg font-semibold truncate mb-30"
           >
             {dish.name}
           </h3>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             {images.map((imgSrc) => (
-              <img
-                key={imgSrc}
-                src={imgSrc}
-                alt=""
-                className="w-4 aspect-square"
-              />
+              <figure key={imgSrc}>
+                <img
+                  key={imgSrc}
+                  src={imgSrc}
+                  alt="add images"
+                  className="w-4 aspect-square"
+                />
+              </figure>
             ))}
+            {!dish.availability && <span className="text-red-500">N/A</span>}
           </div>
         </article>
       </article>

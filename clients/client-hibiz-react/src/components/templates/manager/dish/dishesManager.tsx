@@ -36,7 +36,7 @@ const MemoDishesManager = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishStore(DishSteps.LINK_RECOMMENDATION_STEP);
+  const { isLoading } = useDishStore();
   const { data: linkedCategories } = useLinkedDishes();
 
   const fuse = useMemo(
