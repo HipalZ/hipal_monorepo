@@ -257,6 +257,15 @@ const categoriesRouter = new Hono()
           },
         );
 
+        await Category.updateMany(
+          {
+            subCategoryIds: id,
+          },
+          {
+            $pull: { subCategoryIds: id },
+          },
+        );
+
         const pullDish = await Dish.updateMany(
           {
             categoryIds: id,
