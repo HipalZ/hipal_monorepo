@@ -127,38 +127,37 @@ const MemoAddCatImage = () => {
   };
 
   const handleSave = async () => {
+    let imageUrl = "";
     if (selectedFile) {
-      const imageUrl = await storeImageAfterSave(
+      imageUrl = await storeImageAfterSave(
         selectedFile,
         imagePreview,
         setIsLoading,
       );
-      if (imageUrl) {
-        const commonPayload = {
-          name: categoryName,
-          businessId: Object(businessData?._id) || "",
-          coverImage: imageUrl,
-        };
-
-        const payload =
-          selectedCategory === "MAIN_CATEGORY"
-            ? {
-                ...commonPayload,
-                hierarchy: "PARENT",
-                subCategoryIds: selectIds,
-              }
-            : {
-                ...commonPayload,
-                hierarchy: "CHILD",
-                parentCategoryIds: selectIds || [],
-                dishIds: recommendationIds,
-              };
-
-        createCategory(payload);
-      } else {
-        console.error("Failed to upload image");
-      }
     }
+    const commonPayload = {
+      name: categoryName,
+      businessId: Object(businessData?._id) || "",
+    };
+    if (imageUrl) {
+      commonPayload.coverImage = imageUrl;
+    }
+
+    const payload =
+      selectedCategory === "MAIN_CATEGORY"
+        ? {
+            ...commonPayload,
+            hierarchy: "PARENT",
+            subCategoryIds: selectIds,
+          }
+        : {
+            ...commonPayload,
+            hierarchy: "CHILD",
+            parentCategoryIds: selectIds || [],
+            dishIds: recommendationIds,
+          };
+
+    createCategory(payload);
   };
 
   if (isLoading) {
@@ -177,61 +176,61 @@ const MemoAddCatImage = () => {
   }
 
   return (
-    <section className="mx-6 ">
-      <label className="font-medium" htmlFor="cat">
-        Category Image
-      </label>
-      <Background>
-        <div className="flex justify-between gap-4 mx-4">
-          <div className="rounded-full w-[7rem] h-[7rem]">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-[7rem] h-[7rem] rounded-full object-contain"
+    <>
+      <section className="mx-6">
+        <label className="font-medium" htmlFor="cat">
+          Category Image
+        </label>
+        <Background>
+          <div className="flex justify-between gap-4 mx-4">
+            <div className="rounded-full w-[7rem] h-[7rem]">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-[7rem] h-[7rem] rounded-full object-contain"
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center w-full h-full rounded-full"
+                  style={{
+                    background: "linear-gradient(45deg, #D9CCFF, #FCD6CF)",
+                  }}
+                >
+                  <BiImageAdd className="text-gray-600 opacity-50" size={36} />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col items-center justify-center w-1/2">
+              <input
+                type="file"
+                id="cat"
+                className="hidden"
+                onChange={handleImageChange}
               />
-            ) : (
-              <div
-                className="flex items-center justify-center w-full h-full rounded-full"
-                style={{
-                  background: "linear-gradient(45deg, #D9CCFF, #FCD6CF)",
-                }}
+              <button
+                type="button"
+                className="w-full p-2 mb-2 text-white bg-black rounded-2xl"
+                onClick={() => document.getElementById("cat")?.click()}
               >
-                <BiImageAdd className="text-gray-600 opacity-50" size={36} />
-              </div>
-            )}
+                Add Image
+              </button>
+              <button
+                type="button"
+                className="w-full p-2 text-black bg-white border border-black rounded-2xl"
+                onClick={handleRemoveImage}
+              >
+                Remove
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col items-center justify-center w-1/2">
-            <input
-              type="file"
-              id="cat"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <button
-              type="button"
-              className="w-full p-2 mb-2 text-white bg-black rounded-2xl"
-              onClick={() => document.getElementById("cat")?.click()}
-            >
-              Add Image
-            </button>
-            <button
-              type="button"
-              className="w-full p-2 text-black bg-white border border-black rounded-2xl"
-              onClick={handleRemoveImage}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      </Background>
-      
+        </Background>
+      </section>
+
       <BottomButton
-          buttons={[
-            { text: "save", onClick: handleSave, type: "button" },
-          ]}
-        />
-    </section>
+        buttons={[{ text: "save", onClick: handleSave, type: "button" }]}
+      />
+    </>
   );
 };
 
