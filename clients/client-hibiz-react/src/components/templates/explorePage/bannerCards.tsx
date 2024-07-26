@@ -2,7 +2,7 @@ import { type CSSProperties, memo } from "react";
 import type { IBannerPayload } from "@/components/types/businessData";
 import BannerDummy from "@/assets/hisite/bannerDummy.jpg";
 import layout3 from "@/assets/hisite/layout3.jpg";
-import { BannerType } from "@hi/common";
+import { BannerType } from "@/components/utils/bannerLayouts";
 interface IBanner {
   banners: IBannerPayload[];
   handleEditBanner?: (banner: IBannerPayload) => void;

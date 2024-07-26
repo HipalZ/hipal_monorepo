@@ -1,4 +1,3 @@
-import { useBannerStore } from "@/components/store/useBannerStore";
 import { memo } from "react";
 
 type Props = {
@@ -9,39 +8,19 @@ type Props = {
     isButton: boolean;
     pattern?: string;
   };
-  bannerLayout: string;
-  handleBannerType: (id: string, isButton: boolean, isPattern: boolean) => void;
 };
 
 const MemoSelectingCardLayout = (props: Props) => {
-  const { layout, handleBannerType, bannerLayout } = props;
-  const { selectedBannerType } = useBannerStore((s) => ({
-    selectedBannerType: s.selectedBannerType,
-  }));
+  const { layout } = props;
+
   return (
     <section className="w-48">
       <article className="mt-4 mb-2">
-        <input
-          type="radio"
-          className="text-[#8C63FF]"
-          name="banner_layout"
-          value={layout?._id}
-          checked={
-            bannerLayout === layout?._id || selectedBannerType === layout?._id
-          }
-          onChange={() =>
-            handleBannerType(
-              layout?._id,
-              layout?.isButton,
-              layout?.isPattern || false,
-            )
-          }
-        />
-        <span className="text-[#807C83] text-sm ml-2">{layout?.title}</span>
+        <h6 className="text-[#807C83] text-base ml-2">{layout?.title}</h6>
+        <h6 className="text-xs text-[#999999] w-48 leading-1 ml-2 mt-2">
+          {layout?.description}
+        </h6>
       </article>
-      <span className="text-xs text-[#999999] w-48 leading-none">
-        {layout?.description}
-      </span>
     </section>
   );
 };

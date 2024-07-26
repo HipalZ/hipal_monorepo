@@ -4,6 +4,7 @@ import type {
   MenuLayout,
 } from "../store/useBusinessCtrl";
 import type { User } from "../store/useOwnerLogin";
+import type { BannerType } from "../utils/bannerLayouts";
 
 interface IAcessControl {
   [key: string]: string;
@@ -357,4 +358,19 @@ export interface IBannerPayload {
 export interface BasicInfo {
   _id: number;
   text: string;
+}
+interface PatternProps {
+  color: string;
+}
+export interface BannerLayout {
+  _id: BannerType;
+  heading: string;
+  paragraph: string;
+  isButton: boolean;
+  buttonText: string;
+  title: string;
+  image: string;
+  isPattern: boolean;
+  pattern: React.FC<PatternProps>;
+  description: string;
 }

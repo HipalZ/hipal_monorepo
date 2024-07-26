@@ -54,7 +54,7 @@ function MemoMiddlePopUp({
                   &nbsp;
                   {onSave ? (
                     <div onClick={onSave} className="flex justify-center mb-4">
-                      <button className="on_active_bounce bg-[#2B354D] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto">
+                      <button className="on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto">
                         Save
                       </button>
                     </div>

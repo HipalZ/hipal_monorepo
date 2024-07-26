@@ -14,8 +14,9 @@ import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { BannerPage } from "@/components/utils/bannerLayouts";
-import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
+import { cn } from "@/components/utils/helper";
+import toast from "react-hot-toast";
 
 enum ViewType {
   BANNERS = "Banners",
@@ -23,40 +24,43 @@ enum ViewType {
 }
 
 // Lazy load components
+const MemoizedHeader = lazy(() => import("@/components/molecules/header"));
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const CreatedBannersLayouts = lazy(
   () => import("@/components/templates/explorePage/createdBannerLayouts"),
 );
-const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
-const Paragraph = lazy(() => import("@/components/atom/paragraph"));
-const SubHeader = lazy(() => import("@/components/atom/subHeader"));
-const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const MemoBanners = () => {
   const navigate = useNavigate();
   const banners = useExploreStore((s) => s.banners);
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner, setBannerPage } = useBannerStore((s) => ({
-    setSelectedBanner: s.setSelectedBanner,
-    bannerPage: s.bannerPage,
-    setBannerPage: s.setBannerPage,
-  }));
+  const { setSelectedBanner, setBannerPage, bannerPage } = useBannerStore(
+    (s) => ({
+      setSelectedBanner: s.setSelectedBanner,
+      setBannerPage: s.setBannerPage,
+      bannerPage: s.bannerPage,
+    }),
+  );
 
   const [addSpotlight, setAddSpotlight] = useState(false);
   const [view, setView] = useState(ViewType.BANNERS);
+  const [draggedBanner, setDraggedBanner] = useState<IBannerPayload | null>(
+    null,
+  );
+  const [isArrangeMode, setIsArrangeMode] = useState(false);
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
   }));
 
-  const handleNewBanner = () => {
+  const handleNewBanner = useCallback(() => {
     setBannerPage(BannerPage.VIEW);
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/new`);
     });
-  };
+  }, [businessId, bannerPage]);
 
   const handleEditBanner = useCallback((banner: IBannerPayload) => {
     setSelectedBanner(banner);
@@ -95,21 +99,72 @@ const MemoBanners = () => {
     });
   }, [banners, view]);
 
+  const onDragStart = useCallback((banner: IBannerPayload) => {
+    setDraggedBanner(banner);
+  }, []);
+
+  const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  }, []);
+
+  const onDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    droppedBanner: IBannerPayload,
+  ) => {
+    e.preventDefault();
+    if (!draggedBanner) return;
+
+    const draggedBannerIndex = filteredBanners.findIndex(
+      (banner) => banner._id === draggedBanner._id,
+    );
+    const droppedBannerIndex = filteredBanners.findIndex(
+      (banner) => banner._id === droppedBanner._id,
+    );
+
+    const updatedBanners = [...filteredBanners];
+    updatedBanners.splice(draggedBannerIndex, 1);
+    updatedBanners.splice(droppedBannerIndex, 0, draggedBanner);
+
+    setBanners(updatedBanners);
+    setDraggedBanner(null);
+  };
+
+  const handleArrangeSequence = useCallback(() => {
+    setIsArrangeMode(!isArrangeMode);
+  }, [isArrangeMode]);
+
+  const handleSaveSequence = async () => {
+    const sequence = filteredBanners.map((banner) => banner._id);
+    setIsArrangeMode(false);
+    const response = await apiRpc.settings.banners.sequence.$put({
+      json: {
+        sequenceOfBannerIds: sequence,
+      },
+    });
+    if (response.status === 200) {
+      toast.success("Sequence saved successfully");
+    }
+  };
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main className="relative h-screen mb-[2rem]">
-        <header className="sticky top-0 z-10 w-full bg-white rounded-t-2xl">
+        <header
+          className={`sticky top-0 z-10 w-full bg-white rounded-t-2xl ${
+            isArrangeMode ? "opacity-50 pointer-events-none" : ""
+          }`}
+        >
           <MemoizedHeader
             title="Banners"
             onBack={handleNavigate}
             leftIcon={<FaArrowLeft />}
             isIconBusinessShow={false}
           >
-            <p className="mx-4 mb-2 text-xs text-gray-500">
+            <p className="mx-4 mb-2 text-xs text-gray-500 md:text-base lg:text-base">
               Size matters! Express limitless with your customers about all the
               happenings at your place.
             </p>
-            <div className="flex justify-around mb-10">
+            <div className="flex justify-around mb-10 md:justify-start md:space-x-10 md:ml-10">
               <button
                 type="button"
                 onClick={() => setView(ViewType.BANNERS)}
@@ -135,29 +190,57 @@ const MemoBanners = () => {
             </div>
           </MemoizedHeader>
         </header>
+        <article className="max-w-[69rem] flex justify-end">
+          <button
+            type="button"
+            className="z-20 px-4 py-2 mb-4 mr-4 text-xs text-white bg-black rounded-full"
+            onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
+          >
+            {isArrangeMode ? "Save Sequence" : "Arrange Sequence"}
+          </button>
+        </article>
         &nbsp;
-        <section className="mx-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5 pb-[5rem]">
+        <section
+          className={`mx-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5 pb-[5rem] ${
+            isArrangeMode ? "pointer-events-auto opacity-100" : ""
+          }`}
+        >
           {filteredBanners && filteredBanners?.length > 0 ? (
             filteredBanners.map((banner: IBannerPayload, index: number) => (
-              <CreatedBannersLayouts
+              <div
                 key={`banner?._id+${index.toString()}`}
-                selectedLayout={banner?.layout || ""}
-                heading={banner?.heading || ""}
-                paragraph={banner?.paragraph || ""}
-                callToAction={banner?.callToAction || ""}
-                img={{ logo: banner?.bannerImage || "" }}
-                selectedColor={{
-                  bgColor: banner?.backgroundColor || "",
-                  textColor: banner?.backgroundColor || "",
-                }}
-                paragraphStyle={{ color: banner?.paragraphColor || "" }}
-                buttonStyle={{
-                  color: banner?.buttonColor || "",
-                  buttonColor: banner?.buttonTextColor || "",
-                }}
-                banner={banner}
-                handleEditBanner={handleEditBanner}
-              />
+                draggable={isArrangeMode}
+                onDragStart={
+                  isArrangeMode ? () => onDragStart(banner) : undefined
+                }
+                onDragOver={isArrangeMode ? onDragOver : undefined}
+                onDrop={isArrangeMode ? (e) => onDrop(e, banner) : undefined}
+                className="relative overflow-hidden"
+              >
+                <CreatedBannersLayouts
+                  selectedLayout={banner?.layout || ""}
+                  heading={banner?.heading || ""}
+                  paragraph={banner?.paragraph || ""}
+                  callToAction={banner?.callToAction || ""}
+                  img={{ logo: banner?.bannerImage || "" }}
+                  selectedColor={{
+                    bgColor: banner?.backgroundColor || "",
+                    textColor: banner?.backgroundColor || "",
+                  }}
+                  paragraphStyle={{ color: banner?.paragraphColor || "" }}
+                  buttonStyle={{
+                    color: banner?.buttonColor || "",
+                    buttonColor: banner?.buttonTextColor || "",
+                  }}
+                  banner={banner}
+                  handleEditBanner={handleEditBanner}
+                />
+                {isArrangeMode && (
+                  <div className="absolute inset-0     max-w-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 text-white text-2xl font-bold">
+                    {index + 1}
+                  </div>
+                )}
+              </div>
             ))
           ) : (
             <center className="absolute -translate-x-1/2 top-1/2 left-1/2">
@@ -191,7 +274,15 @@ const MemoBanners = () => {
           </MiddlePopUp>
         )}
       </main>
-      <button type="button" className="bottom_btn " onClick={handleNewBanner}>
+      <button
+        type="button"
+        className={cn(
+          "pointer-events-auto bottom_btn",
+          isArrangeMode ? "opacity-50" : "",
+        )}
+        onClick={handleNewBanner}
+        disabled={isArrangeMode}
+      >
         Add New Spotlight
       </button>
     </Suspense>

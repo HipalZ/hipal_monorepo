@@ -1,13 +1,15 @@
 import { memo } from "react";
 
-const MemoArrowPattern = ({ color }) => (
+const MemoArrowPattern = ({ color }: { color: string }) => (
   <svg
     width="50"
     height="50"
     viewBox="0 0 72 50"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    aria-labelledby="arrowPatternTitle"
   >
+    <title id="arrowPatternTitle">Arrow Pattern</title>
     <path
       d="M46.9418 3.15426L25.1247 24.6634L46.6338 46.4805"
       stroke={color}

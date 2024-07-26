@@ -1,4 +1,4 @@
-import { type CSSProperties, memo, useEffect, useMemo } from "react";
+import { type CSSProperties, memo, useMemo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import type { IBannerPayload } from "@/components/types/businessData";
 import {
@@ -186,7 +186,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                     selectedColor?.bgColor ? selectedColor?.bgColor : "black"
                   } 90%)`,
                 }}
-                className="absolute bottom-0 w-full p-2 rounded-xl h-[3rem]"
+                className="absolute bottom-0 w-full p-2 rounded-xl h-[5rem]"
               >
                 <div className="flex justify-between">
                   <h1

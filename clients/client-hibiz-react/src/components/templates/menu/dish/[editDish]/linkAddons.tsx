@@ -83,7 +83,7 @@ const MemoLinkAddons = (props: Props) => {
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}
-            className="relative flex flex-col w-[90%] p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
+            className="relative flex flex-col w-full p-4 bg-white rounded-lg shadow md:max-w-[20rem] lg:max-w-[20rem]"
           >
             <div className="flex items-center justify-between">
               <label className="flex items-center">
@@ -94,7 +94,9 @@ const MemoLinkAddons = (props: Props) => {
                   className="mr-2 text-sm text-black rounded-md"
                 />
                 <h3 className="text-lg font-semibold truncate w-[80%]">
-                  {data.name}
+                  {data.name.length > 25
+                    ? `${data.name.slice(0, 25)}...`
+                    : data.name}
                 </h3>
               </label>
               <div className="absolute flex items-center right-2">
@@ -128,12 +130,9 @@ const MemoLinkAddons = (props: Props) => {
         ))}
       </div>
 
-  
       <BottomButton
-          buttons={[
-            { text: "Save", onClick: handleSave, type: "button" },
-          ]}
-        />
+        buttons={[{ text: "Save", onClick: handleSave, type: "button" }]}
+      />
     </>
   );
 };

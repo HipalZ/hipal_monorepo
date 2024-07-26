@@ -125,7 +125,8 @@ const MemoDishForm = () => {
   }, []);
 
   const goToNextStep = useCallback(() => {
-    validateDish(dishName, dishPrice, dishTypes);
+    const value = validateDish(dishName, dishPrice, dishTypes);
+    if (!value) return;
     setDishStep(DishSteps.DISH_STEP_2);
   }, [dishStep]);
 
@@ -185,9 +186,12 @@ const MemoDishForm = () => {
       queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
       return toast.success(data?.message);
     }
-    if (!data?.success) {
-      setIsLoading(false);
+    setIsLoading(false);
+    if (dishResponse?.status === 400 && Array.isArray(data?.error?.issues)) {
       errorToasts(data?.error);
+    }
+    if (dishResponse?.status === 400 || data?.message) {
+      toast.error(data?.message);
     }
   };
 
@@ -198,17 +202,22 @@ const MemoDishForm = () => {
           Dish Name*
         </label>
         <Background>
-          <input
-            type="text"
-            id="name"
-            placeholder="Enter Dish Name"
-            value={dishName}
-            maxLength={30}
-            minLength={3}
-            required
-            onChange={(e) => setDishName(e.target.value)}
-            className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              id="name"
+              placeholder="Enter Dish Name"
+              value={dishName}
+              maxLength={30}
+              minLength={3}
+              required
+              onChange={(e) => setDishName(e.target.value)}
+              className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+            />
+            <small className="absolute bottom-2 right-4">
+              {dishName?.length}/{30}
+            </small>
+          </div>
         </Background>
       </article>
       <article className="mx-6 lg:mx-16 lg:mt-6">
@@ -247,7 +256,7 @@ const MemoDishForm = () => {
             <small className="absolute ml-2 text-lg bottom-5 left-4">₹</small>
             <input
               minLength={1}
-              maxLength={6}
+              maxLength={7}
               onChange={handleDishPrice}
               onFocus={handleFocus}
               onBlur={handleBlur}
@@ -257,6 +266,9 @@ const MemoDishForm = () => {
               required
               className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
             />
+            <small className="absolute bottom-2 right-4">
+              {dishPrice?.toString()?.length}/{7}
+            </small>
           </div>
           <section>
             <Background>

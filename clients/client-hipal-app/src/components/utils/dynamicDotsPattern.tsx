@@ -1,13 +1,15 @@
 import { memo } from "react";
 
-const MemoDotsPattern = ({ color }) => (
+const MemoDotsPattern = ({ color }: { color: string }) => (
   <svg
     width="46"
     height="46"
     viewBox="0 0 46 46"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    aria-labelledby="dotsPatternTitle"
   >
+    <title id="dotsPatternTitle">Dots Pattern</title>
     <path
       d="M2.649 5.298C4.112 5.298 5.298 4.112 5.298 2.649C5.298 1.186 4.112 0 2.649 0C1.186 0 0 1.186 0 2.649C0 4.112 1.186 5.298 2.649 5.298Z"
       fill={color}

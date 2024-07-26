@@ -1,11 +1,11 @@
-import PlusButton from "@/components/atom/plusButton";
-import SubHeader from "@/components/atom/subHeader";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { BasicInfo } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
-import { memo, useEffect, useState, type ChangeEvent } from "react";
+import { lazy, memo, useEffect, useState, type ChangeEvent } from "react";
 
+const PlusButton = lazy(() => import("@/components/atom/plusButton"));
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 export interface IProps {
   img: { banner: string; logo: string; footer: string };
   handleImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -102,11 +102,11 @@ const MemoExplorePageSection = (props: IProps) => {
           </article>
           <div className="relative">
             <input
-              placeholder="Business Name"
+              placeholder={businessData?.name}
               type="text"
               minLength={4}
               maxLength={30}
-              value={bizInfo?.name || businessData?.name}
+              value={bizInfo?.name}
               className="w-full p-2 pr-14 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               onChange={handleBizName}
             />

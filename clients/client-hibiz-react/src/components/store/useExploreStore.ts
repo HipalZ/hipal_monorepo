@@ -23,28 +23,25 @@ interface IExploreStore {
   bannerObj: IBanner;
   setBannerObj: (banner: IBanner) => void;
 
-  img: {
-    banner: string | undefined;
-    logo: string | undefined;
-    footer: string | undefined;
-  };
-  setImg: (img: {
-    banner: string | undefined;
-    logo: string | undefined;
-    footer: string | undefined;
-  }) => void;
+  imageFiles: ImageFiles;
+  setImageFiles: SetImageFilesFunction;
 
-  imageFiles: {
-    banner: File | null;
-    logo: File | null;
-    footer: File | null;
-  };
-  setImageFiles: (files: {
-    banner: File | null;
-    logo: File | null;
-    footer: File | null;
-  }) => void;
+  img: ImagePreviews;
+  setImg: SetImagePreviewsFunction;
 }
+
+export type ImagePreviews = {
+  banner: string | ArrayBuffer | null;
+  logo: string | ArrayBuffer | null;
+  footer: string | ArrayBuffer | null;
+};
+
+export type SetImageFilesFunction = (
+  update: (prev: ImageFiles) => ImageFiles,
+) => void;
+export type SetImagePreviewsFunction = (
+  update: (prev: ImagePreviews) => ImagePreviews,
+) => void;
 
 export const useExploreStore = create(
   persist<IExploreStore>(
@@ -110,17 +107,18 @@ export const useExploreStore = create(
       clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
 
       img: {
-        banner: "",
-        logo: "",
-        footer: "",
-      },
-      setImg: (img) => set({ img }),
-      imageFiles: { banner: null, logo: null, footer: null } as ImageFiles,
-      setImageFiles: (files: ImageFiles | ((prev: ImageFiles) => ImageFiles)) =>
+        banner: null,
+        logo: null,
+        footer: null,
+      } as ImagePreviews,
+      setImg: (
+        previews: ImagePreviews | ((prev: ImagePreviews) => ImagePreviews),
+      ) =>
         set((state) => ({
-          imageFiles:
-            typeof files === "function" ? files(state.imageFiles) : files,
+          img: typeof previews === "function" ? previews(state.img) : previews,
         })),
+      imageFiles: { banner: null, logo: null, footer: null } as ImageFiles,
+      setImageFiles: (files) => set({ imageFiles: files }),
     }),
     {
       name: "explore-store",

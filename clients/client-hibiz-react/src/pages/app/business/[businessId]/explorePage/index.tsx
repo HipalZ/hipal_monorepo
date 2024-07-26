@@ -175,20 +175,23 @@ const MemoExplorePage = () => {
     });
   };
 
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const type = event?.target?.dataset?.type;
-    const file = event?.target?.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setCropping({ image: reader.result, type });
-        setShowCropper(true);
-      };
-
-      setImageFiles((prev) => ({ ...prev, [type]: file }));
-    }
-  };
+  const handleImageChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const type = event?.target?.dataset?.type;
+      console.log("type", type);
+      const file = event?.target?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          setCropping({ image: reader.result, type });
+          setShowCropper(true);
+        };
+        setImageFiles((prev) => ({ ...prev, [type]: file }));
+      }
+    },
+    [],
+  );
 
   const handleCrop = async () => {
     const { image, type } = cropping;
@@ -245,12 +248,12 @@ const MemoExplorePage = () => {
     setBizInfo({ ...bizInfo, fssai: e.target.value });
   };
 
-  const handlegst = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlegst = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.value.length >= 26)
       return toast.error("GST number should be less than 26 characters");
     setBizInfo({ ...bizInfo, gst: e.target.value });
-  };
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+  }, []);
+  const handleSearch = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const search = e.target.value;
     setSearchQuery(search);
     const filteredDishes = dishes.filter((dish) =>
@@ -260,7 +263,7 @@ const MemoExplorePage = () => {
     if (search.trim() === "") {
       setDishes(originalDishes);
     }
-  };
+  }, []);
 
   const handleBizName = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -385,7 +388,6 @@ const MemoExplorePage = () => {
         },
       });
       const outletInfoData = await outletInfo.json();
-      console.log("outletInfo", outletInfoData?.error);
       if (outletInfo.status === 200) {
         toast.success("Data saved successfully");
       } else if (outletInfo.status === 400) {

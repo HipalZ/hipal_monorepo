@@ -30,6 +30,12 @@ interface IBannerStore {
 
   redirectDishes: IDish[];
   setRedirectDishes: (dishes: IDish[]) => void;
+
+  handleBannerType: (
+    id: string,
+    isButton: boolean,
+    isPatternExists: boolean,
+  ) => void;
 }
 
 export const useBannerStore = create(
@@ -66,6 +72,20 @@ export const useBannerStore = create(
 
       redirectDishes: [],
       setRedirectDishes: (dishes) => set(() => ({ redirectDishes: dishes })),
+
+      handleBannerType: (
+        id: string,
+        isButton: boolean,
+        isPatternExists: boolean,
+      ) => {
+        set(() => ({
+          isButtonExists: isButton,
+          isPatternExists: isPatternExists,
+          selectedBannerType: id,
+          bannerPage: BannerPage.CREATE,
+          isLoading: false,
+        }));
+      },
     }),
     {
       name: "banner-store",

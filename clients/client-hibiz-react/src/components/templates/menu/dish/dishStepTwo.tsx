@@ -133,10 +133,13 @@ const MemoDishFormTwo = () => {
       queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
       return toast.success(data?.message);
     }
-    if (!data?.success) {
+    setIsLoading(false);
+    if (dishResponse?.status === 400 && Array.isArray(data?.error?.issues)) {
       errorToasts(data?.error);
     }
-    setIsLoading(false);
+    if (dishResponse?.status === 400 || data?.message) {
+      toast.error(data?.message);
+    }
   };
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {

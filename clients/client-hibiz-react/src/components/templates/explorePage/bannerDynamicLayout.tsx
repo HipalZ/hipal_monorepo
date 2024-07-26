@@ -47,8 +47,14 @@ const MemoBannerDynamicLayout = (props: Props) => {
     color: buttonStyle?.buttonColor || "white",
   };
 
+  const buttonOutlineStyleTags = {
+    backgroundColor: "transparent",
+    color: buttonStyle?.color || "white",
+    border: `1px solid ${buttonStyle?.color || "white"}`,
+  };
+
   const buttonClassNames =
-    "flex items-center px-1 mb-1 text-[0.7rem] text-white rounded-full space-x-0.5 scale-75 -mr-1";
+    "flex items-center px-2 py-1 text-[0.7rem] text-white rounded-full space-x-0.5 scale-75 -mr-1";
 
   return (
     <>
@@ -177,7 +183,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     selectedColor?.bgColor ? selectedColor?.bgColor : "black"
                   } 90%)`,
                 }}
-                className="absolute bottom-0 w-full p-2 rounded-xl h-[4rem] pb-4"
+                className="absolute bottom-0 w-full p-2 rounded-xl h-[5rem] pb-4"
               >
                 <div className="flex justify-between">
                   <h1
@@ -187,7 +193,10 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
-                    <div style={buttonStyleTags} className={buttonClassNames}>
+                    <div
+                      style={buttonOutlineStyleTags}
+                      className={buttonClassNames}
+                    >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.8rem]">
                         <LuArrowUpRight />
@@ -197,7 +206,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 </div>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
@@ -255,7 +264,10 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     : layout?.paragraph}
                 </p>
                 {layout?.isButton && (
-                  <div style={buttonStyleTags} className={buttonClassNames}>
+                  <div
+                    style={buttonOutlineStyleTags}
+                    className={buttonClassNames}
+                  >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.8rem]">
                       <LuArrowUpRight />
@@ -308,7 +320,10 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     : layout?.paragraph}
                 </p>
                 {layout?.isButton && (
-                  <div style={buttonStyleTags} className={buttonClassNames}>
+                  <div
+                    style={buttonOutlineStyleTags}
+                    className={`${buttonClassNames} -ml-2`}
+                  >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.8rem]">
                       <LuArrowUpRight />

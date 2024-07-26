@@ -78,7 +78,7 @@ const MemoEditDish = () => {
         setDishStep(DishSteps.DISH_STEP_1);
         break;
       case DishSteps.LINK_ADDON_STEP:
-        setDishStep(DishSteps.DISH_STEP_2);
+        setDishStep(DishSteps.DISH_STEP_1);
         break;
       case DishSteps.LINK_RECOMMENDATION_STEP:
         setDishStep(DishSteps.DISH_STEP_2);

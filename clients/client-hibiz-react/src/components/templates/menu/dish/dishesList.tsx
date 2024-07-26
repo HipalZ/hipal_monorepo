@@ -88,7 +88,14 @@ const MemoListOfDishes = () => {
               key={dish.name}
               className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
             >
-              <h3 className="mb-2 text-lg font-semibold">{dish.name}</h3>
+              <h3
+                title={dish.name}
+                className="mb-2 text-lg font-semibold truncate"
+              >
+                {dish.name.length > 28
+                  ? `${dish.name.slice(0, 28)}...`
+                  : dish.name}
+              </h3>
               <div className="flex items-center mb-2 text-gray-500">
                 {dish.visibility ? (
                   <FaEye className="text-green-500" />

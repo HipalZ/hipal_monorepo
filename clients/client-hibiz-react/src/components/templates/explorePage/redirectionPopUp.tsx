@@ -173,11 +173,13 @@ const MemoRedirectionPopUp = (props: IProps) => {
                 />
               )}
             </div>
-            <figure>
-              <IoIosSearch size={20} onClick={toggleSearch} />
-            </figure>
+            {selectedLink !== RedirectionType.LINK && (
+              <figure>
+                <IoIosSearch size={20} onClick={toggleSearch} />
+              </figure>
+            )}
           </div>
-          <article className="mt-6">
+          <article>
             {selectedLink === RedirectionType.CATEGORIES &&
               filteredCategories.map((cat) => (
                 <section
@@ -229,11 +231,9 @@ const MemoRedirectionPopUp = (props: IProps) => {
               </>
             )}
           </article>
-          <BottomButton
-          buttons={[
-            { text: "Save", onClick: handleSave, type: "button" },
-          ]}
-        />
+          <button type="button" onClick={handleSave} className="bottom_btn">
+            Save
+          </button>
         </>
       )}
     </section>

@@ -58,12 +58,12 @@ const MemoDishButton = ({ dish, onEdit }: DishButtonProps) => {
             />
           )}
         </figure>
-        <article className="flex flex-col items-start justify-center ">
+        <article className="flex flex-col items-start justify-center w-full">
           <h3
             title={dish?.name}
             className="text-lg font-semibold truncate mb-30"
           >
-            {dish.name}
+            {dish.name.length > 20 ? `${dish.name.slice(0, 20)}...` : dish.name}
           </h3>
           <div className="flex items-center gap-2">
             {images.map((imgSrc) => (

@@ -14,6 +14,7 @@ import {
   filterPayload,
   foodTypes,
   updateImage,
+  validateDish,
 } from "@/components/utils/helper";
 import type { DishType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
@@ -148,6 +149,8 @@ const MemoDishForm = () => {
   }, []);
 
   const goToNextStep = useCallback(() => {
+    const value = validateDish(dishName, dishPrice, dishTypes);
+    if (!value) return;
     setDishStep(DishSteps.DISH_STEP_2);
   }, [dishStep]);
 
@@ -212,10 +215,13 @@ const MemoDishForm = () => {
       toast.success(data?.message);
       return;
     }
-    if (!data?.success) {
+    setIsLoading(false);
+    if (dishResponse?.status === 400 && Array.isArray(data?.error?.issues)) {
       errorToasts(data?.error);
     }
-    setIsLoading(false);
+    if (dishResponse?.status === 400 || data?.message) {
+      toast.error(data?.message);
+    }
   };
 
   const handleVisibility = useCallback(() => {

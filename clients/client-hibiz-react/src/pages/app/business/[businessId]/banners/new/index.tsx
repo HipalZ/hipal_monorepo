@@ -1,15 +1,16 @@
 import { lazy, memo, startTransition, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 import { BannerPage } from "@/components/utils/bannerLayouts";
-import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
 
 // Lazy load components
-const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 const CreateBanner = lazy(
   () => import("@/components/templates/explorePage/createBanner"),
+);
+const MemoizedHeader = lazy(() => import("@/components/molecules/header"));
+const BannerLayouts = lazy(
+  () => import("@/components/templates/explorePage/bannerLayouts"),
 );
 
 const MemoNewBanner = () => {
@@ -31,7 +32,7 @@ const MemoNewBanner = () => {
     <Suspense fallback={<div>Loading ...</div>}>
       {bannerPage === BannerPage.VIEW ? (
         <section className="max-w-[69rem] m-auto">
-          <header className="sticky top-0 z-10 w-full bg-white rounded-t-2xl bg-base-100">
+          <header className="sticky top-0 z-10 bg-white rounded-t-2xl h-[5rem] w-full">
             <MemoizedHeader
               title="Choose Layout"
               onBack={handleBack}
