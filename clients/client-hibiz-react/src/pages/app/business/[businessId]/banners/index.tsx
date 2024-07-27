@@ -234,9 +234,9 @@ const MemoBanners = () => {
         </article>
         &nbsp;
         <section
-          className={`mx-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5 pb-[5rem] ${
-            isArrangeMode ? "pointer-events-auto opacity-100" : ""
-          }`}
+          className={
+            "mx-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-5 pb-[5rem] "
+          }
         >
           {filteredBanners && filteredBanners?.length > 0 ? (
             filteredBanners.map((banner: IBannerPayload, index: number) => (
