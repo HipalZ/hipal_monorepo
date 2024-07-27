@@ -263,14 +263,14 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
           <div className="relative flex-1">
             <textarea
               minLength={30}
-              maxLength={90}
+              maxLength={250}
               value={tempDescription}
               onChange={handleDescriptionChange}
               className="w-full pr-16 resize-none h-28 lg:h-full rounded-2xl"
               placeholder="Add description"
             />
             <small className="absolute bottom-3 right-4">
-              {tempDescription?.length}/{90}
+              {tempDescription?.length}/{250}
             </small>
           </div>
           &nbsp;
