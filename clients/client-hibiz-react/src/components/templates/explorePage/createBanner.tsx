@@ -220,7 +220,7 @@ const MemoCreateBanner = () => {
     setItemName(itemName);
   };
 
-  const handleCreateBanner = async () => {
+  const handleCreateBanner = async (isPublish?: boolean) => {
     if (!businessId) return;
     if (heading.length === 0) {
       return toast.error("Heading and Description are required");
@@ -238,7 +238,7 @@ const MemoCreateBanner = () => {
     }
     const payload: IBannerPayload = {
       businessId,
-      isPublished,
+      isPublished: isPublish ?? isPublished,
       layout: selectedBannerType,
       bannerImage,
       heading,
@@ -569,7 +569,13 @@ const MemoCreateBanner = () => {
             type="submit"
             className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
             disabled={isLoading}
-            onClick={() => setIsPublished(!isPublished)}
+            onClick={() => {
+              setIsPublished((prevIsPublished) => {
+                const newIsPublished = !prevIsPublished;
+                handleCreateBanner(newIsPublished);
+                return newIsPublished;
+              });
+            }}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
@@ -593,8 +599,6 @@ const MemoCreateBanner = () => {
                 <SectionLoader />
                 Loading...
               </div>
-            ) : isPublished ? (
-              "Click Save to Continue"
             ) : (
               "Save"
             )}
