@@ -152,7 +152,7 @@ const MemoDishForm = () => {
     const value = validateDish(dishName, dishPrice, dishTypes);
     if (!value) return;
     setDishStep(DishSteps.DISH_STEP_2);
-  }, [dishStep]);
+  }, [dishStep, dishName, dishPrice, dishTypes]);
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

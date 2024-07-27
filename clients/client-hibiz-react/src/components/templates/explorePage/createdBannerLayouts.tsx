@@ -42,7 +42,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
 
   const buttonStyleTags = {
     backgroundColor: buttonStyle?.color || "red",
-    color: buttonStyle?.buttonColor || "white",
+    color: buttonStyle?.buttonColor || "black",
   };
 
   const location = useLocation();
@@ -56,32 +56,38 @@ const MemoCreatedBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <div
-            className="flex flex-col shrink-0"
+            className="flex flex-col h-[12rem] shrink-0 relative"
             key={layout?._id}
             onClick={() => handleEditBanner(banner || {})}
           >
-            <article key={layout?._id} className="max-h-[13rem]">
+            <article key={layout?._id} className="max-h-[12rem]">
               <figure className="w-full rounded-2xl">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-t-xl w-[12rem] h-[8.5rem] bg-cover"
+                  className="rounded-2xl w-[12rem] bg-cover"
                 />
               </figure>
               <article
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
                 }}
-                className="w-full max-w-[12rem] p-2 rounded-b-xl h-[3.5rem] shadow-2xl"
+                className="absolute bottom-0 z-10 w-full max-w-[12rem] p-2 rounded-b-xl"
               >
                 <div className="flex justify-between">
-                  <h1 style={paragraphStyle} className="text-[0.7rem]">
+                  <h1
+                    style={paragraphStyle}
+                    className={cn(
+                      "text-[1rem] leading-5",
+                      layout?.isButton ? "w-[70%]" : "w-[100%]",
+                    )}
+                  >
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div
                       style={buttonStyleTags}
-                      className="flex items-center px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                      className="flex items-center px-1 py-0.5 text-[0.6rem] rounded-full space-x-0.5 scale-75 -mr-1"
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
@@ -148,7 +154,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </div>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
@@ -186,7 +192,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                     selectedColor?.bgColor ? selectedColor?.bgColor : "black"
                   } 90%)`,
                 }}
-                className="absolute bottom-0 w-full p-2 rounded-xl h-[5rem]"
+                className="absolute bottom-0 w-full p-2 rounded-xl"
               >
                 <div className="flex justify-between">
                   <h1
@@ -209,7 +215,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 </div>
                 <p
                   style={{
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",

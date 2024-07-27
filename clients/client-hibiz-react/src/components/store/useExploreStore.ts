@@ -118,7 +118,10 @@ export const useExploreStore = create(
           img: typeof previews === "function" ? previews(state.img) : previews,
         })),
       imageFiles: { banner: null, logo: null, footer: null } as ImageFiles,
-      setImageFiles: (files) => set({ imageFiles: files }),
+      setImageFiles: (files: Partial<ImageFiles>) =>
+        set((state) => ({
+          imageFiles: { ...state.imageFiles, ...files },
+        })),
     }),
     {
       name: "explore-store",

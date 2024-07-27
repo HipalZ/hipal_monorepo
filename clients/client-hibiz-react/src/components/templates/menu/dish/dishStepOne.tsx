@@ -126,9 +126,10 @@ const MemoDishForm = () => {
 
   const goToNextStep = useCallback(() => {
     const value = validateDish(dishName, dishPrice, dishTypes);
+    console.log("value", value);
     if (!value) return;
     setDishStep(DishSteps.DISH_STEP_2);
-  }, [dishStep]);
+  }, [dishStep, dishName, dishPrice, dishTypes]);
 
   const handleSubmitDish = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

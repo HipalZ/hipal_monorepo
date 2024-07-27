@@ -164,6 +164,8 @@ export const compressImage = (file, callback) => {
               type: MIME_TYPE,
               lastModified: Date.now(),
             });
+            console.log("Original File:", file);
+            console.log("Compressed File:", compressedFile);
             callback(compressedFile);
           }
         },
@@ -255,6 +257,9 @@ export const validateDish = (
   dishPrice: number,
   dishTypes: string[],
 ) => {
+  console.log("dishTypes", dishTypes);
+  console.log("dishname", dishName);
+  console.log("dishPrice", dishPrice);
   if (dishName.length === 0) {
     toast.error("Please enter dish name");
     return false;

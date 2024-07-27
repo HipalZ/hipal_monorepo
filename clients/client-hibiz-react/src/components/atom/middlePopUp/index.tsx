@@ -4,7 +4,7 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { Fragment, memo, useEffect } from "react";
+import { Fragment, memo } from "react";
 import { HiX } from "react-icons/hi";
 
 function MemoMiddlePopUp({
@@ -28,7 +28,7 @@ function MemoMiddlePopUp({
     <Transition appear show={show} as={Fragment}>
       <Dialog
         as="div"
-        className="fixed inset-0 z-50 overflow-y-auto"
+        className="fixed inset-0 z-50 overflow-y-auto "
         onClose={(e) => closeModalNothing(e)}
       >
         <div className="fixed inset-0 flex items-center justify-center px-6 overflow-hidden bg-black pointer-events-none z-100 bg-opacity-70 backdrop-blur-sm">
@@ -41,7 +41,7 @@ function MemoMiddlePopUp({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <DialogPanel className="bg-base-100 z-100 relative w-full max-w-md rounded-[1.5rem] shadow-md pointer-events-auto">
+            <DialogPanel className="bg-base-100 z-100 relative max-w-md rounded-[1.5rem] shadow-md pointer-events-auto">
               {children}
               {onlyPopUp ? null : (
                 <>

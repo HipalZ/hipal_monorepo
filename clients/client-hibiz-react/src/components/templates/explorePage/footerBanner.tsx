@@ -4,6 +4,7 @@ import SubHeader from "@/components/atom/subHeader";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn } from "@/components/utils/helper";
 import { type ChangeEvent, memo } from "react";
+import { CiEdit } from "react-icons/ci";
 
 interface IFooterBanner {
   img: { logo: string; banner: string; footer: string };
@@ -47,7 +48,16 @@ const MemoFooterBanner = (props: IFooterBanner) => {
           >
             <figure className="w-[320px] h-[320px]">
               {img.footer ? (
-                <img src={img.footer} alt="footer" className="rounded-2xl" />
+                <div className="relative w-[320px] h-[320px]">
+                  <figure className="w-full h-full">
+                    <img
+                      src={img.footer}
+                      alt="Footer"
+                      className="object-cover w-full h-full rounded-2xl"
+                    />
+                  </figure>
+                  <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+                </div>
               ) : (
                 <PlusButton />
               )}

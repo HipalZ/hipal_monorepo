@@ -23,7 +23,11 @@ import type {
   IDish,
 } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
+import {
+  compressImage,
+  filterPayload,
+  storeImageAfterSave,
+} from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { BsInstagram } from "react-icons/bs";
 import { CiFacebook } from "react-icons/ci";
@@ -44,7 +48,7 @@ const FooterBanner = lazy(
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 const ReactCropper = lazy(() => import("@/components/cropper"));
-const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
+const CropperPopup = lazy(() => import("@/components/common/cropperPopup"));
 const UniquelyYoursPopUp = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursPopUp"),
 );
@@ -81,10 +85,10 @@ const MemoExplorePage = () => {
     setSelectedDishes,
     selectedDishes,
     clearOriginalDishes,
-    // img,
-    // setImg,
-    // imageFiles,
-    // setImageFiles,
+    img,
+    setImg,
+    imageFiles,
+    setImageFiles,
   } = useExploreStore((state) => ({
     bizInfo: state.bizInfo,
     setBizInfo: state.setBizInfo,
@@ -96,10 +100,10 @@ const MemoExplorePage = () => {
     setUniquelyDishes: state.setUniquelyDishes,
     clearOriginalDishes: state.clearOriginalDishes,
     setBanners: state.setBanners,
-    // img: state.img,
-    // setImg: state.setImg,
-    // imageFiles: state.imageFiles,
-    // setImageFiles: state.setImageFiles,
+    img: state.img,
+    setImg: state.setImg,
+    imageFiles: state.imageFiles,
+    setImageFiles: state.setImageFiles,
   }));
   const cropperRef = useRef(null);
   const [toggleBizInfo, setToggleBizInfo] = useState(false);
@@ -111,17 +115,6 @@ const MemoExplorePage = () => {
     { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
   ]);
   const [showUniquePopUp, setShowUniquePopUp] = useState(false);
-
-  const [img, setImg] = useState({
-    banner: bizInfo?.specialBannerUrl,
-    logo: bizInfo?.logoUrl,
-    footer: bizInfo?.endBannerUrl,
-  });
-  const [imageFiles, setImageFiles] = useState({
-    banner: null,
-    logo: null,
-    footer: null,
-  });
 
   const [selectedSocialMedia, setSelectedSocialMedia] = useState("");
   const [showCropper, setShowCropper] = useState(false);
@@ -177,20 +170,24 @@ const MemoExplorePage = () => {
 
   const handleImageChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const type = event?.target?.dataset?.type;
-      console.log("type", type);
-      const file = event?.target?.files?.[0];
+      const type = event.target.dataset.type as keyof ImageFiles;
+      console.log("Type:", type);
+      const file = event.target.files?.[0];
       if (file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = () => {
-          setCropping({ image: reader.result, type });
-          setShowCropper(true);
-        };
-        setImageFiles((prev) => ({ ...prev, [type]: file }));
+        console.log("Selected File:", file);
+        compressImage(file, (compressedFile) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(compressedFile);
+          reader.onloadend = () => {
+            console.log("Compressed Image Data URL:", reader.result);
+            setCropping({ image: reader.result, type });
+            setShowCropper(true);
+            setImageFiles({ [type]: compressedFile });
+          };
+        });
       }
     },
-    [],
+    [imageFiles],
   );
 
   const handleCrop = async () => {
@@ -440,7 +437,7 @@ const MemoExplorePage = () => {
         logo: response?.data?.logoUrl,
         footer: response?.data?.endBannerUrl,
       });
-
+      console.log("Response:", response);
       setBizInfo(response?.data as IBizInfo);
       setSocialMediaLinks((prevLinks) =>
         prevLinks.map((link) => {
@@ -516,7 +513,10 @@ const MemoExplorePage = () => {
                 <IoMdArrowUp size={20} className="rotate-45" />
               </article>
             </section>
-            <MiddlePopUp
+            <button type="submit" className="bottom_btn">
+              Save
+            </button>
+            <CropperPopup
               show={showCropper}
               onSave={handleCrop}
               onClose={() => setShowCropper(false)}
@@ -527,10 +527,7 @@ const MemoExplorePage = () => {
                 width={250}
                 height={250}
               />
-            </MiddlePopUp>
-            <button type="submit" className="bottom_btn">
-              Save
-            </button>
+            </CropperPopup>
             {showUniquePopUp && (
               <PopUp
                 show={showUniquePopUp}

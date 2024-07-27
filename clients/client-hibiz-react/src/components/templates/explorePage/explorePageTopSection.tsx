@@ -3,6 +3,7 @@ import { useExploreStore } from "@/components/store/useExploreStore";
 import type { BasicInfo } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
 import { lazy, memo, useEffect, useState, type ChangeEvent } from "react";
+import { CiEdit } from "react-icons/ci";
 
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
@@ -64,9 +65,16 @@ const MemoExplorePageSection = (props: IProps) => {
             className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
           >
             {img.banner ? (
-              <figure className="w-[320px] h-[320px]">
-                <img src={img.banner} alt="Banner" className="rounded-2xl" />
-              </figure>
+              <div className="relative w-[320px] h-[320px]">
+                <figure className="w-full h-full">
+                  <img
+                    src={img.banner}
+                    alt="Banner"
+                    className="object-cover w-full h-full rounded-2xl"
+                  />
+                </figure>
+                <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+              </div>
             ) : (
               <PlusButton />
             )}
@@ -97,7 +105,20 @@ const MemoExplorePageSection = (props: IProps) => {
               htmlFor="logoInput"
               className="flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
             >
-              {img.logo ? <img src={img.logo} alt="Logo" /> : <PlusButton />}
+              {img.logo ? (
+                <div className="relative w-full h-full">
+                  <figure className="w-full h-full">
+                    <img
+                      src={img.logo}
+                      alt="Logo"
+                      className="object-cover w-full h-full rounded-xl"
+                    />
+                  </figure>
+                  <CiEdit className="absolute top-0 right-0 w-6 h-6 p-1 text-black bg-white rounded-full cursor-pointer" />
+                </div>
+              ) : (
+                <PlusButton />
+              )}
             </label>
           </article>
           <div className="relative">
