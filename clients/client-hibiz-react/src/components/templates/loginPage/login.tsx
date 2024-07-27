@@ -5,7 +5,6 @@ import useLoginStore from "@/components/store/useLogin";
 import { useNavigate } from "react-router-dom";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import toast from "react-hot-toast";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
@@ -18,8 +17,7 @@ const Login: React.FC = () => {
     step: state.step,
     setStep: state.setStep,
   }));
-  const { setIsLogin, setUser } = useOwnerLogin((state) => ({
-    setIsLogin: state.setIsLogin,
+  const { setUser } = useOwnerLogin((state) => ({
     setUser: state.setUser,
   }));
   const setAccessToken = useUserToken.getState().setAccessToken;
@@ -76,10 +74,8 @@ const Login: React.FC = () => {
       setRefreshToken(user.data.refreshToken);
       setUser(user.data.user);
       toast.success("Login Successfully");
-      setIsLogin(true);
-      startTransition(() => {
-        navigate(routePaths[PAGE_TYPES.BUSINESS]());
-      });
+
+      window.location.href = "/app/business";
     }
   };
 

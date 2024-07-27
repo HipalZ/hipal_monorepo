@@ -513,6 +513,28 @@ const businessesRouter = new Hono()
     return respond(c, "businesses found", false, 200, existingBusinesses);
   })
   .get(
+    "/:businessId/getOutletsBillingsDate",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const existingBusiness = await OutLetInfo.findOne({
+        businessId: businessId,
+      }).select("billingStartTime");
+
+      return c.json({
+        data: existingBusiness,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  .get(
     "/get/Single/:businessId",
     zValidator("param", paramsSchema),
     async (c) => {

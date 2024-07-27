@@ -53,7 +53,7 @@ console.log("baseUrl", baseUrl);
 
 export const apiRpc = hc<AppType>(baseUrl, {
   headers: {
-    Authorization: `Bearer ${accessToken}`,
-    "x-refresh-token": refreshToken,
+    Authorization: `Bearer ${useUserToken.getState().accessToken}`,
+    "x-refresh-token": useUserToken.getState().refreshToken,
   },
 });
