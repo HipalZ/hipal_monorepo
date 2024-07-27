@@ -1,20 +1,30 @@
-import React, { memo, useMemo } from "react";
-import type { IDish } from "@/components/types/businessData";
+import React, { memo, useCallback, useMemo } from "react";
 import { getPrice } from "@/components/utils/helpers";
-import { useDishStore } from "@/components/store/useDishStore";
+import type { DishType } from "@hi/db-models/src/validators";
+import { useCartStore } from "@/components/store/useCartStore";
 
-// Props now include selectedPortion and onSelectPortion to manage state
-function ChoosePortions({ dishData }: { dishData: IDish }) {
-  const {
-    selectedPortion,
-    setSelectedPortion,
-  } = useDishStore();
+function ChoosePortions({ dishData }: { dishData: DishType }) {
+  const { selectedPortion, setSelectedPortion } = useCartStore((state) => ({
+    selectedPortion: state.selectedPortion,
+    setSelectedPortion: state.setSelectedPortion,
+  }));
 
   const portions = useMemo(() => dishData?.portions || [], [dishData]);
-  console.log(portions, selectedPortion);
+
   if (portions.length === 0) {
     return null;
   }
+
+  const handlePortionSelect = useCallback((portion: {
+    _id: number;
+    name: string;
+    price: number;
+  }) => {
+    setSelectedPortion(portion);
+  },[]);
+
+  console.log("selectedPortion", selectedPortion);
+  
 
   return (
     <div className="mx-6">
@@ -31,7 +41,9 @@ function ChoosePortions({ dishData }: { dishData: IDish }) {
           <tbody>
             {portions.map((portion, index) => (
               <tr
-                className="flex flex-row "
+                className={`flex flex-row ${
+                  selectedPortion?._id === portion._id ? "bg-gray-200" : ""
+                }`}
                 key={`${portion?.name?.replaceAll(" ", "") || ""}${index}`}
               >
                 <td className="!pl-3 !text-xs w-1/3 flex flex-row flex-wrap">
@@ -48,9 +60,13 @@ function ChoosePortions({ dishData }: { dishData: IDish }) {
                   <input
                     type="radio"
                     className="p-1 ml-auto mr-2 radio radio-secondary radio-sm"
-                    checked={selectedPortion === portion.name}
+                    checked={selectedPortion?._id === portion._id}
                     onChange={() =>
-						setSelectedPortion(portion.name, portion.price)
+                      handlePortionSelect({
+                        _id: portion._id,
+                        name: portion.name,
+                        price: portion.price,
+                      })
                     }
                   />
                 </td>

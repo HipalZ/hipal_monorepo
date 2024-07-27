@@ -1,63 +1,36 @@
+import React, { memo, useCallback } from "react";
 import DishTag from "@/components/atoms/dishTag";
-import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
+import FoodType,  from "@/components/atoms/foodType";
 import ReadMore from "@/components/atoms/readMore";
 import { calculateTotalPrice, getPrice } from "@/components/utils/helpers";
 import { isEmpty } from "lodash-es";
-import { memo, useCallback } from "react";
 import { MdOutlineRiceBowl } from "react-icons/md";
 import DishQuantityButton from "../dishQuantityButton";
 import { BsFillCircleFill } from "react-icons/bs";
 import { IoFastFoodSharp } from "react-icons/io5";
-import { useDishStore } from "@/components/store/useDishStore";
-import { useDishCart } from "@/components/store/useDishCart";
+import { useCartStore } from "@/components/store/useCartStore";
 import type { DishType } from "@hi/db-models/src/validators";
 
 function FoodDescription({ dishData }: { dishData: DishType }) {
-  const { selectedExtras, selectedPortion } = useDishStore();
-  const { addToCart } = useDishCart();
-  
-  const watchingDish = useCallback((dish: DishType) => {
-    const totalPrice = calculateTotalPrice(
-      dish,
-      selectedPortion,
-      selectedExtras,
-    );
+  const { selectedPortion, selectedChoices, addToCart } = useCartStore();
 
-    addToCart({
-      dish: dish,
-      quantity: 1,
-      selectedPortion,
-      selectedPortionPrice:
-        dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-      selectedExtras: dish?.extras[0]?.items
-        .filter((extra) => selectedExtras[extra._id] > 0)
-        .map((extra) => ({
-          extraId: extra._id,
-          quantity: selectedExtras[extra._id],
-          name: extra.name,
-          pricePerUnit: extra.price,
-        })),
-      totalPrice,
-      id: "",
-    });
-  }, []);
   const isAvailable = dishData?.availability;
+
   return (
     <div className="flex flex-col !mt-0 space-y-4 no-scrollbar">
       <div className="flex flex-col">
         <div className="flex flex-row flex-wrap flex-1 w-full">
-          {dishData?.dishType.length>0 && (
+          {dishData?.dishTypes.length > 0 && (
             <div className="my-auto">
               <FoodType types={dishData.dishTypes} />
             </div>
           )}
 
-          <DishTag tags={dishData?.tags} />
+          {/* <DishTag tags={dishData?.tags} /> */}
 
           {isAvailable && (
             <div className="my-1 ml-auto shrink-0">
               <DishQuantityButton
-                setSelectedDish={watchingDish}
                 dishData={dishData}
               />
             </div>
@@ -73,7 +46,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             <span className="text-base">{getPrice(dishData?.price || 0)}</span>
           </div>
         </div>
-        {/* Descrption */}
+        {/* Description */}
         {dishData?.description && (
           <div className="text-xs leading-3">
             <ReadMore text={dishData?.description || ""} />
@@ -110,28 +83,28 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
         </div>
       )}
 
-      {!isEmpty(dishData?.extras?.[0]?.items) && (
+      {!isEmpty(dishData?.addOnIds) && (
         <div className="flex flex-col pt-1 space-y-5">
           <div className="flex flex-row gap-4 text-base text-primary">
             <IoFastFoodSharp className="my-auto text-xl" />
             <h4 className="my-auto">Extras available</h4>
           </div>
 
-          {dishData?.extras.map((extra, key) => (
-            <div key={extra.name} className="space-y-3">
+          {dishData?.addOnIds.map((addOn, key) => (
+            <div key={addOn._id} className="space-y-3">
               <h6 className="text-sm ">
-                {key + 1}. {extra?.name}
+                {key + 1}. {addOn?.name}
               </h6>
 
               <ul className="grid justify-start grid-cols-2 px-1 py-2 border rounded-lg flex-col-2 border-base-content/20">
-                {extra?.items.map((item) => (
+                {addOn.choices.map((choice) => (
                   <li
-                    key={item?.name}
+                    key={choice._id}
                     className="flex flex-row gap-2 py-2 text-sm font-normal opacity-60 min-w-fit text-base-content"
                   >
                     <BsFillCircleFill className="inline-flex p-1 my-auto text-xs" />
                     <span className="my-auto text-sm text-start">
-                      {item?.name}
+                      {choice?.name}
                     </span>
                   </li>
                 ))}

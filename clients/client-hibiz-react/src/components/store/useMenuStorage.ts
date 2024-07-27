@@ -67,7 +67,7 @@ export interface Choice {
   description: string;
   visibility: boolean;
   availability: boolean;
-  maxQuantity: number;
+  choiceMaxQuantity: number
   choiceDishType: string[];
 }
 

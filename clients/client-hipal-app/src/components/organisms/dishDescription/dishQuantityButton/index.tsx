@@ -1,194 +1,78 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import type { IDish, IExtraItem } from "@/components/types/businessData";
+import { memo, useCallback } from "react";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import MemoChoosePortions from "@/components/molecules/choosePortions";
 import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
-import { useDishCart } from "@/components/store/useDishCart";
-import { useDishStore } from "@/components/store/useDishStore";
-import { calculateTotalPrice } from "@/components/utils/helpers";
+import type { DishType } from "@hi/db-models/src/validators";
+import { useCartStore } from "@/components/store/useCartStore";
+import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 
-const DishQuantityButton = ({
-  dishData,
-  setSelectedDish,
-}: {
-  dishData: IDish;
-  setSelectedDish: (dish: IDish,portion:string,extra:IExtraItem) => void;
-}) => {
-  const [openModal, setOpenModal] = useState(false);
-  const [showRepeatPopup, setShowRepeatPopup] = useState(false);
-  const { selectedExtras, selectedPortion, resetSelections } = useDishStore();
-  const cartItems = useDishCart((state) => state.cartItems);
-  const addToCart = useDishCart((state) => state.addToCart);
-  const increaseQuantity = useDishCart((state) => state.increaseQuantity);
-  const decreaseQuantity = useDishCart((state) => state.decreaseQuantity);
-  const removeFromCart = useDishCart((state) => state.removeFromCart);
+const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
+  const { openBottomPanel, setOpenBottomPanel, cartPopup, setCartPopup,removeFromCart, selectedDish, setSelectedDish, selectedPortion, selectedChoices, addToCart, cart, updateCartItem } = useCartStore();
 
   const handleOpenModal = useCallback(() => {
-    setOpenModal(true);
-  }, []);
+    setOpenBottomPanel(true);
+  }, [setOpenBottomPanel]);
 
   const closeModal = useCallback(() => {
-    setOpenModal(false);
-  }, []);
+    setOpenBottomPanel(false);
+  }, [setOpenBottomPanel]);
 
-  const saveDish = useCallback((dish: IDish,portion:string,extra:IExtraItem) => {
-    setSelectedDish(dish,portion,extra);
+  const handleClick = useCallback((addDish: DishType) => {
+    setSelectedDish(addDish);
+    if (addDish?.portions?.length > 0 || addDish?.addOnIds?.length > 0) {
+      setCartPopup("BOTTOM_PANEL");
+      handleOpenModal();
+    }
+  }, [setSelectedDish, setCartPopup, handleOpenModal]);
+
+  const handleAddToCart = useCallback(() => {
+    console.log("selectedDish", selectedDish);
+    const item = {
+      id: selectedDish._id,
+      dish: selectedDish,
+      portion: selectedPortion,
+      extras: selectedChoices,
+      quantity: 1,
+    };
+    console.log("item", item);
+    addToCart(item);
     closeModal();
-  }, []);
+  }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal]);
 
-  const handleClick = useCallback((dish: IDish) => {
-    if (dish?.portions?.length > 0 || dish?.extras?.[0]?.items.length > 0) {
-      handleOpenModal();
-      return;
+  const handleIncreaseQuantity = useCallback((item) => {
+    updateCartItem({ ...item, quantity: item.quantity + 1 });
+  }, [updateCartItem]);
+
+  const handleDecreaseQuantity = useCallback((item) => {
+    if (item.quantity > 1) {
+      updateCartItem({ ...item, quantity: item.quantity - 1 });
+    } else {
+      removeFromCart(item.id);
     }
-    const existingCartItem = cartItems.find(
-      (item) => item.dish._id === dish._id,
-    );
-    if (existingCartItem) {
-      setShowRepeatPopup(true);
-      return;
-    }
-    const totalPrice = calculateTotalPrice(
-      dish,
-      selectedPortion,
-      selectedExtras,
-    );
-    addToCart({
-      dish: dish,
-      quantity: 1,
-      selectedPortion,
-      selectedPortionPrice:
-        dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-      selectedExtras: dish?.extras[0]?.items
-        .filter((extra) => selectedExtras[extra._id] > 0)
-        .map((extra) => ({
-          extraId: extra._id,
-          quantity: selectedExtras[extra._id],
-          name: extra.name,
-          pricePerUnit: extra.price,
-        })),
-      totalPrice,
-    });
-    resetSelections();
-  }, [selectedPortion,selectedExtras,cartItems]);
+  }, [updateCartItem, removeFromCart]);
 
-  const handleIncreaseQuantity = useCallback(
-    (dish: IDish) => {
-      const existingCartItem = cartItems.find(
-        (item) => item.dish._id === dish._id,
-      );
-      if (existingCartItem) {
-        setShowRepeatPopup(true);
-        return;
-      }
-      const totalPrice = calculateTotalPrice(
-        dish,
-        selectedPortion,
-        selectedExtras,
-      );
-      addToCart({
-        dish: dish,
-        quantity: 1,
-        selectedPortion,
-        selectedPortionPrice:
-          dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-        selectedExtras: dish?.extras[0]?.items
-          .filter((extra) => selectedExtras[extra._id] > 0)
-          .map((extra) => ({
-            extraId: extra._id,
-            quantity: selectedExtras[extra._id],
-            name: extra.name,
-            pricePerUnit: extra.price,
-          })),
-        totalPrice,
-      });
-      resetSelections();
-    },
-    [cartItems,selectedPortion,selectedExtras],
-  );
+  const cartItem = cart.find(item => item.id === dishData._id);
 
-  const handleDecreaseQuantity = useCallback(
-    (dishId: string) => {
-      const existingCartItem = cartItems.find(
-        (item) => item.dish._id === dishId,
-      );
-      if (existingCartItem && existingCartItem.quantity === 1) {
-        removeFromCart(existingCartItem.id || "");
-        return;
-      }
-      decreaseQuantity(existingCartItem?.id || "");
-    },
-    [cartItems],
-  );
-
-  const handleRepeatLast = useCallback(() => {
-    const existingCartItem = cartItems.reverse().find(
-      (item) => item.dish._id === dishData._id,
-    );
-    if (existingCartItem) {
-      increaseQuantity(existingCartItem.id || "");
-    }
-    setShowRepeatPopup(false);
-  }, [cartItems, dishData._id]);
-
-  const handleAddNew = useCallback((dish: IDish) => {
-    if (dish?.portions?.length > 0 || dish?.extras?.[0]?.items.length > 0) {
-      handleOpenModal();
-      return;
-    }
-    const totalPrice = calculateTotalPrice(
-      dish,
-      selectedPortion,
-      selectedExtras,
-    );
-    addToCart({
-      dish: dish,
-      quantity: 1,
-      selectedPortion,
-      selectedPortionPrice:
-        dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-      selectedExtras: dish?.extras[0]?.items
-        .filter((extra) => selectedExtras[extra._id] > 0)
-        .map((extra) => ({
-          extraId: extra._id,
-          quantity: selectedExtras[extra._id],
-          name: extra.name,
-          pricePerUnit: extra.price,
-        })),
-      totalPrice,
-    });
-    resetSelections();
-    setShowRepeatPopup(false);
-  }, [selectedPortion,selectedExtras,cartItems]);
-
-  const cartItem = useMemo(() => {
-    return cartItems.find((item) => item.dish._id === dishData._id);
-  }, [cartItems, dishData._id]);
-
-  const totalQuantity = useMemo(() => {
-    return cartItems
-      .filter((item) => item.dish._id === dishData._id)
-      .reduce((acc, item) => acc + item.quantity, 0);
-  }, [cartItems, dishData._id]);
+  console.log("cartItem", cart);
 
   return (
     <>
       {cartItem ? (
-        <div className="flex items-center space-x-2 border rounded-full bg-base-100 border-primary">
+        <div className="flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary">
           <button
-            onClick={() => handleDecreaseQuantity(dishData._id)}
             type="button"
-            className="btn-sm text-base-content min-w-[2.241rem] min-h-[2.241rem] !px-2 rounded-full font-medium text-[0.969rem] normal-case"
+            onClick={() => handleDecreaseQuantity(cartItem)}
           >
-            -
+            <HiMinusSm size={16} />
           </button>
-          <span className="text-base-content">{totalQuantity}</span>
+          <span className="w-1/3 px-2 text-xs font-bold text-center">
+            {cartItem.quantity}
+          </span>
           <button
-            onClick={() => handleIncreaseQuantity(dishData)}
             type="button"
-            className="btn-sm text-base-content min-w-[2.241rem] min-h-[2.241rem] !px-2 rounded-full font-medium text-[0.969rem] normal-case"
+            onClick={() => handleIncreaseQuantity(cartItem)}
           >
-            +
+            <HiPlusSm size={16} />
           </button>
         </div>
       ) : (
@@ -201,46 +85,23 @@ const DishQuantityButton = ({
         </button>
       )}
 
-      {openModal && (
-        <MemoBottomPopUp show={openModal} onClose={closeModal}>
-          <div className="relative flex flex-col pb-12 mt-4 overflow-auto">
-            <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200">
-              <MemoChoosePortions dishData={dishData} />
-              <ExtraWithDishWithSelect dishData={dishData} />
+      {openBottomPanel && selectedDish._id === dishData._id && (
+        <MemoBottomPopUp show={openBottomPanel} onClose={closeModal}>
+          {cartPopup === "BOTTOM_PANEL" && (
+            <div className="relative flex flex-col pb-12 mt-4 overflow-auto">
+              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200">
+                <MemoChoosePortions dishData={selectedDish} />
+                <ExtraWithDishWithSelect dishData={selectedDish} />
+              </div>
+              <button
+                className="absolute on_active_bounce z-[101] bottom-4 rounded-full text-base bg-primary w-[92%] mx-4 py-3"
+                type="button"
+                onClick={handleAddToCart}
+              >
+                Add Dish To Cart
+              </button>
             </div>
-            <button
-              className="absolute bottom-4 rounded-full text-base bg-primary w-[92%] mx-4 py-3"
-              type="button"
-              onClick={() => saveDish(dishData,selectedPortion,selectedExtras)}
-            >
-              Add Dish To Cart
-            </button>
-          </div>
-        </MemoBottomPopUp>
-      )}
-
-      {showRepeatPopup && (
-        <MemoBottomPopUp
-          show={showRepeatPopup}
-          onClose={() => setShowRepeatPopup(false)}
-        >
-          <div className="p-4 bg-white rounded-lg shadow-lg">
-            <p className="mb-4 text-lg font-semibold">Add Dish</p>
-            <button
-              type="button"
-              className="w-full px-4 py-2 mb-2 text-white rounded-full bg-primary"
-              onClick={handleRepeatLast}
-            >
-              Repeat Last
-            </button>
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-white rounded-full bg-primary"
-              onClick={() => handleAddNew(dishData)}
-            >
-              Add New
-            </button>
-          </div>
+          )}
         </MemoBottomPopUp>
       )}
     </>
@@ -249,3 +110,23 @@ const DishQuantityButton = ({
 
 const MemoDishQuantityButton = memo(DishQuantityButton);
 export default MemoDishQuantityButton;
+
+
+
+// {cartPopup === "ADD_NEW" && (
+//   <div className="p-4 bg-white rounded-lg shadow-lg">
+//     <p className="mb-4 text-lg font-semibold">Add Dish</p>
+//     <button
+//       type="button"
+//       className="w-full px-4 py-2 mb-2 text-white rounded-full bg-primary"
+//     >
+//       Repeat Last
+//     </button>
+//     <button
+//       type="button"
+//       className="w-full px-4 py-2 text-white rounded-full bg-primary"
+//     >
+//       Add New
+//     </button>
+//   </div>
+// )}

@@ -79,6 +79,8 @@ const CategoryPageBtn = () => {
     setShowCart(!showCart);
   }, [showCart, setShowCart]);
 
+  console.log(cart);
+
   useEffect(() => {
     if (isPayment && isLogin && tableName) {
       openModal();

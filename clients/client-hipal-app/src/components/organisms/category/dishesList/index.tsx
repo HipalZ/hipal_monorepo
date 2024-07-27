@@ -14,48 +14,31 @@ const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory } = props;
   const {
     isActiveDishType,
-    setActiveCategory,
-    setActiveParentCategory,
     isActiveCategory,
     isActiveParentCategory,
   } = useActiveClass((state) => ({
-    setActiveCategory: state.setActiveCategory,
-    setActiveParentCategory: state.setActiveParentCategory,
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
     isActiveParentCategory: state.isActiveParentCategory,
   }));
 
-  console.log("isActiveCategory", isActiveDishType);
 
-  const normalizeType = (type: string): string => {
-    console.log("type", type);
-    switch (type) {
-      case "NON_VEG":
-        return "nonveg";
-      case "VEGAN":
-        return "vegan";
-      case "VEG":
-        return "veg";
-      case "EGG":
-        return "egg";
-      case "ALL":
-        return "all";
-      default:
-        return "all";
-    }
+  const subTypes = useMemo(() => {
+    return childCategory.filter(
+      (category) =>
+        category.hierarchy === "CHILD" &&
+        category.parentCategoryIds.includes(isActiveParentCategory) &&
+        category.dishIds.length > 0,
+    );
+  }, [childCategory, isActiveParentCategory]);
+
+  // Filter dishes within categories based on the active dish type
+  const filterDishes = (dishes, dishType) => {
+    return dishes.filter(
+      (dish) =>
+        dish.visibility && dish.dishTypes.includes(dishType),
+    );
   };
-
-  const subTypes = useMemo(
-    () =>
-      childCategory.filter(
-        (category) =>
-          category.hierarchy === "CHILD" &&
-          category.parentCategoryIds.includes(isActiveParentCategory) &&
-          category.dishIds.length > 0,
-      ),
-    [childCategory, isActiveParentCategory],
-  );
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -67,9 +50,7 @@ const DishesList: FC<IDishesProps> = (props) => {
     };
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isActiveCategory]);
 
   return (
@@ -94,20 +75,21 @@ const DishesList: FC<IDishesProps> = (props) => {
             </h4>
           </div>
           <div className="flex flex-col divide-y divide-base-300">
-            {category?.dishIds
-              ?.filter((dishData: DishType) =>
-                dishData.dishTypes
-                  .map(normalizeType)
-                  .includes(normalizeType(isActiveDishType)),
-              )
-              ?.map(
-                (dishData: DishType, dishIndex) =>
-                  dishData?.visibility && (
-                    <div key={`${dishData?._id?.toString()}${dishIndex}`}>
-                      <HorizontalCard dishData={dishData} />
-                    </div>
+            {isActiveDishType.toLowerCase() === "all"
+              ? category?.dishIds?.map((dishData: DishType, dishIndex) => (
+                  <HorizontalCard
+                    dishData={dishData}
+                    key={`${dishData?._id?.toString()}${dishIndex}`}
+                  />
+                ))
+              : filterDishes(category.dishIds, isActiveDishType).map(
+                  (dishData: DishType, dishIndex) => (
+                    <HorizontalCard
+                      dishData={dishData}
+                      key={`${dishData?._id?.toString()}${dishIndex}`}
+                    />
                   ),
-              )}
+                )}
           </div>
         </section>
       ))}

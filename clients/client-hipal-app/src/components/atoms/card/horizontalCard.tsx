@@ -1,18 +1,15 @@
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import type {  IDish, IExtraItem } from "@/components/types/businessData";
-import { calculateTotalPrice, getPrice } from "@/components/utils/helpers";
+import {  getPrice } from "@/components/utils/helpers";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import { memo, useCallback, useState } from "react";
 import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai";
-import FoodType, { type FOOD_TYPES } from "../foodType";
+import FoodType from "../foodType";
 import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
 import NotAvailable from "../notAvailable";
 import PlaceholderImg from "../placeholder";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
-import { useDishStore } from "@/components/store/useDishStore";
-import { useDishCart } from "@/components/store/useDishCart";
 import type { DishType } from "@hi/db-models/src/validators";
 
 const HorizontalCard = ({
@@ -26,8 +23,6 @@ const HorizontalCard = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState({} as DishType);
-  const { addToCart } = useDishCart();
-  const { selectedExtras, selectedPortion, resetSelections } = useDishStore();
   const showRecommendations = false;
   const openModal = useCallback((dishData: DishType) => {
     console.log("dishData", dishData);
@@ -40,35 +35,6 @@ const HorizontalCard = ({
     setIsModalOpen(false);
   }, [isModalOpen]);
 
-  const watchingDish = useCallback((dish: DishType, portion: string, extra: IExtraItem) => {
-    const totalPrice = calculateTotalPrice(
-      dish,
-      portion,
-      extra,
-    );
-    addToCart({
-      dish: dish,
-      quantity: 1,
-      selectedPortion: portion,
-      selectedPortionPrice:
-        dish?.portions?.find((p) => p.name === selectedPortion)?.price || 0,
-      selectedExtras: Object.keys(extra)
-        .filter((extraId) => extra[extraId] > 0)
-        .map((extraId) => {
-          const extraItem = dish?.extras[0]?.items.find(
-            (extra) => extra._id === extraId,
-          );
-          return {
-            extraId: extraItem?._id,
-            quantity: extra[extraId],
-            name: extraItem?.name,
-            pricePerUnit: extraItem?.price,
-          };
-        }),
-      totalPrice,
-    });
-    resetSelections();
-  }, [selectedExtras, selectedPortion]);
 
   return (
     <section
@@ -77,7 +43,7 @@ const HorizontalCard = ({
   ${dishData.availability ? "mx-6" : "opacity-80 px-6"}
 `}
     >
-      <div className="flex flex-row py-6 space-x-12 prose">
+      <div className="flex flex-row items-center py-4 space-x-12 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && (
@@ -167,11 +133,10 @@ const HorizontalCard = ({
             >
               {dishData.availability && (
                 <div
-                  className={`flex flex-col flex-shrink-0 items-center w-full ${dishData?.images?.length>0 ? "" : "-ml-6"
+                  className={`flex flex-col items-center w-full ${dishData?.images?.length>0 ? "" : "-ml-6"
                     }`}
                 >
                   <DishQuantityButton
-                    setSelectedDish={watchingDish}
                     dishData={dishData}
                   />
                   <span className="text-sm opacity-50">{dishData?.addOnIds?.length > 0  ? 'customizable': null}</span>
@@ -189,9 +154,9 @@ const HorizontalCard = ({
         </div>
       </div>
       <div>
-        {showRecommendations && (
+        {/* {showRecommendations && (
           <MemoRecommendedDishes dishData={dishData} openModal={openModal} />
-        )}
+        )} */}
       </div>
     </section>
   );

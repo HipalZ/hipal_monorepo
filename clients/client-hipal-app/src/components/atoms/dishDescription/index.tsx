@@ -19,7 +19,7 @@ function DishData({
 			<Dialog
 				static
 				as="div"
-				className="fixed inset-0 z-50 overflow-y-auto"
+				className="fixed inset-0 z-[100] overflow-y-auto"
 				onClose={(e) => closeModalNothing(e)}
 			>
 				<div className="fixed inset-0 flex items-end justify-center bg-black backdrop-blur-sm bg-opacity-70">

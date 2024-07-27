@@ -74,13 +74,13 @@ const QuickFilter = () => {
 			<section className="flex space-x-2 text-xs justify-evenly text-nowrap">
 				<FilterOption
 					isActive={isActiveDishType.toLowerCase() === "veg"}
-					onClick={() => handleFilter("veg")}
+					onClick={() => handleFilter("VEG")}
 					color="#55CB1E"
 					label="Veg"
 				/>
 				<FilterOption
-					isActive={isActiveDishType.toLowerCase() === "nonveg"}
-					onClick={() => handleFilter("nonveg")}
+					isActive={isActiveDishType.toLowerCase() === "non_veg"}
+					onClick={() => handleFilter("NON_VEG")}
 					color="#FF6363"
 					label="Non Veg"
 				/>
@@ -98,19 +98,19 @@ const QuickFilter = () => {
 						<div className="mx-[1rem]  font-medium space-y-4">
 							<FilterOption
 								isActive={isActiveDishType.toLowerCase() === "vegan"}
-								onClick={() => handleFilter("vegan")}
+								onClick={() => handleFilter("VEGAN")}
 								color="#02614b"
 								label="Vegan"
 							/>
 							<FilterOption
 								isActive={isActiveDishType.toLowerCase() === "egg"}
-								onClick={() => handleFilter("egg")}
+								onClick={() => handleFilter("EGG")}
 								color="#D2C903"
 								label="Egg"
 							/>
 							<FilterOption
 								isActive={isActiveDishType === "all"}
-								onClick={() => handleFilter("all")}
+								onClick={() => handleFilter("ALL")}
 								color="transparent"
 								label="None"
 								isNone

@@ -11,8 +11,6 @@ function DishesTypes({
 	childCategory: CategoryType[],
 }) {
 
-	console.log("this is inside DishesTypes", parentCategory, childCategory);
-	
 	return (
 		<section className="sticky z-50 -top-1">
 			<MainTypes parentCategory={parentCategory}/>

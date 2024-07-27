@@ -90,7 +90,7 @@ const MemoCreateChoice = () => {
       description: "",
       visibility: true,
       availability: true,
-      maxQuantity: maxChoices,
+      choiceMaxQuantity: maxChoices,
       choiceDishType: dishTypes,
     };
 

@@ -1,41 +1,41 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { IDish, IExtraItem } from "../types/businessData";
+import type { DishType } from "@hi/db-models/src/validators";
 
-// Define the store's state structure
 interface DishState {
-  dishes: IDish;
+  dishes: DishType;
   selectedPortion: string | null;
-  selectedExtras: IExtraItem;
+  selectedAddOns: { [addOnId: string]: number };
 
-  addDish: (dishData: IDish) => void;
-  setSelectedPortion: (portion: string, price: number) => void;
-  setSelectedExtras: (extras: IExtraItem) => void;
+  addDish: (dishData: DishType) => void;
+  setSelectedPortion: (portion: string) => void;
+  setSelectedAddOns: (addOnId: string, quantity: number) => void;
   resetSelections: () => void;
 }
 
 export const useDishStore = create(
   persist<DishState>(
     (set) => ({
-      dishes: {} as IDish,
+      dishes: {} as DishType,
       selectedPortion: null,
-      selectedExtras: {} as IExtraItem,
-      setSelectedExtras(extras) {
-        set({ selectedExtras: extras });
+      selectedAddOns: {},
+      setSelectedAddOns: (addOnId, quantity) => {
+        set((state) => ({
+          selectedAddOns: {
+            ...state.selectedAddOns,
+            [addOnId]: quantity
+          }
+        }));
       },
-      setSelectedPortion(portion) {
+      setSelectedPortion: (portion) => {
         set({ selectedPortion: portion });
       },
-      addDish: (dishData: IDish) =>
-        set((state) => ({
-          dishes: dishData,
-        })),
-      resetSelections: () =>
-        set({
-          dishes: {} as IDish,
-          selectedPortion: null,
-          selectedExtras: {} as IExtraItem,
-        }),
+      addDish: (dishData) => {
+        set({ dishes: dishData });
+      },
+      resetSelections: () => {
+        set({ dishes: {} as DishType, selectedPortion: null, selectedAddOns: {} });
+      },
     }),
     {
       name: "dish-storage",

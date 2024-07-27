@@ -11,13 +11,9 @@ function MainTypes(props: IMainTypes) {
   const { parentCategory } = props;
   const mainTypes = useMemo(
     () =>
-      parentCategory.filter(
-        (category) =>
-          category.subCategoryIds.length > 0  ),
+      parentCategory.filter((category) => category.subCategoryIds.length > 0),
     [parentCategory],
   );
-
-  console.log("mainTypes", mainTypes);
 
   const {
     isActiveParentCategory,
@@ -41,7 +37,6 @@ function MainTypes(props: IMainTypes) {
   const setMainCategory = (category: CategoryType) => {
     setActiveParentCategory(category._id?.toString() ?? "");
     setActiveParentCategoryName(category.name ?? "");
-    console.log("category", category);
   };
 
   return mainTypes.length > 0 ? (
@@ -50,7 +45,6 @@ function MainTypes(props: IMainTypes) {
         {mainTypes
           .filter((item) => item?.visibility)
           .map((item: CategoryType, index: number) => {
-            console.log(isActiveParentCategory === item._id?.toString());
             return (
               <section className={cn("flex items-center")} key={item?.name}>
                 <SplideSlideWrapper>
