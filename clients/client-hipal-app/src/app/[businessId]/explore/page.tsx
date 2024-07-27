@@ -93,6 +93,7 @@ export default async function Explore({
                       return (
                         <BannerLayouts
                           redirectionId={banner?.redirectionId || ""}
+                          redirectionName={banner?.redirectionName || ""}
                           key={`banner?._id+${index.toString()}`}
                           selectedLayout={banner?.layout || ""}
                           heading={banner?.heading || ""}

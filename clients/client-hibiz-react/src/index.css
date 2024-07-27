@@ -773,6 +773,15 @@ input[type="color" i] {
   }
 }
 
+@keyframes shine {
+  0% {
+    left: -75%;
+  }
+  100% {
+    left: 125%;
+  }
+}
+
 .shine {
   position: absolute;
   top: 0;
@@ -781,7 +790,7 @@ input[type="color" i] {
   height: 100%;
   background: rgba(255, 255, 255, 0.3);
   transform: skewX(-25deg);
-  transition: all 0.5s;
+  animation: shine 2s infinite;
 }
 
 button:hover .shine {

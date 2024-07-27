@@ -26,10 +26,12 @@ interface Props {
   paragraphStyle?: CSSProperties;
   buttonStyle?: { color: string; buttonColor?: string };
   selectedLayout?: string;
+  redirectionName?: string;
 }
 const MemoBannersLayout = (props: Props) => {
   const {
     redirectionId,
+    redirectionName,
     heading,
     paragraph,
     callToAction,
@@ -42,15 +44,22 @@ const MemoBannersLayout = (props: Props) => {
 
   const buttonStyleTags = {
     backgroundColor: buttonStyle?.color || "red",
-    color: buttonStyle?.buttonColor || "white",
+    color: buttonStyle?.buttonColor || "black",
   };
   const defaultButtonStyle =
-    "px-2 h-8 flex items-center text-[0.8rem] text-white rounded-full space-x-0.5 -mr-1";
+    "px-2 h-6 flex items-center text-[0.8rem] text-white rounded-full space-x-0.5 -mr-1";
 
   const router = useRouter();
   const customLink = useParams()?.businessId;
-  const handleNavigation = (id: string) => {
-    console.log("id", id);
+  const handleNavigation = (id: string, redirectionName: string) => {
+    if (redirectionName === "EXTERNAL") {
+      let url = id;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = `https://${url}`;
+      }
+      window.open(url, "_blank");
+      return;
+    }
     router.push(`/${customLink}/category#${id}`);
   };
 
@@ -62,7 +71,7 @@ const MemoBannersLayout = (props: Props) => {
           <div
             className="flex flex-col shrink-0 h-[20rem] aspect-square"
             key={layout?._id}
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
           >
             <article key={layout?._id} className="max-h-[20rem]">
               <figure className="w-full rounded-2xl">
@@ -98,7 +107,7 @@ const MemoBannersLayout = (props: Props) => {
                         "absolute right-4 bottom-8",
                       )}
                     >
-                      <button type="button">{callToAction || "Explore"}</button>{" "}
+                      <button type="button">{callToAction || "Explore"}</button>
                       <span className="text-[0.8rem]">
                         <LuArrowUpRight />
                       </span>
@@ -128,7 +137,7 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -190,7 +199,7 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -257,7 +266,7 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -316,7 +325,7 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -381,7 +390,7 @@ const MemoBannersLayout = (props: Props) => {
         const patternColor = "#00000050";
         return (
           <section
-            onClick={() => handleNavigation(redirectionId)}
+            onClick={() => handleNavigation(redirectionId, redirectionName)}
             key={layout?._id}
             className="w-[20rem] h-[20rem] shrink-0"
           >
