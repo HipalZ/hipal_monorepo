@@ -318,16 +318,25 @@ const MemoExplorePage = () => {
     let bannerExplore: string | undefined;
     let logoExplore: string | undefined;
     let footerExplore: string | undefined;
-    if (imageFiles?.banner !== null) {
+    if (
+      imageFiles?.banner !== null &&
+      !img?.banner?.includes("https://storage.hipal.life")
+    ) {
       bannerExplore = await storeImageAfterSave(
         imageFiles?.banner,
         img?.banner,
       );
     }
-    if (imageFiles?.logo !== null) {
+    if (
+      imageFiles?.logo !== null &&
+      !img?.banner?.includes("https://storage.hipal.life")
+    ) {
       logoExplore = await storeImageAfterSave(imageFiles?.logo, img?.logo);
     }
-    if (imageFiles?.footer !== null) {
+    if (
+      imageFiles?.footer !== null &&
+      !img?.banner?.includes("https://storage.hipal.life")
+    ) {
       footerExplore = await storeImageAfterSave(
         imageFiles?.footer,
         img?.footer,

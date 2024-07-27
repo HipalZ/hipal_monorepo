@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
   useRef,
+  useEffect,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
@@ -34,7 +35,7 @@ const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
 
 const MemoBanners = () => {
   const navigate = useNavigate();
-  const banners = useExploreStore((s) => s.banners);
+  const banners = useExploreStore((s) => s.banners) || [];
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
   const { setSelectedBanner, setBannerPage, bannerPage } = useBannerStore(
@@ -95,6 +96,7 @@ const MemoBanners = () => {
   });
 
   const filteredBanners = useMemo(() => {
+    if (!Array.isArray(banners)) return [];
     return banners.filter((banner) => {
       return view === ViewType.BANNERS
         ? banner.isPublished
@@ -132,6 +134,39 @@ const MemoBanners = () => {
     dragItemIndex.current = null;
   };
 
+  const handleArrangeSequence = useCallback(() => {
+    setIsArrangeMode(!isArrangeMode);
+  }, [isArrangeMode]);
+
+  const handleSaveSequence = async () => {
+    const sequence = filteredBanners.map((banner) => banner._id);
+    setIsArrangeMode(false);
+    const response = await apiRpc.settings.banners.sequence.$put({
+      json: {
+        sequenceOfBannerIds: sequence,
+      },
+    });
+    if (response.status === 200) {
+      toast.success("Sequence saved successfully");
+    }
+  };
+
+  useEffect(() => {
+    const touchMoveListener = (e) => {
+      e.preventDefault();
+    };
+
+    if (isArrangeMode) {
+      window.addEventListener("touchmove", touchMoveListener, {
+        passive: false,
+      });
+    }
+
+    return () => {
+      window.removeEventListener("touchmove", touchMoveListener);
+    };
+  }, [isArrangeMode]);
+
   const onTouchStart = (
     banner: IBannerPayload,
     index: number,
@@ -151,23 +186,6 @@ const MemoBanners = () => {
   ) => {
     e.preventDefault();
     onDrop(e as any, droppedBanner);
-  };
-
-  const handleArrangeSequence = useCallback(() => {
-    setIsArrangeMode(!isArrangeMode);
-  }, [isArrangeMode]);
-
-  const handleSaveSequence = async () => {
-    const sequence = filteredBanners.map((banner) => banner._id);
-    setIsArrangeMode(false);
-    const response = await apiRpc.settings.banners.sequence.$put({
-      json: {
-        sequenceOfBannerIds: sequence,
-      },
-    });
-    if (response.status === 200) {
-      toast.success("Sequence saved successfully");
-    }
   };
 
   return (
