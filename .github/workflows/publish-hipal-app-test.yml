@@ -1,53 +1,53 @@
-name: Build and Push hipal test
+# name: Build and Push hipal test
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
+# env:
+#   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_HIPALZ_PROJECT_ID }}
 
-on:
-  push:
-    branches: ['test']
-    paths:
-      - 'package.json'
-      - '*'
+# on:
+#   push:
+#     branches: ['test']
+#     paths:
+#       - 'package.json'
+#       - '*'
 
-jobs:
-  build:
-    name: Build and Test
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     name: Build and Test
+#     runs-on: ubuntu-latest
 
-    # outputs:
-    #   deployment-url: ${{ steps.vercel.outputs.deployment-url }}
+#     # outputs:
+#     #   deployment-url: ${{ steps.vercel.outputs.deployment-url }}
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+#     steps:
+#       - name: Check out code
+#         uses: actions/checkout@v3
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8.4.0
+#       - uses: pnpm/action-setup@v4
+#         with:
+#           version: 8.4.0
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          always-auth: true
-          node-version: 18
+#       - name: Setup Node.js environment
+#         uses: actions/setup-node@v3
+#         with:
+#           always-auth: true
+#           node-version: 18
 
-      - name: Install dependencies
-        run: pnpm install
+#       - name: Install dependencies
+#         run: pnpm install
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel@33.2.0
+#       - name: Install Vercel CLI
+#         run: npm install --global vercel@33.2.0
 
-      - name: Pull Vercel Environment Information
-        # run: vercel pull --cwd clients/client-hipal-app --yes --local-config=./vercel.json --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app --local-config=./vercel.json --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --local-config=./vercel.json --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
-        run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app  --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
-        # run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
-        # run: cd clients/client-hipal-app && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --no-wait
-      # - name: Build Project Artifacts
-      #   run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+#       - name: Pull Vercel Environment Information
+#         # run: vercel pull --cwd clients/client-hipal-app --yes --local-config=./vercel.json --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app --local-config=./vercel.json --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --local-config=./vercel.json --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
+#         run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app  --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
+#         # run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
+#         # run: cd clients/client-hipal-app && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --no-wait
+#       # - name: Build Project Artifacts
+#       #   run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-      # - name: Deploy Project Artifacts to Vercel
-      #   id: vercel
-      #   run: |
-      #     echo "::set-output name=deployment-url::$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)"
+#       # - name: Deploy Project Artifacts to Vercel
+#       #   id: vercel
+#       #   run: |
+#       #     echo "::set-output name=deployment-url::$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} | tail -n 1)"
