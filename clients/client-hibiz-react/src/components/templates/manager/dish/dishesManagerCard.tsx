@@ -46,15 +46,15 @@ const MemoDishButton = ({ dish, onEdit }: DishButtonProps) => {
       type="button"
       className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
     >
-      <article className="flex gap-4">
+      <article className="flex flex-1 gap-4">
         <figure>
           {dish.images && dish.images.length > 0 ? (
-            <img src={dish.images[0]} alt="" className="w-12 aspect-square" />
+            <img src={dish.images[0]} alt="" className="w-12 h-12 rounded-xl" />
           ) : (
             <img
               src={placeholder}
               alt="placeholder"
-              className="w-12 aspect-square"
+              className="w-12 h-12 rounded-xl"
             />
           )}
         </figure>

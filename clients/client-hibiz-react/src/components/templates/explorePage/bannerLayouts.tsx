@@ -25,24 +25,30 @@ const MemoBannerLayouts = () => {
     setOpenFilter(!openFilter);
   }, [openFilter]);
 
-  const toggleFilter = useCallback((filter: string) => {
-    setSelectedFilters((prev) =>
-      prev.includes(filter)
-        ? prev.filter((f) => f !== filter)
-        : [...prev, filter],
-    );
-  }, []);
+  const toggleFilter = useCallback(
+    (filter: string) => {
+      setSelectedFilters((prev) =>
+        prev.includes(filter)
+          ? prev.filter((f) => f !== filter)
+          : [...prev, filter],
+      );
+    },
+    [selectedFilters],
+  );
 
-  const isLayoutVisible = useCallback((layout: any) => {
-    if (selectedFilters.includes("withButton") && !layout.isButton)
-      return false;
-    if (selectedFilters.includes("withoutButton") && layout.isButton)
-      return false;
-    if (selectedFilters.includes("withImage") && !layout.image) return false;
-    if (selectedFilters.includes("withPattern") && !layout.isPattern)
-      return false;
-    return true;
-  }, []);
+  const isLayoutVisible = useCallback(
+    (layout: any) => {
+      if (selectedFilters.includes("withButton") && !layout.isButton)
+        return false;
+      if (selectedFilters.includes("withoutButton") && layout.isButton)
+        return false;
+      if (selectedFilters.includes("withImage") && !layout.image) return false;
+      if (selectedFilters.includes("withPattern") && !layout.isPattern)
+        return false;
+      return true;
+    },
+    [selectedFilters],
+  );
 
   const clearFilters = useCallback(() => {
     setSelectedFilters([]);

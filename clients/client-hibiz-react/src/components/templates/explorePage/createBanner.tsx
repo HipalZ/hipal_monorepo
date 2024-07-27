@@ -124,6 +124,7 @@ const MemoCreateBanner = () => {
       }));
       setItemName(editingBanner?.redirectionName || "");
       setSelectedBannerType(editingBanner?.layout || "");
+      setIsPublished(editingBanner?.isPublished || false);
     }
   }, [editingBanner]);
 
@@ -229,7 +230,10 @@ const MemoCreateBanner = () => {
       return toast.error("Please upload an image");
     }
     let bannerImage: string | undefined;
-    if (imageFiles?.logo) {
+    if (
+      imageFiles?.logo &&
+      !img?.logo?.includes("https://storage.hipal.life")
+    ) {
       bannerImage = await storeImageAfterSave(
         imageFiles?.logo,
         img?.logo,
@@ -252,6 +256,7 @@ const MemoCreateBanner = () => {
       redirectionType,
       redirectionName: itemName,
     };
+    console.log("payload", payload);
     const filteredPayload = Object.fromEntries(
       Object.entries(payload).filter(
         ([_, value]) => value !== null && value !== "",
@@ -589,7 +594,7 @@ const MemoCreateBanner = () => {
             )}
           </button>
           <button
-            onClick={handleCreateBanner}
+            onClick={() => handleCreateBanner(isPublished)}
             type="button"
             disabled={isLoading}
             className="w-full py-3 text-white bg-black rounded-full"

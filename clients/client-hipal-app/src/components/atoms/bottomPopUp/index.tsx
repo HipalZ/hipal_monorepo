@@ -21,7 +21,7 @@ const BottomPopUp = ({
 				className='fixed inset-0 z-[100] overflow-y-auto'
 				onClose={(e) => closeModalNothing(e)}
 			>
-				<div className='fixed inset-0 flex items-end justify-center bg-black backdrop-blur-sm bg-opacity-70'>
+				<div className='fixed inset-0 flex items-end justify-center bg-[#00000040] backdrop-blur-sm bg-opacity-70'>
 					<TransitionChild
 						as={Fragment}
 						enter='transition ease-out duration-200 transform'
