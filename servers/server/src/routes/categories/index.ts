@@ -347,9 +347,11 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
           hierarchy: "PARENT",
-        }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
-        );
+        })
+          .sort({ sequence: 1 })
+          .select(
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
+          );
 
         return respond(
           c,
@@ -367,9 +369,13 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
         }).populate({
           path: "dishIds",
-          populate: {
-            path: "addOnIds recommendationIds",
-          },
+          populate: [
+            { path: "addOnIds" },
+            {
+              path: "recommendationIds",
+              populate: { path: "addOnIds" },
+            },
+          ],
         });
 
         return respond(
@@ -442,6 +448,34 @@ const categoriesRouter = new Hono()
         false,
         200,
         existingCategory,
+      );
+    },
+  )
+  .post(
+    "/:businessId/parentCategorySequence",
+
+    zValidator(
+      "json",
+      z.object({ sequenceOfParentCategoryIds: z.array(z.string()) }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const { sequenceOfParentCategoryIds } = requestData;
+
+      for (let i = 0; i < sequenceOfParentCategoryIds.length; i++) {
+        await Category.updateOne(
+          { _id: sequenceOfParentCategoryIds[i] },
+          { $set: { sequence: i + 1 } },
+        );
+      }
+
+      return respond(
+        c,
+        "Categories sequence updated successfully",
+        false,
+        200,
+        {},
       );
     },
   );
