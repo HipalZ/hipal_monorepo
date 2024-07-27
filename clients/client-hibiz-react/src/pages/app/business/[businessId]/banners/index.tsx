@@ -6,8 +6,6 @@ import {
   useCallback,
   useMemo,
   useState,
-  useRef,
-  useEffect,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
@@ -19,6 +17,7 @@ import { BannerPage } from "@/components/utils/bannerLayouts";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
+import { PiSealWarningFill } from "react-icons/pi";
 
 enum ViewType {
   BANNERS = "Banners",
@@ -48,12 +47,8 @@ const MemoBanners = () => {
 
   const [addSpotlight, setAddSpotlight] = useState(false);
   const [view, setView] = useState(ViewType.BANNERS);
-  const [draggedBanner, setDraggedBanner] = useState<IBannerPayload | null>(
-    null,
-  );
   const [isArrangeMode, setIsArrangeMode] = useState(false);
-  const touchStartY = useRef(0);
-  const dragItemIndex = useRef<number | null>(null);
+  const [firstCardIndex, setFirstCardIndex] = useState<number | null>(null);
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
@@ -80,6 +75,53 @@ const MemoBanners = () => {
     });
   }, [businessId]);
 
+  const filteredBanners = useMemo(() => {
+    if (!Array.isArray(banners)) return [];
+    return banners.filter((banner) => {
+      return view === ViewType.BANNERS
+        ? banner.isPublished
+        : !banner.isPublished;
+    });
+  }, [banners, view]);
+
+  const handleArrangeSequence = useCallback(() => {
+    setIsArrangeMode(!isArrangeMode);
+    setFirstCardIndex(null);
+  }, [isArrangeMode]);
+
+  const handleSaveSequence = async () => {
+    const sequence = filteredBanners.map((banner) => banner._id);
+    setIsArrangeMode(false);
+    setFirstCardIndex(null);
+    const response = await apiRpc.settings.banners.sequence.$put({
+      json: {
+        sequenceOfBannerIds: sequence,
+      },
+    });
+    if (response.status === 200) {
+      toast.success("Sequence saved successfully");
+    }
+  };
+
+  const handleCardClick = useCallback(
+    (index: number) => {
+      if (isArrangeMode) {
+        if (firstCardIndex === null) {
+          setFirstCardIndex(index);
+        } else {
+          const updatedBanners = [...filteredBanners];
+          [updatedBanners[firstCardIndex], updatedBanners[index]] = [
+            updatedBanners[index],
+            updatedBanners[firstCardIndex],
+          ];
+          setBanners(updatedBanners);
+          setFirstCardIndex(null);
+        }
+      }
+    },
+    [banners, isArrangeMode, firstCardIndex],
+  );
+
   useQuery({
     queryKey: ["banners", businessId],
     queryFn: async () => {
@@ -94,99 +136,6 @@ const MemoBanners = () => {
     },
     enabled: !!businessId,
   });
-
-  const filteredBanners = useMemo(() => {
-    if (!Array.isArray(banners)) return [];
-    return banners.filter((banner) => {
-      return view === ViewType.BANNERS
-        ? banner.isPublished
-        : !banner.isPublished;
-    });
-  }, [banners, view]);
-
-  const onDragStart = useCallback((banner: IBannerPayload, index: number) => {
-    setDraggedBanner(banner);
-    dragItemIndex.current = index;
-  }, []);
-
-  const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  }, []);
-
-  const onDrop = (
-    e: React.DragEvent<HTMLDivElement>,
-    droppedBanner: IBannerPayload,
-  ) => {
-    e.preventDefault();
-    if (!draggedBanner || dragItemIndex.current === null) return;
-
-    const draggedBannerIndex = dragItemIndex.current;
-    const droppedBannerIndex = filteredBanners.findIndex(
-      (banner) => banner._id === droppedBanner._id,
-    );
-
-    const updatedBanners = [...filteredBanners];
-    updatedBanners.splice(draggedBannerIndex, 1);
-    updatedBanners.splice(droppedBannerIndex, 0, draggedBanner);
-
-    setBanners(updatedBanners);
-    setDraggedBanner(null);
-    dragItemIndex.current = null;
-  };
-
-  const handleArrangeSequence = useCallback(() => {
-    setIsArrangeMode(!isArrangeMode);
-  }, [isArrangeMode]);
-
-  const handleSaveSequence = async () => {
-    const sequence = filteredBanners.map((banner) => banner._id);
-    setIsArrangeMode(false);
-    const response = await apiRpc.settings.banners.sequence.$put({
-      json: {
-        sequenceOfBannerIds: sequence,
-      },
-    });
-    if (response.status === 200) {
-      toast.success("Sequence saved successfully");
-    }
-  };
-
-  useEffect(() => {
-    const touchMoveListener = (e) => {
-      e.preventDefault();
-    };
-
-    if (isArrangeMode) {
-      window.addEventListener("touchmove", touchMoveListener, {
-        passive: false,
-      });
-    }
-
-    return () => {
-      window.removeEventListener("touchmove", touchMoveListener);
-    };
-  }, [isArrangeMode]);
-
-  const onTouchStart = (
-    banner: IBannerPayload,
-    index: number,
-    e: React.TouchEvent<HTMLDivElement>,
-  ) => {
-    touchStartY.current = e.touches[0].clientY;
-    onDragStart(banner, index);
-  };
-
-  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const onTouchEnd = (
-    e: React.TouchEvent<HTMLDivElement>,
-    droppedBanner: IBannerPayload,
-  ) => {
-    e.preventDefault();
-    onDrop(e as any, droppedBanner);
-  };
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -250,6 +199,13 @@ const MemoBanners = () => {
             </button>
           )}
         </article>
+        {isArrangeMode && (
+          <center className="px-4 text-sm py-2 mt-2 text-[#da0606] bg-[#da060630] flex items-center justify-center">
+            <PiSealWarningFill size={32} className="mr-2" />
+            Click on the first card, then click on the second card to swap their
+            positions.
+          </center>
+        )}
         &nbsp;
         <section
           className={
@@ -260,22 +216,8 @@ const MemoBanners = () => {
             filteredBanners.map((banner: IBannerPayload, index: number) => (
               <div
                 key={`banner?._id+${index.toString()}`}
-                draggable={isArrangeMode}
-                onDragStart={
-                  isArrangeMode ? () => onDragStart(banner, index) : undefined
-                }
-                onDragOver={isArrangeMode ? onDragOver : undefined}
-                onDrop={isArrangeMode ? (e) => onDrop(e, banner) : undefined}
-                onTouchStart={
-                  isArrangeMode
-                    ? (e) => onTouchStart(banner, index, e)
-                    : undefined
-                }
-                onTouchMove={isArrangeMode ? onTouchMove : undefined}
-                onTouchEnd={
-                  isArrangeMode ? (e) => onTouchEnd(e, banner) : undefined
-                }
                 className="relative overflow-hidden"
+                onClick={() => handleCardClick(index)}
               >
                 <CreatedBannersLayouts
                   selectedLayout={banner?.layout || ""}

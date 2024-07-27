@@ -4,7 +4,6 @@ import { memo, useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { combineAllDishes } from "./explorePageStore";
 import { useQuery } from "@tanstack/react-query";
-import BottomButton from "@/components/atom/bottomButton";
 import { IoIosSearch } from "react-icons/io";
 import SubHeader from "@/components/atom/subHeader";
 import { useBannerStore } from "@/components/store/useBannerStore";
@@ -190,6 +189,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                     <input
                       type="radio"
                       name="cat"
+                      checked={selectedId === cat?._id}
                       className="text-2xl text-black"
                       onChange={() => handleItem(cat?._id, cat?.name)}
                     />
@@ -208,6 +208,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                     <input
                       type="radio"
                       name="dish"
+                      checked={selectedId === dish?._id}
                       className="text-2xl text-black"
                       onChange={() => handleItem(dish?._id, dish?.name)}
                     />

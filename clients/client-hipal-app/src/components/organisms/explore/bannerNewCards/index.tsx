@@ -1,3 +1,4 @@
+"use client";
 import { type CSSProperties, memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import pastaDummy from "@/assets/pastaDummy.png";
@@ -13,8 +14,10 @@ import {
   truncateDescription,
 } from "@/components/utils/bannerLayouts";
 import { cn } from "@hi/common";
+import { useParams, useRouter } from "next/navigation";
 
 interface Props {
+  redirectionId?: string;
   heading?: string;
   paragraph?: string;
   callToAction?: string;
@@ -26,6 +29,7 @@ interface Props {
 }
 const MemoBannersLayout = (props: Props) => {
   const {
+    redirectionId,
     heading,
     paragraph,
     callToAction,
@@ -43,6 +47,13 @@ const MemoBannersLayout = (props: Props) => {
   const defaultButtonStyle =
     "px-2 h-8 flex items-center text-[0.8rem] text-white rounded-full space-x-0.5 -mr-1";
 
+  const router = useRouter();
+  const customLink = useParams()?.businessId;
+  const handleNavigation = (id: string) => {
+    console.log("id", id);
+    router.push(`/${customLink}/category#${id}`);
+  };
+
   return (
     <>
       {bannerLayouts.map((layout) => {
@@ -51,6 +62,7 @@ const MemoBannersLayout = (props: Props) => {
           <div
             className="flex flex-col shrink-0 h-[20rem] aspect-square"
             key={layout?._id}
+            onClick={() => handleNavigation(redirectionId)}
           >
             <article key={layout?._id} className="max-h-[20rem]">
               <figure className="w-full rounded-2xl">
@@ -115,7 +127,11 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts2.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0 h-[20rem]">
+          <section
+            onClick={() => handleNavigation(redirectionId)}
+            key={layout?._id}
+            className="shrink-0 h-[20rem]"
+          >
             <article className="relative flex justify-start">
               <figure className="w-full max-h-[20rem] rounded-2xl aspect-square">
                 <Image
@@ -173,7 +189,11 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts3.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0 h-[20rem]">
+          <section
+            onClick={() => handleNavigation(redirectionId)}
+            key={layout?._id}
+            className="shrink-0 h-[20rem]"
+          >
             <article className="relative flex justify-center shrink-0 max-w-[20rem] aspect-square">
               <figure className="w-full max-w-[20rem] rounded-2xl max-h-[14rem]">
                 <Image
@@ -236,7 +256,11 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts4.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0 h-[20rem]">
+          <section
+            onClick={() => handleNavigation(redirectionId)}
+            key={layout?._id}
+            className="shrink-0 h-[20rem]"
+          >
             <article className="relative flex justify-center max-w-[20rem]">
               <figure className="w-full max-w-[20rem] rounded-2xl">
                 <Image
@@ -291,7 +315,11 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts5.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0 h-[20rem]">
+          <section
+            onClick={() => handleNavigation(redirectionId)}
+            key={layout?._id}
+            className="shrink-0 h-[20rem]"
+          >
             <article className="relative flex justify-center shrink-0 max-w-[20rem]">
               <figure className="w-full max-w-[20rem] rounded-2xl">
                 <Image
@@ -352,7 +380,11 @@ const MemoBannersLayout = (props: Props) => {
           layout?._id === BannerType.BANNER_TYPE_12 ? "#678BFF" : "#E03030";
         const patternColor = "#00000050";
         return (
-          <section key={layout?._id} className="w-[20rem] h-[20rem] shrink-0">
+          <section
+            onClick={() => handleNavigation(redirectionId)}
+            key={layout?._id}
+            className="w-[20rem] h-[20rem] shrink-0"
+          >
             <article
               className="relative h-[20rem] max-w-[20rem] rounded-xl"
               style={{ backgroundColor: selectedColor?.bgColor || color }}

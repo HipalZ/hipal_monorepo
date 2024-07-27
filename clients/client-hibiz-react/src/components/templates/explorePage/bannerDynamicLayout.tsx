@@ -44,13 +44,13 @@ const MemoBannerDynamicLayout = (props: Props) => {
 
   const buttonStyleTags = {
     backgroundColor: buttonStyle?.color || "red",
-    color: buttonStyle?.buttonColor || "white",
+    color: buttonStyle?.buttonColor || "black",
   };
 
   const buttonOutlineStyleTags = {
     backgroundColor: "transparent",
-    color: buttonStyle?.color || "white",
-    border: `1px solid ${buttonStyle?.color || "white"}`,
+    color: buttonStyle?.color || "black",
+    border: `1px solid ${buttonStyle?.color || "black"}`,
   };
 
   const buttonClassNames =

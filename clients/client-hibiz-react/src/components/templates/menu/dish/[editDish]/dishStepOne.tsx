@@ -235,16 +235,6 @@ const MemoDishForm = () => {
 
   return (
     <form onSubmit={handleSubmitDish}>
-      <button
-        type="button"
-        onClick={handleDishPage}
-        className="absolute top-7 right-16"
-      >
-        <MdDelete
-          size={30}
-          className="px-2 py-1 text-red-500 bg-red-100 rounded-lg"
-        />
-      </button>
       {isMenuManager ? <PendingActions /> : null}
       {isMenuManager ? null : (
         <article className="mx-6 lg:mx-16 lg:mt-6">
@@ -409,6 +399,20 @@ const MemoDishForm = () => {
           </Background>
         </section>
       </article>
+      <section className="mx-6 lg:mx-16 lg:mt-6">
+        <label className="font-semibold opacity-50" htmlFor="name">
+          Delete Dish
+        </label>
+        <Background>
+          <button
+            onClick={handleDishPage}
+            type="button"
+            className="bg-[#d32a2a] w-full py-2 rounded-full flex items-center justify-center text-white"
+          >
+            <MdDelete className="mr-2" /> Delete Dish
+          </button>
+        </Background>
+      </section>
       <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
         <button
           type="submit"

@@ -1,9 +1,10 @@
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
+import { memo } from "react";
 
 type Props = {
   handleDelete: () => void;
 };
-const DeleteDish = (props: Props) => {
+const MemoDeleteDish = (props: Props) => {
   const { handleDelete } = props;
   const { setShowDeleteDish, setDishStep } = useMenuPageStore((s) => ({
     setShowDeleteDish: s.setShowDeleteDish,
@@ -14,7 +15,7 @@ const DeleteDish = (props: Props) => {
     setDishStep(DishSteps.DISH_STEP_1);
   };
   return (
-    <center className="mx-6 lg:mx-24 mt-[20dvh]">
+    <section className="mx-6 lg:mx-24 mt-[20dvh] absolute top-0 right-10">
       <h1 className="text-lg font-semibold text-gray-900">
         Are you sure you want to delete this dish?
       </h1>
@@ -37,8 +38,9 @@ const DeleteDish = (props: Props) => {
           Delete
         </button>
       </div>
-    </center>
+    </section>
   );
 };
 
+const DeleteDish = memo(MemoDeleteDish);
 export default DeleteDish;

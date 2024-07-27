@@ -61,7 +61,6 @@ export default async function Explore({
   params,
 }: { params: { businessId: string } }) {
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
-  console.log("data", data);
 
   return (
     <div className="relative flex flex-col w-full pb-16 overflow-hidden">
@@ -93,6 +92,7 @@ export default async function Explore({
                       if (banner?.isPublished === false) return null;
                       return (
                         <BannerLayouts
+                          redirectionId={banner?.redirectionId || ""}
                           key={`banner?._id+${index.toString()}`}
                           selectedLayout={banner?.layout || ""}
                           heading={banner?.heading || ""}
