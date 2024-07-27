@@ -15,6 +15,7 @@ import { HiX } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
+import { useCartStore } from "@/components/store/useCartStore";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -33,7 +34,8 @@ const CategoryPageBtn = () => {
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
   const [callWaiterModal, setCallWaiterModal] = useState(false);
-  const { setShowCart, showCart, cart, setCart } = useCart();
+  const { setShowCart, showCart, setCart } = useCart();
+  const cart = useCartStore((s) => s.cart);
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -135,7 +137,7 @@ const CategoryPageBtn = () => {
                 >
                   <div className="relative">
                     <BsBagHeart size={30} />
-                    {Object.values(cart).length > 0 && (
+                    {cart.length > 0 && (
                       <motion.span
                         className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-6"
                         initial={{ scale: 0 }}
@@ -143,7 +145,7 @@ const CategoryPageBtn = () => {
                         exit={{ scale: 0 }}
                         transition={{ duration: 0.5 }}
                       >
-                        {Object.values(cart).length}
+                        {cart.length}
                       </motion.span>
                     )}
                   </div>

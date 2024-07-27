@@ -16,7 +16,6 @@ function SubTypes(props: ISubTypes) {
     isActiveCategory,
     setActiveCategory,
     isActiveParentCategory,
-    setActiveParentCategory,
   } = useActiveClass();
 
   const subTypes = useMemo(() => 

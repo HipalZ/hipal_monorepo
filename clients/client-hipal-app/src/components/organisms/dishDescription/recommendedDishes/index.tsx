@@ -7,20 +7,24 @@ import { ImSpoonKnife } from "react-icons/im";
 import DishQuantityButton from "../dishQuantityButton";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { DishType } from "@hi/db-models/src/validators";
+import type { DishType } from "@hi/db-models/src/validators";
 
 function RecommendedDishes({
-  dishData,
+  recommendations,
   openModal,
-}: { dishData: DishType; openModal: (dish: DishType) => void }) {
+}: {
+  recommendations: DishType[];
+  openModal: (dish: DishType) => void;
+}) {
   // Use useMemo to prepare the dishes for rendering
   const processedDishes = useMemo(() => {
-    return dishData?.recommendationIds?.map((dish:DishType) => ({
+    return recommendations.map((dish: DishType) => ({
       ...dish,
-      image: dish.images.length > 0 ? dish.images[0] : "",
+      image: dish?.images.length > 0 ? dish?.images[0] : "",
       blurDataURL: getRandomBlurImg(150, 150),
     }));
-  }, [dishData.recommendationIds]);
+  }, [recommendations]);
+
   if (processedDishes.length === 0) return null;
 
   return (
@@ -40,37 +44,34 @@ function RecommendedDishes({
               perPage: 2,
               perMove: 1,
               autoWidth: true,
-              classes: {
-                pagination: "splide__pagination hidden",
-              },
             }}
           >
-			<div className="hidden splide__arrows">
-							<button type="button" className="splide__arrow splide__arrow--prev">Prev</button>
-							<button type="button" className="splide__arrow splide__arrow--next">Next</button>
-						</div>
+            <div className="hidden splide__arrows">
+              <button type="button" className="splide__arrow splide__arrow--prev">Prev</button>
+              <button type="button" className="splide__arrow splide__arrow--next">Next</button>
+            </div>
             {processedDishes?.map((dish) => (
               <SplideSlide key={dish._id?.toString()}>
                 {dish && (
-                  <div className="relative">
+                  <div className="relative z-[100]">
                     <div className="absolute bg-white left-2 top-2">
-                      <FoodType types={dish?.dishType as FOOD_TYPES[]} />
+                      <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>
                     <div className="z-10 flex flex-col overflow-hidden bg-white border w-[8.5rem] rounded-xl h-44 border-base-200">
                       <div
                         onClick={() => openModal(dish)}
                         className="w-full h-32 overflow-hidden"
                       >
-                        {dish?.images.length > 0 ? (
+                        {dish?.image ? (
                           <div className="px-2 pt-2 rounded-t-xl">
                             <Image
-                              src={dish?.images[0]}
+                              src={dish?.image}
                               layout="object-fit"
                               quality={95}
                               objectFit="cover"
                               alt={dish?.name}
                               placeholder="blur"
-                              blurDataURL={getRandomBlurImg(150, 150)}
+                              blurDataURL={dish?.blurDataURL}
                               width={150}
                               height={150}
                             />
@@ -84,9 +85,9 @@ function RecommendedDishes({
                           {dish?.name}
                         </div>
                       </div>
-                      <div className="flex items-center justify-between px-2 pb-2">
+                      <div className="flex items-center justify-between px-2 pb-2 mt-2">
                         <div className="text-xs">₹{dish?.price}</div>
-                        <div className="scale-75">
+                        <div className="mt-1 scale-75">
                           <DishQuantityButton dishData={dish} />
                         </div>
                       </div>

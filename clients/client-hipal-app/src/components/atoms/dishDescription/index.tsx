@@ -1,4 +1,4 @@
-import { Fragment, memo } from "react"
+import { Fragment, memo, type ReactNode } from "react"
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react"
 import { HiX } from "react-icons/hi"
 
@@ -7,9 +7,9 @@ function DishData({
 	show,
 	onClose,
 }: {
-	children: React.ReactNode
-	show: boolean
-	onClose: () => void
+	readonly children: ReactNode
+	readonly show: boolean
+	readonly onClose: () => void
 }) {
 	const closeModalNothing = (e: any) => {
 		// e.preventDefault()
@@ -22,7 +22,7 @@ function DishData({
 				className="fixed inset-0 z-[100] overflow-y-auto"
 				onClose={(e) => closeModalNothing(e)}
 			>
-				<div className="fixed inset-0 flex items-end justify-center bg-black backdrop-blur-sm bg-opacity-70">
+				<div className="fixed inset-0 flex items-end justify-center bg-[#00000060] backdrop-blur-sm bg-opacity-70">
 					<TransitionChild
 						as={Fragment}
 						enter="transition ease-out duration-500 transform"

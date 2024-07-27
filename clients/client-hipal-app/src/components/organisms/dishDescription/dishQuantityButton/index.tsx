@@ -7,7 +7,21 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 
 const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
-  const { openBottomPanel, setOpenBottomPanel, cartPopup, setCartPopup,removeFromCart, selectedDish, setSelectedDish, selectedPortion, selectedChoices, addToCart, cart, updateCartItem } = useCartStore();
+  const {
+    openBottomPanel,
+    setOpenBottomPanel,
+    cartPopup,
+    setCartPopup,
+    removeFromCart,
+    selectedDish,
+    setSelectedDish,
+    selectedPortion,
+    selectedChoices,
+    addToCart,
+    cart,
+    resetSelections,
+    updateCartItem,
+  } = useCartStore();
 
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
@@ -17,13 +31,26 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     setOpenBottomPanel(false);
   }, [setOpenBottomPanel]);
 
-  const handleClick = useCallback((addDish: DishType) => {
-    setSelectedDish(addDish);
-    if (addDish?.portions?.length > 0 || addDish?.addOnIds?.length > 0) {
-      setCartPopup("BOTTOM_PANEL");
-      handleOpenModal();
-    }
-  }, [setSelectedDish, setCartPopup, handleOpenModal]);
+  const handleClick = useCallback(
+    (addDish: DishType) => {
+      setSelectedDish(addDish);
+      if (addDish?.portions?.length > 0 || addDish?.addOnIds?.length > 0) {
+        setCartPopup("BOTTOM_PANEL");
+        handleOpenModal();
+        return;
+      }
+      const item = {
+        id: addDish._id,
+        dish: addDish,
+        portion: null,
+        extras: [],
+        quantity: 1,
+      };
+      addToCart(item);
+      resetSelections();
+    },
+    [setSelectedDish, setCartPopup, handleOpenModal],
+  );
 
   const handleAddToCart = useCallback(() => {
     console.log("selectedDish", selectedDish);
@@ -36,22 +63,29 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     };
     console.log("item", item);
     addToCart(item);
+    resetSelections();
     closeModal();
   }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal]);
 
-  const handleIncreaseQuantity = useCallback((item) => {
-    updateCartItem({ ...item, quantity: item.quantity + 1 });
-  }, [updateCartItem]);
+  const handleIncreaseQuantity = useCallback(
+    (item) => {
+      updateCartItem({ ...item, quantity: item.quantity + 1 });
+    },
+    [updateCartItem],
+  );
 
-  const handleDecreaseQuantity = useCallback((item) => {
-    if (item.quantity > 1) {
-      updateCartItem({ ...item, quantity: item.quantity - 1 });
-    } else {
-      removeFromCart(item.id);
-    }
-  }, [updateCartItem, removeFromCart]);
+  const handleDecreaseQuantity = useCallback(
+    (item) => {
+      if (item.quantity > 1) {
+        updateCartItem({ ...item, quantity: item.quantity - 1 });
+      } else {
+        removeFromCart(item.id);
+      }
+    },
+    [updateCartItem, removeFromCart],
+  );
 
-  const cartItem = cart.find(item => item.id === dishData._id);
+  const cartItem = cart.find((item) => item.id === dishData._id);
 
   console.log("cartItem", cart);
 
@@ -94,7 +128,7 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                 <ExtraWithDishWithSelect dishData={selectedDish} />
               </div>
               <button
-                className="absolute on_active_bounce z-[101] bottom-4 rounded-full text-base bg-primary w-[92%] mx-4 py-3"
+                className="absolute on_active_bounce z-[101] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-3"
                 type="button"
                 onClick={handleAddToCart}
               >
@@ -110,8 +144,6 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
 
 const MemoDishQuantityButton = memo(DishQuantityButton);
 export default MemoDishQuantityButton;
-
-
 
 // {cartPopup === "ADD_NEW" && (
 //   <div className="p-4 bg-white rounded-lg shadow-lg">

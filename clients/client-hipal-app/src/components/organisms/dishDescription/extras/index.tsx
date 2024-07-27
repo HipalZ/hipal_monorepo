@@ -38,15 +38,15 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
           <div className="flex justify-between py-3 mx-6 prose cursor-pointer">
             <div>
               <h5 className="w-[12rem] text-sm font-medium capitalize text-base-content">
-                {addOn.name || ""}
+                {addOn?.name || ""}
               </h5>
               <span
                 className={`text-xs font-normal ${
-                  addOn.compulsory === 0 ? "" : "!text-primary"
+                  addOn?.compulsory === 0 ? "" : "!text-primary"
                 }`}
               >
-                Select up to {addOn.addOnMaxQuantity} (
-                {addOn.compulsory > 0 ? ` ${addOn.compulsory} Required` : " Optional"})
+                Select up to {addOn?.addOnMaxQuantity} (
+                {addOn?.compulsory > 0 ? ` ${addOn?.compulsory} Required` : " Optional"})
               </span>
             </div>
           </div>
@@ -54,8 +54,8 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
             <div className="max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out border opacity-100 rounded-xl border-primary">
               <table className="table w-full table-compact table-zebra">
                 <tbody>
-                  {addOn.choices.map((choice) => {
-                    if (!choice.visibility || !choice.availability) return null;
+                  {addOn?.choices?.map((choice) => {
+                    if (!choice?.visibility || !choice?.availability) return null;
                     let choiceId = choice._id || choice.uuid; 
                     return (
                       <tr
@@ -64,13 +64,13 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                       >
                         <td className="min-h-12 max-h-20 !pl-3 !text-xs w-1/3 flex flex-row flex-wrap">
                           <span className="w-full my-auto capitalize whitespace-pre-wrap">
-                            {choice.name} <br />
-                            (Max: {choice.choiceMaxQuantity})
+                            {choice?.name} <br />
+                            (Max: {choice?.choiceMaxQuantity})
                           </span>
                         </td>
                         <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
                           <span className="mx-auto my-auto">
-                            {getPrice(choice.price)}
+                            {getPrice(choice?.price)}
                           </span>
                         </td>
                         <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
@@ -78,7 +78,7 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                             <QuantityPickerNonOutline
                               setQuantity={(q) => handleQuantityChange(q, choice)}
                               minQuantity={0}
-                              maxQuantity={choice.choiceMaxQuantity || 10}
+                              maxQuantity={choice?.choiceMaxQuantity || 10}
                               quantity={selectedChoices.find(c => c.id === choiceId)?.quantity || 0}
                               extra={addOn}
                               item={choice}

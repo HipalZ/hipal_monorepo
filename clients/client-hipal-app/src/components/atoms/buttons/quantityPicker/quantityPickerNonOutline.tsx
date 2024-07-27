@@ -35,11 +35,10 @@ const QuantityPickerNonOutline = ({
   return (
     <>
       {isNumberType ? (
-        <div className="flex flex-row mx-1 my-auto">
+        <div className="flex items-center mx-1 my-auto">
           {/* Decrease Button */}
           <button
             type="button"
-            className="btn btn-xs btn-outline btn-primary !h-6 !w-6 aspect-square rounded-full"
             onClick={handleDecrease}
             disabled={quantity <= minQuantity}
           >
@@ -54,7 +53,6 @@ const QuantityPickerNonOutline = ({
           {/* Increase Button */}
           <button
             type="button"
-            className="btn btn-xs btn-outline btn-primary !h-6 !w-6 aspect-square rounded-full"
             onClick={handleIncrease}
             disabled={quantity >= maxQuantity}
           >

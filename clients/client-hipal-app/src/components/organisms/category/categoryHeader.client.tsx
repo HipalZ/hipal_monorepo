@@ -3,7 +3,6 @@ import Header from "@/components/molecules/header";
 import DishesTypes from "@/components/organisms/category/dishTypes";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo } from "react";
-import { useInView } from "react-intersection-observer";
 
 interface ICategoryProps {
   parentCategory: CategoryType[];
@@ -14,7 +13,7 @@ function CategoryHeader(props: ICategoryProps) {
   return (
     <>
       <Header
-      // categories={categories}
+      categories={childCategory}
       />
       <DishesTypes
         parentCategory={parentCategory}

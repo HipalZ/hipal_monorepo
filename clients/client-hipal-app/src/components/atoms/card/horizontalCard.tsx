@@ -9,8 +9,9 @@ import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
 import NotAvailable from "../notAvailable";
 import PlaceholderImg from "../placeholder";
-import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import type { DishType } from "@hi/db-models/src/validators";
+import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
+import { useCartStore } from "@/components/store/useCartStore";
 
 const HorizontalCard = ({
   dishData,
@@ -23,17 +24,21 @@ const HorizontalCard = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState({} as DishType);
-  const showRecommendations = false;
+  const { cart } = useCartStore();
   const openModal = useCallback((dishData: DishType) => {
     console.log("dishData", dishData);
-    // setSelectedDish(dishData);
-    // setIsModalOpen(true);
+    setSelectedDish(dishData);
+    setIsModalOpen(true);
   }, []);
 
   const closeModal = useCallback(() => {
     setSelectedDish({} as DishType);
     setIsModalOpen(false);
   }, [isModalOpen]);
+
+  const isDishInCart = cart.some((item) => item.dish._id === dishData._id);
+  const recommendations = isDishInCart ? dishData.recommendationIds : [];
+
 
 
   return (
@@ -144,7 +149,7 @@ const HorizontalCard = ({
               )}
             </div>
           )}
-          {isModalOpen && (
+          {isModalOpen && dishData._id === selectedDish._id && (
             <DishData show={isModalOpen} onClose={closeModal}>
               <div className="relative py-4 mx-4 ">
                 <DishPopup dishData={selectedDish} />
@@ -154,9 +159,11 @@ const HorizontalCard = ({
         </div>
       </div>
       <div>
-        {/* {showRecommendations && (
-          <MemoRecommendedDishes dishData={dishData} openModal={openModal} />
-        )} */}
+      {isDishInCart && (
+        <div>
+          <MemoRecommendedDishes recommendations={recommendations} openModal={openModal} />
+        </div>
+      )}
       </div>
     </section>
   );

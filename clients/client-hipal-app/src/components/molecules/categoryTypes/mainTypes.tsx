@@ -18,9 +18,7 @@ function MainTypes(props: IMainTypes) {
   const {
     isActiveParentCategory,
     setActiveParentCategory,
-    isActiveParentCategoryName,
     setActiveParentCategoryName,
-    isActiveCategory,
   } = useActiveClass();
 
   const SplideSlideWrapper = ({ children }: { children?: ReactNode }) => {
@@ -66,9 +64,7 @@ function MainTypes(props: IMainTypes) {
                   </div>
                 </SplideSlideWrapper>
                 {index <
-                  Object.values(mainTypes).filter((item) => item?.visibility)
-                    .length -
-                    1 && (
+                  mainTypes.filter((item) => item?.visibility).length - 1 && (
                   <div className="text-2xl !font-thin divider opacity-70">
                     |
                   </div>

@@ -31,13 +31,11 @@ function TopBackground({
       ) : (
         <PlaceholderImg className="w-full h-full" />
       )}
-      {/* <Link href={`/${customLink}/explore`}>
-        <div className="top-4  w-full absolute z-[60] flex flex-row px-4">
-          <button type="button" className="">
+      <Link href={`/${customLink}/explore`}>
+        <button type="button" className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]">
             <BiArrowBack />
           </button>
-        </div>
-      </Link> */}
+      </Link>
     </div>
   );
 }

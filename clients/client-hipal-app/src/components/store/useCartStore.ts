@@ -36,13 +36,17 @@ interface ICartStore {
     quantity: number;
     price: number;
   }>;
+
   setSelectedChoice: (choice: {
     id: string;
     name: string;
     quantity: number;
     price: number;
   }) => void;
+
   removeSelectedChoice: (choiceId: string) => void;
+
+  resetSelections: () => void;
 
   cart: Array<ICartItem>;
   addToCart: (item: ICartItem) => void;
@@ -74,6 +78,14 @@ export const useCartStore = create(
       setSelectedPortion: (portion) => {
         set({ selectedPortion: portion });
       },
+
+        resetSelections: () => {
+            set({
+            selectedDish: {} as DishType,
+            selectedPortion: null,
+            selectedChoices: [],
+            });
+        },
 
       selectedChoices: [],
       setSelectedChoice: (choice) => {

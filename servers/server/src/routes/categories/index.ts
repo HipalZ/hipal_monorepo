@@ -367,9 +367,13 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
         }).populate({
           path: "dishIds",
-          populate: {
-            path: "addOnIds recommendationIds",
-          },
+          populate: [
+            { path: "addOnIds" },
+            {
+              path: "recommendationIds",
+              populate: { path: "addOnIds" },
+            },
+          ],
         });
 
         return respond(
