@@ -1,66 +1,13 @@
-import { startTransition, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useEffect, useState } from "react";
 import MainRouter from "./routes";
-import { useOwnerLogin } from "./components/store/useOwnerLogin";
-import toast from "react-hot-toast";
 
-interface AccessControl {
-  dish: boolean;
-  staff: boolean;
-  loyalty: boolean;
-  sale: boolean;
-  reports: boolean;
-  zones_tables: boolean;
-}
 
-const routeToPermissionMap: { [key: string]: keyof AccessControl } = {
-  "/items": "dish",
-  "/loyalty": "loyalty",
-  "/zonesandtables": "zones_tables",
-  "/sales": "sale",
-  "/staff": "staff",
-  "/reports": "reports",
-};
+
+
 
 function App() {
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isLoggedIn = useOwnerLogin((s) => s.isLogin);
-  const user = useOwnerLogin((s) => s.user);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      const pathSegments = location.pathname.split("/");
-      const routeKey = pathSegments.length > 3 ? `/${pathSegments[3]}` : null;
-      if (
-        routeKey &&
-        user.role !== "RESTAURANT_OWNER" &&
-        routeToPermissionMap[routeKey]
-      ) {
-        const permissionKey = routeToPermissionMap[routeKey];
-        if (!user.accessControl[permissionKey]) {
-          toast.error("You don't have access to this page.");
-          startTransition(() => {
-            navigate("/business");
-          });
-        }
-      }
-    }
-  }, [isLoggedIn, location.pathname, user.role, user.accessControl]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      const timeout = setTimeout(() => {
-        toast.error("Session TimeOut");
-        startTransition(() => {
-          navigate("/");
-        });
-      }, 60000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoggedIn]);
 
   useEffect(() => {
     const checkOnlineStatus = () => {
