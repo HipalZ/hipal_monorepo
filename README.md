@@ -13,12 +13,6 @@ yarn dev
 # or
 pnpm devs
 ```////
-//////
-asds//
-
-````sss//
-sd
-```asd
 ss
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
