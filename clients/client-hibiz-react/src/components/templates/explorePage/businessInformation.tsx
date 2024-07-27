@@ -24,6 +24,7 @@ import { Switch } from "@headlessui/react";
 import useShowErrorToasts from "@/components/atom/errorToasts";
 import type { IBizPayload } from "@/components/types/businessData";
 import { FaLocationDot } from "react-icons/fa6";
+import BottomButton from "@/components/atom/bottomButton";
 
 const amenitiesArr = [
   { _id: 1, text: "SMOKING SECTION", image: <MdOutlineSmokingRooms /> },
@@ -258,14 +259,14 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
     <main className="px-4">
       <section>
         <SubHeader text="Basic Information" />
-        <article className="p-4 bg-white rounded-2xl">
-          <div className="relative">
+        <article className="p-4 bg-white rounded-2xl lg:flex lg:justify-around lg:space-x-4">
+          <div className="relative flex-1">
             <textarea
               minLength={30}
               maxLength={90}
               value={tempDescription}
               onChange={handleDescriptionChange}
-              className="w-full pr-16 resize-none h-28 rounded-2xl"
+              className="w-full pr-16 resize-none h-28 lg:h-full rounded-2xl"
               placeholder="Add description"
             />
             <small className="absolute bottom-3 right-4">
@@ -273,145 +274,149 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
             </small>
           </div>
           &nbsp;
-          <Paragraph text="Describe Your business with 3 words" />
-          {tempTags.map((tag, index) => (
-            <section
-              key={index.toString()}
-              className="flex items-center my-4 space-x-4"
-            >
-              <h1>{index + 1}</h1>
-              <div className="relative">
-                <input
-                  minLength={4}
-                  maxLength={30}
-                  placeholder={`Tag ${index + 1}`}
-                  type="text"
-                  className="w-full rounded-xl"
-                  value={tag}
-                  onChange={(e) => handleTagChange(e, index)}
-                />
-                <small className="absolute bottom-3 right-4">
-                  {tag?.length}/{30}
-                </small>
-              </div>
-            </section>
-          ))}
-        </article>
-      </section>
-      <section className="my-6">
-        <SubHeader text="Contact" />
-        <article className="p-4 space-y-4 bg-white rounded-2xl">
-          <div className="relative">
-            <input
-              type="tel"
-              value={tempPhone}
-              onChange={handlePhoneChange}
-              className="w-full rounded-2xl"
-              placeholder="Enter phone number"
-              maxLength={10}
-              minLength={10}
-            />
-            <small className="absolute bottom-3 right-4">
-              {tempPhone?.length}/{10}
-            </small>
-          </div>
-          <div className="relative">
-            <input
-              minLength={10}
-              maxLength={100}
-              placeholder="Add Location on map"
-              type="text"
-              value={tempLocation}
-              className="w-full pr-10 rounded-2xl"
-              onChange={handleLocationChange}
-            />
-            <small className="absolute bottom-4 right-4">
-              <FaLocationDot />
-            </small>
-          </div>
-          <div className="relative">
-            <textarea
-              minLength={10}
-              maxLength={100}
-              placeholder="Add Address"
-              value={tempAddress}
-              className="w-full h-24 pr-16 resize-none rounded-2xl"
-              onChange={handleChangeAddress}
-            />
-            <small className="absolute bottom-3 right-4">
-              {tempAddress?.length}/{100}
-            </small>
+          <div className="lg:flex lg:flex-col lg:justify-end lg:items-end">
+            <Paragraph text="Describe Your business with 3 words" />
+            {tempTags.map((tag, index) => (
+              <section
+                key={index.toString()}
+                className="flex items-center my-4 space-x-4"
+              >
+                <h1>{index + 1}</h1>
+                <div className="relative">
+                  <input
+                    minLength={4}
+                    maxLength={30}
+                    placeholder={`Tag ${index + 1}`}
+                    type="text"
+                    className="w-full rounded-xl"
+                    value={tag}
+                    onChange={(e) => handleTagChange(e, index)}
+                  />
+                  <small className="absolute bottom-3 right-4">
+                    {tag?.length}/{30}
+                  </small>
+                </div>
+              </section>
+            ))}
           </div>
         </article>
       </section>
-      <article>
-        <SubHeader text="Info" />
-      </article>
-      <section className="mb-[5rem]">
-        <article className="p-4 bg-white rounded-2xl">
-          <section className="p-4 border border-1 rounded-2xl">
+      <div className="mt-10 lg:flex lg:justify-between lg:space-x-4">
+        <section className="flex-1 my-6 lg:my-0">
+          <SubHeader text="Contact" />
+          <article className="p-4 space-y-4 bg-white rounded-2xl">
             <div className="relative">
               <input
-                value={tempAvgPricingForTwo}
                 type="tel"
+                value={tempPhone}
+                onChange={handlePhoneChange}
+                className="w-full rounded-2xl"
+                placeholder="Enter phone number"
                 maxLength={10}
-                onChange={handlePricingChange}
-                className="w-full mb-2 outline-none rounded-2xl"
-                placeholder="Add Average Pricing For Two"
+                minLength={10}
               />
-              <small className="absolute bottom-5 right-4">
-                {tempAvgPricingForTwo?.toString().length}/{10}
+              <small className="absolute bottom-3 right-4">
+                {tempPhone?.length}/{10}
               </small>
             </div>
-            {amenitiesArr && amenitiesArr.length > 0 ? (
-              <h6 className="my-2 text-base text-gray-500">Add Amenities</h6>
-            ) : null}
-            <section className="flex flex-wrap gap-4">
-              {amenitiesArr
-                ? amenitiesArr.map((amenity) => {
-                    if (tempAmenities === undefined) return null;
-                    const isSelected = tempAmenities.includes(amenity?.text);
-                    return (
-                      <article
-                        key={amenity._id}
-                        onClick={() =>
-                          handleSelectAmenitiesChange(amenity.text)
-                        }
-                        onKeyDown={() =>
-                          handleSelectAmenitiesChange(amenity.text)
-                        }
-                        className={`capitalize flex items-center space-x-1 rounded-full border border-1 px-2 py-1 cursor-pointer ${
-                          isSelected ? "bg-[#FFE7AB]" : "bg-gray-100"
-                        }`}
-                      >
-                        {amenity?.image}
-                        <h1>{amenity.text.toLowerCase()}</h1>
-                      </article>
-                    );
-                  })
-                : null}
-            </section>
-          </section>
-          <section className="flex gap-6 my-4">
-            <article
-              onClick={handleTimings}
-              className="flex items-center px-2 py-1 space-x-4 bg-gray-100 border rounded-full border-1"
-            >
-              <MdOutlineWatchLater />
-              <h1>Add Timings</h1>
-            </article>
-          </section>
-          {(fixedTime?.openTime || fixedTime?.closeTime) && (
-            <div
-              style={{ width: "max-content" }}
-              className="px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full"
-            >
-              Business time from {convertTo12HourFormat(fixedTime?.openTime)} to{" "}
-              {convertTo12HourFormat(fixedTime?.closeTime)}
+            <div className="relative">
+              <input
+                minLength={10}
+                maxLength={100}
+                placeholder="Add Location on map"
+                type="text"
+                value={tempLocation}
+                className="w-full pr-10 rounded-2xl"
+                onChange={handleLocationChange}
+              />
+              <small className="absolute bottom-4 right-4">
+                <FaLocationDot />
+              </small>
             </div>
-          )}
-        </article>
-      </section>
+            <div className="relative">
+              <textarea
+                minLength={10}
+                maxLength={100}
+                placeholder="Add Address"
+                value={tempAddress}
+                className="w-full h-24 pr-16 resize-none rounded-2xl"
+                onChange={handleChangeAddress}
+              />
+              <small className="absolute bottom-3 right-4">
+                {tempAddress?.length}/{100}
+              </small>
+            </div>
+          </article>
+        </section>
+        <section className="mb-[5rem] flex-1">
+          <article>
+            <SubHeader text="Info" />
+          </article>
+          <article className="p-4 bg-white rounded-2xl">
+            <section className="p-4 border border-1 rounded-2xl">
+              <div className="relative">
+                <input
+                  value={tempAvgPricingForTwo}
+                  type="tel"
+                  maxLength={10}
+                  onChange={handlePricingChange}
+                  className="w-full mb-2 outline-none rounded-2xl"
+                  placeholder="Add Average Pricing For Two"
+                />
+                <small className="absolute bottom-5 right-4">
+                  {tempAvgPricingForTwo?.toString().length}/{10}
+                </small>
+              </div>
+              {amenitiesArr && amenitiesArr.length > 0 ? (
+                <h6 className="my-2 text-base text-gray-500">Add Amenities</h6>
+              ) : null}
+              <section className="flex flex-wrap gap-4">
+                {amenitiesArr
+                  ? amenitiesArr.map((amenity) => {
+                      if (tempAmenities === undefined) return null;
+                      const isSelected = tempAmenities.includes(amenity?.text);
+                      return (
+                        <article
+                          key={amenity._id}
+                          onClick={() =>
+                            handleSelectAmenitiesChange(amenity.text)
+                          }
+                          onKeyDown={() =>
+                            handleSelectAmenitiesChange(amenity.text)
+                          }
+                          className={`capitalize flex items-center space-x-1 rounded-full border border-1 px-2 py-1 cursor-pointer ${
+                            isSelected ? "bg-[#FFE7AB]" : "bg-gray-100"
+                          }`}
+                        >
+                          {amenity?.image}
+                          <h1>{amenity.text.toLowerCase()}</h1>
+                        </article>
+                      );
+                    })
+                  : null}
+              </section>
+            </section>
+            <section className="flex gap-6 my-4">
+              <article
+                onClick={handleTimings}
+                className="flex items-center px-2 py-1 space-x-4 bg-gray-100 border rounded-full border-1"
+              >
+                <MdOutlineWatchLater />
+                <h1>Add Timings</h1>
+              </article>
+            </section>
+            {(fixedTime?.openTime || fixedTime?.closeTime) && (
+              <div
+                style={{ width: "max-content" }}
+                className="px-4 py-1 text-sm text-[#8C63FF] bg-[#8C63FF20] rounded-full"
+              >
+                Business time from {convertTo12HourFormat(fixedTime?.openTime)}{" "}
+                to {convertTo12HourFormat(fixedTime?.closeTime)}
+              </div>
+            )}
+          </article>
+        </section>
+      </div>
       <button
         className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
          md:left-0 md:right-0 md:mx-auto"
@@ -505,14 +510,15 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
               ))}
             </section>
           )}
-          <button
-            className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
-         md:left-0 md:right-0 md:mx-auto"
-            onClick={handleSaveChanges}
-            type="button"
-          >
-            Save
-          </button>
+          <BottomButton
+            buttons={[
+              {
+                text: "Save",
+                onClick: handleSaveChanges,
+                type: "button",
+              },
+            ]}
+          />
         </section>
       </PopUp>
     </main>

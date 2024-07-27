@@ -1,8 +1,14 @@
 import { memo, useCallback } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { settingServices } from "./settingStore";
-import { type SettingPageTypes, useSettings } from "@/components/store/useSettings";
-import { useOutletFormStore, useBusinessFormStore } from "@/components/store/useOutlet";
+import {
+  type SettingPageTypes,
+  useSettings,
+} from "@/components/store/useSettings";
+import {
+  useOutletFormStore,
+  useBusinessFormStore,
+} from "@/components/store/useOutlet";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -11,64 +17,63 @@ const MemoSettings = () => {
   const { setPageToggle } = useSettings((s) => ({
     setPageToggle: s.setPageToggle,
     pageToggle: s.pageToggle,
-  }))
+  }));
 
-  const { setEntireFormData } = useOutletFormStore(s => ({
+  const { setEntireFormData } = useOutletFormStore((s) => ({
     formData: s.formData,
     setFormData: s.setFormData,
     setEntireFormData: s.setEntireFormData,
+  }));
 
-  }))
-
-  const { setEntireBusinessFormData } = useBusinessFormStore(s => ({
+  const { setEntireBusinessFormData } = useBusinessFormStore((s) => ({
     businessFormData: s.businessFormData,
     setBusinessFormData: s.setBusinessFormData,
     setEntireBusinessFormData: s.setEntireBusinessFormData,
-  }))
+  }));
   const businessData = useBusinessData((s) => s.businessData);
 
   const getBusinessInfo = async () => {
     const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
       param: {
-        businessId: businessData?._id
-      }
-    })
-    const response = (await res.json()).data
+        businessId: businessData?._id,
+      },
+    });
+    const response = (await res.json()).data;
     if (res.status === 200 || res.status === 201) {
       setEntireFormData(response);
       console.log(response);
     }
-  }
+  };
 
   const getSettingsInfo = async () => {
     const res = await apiRpc.settings[":businessId"].$get({
       param: {
-        businessId: businessData?._id
-      }
-    })
-    const response = (await res.json()).data
+        businessId: businessData?._id,
+      },
+    });
+    const response = (await res.json()).data;
     if (res.status === 200 || res.status === 201) {
       setEntireBusinessFormData(response);
       console.log(response);
     }
-  }
+  };
 
   const goToForm = useCallback((navigateTo: SettingPageTypes) => {
     if (navigateTo === "OUTLET_FORM") {
-      getBusinessInfo()
+      getBusinessInfo();
     }
     if (navigateTo === "BUSINESS_FORM") {
-      getSettingsInfo()
+      getSettingsInfo();
     }
-    setPageToggle(navigateTo)
-  }, [])
+    setPageToggle(navigateTo);
+  }, []);
 
   return (
-
     <section className="p-6 space-y-6">
       {settingServices.map((service) => {
         return (
           <article
+            onClick={() => goToForm(service?.navigateTo)}
             key={service?._id}
             className="bg-white h-[6.5rem] rounded-2xl p-4"
           >
@@ -79,7 +84,6 @@ const MemoSettings = () => {
               <h1 className="text-xl font-normal">{service?.title}</h1>
               <button
                 type="button"
-                onClick={() => goToForm(service?.navigateTo)}
                 className="absolute -rotate-45 right-2 top-2"
               >
                 <FaArrowRight />
