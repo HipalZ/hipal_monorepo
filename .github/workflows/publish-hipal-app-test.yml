@@ -42,8 +42,8 @@ jobs:
       - name: Pull Vercel Environment Information
         # run: vercel pull --cwd clients/client-hipal-app --yes --local-config=./vercel.json --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app --local-config=./vercel.json --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --local-config=./vercel.json --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
         # run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel build --cwd clients/client-hipal-app  --prod --token=${{ secrets.VERCEL_TOKEN }} && vercel deploy --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
-        # run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
-        run: cd clients/client-hipal-app && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --no-wait
+        run: vercel pull --cwd clients/client-hipal-app --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --cwd clients/client-hipal-app --no-wait --prod --token=${{ secrets.VERCEL_TOKEN }}
+        # run: cd clients/client-hipal-app && vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} && vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --no-wait
       # - name: Build Project Artifacts
       #   run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
