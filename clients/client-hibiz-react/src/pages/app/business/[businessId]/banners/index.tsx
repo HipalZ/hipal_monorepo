@@ -6,6 +6,7 @@ import {
   useCallback,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
@@ -33,6 +34,7 @@ const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
 
 const MemoBanners = () => {
   const navigate = useNavigate();
+  const banners = useExploreStore((s) => s.banners);
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
   const { setSelectedBanner, setBannerPage, bannerPage } = useBannerStore(
@@ -49,9 +51,8 @@ const MemoBanners = () => {
     null,
   );
   const [isArrangeMode, setIsArrangeMode] = useState(false);
-  const [reorderedBanners, setReorderedBanners] = useState<IBannerPayload[]>(
-    [],
-  );
+  const touchStartY = useRef(0);
+  const dragItemIndex = useRef<number | null>(null);
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
@@ -88,48 +89,68 @@ const MemoBanners = () => {
       });
       const response = (await res.json()).data;
       setBanners(response);
-      setReorderedBanners(response);
       return response;
     },
     enabled: !!businessId,
   });
 
   const filteredBanners = useMemo(() => {
-    return reorderedBanners.filter((banner) => {
+    return banners.filter((banner) => {
       return view === ViewType.BANNERS
         ? banner.isPublished
         : !banner.isPublished;
     });
-  }, [reorderedBanners, view]);
+  }, [banners, view]);
 
-  const onDragStart = useCallback((banner: IBannerPayload) => {
+  const onDragStart = useCallback((banner: IBannerPayload, index: number) => {
     setDraggedBanner(banner);
+    dragItemIndex.current = index;
   }, []);
 
-  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-  };
+  }, []);
 
   const onDrop = (
     e: React.DragEvent<HTMLDivElement>,
     droppedBanner: IBannerPayload,
   ) => {
     e.preventDefault();
-    if (!draggedBanner) return;
+    if (!draggedBanner || dragItemIndex.current === null) return;
 
-    const draggedBannerIndex = reorderedBanners.findIndex(
-      (banner) => banner._id === draggedBanner._id,
-    );
-    const droppedBannerIndex = reorderedBanners.findIndex(
+    const draggedBannerIndex = dragItemIndex.current;
+    const droppedBannerIndex = filteredBanners.findIndex(
       (banner) => banner._id === droppedBanner._id,
     );
 
-    const updatedBanners = [...reorderedBanners];
+    const updatedBanners = [...filteredBanners];
     updatedBanners.splice(draggedBannerIndex, 1);
     updatedBanners.splice(droppedBannerIndex, 0, draggedBanner);
 
-    setReorderedBanners(updatedBanners);
+    setBanners(updatedBanners);
     setDraggedBanner(null);
+    dragItemIndex.current = null;
+  };
+
+  const onTouchStart = (
+    banner: IBannerPayload,
+    index: number,
+    e: React.TouchEvent<HTMLDivElement>,
+  ) => {
+    touchStartY.current = e.touches[0].clientY;
+    onDragStart(banner, index);
+  };
+
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const onTouchEnd = (
+    e: React.TouchEvent<HTMLDivElement>,
+    droppedBanner: IBannerPayload,
+  ) => {
+    e.preventDefault();
+    onDrop(e as any, droppedBanner);
   };
 
   const handleArrangeSequence = useCallback(() => {
@@ -137,7 +158,7 @@ const MemoBanners = () => {
   }, [isArrangeMode]);
 
   const handleSaveSequence = async () => {
-    const sequence = reorderedBanners.map((banner) => banner._id);
+    const sequence = filteredBanners.map((banner) => banner._id);
     setIsArrangeMode(false);
     const response = await apiRpc.settings.banners.sequence.$put({
       json: {
@@ -146,12 +167,6 @@ const MemoBanners = () => {
     });
     if (response.status === 200) {
       toast.success("Sequence saved successfully");
-      setBanners((prevBanners) =>
-        prevBanners.map(
-          (banner) =>
-            reorderedBanners.find((b) => b._id === banner._id) || banner,
-        ),
-      );
     }
   };
 
@@ -202,7 +217,7 @@ const MemoBanners = () => {
         <article className="max-w-[69rem] flex justify-end">
           <button
             type="button"
-            className="z-20 px-4 py-2 mb-4 mr-4 text-xs text-white bg-black rounded-full"
+            className="z-20 px-4 py-2 mb-4 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
             onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
           >
             {isArrangeMode ? "Save Sequence" : "Arrange Sequence"}
@@ -223,17 +238,25 @@ const MemoBanners = () => {
             isArrangeMode ? "pointer-events-auto opacity-100" : ""
           }`}
         >
-          {filteredBanners && filteredBanners.length > 0 ? (
-            filteredBanners.map((banner, index) => (
+          {filteredBanners && filteredBanners?.length > 0 ? (
+            filteredBanners.map((banner: IBannerPayload, index: number) => (
               <div
-                key={banner._id}
-                data-id={banner._id}
+                key={`banner?._id+${index.toString()}`}
                 draggable={isArrangeMode}
                 onDragStart={
-                  isArrangeMode ? () => onDragStart(banner) : undefined
+                  isArrangeMode ? () => onDragStart(banner, index) : undefined
                 }
                 onDragOver={isArrangeMode ? onDragOver : undefined}
                 onDrop={isArrangeMode ? (e) => onDrop(e, banner) : undefined}
+                onTouchStart={
+                  isArrangeMode
+                    ? (e) => onTouchStart(banner, index, e)
+                    : undefined
+                }
+                onTouchMove={isArrangeMode ? onTouchMove : undefined}
+                onTouchEnd={
+                  isArrangeMode ? (e) => onTouchEnd(e, banner) : undefined
+                }
                 className="relative overflow-hidden"
               >
                 <CreatedBannersLayouts
@@ -246,9 +269,7 @@ const MemoBanners = () => {
                     bgColor: banner?.backgroundColor || "",
                     textColor: banner?.backgroundColor || "",
                   }}
-                  paragraphStyle={{
-                    color: banner?.paragraphColor || "",
-                  }}
+                  paragraphStyle={{ color: banner?.paragraphColor || "" }}
                   buttonStyle={{
                     color: banner?.buttonColor || "",
                     buttonColor: banner?.buttonTextColor || "",
@@ -257,7 +278,7 @@ const MemoBanners = () => {
                   handleEditBanner={handleEditBanner}
                 />
                 {isArrangeMode && (
-                  <div className="absolute inset-0 rounded-2xl max-w-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 text-white text-2xl font-bold">
+                  <div className="absolute inset-0 max-w-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 text-white text-2xl font-bold">
                     {index + 1}
                   </div>
                 )}
