@@ -114,6 +114,8 @@ const MemoExplorePage = () => {
     setIsLoading: state.setIsLoading,
   }));
   const cropperRef = useRef(null);
+  const bannersRef = useRef(false);
+  const uniquelyYoursRef = useRef(false);
   const [socialMediaLinks, setSocialMediaLinks] = useState([
     { _id: 1, icon: "instagram", logo: <BsInstagram size={30} />, link: "" },
     { _id: 2, icon: "facebook", logo: <CiFacebook size={36} />, link: "" },
@@ -178,15 +180,12 @@ const MemoExplorePage = () => {
   const handleImageChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const type = event.target.dataset.type as keyof ImageFiles;
-      console.log("Type:", type);
       const file = event.target.files?.[0];
       if (file) {
-        console.log("Selected File:", file);
         compressImage(file, (compressedFile) => {
           const reader = new FileReader();
           reader.readAsDataURL(compressedFile);
           reader.onloadend = () => {
-            console.log("Compressed Image Data URL:", reader.result);
             setCropping({ image: reader.result, type });
             setShowCropper(true);
             setImageFiles({ [type]: compressedFile });
@@ -231,7 +230,9 @@ const MemoExplorePage = () => {
   }, [toggleBizInfo]);
 
   const handleNavigate = useCallback(() => {
-    setToggleBizInfo(!toggleBizInfo);
+    if(toggleBizInfo){
+      setToggleBizInfo(!toggleBizInfo);
+    }
     if (!toggleBizInfo) {
       startTransition(() => {
         clearOriginalDishes();
@@ -257,6 +258,7 @@ const MemoExplorePage = () => {
       return toast.error("GST number should be less than 26 characters");
     setBizInfo({ ...bizInfo, gst: e.target.value });
   }, []);
+  
   const handleSearch = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const search = e.target.value;
     setSearchQuery(search);
@@ -442,8 +444,7 @@ const MemoExplorePage = () => {
     }
     return response?.data;
   };
-  const bannersRef = useRef(false);
-  const uniquelyYoursRef = useRef(false);
+
 
   const { refetch } = useQuery({
     queryKey: ["bizInfo", businessId],
@@ -455,7 +456,6 @@ const MemoExplorePage = () => {
         logo: response?.data?.logoUrl,
         footer: response?.data?.endBannerUrl,
       });
-      console.log("Response:", response);
       setBizInfo(response?.data as IBizInfo);
       setSocialMediaLinks((prevLinks) =>
         prevLinks.map((link) => {
