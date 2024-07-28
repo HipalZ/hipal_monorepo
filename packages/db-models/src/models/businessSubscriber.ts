@@ -21,6 +21,10 @@ const businessSubscriberSchema = new mongoose.Schema<BusinessSubscriber>(
       required: true,
       default: false,
     },
+    date: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

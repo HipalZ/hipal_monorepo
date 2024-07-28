@@ -1,7 +1,6 @@
-import mongoose, { type Model } from 'mongoose';
-import type { UserRewardHistoryType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { UserRewardHistoryType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
-
 
 const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   {
@@ -15,7 +14,7 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
 
     status: {
       type: String,
-      enum: ['MINUS', 'PLUS'],
+      enum: ["MINUS", "PLUS"],
     },
     date: {
       type: Number,
@@ -26,15 +25,13 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     },
     order_id: {
       type: ObjectId,
-      ref: 'Order',
-
+      ref: "Order",
     },
-
 
     loyaltyId: {
       type: ObjectId,
       required: true,
-      ref: 'LoyaltySetting',
+      ref: "LoyaltySetting",
     },
   },
   {
@@ -42,6 +39,10 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
   },
 );
 
-const UserRewardHistory: Model<UserRewardHistoryType> = mongoose.model<UserRewardHistoryType>('userRewardHistory', userRewardHistorySchema);
+const UserRewardHistory: Model<UserRewardHistoryType> =
+  mongoose.model<UserRewardHistoryType>(
+    "userRewardHistory",
+    userRewardHistorySchema,
+  );
 
 export { UserRewardHistory };

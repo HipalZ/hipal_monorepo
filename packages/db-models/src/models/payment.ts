@@ -1,14 +1,14 @@
-import mongoose, { type Model } from 'mongoose';
-import type { PaymentType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { PaymentType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
     businessId: {
-      required: false,
+      required: true,
       type: ObjectId,
       index: true,
-      ref: 'Business',
+      ref: "Business",
     },
 
     date: {
@@ -25,7 +25,8 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     userId: {
       type: ObjectId,
       required: true,
-      ref: 'User',
+      ref: "User",
+      index: true,
     },
 
     mode: {
@@ -47,21 +48,27 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     order_id: {
       type: ObjectId,
-      ref: 'Order',
+      ref: "Order",
       required: true,
+      unique: true,
     },
 
     tips: {
       type: Number,
       default: 0,
+      required: false,
     },
 
     razorpayPaymentId: {
       type: String,
+      required: true,
+      unique: true,
     },
 
     razorpayOrderId: {
       type: String,
+      required: true,
+      unique: true,
     },
     claimedCoins: {
       type: Number,
@@ -73,6 +80,8 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     },
     razorpayEventId: {
       type: String,
+      required: true,
+      unique: true,
     },
     waiterName: {
       type: String,
@@ -85,6 +94,9 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
   { timestamps: true },
 );
 
-const Payment: Model<PaymentType> = mongoose.model<PaymentType>('Payment', paymentSchema);
+const Payment: Model<PaymentType> = mongoose.model<PaymentType>(
+  "Payment",
+  paymentSchema,
+);
 
 export { Payment };

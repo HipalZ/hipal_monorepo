@@ -119,7 +119,7 @@ const usersRouter = new Hono()
   .post("/:id/signUp", zValidator("json", UserAttrs), async (c) => {
     const requestData = await c.req.json();
 
-    const { phone, role } = requestData;
+    const { phone } = requestData;
 
     const existingUser = await User.findOne({ phone });
     //TODO: USER ["HIPAL_CUSTOMER"]
@@ -734,14 +734,6 @@ const usersRouter = new Hono()
       if (!existingUser) {
         return respond(c, "User not found", true, 404, {});
       }
-      //TODO: ROLE WHEN I ADD ROLE IN USER SCHEMA
-      try {
-        if (loyaltyId && signUpBonus && signUpBonus > 0) {
-          await addSignUpBonus(loyaltyId, userId, signUpBonus);
-        }
-      } catch (e) {
-        return respond(c, "Error in adding sign up bonus", true, 400, {});
-      }
 
       const options = {
         method: "GET",
@@ -760,6 +752,14 @@ const usersRouter = new Hono()
       )
         return respond(c, "Please enter valid Otp !!", true, 400, {});
 
+      try {
+        if (loyaltyId && signUpBonus && signUpBonus > 0) {
+          await addSignUpBonus(loyaltyId, userId, signUpBonus);
+        }
+      } catch (e) {
+        return respond(c, "Error in adding sign up bonus", true, 400, {});
+      }
+
       if (loyaltyId && signUpBonus > 0) {
         const userReward = await UserReward.findOne({
           userPhone: phone,
@@ -776,7 +776,7 @@ const usersRouter = new Hono()
         );
         const modifyUser = {
           ...existingUser,
-          reward: signUpBonus,
+          signUpBonus: signUpBonus,
           count: userReward?.scanCount,
         };
         return respond(c, "User logged in successfully", false, 200, {
@@ -878,26 +878,12 @@ const usersRouter = new Hono()
         phone: 1,
         _id: 0,
       });
-      if (!userRewards) {
-        const data = new UserReward({
-          userId,
-          loyaltyId,
-          rewards: 0,
-          password: Math.floor(Math.random() * 9000) + 10000,
-          scanCount: 1,
-        });
 
-        const user = await data.save();
-        return respond(c, "User reward fetched successfully", false, 200, user);
-      }
-
-      return respond(
-        c,
-        "User reward fetched successfully",
-        false,
-        200,
-        userRewards,
-      );
+      return c.json({
+        message: "User reward fetched successfully",
+        data: userRewards,
+        err: false,
+      });
     },
   )
   .get(

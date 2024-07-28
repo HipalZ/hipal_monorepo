@@ -17,7 +17,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
       enum: ["ONLINE", "OFFLINE", "WAITER"],
       required: true,
     },
-    order_id: { type: ObjectId, required: false, ref: "Order" },
+    order_id: { type: ObjectId, required: false, ref: "Order", unique: true },
 
     isAccepted: { type: Boolean, default: false },
     message: { type: String, default: null },

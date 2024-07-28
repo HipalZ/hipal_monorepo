@@ -59,6 +59,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       default: false,
     },
+    sequence: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,

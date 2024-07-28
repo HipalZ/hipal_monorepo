@@ -1,5 +1,10 @@
 import { LRUCache } from "lru-cache";
-
+interface MerchantConfig {
+  razorpayMerchantId: string;
+  razorpayKeyId: string;
+  razorpayKeySecret: string;
+  razorpayWebhookSecret: string;
+}
 const options = {
   max: 50000,
   // for use with tracking overall storage size
@@ -21,5 +26,5 @@ export const setMerchantConfig = async (
   merchantId: string,
   config: unknown,
 ) => {
-  cache.set(merchantId, config);
+  cache.set(merchantId, config as MerchantConfig);
 };

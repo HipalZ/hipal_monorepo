@@ -7,8 +7,15 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { cache } from "../../utils/cacheHelper";
 import { respond } from "../../utils/response";
+import { razorpayWrapper } from "./../../utils/razorpay-wrapper";
 
+export interface MerChantDetails {
+  businessId: string;
+  razorpayMerchantId: string;
+  razorpayKeyId: string;
+}
 const settingsRouter = new Hono()
   // .get(
   //   '/',
@@ -57,6 +64,24 @@ const settingsRouter = new Hono()
       const createSetting = await BusinessSettings.create(requestData);
       if (!createSetting)
         return respond(c, "Error in creating setting", true, 400, {});
+      if (
+        createSetting.razorpayKeyId &&
+        createSetting.razorpayKeySecret &&
+        createSetting.razorpayMerchantId &&
+        createSetting.razorpayWebhookSecret
+      ) {
+        await razorpayWrapper
+          .create(createSetting.razorpayMerchantId)
+          .then(() => {
+            console.log(
+              "Razorpay instance created successfully",
+              createSetting.razorpayMerchantId,
+            );
+          })
+          .catch((err) => {
+            console.error("Error creating Razorpay instance", err);
+          });
+      }
       return respond(
         c,
         "Setting created successfully",
@@ -82,6 +107,25 @@ const settingsRouter = new Hono()
       );
       if (!updateSetting)
         return respond(c, "Error in updating setting", true, 400, {});
+
+      if (
+        updateSetting.razorpayKeyId &&
+        updateSetting.razorpayKeySecret &&
+        updateSetting.razorpayMerchantId &&
+        updateSetting.razorpayWebhookSecret
+      ) {
+        await razorpayWrapper
+          .create(updateSetting.razorpayMerchantId)
+          .then(() => {
+            console.log(
+              "Razorpay instance created successfully",
+              updateSetting.razorpayMerchantId,
+            );
+          })
+          .catch((err) => {
+            console.error("Error creating Razorpay instance", err);
+          });
+      }
       return respond(
         c,
         "Setting updated successfully",
@@ -218,6 +262,48 @@ const settingsRouter = new Hono()
       return respond(c, "Banners sequence updated successfully", false, 200, {
         updatedBannerIds: sequenceOfBannerIds,
       });
+    },
+  )
+  .get(
+    "/:businessId/getMerchantKeySecret",
+
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      let merchant: MerChantDetails | null = (await cache.get(
+        businessId as string,
+      )) as MerChantDetails;
+      if (!merchant) {
+        console.log("from db");
+        merchant = await BusinessSettings.findOne({
+          businessId,
+        })
+          .select("razorpayMerchantId razorpayKeyId businessId")
+          .lean();
+        await cache.set(businessId as string, merchant as MerChantDetails);
+      }
+
+      console.log("form cache", merchant);
+
+      const razorpayObject = {
+        businessId: merchant?.businessId,
+        razorpayKeyId: merchant?.razorpayKeyId,
+        razorpayMerchantId: merchant?.razorpayMerchantId,
+      };
+
+      return respond(
+        c,
+        "Settings fetched successfully",
+        false,
+        200,
+        razorpayObject,
+      );
     },
   );
 

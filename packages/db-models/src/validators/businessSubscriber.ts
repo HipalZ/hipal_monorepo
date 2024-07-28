@@ -18,10 +18,12 @@ export const businessSubscriberValidator = z.object({
       message: "userCount must be a number",
     })
     .optional(),
-  isDeleted: z.boolean().default(false),
-  date: z.number({
-    message: "date must be a number",
-  }),
+  isDeleted: z.boolean().default(false).optional(),
+  date: z
+    .number({
+      message: "date must be a number",
+    })
+    .optional(),
 });
 
 export type BusinessSubscriber = z.infer<typeof businessSubscriberValidator>;

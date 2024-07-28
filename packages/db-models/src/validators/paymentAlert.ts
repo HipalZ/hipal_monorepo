@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
-import { z } from 'zod';
+import mongoose from "mongoose";
+import { z } from "zod";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
     .string()
     .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: 'Invalid ObjectId',
+      message: "Invalid ObjectId",
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
@@ -13,18 +13,37 @@ export const PaymentAlertSchema = z.object({
   businessId: ObjectIdSchema,
   comment: z.string().min(4).max(300).optional(),
   message: z.string().min(4).max(300).optional(),
-  alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER']),
-  status: z.enum(['SUCCESS', 'FAIL', 'WAITER']),
-  order_id: ObjectIdSchema.optional(),
+  alertType: z.enum(["ONLINE", "OFFLINE", "WAITER"]),
+  status: z.enum(["SUCCESS", "FAIL", "WAITER"]),
+  order_id: ObjectIdSchema,
   errorReason: z.string().optional(),
   errorDescription: z.string().optional(),
   isAccepted: z.boolean().default(false).optional(),
   coinsApplied: z.boolean().default(false).optional(),
-  tableName: z.string(),
+  tableName: z
+    .string({
+      message: "Table name must be a string",
+    })
+    .min(3, {
+      message: "Table name must be at least 3 characters",
+    })
+    .max(100, {
+      message: "Table name must be at most 100 characters",
+    }),
   posDiscount: z.number().default(0).optional(),
-  waiterName: z.string().optional(),
+  waiterName: z
+    .string({
+      message: "Waiter name must be a string",
+    })
+    .min(3, {
+      message: "Waiter name must be at least 3 characters",
+    })
+    .max(100, {
+      message: "Waiter name must be at most 100 characters",
+    })
+    .optional(),
   isRejected: z.boolean().default(false).optional(),
-  date: z.number().optional(),
+  date: z.number(),
   userId: ObjectIdSchema,
 });
 

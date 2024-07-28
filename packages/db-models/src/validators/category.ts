@@ -66,6 +66,7 @@ export const categorySchema = z.object({
   isDeleted: z.boolean().default(false).optional(),
 
   availability: z.boolean().default(true).optional(),
+  sequence: z.number().optional(),
 });
 
 export const updateCategorySchema = z.object({
@@ -116,6 +117,7 @@ export const updateCategorySchema = z.object({
   removeSubCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
   removeParentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
+  sequence: z.number().optional(),
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;

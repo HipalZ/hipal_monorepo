@@ -11,7 +11,6 @@ import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
 import { catchErrorHandler } from "../middleware/catchErrorHandler";
-import { razorpayWrapper } from "../razorpay_wrapper";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
@@ -20,8 +19,6 @@ import "./utils/env";
 const app = new Hono({
   strict: true,
 });
-
-razorpayWrapper.create(Bun.env.RAZORPAY_KEY_ID, Bun.env.RAZORPAY_SECRET);
 
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
@@ -67,6 +64,7 @@ export default {
   fetch: app.fetch,
 };
 
+//@ts-ignore
 app.use(catchErrorHandler(app));
 
 export { type AppType } from "./routes";

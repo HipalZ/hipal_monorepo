@@ -214,7 +214,7 @@ const dishesRouter = new Hono()
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       //@ts-ignore
-      return await runInTransaction(async (session: ClientSession) => {
+      return runInTransaction(async (session: ClientSession) => {
         const { id } = c.req.param();
 
         const existingDish = await Dish.findByIdAndUpdate(id, {

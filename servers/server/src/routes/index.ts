@@ -6,7 +6,7 @@ import dishesRouter from "./dishes";
 import groupRouter from "./group";
 import paymentsRouter from "./payments";
 import settingsRouter from "./settings";
-import subsCriberRouter from "./subscriber";
+import subsCriberRouter from "./subscribers";
 import usersRouter from "./users";
 //
 const app = new Hono();
