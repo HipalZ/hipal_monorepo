@@ -6,7 +6,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 First, run the development server:
 
-`````bash
+````bash
 npm run dev
 # or
 yarn dev
@@ -51,7 +51,7 @@ secret/digitalocean-dns created
 Test
 sss
 `
-`````
+````
 
 solved revi
 
@@ -67,9 +67,12 @@ home icon change and bookmark back button remove
 //
 
 hipal-app test
+payment
 again
 popo
 loaders payment
 loaders payment
 create order offline toast
 optimized code
+
+ahal
