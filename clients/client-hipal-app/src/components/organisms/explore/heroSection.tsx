@@ -15,6 +15,9 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import RestaurantTimeMemo from "@/components/atoms/time/restaurant";
 import { preDefinedHeroButtons } from "@/components/utils/helpers";
 import { MdOutlineCall } from "react-icons/md";
+import MemoRewards from "@/components/templates/explore/rewards";
+import { cn } from "@hi/common";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 interface IHeroSection {
   data: IBusinessData;
@@ -22,6 +25,7 @@ interface IHeroSection {
 
 function HeroSection({ data }: IHeroSection): JSX.Element {
   const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
+  const accessToken = useUserToken.getState().accessToken;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
   const business = data.business as BusinessDetails;
@@ -48,8 +52,8 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   return (
     <div className="relative flex flex-col items-center px-8">
-      <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-3xl p-4 text-base-100">
-        <article className="flex space-x-4">
+      <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-3xl px-4 pt-4 text-base-100">
+        <article className="flex pb-4 space-x-4">
           <figure>
             {logoUrl ? (
               <center className="w-[65px] h-[65px]">
@@ -75,13 +79,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             )}
             {address && (
               <>
-                <h6 className="w-48 text-xs font-semibold capitalize truncate line-clamp-1 ">
+                <h6 className="w-48 mt-2 text-xs font-semibold capitalize truncate line-clamp-1">
                   {address}
                 </h6>
-                <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-base-200 text-primary z-20">
+                <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-[#3DC18B] text-white z-20">
                   OPEN
                 </h6>
-                <div className="absolute top-[2.5rem] px-2 py-1 text-xs rounded-md -right-1 w-5 h-10 rotate-45 bg-base-300 text-primary z-[-1]" />
+                <div className="absolute top-[2.5rem] px-2 py-1 text-xs rounded-md -right-1 w-5 h-10 rotate-45 bg-[#1E7250] text-primary z-[-1]" />
               </>
             )}
             <article className="flex gap-1 mt-1">
@@ -90,7 +94,9 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             </article>
           </div>
         </article>
-        <article className="flex items-center justify-between gap-2 mt-5">
+        <hr className="-mx-6 opacity-30" />
+
+        <article className="flex items-center justify-between gap-2 mt-3">
           {preDefinedHeroButtons.map((button) => {
             return (
               <div
@@ -105,27 +111,33 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         </article>
       </section>
       {location && (
-        <section
+        <button
+          type="button"
           onClick={callTheOwner}
-          onKeyDown={callTheOwner}
           className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-4 flex justify-center items-center"
         >
           <MdOutlineCall size={24} className="text-white" />
-        </section>
+        </button>
       )}
       {phone && (
-        <section
+        <button
+          type="button"
           onClick={goToLocation}
-          onKeyDown={goToLocation}
           className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-[4.5rem] flex justify-center items-center"
         >
           <TiLocationOutline size={24} className="text-white" />
-        </section>
+        </button>
       )}
       <div className="mt-36" />
-      <h3 className="flex text-xl font-bold line-clamp-2 divide-base-content">
+      <MemoRewards />
+      <center
+        className={cn(
+          "flex items-center justify-center text-xl font-bold line-clamp-2 divide-base-content",
+          accessToken.length > 0 ? "pt-[7rem]" : "-pt-[1rem]",
+        )}
+      >
         {Array.isArray(tags) ? tags.join(" | ") : tags}
-      </h3>
+      </center>
       <div className="mt-4 text-xs font-light text-center">
         <ReadMore text={description} />
       </div>

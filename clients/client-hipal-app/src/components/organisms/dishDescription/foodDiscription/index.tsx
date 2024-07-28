@@ -12,8 +12,6 @@ import { useCartStore } from "@/components/store/useCartStore";
 import type { DishType } from "@hi/db-models/src/validators";
 
 function FoodDescription({ dishData }: { dishData: DishType }) {
-  const { selectedPortion, selectedChoices, addToCart } = useCartStore();
-
   const isAvailable = dishData?.availability;
 
   return (
@@ -64,7 +62,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
           </div>
 
           <div className="flex flex-row flex-wrap w-full gap-px divide-base-content bg-base-content/10">
-            {dishData?.portions.map((portion, key) => (
+            {dishData?.portions?.map((portion, key) => (
               <div
                 key={key}
                 className={
@@ -90,8 +88,8 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             <h4 className="my-auto">Extras available</h4>
           </div>
 
-          {dishData?.addOnIds.map((addOn, key) => (
-            <div key={addOn._id} className="space-y-3">
+          {dishData?.addOnIds?.map((addOn, key) => (
+            <div key={addOn._id.toString()} className="space-y-3">
               <h6 className="text-sm ">
                 {key + 1}. {addOn?.name}
               </h6>

@@ -71,9 +71,7 @@ export default async function Explore({
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <HeroSection data={data} />
         </Suspense>
-        <Suspense fallback={<SkeletonLoader height={100} count={1} />}>
-          <Rewards />
-        </Suspense>
+     
         <div className="bg-base-200">
           <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
         </div>
@@ -85,7 +83,7 @@ export default async function Explore({
               <h2 className="mt-4 text-2xl font-bold text-center bg-base-200">
                 In Spotlight
               </h2>
-              <article className="h-[25rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap">
+              <article className="h-[28rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap">
                 <EmblaCarousel>
                   {data?.banners?.map(
                     (banner: IBannerPayload, index: number) => {

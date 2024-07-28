@@ -1453,7 +1453,7 @@ input[type='password'] {
 }
 
 .splide__pagination__page.custom-pagination__page {
-    background-color: #ccc; /* Adjust color as needed */
+    background-color: #ccc; 
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -1462,28 +1462,28 @@ input[type='password'] {
 }
 
 .splide__pagination__page.custom-pagination__page.is-active {
-    background-color: #333; /* Adjust color as needed */
+    background-color: #333; 
 }
 
-  .embla__slide {
-	flex: 0 0 100%;
+.embla__slide {
+	flex: 0 0 80%; 
 	min-width: 0;
+	transition: transform 0.3s ease; 
+	margin-right: 10px; 
   }
-
+  
   .embla {
-	max-width: 48rem;
+	max-width: 100%; 
 	margin: auto;
-	--slide-height: 19rem;
-	--slide-spacing: 1rem;
-	--slide-size: 70%;
 	overflow: hidden;
   }
-
+  
   .embla__container {
-	backface-visibility: hidden;
 	display: flex;
+	backface-visibility: hidden;
 	touch-action: pan-y pinch-zoom;
   }
+  
   .embla__button-container {
 	display: flex;
 	justify-content: space-between;
@@ -1494,24 +1494,29 @@ input[type='password'] {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background-color: #CACACA;
+	background-color: #cacaca;
 	margin: 0 4px;
 	transition: transform 0.3s ease;
   }
   
   .embla__dot--active {
 	background-color: #333;
-	transform: scale(1); /* Scale up the active dot */
+	transform: scale(1);
   }
   
   .embla__dot--inactive {
-	transform: scale(0.8); /* Scale down the inactive dots */
+	transform: scale(0.8);
   }
-
-  .listbox-button:hover {
-	background-color: #f0f0f0; /* Change to your desired highlight color */
-	border-color: #CACACA; /* Optional: Change border color on hover */
+  
+  /* Add classes for scaling */
+  .embla__slide--scale-down {
+	transform: scale(0.75);
   }
+  
+  .embla__slide--scale-up {
+	transform: scale(1);
+  }
+  
   
 
   .shine {

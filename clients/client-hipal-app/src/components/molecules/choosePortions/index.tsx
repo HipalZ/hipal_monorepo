@@ -61,7 +61,7 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
                     type="radio"
                     className="p-1 ml-auto mr-2 radio radio-secondary radio-sm"
                     checked={selectedPortion?._id === portion._id}
-                    onChange={() =>
+                    onClick={() =>
                       handlePortionSelect({
                         _id: portion._id,
                         name: portion.name,

@@ -29,7 +29,7 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto z-[103]">
       {addOns.map((addOn) => (
         <div
           key={addOn._id || crypto.randomUUID()}

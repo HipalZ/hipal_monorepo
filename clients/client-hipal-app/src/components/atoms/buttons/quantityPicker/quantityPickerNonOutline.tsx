@@ -64,7 +64,7 @@ const QuantityPickerNonOutline = ({
           {/* Checkbox for binary choice */}
           <input
             type="checkbox"
-            className="scale-110"
+            className="scale-125 "
             checked={quantity > 0}
             onChange={() => setQuantity(quantity > 0 ? 0 : 1)}
           />

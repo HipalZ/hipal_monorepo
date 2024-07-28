@@ -1,85 +1,61 @@
 "use client";
 import { useLogin } from "@/components/store/useLogin";
 import React, { memo } from "react";
-import styles from "./reward.module.css";
-import RewardsImg from "@/assets/payment/Rewards.png";
-import Wallet from "@/assets/payment/Waller.png";
-import Couponz from "@/assets/payment/Couponz.png";
-import Backgrid from "@/assets/payment/backgrid";
-import Image from "next/image";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-
-const RewardCard = ({
-	bgColor,
-	title,
-	imgSrc,
-	imgAlt,
-	buttonContent,
-	gridColor,
-}) => (
-	<center className={`${styles.reward_card} ${bgColor} on_active_bounce`}>
-		<center className={styles.reward_card_text}>{title}</center>
-		<figure className={styles.reward_card_grid}>
-			<Backgrid color={gridColor} />
-		</figure>
-		<figure className={styles.reward_card_image}>
-			<Image src={imgSrc} width={90} height={90} alt={imgAlt} />
-		</figure>
-		<button type="button" className={`${styles.reward_card_button}`}>{buttonContent}</button>
-	</center>
-);
+import { CiDiscount1 } from "react-icons/ci";
+import { TfiWallet } from "react-icons/tfi";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const Rewards = () => {
-	const { userDetails, userCoinZ,isLogin } = useLogin((s) => ({
-		userDetails: s.userDetails,
-		userCoinZ: s.userCoinZ,
-		isLogin: s.isLogin,
-	}));
-	const customLink = useParams()?.businessId as string;
+  const { userDetails, userCoinZ, isLogin } = useLogin((s) => ({
+    userDetails: s.userDetails,
+    userCoinZ: s.userCoinZ,
+    isLogin: s.isLogin,
+  }));
+  const accessToken = useUserToken.getState().accessToken;
+  const customLink = useParams()?.businessId as string;
 
-	if(!isLogin)return;
-	return (
-		<div className="h-[15.5rem]">
-			<h3 className="pt-2 pl-4 text-xl text-Primary">
-				👋 Hi {userDetails.name}
-			</h3>
-			<section className={styles.reward_card_container}>
-				<Link href={`/${customLink}/loyalty`} className="w-full">
-					<RewardCard
-						bgColor="bg-[#F5D14E]"
-						title="Reward"
-						imgSrc={RewardsImg}
-						imgAlt="rewards"
-						buttonContent="Explore"
-						gridColor="#000"
-					/>
-				</Link>
-				<Link href={`/${customLink}/loyalty`} className="w-full">
-					<RewardCard
-						bgColor="bg-[#5227CA]"
-						title="Wallet"
-						imgSrc={Wallet}
-						imgAlt="wallet"
-						buttonContent={`🪙${userCoinZ}`}
-						gridColor="#ffffff60"
-					/>
-				</Link>
-				<Link href="#" className="w-full">
-					<RewardCard
-						bgColor="bg-[#CA2727]"
-						title="CouponZ"
-						imgSrc={Couponz}
-						imgAlt="couponz"
-						buttonContent="🔜"
-						gridColor="#000"
-					/>
-				</Link>
-			</section>
-		</div>
-	);
-}
+  if (!accessToken) return null;
+
+  return (
+    <div className="h-[11rem] bg-base-200 absolute w-full z-[-1] mt-16">
+      <center className="mt-[3rem]">
+        <h3 className="py-4 mr-2 text-xl text-Primary">
+          👋 Hi {userDetails.name}
+        </h3>
+        <section className="flex items-center justify-center gap-4">
+          <article className="flex items-center justify-center gap-1">
+            <CiDiscount1 size={36} />
+            <div className="text-start">
+              <h3 className="text-sm font-semibold text-Primary">Rewards</h3>
+              <p className="text-xs text-base-content opacity-60 text-nowrap">
+                Explore
+              </p>
+            </div>
+          </article>
+          <article className="flex items-center justify-center gap-1">
+            <TfiWallet size={30} />
+            <div className="text-start">
+              <h3 className="text-sm font-semibold text-Primary">Rewards</h3>
+              <p className="text-xs text-base-content opacity-60 text-nowrap">
+                Use {userCoinZ} CoinZ
+              </p>
+            </div>
+          </article>
+          <article className="flex items-center justify-center gap-1">
+            <CiDiscount1 size={36} />
+            <div className="text-start">
+              <h3 className="text-sm font-semibold text-Primary">Couponz</h3>
+              <p className="text-xs text-base-content opacity-60 text-nowrap">
+                Coming Soon
+              </p>
+            </div>
+          </article>
+        </section>
+      </center>
+    </div>
+  );
+};
 
 const MemoRewards = memo(Rewards);
-export default MemoRewards
+export default MemoRewards;

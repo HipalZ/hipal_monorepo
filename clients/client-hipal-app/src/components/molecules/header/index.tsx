@@ -1,12 +1,12 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import { HiSearch } from "react-icons/hi";
 import QuickFilter from "@/components/atoms/quickFilter";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import MemoDishData from "@/components/atoms/dishDescription";
 import SearchPanelCom from "./searchPanelCom";
+import { useSearch } from "@/components/store/useSearch";
 
 function Header({ categories }: { categories: CategoryType[] }) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { isSearchActive, setIsSearchActive } = useSearch();
 
   const allDishes: DishType[] = useMemo(() => {
     const getDishesFromCategory = (category: CategoryType): DishType[] => {
@@ -24,8 +24,7 @@ function Header({ categories }: { categories: CategoryType[] }) {
     }, []);
   }, [categories]);
 
-  const openSearchModal = () => setIsSearchOpen(true);
-  const closeSearchModal = () => setIsSearchOpen(false);
+  const openSearchModal = () => setIsSearchActive(true);
 
   return (
     <div
@@ -43,22 +42,17 @@ function Header({ categories }: { categories: CategoryType[] }) {
             type="button"
             className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto rounded-full"
           >
-            <HiSearch
-              onClick={openSearchModal}
-              size={30}
-              className="text-lg text-primary"
-            />
+            {!isSearchActive && (
+              <HiSearch
+                onClick={openSearchModal}
+                size={30}
+                className="text-lg text-primary"
+              />
+            )}
           </button>
         </div>
       </div>
-      {isSearchOpen && (
-        <MemoDishData show={isSearchOpen} onClose={closeSearchModal}>
-          <SearchPanelCom
-            allDishes={allDishes}
-            closeSearchModal={closeSearchModal}
-          />
-        </MemoDishData>
-      )}
+      {isSearchActive && <SearchPanelCom allDishes={allDishes} />}
     </div>
   );
 }

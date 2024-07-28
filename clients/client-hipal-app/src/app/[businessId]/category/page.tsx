@@ -43,7 +43,6 @@ const TopBackground = dynamics(
   },
 );
 
-
 async function fetchData(businessId: string) {
   const data = await categoryApis.all(businessId);
   return data;
@@ -72,12 +71,18 @@ export default async function Page({
         <div>
           <div className="!mt-0 !scroll-smooth">
             <DishesList
-               parentCategory={data?.parentCategories}
-               childCategory={data?.childCategories}
+              parentCategory={data?.parentCategories}
+              childCategory={data?.childCategories}
             />
           </div>
-          <Footer themes={data?.settings || defaultThemes} socialMediaLinks={data?.business?.socialMediaLinks} footerDescription={data?.business?.footerDescription}/>
-          <PageName endBannerUrl={data?.business?.endBannerUrl}/>
+          <section className="pt-6 bg-base-100">
+            <Footer
+              themes={data?.settings || defaultThemes}
+              socialMediaLinks={data?.business?.socialMediaLinks}
+              footerDescription={data?.business?.footerDescription}
+            />
+          </section>
+          <PageName endBannerUrl={data?.business?.endBannerUrl} />
         </div>
       </div>
       <CategoryPageBtn />

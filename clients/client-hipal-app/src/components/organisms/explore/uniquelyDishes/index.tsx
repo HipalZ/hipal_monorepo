@@ -20,10 +20,10 @@ const MemoUniquelyDishes = (props: Props) => {
   return (
     <section className="mt-6 no-scrollbar">
       <Section title="Uniquely Yours" tag="h3">
-        <div className="flex">
+        <div className="flex mx-4">
           <EmblaCarousel>
             {uniquelyDishes?.map((dishData: IUniquelyDishes, key: number) => (
-              <div key={`${key}FilterPopularDishes${dishData?._id || ""}`}>
+              <div className="!mx-0" key={`${key}FilterPopularDishes${dishData?._id || ""}`}>
                 {dishData && (
                   <DiscountDishCard
                     dishData={dishData}

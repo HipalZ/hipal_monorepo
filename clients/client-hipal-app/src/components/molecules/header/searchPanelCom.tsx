@@ -1,37 +1,41 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import MemoHorizontalCard from "@/components/atoms/card/horizontalCard";
+import { useSearch } from "@/components/store/useSearch";
+import { BiArrowBack } from "react-icons/bi";
 
-const SearchPanelCom = ({ allDishes, closeSearchModal }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+const SearchPanelCom = ({ allDishes }) => {
+  const { searchText, setSearchText, setIsSearchActive } = useSearch();
 
   const filteredDishes = useMemo(() => {
-    if (!searchQuery) return allDishes;
+    if (!searchText) return allDishes;
     return allDishes.filter((dish) =>
-      dish.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      dish.name.toLowerCase().includes(searchText.toLowerCase()),
     );
-  }, [searchQuery, allDishes]);
-
-  console.log("filteredDishes", filteredDishes);
+  }, [searchText, allDishes]);
 
   return (
     <>
-      <div className="mt-4 ">
+      <div className="flex items-center mt-4 ml-4 text-base">
+        <BiArrowBack onClick={() => setIsSearchActive(false)} size={24} />
         <input
           type="search"
-          className="w-[92%] px-4 py-2 mx-4 border border-gray-300 rounded-md"
+          className="w-[92%] px-4 py-2 text-sm mx-4 border border-gray-300 rounded-md"
           placeholder="Search for dishes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
-      <div className="mt-4 overflow-y-auto max-h-[80dvh] min-h-[80dvh]">
-        {(searchQuery.length > 0 ? filteredDishes : allDishes).map(
+      <div className="mt-4 overflow-y-auto max-h-[95dvh] min-h-[95dvh]">
+        {(searchText.length > 0 ? filteredDishes : allDishes).map(
           (dish, index) => (
             <div
               key={`${dish._id} + ${index}`}
               className="py-2 border-b cursor-pointer"
             >
-              <MemoHorizontalCard dishData={dish} key={`${dish._id} + ${index}`} />
+              <MemoHorizontalCard
+                dishData={dish}
+                key={`${dish._id} + ${index}`}
+              />
             </div>
           ),
         )}

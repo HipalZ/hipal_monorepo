@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
+import { useSearch } from "@/components/store/useSearch";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -27,6 +28,7 @@ const CategoryPageBtn = () => {
   const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?._id,
   }));
+  const { isSearchActive, setIsSearchActive } = useSearch();
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const [inputModal, setInputModal] = useState(false);
@@ -102,69 +104,71 @@ const CategoryPageBtn = () => {
 
   return (
     <>
-      <BottomButton>
-        <section className="relative flex items-center justify-between gap-4">
-          <center
-            onClick={triggerCallWaiter}
-            className="w-full px-2 font-light text-base-100"
-          >
-            <FaConciergeBell size={22} className="mr-2" />
-            Call captain
-          </center>
-          <button
-            type="button"
-            onClick={showingCart}
-            className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
-          >
-            <AnimatePresence initial={false} mode="wait">
-              {showCart ? (
-                <motion.div
-                  key="close"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <HiX size={30} className="text-primary" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="bag"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <div className="relative">
-                    <BsBagHeart size={30} />
-                    {cart.length > 0 && (
-                      <motion.span
-                        className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-6"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        {cart.length}
-                      </motion.span>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </button>
-          <span className="w-full -mb-5 font-thin text-base-100">
-            {showCart ? "Menu" : "Cart"}
-          </span>
-          <center
-            onClick={proceedToPayment}
-            className="w-full px-2 font-light text-base-100"
-          >
-            <FaMoneyBillWave size={22} />
-            Pay bill
-          </center>
-        </section>
-      </BottomButton>
+      {!isSearchActive && (
+        <BottomButton>
+          <section className="relative flex items-center justify-between gap-4">
+            <center
+              onClick={triggerCallWaiter}
+              className="w-full px-2 font-light text-base-100"
+            >
+              <FaConciergeBell size={22} className="mr-2" />
+              Call captain
+            </center>
+            <button
+              type="button"
+              onClick={showingCart}
+              className="absolute top-0 p-4 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100"
+            >
+              <AnimatePresence initial={false} mode="wait">
+                {showCart ? (
+                  <motion.div
+                    key="close"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <HiX size={30} className="text-primary" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="bag"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="relative">
+                      <BsBagHeart size={30} />
+                      {cart.length > 0 && (
+                        <motion.span
+                          className="absolute right-0 px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-full -top-6"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {cart.length}
+                        </motion.span>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+            <span className="w-full -mb-5 font-thin text-base-100">
+              {showCart ? "Menu" : "Cart"}
+            </span>
+            <center
+              onClick={proceedToPayment}
+              className="w-full px-2 font-light text-base-100"
+            >
+              <FaMoneyBillWave size={22} />
+              Pay bill
+            </center>
+          </section>
+        </BottomButton>
+      )}
 
       {inputModal && (
         <BottomPopUp show={inputModal} onClose={closeModal}>
