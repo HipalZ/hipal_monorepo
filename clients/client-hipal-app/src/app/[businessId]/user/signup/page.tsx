@@ -76,13 +76,13 @@ const SignUp = memo(() => {
         onSubmit={handleSubmit}
         className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl"
       >
-        {businessData?.logo && (
+        {businessData?.logoUrl && (
           <section className="bg-inherit float-right w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden">
             <Image
               className="aspect-square w-[4.75rem] h-[4.75rem]"
               width={84}
               height={84}
-              src={logo}
+              src={businessData?.logoUrl}
               alt="business logo"
               onError={() => setLogo(HipalLogo.src)}
             />

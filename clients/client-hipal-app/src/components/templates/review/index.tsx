@@ -50,7 +50,7 @@ function Review({ data }: { data: IBusinessData }) {
 	const mode = searchParams?.get('mode')
 	const amount = Number(searchParams?.get('amount') || '0')
 	const businessName = useBusinessDetails((s) => s.businessDetails?.businessName);
-	const logo = useBusinessDetails((s) => s.businessDetails?.logo);
+	const logo = useBusinessDetails((s) => s.businessDetails?.logoUrl);
 	const [rating, setRating] = useState<string | null>();
 	const [description, setDescription] = useState<string | ''>('')
 	const [showSuggestions, setShowSuggestions] = useState(false)

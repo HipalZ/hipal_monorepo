@@ -27,7 +27,7 @@ function OtpPage() {
   const [coinZ, setCoinz] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState(userDetails?.name);
-  const businessLogo = useBusinessDetails((s) => s.businessDetails.logo);
+  const businessLogo = useBusinessDetails((s) => s.businessDetails.logoUrl);
   const [logo, setLogo] = useState(businessLogo);
   const setAccessToken = useUserToken.getState().setAccessToken;
   const setRefreshToken = useUserToken.getState().setRefreshToken;

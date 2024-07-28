@@ -12,7 +12,7 @@ import type { IBiz } from '@/components/types/businessData'
 
 const Terms = () => {
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
-	const { logo } = businessDetails as IBiz
+	const { logo: logoUrl } = businessDetails as IBiz
 	const router = useRouter()
 	const onBack = () => {
 		router.back()
@@ -24,9 +24,9 @@ const Terms = () => {
 				<HiChevronLeft className='mt-6 ml-2 text-3xl' onClick={onBack} />
 			</div>
 			<div className='flex items-center justify-center w-1/2 mx-auto mt-6 mb-12'>
-				{!isEmpty(logo) ? (
+				{!isEmpty(logoUrl) ? (
 					<Image
-						src={logo ? logo : Logo}
+						src={logoUrl ? logoUrl : Logo}
 						height={100}
 						width={100}
 						quality={95}

@@ -23,7 +23,7 @@ const MemoHiSites = () => {
     startTransition(() => {
       navigate(`/app/business/${businessId}/businesscontrol`);
     });
-  }, []);
+  }, [businessId]);
 
   const goBack = useCallback(() => {
     startTransition(() => {

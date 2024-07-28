@@ -20,6 +20,7 @@ export const useBusinessDetails = create(
         tags: [],
         customLink: "",
         logo: "",
+        logoUrl: "",
         address: "",
         staff: [],
         _id: "",

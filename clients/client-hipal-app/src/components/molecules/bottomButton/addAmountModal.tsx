@@ -73,10 +73,10 @@ const AddAmountModal = memo(() => {
   return (
     <section className="h-[80vh] overflow-y-auto overflow-x-hidden">
       <header className="bg-white h-[4.25rem] flex items-center">
-        {business.logo ? (
+        {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
             <Image
-              src={business.logo}
+              src={business.logoUrl}
               height={80}
               width={80}
               quality={95}

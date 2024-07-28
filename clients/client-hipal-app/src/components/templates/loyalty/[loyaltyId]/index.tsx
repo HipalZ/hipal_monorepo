@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import useUserReward from "@/components/store/useUserReward";
 import avatar from "@/assets/img/avatar.png";
 import Link from "next/link";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import line from "@/assets/svg/Line.svg";
 import ellipse from "@/assets/svg/ellipse.svg";
@@ -110,11 +109,11 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
         &nbsp;
         <section className="relative bg-primary h-[7rem] flex justify-between items-center -mx-6 rounded-t-3xl pt-4 mb-4 px-10 overflow-hidden">
           <h3 className="mt-4 text-3xl font-thin capitalize text-base-100">
-            {data?.business?.businessName}
+            {data?.business?.name}
           </h3>
           <figure>
             <Image
-              src={data?.business?.logo || ""}
+              src={data?.business?.logoUrl || ""}
               alt="logo"
               width={64}
               height={64}
@@ -158,7 +157,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
                 <article className="flex space-x-0">
                   <figure className="w-[4rem] shrink-0 ">
                     <Image
-                      src={data?.business?.logo || ""}
+                      src={data?.business?.logoUrl || ""}
                       alt="logo"
                       width={52}
                       height={52}

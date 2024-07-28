@@ -509,7 +509,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         <div>
           <section className="z-20 w-full bg-base-100">
             <header className="bg-white h-[4.25rem] flex items-center space-x-8">
-              {businessDetails.logo ? (
+              {businessDetails?.logoUrl ? (
                 <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
                   <button
                     onClick={handleBack}
@@ -519,7 +519,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                     <MdOutlineChevronLeft className="text-3xl text-white " />
                   </button>
                   <Image
-                    src={businessDetails.logo}
+                    src={businessDetails?.logoUrl}
                     height={80}
                     width={80}
                     quality={95}
@@ -546,7 +546,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
               <PaymentCard
                 claimedCoinz={claimedCoinz}
                 billValue={billValue}
-                logo={data?.business?.logo}
+                logo={data?.business?.logoUrl}
               />
               {userCoinz > 0 && (
                 <UseCoinzPopup openModal={openModal} billValue={billValue} />

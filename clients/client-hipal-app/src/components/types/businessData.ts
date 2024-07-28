@@ -3,6 +3,7 @@ import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import type { CategoryType } from "@hi/db-models/src/validators";
 
 export interface IBiz {
+  logoUrl: string;
   email: string;
   businessId: string;
   businessName: string;
@@ -363,8 +364,6 @@ export interface BusinessDetails {
     openTime: string;
     closeTime: string;
   }[];
-  fixCloseTime: string;
-  fixOpenTime: string;
   logoUrl: string;
   specialBannerUrl: string;
   endBannerUrl: string;

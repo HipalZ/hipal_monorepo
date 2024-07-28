@@ -32,7 +32,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const ref = useRef(null);
 	const isInView = useInView(ref, { once: true });
-	const logo = useBusinessDetails((s) => s.businessDetails?.logo)
+	const logo = useBusinessDetails((s) => s.businessDetails?.logoUrl)
 	const customLink = useParams()?.businessId as string
 	const accessToken = useUserToken.getState().accessToken;
 

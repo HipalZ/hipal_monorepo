@@ -216,7 +216,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
               </article>
               <center>
                 <Image
-                  src={data?.business?.logo || ""}
+                  src={data?.business?.logoUrl || ""}
                   alt="logo"
                   width={95}
                   height={95}
@@ -293,9 +293,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                     }}
                     className="mx-[1rem] mt-[1rem] w-[50px] h-[50px]"
                   >
-                    {data?.business?.logo ? (
+                    {data?.business?.logoUrl ? (
                       <Image
-                        src={data?.business?.logo}
+                        src={data?.business?.logoUrl}
                         alt="logo"
                         height={100}
                         width={100}
@@ -404,7 +404,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
           onClose={() => setIsHiCodeModalOpen(false)}
         >
           <MainLoyalty
-            logo={businessDetails?.logo}
+            logo={businessDetails?.logoUrl}
             hiCode={HiCode}
             cardColor={data?.loyalty?.cardColor}
             fontColor={data?.loyalty?.fontColor}
