@@ -122,7 +122,7 @@ export default async function Explore({
           <SubLoyalty loyalty={data?.loyalty} />
         </Suspense>
         {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
-          <div className="overflow-auto">
+          <div className="mt-12 overflow-auto">
             <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </Suspense>

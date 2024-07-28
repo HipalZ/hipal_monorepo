@@ -43,11 +43,11 @@ const Footer = (props: IFooter) => {
 
   return (
     <div className="">
-      {footerDescription ? (
+      {/* {footerDescription ? (
         <div className="px-4 text-sm text-left text-base-100-content">
           {footerDescription}
         </div>
-      ) : null}
+      ) : null} */}
       <section className="flex justify-center px-2 mt-4 space-x-2">
         {socialMediaLinks
           ? socialMediaLinks.map(({ _id, icon, link }) => (

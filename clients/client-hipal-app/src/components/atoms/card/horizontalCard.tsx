@@ -67,7 +67,7 @@ const HorizontalCard = ({
             {/* <DishTag tags={dishData.tags} /> */}
           </div>
 
-          <div className="w-full overflow-hidden text-lg font-medium capitalize">
+          <div className="overflow-hidden text-lg font-medium capitalize w-[95%]">
             {dishData?.name || ""}
           </div>
           <div className="mt-1 ml-1 text-xs ">

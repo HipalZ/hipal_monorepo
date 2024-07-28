@@ -13,7 +13,7 @@ function DiscountDishCard({
 	onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }) {
 	return (
-		<center className="relative flex flex-col w-32 no-scrollbar" onClick={onClick}>
+		<center className="relative flex flex-col w-32 mx-2 hide-scrollbar" onClick={onClick}>
 			<div className="absolute z-50 scale-75 bg-white rounded-md left-1 top-1">
 				<FoodType type={dishData.dishType as FOOD_TYPES} />
 			</div>

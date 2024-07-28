@@ -1547,3 +1547,162 @@ input[type='password'] {
 	  background-position: 200%;
 	}
   }
+
+  .explore-bento-first {  
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    gap: 8px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "first";
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .explore-bento-first .first { grid-area: first; height: 220px; }
+  
+
+/* for 2 */
+.explore-bento-second {  
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "first second";
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .explore-bento-second .first { grid-area: first; height: 220px; }
+  
+  .explore-bento-second .second { grid-area: second; height: 220px; }
+  
+  /* for 3 */
+  .explore-bento-third {  
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "first second"
+      "third second";
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .first { grid-area: first; height: 105px;}
+  
+  .explore-bento-third .second { grid-area: second; height: 220px;}
+  
+  .third { grid-area: third; height: 105px;}
+
+  /* for 4 */
+
+  .explore-bento-fourth {  
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr 1fr 2fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "first first second"
+      "third fourth second";
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .third { grid-area: third; height: 105px;}
+  
+  .explore-bento-fourth .second { grid-area: second;  height: 220px; }
+  
+  .first { grid-area: first; height: 105px;}
+  
+  .fourth { grid-area: fourth; height: 105px;}
+  
+
+  /* for 5 */
+
+  .explore-bento-fifth {  
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "second first fifth"
+      "second third fourth";
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .third { grid-area: third; height: 105px; }
+  
+  .explore-bento-fifth .second { grid-area: second; height: 220px; }
+  
+  .fourth { grid-area: fourth; height: 105px; }
+  
+  .first { grid-area: first; height: 105px; }
+  
+  .fifth { grid-area: fifth; height: 105px; }
+  
+
+  /* for 6 */
+
+  .explore-bento-sixth {
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr 1fr 1fr 1fr; 
+    grid-template-rows: 1fr 1fr;
+    gap: 8px 8px;
+    grid-auto-flow: row;
+    grid-template-areas:
+      "first fifth second second" 
+      "third third fourth sixth"; 
+    width: 100%;
+    max-width: 30rem;
+    height: 220px;
+  }
+  
+  .third {
+    grid-area: third; 
+    height: 105px;
+  }
+  
+  .fourth {
+    grid-area: fourth; 
+    height: 105px;
+  }
+  
+  .first {
+    grid-area: first; 
+    height: 105px;
+  }
+  
+  .fifth {
+    grid-area: fifth; 
+    height: 105px;
+  }
+  
+  .second {
+    grid-area: second; 
+    height: 105px;
+  }
+  
+  .sixth {
+    grid-area: sixth; 
+    height: 105px;
+  }

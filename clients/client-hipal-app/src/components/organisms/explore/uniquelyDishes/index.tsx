@@ -5,37 +5,60 @@ import type { IUniquelyDishes } from "@/components/types/businessData";
 import DiscountDishCard from "@/components/molecules/discountDishCard";
 import { useParams, useRouter } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
-import EmblaCarousel from "@/components/atoms/emblaCarousel";
+import type { DishType } from "@hi/db-models/src/validators";
+import { cn } from "@hi/common";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
 }
-const MemoUniquelyDishes = (props: Props) => {
+
+const baseGridOrder = ["first", "second", "third", "fourth", "fifth", "sixth"];
+
+const getFigureClass = (imageCount: number): string => {
+  return `explore-bento-${baseGridOrder[imageCount - 1] || "default"}`;
+};
+
+const DynamicImageGrid = ({ images }: { images: DishType[] }) => {
+  const figureClass = getFigureClass(images.length);
+
   const customLink = useParams()?.businessId as string;
-  const { uniquelyDishes } = props;
   const router = useRouter();
+
   const handleRecommendedDishClick = (id: string) => {
     router.push(routePaths[PAGE_TYPES.DISH_ID](customLink, id));
   };
+
+
   return (
-    <section className="mt-6 no-scrollbar">
-      <Section title="Uniquely Yours" tag="h3">
-        <div className="flex mx-4">
-          <EmblaCarousel>
-            {uniquelyDishes?.map((dishData: IUniquelyDishes, key: number) => (
-              <div className="!mx-0" key={`${key}FilterPopularDishes${dishData?._id || ""}`}>
-                {dishData && (
-                  <DiscountDishCard
-                    dishData={dishData}
-                    onClick={() => handleRecommendedDishClick(dishData._id)}
-                  />
-                )}
-              </div>
-            ))}
-          </EmblaCarousel>
-        </div>
-      </Section>
-    </section>
+    <figure className={cn(figureClass, "px-4")}>
+      {images.map((item, index) => (
+        <button
+          type="button"
+          style={{ overflow: "hidden", position: "relative" }}
+          key={item._id}
+          className={baseGridOrder[index % baseGridOrder.length]}
+          onClick={() => handleRecommendedDishClick(item._id?.toString())}
+        >
+          <img
+            className="object-cover w-full h-full rounded-xl"
+            src={item.images[0]}
+            alt={item.name}
+          />
+        </button>
+      ))}
+    </figure>
+  );
+};
+
+const MemoUniquelyDishes = (props: Props) => {
+  const { uniquelyDishes } = props;
+
+  return (
+    <Section title="Uniquely Yours" tag="h3">
+      {uniquelyDishes && uniquelyDishes.length > 0 && (
+        <DynamicImageGrid images={uniquelyDishes} />
+      )}
+    </Section>
   );
 };
 
