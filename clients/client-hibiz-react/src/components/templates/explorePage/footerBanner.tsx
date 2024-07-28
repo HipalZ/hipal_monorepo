@@ -24,11 +24,11 @@ const MemoFooterBanner = (props: IFooterBanner) => {
   } = props;
   return (
     <section className="md:flex md:space-x-10">
-      <section className="mt-4">
+      <section>
         <SubHeader text="Footer Banner" />
         <article
           className={cn(
-            "relative rounded-xl h-[18rem] w-full",
+            "relative rounded-xl w-full",
             img?.footer?.length > 0
               ? ""
               : "border-dashed border-2 border-[#8C63FF]",

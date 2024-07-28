@@ -35,6 +35,7 @@ const MemoBannerSection = (props: IProps) => {
               paragraphStyle={{ color: banner?.paragraphColor || "" }}
               buttonStyle={{
                 color: banner?.buttonColor || "",
+                buttonColor: banner?.buttonTextColor || "",
               }}
             />
           );

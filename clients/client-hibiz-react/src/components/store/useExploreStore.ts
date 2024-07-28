@@ -28,6 +28,12 @@ interface IExploreStore {
 
   img: ImagePreviews;
   setImg: SetImagePreviewsFunction;
+
+  toggleBizInfo: boolean;
+  setToggleBizInfo: (toggle: boolean) => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 export type ImagePreviews = {
@@ -122,6 +128,11 @@ export const useExploreStore = create(
         set((state) => ({
           imageFiles: { ...state.imageFiles, ...files },
         })),
+
+      toggleBizInfo: false,
+      setToggleBizInfo: (toggle) => set(() => ({ toggleBizInfo: toggle })),
+      isLoading: false,
+      setIsLoading: (loading) => set(() => ({ isLoading: loading })),
     }),
     {
       name: "explore-store",

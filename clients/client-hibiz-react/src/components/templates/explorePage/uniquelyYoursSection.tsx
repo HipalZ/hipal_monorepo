@@ -17,7 +17,7 @@ const MemoUniquelyYoursSection = (props: IUniqueSection) => {
     <section className="mb-4">
       <SubHeader text="Uniquely Yours" />
       <Paragraph text="select your best dishes on explore page upto 7" />
-      <article className="flex flex-wrap gap-2 p-4 mt-2 bg-white rounded-2xl h-[7rem]">
+      <article className="flex flex-wrap gap-2 p-4 mt-2 bg-white rounded-2xl min-h-[7rem]">
         {uniquelyDishes.length > 0 &&
           uniquelyDishes.map((dish: IDish, index: number) => {
             return (

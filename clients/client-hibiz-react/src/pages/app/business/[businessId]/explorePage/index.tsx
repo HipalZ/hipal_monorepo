@@ -89,6 +89,10 @@ const MemoExplorePage = () => {
     setImg,
     imageFiles,
     setImageFiles,
+    toggleBizInfo,
+    setToggleBizInfo,
+    setIsLoading,
+    isLoading,
   } = useExploreStore((state) => ({
     bizInfo: state.bizInfo,
     setBizInfo: state.setBizInfo,
@@ -104,9 +108,12 @@ const MemoExplorePage = () => {
     setImg: state.setImg,
     imageFiles: state.imageFiles,
     setImageFiles: state.setImageFiles,
+    toggleBizInfo: state.toggleBizInfo,
+    setToggleBizInfo: state.setToggleBizInfo,
+    isLoading: state.isLoading,
+    setIsLoading: state.setIsLoading,
   }));
   const cropperRef = useRef(null);
-  const [toggleBizInfo, setToggleBizInfo] = useState(false);
   const [socialMediaLinks, setSocialMediaLinks] = useState([
     { _id: 1, icon: "instagram", logo: <BsInstagram size={30} />, link: "" },
     { _id: 2, icon: "facebook", logo: <CiFacebook size={36} />, link: "" },
@@ -315,6 +322,7 @@ const MemoExplorePage = () => {
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!businessId) return;
+    setIsLoading(true);
     let bannerExplore: string | undefined;
     let logoExplore: string | undefined;
     let footerExplore: string | undefined;
@@ -400,6 +408,7 @@ const MemoExplorePage = () => {
         showErrorToasts(outletInfoData?.error);
       }
     }
+    setIsLoading(false);
   };
 
   const handleIconClick = useCallback((icon: string) => {
@@ -556,6 +565,7 @@ const MemoExplorePage = () => {
             )}
           </form>
         )}
+        {isLoading && <LoadingSpinner />}
       </main>
     </Suspense>
   );

@@ -39,10 +39,15 @@ const MemoCreatedBannersLayout = (props: Props) => {
     selectedLayout,
     banner,
   } = props;
-
   const buttonStyleTags = {
     backgroundColor: buttonStyle?.color || "red",
     color: buttonStyle?.buttonColor || "black",
+  };
+
+  const buttonOutlineStyleTags = {
+    backgroundColor: "transparent",
+    color: buttonStyle?.color || "black",
+    border: `1px solid ${buttonStyle?.color || "black"}`,
   };
 
   const location = useLocation();
@@ -56,33 +61,49 @@ const MemoCreatedBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <div
-            className="flex flex-col h-[12rem] shrink-0 relative"
+            className={cn(
+              "flex flex-col shrink-0 relative",
+              isExplorePage ? "h-[12rem]" : "",
+              "border border-1 border-[#00000050] rounded-2xl",
+            )}
             key={layout?._id}
             onClick={() => handleEditBanner(banner || {})}
           >
-            <article key={layout?._id} className="max-h-[12rem]">
-              <figure className="w-full rounded-2xl">
+            <article
+              key={layout?._id}
+              className={cn(isExplorePage ? "max-h-[12rem]" : "")}
+            >
+              <figure className="rounded-2xl">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-2xl w-[12rem] bg-cover"
+                  className={cn(
+                    "rounded-2xl w-[12rem] h-[12rem]",
+                    isExplorePage ? "" : "md:w-[15rem]",
+                  )}
                 />
               </figure>
               <article
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
-                }}
-                className="absolute bottom-0 z-10 w-full max-w-[12rem] p-2 rounded-b-xl"
+                }}  
+                className={cn(
+                  "absolute bottom-0 p-2 rounded-b-xl border border-[#000000]",
+                  isExplorePage ? "max-w-[12rem] " : "w-full md:max-w-[15rem]",
+                )}
               >
-                <div className="flex justify-between">
+                <div className="flex justify-between ">
                   <h1
                     style={paragraphStyle}
                     className={cn(
-                      "text-[1rem] leading-5",
+                      "md:text-[1rem] leading-0 md:leading-5  truncate",
                       layout?.isButton ? "w-[70%]" : "w-[100%]",
+                      isExplorePage
+                        ? "text-[0.75rem]"
+                        : "text-[0.75rem] md:text-[1rem]",
                     )}
                   >
-                    {heading ? truncateDescription(heading) : "Heading"}
+                    {heading ?? "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div
@@ -123,18 +144,26 @@ const MemoCreatedBannersLayout = (props: Props) => {
               className="relative flex justify-center"
               onClick={() => handleEditBanner(banner)}
             >
-              <figure className="w-full max-h-[12rem] max-w-[12rem] rounded-2xl">
+              <figure className="rounded-2xl">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl w-full h-[12rem] bg-contain aspect-square"
+                  className={cn(
+                    "rounded-2xl w-[12rem] h-[12rem]",
+                    isExplorePage ? "" : "md:w-[15rem]",
+                  )}
                 />
               </figure>
               <article
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
                 }}
-                className="absolute bottom-2 w-[90%] max-w-[11rem] max-h-[12rem] md:max-w-[11rem] p-2 rounded-xl h-[3rem]"
+                className={cn(
+                  "absolute bottom-2 p-2 rounded-xl mx-2",
+                  isExplorePage
+                    ? "w-[90%] max-w-[11rem] max-h-[12rem] md:max-w-[11rem]"
+                    : "w-[92%] md:w-[94%] lg:w-[90%]",
+                )}
               >
                 <div className="flex justify-between">
                   <h1 style={paragraphStyle} className="text-[0.7rem] truncate">
@@ -176,14 +205,14 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <section key={layout?._id} className="shrink-0">
             <article
-              className="relative flex justify-center shrink-0 max-w-[12rem] "
+              className="relative flex justify-center shrink-0 max-w-[13rem] "
               onClick={() => handleEditBanner(banner)}
             >
-              <figure className="w-full max-w-[14rem] rounded-2xl max-h-[12rem] ">
+              <figure className="rounded-2xl max-h-[13rem] ">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl aspect-square h-[12rem] bg-cover"
+                  className="rounded-xl h-[12rem] w-[13rem] bg-cover"
                 />
               </figure>
               <article
@@ -197,14 +226,14 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <div className="flex justify-between">
                   <h1
                     style={paragraphStyle}
-                    className="text-[0.7rem] truncate text-white"
+                    className="text-[0.7rem] truncate text-white mb-2"
                   >
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div
-                      style={buttonStyleTags}
-                      className="flex items-center border border-1 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                      style={buttonOutlineStyleTags}
+                      className="flex items-center border border-1 px-2 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
@@ -235,119 +264,119 @@ const MemoCreatedBannersLayout = (props: Props) => {
       {bannerLayouts4.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0">
-            <article
-              className="relative flex justify-center max-w-[12rem]"
-              onClick={() => handleEditBanner(banner || {})}
-            >
-              <figure className="w-[11rem] max-w-[12rem] rounded-2xl lg:max-w-[13rem]">
-                <img
-                  src={img?.logo || layout?.image}
-                  alt={layout?.title}
-                  className="rounded-xl h-[12rem] aspect-square bg-cover"
-                />
-              </figure>
-              <article
-                style={{
-                  background: `linear-gradient(to bottom, transparent 10%, ${
-                    selectedColor?.bgColor ? selectedColor?.bgColor : "black"
-                  } 50%, transparent 80%)`,
-                }}
-                className="bg-black absolute bottom-1/2 translate-y-1/2 w-full max-w-[11rem] flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
-              >
-                <h1
-                  style={paragraphStyle}
-                  className="text-[0.7rem] truncate text-white"
-                >
-                  {heading ? truncateDescription(heading) : "Heading"}
-                </h1>
-                <p
-                  style={{
-                    WebkitLineClamp: 2,
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    ...paragraphStyle,
-                  }}
-                  className="text-[0.5rem] text-white bg-opacity-50"
-                >
-                  {paragraph
-                    ? truncateDescription(paragraph)
-                    : layout?.paragraph}
-                </p>
-                {layout?.isButton && (
-                  <div
-                    style={buttonStyleTags}
-                    className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
-                  >
-                    <button type="button">{callToAction || "Explore"}</button>{" "}
-                    <span className="text-[0.6rem]">
-                      <LuArrowUpRight />
-                    </span>
-                  </div>
+          <article
+            key={layout?._id}
+            className="shrink-0 relative flex justify-center h-[12rem] max-w-[15rem]"
+            onClick={() => handleEditBanner(banner || {})}
+          >
+            <figure className="max-w-[15rem] rounded-2xl">
+              <img
+                src={img?.logo || layout?.image}
+                alt={layout?.title}
+                className={cn(
+                  "rounded-xl h-[12rem] bg-cover",
+                  isExplorePage ? "w-[12rem] md:w-[13rem]" : " w-[15rem]",
                 )}
-              </article>
+              />
+            </figure>
+            <article
+              style={{
+                background: `linear-gradient(to bottom, transparent 10%, ${
+                  selectedColor?.bgColor ? selectedColor?.bgColor : "black"
+                } 50%, transparent 80%)`,
+              }}
+              className="bg-black absolute bottom-1/2 translate-y-1/2 w-full max-w-[15rem] flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
+            >
+              <h1
+                style={paragraphStyle}
+                className="text-[0.7rem] truncate text-white"
+              >
+                {heading ? truncateDescription(heading) : "Heading"}
+              </h1>
+              <p
+                style={{
+                  WebkitLineClamp: 2,
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  ...paragraphStyle,
+                }}
+                className="text-[0.5rem] text-white bg-opacity-50"
+              >
+                {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
+              </p>
+              {layout?.isButton && (
+                <div
+                  style={buttonOutlineStyleTags}
+                  className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                >
+                  <button type="button">{callToAction || "Explore"}</button>{" "}
+                  <span className="text-[0.6rem]">
+                    <LuArrowUpRight />
+                  </span>
+                </div>
+              )}
             </article>
-          </section>
+          </article>
         );
       })}
       {bannerLayouts5.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0">
-            <article
-              className="relative flex justify-center shrink-0 max-w-[12rem]"
-              onClick={() => handleEditBanner(banner || {})}
-            >
-              <figure className="w-full max-w-[12rem] rounded-2xl">
-                <img
-                  src={img?.logo || layout?.image}
-                  alt={layout?.title}
-                  className="rounded-xl h-[12rem] aspcet-square bg-cover"
-                />
-              </figure>
-              <article
-                style={{
-                  background: `linear-gradient(to bottom, transparent 10% , ${
-                    selectedColor?.bgColor ? selectedColor?.bgColor : "black"
-                  } 50%, transparent 80%)`,
-                }}
-                className="absolute top-0 flex flex-col items-start justify-center w-full p-2 bg-black rounded-xl"
-              >
-                <h1
-                  style={paragraphStyle}
-                  className="text-[0.7rem] truncate text-white"
-                >
-                  {heading ? truncateDescription(heading) : "Heading"}
-                </h1>
-                <p
-                  style={{
-                    WebkitLineClamp: 2,
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    ...paragraphStyle,
-                  }}
-                  className="text-[0.5rem] text-white bg-opacity-50"
-                >
-                  {paragraph
-                    ? truncateDescription(paragraph)
-                    : layout?.paragraph}
-                </p>
-                {layout?.isButton && (
-                  <div
-                    style={buttonStyleTags}
-                    className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
-                  >
-                    <button type="button">{callToAction || "Explore"}</button>{" "}
-                    <span className="text-[0.6rem]">
-                      <LuArrowUpRight />
-                    </span>
-                  </div>
+          <article
+            key={layout?._id}
+            className="relative flex justify-center shrink-0 max-w-[15rem]"
+            onClick={() => handleEditBanner(banner || {})}
+          >
+            <figure className="w-full max-w-[15rem] rounded-2xl">
+              <img
+                src={img?.logo || layout?.image}
+                alt={layout?.title}
+                className={cn(
+                  "rounded-xl h-[12rem] bg-cover",
+                  isExplorePage ? "w-[12rem] " : "w-[15rem] ",
                 )}
-              </article>
+              />
+            </figure>
+            <article
+              style={{
+                background: `linear-gradient(to bottom, transparent 10% , ${
+                  selectedColor?.bgColor ? selectedColor?.bgColor : "black"
+                } 50%, transparent 80%)`,
+              }}
+              className="absolute top-0 flex flex-col items-start justify-center w-full p-2 bg-black rounded-xl"
+            >
+              <h1
+                style={paragraphStyle}
+                className="text-[0.7rem] truncate text-white"
+              >
+                {heading ? truncateDescription(heading) : "Heading"}
+              </h1>
+              <p
+                style={{
+                  WebkitLineClamp: 2,
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  ...paragraphStyle,
+                }}
+                className="text-[0.5rem] text-white bg-opacity-50"
+              >
+                {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
+              </p>
+              {layout?.isButton && (
+                <div
+                  style={buttonOutlineStyleTags}
+                  className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                >
+                  <button type="button">{callToAction || "Explore"}</button>{" "}
+                  <span className="text-[0.6rem]">
+                    <LuArrowUpRight />
+                  </span>
+                </div>
+              )}
             </article>
-          </section>
+          </article>
         );
       })}
       {bannerLayouts6.map((layout) => {
@@ -361,11 +390,11 @@ const MemoCreatedBannersLayout = (props: Props) => {
             className={cn(
               isExplorePage
                 ? "h-[12rem] aspect-square lg:max-w-[12rem] shrink-0"
-                : "flex-1 flex-shrink-0 w-full lg:max-w-[12rem]",
+                : "flex-1 flex-shrink-0 w-full md:max-w-[13rem] h-[13rem]",
             )}
           >
             <article
-              className="relative w-full h-full min-h-[11rem] max-h-[12rem] lg:max-w-[12rem] w-full max-w-[12rem] rounded-xl"
+              className={cn("relative w-full h-full rounded-xl", isExplorePage ? '': 'min-h-[11rem] max-h-[12rem] max-w-[13rem] ')}
               onClick={() => handleEditBanner(banner || {})}
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >

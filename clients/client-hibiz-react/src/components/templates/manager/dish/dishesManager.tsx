@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import Fuse from "fuse.js";
-import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
+import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";

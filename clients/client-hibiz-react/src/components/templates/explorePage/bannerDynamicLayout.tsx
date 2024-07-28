@@ -66,7 +66,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             key={layout?._id}
             onClick={() => handleEditBanner(layoutId)}
           >
-            <article key={layout?._id} className="max-h-[12rem] shadow-2xl">
+            <article key={layout?._id} className="shadow-2xl">
               <figure className="w-full rounded-2xl">
                 <img
                   src={img?.logo || layout?.image || pastaDummy}
@@ -117,7 +117,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
         return (
           <section key={layout?._id}>
             <article className="relative flex justify-start shrink-0">
-              <figure className="w-full max-h-[12rem] rounded-2xl">
+              <figure className="w-full rounded-2xl">
                 <img
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
@@ -128,7 +128,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
                 }}
-                className="absolute -bottom-2 mx-2 px-2 py-1 rounded-xl w-[90%]"
+                className="absolute bottom-2 mx-2 px-2 py-1 rounded-xl w-[90%]"
               >
                 <div className="flex justify-between w-full">
                   <h1

@@ -55,7 +55,7 @@ const MemoCreateBanner = () => {
   const cropperRef = useRef(null);
   const [isPublished, setIsPublished] = useState(false);
   const navigate = useNavigate();
-  const { businessId, editBanner } = useParams();
+  const { businessId } = useParams();
 
   const [itemName, setItemName] = useState("");
   const [img, setImg] = useState({ logo: "" });
@@ -79,12 +79,14 @@ const MemoCreateBanner = () => {
     isButtonExists,
     setBannerPage,
     isPatternExists,
+    editBanner
   } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
     selectedBannerType: s.selectedBannerType,
     isButtonExists: s.isButtonExists,
     setBannerPage: s.setBannerPage,
     isPatternExists: s.isPatternExists,
+    editBanner: s.editBanner,
   }));
 
   const [isLoading, setIsLoading] = useState(false);
@@ -123,10 +125,9 @@ const MemoCreateBanner = () => {
         bgColor: editingBanner?.backgroundColor || "",
       }));
       setItemName(editingBanner?.redirectionName || "");
-      setSelectedBannerType(editingBanner?.layout || "");
       setIsPublished(editingBanner?.isPublished || false);
     }
-  }, [editingBanner]);
+  }, [editingBanner, editBanner]);
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const type = event?.target?.dataset?.type;
@@ -285,10 +286,16 @@ const MemoCreateBanner = () => {
   };
 
   const handleBackClick = () => {
+    setBannerPage(BannerPage.VIEW);
+    startTransition(() => {
+      navigate(`/app/business/${businessId}/banners`);
+    });
+  };
+  const handleChangeLayout = () => {
+    setBannerPage(BannerPage.VIEW);
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/new`);
     });
-    setBannerPage(BannerPage.VIEW);
   };
 
   const handleRemoveImage = useCallback(
@@ -323,7 +330,7 @@ const MemoCreateBanner = () => {
           <center className="absolute -translate-x-1/2 -bottom-4 left-1/2">
             <button
               type="button"
-              onClick={handleBackClick}
+              onClick={handleChangeLayout}
               className="flex items-center justify-center px-3 py-1 space-x-2 text-sm text-white bg-black rounded-full"
             >
               <BsGrid /> <span>Change Layout</span>
@@ -575,11 +582,9 @@ const MemoCreateBanner = () => {
             className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
             disabled={isLoading}
             onClick={() => {
-              setIsPublished((prevIsPublished) => {
-                const newIsPublished = !prevIsPublished;
-                handleCreateBanner(newIsPublished);
-                return newIsPublished;
-              });
+              const newIsPublished = !isPublished;
+              setIsPublished(newIsPublished);
+              handleCreateBanner(newIsPublished);
             }}
           >
             {isLoading ? (

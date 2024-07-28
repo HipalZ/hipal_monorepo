@@ -26,19 +26,27 @@ import CreateDish from "@/components/templates/menu/dish/createDish";
 const MemoiseManager = () => {
   const businessData = useBusinessData((s) => s.businessData);
 
-  const { selectedPage, setIsMenuManager,setSelectedPage,resetStore, editOpenMenu, setEditOpenMenu,openMenu,setOpenMenu } =
-    useMenuPageStore((s) => ({
-      selectedPage: s.selectedPage,
-      setSelectedPage: s.setSelectedPage,
-      editOpenMenu: s.editOpenMenu,
-      setEditOpenMenu: s.setEditOpenMenu,
-      setSelectedCategory: s.setSelectedCategory,
-      openMenu: s.openMenu,
-      setOpenMenu: s.setOpenMenu,
-      resetStore: s.resetStore,
-      resetEditDish: s.resetEditDish,
-      setIsMenuManager: s.setIsMenuManager,
-    }));
+  const {
+    selectedPage,
+    setIsMenuManager,
+    setSelectedPage,
+    resetStore,
+    editOpenMenu,
+    setEditOpenMenu,
+    openMenu,
+    setOpenMenu,
+  } = useMenuPageStore((s) => ({
+    selectedPage: s.selectedPage,
+    setSelectedPage: s.setSelectedPage,
+    editOpenMenu: s.editOpenMenu,
+    setEditOpenMenu: s.setEditOpenMenu,
+    setSelectedCategory: s.setSelectedCategory,
+    openMenu: s.openMenu,
+    setOpenMenu: s.setOpenMenu,
+    resetStore: s.resetStore,
+    resetEditDish: s.resetEditDish,
+    setIsMenuManager: s.setIsMenuManager,
+  }));
   const navigate = useNavigate();
   const handleBack = () => {
     startTransition(() => {
@@ -47,11 +55,11 @@ const MemoiseManager = () => {
   };
 
   const pathname = useLocation().pathname;
-  
+
   useEffect(() => {
     const isManagerExists = pathname.includes("manager");
     setIsMenuManager(isManagerExists);
-  },[])
+  }, []);
 
   const closeMenu = useCallback(() => {
     resetStore();
@@ -114,20 +122,28 @@ const MemoiseManager = () => {
             </button>
           ))}
         </section>
+        <article className="max-w-[69rem] flex justify-end absolute right-16 lg:mt-4 mt-16">
+          <button
+            type="button"
+            className="z-20 px-4 py-2 mb-4 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
+            // onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
+          >
+            {/* {isArrangeMode ? "Save Sequence" : "Arrange Sequence"} */}
+            Arrange
+          </button>
+        </article>
         <Filter />
         <Search />
       </div>
       <Sidebar items={sidebarItems} />
       <section className="min-h-[100dvh]">
         {selectedPage === "DISHES" && <DishesManager />}
-        
+
         {selectedPage === "MAIN_CATEGORY" && <ListOfParentCategory />}
 
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
-        {selectedPage === "ADD_ON" && (
-          <ListOfAddOn />
-        )}
+        {selectedPage === "ADD_ON" && <ListOfAddOn />}
       </section>
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
@@ -143,7 +159,7 @@ const MemoiseManager = () => {
           </section>
         </PopUp>
       )}
-      
+
       {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>
           <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">

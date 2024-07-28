@@ -1,6 +1,7 @@
 import {
   type ChangeEvent,
   memo,
+  startTransition,
   useCallback,
   useEffect,
   useState,
@@ -25,6 +26,7 @@ import useShowErrorToasts from "@/components/atom/errorToasts";
 import type { IBizPayload } from "@/components/types/businessData";
 import { FaLocationDot } from "react-icons/fa6";
 import BottomButton from "@/components/atom/bottomButton";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const amenitiesArr = [
   { _id: 1, text: "SMOKING SECTION", image: <MdOutlineSmokingRooms /> },
@@ -35,6 +37,12 @@ const amenitiesArr = [
 ];
 
 const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
+  const {setToggleBizInfo,toggleBizInfo, isLoading, setIsLoading} = useExploreStore((state)=>({
+    toggleBizInfo: state.toggleBizInfo,
+    setToggleBizInfo: state.setToggleBizInfo,
+    isLoading: state.isLoading,
+    setIsLoading: state.setIsLoading,
+  }))
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   const [openTimings, setOpenTimings] = useState(false);
@@ -207,6 +215,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
 
   const handleCreateInfo = async () => {
     if (!businessId) return;
+    setIsLoading(true);
     const payload: IBizPayload = {
       businessId,
       isCustomTime: showCustomTime,
@@ -249,10 +258,12 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
       if (outletInfo.status === 200 || outletInfo.status === 201) {
         refetch();
         toast.success("Data saved successfully");
+        setToggleBizInfo(!toggleBizInfo);
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
       }
     }
+    setIsLoading(false);
   };
 
   return (
@@ -521,6 +532,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
           />
         </section>
       </PopUp>
+      {isLoading && <LoadingSpinner/>}
     </main>
   );
 };

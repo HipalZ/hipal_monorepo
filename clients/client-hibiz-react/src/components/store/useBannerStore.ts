@@ -36,6 +36,9 @@ interface IBannerStore {
     isButton: boolean,
     isPatternExists: boolean,
   ) => void;
+
+  editBanner: string;
+  setEditBanner: (id: string) => void;
 }
 
 export const useBannerStore = create(
@@ -86,6 +89,8 @@ export const useBannerStore = create(
           isLoading: false,
         }));
       },
+      editBanner: "",
+      setEditBanner: (id) => set(() => ({ editBanner:id })),
     }),
     {
       name: "banner-store",

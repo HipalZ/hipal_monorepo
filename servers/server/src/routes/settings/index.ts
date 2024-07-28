@@ -209,7 +209,7 @@ const settingsRouter = new Hono()
       const { businessId } = c.req.param();
       const existingBanners = await Banner.find({
         businessId,
-      }).sort({ sequence: 1 });
+      }).sort({ sequence: 1, createdAt: -1 });
       return respond(
         c,
         "Banners fetched successfully",
