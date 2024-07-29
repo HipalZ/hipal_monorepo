@@ -6,44 +6,50 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: 'true'
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
-    cert-manager.io/issuer: letsencrypt-nginx-wcard
+    cert-manager.io/issuer: letsencrypt-nginx
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/enable-cors: 'true'
+    nginx.ingress.kubernetes.io/cors-allow-origin: 'https://hipalz.com, https://hibiz.hipalz.com, https://hiclient.hipalz.com'
+    nginx.ingress.kubernetes.io/cors-allow-headers: Content-Type, Authorization
+
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - api.test.hipalz.com
-      secretName: test.hipalz.com
+        - api.hipalz.com
+        - hiclient.hipalz.com
+        - hibiz.hipalz.com
+      secretName: letsencrypt-nginx
   rules:
-    - host: api.test.hipalz.com
+    - host: api.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: server-test
+                name: server-production
                 port:
                   number: 80
 
-    - host: table.test.hipalz.com
+    - host: hiclient.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-hitable-test
+                name: client-hitable-production
                 port:
                   number: 80
 
-    - host: biz.test.hipalz.com
+    - host: hibiz.hipalz.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: client-hibiz-test
+                name: client-hibiz-production
                 port:
                   number: 80
