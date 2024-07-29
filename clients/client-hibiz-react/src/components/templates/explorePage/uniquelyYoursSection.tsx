@@ -16,7 +16,7 @@ const MemoUniquelyYoursSection = (props: IUniqueSection) => {
   return (
     <section className="mb-4">
       <SubHeader text="Uniquely Yours" />
-      <Paragraph text="select your best dishes on explore page upto 7" />
+      <Paragraph text="select your best dishes on explore page upto 6" />
       <article className="flex flex-wrap gap-2 p-4 mt-2 bg-white rounded-2xl min-h-[7rem]">
         {uniquelyDishes.length > 0 &&
           uniquelyDishes.map((dish: IDish, index: number) => {
@@ -31,7 +31,7 @@ const MemoUniquelyYoursSection = (props: IUniqueSection) => {
                   htmlFor={`uniquelyYours${dish._id || index}`}
                   className="flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
                 >
-                  {dish.images[0] ? (
+                  {dish.images.length > 0 ? (
                     <img
                       src={dish.images[0]}
                       alt="Dish"

@@ -71,7 +71,7 @@ export default async function Explore({
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <HeroSection data={data} />
         </Suspense>
-     
+
         <div className="bg-base-200">
           <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
         </div>
@@ -136,7 +136,7 @@ export default async function Explore({
           />
         </Suspense>
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
-          <PageName endBannerUrl={data?.business?.endBannerUrl} />
+          <PageName />
         </Suspense>
       </div>
       <Suspense fallback={<SkeletonLoader height={50} count={1} />}>
