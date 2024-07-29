@@ -136,7 +136,6 @@ const MemoExplorePage = () => {
       const isAlreadySelected = selectedDishes.some(
         (dish) => dish._id === selectedDish._id,
       );
-
       let updatedSelectedDishes: IDish[];
       if (isAlreadySelected) {
         updatedSelectedDishes = selectedDishes.filter(
@@ -230,7 +229,7 @@ const MemoExplorePage = () => {
   }, [toggleBizInfo]);
 
   const handleNavigate = useCallback(() => {
-    if(toggleBizInfo){
+    if (toggleBizInfo) {
       setToggleBizInfo(!toggleBizInfo);
     }
     if (!toggleBizInfo) {
@@ -258,7 +257,7 @@ const MemoExplorePage = () => {
       return toast.error("GST number should be less than 26 characters");
     setBizInfo({ ...bizInfo, gst: e.target.value });
   }, []);
-  
+
   const handleSearch = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const search = e.target.value;
     setSearchQuery(search);
@@ -444,7 +443,6 @@ const MemoExplorePage = () => {
     }
     return response?.data;
   };
-
 
   const { refetch } = useQuery({
     queryKey: ["bizInfo", businessId],
