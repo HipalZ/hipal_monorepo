@@ -1,5 +1,6 @@
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import { memo } from "react";
+import { AiFillAlert } from "react-icons/ai";
 
 type Props = {
   handleDelete: () => void;
@@ -15,30 +16,32 @@ const MemoDeleteDish = (props: Props) => {
     setDishStep(DishSteps.DISH_STEP_1);
   };
   return (
-    <section className="mx-6 lg:mx-24 mt-[20dvh] absolute top-0 right-10">
-      <h1 className="text-lg font-semibold text-gray-900">
-        Are you sure you want to delete this dish?
-      </h1>
-      <p className="mt-2 text-sm text-gray-600">
-        This action cannot be undone.
-      </p>
-      <div className="flex justify-center mt-4 space-x-4">
-        <button
-          onClick={handleCancel}
-          type="button"
-          className="px-4 py-2 text-gray-800 bg-gray-200 rounded hover:bg-gray-300"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleDelete}
-          type="button"
-          className="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700"
-        >
-          Delete
-        </button>
-      </div>
-    </section>
+    <div className="flex justify-center">
+      <section className="h-[20rem] w-[20rem] border-1 border rounded-2xl p-6">
+        <AiFillAlert color="red" size="28" />
+        <h1 className="mt-2 mb-6 text-2xl font-bold">Delete Dish!</h1>
+        <p className="text-sm text-[#CACACA] mb-4">
+          This action cannot be undone.
+        </p>
+        <p className="text-xl">Do you want to cancel the Delete?</p>
+        <center className="mt-10 space-x-24">
+          <button
+            type="button"
+            className="px-4 py-2 mr-2 bg-gray-300 rounded-full"
+            onClick={handleCancel}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="px-4 py-2 text-white bg-red-600 rounded-full"
+            onClick={handleDelete}
+          >
+            Delete
+          </button>
+        </center>
+      </section>
+    </div>
   );
 };
 

@@ -25,7 +25,9 @@ enum ViewType {
 }
 
 // Lazy load components
-const BannersHeader = lazy(() => import("@/components/templates/explorePage/bannersHeader"));
+const BannersHeader = lazy(
+  () => import("@/components/templates/explorePage/bannersHeader"),
+);
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const CreatedBannersLayouts = lazy(
   () => import("@/components/templates/explorePage/createdBannerLayouts"),
@@ -37,14 +39,13 @@ const MemoBanners = () => {
   const banners = useExploreStore((s) => s.banners) || [];
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner, setBannerPage, bannerPage ,setEditBanner} = useBannerStore(
-    (s) => ({
+  const { setSelectedBanner, setBannerPage, bannerPage, setEditBanner } =
+    useBannerStore((s) => ({
       setSelectedBanner: s.setSelectedBanner,
       setBannerPage: s.setBannerPage,
       bannerPage: s.bannerPage,
       setEditBanner: s.setEditBanner,
-    }),
-  );
+    }));
 
   const [addSpotlight, setAddSpotlight] = useState(false);
   const [view, setView] = useState(ViewType.BANNERS);
@@ -65,7 +66,7 @@ const MemoBanners = () => {
   const handleEditBanner = useCallback((banner: IBannerPayload) => {
     setSelectedBanner(banner);
     setSelectedBannerType(banner?.layout || "");
-    setEditBanner(banner?._id || '');
+    setEditBanner(banner?._id || "");
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners/${banner?._id}`);
     });
@@ -222,7 +223,7 @@ const MemoBanners = () => {
         <article className="max-w-[69rem] flex justify-end">
           <button
             type="button"
-            className="z-20 px-4 py-2 mb-4 md:mb-0 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
+            className="z-20 px-4 py-2 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
             onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
           >
             {isArrangeMode ? "Save Sequence" : "Arrange Sequence"}
@@ -240,7 +241,7 @@ const MemoBanners = () => {
         {isArrangeMode && (
           <center className="px-4 text-sm py-2 mt-2 text-[#da0606] bg-[#da060630] flex items-center justify-center">
             <PiSealWarningFill size={32} className="mr-2" />
-            Click on the first card, then click on the second <br/>
+            Click on the first card, then click on the second <br />
             card to swap their positions.
           </center>
         )}
@@ -255,7 +256,10 @@ const MemoBanners = () => {
               <div
                 key={`banner?._id+${index.toString()}`}
                 className={cn(
-                  "relative overflow-hidden md:w-[13rem] md:h-[13rem]",firstCardIndex===index ? "border-2 border-[#7D68FE] h-[12rem] rounded-2xl" : "",
+                  "relative overflow-hidden md:w-[13rem] md:h-[13rem]",
+                  firstCardIndex === index
+                    ? "border-2 border-[#7D68FE] h-[12rem] rounded-2xl"
+                    : "",
                 )}
                 onClick={() => handleCardClick(index)}
               >
@@ -326,7 +330,9 @@ const MemoBanners = () => {
         )}
         <MiddlePopUp show={isModalOpen} onClose={closeModal} onlyPopUp={true}>
           <section className="h-[15rem] space-y-16 p-6">
-            <h1 className="text-2xl">Are you sure you want to delete this banner?</h1>
+            <h1 className="text-2xl">
+              Are you sure you want to delete this banner?
+            </h1>
             <div className="flex justify-between">
               <button
                 type="button"

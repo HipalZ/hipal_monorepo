@@ -122,16 +122,6 @@ const MemoiseManager = () => {
             </button>
           ))}
         </section>
-        <article className="max-w-[69rem] flex justify-end absolute right-16 lg:mt-4 mt-16">
-          <button
-            type="button"
-            className="z-20 px-4 py-2 mb-4 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
-            // onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
-          >
-            {/* {isArrangeMode ? "Save Sequence" : "Arrange Sequence"} */}
-            Arrange
-          </button>
-        </article>
         <Filter />
         <Search />
       </div>

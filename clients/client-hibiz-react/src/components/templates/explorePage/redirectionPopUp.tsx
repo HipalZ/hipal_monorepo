@@ -89,7 +89,6 @@ const MemoRedirectionPopUp = (props: IProps) => {
       err: boolean;
       message: string;
     };
-    console.log("data", data);
     const categories = data?.data;
 
     if (redirectCategories.length === 0) {

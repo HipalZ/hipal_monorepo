@@ -230,36 +230,37 @@ const MemoizeDishAndCat = () => {
         </PopUp>
       )}
 
-      {selectedPage === "DISHES" && (
-        <>
-          <button
-            onClick={bulkUpload}
-            className="absolute z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-[6rem] right-6 lg:right-0"
-            type="button"
-          >
-            <BiPlus size={32} /> BULK UPLOAD DISHES
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                handleFileUpload(file);
-              }
-            }}
-            style={{ display: "none" }}
-          />
-        </>
-      )}
-
-      <button
-        onClick={openMenuModel}
-        className="fixed z-50 flex items-center px-4 py-2 text-white bg-black rounded-full lg:sticky lg:float-right bottom-6 right-6"
-        type="button"
-      >
-        <BiPlus size={32} /> {selectedPage}
-      </button>
+      <div className="fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right bottom-6 right-6">
+        {selectedPage === "DISHES" && (
+          <>
+            <button
+              onClick={bulkUpload}
+              className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
+              type="button"
+            >
+              <BiPlus size={32} /> BULK UPLOAD DISHES
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleFileUpload(file);
+                }
+              }}
+              style={{ display: "none" }}
+            />
+          </>
+        )}
+        <button
+          onClick={openMenuModel}
+          className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
+          type="button"
+        >
+          <BiPlus size={32} /> {selectedPage}
+        </button>
+      </div>
     </main>
   );
 };

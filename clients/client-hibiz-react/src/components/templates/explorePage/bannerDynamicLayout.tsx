@@ -183,7 +183,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     selectedColor?.bgColor ? selectedColor?.bgColor : "black"
                   } 90%)`,
                 }}
-                className="absolute bottom-0 w-full p-2 rounded-xl h-[5rem] pb-4"
+                className="absolute bottom-0 w-full p-2 pb-6 rounded-xl"
               >
                 <div className="flex justify-between">
                   <h1

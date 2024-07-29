@@ -34,14 +34,18 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
 
   useEffect(() => {
     setSelectedDishes(uniquelyDishes);
-  }, [uniquelyDishes, selectedDishes]);
+  }, []);
 
   // Function to filter unique dishes with images
   const getUniqueDishesWithImages = (dishesList: IDish[]) => {
     const uniqueDishesMap = new Map();
     for (const dish of dishesList) {
-      if (dish.images && dish.images.length > 0 && !uniqueDishesMap.has(dish._id)) {
-        uniqueDishesMap.set(dish._id, dish);
+      if (
+        dish.images &&
+        dish.images.length > 0 &&
+        !uniqueDishesMap.has(dish._name)
+      ) {
+        uniqueDishesMap.set(dish.name, dish);
       }
     }
     return Array.from(uniqueDishesMap.values());
@@ -57,38 +61,47 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
 
   const fuse = useMemo(() => {
     return new Fuse([...selectedDishes, ...filteredDishes], {
-      keys: ['name'],
+      keys: ["name"],
       includeScore: true,
       threshold: 0.3,
     });
   }, [selectedDishes, filteredDishes]);
 
   const displayedDishes = useMemo(() => {
-    let combinedDishes = [...selectedDishes, ...filteredDishes.filter(dish => !selectedDishes.some(d => d._id === dish._id))];
+    let combinedDishes = [
+      ...selectedDishes,
+      ...filteredDishes.filter(
+        (dish) => !selectedDishes.some((d) => d.name === dish.name),
+      ),
+    ];
     if (searchQuery) {
-      combinedDishes = fuse.search(searchQuery).map(result => result.item);
+      combinedDishes = fuse.search(searchQuery).map((result) => result.item);
     }
     return combinedDishes;
   }, [filteredDishes, selectedDishes, searchQuery, fuse]);
 
   return (
-    <div className="p-4 h-[80vh] overflow-auto">
-      <center className="mb-4 text-2xl">
-        Uniquely Yours{" "}
-        <span className="text-sm">( {selectedDishes?.length}/6 )</span>
-      </center>
-      <span className="text-gray-500">Add Best dishes to explore page</span>
-      <input
-        type="search"
-        onChange={handleSearch}
-        value={searchQuery}
-        className="w-full px-4 py-2 mt-4 mb-4 border border-gray-300 rounded-2xl"
-        placeholder="Search for a dish"
-      />
+    <div className="relative px-4 pb-[5rem] h-[80dvh] overflow-auto">
+      <div className="sticky top-0 mt-4 bg-base-100">
+        <center className="mb-4 text-2xl">
+          Uniquely Yours{" "}
+          <span className="text-sm">( {selectedDishes?.length}/6 )</span>
+        </center>
+        <span className="text-gray-500">Add Best dishes to explore page</span>
+        <input
+          type="search"
+          onChange={handleSearch}
+          value={searchQuery}
+          className="w-full px-4 py-2 mt-4 mb-4 border border-gray-300 rounded-2xl"
+          placeholder="Search for a dish"
+        />
+      </div>
       <div className="gap-4 space-y-4">
         {displayedDishes.length > 0
           ? displayedDishes.map((dish) => {
-              const isSelected = selectedDishes.some((d) => d._id === dish._id);
+              const isSelected = selectedDishes.some(
+                (d) => d.name === dish.name,
+              );
               return (
                 <div
                   key={dish._id}
@@ -99,10 +112,10 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                     className="text-black rounded-md"
                     checked={isSelected}
                     onChange={() => {
-                      if (isSelected || selectedDishes.length < 7) {
+                      if (isSelected || selectedDishes.length < 6) {
                         handleDishSelect(dish);
                       } else {
-                        toast.error("You can only select 7 dishes");
+                        toast.error("You can only select 6 dishes");
                       }
                     }}
                   />
@@ -117,7 +130,9 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
               );
             })
           : filteredOriginalDishes.map((dish) => {
-              const isSelected = selectedDishes.some((d) => d._id === dish._id);
+              const isSelected = selectedDishes.some(
+                (d) => d.name === dish.name,
+              );
               return (
                 <div
                   key={dish._id}
@@ -128,10 +143,10 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
                     className="text-black rounded-md"
                     checked={isSelected}
                     onChange={() => {
-                      if (isSelected || selectedDishes.length < 7) {
+                      if (isSelected || selectedDishes.length < 6) {
                         handleDishSelect(dish);
                       } else {
-                        toast.error("You can only select 7 dishes");
+                        toast.error("You can only select 6 dishes");
                       }
                     }}
                   />
@@ -146,11 +161,9 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
               );
             })}
       </div>
-      <section className="fixed bottom-4 left-6 right-6">
-        <button onClick={handleSaveDish} type="button" className="action_btn">
-          Save
-        </button>
-      </section>
+      <button onClick={handleSaveDish} type="button" className="bottom_btn">
+        Save
+      </button>
     </div>
   );
 };

@@ -53,7 +53,7 @@ const MemoBannersLayout = (props: Props) => {
   };
 
   const defaultButtonStyle =
-    "px-2 h-6 flex items-center text-[0.8rem] text-white rounded-full space-x-0.5 -mr-1";
+    "px-2 h-6 flex items-center text-[0.7rem] text-white rounded-full space-x-0.5 -mr-1";
 
   const router = useRouter();
   const customLink = useParams()?.businessId;
@@ -75,7 +75,7 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <div
-            className="flex flex-col shrink-0 h-[20rem] aspect-square"
+            className="relative flex flex-col shrink-0 h-[20rem] aspect-square"
             key={layout?._id}
             onClick={() =>
               handleNavigation(redirectionId || "", redirectionName || "")
@@ -86,9 +86,9 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl w-[20rem] h-[20rem]"
-                  width={240}
-                  height={240}
+                  className="rounded-xl h-[20rem] bg-cover aspect-square shrink-0"
+                  width={320}
+                  height={320}
                 />
               </figure>
               <article
@@ -109,8 +109,8 @@ const MemoBannersLayout = (props: Props) => {
                   </h1>
                   {layout?.isButton && (
                     <div style={buttonStyleTags} className={defaultButtonStyle}>
-                      <button type="button">{callToAction || "Explore"}</button>{" "}
-                      <span className="text-[0.6rem]">
+                      <button type="button">{callToAction || "Explore"}</button>
+                      <span className="text-[0.8rem]">
                         <LuArrowUpRight />
                       </span>
                     </div>
@@ -159,7 +159,7 @@ const MemoBannersLayout = (props: Props) => {
                 }}
                 className="absolute bottom-2 w-[19rem] md:max-w-[20rem] mx-2 p-2 rounded-xl"
               >
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <h1
                     style={paragraphStyle}
                     className={cn(
@@ -233,10 +233,7 @@ const MemoBannersLayout = (props: Props) => {
                   {layout?.isButton && (
                     <div
                       style={buttonOutlineStyleTags}
-                      className={cn(
-                        defaultButtonStyle,
-                        "absolute right-4 bottom-10",
-                      )}
+                      className={defaultButtonStyle}
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.8rem]">
@@ -272,14 +269,14 @@ const MemoBannersLayout = (props: Props) => {
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
-            <article className="relative flex justify-center max-w-[20rem]">
-              <figure className="w-full max-w-[20rem] rounded-2xl">
+            <article className="relative flex justify-center shrink-0 max-w-[20rem] aspect-square">
+              <figure className="w-full max-w-[20rem] rounded-2xl max-h-[14rem]">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] aspect-square bg-cover w-full"
-                  width={240}
-                  height={240}
+                  className="rounded-xl h-[20rem] aspect-square bg-cover shrink-0"
+                  width={320}
+                  height={320}
                 />
               </figure>
               <article
@@ -288,15 +285,15 @@ const MemoBannersLayout = (props: Props) => {
                     selectedColor?.bgColor ? selectedColor?.bgColor : "black"
                   } 50%, transparent 90%)`,
                 }}
-                className="absolute flex flex-col items-center justify-center w-full px-2 py-8 translate-y-[40%] bg-black rounded-xl"
+                className="absolute flex flex-col items-center justify-center w-full px-2 py-8 translate-y-[48%] bg-black rounded-xl"
               >
                 <h1
                   style={paragraphStyle}
-                  className="text-[1rem] truncate text-white"
+                  className="text-base text-white truncate"
                 >
                   {heading ? truncateDescription(heading) : "Heading"}
                 </h1>
-                <p
+                <div
                   style={{
                     WebkitLineClamp: 2,
                     display: "-webkit-box",
@@ -309,7 +306,7 @@ const MemoBannersLayout = (props: Props) => {
                   {paragraph
                     ? truncateDescription(paragraph)
                     : layout?.paragraph}
-                </p>
+                </div>
                 {layout?.isButton && (
                   <div
                     style={buttonOutlineStyleTags}
