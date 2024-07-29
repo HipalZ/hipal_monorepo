@@ -64,7 +64,7 @@ function SubTypes(props: ISubTypes) {
             className="relative px-2 py-4 snap-center"
             onClick={() => setActiveCategories(item)}
           >
-            <Link href={`#${item?._id}`}>
+            <a href={`#${item?._id}`}>
               <article
                 className={cn(
                   isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
@@ -92,7 +92,7 @@ function SubTypes(props: ISubTypes) {
                   {item?.name}
                 </h6>
               </article>
-            </Link>
+            </a>
           </button>
         </SplideSlide>
       ))}
