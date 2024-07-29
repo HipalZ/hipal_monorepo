@@ -86,7 +86,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
               <article
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
-                }}  
+                }}
                 className={cn(
                   "absolute bottom-0 p-2 rounded-b-xl border border-[#000000]",
                   isExplorePage ? "max-w-[12rem] " : "w-full md:max-w-[15rem]",
@@ -139,9 +139,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
       {bannerLayouts2.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0">
+          <section key={layout?._id} className="shrink-0 ">
             <article
-              className="relative flex justify-center"
+              className="relative flex justify-center w-full"
               onClick={() => handleEditBanner(banner)}
             >
               <figure className="rounded-2xl">
@@ -162,7 +162,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   "absolute bottom-2 p-2 rounded-xl mx-2",
                   isExplorePage
                     ? "w-[90%] max-w-[11rem] max-h-[12rem] md:max-w-[11rem]"
-                    : "w-[92%] md:w-[94%] lg:w-[90%]",
+                    : "w-[92%] max-w-[10.5rem] md:max-w-[11.5rem] md:w-[11.5rem]",
                 )}
               >
                 <div className="flex justify-between">
@@ -203,9 +203,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
       {bannerLayouts3.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section key={layout?._id} className="shrink-0">
+          <section key={layout?._id} className="shrink-0 ">
             <article
-              className="relative flex justify-center shrink-0 max-w-[13rem] "
+              className="relative flex justify-center shrink-0 max-w-[13rem]"
               onClick={() => handleEditBanner(banner)}
             >
               <figure className="rounded-2xl max-h-[13rem] ">
@@ -223,7 +223,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 }}
                 className="absolute bottom-0 w-full p-2 rounded-xl"
               >
-                <div className="flex justify-between">
+                <div className="flex items-center justify-between">
                   <h1
                     style={paragraphStyle}
                     className="text-[0.7rem] truncate text-white mb-2"
@@ -394,7 +394,12 @@ const MemoCreatedBannersLayout = (props: Props) => {
             )}
           >
             <article
-              className={cn("relative w-full h-full rounded-xl", isExplorePage ? '': 'min-h-[11rem] max-h-[12rem] max-w-[13rem] ')}
+              className={cn(
+                "relative w-full h-full rounded-xl",
+                isExplorePage
+                  ? ""
+                  : "min-h-[11rem] max-h-[12rem] max-w-[13rem] ",
+              )}
               onClick={() => handleEditBanner(banner || {})}
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >

@@ -30,7 +30,6 @@ const HeroSection = dynamics(
   { loading: () => <SkeletonLoader height={200} /> },
 );
 
-
 const Footer = dynamics(() => import("@/components/molecules/footer"), {
   loading: () => <SkeletonLoader height={50} />,
 });
