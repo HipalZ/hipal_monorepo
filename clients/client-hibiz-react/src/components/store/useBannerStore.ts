@@ -39,6 +39,12 @@ interface IBannerStore {
 
   editBanner: string;
   setEditBanner: (id: string) => void;
+
+  selectedRedirectionId: string;
+  setSelectedRedirectionId: (id: string) => void;
+
+  selectedRedirectionName: string;
+  setSelectedRedirectionName: (name: string) => void;
 }
 
 export const useBannerStore = create(
@@ -90,7 +96,15 @@ export const useBannerStore = create(
         }));
       },
       editBanner: "",
-      setEditBanner: (id) => set(() => ({ editBanner:id })),
+      setEditBanner: (id) => set(() => ({ editBanner: id })),
+
+      selectedRedirectionId: "",
+      setSelectedRedirectionId: (id) =>
+        set(() => ({ selectedRedirectionId: id })),
+
+      selectedRedirectionName: "",
+      setSelectedRedirectionName: (name) =>
+        set(() => ({ selectedRedirectionName: name })),
     }),
     {
       name: "banner-store",

@@ -89,7 +89,7 @@ const MemoBannerHeader: React.FC<HeaderProps> = memo(
           </div>
         </div>
         &nbsp;
-        <p>{children}</p>
+        <div>{children}</div>
       </>
     );
   },

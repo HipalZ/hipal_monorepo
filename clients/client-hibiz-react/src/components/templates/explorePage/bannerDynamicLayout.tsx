@@ -78,11 +78,11 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 style={{
                   backgroundColor: selectedColor?.bgColor || "white",
                 }}
-                className="w-full max-w-[14rem] px-2 py-0.5 rounded-b-xl h-[3.5rem] shadow-2xl"
+                className="w-full rounded-b-xl max-w-[14rem] px-2 py-0.5 h-[3.5rem]"
               >
                 <div className="flex items-start justify-between">
-                  <h1 style={paragraphStyle} className="text-[1rem]">
-                    {heading ? truncateDescription(heading) : "Heading"}
+                  <h1 style={paragraphStyle} className="text-[1rem] truncate">
+                    {heading ?? "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div style={buttonStyleTags} className={buttonClassNames}>

@@ -513,7 +513,7 @@ const MemoCreateBanner = () => {
                       placeholder="Button Name"
                     />
                     <small className="absolute text-gray-700 right-2 bottom-2">
-                      {callToAction.length}/16
+                      {callToAction.length}/10
                     </small>
                   </div>
                   <div className="flex gap-4 mt-4 md:mt-0">
@@ -560,7 +560,7 @@ const MemoCreateBanner = () => {
               </article>
             </section>
           ) : null}
-          <section className="m-6 pb-[7rem] md:pb-0">
+          <section className="m-6 pb-[7rem] md:pb-0 lg:pb-[7rem]">
             <SubHeader text="Link Items" />
             <article className="p-4 bg-white rounded-2xl">
               <button
@@ -576,7 +576,7 @@ const MemoCreateBanner = () => {
             </article>
           </section>
         </section>
-        <footer className="fixed md:absolute bottom-0 flex w-[92%] lg:w-[96%] gap-4 mx-4 mb-4">
+        <footer className="fixed bottom-0 w-[92%] flex gap-4 mx-4 mb-4">
           <button
             type="submit"
             className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
