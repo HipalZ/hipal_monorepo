@@ -43,9 +43,9 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
       if (
         dish.images &&
         dish.images.length > 0 &&
-        !uniqueDishesMap.has(dish._id)
+        !uniqueDishesMap.has(dish._name)
       ) {
-        uniqueDishesMap.set(dish._id, dish);
+        uniqueDishesMap.set(dish.name, dish);
       }
     }
     return Array.from(uniqueDishesMap.values());
@@ -71,7 +71,7 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
     let combinedDishes = [
       ...selectedDishes,
       ...filteredDishes.filter(
-        (dish) => !selectedDishes.some((d) => d._id === dish._id),
+        (dish) => !selectedDishes.some((d) => d.name === dish.name),
       ),
     ];
     if (searchQuery) {
@@ -81,7 +81,7 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
   }, [filteredDishes, selectedDishes, searchQuery, fuse]);
 
   return (
-    <div className="relative px-4 pb-4 h-[80dvh] overflow-auto">
+    <div className="relative px-4 pb-[5rem] h-[80dvh] overflow-auto">
       <div className="sticky top-0 mt-4 bg-base-100">
         <center className="mb-4 text-2xl">
           Uniquely Yours{" "}
@@ -99,7 +99,9 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
       <div className="gap-4 space-y-4">
         {displayedDishes.length > 0
           ? displayedDishes.map((dish) => {
-              const isSelected = selectedDishes.some((d) => d._id === dish._id);
+              const isSelected = selectedDishes.some(
+                (d) => d.name === dish.name,
+              );
               return (
                 <div
                   key={dish._id}
@@ -128,7 +130,9 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
               );
             })
           : filteredOriginalDishes.map((dish) => {
-              const isSelected = selectedDishes.some((d) => d._id === dish._id);
+              const isSelected = selectedDishes.some(
+                (d) => d.name === dish.name,
+              );
               return (
                 <div
                   key={dish._id}
