@@ -14,14 +14,15 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import { apiRpc } from "@hi/common";
 
 const AddAmountModal = memo(() => {
-  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const business = useBusinessDetails((s) => s.businessDetails);
-  const customLink = useParams()?.businessId as string
+  const userDetailes = useLogin((s) => s.userDetails);
+  const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
   const setIsPayment = useLogin((s) => s.setIsPayment);
-  const name = useLogin((s) => s.userDetails?.name)
+  const name = useLogin((s) => s.userDetails?.name);
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value === "" ? 0 : Number(value));
@@ -59,6 +60,7 @@ const AddAmountModal = memo(() => {
         alertType: "WAITER",
         status: "WAITER",
         name: name,
+        userId: userDetailes._id,
       },
     });
     if (res.status === 200) {

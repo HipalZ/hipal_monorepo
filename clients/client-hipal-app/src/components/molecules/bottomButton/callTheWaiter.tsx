@@ -18,9 +18,11 @@ const messages = [
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
-  const name = useLogin((s) => s.userDetails?.name)
-  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
+  const name = useLogin((s) => s.userDetails?.name);
+  const userDetailes = useLogin((s) => s.userDetails);
+
   const [loading, setLoading] = useState<boolean>(false);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
 
   const handleSelectMessage = useCallback((message: string) => {
     setMessage(message);
@@ -34,7 +36,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       return toast.error("Please wait for a moment");
     }
     setLoading(true);
-    console.log("name", name)
+    console.log("name", name);
     const res = await apiRpc.payments.createWaiterAlert.$post({
       json: {
         businessId: businessId,
@@ -43,6 +45,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         alertType: "WAITER",
         status: "WAITER",
         name: name,
+        userId: userDetailes._id,
       },
     });
     if (res.status === 200) {

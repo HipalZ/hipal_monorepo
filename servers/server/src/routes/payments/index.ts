@@ -824,7 +824,6 @@ const paymentsRouter = new Hono()
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
             const order = await Order.findById(alert.order_id);
-
             await Payment.create(
               [
                 {
@@ -839,6 +838,10 @@ const paymentsRouter = new Hono()
                   billValue: order?.billValue,
                   tips: order?.tips,
                   tableName: order?.tableName,
+                  razorpayEventId: nanoid(15),
+                  razorpayOrderId: nanoid(15),
+                  razorpayPaymentId: nanoid(15),
+
                   waiterName,
                   date: Date.now(),
                 },
