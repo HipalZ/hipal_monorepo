@@ -46,6 +46,12 @@ const MemoBannersLayout = (props: Props) => {
     backgroundColor: buttonStyle?.color || "red",
     color: buttonStyle?.buttonColor || "black",
   };
+  const buttonOutlineStyleTags = {
+    backgroundColor: "transparent",
+    color: buttonStyle?.color || "black",
+    border: `1px solid ${buttonStyle?.color || "black"}`,
+  };
+
   const defaultButtonStyle =
     "px-2 h-6 flex items-center text-[0.8rem] text-white rounded-full space-x-0.5 -mr-1";
 
@@ -71,7 +77,9 @@ const MemoBannersLayout = (props: Props) => {
           <div
             className="flex flex-col shrink-0 h-[20rem] aspect-square"
             key={layout?._id}
-            onClick={() => handleNavigation(redirectionId, redirectionName)}
+            onClick={() =>
+              handleNavigation(redirectionId || "", redirectionName || "")
+            }
           >
             <article key={layout?._id} className="max-h-[20rem]">
               <figure className="w-full rounded-2xl">
@@ -100,15 +108,9 @@ const MemoBannersLayout = (props: Props) => {
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
-                    <div
-                      style={buttonStyleTags}
-                      className={cn(
-                        defaultButtonStyle,
-                        "absolute right-4 bottom-8",
-                      )}
-                    >
-                      <button type="button">{callToAction || "Explore"}</button>
-                      <span className="text-[0.8rem]">
+                    <div style={buttonStyleTags} className={defaultButtonStyle}>
+                      <button type="button">{callToAction || "Explore"}</button>{" "}
+                      <span className="text-[0.6rem]">
                         <LuArrowUpRight />
                       </span>
                     </div>
@@ -122,7 +124,7 @@ const MemoBannersLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphStyle,
                   }}
-                  className="text-[0.8rem] leading-5"
+                  className="text-[0.8rem] leading-5 mt-2"
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -230,7 +232,7 @@ const MemoBannersLayout = (props: Props) => {
                   </h1>
                   {layout?.isButton && (
                     <div
-                      style={buttonStyleTags}
+                      style={buttonOutlineStyleTags}
                       className={cn(
                         defaultButtonStyle,
                         "absolute right-4 bottom-10",
@@ -309,7 +311,10 @@ const MemoBannersLayout = (props: Props) => {
                     : layout?.paragraph}
                 </p>
                 {layout?.isButton && (
-                  <div style={buttonStyleTags} className={defaultButtonStyle}>
+                  <div
+                    style={buttonOutlineStyleTags}
+                    className={defaultButtonStyle}
+                  >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.8rem]">
                       <LuArrowUpRight />
@@ -369,7 +374,7 @@ const MemoBannersLayout = (props: Props) => {
                 </p>
                 {layout?.isButton && (
                   <div
-                    style={buttonStyleTags}
+                    style={buttonOutlineStyleTags}
                     className={cn(defaultButtonStyle, "absolute top-4 right-4")}
                   >
                     <button type="button">{callToAction || "Explore"}</button>{" "}

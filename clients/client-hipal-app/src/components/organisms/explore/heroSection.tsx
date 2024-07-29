@@ -2,7 +2,7 @@
 import ReadMore from "@/components/atoms/readMore";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { memo, useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import type {
   BusinessDetails,
@@ -26,22 +26,25 @@ interface IHeroSection {
 function HeroSection({ data }: IHeroSection): JSX.Element {
   const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
   const accessToken = useUserToken.getState().accessToken;
+  const { location, phone } = data?.outletInfo;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
   const business = data.business as BusinessDetails;
-  const { location, phone } = data.settings?.explore as IExplore;
   const setBusinessData = _useAllBusiness((s) => s.setData);
-  const goToLocation = () => {
-    if (typeof window !== "undefined") {
-      window.location.href = location;
-    }
-  };
 
-  const callTheOwner = () => {
-    if (typeof window !== "undefined") {
-      window.open(`tel:${phone}`);
-    }
-  };
+  const goToLocation = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.open(location, "_blank");
+  }, [location]);
+
+  const callTheOwner = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.open(`tel:${phone}`);
+  }, [phone]);
+
+  const onBoardBusiness = useCallback(() => {
+    window.open(`https://wa.me/${phone}`, "_blank");
+  }, [phone]);
 
   useEffect(() => {
     setBusinessData(data);
@@ -101,6 +104,15 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             return (
               <div
                 key={button?._id}
+                onClick={() => {
+                  if (button?.label.toLowerCase() === "direction") {
+                    goToLocation();
+                  } else if (button?.label.toLowerCase() === "call") {
+                    callTheOwner();
+                  } else {
+                    onBoardBusiness();
+                  }
+                }}
                 className="h-[2rem] text-xs bg-base-100 text-primary rounded-full flex justify-center items-center px-2 space-x-2"
               >
                 <button.icon size={16} />
@@ -110,24 +122,6 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           })}
         </article>
       </section>
-      {location && (
-        <button
-          type="button"
-          onClick={callTheOwner}
-          className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-4 flex justify-center items-center"
-        >
-          <MdOutlineCall size={24} className="text-white" />
-        </button>
-      )}
-      {phone && (
-        <button
-          type="button"
-          onClick={goToLocation}
-          className="w-10 h-10 rounded-full bg-[#00000050] absolute z-10 top-2 right-[4.5rem] flex justify-center items-center"
-        >
-          <TiLocationOutline size={24} className="text-white" />
-        </button>
-      )}
       <div className="mt-36" />
       <MemoRewards />
       <center

@@ -1,9 +1,9 @@
 import type { IDish } from "@/components/types/businessData";
-import dummyImage from "@/assets/hisite/placeholder.png";
 import { memo, useEffect, type ChangeEvent, useMemo } from "react";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
+import Fuse from "fuse.js";
 
 interface IUniqueProps {
   dishes: IDish[];
@@ -34,23 +34,48 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
 
   useEffect(() => {
     setSelectedDishes(uniquelyDishes);
-  }, [uniquelyDishes]);
+  }, [uniquelyDishes, selectedDishes]);
 
-  const filteredDishes = useMemo(() => {
-    return dishes.filter((dish) => dish.images && dish.images.length > 0);
-  }, [dishes]);
+  // Function to filter unique dishes with images
+  const getUniqueDishesWithImages = (dishesList: IDish[]) => {
+    const uniqueDishesMap = new Map();
+    for (const dish of dishesList) {
+      if (dish.images && dish.images.length > 0 && !uniqueDishesMap.has(dish._id)) {
+        uniqueDishesMap.set(dish._id, dish);
+      }
+    }
+    return Array.from(uniqueDishesMap.values());
+  };
 
   const filteredOriginalDishes = useMemo(() => {
-    return originalDishes.filter(
-      (dish) => dish.images && dish.images.length > 0,
-    );
+    return getUniqueDishesWithImages(originalDishes);
   }, [originalDishes]);
+
+  const filteredDishes = useMemo(() => {
+    return getUniqueDishesWithImages(dishes);
+  }, [dishes]);
+
+  const fuse = useMemo(() => {
+    return new Fuse([...selectedDishes, ...filteredDishes], {
+      keys: ['name'],
+      includeScore: true,
+      threshold: 0.3,
+    });
+  }, [selectedDishes, filteredDishes]);
+
+  const displayedDishes = useMemo(() => {
+    let combinedDishes = [...selectedDishes, ...filteredDishes.filter(dish => !selectedDishes.some(d => d._id === dish._id))];
+    if (searchQuery) {
+      combinedDishes = fuse.search(searchQuery).map(result => result.item);
+    }
+    return combinedDishes;
+  }, [filteredDishes, selectedDishes, searchQuery, fuse]);
 
   return (
     <div className="p-4 h-[80vh] overflow-auto">
       <center className="mb-4 text-2xl">
         Uniquely Yours{" "}
-        <span className="text-sm">( {selectedDishes?.length}/7 )</span>
+        <span className="text-sm">( {selectedDishes?.length}/6 )</span>
       </center>
       <span className="text-gray-500">Add Best dishes to explore page</span>
       <input
@@ -61,8 +86,8 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
         placeholder="Search for a dish"
       />
       <div className="gap-4 space-y-4">
-        {filteredDishes.length > 0
-          ? filteredDishes.map((dish) => {
+        {displayedDishes.length > 0
+          ? displayedDishes.map((dish) => {
               const isSelected = selectedDishes.some((d) => d._id === dish._id);
               return (
                 <div
