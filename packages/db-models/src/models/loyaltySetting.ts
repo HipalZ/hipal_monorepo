@@ -25,7 +25,6 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     loyaltyId: {
       type: ObjectId,
       required: true,
-      ref: "LoyaltySetting",
     },
     origin: {
       type: Boolean,
