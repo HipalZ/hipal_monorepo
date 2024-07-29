@@ -14,7 +14,7 @@ function PageComponent(props:Props) {
 		window.open("https://wa.me/9177914130", "_blank");
 	}
 	return (
-		<div className="pt-6 bg-base-100">
+		<div className="pt-10 bg-base-100">
 			<Image
 				onClick={onBoardBusiness}
 				src={Footer}

@@ -91,8 +91,8 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     queryFn: handleUserCoinz,
     enabled: !!userDetails._id && !!loyalty?.loyaltyId,
   });
-
-  if (loyalty?._id) {
+  
+  if (!loyalty?._id) {
     return <></>;
   }
 
@@ -147,14 +147,20 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           </div>
           {accessToken && (
             <Link href={`/${customLink}/loyalty`}>
-              <button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+              <button
+                type="button"
+                className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
+              >
                 claim Now
               </button>
             </Link>
           )}
           {!accessToken && (
             <Link href={`/${customLink}/user/signup`}>
-              <button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+              <button
+                type="button"
+                className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
+              >
                 claim Now
               </button>
             </Link>
@@ -182,7 +188,10 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
             </figure>
             {!accessToken && (
               <Link href={`/${customLink}/user/signup`}>
-                <button className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white">
+                <button
+                  type="button"
+                  className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
+                >
                   Get Now
                 </button>
               </Link>

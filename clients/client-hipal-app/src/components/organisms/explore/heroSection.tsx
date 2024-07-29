@@ -133,7 +133,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       <center
         className={cn(
           "flex items-center justify-center text-xl font-bold line-clamp-2 divide-base-content",
-          accessToken.length > 0 ? "pt-[7rem]" : "-pt-[1rem]",
+          accessToken.length > 0 ? "pt-[8rem]" : "-pt-[1rem]",
         )}
       >
         {Array.isArray(tags) ? tags.join(" | ") : tags}
