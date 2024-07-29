@@ -79,7 +79,7 @@ const MemoCreateBanner = () => {
     isButtonExists,
     setBannerPage,
     isPatternExists,
-    editBanner
+    editBanner,
   } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
     selectedBannerType: s.selectedBannerType,
@@ -507,7 +507,7 @@ const MemoCreateBanner = () => {
                     <input
                       type="text"
                       className="w-full rounded-2xl"
-                      maxLength={16}
+                      maxLength={10}
                       value={callToAction}
                       onChange={handleButtonName}
                       placeholder="Button Name"
