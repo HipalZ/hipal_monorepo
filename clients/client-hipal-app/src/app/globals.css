@@ -1707,3 +1707,7 @@ input[type='password'] {
     grid-area: sixth; 
     height: 105px;
   }
+
+  .rounded-squircle {
+    border-radius: 10% / 20%;
+  }

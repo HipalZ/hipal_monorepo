@@ -48,7 +48,7 @@ const Footer = (props: IFooter) => {
           {footerDescription}
         </div>
       ) : null} */}
-      <section className="flex justify-center px-2 mt-4 space-x-2">
+      <section className="flex justify-center px-2 mt-8 space-x-2">
         {socialMediaLinks
           ? socialMediaLinks.map(({ _id, icon, link }) => (
               <a

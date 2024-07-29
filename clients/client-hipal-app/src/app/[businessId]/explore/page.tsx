@@ -29,10 +29,7 @@ const HeroSection = dynamics(
   () => import("@/components/organisms/explore/heroSection"),
   { loading: () => <SkeletonLoader height={200} /> },
 );
-const Rewards = dynamics(
-  () => import("@/components/templates/explore/rewards"),
-  { loading: () => <SkeletonLoader height={50} /> },
-);
+
 
 const Footer = dynamics(() => import("@/components/molecules/footer"), {
   loading: () => <SkeletonLoader height={50} />,
@@ -67,7 +64,7 @@ export default async function Explore({
       <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
         <MainBackground explore={data?.business} />
       </Suspense>
-      <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100 rounded-t-3xl">
+      <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
         <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <HeroSection data={data} />
         </Suspense>

@@ -28,7 +28,7 @@ export const foodTypeIcons = {
 
 const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
 	<div
-		className={`${isActive ? 'bg-white' : ''} flex justify-center items-center px-2 rounded-full py-2 border border-primary `}
+		className={`${isActive ? 'bg-primary text-base-100' : ''} flex justify-center items-center px-2 rounded-full py-2 border border-primary `}
 		onClick={onClick}
 	>
 		<div className="w-4 h-4 p-[0.125rem] border-2" style={{ borderColor: color }}>

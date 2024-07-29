@@ -43,65 +43,62 @@ function SubTypes(props: ISubTypes) {
 
   return (
     <section className="overflow-x-auto border shadow-2xl border-b-primary no-scrollbar bg-base-100">
-      {subTypes?.length > 0 && (
-        <Splide
-          ref={splideRef}
-          options={{
-            type: 'slide',
-            perPage: 3,
-            // perMove: 2,
-            pagination: false,
-            drag: 'free',
-            snap: true,
-            arrows: false,
-            gap: '1rem',
-          }}
-          className="no-scrollbar"
-        >
-          {subTypes.map((item: CategoryType, index: number) => (
-            <SplideSlide key={item._id?.toString()}>
-              <button
-                type="button"
-                id={item?._id?.toString() + index.toString()}
-                className="relative px-2 py-4 snap-center"
-                onClick={() => setActiveCategories(item)}
-                style={{ margin: '0 0.5rem' }} // Adds consistent margin
+  {subTypes?.length > 0 && (
+    <Splide
+      ref={splideRef}
+      options={{
+        type: 'slide',
+        pagination: false,
+        drag: 'free',
+        snap: true,
+        arrows: false,
+        autoWidth: true, 
+      }}
+      className="w-full px-4 no-scrollbar"
+    >
+      {subTypes.map((item: CategoryType, index: number) => (
+        <SplideSlide key={item._id?.toString()}>
+          <button
+            type="button"
+            id={item?._id?.toString() + index.toString()}
+            className="relative px-2 py-4 snap-center"
+            onClick={() => setActiveCategories(item)}
+          >
+            <Link href={`#${item?._id}`}>
+              <article
+                className={cn(
+                  isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
+                  "flex border border-primary rounded-full items-center justify-between px-2 py-1"
+                )}
               >
-                <Link href={`#${item?._id}`}>
-                  <article
-                    className={cn(
-                      isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
-                      "flex w-full border border-primary rounded-full items-center justify-between px-2 py-1"
-                    )}
-                  >
-                    {item.coverImage ? (
-                      <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
-                        <Image
-                          src={item.coverImage || ""}
-                          alt="dish"
-                          quality={95}
-                          width={35}
-                          height={35}
-                          objectFit="cover"
-                          blurDataURL={getRandomBlurImg(50, 50)}
-                        />
-                      </figure>
-                    ) : (
-                      <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
-                        <PlaceholderImg className="rounded-full" />
-                      </figure>
-                    )}
-                    <h6 className="w-full text-sm whitespace-nowrap text-nowrap">
-                      {item?.name}
-                    </h6>
-                  </article>
-                </Link>
-              </button>
-            </SplideSlide>
-          ))}
-        </Splide>
-      )}
-    </section>
+                {item.coverImage ? (
+                  <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
+                    <Image
+                      src={item.coverImage || ""}
+                      alt="dish"
+                      quality={95}
+                      width={35}
+                      height={35}
+                      objectFit="cover"
+                      blurDataURL={getRandomBlurImg(50, 50)}
+                    />
+                  </figure>
+                ) : (
+                  <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
+                    <PlaceholderImg className="rounded-full" />
+                  </figure>
+                )}
+                <h6 className="w-full text-sm">
+                  {item?.name}
+                </h6>
+              </article>
+            </Link>
+          </button>
+        </SplideSlide>
+      ))}
+    </Splide>
+  )}
+</section>
   );
 }
 
