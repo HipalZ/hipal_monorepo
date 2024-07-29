@@ -78,7 +78,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "rounded-2xl w-[12rem] h-[12rem]",
+                    "rounded-2xl w-full h-[12rem] md:h-full",
                     isExplorePage ? "" : "md:w-[15rem]",
                   )}
                 />

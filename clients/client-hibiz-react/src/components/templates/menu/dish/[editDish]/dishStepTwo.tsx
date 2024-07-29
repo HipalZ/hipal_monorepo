@@ -47,6 +47,9 @@ const MemoDishFormTwo = () => {
     setShowDeleteDish,
     dishStep,
     setIsLoading,
+    removeRecommendationIds,
+    removeCategoryIds,
+    removeAddOnIds,
   } = useMenuPageStore((s) => ({
     setDishStep: s.setDishStep,
     calories: s.calories,
@@ -74,6 +77,9 @@ const MemoDishFormTwo = () => {
     setShowDeleteDish: s.setShowDeleteDish,
     dishStep: s.dishStep,
     setIsLoading: s.setIsLoading,
+    removeRecommendationIds: s.removeRecommendationIds,
+    removeCategoryIds: s.removeCategoryIds,
+    removeAddOnIds: s.removeAddOnIds,
   }));
 
   const queryClient = useQueryClient();
@@ -108,7 +114,8 @@ const MemoDishFormTwo = () => {
     const images: string[] = [firstImage, secondImage, thirdImage].filter(
       Boolean,
     );
-
+    console.log("removeRecommendationIds:", removeRecommendationIds);
+    console.log("recommendationIds:", recommendationIds);
     const payload: DishType = {
       _id: editDish?._id,
       businessId: Object(businessId),
@@ -123,6 +130,9 @@ const MemoDishFormTwo = () => {
       portions: portions,
       addOnIds: Object(addonIds),
       recommendationIds: Object(recommendationIds),
+      removeCategoryIds: Object(removeCategoryIds),
+      removeAddOnIds: Object(removeAddOnIds),
+      removeRecommendationIds: Object(removeRecommendationIds),
       tags: tags,
       images: images,
     };

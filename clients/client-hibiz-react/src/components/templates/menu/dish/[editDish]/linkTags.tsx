@@ -134,12 +134,9 @@ const MemoLinkTags = () => {
           </div>
         ))}
       </section>
-      
-      <BottomButton
-          buttons={[
-            { text: "Save", onClick: handleSave, type: "button" },
-          ]}
-        />
+      <button type="button" onClick={handleSave} className="bottom_btn">
+        Save
+      </button>
     </section>
   );
 };
