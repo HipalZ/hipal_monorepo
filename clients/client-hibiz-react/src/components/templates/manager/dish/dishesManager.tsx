@@ -166,7 +166,7 @@ const MemoDishesManager = () => {
                       className="flex items-center cursor-pointer"
                       onClick={() => toggleCategory(category._id)}
                     >
-                      <h3 className="text-sm w-[80%]">{category?.name} </h3>
+                      <h3 className="text-sm">{category?.name} </h3>
                       {openCategoryIds[category._id] ? (
                         <>
                           <span className="text-xs">

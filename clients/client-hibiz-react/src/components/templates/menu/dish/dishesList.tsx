@@ -92,9 +92,7 @@ const MemoListOfDishes = () => {
                 title={dish.name}
                 className="mb-2 text-lg font-semibold truncate"
               >
-                {dish.name.length > 28
-                  ? `${dish.name.slice(0, 28)}...`
-                  : dish.name}
+                {dish.name}
               </h3>
               <div className="flex items-center mb-2 text-gray-500">
                 {dish.visibility ? (
