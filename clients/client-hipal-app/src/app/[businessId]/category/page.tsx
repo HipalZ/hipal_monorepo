@@ -10,7 +10,7 @@ const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader.client"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <SkeletonLoader height={250} />,
   },
 );
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
