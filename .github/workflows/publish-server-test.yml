@@ -2,7 +2,7 @@ name: Build and Push server-test to DigitalOcean Container Registry
 
 on:
   push:
-    branches: ['test']
+    branches: ['test-prod']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: server-test
+  DOCKER_REPOSITORY: server-test-prod
 
 jobs:
   build-and-push:
