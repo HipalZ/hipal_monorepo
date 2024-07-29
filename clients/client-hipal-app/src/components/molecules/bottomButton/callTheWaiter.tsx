@@ -36,7 +36,6 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       return toast.error("Please wait for a moment");
     }
     setLoading(true);
-    console.log("name", name);
     const res = await apiRpc.payments.createWaiterAlert.$post({
       json: {
         businessId: businessId,

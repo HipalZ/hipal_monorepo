@@ -17,7 +17,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
       enum: ["ONLINE", "OFFLINE", "WAITER"],
       required: true,
     },
-    order_id: { type: ObjectId, required: false, ref: "Order", unique: true },
+    order_id: { type: ObjectId, required: false, ref: "Order" },
 
     isAccepted: { type: Boolean, default: false },
     message: { type: String, default: null },
@@ -35,6 +35,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     timestamps: true,
   },
 );
+paymentAlertSchema.index({ status: 1, order_id: 1 }, { unique: true });
 
 const PaymentAlert: Model<PaymentAlertType> = mongoose.model<PaymentAlertType>(
   "PaymentAlert",

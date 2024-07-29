@@ -87,6 +87,7 @@ export interface IUniquelyDishes {
   __v: number;
 }
 export interface IBusinessData {
+  outletInfo: { location: any; phone: any; };
   businessId: string;
   banners: IBannerPayload[];
   _id: string;

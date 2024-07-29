@@ -1,17 +1,17 @@
-import SearchPanel from '@/components/atoms/searchPanel';
-import { useLiteStore } from '@/components/store/useLiteStore';
-import { useSearch } from '@/components/store/useSearch';
-import { Menu } from '@headlessui/react';
-import { memo, useMemo, useState } from 'react';
-import { CiFilter } from 'react-icons/ci';
-import { HiSearch } from 'react-icons/hi';
-import OfflineAlertCard from '../offlineAlertCard';
+import SearchPanel from "@/components/atoms/searchPanel";
+import { useLiteStore } from "@/components/store/useLiteStore";
+import { useSearch } from "@/components/store/useSearch";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { memo, useMemo, useState } from "react";
+import { CiFilter } from "react-icons/ci";
+import { HiSearch } from "react-icons/hi";
+import OfflineAlertCard from "../offlineAlertCard";
 
 const OfflineAlerts = () => {
-  const { offlineAlertData } = useLiteStore((s)=>({
+  const { offlineAlertData } = useLiteStore((s) => ({
     offlineAlertData: s.offlineAlertData,
   }));
-  const { searchText } = useSearch((s)=>({
+  const { searchText } = useSearch((s) => ({
     searchText: s.searchText,
   }));
   const [showSearchBox, setShowSearchBox] = useState(false);
@@ -21,8 +21,8 @@ const OfflineAlerts = () => {
     setShowSearchBox(!showSearchBox);
   };
 
-  const handleSort = (order: 'asc' | 'desc') => {
-    setIsAscending(order === 'asc');
+  const handleSort = (order: "asc" | "desc") => {
+    setIsAscending(order === "asc");
   };
 
   const sortedAndFilteredData = useMemo(() => {
@@ -50,47 +50,52 @@ const OfflineAlerts = () => {
         <div className="flex items-center">
           {!showSearchBox ? (
             <Menu as="div" className="relative">
-              <Menu.Button className="flex items-center space-x-2 rounded-full bg-black px-4 py-2 text-white">
+              <MenuButton className="flex items-center px-4 py-2 space-x-2 text-white bg-black rounded-full">
                 <span>Filters</span>
                 <CiFilter className="ml-2" />
-              </Menu.Button>
-              <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              </MenuButton>
+              <MenuItems className="absolute right-0 w-48 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                 <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
+                  <MenuItem>
+                    {({ focus }) => (
                       <button
+                        type="button"
                         disabled={isAscending}
                         className={`${
-                          active ? 'bg-gray-100 text-gray-900' : 'text-black'
+                          focus ? "bg-gray-100 text-gray-900" : "text-black"
                         } group flex w-full items-center rounded-md px-2 py-2 text-base font-semibold`}
                         onClick={() => {
-                          handleSort('asc');
+                          handleSort("asc");
                         }}
                       >
                         Ascending
                       </button>
                     )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
+                  </MenuItem>
+                  <MenuItem>
+                    {({ focus }) => (
                       <button
+                        type="button"
                         className={`${
-                          active ? 'bg-gray-100 text-gray-900' : 'text-black'
+                          focus ? "bg-gray-100 text-gray-900" : "text-black"
                         } group flex w-full items-center rounded-md px-2 py-2 text-base font-semibold`}
                         onClick={() => {
-                          handleSort('desc');
+                          handleSort("desc");
                         }}
                       >
                         Descending
                       </button>
                     )}
-                  </Menu.Item>
+                  </MenuItem>
                 </div>
-              </Menu.Items>
+              </MenuItems>
             </Menu>
           ) : null}
           {!showSearchBox ? (
-            <HiSearch onClick={toggleSearchPanel} className="mx-2 my-auto h-4 w-4 cursor-pointer text-sm" />
+            <HiSearch
+              onClick={toggleSearchPanel}
+              className="w-4 h-4 mx-2 my-auto text-sm cursor-pointer"
+            />
           ) : (
             <SearchPanel closeSearchBox={toggleSearchPanel} />
           )}
@@ -99,7 +104,7 @@ const OfflineAlerts = () => {
       <OfflineAlertCard offlineAlertData={sortedAndFilteredData} />
     </>
   );
-}
+};
 
 const OfflineAlertsMemo = memo(OfflineAlerts);
 export default OfflineAlertsMemo;

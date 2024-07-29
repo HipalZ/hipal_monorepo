@@ -214,9 +214,9 @@ const MemoPaymentSales = () => {
                     </section>
                   </section>
                   <section className="py-4">
-                    <b>{data?.order_id?.name}</b>{" "}
+                    <b>{data?.userId?.name}</b>{" "}
                     <span className="opacity-50">
-                      {hideMiddleNumbers(data?.order_id?.phone)}
+                      {hideMiddleNumbers(data?.userId?.phone)}
                     </span>
                     <br />
                     <small>Bill value : {data?.order_id?.billValue}</small>

@@ -96,6 +96,10 @@ function OtpPage() {
       setError("Please enter the complete OTP.");
       return;
     }
+    if (userDetails.name === "" && customerName === "") {
+      setError("Please enter your name.");
+      return;
+    }
     if (loading) {
       return toast.error("Please wait for a moment");
     }
@@ -121,8 +125,8 @@ function OtpPage() {
       return;
     }
     if (res.status === 200) {
-      setAccessToken(response.accessToken);
-      setRefreshToken(response.refreshToken);
+      setAccessToken(response?.accessToken);
+      setRefreshToken(response?.refreshToken);
       setUserDetails(response?.user);
       setUserCoinZ(response?.rewards);
       setIsLogin(true);
@@ -277,7 +281,7 @@ function OtpPage() {
             className="w-full text-white bg-black rounded-full btn"
           >
             {loading ? (
-              <span className="loader_spinner !border-t-base-100  text-white"></span>
+              <span className="loader_spinner !border-t-base-100  text-white" />
             ) : userDetails.name !== "" ? (
               "sign in"
             ) : (

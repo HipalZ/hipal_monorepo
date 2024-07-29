@@ -54,8 +54,8 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
       const data = response;
       const items = data?.items;
       setItemData((prevData) => {
-        const existingIds = new Set(prevData.map(item => item.id));
-        const uniqueNewData = items.filter(item => !existingIds.has(item.id));
+        const existingIds = new Set(prevData.map((item) => item.id));
+        const uniqueNewData = items.filter((item) => !existingIds.has(item.id));
         return [...prevData, ...uniqueNewData];
       });
       setHasMoreData(data.length === 10);
@@ -153,7 +153,10 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
         <div>
           {itemData?.map((item) => {
             return (
-              <section key={item?._id} className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200">
+              <section
+                key={item?._id}
+                className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200"
+              >
                 <article className="flex space-x-0">
                   <figure className="w-[4rem] shrink-0 ">
                     <Image
@@ -166,7 +169,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
                   <div>
                     <h1 className="text-lg font-semibold">
                       {item?.rewards} Coinz{" "}
-                      {item?.status === "plus" ? "Won" : "Used"}
+                      {item?.status === "PLUS" ? "Won" : "Used"}
                     </h1>
                     <span className="text-sm">
                       {timestampToDateTime(item?.date)}
@@ -176,7 +179,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
                 <div className="flex flex-col w-[5rem] bg-white justify-center items-center p-2">
                   <p className="font-bold">{item?.rewards}</p>
                   <center className="text-xs font-bold">
-                    Coinz {item?.status === "plus" ? "Won" : "Used"}
+                    Coinz {item?.status === "PLUS" ? "Won" : "Used"}
                   </center>
                 </div>
               </section>
@@ -194,7 +197,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
             className="w-full mt-4 rounded-full bg-primary on_active_bounce btn text-base-200"
           >
             {loading ? (
-              <span className="loader_spinner !border-t-base-100"/>
+              <span className="loader_spinner !border-t-base-100" />
             ) : hasMoreData ? (
               "Load More"
             ) : (

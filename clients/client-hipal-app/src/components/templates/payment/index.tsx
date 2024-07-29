@@ -174,9 +174,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         key: merchantDetails.razorpayKeyId,
         amount: billValue - claimedCoinz + tips,
         currency: "INR",
-        name: "PALTRIBE",
+        name: businessDetails?.name,
         description: "Test Transaction",
-        image: "https://example.com/your_logo",
+        image: businessDetails?.logoUrl,
         order_id: orderId,
         handler: (response) => {
           handlePaymentSuccess(response);

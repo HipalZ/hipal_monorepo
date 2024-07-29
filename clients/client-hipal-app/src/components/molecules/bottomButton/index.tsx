@@ -27,9 +27,10 @@ function BottomButton({
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false)
-  }, [setInputModal]);
+  }, [inputModal,isPayment]);
 
   const openModal = useCallback(() => {
+    console.log('is login',isLogin, tableName)
     if (!isLogin) {
       setDirection("explore")
       setIsPayment(true)
@@ -37,7 +38,7 @@ function BottomButton({
       return;
     }
     setInputModal(true);
-  }, [setInputModal, tableName]);
+  }, [inputModal, tableName]);
 
   useEffect(() => {
     if (isPayment && isLogin && tableName) {

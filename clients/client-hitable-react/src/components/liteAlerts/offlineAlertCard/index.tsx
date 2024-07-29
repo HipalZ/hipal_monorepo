@@ -80,7 +80,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                     <section>
                       <article className="ml-2 space-y-1">
                         <h1 className="text-base">
-                          User : {alert?.name || "Customer"}
+                          User : {alert?.userId?.name || "Customer"}
                         </h1>
                         <p>{alert?.message}</p>
                       </article>

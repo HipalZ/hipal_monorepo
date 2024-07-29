@@ -31,7 +31,6 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     loyaltyId: {
       type: ObjectId,
       required: true,
-      ref: "LoyaltySetting",
     },
   },
   {

@@ -23,7 +23,7 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const { isLogin } = useLogin();
 
   useEffect(() => {
-    if (!!tableName) {
+    if (tableName !== null) {
       setTableName(tableName);
     }
   }, [tableName]);

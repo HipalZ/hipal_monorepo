@@ -33,7 +33,7 @@ const HistoryCard = (props: IOnlineProp) => {
               key={alert?._id}
               className={cn('max-h-[15rem]','mx-4 my-4 rounded-xl p-4', alert?.status === 'FAIL' ? 'bg-red-100' : 'bg-gray-300')}
             >
-              <section className="mb-2 flex items-center justify-between">
+              <section className="flex items-center justify-between mb-2">
                 <article className={cn('flex w-[8rem] items-center rounded-full px-2', alert?.status === 'FAIL' ? '' : 'bg-green-100', alert?.alertType==='OFFLINE' ? 'bg-indigo-100' :'bg-green-100')}>
                   <span>
                     <PiCoinsFill />
@@ -57,7 +57,7 @@ const HistoryCard = (props: IOnlineProp) => {
                     <h6 className="text-sm">Tips : ₹ {alert?.order_id?.tips}</h6>
                   </article>
                   {alert?.coinsApplied ? (
-                    <article className="my-2 flex w-fit items-center justify-start rounded-full bg-gray-200 px-3">
+                    <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full w-fit">
                       <span>
                         <PiCoinsFill size={20} />
                       </span>
@@ -67,13 +67,13 @@ const HistoryCard = (props: IOnlineProp) => {
                   ) : null}
                 </section>
                 <section className="text-right">
-                  <p>User : {alert?.order_id?.name?.length > 10 ? `${alert.order_id.name.substring(0, 10)}...` : alert?.order_id?.name}</p>
+                  <p>User : {alert?.userId?.name?.length > 10 ? `${alert?.userId?.name.substring(0, 10)}...` : alert?.userId?.name}</p>
                   {alert?.alertType === 'ONLINE' ? null : <p>Waiter : {alert?.waiterName || 'Captain'}</p>}
                   <article className="space-y-1">
                     <h1 className="text-base text-gray-700">Table : {alert?.tableName}</h1>
                     <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
                   </article>
-                  <button onClick={() => handleViewMore(alert)} className="mt-2 rounded-full bg-black px-6 py-2 text-white">
+                  <button type='button' onClick={() => handleViewMore(alert)} className="px-6 py-2 mt-2 text-white bg-black rounded-full">
                     <h1 className="text-xs">View</h1>
                   </button>
                 </section>
@@ -84,7 +84,7 @@ const HistoryCard = (props: IOnlineProp) => {
           );
         })
       ) : (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-2xl">No Data Found</div>
+        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">No Data Found</div>
       )}
     </main>
   );

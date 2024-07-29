@@ -1,12 +1,12 @@
-import mongoose, { type Model } from 'mongoose';
-import type { CustomRoleType, UserType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { CustomRoleType, UserType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const CustomRoleSchema = new mongoose.Schema({
   businessId: {
     type: ObjectId,
     required: true, // Assuming ObjectIdSchema is required
-    ref: 'Business', // Assuming it references a Business collection
+    ref: "Business", // Assuming it references a Business collection
   },
   role: {
     type: String,
@@ -27,11 +27,11 @@ const userSchema = new mongoose.Schema<UserType>(
     name: {
       type: String,
       required: false,
-      default: true,
+      default: "",
     },
     email: {
       type: String,
-      default: '',
+      default: "",
     },
     phone: {
       type: String,
@@ -61,6 +61,6 @@ const userSchema = new mongoose.Schema<UserType>(
   },
 );
 
-const User: Model<UserType> = mongoose.model<UserType>('User', userSchema);
+const User: Model<UserType> = mongoose.model<UserType>("User", userSchema);
 
 export { User };

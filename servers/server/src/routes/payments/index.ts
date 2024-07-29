@@ -23,6 +23,7 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -152,12 +153,9 @@ const removeCoins = async (
       "MINUS",
       tableName,
       loyaltyId,
-
       order_id,
       userId,
-
       claimedCoins,
-
       session,
     );
 
@@ -580,7 +578,7 @@ const paymentsRouter = new Hono()
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             { tableName: getOrder?.tableName, isAccepted: false },
-            { isAccepted: true },
+            { isAccepted: true, isRejected: true },
             { session },
           );
           let posDiscount = 0;
@@ -683,6 +681,7 @@ const paymentsRouter = new Hono()
         tableName: tableName,
         message: message,
         date: Date.now(),
+        order_id: new ObjectId(),
       });
       return respond(c, "Alert created successfully", false, 200, alert);
     },

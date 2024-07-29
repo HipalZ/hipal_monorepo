@@ -157,6 +157,12 @@ export interface OrderDetails {
   __v: number;
 }
 
+interface IUserId {
+  _id: string;
+  name: string;
+  phone: string;
+}
+
 export interface IExistingPayments {
   comment: boolean;
   _id: string;
@@ -165,6 +171,7 @@ export interface IExistingPayments {
   total: number;
   customerName: string;
   customerPhone: string;
+  userId: IUserId;
   mode: string;
   paymentMode: string;
   billValue: number;

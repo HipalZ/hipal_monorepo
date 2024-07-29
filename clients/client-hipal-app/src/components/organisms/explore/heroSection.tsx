@@ -18,18 +18,25 @@ import { MdOutlineCall } from "react-icons/md";
 import MemoRewards from "@/components/templates/explore/rewards";
 import { cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { useLogin } from "@/components/store/useLogin";
 
 interface IHeroSection {
   data: IBusinessData;
 }
 
 function HeroSection({ data }: IHeroSection): JSX.Element {
-  const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
+  const { setBusinessDetails, businessDetails } = useBusinessDetails((s) => ({
+    setBusinessDetails: s.setBusinessDetails,
+    businessDetails: s.businessDetails,
+  }));
+
+  const setIsLogin = useLogin((s) => s.setIsLogin);
   const accessToken = useUserToken.getState().accessToken;
   const { location, phone } = data?.outletInfo;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
   const business = data.business as BusinessDetails;
+
   const setBusinessData = _useAllBusiness((s) => s.setData);
 
   const goToLocation = useCallback(() => {
@@ -52,6 +59,18 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       setBusinessDetails(business);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (businessDetails?.businessId !== data?.business?.businessId) {
+      console.log(
+        "datttttaaaa",
+        data?.business?.businessId,
+        businessDetails?.businessId,
+      );
+      console.log("loop");
+      setIsLogin(false);
+    }
+  }, [businessDetails?.businessId, data?.business?.businessId]);
 
   return (
     <div className="relative flex flex-col items-center px-8">

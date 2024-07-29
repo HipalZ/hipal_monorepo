@@ -50,7 +50,7 @@ const PaymentModal = (props: PaymentModalProps) => {
         <hr className="m-6 h-[0.1rem] bg-[#CACACA] text-black" />
         <div className="grid grid-cols-2 mx-6 mb-2">
           <h1>User</h1>
-          <p>: {salesData?.order_id?.name}</p>
+          <p>: {salesData?.userId?.name}</p>
         </div>
         <div className="grid grid-cols-2 mx-6 mb-2">
           <h1>Table</h1>
@@ -61,13 +61,13 @@ const PaymentModal = (props: PaymentModalProps) => {
           <div className="flex">
             <span>
               :{" "}
-              {salesData?.order_id?.phone
-                ? hideMiddleNumbers(salesData?.order_id?.phone)
+              {salesData?.userId?.phone
+                ? hideMiddleNumbers(salesData?.userId?.phone)
                 : ""}
             </span>
             &nbsp;&nbsp;
             <a
-              href={`tel:+91${salesData?.order_id?.phone}`}
+              href={`tel:+91${salesData?.userId?.phone}`}
               className="flex items-center rounded-full bg-[#f3eeff] px-2 py-1 text-[#6f2eff]"
             >
               <MdOutlineCall size={16} />
@@ -78,7 +78,7 @@ const PaymentModal = (props: PaymentModalProps) => {
         <h1 className="mx-6 font-semibold">Used reason</h1>
         <div className="flex flex-col p-4 m-6 bg-gray-300 rounded-2xl">
           <h1 id="discount-reason">
-            User {salesData?.order_id?.name} has paid ₹{" "}
+            User {salesData?.userId?.name} has paid ₹{" "}
             {salesData?.order_id?.total} discount applied ₹{" "}
             {salesData?.order_id?.claimedCoins} transaction id {salesData?._id}
           </h1>
