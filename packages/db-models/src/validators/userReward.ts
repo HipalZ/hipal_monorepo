@@ -15,7 +15,7 @@ const UserRewardDoc = z.object({
   rewards: z.coerce.number(),
   password: z.coerce.number(),
   scanCount: z.coerce.number(),
-  date: z.number(),
+  date: z.number().optional(),
 });
 
 export type UserRewardType = z.infer<typeof UserRewardDoc>;

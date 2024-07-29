@@ -10,7 +10,8 @@ export const useBusinessDetails = create(
     (set) => ({
       businessDetails: {
         businessId: "",
-        businessName: "",
+        branchName: "",
+        name: "",
         registeredName: "",
         businessType: "",
         email: "",

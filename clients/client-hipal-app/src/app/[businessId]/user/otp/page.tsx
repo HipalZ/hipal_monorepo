@@ -19,7 +19,8 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
-
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 function OtpPage() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
@@ -48,7 +49,8 @@ function OtpPage() {
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
   ) => {
-    if (e.target.value.length > 1 || Number.isNaN(Number(e.target.value))) return;
+    if (e.target.value.length > 1 || Number.isNaN(Number(e.target.value)))
+      return;
 
     const newOtp = [...otp];
     newOtp[index] = e.target.value;
@@ -73,18 +75,20 @@ function OtpPage() {
       origin: { y: 0.6 },
     });
   }
+
   const goNext = useCallback(() => {
+    let newUrl = `/${customLink}/explore?pay=${isPayment}`;
+
     if (direction === "loyalty") {
-      return router.push(routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`));
+      newUrl = routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`);
+    } else if (direction === "category") {
+      newUrl = `/${customLink}/category?pay=${isPayment}`;
+    } else if (direction === "explore") {
+      newUrl = `/${customLink}/explore?pay=${isPayment}`;
     }
-    if (direction === "category") {
-      return router.push(`/${customLink}/category?pay=${isPayment}`);
-    }
-    if (direction === "explore") {
-      return router.push(`/${customLink}/explore?pay=${isPayment}`);
-    }
-    return router.push(`/${customLink}/explore?pay=${isPayment}`);
-  }, [router, direction, customLink]);
+
+    window.location.href = newUrl;
+  }, [direction, customLink, isPayment]);
 
   const verifyOtp = async () => {
     const fullOtp = otp.join("");
@@ -95,7 +99,7 @@ function OtpPage() {
     if (loading) {
       return toast.error("Please wait for a moment");
     }
-    setLoading(true)
+    setLoading(true);
 
     const res = await apiRpc.users[":id"].signIn.$post({
       json: {
@@ -108,7 +112,7 @@ function OtpPage() {
         name: customerName || userDetails.name,
       },
       param: { id: customLink },
-    })
+    });
     const response = (await res.json()).data;
     if (res.status === 400) {
       setError("Invalid OTP");
@@ -136,7 +140,7 @@ function OtpPage() {
         inputRefs[0].current.focus();
       }
     }
-  }
+  };
 
   const goBack = useCallback(() => {
     router.back();
@@ -240,8 +244,9 @@ function OtpPage() {
                 max={1}
                 min={0}
                 ref={inputRefs[index]}
-                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${error && "border-red-500"
-                  }`}
+                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
+                  error && "border-red-500"
+                }`}
                 required
               />
             ))}

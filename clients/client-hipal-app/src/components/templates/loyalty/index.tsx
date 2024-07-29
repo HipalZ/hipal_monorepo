@@ -34,6 +34,7 @@ import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
+  console.log("dta", data);
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const [rewards, setRewards] = useState<number>();
@@ -47,8 +48,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
   const searchParams = useSearchParams();
   const claim = searchParams?.get("claim");
-  const customLink = useParams()?.businessId as string
-
+  const customLink = useParams()?.businessId as string;
   useEffect(() => {
     const patterns = (cardPattern: PatternKeys, fontColor: string) => {
       const defaultColor = "#FAE8CA";
@@ -73,21 +73,21 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
-      data?.loyalty?.loyaltyId === undefined
+      loyaltySetting?.loyaltyId === undefined
     )
       return;
 
     const userReward = await apiRpc.users[":businessId"].getUserReward.$get({
       param: {
-        businessId: userDetails.phone,
+        businessId: businessDetails?._id,
       },
       query: {
         userId: userDetails?._id,
-        loyaltyId: data?.loyalty?.loyaltyId,
+        loyaltyId: loyaltySetting?.loyaltyId,
       },
-
     });
     const response = (await userReward.json()).data;
+    console.log("res", response);
     if (userReward.status === 404 || userReward.status === 400) {
       toast.error("User not found");
     }
@@ -106,9 +106,8 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       },
       query: {
         loyaltyId: loyaltySetting?.loyaltyId,
-        userPhone: userDetails?.phone,
+        userId: userDetails?._id,
       },
-
     });
     const res = (await response.json()).data;
     if (response.status === 200 || response.status === 201) {
@@ -144,21 +143,17 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   useQuery({
     queryKey: [
       "userRewardHistory",
-      Number(userDetails.phone),
-      data?.loyalty?.loyaltyId,
+      userDetails?._id,
+      loyaltySetting?.loyaltyId,
     ],
     queryFn: getUserReward,
-    enabled: !!data?.loyalty?.loyaltyId,
+    enabled: !!loyaltySetting?.loyaltyId && !!userDetails?._id,
   });
 
   useQuery({
-    queryKey: [
-      "userTotalRewards",
-      userDetails?.phone,
-      loyaltySetting?.loyaltyId,
-    ],
+    queryKey: ["userTotalRewards", userDetails?._id, loyaltySetting?.loyaltyId],
     queryFn: getUserTotalRewards,
-    enabled: !!loyaltySetting?.loyaltyId && !!userDetails?.phone,
+    enabled: !!loyaltySetting?.loyaltyId && !!userDetails?._id,
   });
 
   return (
@@ -189,7 +184,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                   !!
                 </b>
               </span>
-              <Link href={`/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
+              <Link
+                href={`/${customLink}/loyalty/${loyaltySetting?.loyaltyId}`}
+              >
                 <button
                   type="button"
                   className="px-4 py-2 text-xs border rounded-full on_active_bounce bg-base-100 text-primary border-primary"
@@ -223,7 +220,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                   className="rounded-full"
                 />
                 <h3 className="mt-4 text-3xl font-semibold capitalize text-base-100">
-                  {data?.business?.businessName}
+                  {data?.business?.name}
                 </h3>
               </center>
               <article className="absolute rotate-45 -right-6 top-1/4">
@@ -259,30 +256,35 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                 style={{
                   backgroundImage: `url(${image})`,
                   backgroundColor: data?.loyalty?.cardColor || "primary",
-                  backgroundSize: `${data?.loyalty?.cardPattern === "beans" ||
+                  backgroundSize: `${
+                    data?.loyalty?.cardPattern === "beans" ||
                     data?.loyalty?.cardPattern === "bowl" ||
                     data?.loyalty?.cardPattern === "love" ||
                     data?.loyalty?.cardPattern === "flower" ||
                     data?.loyalty?.cardPattern === "bud"
-                    ? "90px 75px"
-                    : "cover"
-                    }`,
-                  backgroundPosition: `${data?.loyalty?.cardPattern === "beans" ||
+                      ? "90px 75px"
+                      : "cover"
+                  }`,
+                  backgroundPosition: `${
+                    data?.loyalty?.cardPattern === "beans" ||
                     data?.loyalty?.cardPattern === "bowl" ||
                     data?.loyalty?.cardPattern === "love" ||
                     data?.loyalty?.cardPattern === "flower" ||
                     data?.loyalty?.cardPattern === "bud"
-                    ? "right 5% top 50%"
-                    : ""
-                    }`,
+                      ? "right 5% top 50%"
+                      : ""
+                  }`,
                   backgroundRepeat: "no-repeat",
                 }}
-                className={`'justify-between' ${animate ? "backInUp" : "tada"
-                  } ${data?.loyalty?.cardColor
+                className={`'justify-between' ${
+                  animate ? "backInUp" : "tada"
+                } ${
+                  data?.loyalty?.cardColor
                     ? data?.loyalty?.cardColor
                     : "bg-primary"
-                  } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] left-0 right-0 m-auto h-[10rem] border border-1 mb-14  ${Number(claim) > 0 ? "mt-[40rem]" : "mt-[28rem]"
-                  } 
+                } text-base-content flex flex-col absolute top-0 rounded-2xl w-[60%] left-0 right-0 m-auto h-[10rem] border border-1 mb-14  ${
+                  Number(claim) > 0 ? "mt-[40rem]" : "mt-[28rem]"
+                } 
 							transition-transform duration-500 -skew-y-6`}
               >
                 <>
@@ -310,16 +312,18 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                       WebkitBackfaceVisibility: "hidden",
                       color: `${data?.loyalty?.fontColor}`,
                     }}
-                    className={`${data?.loyalty?.fontColor ? "" : "text-primary-content"
-                      } flex self-center text-3xl font-semibold`}
+                    className={`${
+                      data?.loyalty?.fontColor ? "" : "text-primary-content"
+                    } flex self-center text-3xl font-semibold`}
                   >
                     {rewards}{" "}
                     <span
                       style={{ color: `${data?.loyalty?.fontColor}` }}
-                      className={`${data?.loyalty?.fontColor
-                        ? `text-[${data?.loyalty?.fontColor}]`
-                        : "text-primary-content"
-                        } text-sm flex self-center ml-2 `}
+                      className={`${
+                        data?.loyalty?.fontColor
+                          ? `text-[${data?.loyalty?.fontColor}]`
+                          : "text-primary-content"
+                      } text-sm flex self-center ml-2 `}
                     >
                       Coins
                     </span>
@@ -330,10 +334,11 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                       WebkitBackfaceVisibility: "hidden",
                       color: `${data?.loyalty?.fontColor}`,
                     }}
-                    className={`${data?.loyalty?.fontColor
-                      ? `text-[${data?.loyalty?.fontColor}]`
-                      : "text-primary-content"
-                      } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
+                    className={`${
+                      data?.loyalty?.fontColor
+                        ? `text-[${data?.loyalty?.fontColor}]`
+                        : "text-primary-content"
+                    } capitalize mx-[1rem] mb-[1rem] flex self-start text-lg `}
                   >
                     {userName}
                   </h1>
@@ -386,7 +391,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
                   </h1>
                   <p className="text-sm opacity-75 text-primary">
                     Read the policies of rewardz at{" "}
-                    {businessDetails?.businessName}
+                    {businessDetails?.branchName || businessDetails?.name}
                   </p>
                 </div>
                 <span className="p-2 text-3xl rounded-full bg-primary">

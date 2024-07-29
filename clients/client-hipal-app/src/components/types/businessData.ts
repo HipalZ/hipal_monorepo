@@ -1,12 +1,13 @@
 import type { ICart } from "@/components/store/useCart";
-import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import type { CategoryType } from "@hi/db-models/src/validators";
+import type { ILoyaltySetting } from "../store/useLoyaltyData";
 
 export interface IBiz {
   logoUrl: string;
   email: string;
   businessId: string;
-  businessName: string;
+  branchName: string;
+  name: string;
   registeredName: string;
   businessType: string;
   gstRegistered: boolean;

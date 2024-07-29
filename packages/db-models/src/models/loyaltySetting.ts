@@ -1,12 +1,12 @@
-import mongoose, { type Model } from 'mongoose';
-import type { LoyaltyType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { LoyaltyType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const loyaltySchema = new mongoose.Schema<LoyaltyType>(
   {
     businessId: {
       type: ObjectId,
-      ref: 'Business',
+      ref: "Business",
       required: true,
       unique: true,
     },
@@ -20,12 +20,12 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     },
     password: {
       type: String,
-      default: '1234',
+      default: "1234",
     },
     loyaltyId: {
       type: ObjectId,
       required: true,
-      ref: 'LoyaltySetting',
+      ref: "LoyaltySetting",
     },
     origin: {
       type: Boolean,
@@ -33,20 +33,20 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     },
     cardPattern: {
       type: String,
-      default: 'beans',
+      default: "beans",
     },
 
     cardColor: {
       type: String,
-      default: '22341F',
+      default: "22341F",
     },
     fontColor: {
       type: String,
-      default: 'FAE8CA',
+      default: "FAE8CA",
     },
     logo: {
       type: String,
-      default: '',
+      default: "",
     },
 
     loyaltyExpiryDate: {
@@ -54,7 +54,7 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     },
     rewardLimit: {
       type: Number,
-      default: 4999
+      default: 4999,
     },
     signUpBonus: {
       type: Number,
@@ -66,6 +66,9 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
   },
 );
 
-const LoyaltySettings: Model<LoyaltyType> = mongoose.model<LoyaltyType>('LoyaltySetting', loyaltySchema);
+const LoyaltySettings: Model<LoyaltyType> = mongoose.model<LoyaltyType>(
+  "LoyaltySetting",
+  loyaltySchema,
+);
 
 export { LoyaltySettings };

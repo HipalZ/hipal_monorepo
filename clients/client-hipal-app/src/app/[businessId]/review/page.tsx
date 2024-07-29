@@ -1,6 +1,7 @@
 import { businessApis } from "@/apis/explore";
 import Review from "@/components/templates/review";
-
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 export async function generateMetadata() {
   return {
     title: "Review",
@@ -8,7 +9,9 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Page({ params }: { params: { businessId: string } }) {
+export default async function Page({
+  params,
+}: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
   return <Review data={data} />;
 }

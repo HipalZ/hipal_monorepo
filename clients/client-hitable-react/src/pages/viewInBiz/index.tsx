@@ -7,10 +7,11 @@ import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
 
 const ViewInBizMemo = () => {
-  const { selectedBiz, captainData } = useHiClientZ((s)=>({
+  const { selectedBiz, captainData } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
+  console.log("selectedBiz", selectedBiz);
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);
@@ -48,9 +49,19 @@ const ViewInBizMemo = () => {
           <span className="wave-hand text-[2rem]">👋</span>
           <h1 className="text-3xl font-semibold">{captainData?.name}</h1>
           &nbsp;
-          <img className="border border-black rounded-full border-1" src={selectedBiz?.businessId?.logo || hipalLogo} alt="logo" width={125} height={125} />
-          <h6 className="mt-4 mb-2 text-xl font-semibold">{selectedBiz?.businessId?.businessName}</h6>
-          <p className="w-[18rem] text-center">{selectedBiz?.businessId?.address}</p>
+          <img
+            className="border border-black rounded-full border-1"
+            src={selectedBiz?.businessId?.logo || hipalLogo}
+            alt="logo"
+            width={125}
+            height={125}
+          />
+          <h6 className="mt-4 mb-2 text-xl font-semibold">
+            {selectedBiz?.businessId?.businessName}
+          </h6>
+          <p className="w-[18rem] text-center">
+            {selectedBiz?.businessId?.address}
+          </p>
         </article>
       )}
       {showMainComponent && (

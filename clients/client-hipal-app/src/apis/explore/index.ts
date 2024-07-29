@@ -1,9 +1,9 @@
+import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
+import type { IBanner, IUniquelyDishes } from "@/components/types/businessData";
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
+import { apiRpc } from "@hi/common";
 import { set } from "lodash-es";
 import { fetchCommonData } from "../commonApis";
-import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
-import { apiRpc } from "@hi/common";
-import type { IBanner, IUniquelyDishes } from "@/components/types/businessData";
 
 async function fetchBusinessData(customLink: string) {
   // common function has business and settings data
@@ -15,20 +15,18 @@ async function fetchBusinessData(customLink: string) {
     param: {
       businessId: bizId,
     },
-    }
-  );
+  });
   const loyaltyResponse = await apiRpc.businesses[":businessId"].loyalty.$get({
     param: {
       businessId: bizId,
     },
-    }
-  );
+  });
   const bannersResponse = await apiRpc.settings.banners[":businessId"].$get({
     param: {
       businessId: bizId,
     },
   });
-  
+
   const uniquelyDishes = await uniquelyDishesResponse.json();
   const loyalty = await loyaltyResponse.json();
   const banners = await bannersResponse.json();
@@ -46,6 +44,7 @@ async function fetchBusinessData(customLink: string) {
     "settings.explore.openTill",
     getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill || ""),
   );
+  console.log("loyalty", loyalty);
   return data;
 }
 

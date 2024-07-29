@@ -22,7 +22,7 @@ const app = new Hono({
 
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 5000,
+  limit: 10000,
   standardHeaders: "draft-6",
   keyGenerator: (c) => c.req.header("authorization") ?? "new-user",
   // store: new RedisStore({ client: redisClient }),

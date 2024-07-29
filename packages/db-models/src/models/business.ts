@@ -1,7 +1,7 @@
-import type { Model } from 'mongoose';
-import mongoose from 'mongoose';
-import type { BusinessType } from '../validators';
-import { BusinessEnumType, ExploreLayout, MenuLayout } from '../validators';
+import type { Model } from "mongoose";
+import mongoose from "mongoose";
+import type { BusinessType } from "../validators";
+import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -19,7 +19,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     parentOutLetId: {
       type: ObjectId,
       required: false,
-      ref: 'Business',
+      ref: "Business",
     },
 
     customLink: {
@@ -31,7 +31,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     staffIds: {
       type: [ObjectId],
       required: true,
-      ref: 'User',
+      ref: "User",
     },
 
     status: {
@@ -62,12 +62,23 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: Boolean,
       default: false,
     },
+    logo: {
+      type: String,
+      required: false,
+    },
+    address: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
   },
 );
 
-const Business: Model<BusinessType> = mongoose.model<BusinessType>('Business', businessSchema);
+const Business: Model<BusinessType> = mongoose.model<BusinessType>(
+  "Business",
+  businessSchema,
+);
 
 export { Business };

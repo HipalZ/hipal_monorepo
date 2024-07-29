@@ -13,7 +13,6 @@ import {
 } from "@hi/db-models";
 import type { PaymentType } from "@hi/db-models/src/validators";
 import {
-  PaymentAlertSchema,
   RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
   ReviewsSchema,
@@ -226,10 +225,9 @@ const calculatedCashbackCoins = async (
   const LoyaltySetting = await LoyaltySettings.findOne({ businessId }).select(
     "rewardLimit setCashBackPercentage",
   );
-  if (
-    !LoyaltySetting ||
-    typeof LoyaltySetting.setCashBackPercentage !== "number"
-  ) {
+
+  console.log("LoyaltySetting", businessId);
+  if (!LoyaltySetting) {
     console.error("LoyaltySetting not found or setReward is not a number");
     return 0; // Or handle this case as appropriate for your application
   }
@@ -655,12 +653,23 @@ const paymentsRouter = new Hono()
           }
         }
       }
+
+      return respond(c, "Webhook received successfully", false, 200, {});
     });
   })
 
   .post(
     "/createWaiterAlert",
-    zValidator("json", PaymentAlertSchema),
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        alertType: z.enum(["WAITER"]),
+        tableName: z.string(),
+        message: z.string(),
+        userId: z.string(),
+      }),
+    ),
 
     async (c) => {
       const requestData = await c.req.json();

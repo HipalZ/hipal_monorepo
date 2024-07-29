@@ -57,6 +57,8 @@ export const addSignUpBonus = async (
     loyaltyId,
   });
 
+  console.log("existingReward", existingReward);
+
   if (!existingReward) {
     const newReward = new UserReward({
       userId,
@@ -74,7 +76,8 @@ export const addSignUpBonus = async (
       },
     );
 
-    await newReward.save();
+    const u = await newReward.save();
+    console.log("u", u);
     const data = new UserRewardHistory({
       userId,
       status: "PLUS",
@@ -82,6 +85,8 @@ export const addSignUpBonus = async (
       loyaltyId,
       date: Date.now(),
     });
+
+    console.log("data", data);
 
     await data.save();
   } else {
@@ -439,8 +444,19 @@ const usersRouter = new Hono()
     const { phone, password } = requestData;
     const staff = await User.findOne({ phone: phone }).populate({
       path: "customRole.businessId",
-      select: "businessName address logo",
+      select: "name address logo",
     });
+
+    if (!staff) {
+      return c.json(
+        {
+          message: "Staff not found",
+          data: {},
+          err: true,
+        },
+        404,
+      );
+    }
 
     const isPasswordValid = await verifyPassword(
       password,
@@ -489,6 +505,8 @@ const usersRouter = new Hono()
         role: role,
       };
 
+      const password = "6344";
+
       const existingUser = await User.findOne({
         phone,
         customRole: { $elemMatch: { businessId: businessId } },
@@ -505,6 +523,7 @@ const usersRouter = new Hono()
             name,
             phone,
             role: roles,
+            password: await hashPassword(password),
           },
           $addToSet: { customRole: newCustomRole },
         },
@@ -754,7 +773,8 @@ const usersRouter = new Hono()
 
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {
-          await addSignUpBonus(loyaltyId, userId, signUpBonus);
+          const bonus = await addSignUpBonus(loyaltyId, userId, signUpBonus);
+          console.log("bonus", bonus);
         }
       } catch (e) {
         return respond(c, "Error in adding sign up bonus", true, 400, {});
@@ -762,7 +782,7 @@ const usersRouter = new Hono()
 
       if (loyaltyId && signUpBonus > 0) {
         const userReward = await UserReward.findOne({
-          userPhone: phone,
+          userId: userId,
           loyaltyId,
         });
 
@@ -776,7 +796,7 @@ const usersRouter = new Hono()
         );
         const modifyUser = {
           ...existingUser,
-          signUpBonus: signUpBonus,
+          reward: signUpBonus,
           count: userReward?.scanCount,
         };
         return respond(c, "User logged in successfully", false, 200, {

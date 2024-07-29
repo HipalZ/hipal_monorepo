@@ -27,18 +27,14 @@ export const razorpayOrderSchema = z.object({
     .number({
       message: "Claimed coins must be a number",
     })
-    .positive({
-      message: "Claimed coins must be positive",
-    })
+
     .default(0)
     .optional(),
   tips: z.coerce
     .number({
       message: "Tips must be a number",
     })
-    .positive({
-      message: "Tips must be positive",
-    })
+    .default(0)
     .optional(),
   currency: z
     .string({
@@ -61,7 +57,7 @@ export const razorpayOrderSchema = z.object({
     .number({
       message: "Date must be a number",
     })
-    .positive(),
+    .optional(),
 });
 
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;

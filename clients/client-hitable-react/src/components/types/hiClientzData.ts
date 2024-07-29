@@ -1,6 +1,8 @@
-export type NavItemTypes = 'online' | 'on floor' | 'history' | 'sales';
+export type NavItemTypes = "online" | "on floor" | "history" | "sales";
 
 export interface HiClientzData {
+  address: string | undefined;
+  logoUrl: string;
   _id: string;
   name: string;
   email: string;
@@ -14,6 +16,8 @@ export interface HiClientzData {
 }
 
 export interface CustomRole {
+  logoUrl: string | undefined;
+  address: string | undefined;
   businessId: Business;
   customRoleId: string;
   role: string;
@@ -23,8 +27,8 @@ export interface CustomRole {
 }
 
 export interface Business {
+  name: string;
   _id: string;
-  businessName: string;
   logo: string;
   address: string;
 }
@@ -52,6 +56,11 @@ export interface Order {
 }
 
 export interface Alert {
+  userId: {
+    name: string;
+    _id: string;
+    phone: string;
+  };
   posDiscount: number;
   isRejected: boolean;
   waiterName: string;

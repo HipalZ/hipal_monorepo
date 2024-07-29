@@ -1,5 +1,5 @@
-import mongoose, { type Model } from 'mongoose';
-import type { UserRewardType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { UserRewardType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const userRewardSchema = new mongoose.Schema<UserRewardType>(
@@ -7,12 +7,12 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
     userId: {
       type: ObjectId,
       required: true,
-      ref: 'User',
+      ref: "User",
     },
     loyaltyId: {
       type: ObjectId,
       required: true,
-      ref: 'LoyaltySetting',
+      ref: "LoyaltySetting",
     },
 
     rewards: {
@@ -28,13 +28,15 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
     date: {
       type: Number,
     },
-
   },
   {
     timestamps: true,
   },
 );
 
-const UserReward: Model<UserRewardType> = mongoose.model<UserRewardType>('userReward', userRewardSchema);
+const UserReward: Model<UserRewardType> = mongoose.model<UserRewardType>(
+  "userReward",
+  userRewardSchema,
+);
 
 export { UserReward };

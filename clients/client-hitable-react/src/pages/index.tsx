@@ -1,22 +1,24 @@
-import liteLoginIcon1 from '@/assets/img/liteLoginIcon1.png';
-import liteLoginIcon2 from '@/assets/img/liteLoginIcon2.png';
-import liteLoginIcon3 from '@/assets/img/liteLoginIcon3.png';
-import liteLoginIcon4 from '@/assets/img/liteLoginIcon4.png';
-import liteLoginIcon5 from '@/assets/img/liteLoginIcon5.png';
-import liteLoginIcon6 from '@/assets/img/liteLoginIcon6.png';
-import liteLoginIcon7 from '@/assets/img/liteLoginIcon7.png';
-import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { useLiteStore } from '@/components/store/useLiteStore';
+import liteLoginIcon1 from "@/assets/img/liteLoginIcon1.png";
+import liteLoginIcon2 from "@/assets/img/liteLoginIcon2.png";
+import liteLoginIcon3 from "@/assets/img/liteLoginIcon3.png";
+import liteLoginIcon4 from "@/assets/img/liteLoginIcon4.png";
+import liteLoginIcon5 from "@/assets/img/liteLoginIcon5.png";
+import liteLoginIcon6 from "@/assets/img/liteLoginIcon6.png";
+import liteLoginIcon7 from "@/assets/img/liteLoginIcon7.png";
+import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useLiteStore } from "@/components/store/useLiteStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { apiRpc } from '@hi/common';
-import { memo, startTransition, useState } from 'react';
-import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { apiRpc } from "@hi/common";
+import { memo, useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 //tes
 const LoginMemo = () => {
-  const [password, setPassword] = useState<string>('');
+  const setAccessToken = useUserToken((s) => s.setAccessToken);
+  const setRefreshToken = useUserToken((s) => s.setRefreshToken);
+  const [password, setPassword] = useState<string>("");
   const { setLoading } = useLiteStore();
-  // 
+  //
 
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
@@ -32,10 +34,8 @@ const LoginMemo = () => {
 
   //apis
   const handleLogin = async () => {
-    const setAccessToken = useUserToken.getState().setAccessToken;
-    const setRefreshToken = useUserToken.getState().setRefreshToken;
     setLoading(true);
-    const res = await apiRpc.users[':id'].stafflogin.$post({
+    const res = await apiRpc.users[":id"].stafflogin.$post({
       json: {
         phone: phoneNumber,
         password: password,
@@ -47,9 +47,7 @@ const LoginMemo = () => {
       setRefreshToken(response.data.refreshToken);
       setAccessToken(response.data.accessToken);
       toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
-      startTransition(() => {
-        navigate('/businesses');
-      });
+      window.location.href = "/businesses";
     }
     setLoading(false);
   };
@@ -62,27 +60,76 @@ const LoginMemo = () => {
             <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
           </div>
         </div>
-        <div className="absolute top-1/2 mx-8 flex justify-between">
+        <div className="absolute flex justify-between mx-8 top-1/2">
           <section>
-            <img src={liteLoginIcon1} alt="liteLoginIcon1" width={55} height={55} loading="lazy" className="liteLoginIcon1" />
+            <img
+              src={liteLoginIcon1}
+              alt="liteLoginIcon1"
+              width={55}
+              height={55}
+              loading="lazy"
+              className="liteLoginIcon1"
+            />
           </section>
           <section className="-mt-5">
-            <img src={liteLoginIcon2} alt="liteLoginIcon2" width={38} height={38} loading="lazy" className="liteLoginIcon2" />
+            <img
+              src={liteLoginIcon2}
+              alt="liteLoginIcon2"
+              width={38}
+              height={38}
+              loading="lazy"
+              className="liteLoginIcon2"
+            />
           </section>
-          <section className="mt-5 w-10">
-            <img src={liteLoginIcon3} alt="liteLoginIcon3" width={43} height={43} loading="lazy" className="liteLoginIcon3" />
+          <section className="w-10 mt-5">
+            <img
+              src={liteLoginIcon3}
+              alt="liteLoginIcon3"
+              width={43}
+              height={43}
+              loading="lazy"
+              className="liteLoginIcon3"
+            />
           </section>
           <section className="mx-4">
-            <img src={liteLoginIcon4} alt="liteLoginIcon4" width={98} height={98} loading="lazy" className="liteLoginIcon4" />
+            <img
+              src={liteLoginIcon4}
+              alt="liteLoginIcon4"
+              width={98}
+              height={98}
+              loading="lazy"
+              className="liteLoginIcon4"
+            />
           </section>
           <section className="-mt-10">
-            <img src={liteLoginIcon5} alt="liteLoginIcon5" width={57} height={57} loading="lazy" className="liteLoginIcon5" />
+            <img
+              src={liteLoginIcon5}
+              alt="liteLoginIcon5"
+              width={57}
+              height={57}
+              loading="lazy"
+              className="liteLoginIcon5"
+            />
           </section>
           <section className="mt-10">
-            <img src={liteLoginIcon6} alt="liteLoginIcon6" width={43} height={43} loading="lazy" className="liteLoginIcon6" />
+            <img
+              src={liteLoginIcon6}
+              alt="liteLoginIcon6"
+              width={43}
+              height={43}
+              loading="lazy"
+              className="liteLoginIcon6"
+            />
           </section>
           <section>
-            <img src={liteLoginIcon7} alt="liteLoginIcon7" width={45} height={45} loading="lazy" className="liteLoginIcon7" />
+            <img
+              src={liteLoginIcon7}
+              alt="liteLoginIcon7"
+              width={45}
+              height={45}
+              loading="lazy"
+              className="liteLoginIcon7"
+            />
           </section>
         </div>
       </section>
@@ -95,7 +142,7 @@ const LoginMemo = () => {
             maxLength={10}
             minLength={10}
             id="floating_outlined3"
-            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
             placeholder=" "
             required
           />
@@ -111,7 +158,7 @@ const LoginMemo = () => {
             onChange={handlePasswordChange}
             type="password"
             id="floating_outlined4"
-            className="dark:text-base-100 focus:border-primary peer mb-0 ml-0 mr-0 block w-full rounded-xl border border-black bg-transparent pb-3 pl-4 pr-4 pt-3 text-base text-gray-900 focus:outline-none dark:border-gray-600"
+            className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
             placeholder=" "
             maxLength={4}
             minLength={4}
@@ -125,7 +172,7 @@ const LoginMemo = () => {
           </label>
         </div>
       </section>
-      <article className="mb-5 flex justify-center">
+      <article className="flex justify-center mb-5">
         <button
           type="button"
           onClick={handleLogin}

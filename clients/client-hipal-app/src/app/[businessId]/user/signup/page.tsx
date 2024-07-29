@@ -10,7 +10,8 @@ import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
-
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
   const [logo, setLogo] = useState<string>("");
   const [phone, setPhone] = useState("");
@@ -41,7 +42,7 @@ const SignUp = memo(() => {
       param: { id: customLink },
     });
     const response = (await res.json()).data;
-    
+
     if (res.status === 201) {
       setUserDetails(response?.user);
       setLoader(false);

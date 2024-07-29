@@ -43,7 +43,7 @@ export const ReviewsSchema = z.object({
     })
     .optional(),
   staffs: z.array(z.string()).optional(),
-  description: z.string().min(4).max(200).optional(),
+  description: z.string().min(0).max(200).optional(),
   improvementAreas: z
     .array(
       z
@@ -58,8 +58,8 @@ export const ReviewsSchema = z.object({
         }),
     )
     .optional(),
-  date: z.coerce.number(),
-  order_id: ObjectIdSchema,
+  date: z.coerce.number().optional(),
+  order_id: z.string(),
 });
 
 export type ReviewsType = z.infer<typeof ReviewsSchema>;

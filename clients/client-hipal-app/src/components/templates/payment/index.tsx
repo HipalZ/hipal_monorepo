@@ -64,6 +64,7 @@ export interface IMerchantDetails {
 }
 const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
+  const businessId = data?.business?.businessId;
   const [isTipActive, setIsTipActive] = useState<boolean>(false);
   const [showInput, setShowInput] = useState(false);
   const [selectedTip, setSelectedTip] = useState("");
@@ -118,14 +119,14 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   const getMerchantKeySecret = async () => {
     const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
       param: {
-        businessId: data?.business?.businessId || "",
+        businessId: businessId || "",
       },
     });
     const response = await res.json();
     if (res.status === 200) {
       console.log("response", response);
       setMerchantDetails({
-        businessId: data?.business?._id || "",
+        businessId: businessId || "",
         razorpayMerchantId: response?.data?.razorpayMerchantId,
         razorpayKeyId: response?.data?.razorpayKeyId,
       });
@@ -200,7 +201,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         },
         notes: {
           address: "Paltribe solutions",
-          businessId: data?.business?._id,
+          businessId: businessId,
           total: billValue - claimedCoinz + tips,
           claimedCoins: claimedCoinz,
           billValue: billValue,
@@ -303,7 +304,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     setIsLoading(true);
     const res = await apiRpc.payments.createOfflineOrder.$post({
       json: {
-        businessId: data?.business?._id || "",
+        businessId: businessId || "",
         total: billValue - claimedCoinz + tips,
         claimedCoins: claimedCoinz,
         billValue: billValue,
@@ -350,7 +351,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         merchantId: merchantDetails.razorpayMerchantId,
       },
       json: {
-        businessId: data?.business?._id || "",
+        businessId: businessId || "",
         total: billValue - claimedCoinz + tips,
         currency: "INR",
         claimedCoins: claimedCoinz,
@@ -433,7 +434,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   const handleUserCoinz = async () => {
     const res = await apiRpc.users[":businessId"].getUserReward.$get({
       param: {
-        businessId: data?.business?._id || "",
+        businessId: businessId || "",
       },
       query: {
         userId: userDetails?._id,
@@ -536,7 +537,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
               <div>
                 Paying: <br />
                 <span className="font-bold text-primary">
-                  {businessDetails.businessName}
+                  {businessDetails?.branchName || businessDetails?.name}
                 </span>
               </div>
             </header>
@@ -599,7 +600,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             maxCoinz={maxCoinz}
             setMaxCoinz={setMaxCoinz}
             billValue={billValue}
-            setClaimAmount={data?.loyalty?.setClaimRewards}
+            setClaimAmount={data?.loyalty?.setClaimedPercentage}
           />
         </div>
       )}
