@@ -4,10 +4,9 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import Image from "next/image";
-import Link from "next/link";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Splide, SplideSlide } from '@splidejs/react-splide';
-import '@splidejs/splide/dist/css/splide.min.css';
+import Link from "next/link";
 
 interface ISubTypes {
   childCategory: CategoryType[];
@@ -64,7 +63,6 @@ function SubTypes(props: ISubTypes) {
             className="relative px-2 py-4 snap-center"
             onClick={() => setActiveCategories(item)}
           >
-            <a href={`#${item?._id}`}>
               <article
                 className={cn(
                   isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
@@ -92,7 +90,6 @@ function SubTypes(props: ISubTypes) {
                   {item?.name}
                 </h6>
               </article>
-            </a>
           </button>
         </SplideSlide>
       ))}
