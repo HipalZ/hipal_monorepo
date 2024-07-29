@@ -108,13 +108,7 @@ const MemoBannersLayout = (props: Props) => {
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
-                    <div
-                      style={buttonStyleTags}
-                      className={cn(
-                        defaultButtonStyle,
-                        "absolute right-4 bottom-8",
-                      )}
-                    >
+                    <div style={buttonStyleTags} className={defaultButtonStyle}>
                       <button type="button">{callToAction || "Explore"}</button>
                       <span className="text-[0.8rem]">
                         <LuArrowUpRight />
