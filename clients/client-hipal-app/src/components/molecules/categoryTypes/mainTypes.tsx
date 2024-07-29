@@ -2,7 +2,13 @@ import { useActiveClass } from "@/components/store/useActiveClass";
 import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { SplideSlide } from "@splidejs/react-splide";
-import { type CSSProperties, memo, type ReactNode, useMemo } from "react";
+import {
+  type CSSProperties,
+  memo,
+  type ReactNode,
+  useEffect,
+  useMemo,
+} from "react";
 
 interface IMainTypes {
   parentCategory: CategoryType[];
@@ -19,6 +25,7 @@ function MainTypes(props: IMainTypes) {
     isActiveParentCategory,
     setActiveParentCategory,
     setActiveParentCategoryName,
+    setActiveCategory
   } = useActiveClass();
 
   const SplideSlideWrapper = ({ children }: { children?: ReactNode }) => {
@@ -35,7 +42,14 @@ function MainTypes(props: IMainTypes) {
   const setMainCategory = (category: CategoryType) => {
     setActiveParentCategory(category._id?.toString() ?? "");
     setActiveParentCategoryName(category.name ?? "");
+    setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
   };
+
+  useEffect(() => {
+    if (!isActiveParentCategory) {
+      setActiveParentCategory(mainTypes[0]._id?.toString() ?? "");
+    }
+  }, [isActiveParentCategory, mainTypes, setActiveParentCategory]);
 
   return mainTypes.length > 0 ? (
     <div className="flex w-full px-4 mx-auto hide-scrollbar bg-base-300 no-scrollbar">

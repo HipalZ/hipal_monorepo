@@ -42,7 +42,7 @@ function MemoEmblaCarousel({ children }) {
       <div className="embla__viewport" ref={emblaRef}>
         <div className="-space-x-8 embla__container">{children}</div>
       </div>
-      <div className="py-4 mt-3 embla__button-container">
+      <div className="px-10 py-4 mt-3 embla__button-container ">
         <button
           type="button"
           className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"

@@ -85,9 +85,8 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     [updateCartItem, removeFromCart],
   );
 
-  const cartItem = cart.find((item) => item.id === dishData._id);
+  const cartItem = cart.find((item) => item?.id === dishData?._id);
 
-  console.log("cartItem", cart);
 
   return (
     <>

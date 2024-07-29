@@ -4,82 +4,102 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import Image from "next/image";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { Splide, SplideSlide } from '@splidejs/react-splide';
+import '@splidejs/splide/dist/css/splide.min.css';
 
 interface ISubTypes {
   childCategory: CategoryType[];
 }
+
 function SubTypes(props: ISubTypes) {
   const { childCategory } = props;
+  const { isActiveCategory, setActiveCategory, setActiveParentCategory } = useActiveClass();
 
-  const {
-    isActiveCategory,
-    setActiveCategory,
-    isActiveParentCategory,
-  } = useActiveClass();
-
-  const subTypes = useMemo(() => 
-    childCategory.filter(category => 
-      category.hierarchy === "CHILD" &&
-      category.parentCategoryIds.includes(isActiveParentCategory) &&
-      category.dishIds.length > 0 
-    ), [childCategory, isActiveParentCategory]);
+  const subTypes = useMemo(
+    () =>
+      childCategory.filter(
+        (category) => category.hierarchy === "CHILD" && category.dishIds.length > 0
+      ),
+    [childCategory]
+  );
 
   const setActiveCategories = useCallback((category: CategoryType) => {
+    setActiveParentCategory(category?.parentCategoryIds?.[0].toString());
     setActiveCategory(category._id?.toString() ?? "");
-  }, []);
+  }, [setActiveCategory, setActiveParentCategory]);
+
+  const splideRef = useRef<Splide>(null);
 
   useEffect(() => {
-    if (subTypes.length > 0) {
-      setActiveCategory(subTypes[0]._id?.toString() ?? "");
+    if (isActiveCategory && splideRef.current) {
+      const slideIndex = subTypes.findIndex(item => item._id.toString() === isActiveCategory);
+      if (slideIndex !== -1) {
+        splideRef.current.go(slideIndex);
+      }
     }
-  }, [isActiveParentCategory, subTypes]);
+  }, [isActiveCategory, subTypes]);
 
   return (
-    <section className="overflow-x-auto no-scrollbar bg-base-100">
+    <section className="overflow-x-auto border shadow-2xl border-b-primary no-scrollbar bg-base-100">
       {subTypes?.length > 0 && (
-        <div className="flex flex-nowrap -webkit-flex snap-proximity snap-x no-scrollbar">
+        <Splide
+          ref={splideRef}
+          options={{
+            type: 'slide',
+            perPage: 3,
+            // perMove: 2,
+            pagination: false,
+            drag: 'free',
+            snap: true,
+            arrows: false,
+            gap: '1rem',
+          }}
+          className="no-scrollbar"
+        >
           {subTypes.map((item: CategoryType, index: number) => (
-            <button
-              type="button"
-              id={item?._id?.toString() + index.toString()}
-              className="relative px-2 py-4 snap-center"
-              key={item.name}
-              onClick={() => setActiveCategories(item)}
-            >
-              <a href={`#${item?._id}`}>
-                <article
-                  className={cn( isActiveCategory === item._id?.toString() ? "bg-primary text-white" :"",
-                    "flex w-full border border-primary rounded-full items-center justify-between px-2 py-1"
-                  )}
-                >
-                  {item.coverImage ? (
-                    <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
-                      <Image
-                        src={item.coverImage || ""}
-                        alt="dish"
-                        quality={95}
-                        width={35}
-                        height={35}
-                        objectFit="cover"
-                        blurDataURL={getRandomBlurImg(50, 50)}
-                      />
-                    </figure>
-                  ) : (
-                    <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
-                      <PlaceholderImg className="rounded-full" />
-                    </figure>
-                  )}
-                  <h6
-                    className={" text-sm w-full whitespace-nowrap text-nowrap"}
+            <SplideSlide key={item._id?.toString()}>
+              <button
+                type="button"
+                id={item?._id?.toString() + index.toString()}
+                className="relative px-2 py-4 snap-center"
+                onClick={() => setActiveCategories(item)}
+                style={{ margin: '0 0.5rem' }} // Adds consistent margin
+              >
+                <Link href={`#${item?._id}`}>
+                  <article
+                    className={cn(
+                      isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
+                      "flex w-full border border-primary rounded-full items-center justify-between px-2 py-1"
+                    )}
                   >
-                    {item?.name}
-                  </h6>
-                </article>
-              </a>
-            </button>
+                    {item.coverImage ? (
+                      <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
+                        <Image
+                          src={item.coverImage || ""}
+                          alt="dish"
+                          quality={95}
+                          width={35}
+                          height={35}
+                          objectFit="cover"
+                          blurDataURL={getRandomBlurImg(50, 50)}
+                        />
+                      </figure>
+                    ) : (
+                      <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
+                        <PlaceholderImg className="rounded-full" />
+                      </figure>
+                    )}
+                    <h6 className="w-full text-sm whitespace-nowrap text-nowrap">
+                      {item?.name}
+                    </h6>
+                  </article>
+                </Link>
+              </button>
+            </SplideSlide>
           ))}
-        </div>
+        </Splide>
       )}
     </section>
   );

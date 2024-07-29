@@ -27,10 +27,9 @@ const DishesList: FC<IDishesProps> = (props) => {
     return childCategory.filter(
       (category) =>
         category.hierarchy === "CHILD" &&
-        category.parentCategoryIds.includes(isActiveParentCategory) &&
         category.dishIds.length > 0,
     );
-  }, [childCategory, isActiveParentCategory]);
+  }, [childCategory]);
 
   // Filter dishes within categories based on the active dish type
   const filterDishes = (dishes, dishType) => {
