@@ -12,6 +12,7 @@ const MemoLinkingCategoryComp = () => {
     selectIds,
     isCatDelete,
     setIsCatDelete,
+    selectSingleParentCat
   } = useMenuPageStore((s) => ({
     setCategoryStep: s.setCategoryStep,
     categoryStep: s.categoryStep,
@@ -19,6 +20,7 @@ const MemoLinkingCategoryComp = () => {
     selectIds: s.selectedIds,
     setIsCatDelete: s.setIsCatDelete,
     isCatDelete: s.isCatDelete,
+    selectSingleParentCat: s.selectSingleParentCat,
   }));
   
   return (
@@ -62,7 +64,7 @@ const MemoLinkingCategoryComp = () => {
         <>
           <section className="mt-4 lg:mt-6">
             <label className="font-semibold opacity-50" htmlFor="name">
-              Link Main Categories({selectIds?.length})
+              Link Main Categories({selectSingleParentCat?.length})
             </label>
             <Background>
               <button

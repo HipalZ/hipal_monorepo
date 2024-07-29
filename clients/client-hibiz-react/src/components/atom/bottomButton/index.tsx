@@ -5,6 +5,7 @@ interface ButtonConfig {
   text: string;
   onClick?: () => void;
   type?: "button" | "reset" | "submit";
+  delete?: boolean; 
 }
 
 const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
@@ -13,7 +14,7 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
   return (
     <article
       className={cn(
-        "absolute bottom-0 w-full px-4 py-2  bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
+        "absolute bottom-0 w-full px-4 py-2 bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
       )}
     >
       <div
@@ -26,11 +27,11 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
           <button
             key={button.text}
             className={cn(
-              "rounded-full  text-center py-3",
+              "rounded-full text-center py-3",
               {
-                "bg-custom-gradient text-white":
-                  index === 1,
-                "bg-black text-white": index !== 1,
+                "bg-red-500 text-white": button.delete, 
+                "bg-custom-gradient text-white": !button.delete && index === 1,
+                "bg-black text-white": !button.delete && index !== 1,
               },
               {
                 "w-[48%]": buttons.length === 2,

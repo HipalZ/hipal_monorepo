@@ -8,16 +8,16 @@ import BottomButton from "@/components/atom/bottomButton";
 
 const MemoSelectCategory = () => {
   const {
-    selectedIds,
-    handleCategoryChange,
+    selectSingleParentCat,
+    setSelectSingleParentCat,
     setCategoryStep,
     search,
     setSearch,
     catId,
     categoryStep,
   } = useMenuPageStore((state) => ({
-    selectedIds: state.selectedIds,
-    handleCategoryChange: state.handleCategoryChange,
+    selectSingleParentCat: state.selectSingleParentCat,
+    setSelectSingleParentCat: state.setSelectSingleParentCat,
     setCategoryStep: state.setCategoryStep,
     categoryStep: state.categoryStep,
     search: state.search,
@@ -56,7 +56,7 @@ const MemoSelectCategory = () => {
         onChange={(e) => setSearch(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
+      <div className="flex flex-wrap justify-center gap-4 mx-4 mt-4 lg:mx-0">
         {filteredCategories?.map((category: CategoryType) => (
           <div
             key={category._id?.toString()}
@@ -65,9 +65,9 @@ const MemoSelectCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={selectedIds.includes(category._id?.toString() ?? "")}
+                checked={selectSingleParentCat.includes(category._id?.toString() ?? "")}
                 onChange={() =>
-                  handleCategoryChange(category._id?.toString() ?? "")
+                  setSelectSingleParentCat(category._id?.toString() ?? "")
                 }
                 className="mr-2 checkbox checkbox-sm checkbox-black"
               />

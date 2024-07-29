@@ -67,7 +67,7 @@ export interface Choice {
   description: string;
   visibility: boolean;
   availability: boolean;
-  choiceMaxQuantity: number
+  choiceMaxQuantity: number;
   choiceDishType: string[];
 }
 
@@ -303,6 +303,9 @@ interface MenuPageStore {
 
   isCatDelete: boolean;
   setIsCatDelete: (isDelete: boolean) => void;
+
+  selectSingleParentCat: string[];
+  setSelectSingleParentCat: (catId: string) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -336,6 +339,10 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
         ? state.selectedIds.filter((id) => id !== newId)
         : [...state.selectedIds, newId],
     })),
+
+  selectSingleParentCat: [], 
+  setSelectSingleParentCat: (catId: string) =>
+    set({ selectSingleParentCat: [catId] }),
 
   editingMainCat: false,
   setEditingMainCat: (editing: boolean) => set({ editingMainCat: editing }),
@@ -419,6 +426,9 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       editingMainCat: false,
       showDeleteDish: false,
       addOnId: "",
+      linkedDishes: [],
+      isCatDelete: false, 
+      selectSingleParentCat: [],
     }),
 
   imagePreview: null,

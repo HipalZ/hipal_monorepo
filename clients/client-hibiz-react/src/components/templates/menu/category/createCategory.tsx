@@ -21,6 +21,8 @@ const CreateCategoryMain = () => {
     isMainEditing,
     isSubCategoryEditing,
     openMenu,
+    setIsCatDelete,
+    isCatDelete,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     categoryStep: s.categoryStep as CategoryStep,
@@ -30,6 +32,8 @@ const CreateCategoryMain = () => {
     isSubCategoryEditing: s.editingSubCat,
     catId: s.catId,
     openMenu: s.openMenu,
+    isCatDelete: s.isCatDelete,
+    setIsCatDelete: s.setIsCatDelete,
   }));
 
   const goBack = useCallback(() => {
@@ -46,8 +50,9 @@ const CreateCategoryMain = () => {
         return;
       }
     }
-
+    
     if (isSubCategoryEditing) {
+      setIsCatDelete(false);
       if (categoryStep === "LINK_SUB_CATEGORY") {
         setOpenMenu(false);
         return;
@@ -86,7 +91,7 @@ const CreateCategoryMain = () => {
         setOpenMenu(false);
         break;
     }
-  }, [categoryStep, isMainEditing,openMenu]);
+  }, [categoryStep, isMainEditing, openMenu, isCatDelete]);
 
   return (
     <>

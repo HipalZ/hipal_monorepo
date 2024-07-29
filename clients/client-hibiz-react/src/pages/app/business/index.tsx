@@ -13,9 +13,11 @@ import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
+import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 //
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
+  const { reset } = useBusinessCtrl();
   const user = useOwnerLogin((s) => s.user);
   const navigate = useNavigate();
   const handleRoute = async (business: IBusinessData) => {
@@ -26,6 +28,7 @@ const Business = () => {
   };
 
   function addBusiness() {
+    reset();
     startTransition(() => {
       navigate("/app/business/add");
     });

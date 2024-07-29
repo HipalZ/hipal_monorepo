@@ -317,6 +317,7 @@ const MemoEditAddon = () => {
                   text: "Confirm Delete",
                   onClick: () => deleteAddon(addOnId),
                   type: "button",
+                  delete: true,
                 },
               ]}
             />

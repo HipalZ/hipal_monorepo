@@ -23,6 +23,7 @@ const CategoryMainForm = memo(() => {
     resetStore,
     selectIds,
     recommendationIds,
+    selectSingleParentCat
   } = useMenuPageStore((s) => ({
     selectedCategory: s.selectedCategory,
     setSelectedCategory: s.setSelectedCategory,
@@ -33,6 +34,7 @@ const CategoryMainForm = memo(() => {
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
     recommendationIds: s.recommendationIds,
+    selectSingleParentCat: s.selectSingleParentCat,
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
@@ -50,11 +52,7 @@ const CategoryMainForm = memo(() => {
       toast.error("Category name is required");
       return;
     }
-    if (selectedCategory === "SUB_CATEGORY" && selectIds.length === 0) {
-      toast.error("Please select main category");
-      return;
-    }
-
+   
     const commonPayload = {
       name: categoryName,
       businessId: businessData?._id.toString() || "",
@@ -66,7 +64,7 @@ const CategoryMainForm = memo(() => {
         : {
             ...commonPayload,
             hierarchy: "CHILD",
-            parentCategoryIds: selectIds || [],
+            parentCategoryIds: selectSingleParentCat || [],
             dishIds: recommendationIds,
           };
 
@@ -77,6 +75,7 @@ const CategoryMainForm = memo(() => {
     selectIds,
     businessData?._id,
     recommendationIds,
+    selectSingleParentCat,
   ]);
 
   const goToNextStep = useCallback(() => {
@@ -139,7 +138,7 @@ const CategoryMainForm = memo(() => {
         <>
           <section className="mx-6 mt-4 lg:mx-16 lg:mt-6">
             <label className="font-semibold opacity-50" htmlFor="name">
-              Link Main Categories({selectIds?.length})
+              Link Main Categories({selectSingleParentCat?.length})
             </label>
             <Background>
               <button

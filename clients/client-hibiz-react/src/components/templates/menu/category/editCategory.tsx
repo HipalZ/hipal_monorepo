@@ -39,6 +39,7 @@ const MemoEditCategory = () => {
     isMenuManager,
     isCatDelete,
     setIsCatDelete,
+    selectSingleParentCat,
   } = useMenuPageStore((s) => ({
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
@@ -61,6 +62,7 @@ const MemoEditCategory = () => {
     isMenuManager: s.isMenuManager,
     isCatDelete: s.isCatDelete,
     setIsCatDelete: s.setIsCatDelete,
+    selectSingleParentCat: s.selectSingleParentCat,
   }));
 
   const { mutate, isPending } = useUpdateCategory();
@@ -159,7 +161,10 @@ const MemoEditCategory = () => {
         setIsLoading,
       );
     }
-    const removedCatIds = getRemovedIds(idCheck, selectIds);
+    const removedCatIds = getRemovedIds(
+      idCheck,
+      categoryStep === "EDIT_MAIN_CATEGORY" ? selectIds : selectSingleParentCat,
+    );
     const removeDishIds = getRemovedIds(
       removeRecommendationIds,
       recommendationIds,
@@ -182,7 +187,7 @@ const MemoEditCategory = () => {
           }
         : {
             ...commonPayload,
-            parentCategoryIds: selectIds || [],
+            parentCategoryIds: selectSingleParentCat || [],
             removeParentCategoryIds: removedCatIds,
             dishIds: recommendationIds,
             removeDishIds: removeDishIds,
@@ -316,6 +321,7 @@ const MemoEditCategory = () => {
               text: "Confirm Delete",
               onClick: () => deleteCat(catId),
               type: "button",
+              delete: true,
             },
           ]}
         />
