@@ -7,6 +7,11 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import {
+  ClientRoles,
+  requireAuthorization,
+} from "../../../middleware/authorization";
+import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { cache } from "../../utils/cacheHelper";
 import { respond } from "../../utils/response";
 import { razorpayWrapper } from "./../../utils/razorpay-wrapper";
@@ -32,6 +37,12 @@ const settingsRouter = new Hono()
   // )
   .post(
     "/banner",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("json", bannerSchema),
 
@@ -51,6 +62,12 @@ const settingsRouter = new Hono()
   )
   .post(
     "/",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("json", BusinessSettingsSchema),
 
@@ -93,6 +110,12 @@ const settingsRouter = new Hono()
   )
   .put(
     "/update/:settingsId",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("json", BusinessSettingsSchema.partial()),
     zValidator("param", z.object({ settingsId: z.string() })),
@@ -157,6 +180,12 @@ const settingsRouter = new Hono()
 
   .put(
     "/banner/:bannerId",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("json", bannerSchema.partial()),
     zValidator("param", z.object({ bannerId: z.string() })),

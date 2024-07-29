@@ -90,7 +90,14 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     comment: {
       type: String,
     },
+
+    earnCoins: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
   },
+
   { timestamps: true },
 );
 

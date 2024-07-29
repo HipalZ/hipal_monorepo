@@ -67,7 +67,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
               "border border-1 border-[#00000050] rounded-2xl",
             )}
             key={layout?._id}
-            onClick={() => handleEditBanner(banner || {})}
+            onClick={
+              isExplorePage ? null : () => handleEditBanner(banner || {})
+            }
           >
             <article
               key={layout?._id}
@@ -142,7 +144,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <section key={layout?._id} className="shrink-0 ">
             <article
               className="relative flex justify-center w-full"
-              onClick={() => handleEditBanner(banner)}
+              onClick={
+                isExplorePage ? null : () => handleEditBanner(banner || {})
+              }
             >
               <figure className="rounded-2xl">
                 <img
@@ -206,7 +210,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <section key={layout?._id} className="shrink-0 ">
             <article
               className="relative flex justify-center shrink-0 max-w-[13rem]"
-              onClick={() => handleEditBanner(banner)}
+              onClick={
+                isExplorePage ? null : () => handleEditBanner(banner || {})
+              }
             >
               <figure className="rounded-2xl max-h-[13rem] ">
                 <img
@@ -267,7 +273,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <article
             key={layout?._id}
             className="shrink-0 relative flex justify-center h-[12rem] max-w-[15rem]"
-            onClick={() => handleEditBanner(banner || {})}
+            onClick={
+              isExplorePage ? null : () => handleEditBanner(banner || {})
+            }
           >
             <figure className="max-w-[15rem] rounded-2xl">
               <img
@@ -326,7 +334,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <article
             key={layout?._id}
             className="relative flex justify-center shrink-0 max-w-[15rem]"
-            onClick={() => handleEditBanner(banner || {})}
+            onClick={
+              isExplorePage ? null : () => handleEditBanner(banner || {})
+            }
           >
             <figure className="w-full max-w-[15rem] rounded-2xl">
               <img
@@ -400,7 +410,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   ? ""
                   : "min-h-[11rem] max-h-[12rem] max-w-[13rem] ",
               )}
-              onClick={() => handleEditBanner(banner || {})}
+              onClick={
+                isExplorePage ? null : () => handleEditBanner(banner || {})
+              }
               style={{ backgroundColor: selectedColor?.bgColor || color }}
             >
               <figure className="absolute top-2 left-2">

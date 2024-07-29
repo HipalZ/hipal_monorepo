@@ -107,6 +107,8 @@ export const PaymentSchema = z.object({
       message: "Comment must be at most 200 characters",
     })
     .optional(),
+
+  earnCoins: z.coerce.number({}).optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

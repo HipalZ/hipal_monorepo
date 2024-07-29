@@ -41,9 +41,12 @@ function RecommendedDishes({
               rewind: false,
               width: "100%",
               gap: "0.25rem",
-              perPage: 2,
-              perMove: 1,
               autoWidth: true,
+              type: 'slide',
+              pagination: false,
+              drag: 'free',
+              snap: true,
+              arrows: false,
             }}
           >
             <div className="hidden splide__arrows">

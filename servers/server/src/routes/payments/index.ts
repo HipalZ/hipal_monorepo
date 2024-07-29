@@ -61,8 +61,6 @@ const calculateDiscount = (
   return finalDiscount;
 };
 
-//calculate reward
-
 const calculateReward = async (
   exist: number,
   reward: number,
@@ -242,7 +240,11 @@ const paymentsRouter = new Hono()
   .post(
     "/createOrder/:merchantId",
     authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator("json", razorpayOrderSchema),
     zValidator("param", z.object({ merchantId: z.string() })),
 
@@ -297,6 +299,12 @@ const paymentsRouter = new Hono()
   )
   .post(
     "/reviews",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator("json", ReviewsSchema),
 
     async (c) => {
@@ -316,6 +324,12 @@ const paymentsRouter = new Hono()
   )
   .post(
     "/createOfflineOrder",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("json", razorpayOrderSchema),
 
@@ -405,7 +419,11 @@ const paymentsRouter = new Hono()
   .post(
     "/validPayment/:merchantId",
     authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_CUSTOMER]),
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator("json", validatePaymentSchema),
     zValidator("param", z.object({ merchantId: z.string() })),
 
@@ -658,6 +676,12 @@ const paymentsRouter = new Hono()
 
   .post(
     "/createWaiterAlert",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator(
       "json",
       z.object({
@@ -688,6 +712,12 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/paymentAlerts",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("query", paramsSchema),
 
@@ -753,6 +783,12 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/offlineAlerts",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("query", z.object({ businessId: z.string() })),
 
@@ -784,6 +820,12 @@ const paymentsRouter = new Hono()
   )
   .put(
     "/:pid/order/:alertId",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
@@ -914,8 +956,12 @@ const paymentsRouter = new Hono()
   )
   .put(
     "/:pid/rejectOrder/:alertId",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER, ClientRoles.CAPTAIN]),
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator("param", paramsSchema),
 
     zValidator("json", acceptOrderSchema),
@@ -943,6 +989,12 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/paymentAlertHistory",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
     zValidator("query", paramsSchema),
 
     async (c) => {
@@ -1023,6 +1075,12 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/salesDashboard",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("query", paramsSchema),
 
@@ -1136,6 +1194,12 @@ const paymentsRouter = new Hono()
 
   .get(
     "/:id/bills",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
 
     zValidator("query", paramsSchema),
 

@@ -27,7 +27,8 @@ const MemoListOfChildCategory = () => {
     setIdCheck,
     isMenuManager,
     setRecommendationIds,
-    setRemoveRecommendationIds
+    setRemoveRecommendationIds,
+    setSelectSingleParentCat
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -45,6 +46,7 @@ const MemoListOfChildCategory = () => {
     isMenuManager: state.isMenuManager,
     setRemoveRecommendationIds: state.setRemoveRecommendationIds,
     setRecommendationIds: state.setRecommendationIds,
+    setSelectSingleParentCat: state.setSelectSingleParentCat,
   }));
   const { subCategories } = useCategoryStore((state) => ({
     subCategories: state.subCategories,
@@ -76,7 +78,7 @@ const MemoListOfChildCategory = () => {
     setVisibility(category.visibility ?? false);
     setAvailability(category.availability ?? false);
     setImagePreview(category.coverImage ?? null);
-    setSelectedIds(category.parentCategoryIds);
+    setSelectSingleParentCat(category.parentCategoryIds[0]);
     setIdCheck(category.parentCategoryIds);
     setRecommendationIds(category.dishIds);
     setRemoveRecommendationIds(category.dishIds)

@@ -33,9 +33,9 @@ function SubTypes(props: ISubTypes) {
 
   useEffect(() => {
     if (isActiveCategory && splideRef.current) {
-      const slideIndex = subTypes.findIndex(item => item._id.toString() === isActiveCategory);
+      const slideIndex = subTypes.findIndex(item => item?._id.toString() === isActiveCategory);
       if (slideIndex !== -1) {
-        splideRef.current.go(slideIndex);
+        (splideRef.current as any).go(slideIndex);
       }
     }
   }, [isActiveCategory, subTypes]);
@@ -53,14 +53,14 @@ function SubTypes(props: ISubTypes) {
         arrows: false,
         autoWidth: true, 
       }}
-      className="w-full px-4 no-scrollbar"
+      className="w-full no-scrollbar"
     >
       {subTypes.map((item: CategoryType, index: number) => (
         <SplideSlide key={item._id?.toString()}>
           <button
             type="button"
             id={item?._id?.toString() + index.toString()}
-            className="relative px-2 py-4 snap-center"
+            className="relative px-2 py-3 snap-center"
             onClick={() => setActiveCategories(item)}
           >
               <article

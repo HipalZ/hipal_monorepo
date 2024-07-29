@@ -86,8 +86,6 @@ export const addSignUpBonus = async (
       date: Date.now(),
     });
 
-    console.log("data", data);
-
     await data.save();
   } else {
     await UserReward.findOneAndUpdate(
@@ -106,7 +104,7 @@ const createAccessToken = (id: string, role: string) => {
       role: role,
     },
     Bun.env.JWT_SECRET as string,
-    { expiresIn: "7d" }, // Add 7 day expiration
+    { expiresIn: "10d" }, // Add 7 day expiration
   );
 };
 
@@ -117,7 +115,7 @@ const createRefreshToken = (id: string, role: string) => {
       role: role,
     },
     Bun.env.JWT_SECRET as string,
-    { expiresIn: "30d" }, // Add 30 day expiration
+    { expiresIn: "50d" }, // Add 30 day expiration
   );
 };
 const usersRouter = new Hono()
@@ -767,7 +765,11 @@ const usersRouter = new Hono()
 
       if (
         response?.data?.message === "Mobile no. not found" ||
-        response?.data?.message === "OTP not match"
+        response?.data?.message === "OTP not match" ||
+        response?.data?.message === "OTP expired" ||
+        response?.data?.message === "Otp empty or not numeric" ||
+        response?.data?.message ===
+          "Max limit reached for this otp verification"
       )
         return respond(c, "Please enter valid Otp !!", true, 400, {});
 

@@ -56,7 +56,7 @@ const MemoSelectSubCategory = () => {
         onChange={(e) => setSearch(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-start gap-4 mt-4 lg:grid lg:grid-cols-2 lg:mx-6">
+      <div className="flex flex-wrap justify-start gap-4 mx-4 mt-4 lg:grid lg:grid-cols-2 lg:mx-6">
         {filteredsubCategories?.map((category: CategoryType) => (
           <div
             key={category._id?.toString()}

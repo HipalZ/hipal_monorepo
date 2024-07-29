@@ -7,13 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { IoIosSearch } from "react-icons/io";
 import SubHeader from "@/components/atom/subHeader";
 import { useBannerStore } from "@/components/store/useBannerStore";
+import { FaArrowLeft } from "react-icons/fa";
 
 interface IProps {
   setClickRedirect: (value: boolean) => void;
   handleSaveRedirections: (
     selectedLink: string,
-    selectedId: string,
-    itemName: string,
+    selectedRedirectionId: string,
+    selectedRedirectionName: string,
   ) => void;
 }
 
@@ -25,21 +26,30 @@ enum RedirectionType {
 
 const MemoRedirectionPopUp = (props: IProps) => {
   const { handleSaveRedirections, setClickRedirect } = props;
-  const { setRedirectCategories, setRedirectDishes, redirectCategories } =
-    useBannerStore((s) => ({
-      setRedirectCategories: s.setRedirectCategories,
-      setRedirectDishes: s.setRedirectDishes,
-      redirectCategories: s.redirectCategories,
-      redirectDishes: s.redirectDishes,
-    }));
+  const {
+    setRedirectCategories,
+    setRedirectDishes,
+    redirectCategories,
+    selectedRedirectionId,
+    setSelectedRedirectionId,
+    selectedRedirectionName,
+    setSelectedRedirectionName,
+  } = useBannerStore((s) => ({
+    setRedirectCategories: s.setRedirectCategories,
+    setRedirectDishes: s.setRedirectDishes,
+    redirectCategories: s.redirectCategories,
+    redirectDishes: s.redirectDishes,
+    selectedRedirectionId: s.selectedRedirectionId,
+    setSelectedRedirectionId: s.setSelectedRedirectionId,
+    selectedRedirectionName: s.selectedRedirectionName,
+    setSelectedRedirectionName: s.setSelectedRedirectionName,
+  }));
   const businessId = useParams()?.businessId;
   const [selectedLink, setSelectedLink] = useState("");
-  const [itemName, setItemName] = useState("");
   const [dishes, setDishes] = useState<IDish[]>([]);
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [filteredDishes, setFilteredDishes] = useState<IDish[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<ICategory[]>([]);
-  const [selectedId, setSelectedId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const handleSelectCategory = useCallback(() => {
@@ -61,13 +71,17 @@ const MemoRedirectionPopUp = (props: IProps) => {
   }, [selectedLink]);
 
   const handleSave = () => {
-    handleSaveRedirections(selectedLink, selectedId, itemName);
+    handleSaveRedirections(
+      selectedLink,
+      selectedRedirectionId,
+      selectedRedirectionName,
+    );
     setClickRedirect(false);
   };
 
   const handleItem = useCallback((id: string, name: string) => {
-    setSelectedId(id);
-    setItemName(name);
+    setSelectedRedirectionId(id);
+    setSelectedRedirectionName(name);
   }, []);
 
   const getAllCategoryData = async (businessId: string): Promise<IDish[]> => {
@@ -104,12 +118,6 @@ const MemoRedirectionPopUp = (props: IProps) => {
     return allDishes || [];
   };
 
-  useQuery<ICategory[]>({
-    queryKey: ["categories", businessId],
-    queryFn: () => getAllCategoryData(businessId ?? ""),
-    enabled: !!businessId,
-  });
-
   useEffect(() => {
     if (selectedLink === RedirectionType.CATEGORIES) {
       setFilteredCategories(
@@ -126,13 +134,35 @@ const MemoRedirectionPopUp = (props: IProps) => {
     }
   }, [searchQuery, selectedLink, categories, dishes]);
 
+  const handleBack = () => {
+    setSelectedLink("");
+    if (selectedLink === "") {
+      setClickRedirect(false);
+    }
+  };
+
+  useQuery<ICategory[]>({
+    queryKey: ["categories", businessId],
+    queryFn: () => getAllCategoryData(businessId ?? ""),
+    enabled: !!businessId,
+  });
+
   return (
-    <section className="m-6 h-[80vh] overflow-y-auto">
-      <center className="mb-4 text-2xl">Add Redirection</center>
+    <section className="m-6 h-[80vh] overflow-y-auto pb-[5rem]">
+      <div>
+        <button
+          type="button"
+          onClick={handleBack}
+          className="px-4 py-2 bg-[#FFFFFF] border border-[#00000050] rounded-3xl on_active_bounce"
+        >
+          <FaArrowLeft />
+        </button>
+        <center className="mb-4 -mt-6 text-2xl">Add Redirection</center>
+      </div>
       {selectedLink === "" ? (
-        <article>
+        <article className="md:mx-10">
           <SubHeader text="Link Action Button" />
-          <article className="p-4 space-y-10 bg-white rounded-2xl">
+          <article className="p-4 mt-6 mb-4 space-y-10 bg-white rounded-2xl">
             <button
               onClick={handleSelectCategory}
               type="button"
@@ -159,8 +189,8 @@ const MemoRedirectionPopUp = (props: IProps) => {
       ) : (
         <>
           <div className="relative flex items-center justify-between h-6 mx-6 mt-4 space-x-10">
-            <div className="w-[90vw]">
-              {isVisible && (
+            {isVisible && (
+              <div className="w-[90vw]">
                 <input
                   type="search"
                   className="h-[2rem] border border-gray-300 rounded-2xl"
@@ -169,8 +199,8 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   autoFocus
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              )}
-            </div>
+              </div>
+            )}
             {selectedLink !== RedirectionType.LINK && (
               <figure>
                 <IoIosSearch size={20} onClick={toggleSearch} />
@@ -184,13 +214,15 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   key={cat?._id}
                   className="flex items-center gap-4 p-4 m-2 bg-white rounded-2xl"
                 >
-                  <label className="flex items-center w-full gap-4 cursor-pointer">
+                  <label
+                    onChange={() => handleItem(cat?._id, cat?.name)}
+                    className="flex items-center w-full gap-4 cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="cat"
-                      checked={selectedId === cat?._id}
-                      className="text-2xl text-black"
-                      onChange={() => handleItem(cat?._id, cat?.name)}
+                      checked={selectedRedirectionId === cat?._id}
+                      className="text-black"
                     />
                     <span className="text-xl truncate">{cat?.name}</span>
                   </label>
@@ -203,13 +235,15 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   key={dish?._id}
                   className="flex items-center gap-4 p-4 m-2 bg-white rounded-2xl"
                 >
-                  <label className="flex items-center w-full gap-4 cursor-pointer">
+                  <label
+                    onChange={() => handleItem(dish?._id, dish?.name)}
+                    className="flex items-center w-full gap-4 cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="dish"
-                      checked={selectedId === dish?._id}
-                      className="text-2xl text-black"
-                      onChange={() => handleItem(dish?._id, dish?.name)}
+                      checked={selectedRedirectionId === dish?._id}
+                      className="text-black"
                     />
                     <span className="text-xl truncate">{dish?.name}</span>
                   </label>
@@ -223,7 +257,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                     <input
                       type="text"
                       name="external"
-                      className="w-full text-2xl text-black rounded-2xl"
+                      className="w-full text-lg text-black rounded-2xl"
                       onChange={(e) => handleItem(e.target.value, "EXTERNAL")}
                     />
                   </label>
