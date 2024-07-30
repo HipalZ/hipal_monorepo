@@ -209,14 +209,14 @@ const MemoDishForm = () => {
               id="name"
               placeholder="Enter Dish Name"
               value={dishName}
-              maxLength={30}
+              maxLength={50}
               minLength={3}
               required
               onChange={(e) => setDishName(e.target.value)}
               className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
             />
             <small className="absolute bottom-2 right-4">
-              {dishName?.length}/{30}
+              {dishName?.length}/{50}
             </small>
           </div>
         </Background>
