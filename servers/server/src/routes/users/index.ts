@@ -980,7 +980,7 @@ const usersRouter = new Hono()
       }
       if (from && to) {
         const filteredRewards = await UserRewardHistory.find({
-          userPhone,
+          userId,
           loyaltyId,
           date: {
             $gte: fromDate,
