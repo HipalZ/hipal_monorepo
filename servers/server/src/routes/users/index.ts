@@ -92,8 +92,16 @@ export const addSignUpBonus = async (
     await data.save();
   } else {
     await UserReward.findOneAndUpdate(
-      { userId, loyaltyId },
-      { $inc: { scanCount: 2 } },
+      {
+        $or: [
+          { userId, loyaltyId },
+          { userPhone: phone, loyaltyId },
+        ],
+      },
+      {
+        $inc: { scanCount: 2 },
+        $set: { userId: userId },
+      },
       { new: true },
     );
   }
