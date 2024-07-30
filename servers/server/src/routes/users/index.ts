@@ -51,6 +51,7 @@ export const addSignUpBonus = async (
   loyaltyId: string,
   userId: string,
   bonus: number,
+  phone: string,
 ) => {
   const existingReward = await UserReward.findOne({
     userId,
@@ -775,7 +776,12 @@ const usersRouter = new Hono()
 
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {
-          const bonus = await addSignUpBonus(loyaltyId, userId, signUpBonus);
+          const bonus = await addSignUpBonus(
+            loyaltyId,
+            userId,
+            signUpBonus,
+            phone,
+          );
           console.log("bonus", bonus);
         }
       } catch (e) {
