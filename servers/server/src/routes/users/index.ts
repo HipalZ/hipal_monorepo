@@ -51,13 +51,10 @@ export const addSignUpBonus = async (
   loyaltyId: string,
   userId: string,
   bonus: number,
-  phone: string,
 ) => {
   const existingReward = await UserReward.findOne({
-    $or: [
-      { userId, loyaltyId },
-      { userPhone: phone, loyaltyId },
-    ],
+    userId,
+    loyaltyId,
   });
 
   console.log("existingReward", existingReward);
@@ -92,16 +89,8 @@ export const addSignUpBonus = async (
     await data.save();
   } else {
     await UserReward.findOneAndUpdate(
-      {
-        $or: [
-          { userId, loyaltyId },
-          { userPhone: phone, loyaltyId },
-        ],
-      },
-      {
-        $inc: { scanCount: 2 },
-        $set: { userId: userId },
-      },
+      { userId, loyaltyId },
+      { $inc: { scanCount: 2 } },
       { new: true },
     );
   }
@@ -786,12 +775,7 @@ const usersRouter = new Hono()
 
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {
-          const bonus = await addSignUpBonus(
-            loyaltyId,
-            userId,
-            signUpBonus,
-            phone,
-          );
+          const bonus = await addSignUpBonus(loyaltyId, userId, signUpBonus);
           console.log("bonus", bonus);
         }
       } catch (e) {
@@ -907,16 +891,6 @@ const usersRouter = new Hono()
           message: "User not found",
         });
       }
-
-      // await UserReward.findOneAndUpdate(
-      //   {
-      //     userPhone: userExist.phone,
-      //     loyaltyId,
-      //   },
-      //   {
-      //     userId: userExist._id,
-      //   },
-      // );
 
       const userRewards = await UserReward.findOne({
         userId,
