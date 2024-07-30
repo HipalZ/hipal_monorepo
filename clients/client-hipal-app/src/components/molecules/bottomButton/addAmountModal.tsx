@@ -73,7 +73,7 @@ const AddAmountModal = memo(() => {
     }
   }, [businessId, tableName]);
   return (
-    <section className="h-[80vh] overflow-y-auto overflow-x-hidden">
+    <section className="h-[80vh] overflow-y-auto overflow-x-hidden z-100">
       <header className="bg-white h-[4.25rem] flex items-center">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
@@ -94,9 +94,7 @@ const AddAmountModal = memo(() => {
         )}
         <div>
           Paying : <br />
-          <span className="font-bold text-primary">
-            {business.businessName}
-          </span>
+          <span className="font-bold text-primary">{business.name}</span>
         </div>
       </header>
       <section className="relative mt-[30vh]">
