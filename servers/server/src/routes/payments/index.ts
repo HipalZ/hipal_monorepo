@@ -595,7 +595,11 @@ const paymentsRouter = new Hono()
 
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
-            { tableName: getOrder?.tableName, isAccepted: false },
+            {
+              tableName: getOrder?.tableName,
+              isAccepted: false,
+              alertType: "OFFLINE",
+            },
             { isAccepted: true, isRejected: true },
             { session },
           );
