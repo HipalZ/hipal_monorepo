@@ -908,15 +908,15 @@ const usersRouter = new Hono()
         });
       }
 
-      await UserReward.findOneAndUpdate(
-        {
-          userPhone: userExist.phone,
-          loyaltyId,
-        },
-        {
-          userId: userExist._id,
-        },
-      );
+      // await UserReward.findOneAndUpdate(
+      //   {
+      //     userPhone: userExist.phone,
+      //     loyaltyId,
+      //   },
+      //   {
+      //     userId: userExist._id,
+      //   },
+      // );
 
       const userRewards = await UserReward.findOne({
         userId,
