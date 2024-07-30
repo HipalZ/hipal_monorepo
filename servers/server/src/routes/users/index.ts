@@ -54,8 +54,10 @@ export const addSignUpBonus = async (
   phone: string,
 ) => {
   const existingReward = await UserReward.findOne({
-    userId,
-    loyaltyId,
+    $or: [
+      { userId, loyaltyId },
+      { userPhone: phone, loyaltyId },
+    ],
   });
 
   console.log("existingReward", existingReward);
