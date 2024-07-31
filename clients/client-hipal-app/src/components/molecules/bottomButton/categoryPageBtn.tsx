@@ -19,6 +19,7 @@ import { useSearch } from "@/components/store/useSearch";
 import Link from "next/link";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
+import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -106,11 +107,6 @@ const CategoryPageBtn = () => {
     setShowCart(!showCart);
   }, [showCart, setShowCart]);
 
-  useEffect(() => {
-    if (isPayment && accessToken && tableName && !inputModal) {
-      openModal();
-    }
-  }, [isPayment, accessToken, tableName, inputModal, openModal]);
 
   return (
     <>
@@ -178,9 +174,9 @@ const CategoryPageBtn = () => {
       )}
 
       {callWaiterModal && (
-        <BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
+        <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
           <CallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </BottomPopUp>
+        </MemoBottomPopUp>
       )}
       {showCart && (
         <BottomPopUp show={showCart} onClose={showingCart}>
