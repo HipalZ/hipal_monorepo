@@ -46,7 +46,6 @@ const MemoSelectCategory = () => {
     setCategoryStep("CATEGORY_STEP_1");
   }, [catId, categoryStep]);
 
-
   return (
     <>
       <input
@@ -65,15 +64,15 @@ const MemoSelectCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={selectSingleParentCat.includes(category._id?.toString() ?? "")}
+                checked={selectSingleParentCat.includes(
+                  category._id?.toString() ?? "",
+                )}
                 onChange={() =>
                   setSelectSingleParentCat(category._id?.toString() ?? "")
                 }
                 className="mr-2 checkbox checkbox-sm checkbox-black"
               />
-              <h3 className="text-lg font-semibold truncate w-[80%]">
-                {category.name}
-              </h3>
+              <h3 className="text-lg font-semibold">{category.name}</h3>
             </label>
             <div className="absolute right-6">
               {category.visibility ? (

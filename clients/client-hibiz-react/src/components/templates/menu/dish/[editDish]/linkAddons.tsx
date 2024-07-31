@@ -93,11 +93,7 @@ const MemoLinkAddons = (props: Props) => {
                   onChange={() => handleDataChange(data._id?.toString() ?? "")}
                   className="mr-2 text-sm text-black rounded-md"
                 />
-                <h3 className="text-lg font-semibold truncate w-[80%]">
-                  {data.name.length > 25
-                    ? `${data.name.slice(0, 25)}...`
-                    : data.name}
-                </h3>
+                <h3 className="text-lg font-semibold">{data.name}</h3>
               </label>
               <div className="absolute flex items-center right-2">
                 <button

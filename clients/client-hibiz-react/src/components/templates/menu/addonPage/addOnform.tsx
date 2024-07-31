@@ -5,22 +5,17 @@ import { FaArrowLeft } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import CreateAddon from "./createAddon";
 import CreateChoice from "./addChoice";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import LinkItems from "../dish/[editDish]/linkItems";
 import EditAddon from "./editAddon";
 
 const MemoAddonForm = () => {
-  const { addOnToggle, setAddOnToggle, setOpenMenu,addOnId } =
+  const { addOnToggle, setAddOnToggle, setOpenMenu, addOnId } =
     useMenuPageStore((s) => ({
       addOnToggle: s.addOnToggle,
       setAddOnToggle: s.setAddOnToggle,
       setOpenMenu: s.setOpenMenu,
       addOnId: s.addOnId,
     }));
-
-  const { dishes } = useDishesStore((s) => ({
-    dishes: s.dishes,
-  }));
 
   const goBack = useCallback(() => {
     if (addOnId !== "") {
@@ -59,7 +54,7 @@ const MemoAddonForm = () => {
       </header>
       {addOnToggle === "ADD_ON" && <CreateAddon />}
       {addOnToggle === "ADD_CHOICE" && <CreateChoice />}
-      {addOnToggle === "LINK_DISHES" && <LinkItems dishesData={dishes} />}
+      {addOnToggle === "LINK_DISHES" && <LinkItems />}
       {addOnToggle === "EDIT_ADDON" && <EditAddon />}
     </>
   );

@@ -9,6 +9,7 @@ import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { IBusinessData } from "@/components/types/businessData";
 
 const Setting = () => {
   const {
@@ -32,6 +33,7 @@ const Setting = () => {
   const navigate = useNavigate();
 
   const businessData = useBusinessData((s) => s.businessData);
+  const updateAppliedTheme = useBusinessData((s) => s.updateAppliedTheme);
 
   const [selectedPrimaryColor, setSelectedPrimaryColor] =
     useState(primaryColor);
@@ -93,6 +95,7 @@ const Setting = () => {
     }
     if (res.status === 200 || res.status === 201) {
       toast.success("Colors saved successfully");
+      updateAppliedTheme(true);
       setStep(0);
       startTransition(() => {
         navigate(`/app/business/${businessData?._id}`);

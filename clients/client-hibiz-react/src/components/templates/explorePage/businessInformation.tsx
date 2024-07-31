@@ -1,7 +1,6 @@
 import {
   type ChangeEvent,
   memo,
-  startTransition,
   useCallback,
   useEffect,
   useState,
@@ -37,12 +36,13 @@ const amenitiesArr = [
 ];
 
 const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
-  const {setToggleBizInfo,toggleBizInfo, isLoading, setIsLoading} = useExploreStore((state)=>({
-    toggleBizInfo: state.toggleBizInfo,
-    setToggleBizInfo: state.setToggleBizInfo,
-    isLoading: state.isLoading,
-    setIsLoading: state.setIsLoading,
-  }))
+  const { setToggleBizInfo, toggleBizInfo, isLoading, setIsLoading } =
+    useExploreStore((state) => ({
+      toggleBizInfo: state.toggleBizInfo,
+      setToggleBizInfo: state.setToggleBizInfo,
+      isLoading: state.isLoading,
+      setIsLoading: state.setIsLoading,
+    }));
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   const [openTimings, setOpenTimings] = useState(false);
@@ -267,7 +267,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
   };
 
   return (
-    <main className="px-4">
+    <section className="px-4 mt-16">
       <section>
         <SubHeader text="Basic Information" />
         <article className="p-4 bg-white rounded-2xl lg:flex lg:justify-around lg:space-x-4">
@@ -532,8 +532,8 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
           />
         </section>
       </PopUp>
-      {isLoading && <LoadingSpinner/>}
-    </main>
+      {isLoading && <LoadingSpinner />}
+    </section>
   );
 };
 

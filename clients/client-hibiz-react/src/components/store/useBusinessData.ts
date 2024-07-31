@@ -1,6 +1,6 @@
-import type { IBusinessData } from '@/components/types/businessData';
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import type { IBusinessData } from "@/components/types/businessData";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface IExistingLoyalty {
   signUpBonus: number;
@@ -25,30 +25,49 @@ export const useBusinessData = create(
     setExistingLoyalty: (existingLoyalty: IExistingLoyalty) => void;
     isLoyaltyExists: boolean;
     setIsLoyaltyExists: (isLoyaltyExists: boolean) => void;
+    updateAppliedTheme: (theme: boolean) => void;
+    isLoading: boolean;
+    setIsLoading: (isLoading: boolean) => void;
   }>(
-    (set) => ({
+    (set, get) => ({
       businessData: null,
       setBusinessData: (data: IBusinessData) => set({ businessData: data }),
       themes: {},
       setThemes: (themes) => set({ themes: themes }),
       existingLoyalty: {
-        loyaltyId: '',
-        cardColor: '',
-        fontColor: '',
+        loyaltyId: "",
+        cardColor: "",
+        fontColor: "",
         setReward: 0,
         setClaimAmount: 0,
-        logo: '',
-        password: '',
-        expiryDate: '',
+        logo: "",
+        password: "",
+        expiryDate: "",
         rewardLimit: 0,
         signUpBonus: 0,
       },
-      setExistingLoyalty: (existingLoyalty: IExistingLoyalty) => set({ existingLoyalty: existingLoyalty }),
+      setExistingLoyalty: (existingLoyalty: IExistingLoyalty) =>
+        set({ existingLoyalty: existingLoyalty }),
       isLoyaltyExists: false,
-      setIsLoyaltyExists: (isLoyaltyExists: boolean) => set({ isLoyaltyExists: isLoyaltyExists }),
+      setIsLoyaltyExists: (isLoyaltyExists: boolean) =>
+        set({ isLoyaltyExists: isLoyaltyExists }),
+      updateAppliedTheme: (theme: boolean) => {
+        const currentBusinessData = get().businessData;
+        console.log("currentBusinessData", currentBusinessData);
+        if (currentBusinessData) {
+          set({
+            businessData: {
+              ...currentBusinessData,
+              themeApplied: theme,
+            },
+          });
+        }
+      },
+      isLoading: false,
+      setIsLoading: (isLoading: boolean) => set({ isLoading: isLoading }),
     }),
     {
-      name: 'data',
+      name: "data",
       storage: createJSONStorage(() => localStorage),
     },
   ),

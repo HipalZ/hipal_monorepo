@@ -138,7 +138,7 @@ const MemoLinkItems = () => {
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}
-            className="flex relative items-center justify-between w-full p-4 bg-white rounded-lg shadow md:max-w-[20rem] lg:max-w-[20rem]"
+            className="flex relative items-center justify-between w-full p-4 bg-white rounded-lg shadow md:max-w-[21.5rem]"
           >
             <label className="flex items-center">
               <input
@@ -147,11 +147,7 @@ const MemoLinkItems = () => {
                 onChange={() => handleDataChange(data._id?.toString() ?? "")}
                 className="mr-2 text-sm text-black rounded-md"
               />
-              <h3 className="text-lg font-semibold truncate w-[80%]">
-                {data.name.length > 25
-                  ? `${data.name.slice(0, 25)}...`
-                  : data.name}
-              </h3>
+              <h3 className="mr-2 text-lg font-semibold">{data.name}</h3>
             </label>
             <div className="absolute right-2">
               {data.visibility ? (

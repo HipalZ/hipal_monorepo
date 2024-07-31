@@ -114,17 +114,20 @@ const MemoDishForm = () => {
     setIsMenuManager(isManagerExists);
   }, []);
 
-  const toggleSelection = (type: string) => {
-    const isSelected = dishTypes.includes(type);
-    if (isSelected && dishTypes.length === 1) {
-      return;
-    }
-    const newSelectedTypes = isSelected
-      ? dishTypes.filter((t) => t !== type)
-      : [...dishTypes, type];
+  const toggleSelection = useCallback(
+    (type: string) => {
+      const isSelected = dishTypes.includes(type);
+      if (isSelected && dishTypes.length === 1) {
+        return;
+      }
+      const newSelectedTypes = isSelected
+        ? dishTypes.filter((t) => t !== type)
+        : [...dishTypes, type];
 
-    setDishTypes(newSelectedTypes);
-  };
+      setDishTypes(newSelectedTypes);
+    },
+    [dishTypes],
+  );
 
   const handleDishPrice = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -242,20 +245,22 @@ const MemoDishForm = () => {
             Dish Name*
           </label>
           <Background>
-            <input
-              type="text"
-              id="name"
-              placeholder="Enter Dish Name"
-              value={dishName}
-              maxLength={50}
-              minLength={3}
-              required
-              onChange={(e) => setDishName(e.target.value)}
-              className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-            />
-            <small className="absolute bottom-2 right-4">
-              {dishName?.length}/{50}
-            </small>
+            <div className="relative">
+              <input
+                type="text"
+                id="name"
+                placeholder="Enter Dish Name"
+                value={dishName}
+                maxLength={50}
+                minLength={3}
+                required
+                onChange={(e) => setDishName(e.target.value)}
+                className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+              />
+              <small className="absolute bottom-2 right-4">
+                {dishName?.length}/{50}
+              </small>
+            </div>
           </Background>
         </article>
       )}
@@ -320,7 +325,7 @@ const MemoDishForm = () => {
                 </small>
                 <input
                   minLength={1}
-                  maxLength={6}
+                  maxLength={7}
                   onChange={handleDishPrice}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
@@ -330,6 +335,9 @@ const MemoDishForm = () => {
                   required
                   className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
                 />
+                <small className="absolute bottom-6 right-6">
+                  {dishPrice?.toString()?.length}/{7}
+                </small>
               </div>
               <section>
                 <Background>

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, memo } from "react";
 import Background from "@/assets/color-wheel-min.png";
+import BottomButton from "@/components/atom/bottomButton";
 
 interface ColorWheelProps {
   close: () => void;
@@ -120,9 +121,7 @@ const MemoColorWheel: React.FC<ColorWheelProps> = ({
           className="w-64 rounded-lg"
         />
       </section>
-      <button onClick={saveColor} type="button" className="bottom_btn">
-        Save
-      </button>
+      <BottomButton buttons={[{ text: "Save", onClick: saveColor }]} />
     </center>
   );
 };

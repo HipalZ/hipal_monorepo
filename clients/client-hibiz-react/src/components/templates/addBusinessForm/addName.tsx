@@ -1,30 +1,43 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { apiRpc } from "@hi/common";
-import { type FormEvent, memo, useCallback, useState, type ChangeEvent, startTransition } from "react";
+import {
+  type FormEvent,
+  memo,
+  useCallback,
+  useState,
+  type ChangeEvent,
+  startTransition,
+} from "react";
 import { debounce } from "lodash";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import PopUp from "@/components/atom/popUp";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import BottomButton from "@/components/atom/bottomButton";
+import useBusinessData from "@/components/store/useBusinessData";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const parentBranchCopy = [
   {
     title: "menu",
-    description: "Copy dishes, categories, add ons, prices with images and description"
-  }, {
+    description:
+      "Copy dishes, categories, add ons, prices with images and description",
+  },
+  {
     title: "themes",
-    description: "Copy themes design, banners, must try cover logo and more."
+    description: "Copy themes design, banners, must try cover logo and more.",
   },
   {
     title: "rewards",
-    description: "Copy the rewards program with loyalty program, coupons and other settings"
+    description:
+      "Copy the rewards program with loyalty program, coupons and other settings",
   },
   {
     title: "paymentAndBusinessSettings",
-    description: "Copy the same payments, banks and other business settings from parent"
-  }
-]
+    description:
+      "Copy the same payments, banks and other business settings from parent",
+  },
+];
 
 const AddName = () => {
   const {
@@ -43,7 +56,7 @@ const AddName = () => {
     rewards,
     setRewards,
     paymentAndBusinessSettings,
-    setPaymentAndBusinessSettings
+    setPaymentAndBusinessSettings,
   } = useBusinessCtrl((s) => ({
     setStep: s.setStep,
     step: s.step,
@@ -63,9 +76,13 @@ const AddName = () => {
     setPaymentAndBusinessSettings: s.setPaymentAndBusinessSettings,
   }));
 
-
   const { user } = useOwnerLogin((s) => ({
     user: s.user,
+  }));
+
+  const { setIsLoading, isLoading } = useBusinessData((s) => ({
+    setIsLoading: s.setIsLoading,
+    isLoading: s.isLoading,
   }));
 
   const [validCustomLink, setValidCustomLink] = useState(false);
@@ -73,11 +90,11 @@ const AddName = () => {
   const [isButtonActive, setIsButtonActive] = useState(false);
   const [openCopyModal, setOpenCopyModal] = useState(false);
   const [invalidLinkMessage, setInvalidLinkMessage] = useState("");
+  const [validMessage, setValidMessage] = useState("");
 
   const addBusinessName = (e: ChangeEvent<HTMLInputElement>) => {
     setBusinessName(e.target.value);
   };
-
 
   const debouncedApiCall = useCallback(
     debounce(async (link) => {
@@ -94,9 +111,10 @@ const AddName = () => {
       } else {
         setIsButtonActive(true);
         setValidCustomLink(false);
+        setValidMessage("Name available");
       }
     }, 1500),
-    []
+    [],
   );
 
   const addCustomLink = (e: ChangeEvent<HTMLInputElement>) => {
@@ -115,8 +133,8 @@ const AddName = () => {
       setValidCustomLink(true);
       return;
     }
+    setIsLoading(true);
     const res = await apiRpc.businesses.$post({
-
       json: {
         businessType: businessType || "FOOD",
         name: businessName,
@@ -128,14 +146,8 @@ const AddName = () => {
     if (res.status === 200 || res.status === 201) {
       setStep(step + 1);
     }
-  }, [
-    step,
-    businessName,
-    customLink,
-    businessType,
-    user,
-    setStep
-  ]);
+    setIsLoading(false);
+  }, [step, businessName, customLink, businessType, user, setStep]);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -169,11 +181,15 @@ const AddName = () => {
       toast.success("Branch created successfully");
       setStep(step + 1);
     }
-  }
+  };
 
   const closeCopyModal = useCallback(() => {
-    const selectedSettings = { menu, themes, rewards, paymentAndBusinessSettings };
-    console.log(selectedSettings);
+    const selectedSettings = {
+      menu,
+      themes,
+      rewards,
+      paymentAndBusinessSettings,
+    };
     setOpenCopyModal(false);
   }, [menu, themes, rewards, paymentAndBusinessSettings]);
 
@@ -237,68 +253,72 @@ const AddName = () => {
             .hipal.life
           </span>
         </div>
-        {validCustomLink && (
+        {validCustomLink ? (
           <span className="text-red-500">{invalidLinkMessage}</span>
+        ) : (
+          <span className="text-green-500">{validMessage}</span>
         )}
       </section>
-      <button
-        type="submit"
-        className="bottom_btn"
-        disabled={!isButtonActive}
-      >
+      <button type="submit" className="bottom_btn" disabled={!isButtonActive}>
         Next
       </button>
       {openCopyModal && (
         <PopUp show={openCopyModal} onClose={closeCopyModal}>
           <section className="max-h-[85dvh] overflow-auto relative pb-4">
-            <h2 className="mt-4 ml-4 text-2xl ">
-              Copy from parent branch
-            </h2>
+            <h2 className="mt-4 ml-4 text-2xl ">Copy from parent branch</h2>
             <h2 className="mt-4 ml-4 opacity-80">
               You may select the following points to copy from the parent outlet
             </h2>
             <section className="flex flex-wrap">
-              
-            {parentBranchCopy.map((ele) => (
-              <section key={ele.title} className=" w-[90%] max-w-[30rem] lg:max-w-[20rem] m-6 border rounded-2xl bg-white">
-                <article className="flex items-center p-4 ">
-                  <input
-                    type="checkbox"
-
-                    name={ele.title}
-                    checked={
-                      ele.title === "menu" ? menu :
-                        ele.title === "themes" ? themes :
-                          ele.title === "rewards" ? rewards :
-                            ele.title === "paymentAndBusinessSettings" ? paymentAndBusinessSettings :
-                              false
-                    }
-                    onChange={handleCheckboxChange}
-                    className="w-8 h-8 mr-2 checkbox-black checkbox checkbox-xs"
-                  />
-                  <h3 className="text-lg font-semibold">{ele.title}</h3>
-                </article>
-                <article className="p-4 rounded-b-2xl" style={{ background: "#E4E0F9" }}>
-                  <p className="text-sm">{ele.description}</p>
-                </article>
-              </section>
-
-            ))}
+              {parentBranchCopy.map((ele) => (
+                <section
+                  key={ele.title}
+                  className=" w-[90%] max-w-[30rem] lg:max-w-[20rem] m-6 border rounded-2xl bg-white"
+                >
+                  <article className="flex items-center p-4 ">
+                    <input
+                      type="checkbox"
+                      name={ele.title}
+                      checked={
+                        ele.title === "menu"
+                          ? menu
+                          : ele.title === "themes"
+                            ? themes
+                            : ele.title === "rewards"
+                              ? rewards
+                              : ele.title === "paymentAndBusinessSettings"
+                                ? paymentAndBusinessSettings
+                                : false
+                      }
+                      onChange={handleCheckboxChange}
+                      className="w-8 h-8 mr-2 checkbox-black checkbox checkbox-xs"
+                    />
+                    <h3 className="text-lg font-semibold">{ele.title}</h3>
+                  </article>
+                  <article
+                    className="p-4 rounded-b-2xl"
+                    style={{ background: "#E4E0F9" }}
+                  >
+                    <p className="text-sm">{ele.description}</p>
+                  </article>
+                </section>
+              ))}
             </section>
             <br />
             <br />
             <BottomButton
-            buttons={[
-              {
-                text: "Save",
-                onClick: createBranch,
-                type: "button",
-              },
-            ]}
+              buttons={[
+                {
+                  text: "Save",
+                  onClick: createBranch,
+                  type: "button",
+                },
+              ]}
             />
           </section>
         </PopUp>
       )}
+      {isLoading && <LoadingSpinner />}
     </form>
   );
 };

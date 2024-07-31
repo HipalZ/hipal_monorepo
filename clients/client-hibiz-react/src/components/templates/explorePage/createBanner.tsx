@@ -14,6 +14,7 @@ import { apiRpc } from "@hi/common";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   cn,
+  handleClick,
   preDefinedButtons,
   storeImageAfterSave,
 } from "@/components/utils/helper";
@@ -56,6 +57,7 @@ const MemoCreateBanner = () => {
   const [isPublished, setIsPublished] = useState(false);
   const navigate = useNavigate();
   const { businessId } = useParams();
+  const bannerRef = useRef<HTMLInputElement | null>(null);
 
   const [itemName, setItemName] = useState("");
   const [img, setImg] = useState({ logo: "" });
@@ -72,7 +74,6 @@ const MemoCreateBanner = () => {
   const [colorWheelBackground, setColorWheelBackground] = useState(false);
   const [colorWheelParagraph, setColorWheelParagraph] = useState(false);
   const [colorWheelButton, setColorWheelButton] = useState(false);
-
   const {
     setSelectedBannerType,
     selectedBannerType,
@@ -355,17 +356,16 @@ const MemoCreateBanner = () => {
                         )}
                       >
                         <input
-                          onClick={() =>
-                            document.getElementById("logoInput")?.click()
-                          }
+                          ref={bannerRef}
+                          onClick={(e) => handleClick(e, bannerRef)}
                           type="file"
-                          id="logoInput"
+                          id="logoBanner"
                           style={{ display: "none" }}
                           onChange={handleImageChange}
                           data-type="logo"
                         />
                         <label
-                          htmlFor="logoInput"
+                          htmlFor="logoBanner"
                           className="relative flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
                         >
                           {img?.logo ? (

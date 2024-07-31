@@ -65,7 +65,6 @@ const UniquelyYoursSection = lazy(
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
 );
-const RightButton = lazy(() => import("@/components/atom/rightButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const Paragraph = lazy(() => import("@/components/atom/paragraph"));
 
@@ -323,7 +322,6 @@ const MemoExplorePage = () => {
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!businessId) return;
-    setIsLoading(true);
     let bannerExplore: string | undefined;
     let logoExplore: string | undefined;
     let footerExplore: string | undefined;
@@ -334,13 +332,18 @@ const MemoExplorePage = () => {
       bannerExplore = await storeImageAfterSave(
         imageFiles?.banner,
         img?.banner,
+        setIsLoading,
       );
     }
     if (
       imageFiles?.logo !== null &&
       !img?.banner?.includes("https://storage.hipal.life")
     ) {
-      logoExplore = await storeImageAfterSave(imageFiles?.logo, img?.logo);
+      logoExplore = await storeImageAfterSave(
+        imageFiles?.logo,
+        img?.logo,
+        setIsLoading,
+      );
     }
     if (
       imageFiles?.footer !== null &&
@@ -349,6 +352,7 @@ const MemoExplorePage = () => {
       footerExplore = await storeImageAfterSave(
         imageFiles?.footer,
         img?.footer,
+        setIsLoading,
       );
     }
 
@@ -383,7 +387,7 @@ const MemoExplorePage = () => {
     const filteredPayload = filterPayload(payload);
 
     // Conditionally add keys if they have a length greater than 0
-
+    setIsLoading(true);
     let res: {
       status: number;
     };
@@ -492,7 +496,6 @@ const MemoExplorePage = () => {
         <HisiteHeader
           onBack={handleNavigate}
           title={`${toggleBizInfo ? "Business Info" : "Explore Page"} `}
-          rightButton={<RightButton />}
           isIconBusinessShow={false}
         />
         {toggleBizInfo ? (
@@ -563,6 +566,7 @@ const MemoExplorePage = () => {
             )}
           </form>
         )}
+
         {isLoading && <LoadingSpinner />}
       </main>
     </Suspense>
