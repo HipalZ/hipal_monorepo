@@ -76,10 +76,4 @@ export const hisiteServices = [
     icon: ExploreIcon,
     navigateTo: "explorePage",
   },
-  // ,{
-  // 	_id:2,
-  // 	title:'Menu Page',
-  // 	description:'Manage your menu items',
-  // 	icon:MenuIcon
-  // }
 ];

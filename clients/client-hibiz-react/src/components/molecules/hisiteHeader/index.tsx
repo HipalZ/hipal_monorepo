@@ -1,7 +1,8 @@
-import { memo, startTransition } from "react";
-import { useNavigate } from "react-router-dom";
+import { memo, startTransition, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
+import { cn } from "@/components/utils/helper";
 interface HeaderProps {
   leftIcon?: JSX.Element;
   centerImage?: string;
@@ -10,7 +11,6 @@ interface HeaderProps {
   isIconBusinessShow: boolean;
   title?: string;
   onBack?: () => void;
-  dropDown?: JSX.Element;
   children?: React.ReactNode;
 }
 
@@ -23,9 +23,12 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
     rightButton,
     children,
     onBack,
-    dropDown,
   }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const isExplorePage = useMemo(() => {
+      return location?.pathname.includes("explorePage");
+    }, [location.pathname]);
 
     const handleBackClick = () => {
       if (onBack) {
@@ -52,7 +55,12 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
 
     return (
       <>
-        <div className="flex items-center justify-between px-6 pt-6">
+        <div
+          className={cn(
+            "fixed top-0 z-10 flex items-center justify-between w-full p-6 md:max-w-[69rem] rounded-b-xl",
+            isExplorePage ? "bg-white" : "",
+          )}
+        >
           <button
             type="button"
             onClick={handleBackClick}
@@ -82,7 +90,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
             </span>
           </div>
           {rightButton ? (
-            <div className="absolute text-sm right-6">{rightButton}</div>
+            <div className="absolute text-sm right-2">{rightButton}</div>
           ) : null}
           {isIconBusinessShow && (
             <button onClick={profile} type="button">

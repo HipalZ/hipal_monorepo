@@ -79,18 +79,18 @@ const MemoListOfDishes = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+    <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       {filteredDishes
         ? filteredDishes.map((dish) => (
             <button
               onClick={() => handleEditDish(dish)}
               type="button"
               key={dish.name}
-              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[22rem]"
             >
               <h3
                 title={dish.name}
-                className="mb-2 text-lg font-semibold truncate"
+                className="mb-2 text-lg font-semibold text-left"
               >
                 {dish.name}
               </h3>

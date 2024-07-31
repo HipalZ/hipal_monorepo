@@ -1,7 +1,8 @@
 import PlusButton from "@/components/atom/plusButton";
-import { memo, type ChangeEvent } from "react";
+import { memo, useRef, type ChangeEvent } from "react";
 import { FaTimes } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
+import { handleClick } from "@/components/utils/helper";
 
 type Props = {
   handleImageChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -10,7 +11,9 @@ type Props = {
 
 const MemoDishImages = (props: Props) => {
   const { handleImageChange, img } = props;
-
+  const firstImage = useRef<HTMLInputElement | null>(null);
+  const secondImage = useRef<HTMLInputElement | null>(null);
+  const thirdImage = useRef<HTMLInputElement | null>(null);
   const { setImageFiles, setImagePreviews } = useMenuPageStore((s) => ({
     setImageFiles: s.setImageFiles,
     setImagePreviews: s.setImagePreviews,
@@ -25,7 +28,8 @@ const MemoDishImages = (props: Props) => {
     <section className="grid grid-cols-[200px_100px] grid-rows-[100px_100px] content-center gap-4 md:flex md:flex-row md:justify-center">
       <article className="relative col-span-1 row-span-2 border border-1 rounded-xl md:w-[200px] md:h-[200px] overflow-hidden">
         <input
-          onClick={() => document.getElementById("firstImage")?.click()}
+          ref={firstImage}
+          onClick={(e) => handleClick(e, firstImage)}
           type="file"
           id="firstImage"
           style={{ display: "none" }}
@@ -51,7 +55,8 @@ const MemoDishImages = (props: Props) => {
       </article>
       <article className="relative border border-1 rounded-xl md:w-[200px] md:h-[200px] overflow-hidden">
         <input
-          onClick={() => document.getElementById("secondImage")?.click()}
+          ref={secondImage}
+          onClick={(e) => handleClick(e, secondImage)}
           type="file"
           id="secondImage"
           style={{ display: "none" }}
@@ -81,7 +86,8 @@ const MemoDishImages = (props: Props) => {
       </article>
       <article className="relative border border-1 rounded-xl md:w-[200px] md:h-[200px] overflow-hidden">
         <input
-          onClick={() => document.getElementById("thirdImage")?.click()}
+          ref={thirdImage}
+          onClick={(e) => handleClick(e, thirdImage)}
           type="file"
           id="thirdImage"
           style={{ display: "none" }}

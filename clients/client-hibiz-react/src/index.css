@@ -797,3 +797,32 @@ button:hover .shine {
   left: 125%;
   transition: all 0.5s;
 }
+
+@keyframes shine2 {
+  0% {
+    left: -50%;
+    background: transparent;
+  }
+  50% {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    left: 80%;
+    background: transparent;
+  }
+}
+
+.shine2 {
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: skewX(-25deg);
+  animation: shine2 2s infinite;
+}
+button:hover .shine2 {
+  left: 125%;
+  transition: all 0.5s;
+}

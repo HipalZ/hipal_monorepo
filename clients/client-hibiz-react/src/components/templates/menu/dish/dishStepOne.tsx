@@ -27,10 +27,8 @@ import { useQueryClient } from "@tanstack/react-query";
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
   const [displayedPrice, setDisplayedPrice] = useState("");
-
   const queryClient = useQueryClient();
   const errorToasts = useErrorToasts();
-
   const {
     setDishName,
     setDishTypes,
@@ -86,21 +84,27 @@ const MemoDishForm = () => {
   }));
 
   useEffect(() => {
-    setDishTypes(["VEG"]);
+    if (dishTypes.length === 0) {
+      setDishTypes(["VEG"]);
+    } else {
+      setDishTypes(dishTypes);
+    }
     setDisplayedPrice(dishPrice?.toLocaleString("en-IN") || "");
   }, []);
 
-  const toggleSelection = (type: string) => {
-    const isSelected = dishTypes.includes(type as DishTypeEnumType);
-    if (isSelected && dishTypes.length === 1) {
-      return;
-    }
-    const newSelectedTypes = isSelected
-      ? dishTypes.filter((t) => t !== type)
-      : [...dishTypes, type];
-
-    setDishTypes(newSelectedTypes as DishTypeEnumType[]);
-  };
+  const toggleSelection = useCallback(
+    (type: string) => {
+      const isSelected = dishTypes.includes(type as DishTypeEnumType);
+      if (isSelected && dishTypes.length === 1) {
+        return;
+      }
+      const newSelectedTypes = isSelected
+        ? dishTypes.filter((t) => t !== type)
+        : [...dishTypes, type];
+      setDishTypes(newSelectedTypes as DishTypeEnumType[]);
+    },
+    [dishTypes],
+  );
 
   const handleDishPrice = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -267,7 +271,7 @@ const MemoDishForm = () => {
               required
               className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
             />
-            <small className="absolute bottom-2 right-4">
+            <small className="absolute bottom-6 right-6">
               {dishPrice?.toString()?.length}/{7}
             </small>
           </div>

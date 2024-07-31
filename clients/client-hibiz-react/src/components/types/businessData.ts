@@ -32,7 +32,7 @@ export interface UserProfile {
   _id: string;
 }
 export interface IBusinessData {
-  tags: string[];
+  tags?: string[];
   description: string;
   _id: string;
   name: string;

@@ -75,8 +75,11 @@ const MemoCreateAddon = () => {
   }, []);
 
   const goToChoices = useCallback(() => {
-    if (maxChoices <= 0 || addOnName.trim() === "") {
-      return toast.error("Please fill all the fields");
+    if (addOnName.trim() === "") {
+      return toast.error("Addon name is required");
+    }
+    if (maxChoices === 0) {
+      return toast.error("Please add choices");
     }
     resetChoiceFields();
     setAddOnToggle("ADD_CHOICE");

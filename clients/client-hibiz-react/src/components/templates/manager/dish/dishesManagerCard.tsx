@@ -44,7 +44,7 @@ const MemoDishButton = ({ dish, onEdit }: DishButtonProps) => {
       onClick={() => onEdit(dish)}
       id={dish._id?.toString()}
       type="button"
-      className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+      className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[22rem] lg:max-w-[21.5rem]"
     >
       <article className="flex gap-4 shrink-0">
         <figure>
@@ -61,7 +61,7 @@ const MemoDishButton = ({ dish, onEdit }: DishButtonProps) => {
         <article className="flex flex-col items-start">
           <h3
             title={dish?.name}
-            className="text-lg font-semibold w-full max-w-[17rem] truncate mb-30"
+            className="w-64 text-lg font-semibold text-left truncate"
           >
             {dish.name}
           </h3>

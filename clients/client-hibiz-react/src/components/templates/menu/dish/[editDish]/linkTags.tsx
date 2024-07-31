@@ -103,14 +103,19 @@ const MemoLinkTags = () => {
       </section>
       {isAdding && (
         <div className="flex space-x-1 lg:space-x-4">
-          <input
-            type="text"
-            value={newTag}
-            maxLength={10}
-            onChange={(e) => setNewTag(e.target.value)}
-            placeholder="Enter custom tag"
-            className="bg-white rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={newTag}
+              maxLength={10}
+              onChange={(e) => setNewTag(e.target.value)}
+              placeholder="Enter custom tag"
+              className="bg-white rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+            />
+            <small className="absolute bottom-2 right-2">
+              {newTag?.toString()?.length}/{10}
+            </small>
+          </div>
           <button
             className="px-5 py-1 text-white bg-black rounded-full"
             type="button"

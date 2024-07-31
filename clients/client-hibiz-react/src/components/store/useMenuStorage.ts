@@ -340,7 +340,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
         : [...state.selectedIds, newId],
     })),
 
-  selectSingleParentCat: [], 
+  selectSingleParentCat: [],
   setSelectSingleParentCat: (catId: string) =>
     set({ selectSingleParentCat: [catId] }),
 
@@ -427,7 +427,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       showDeleteDish: false,
       addOnId: "",
       linkedDishes: [],
-      isCatDelete: false, 
+      isCatDelete: false,
       selectSingleParentCat: [],
     }),
 
@@ -438,7 +438,21 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   dishes: [],
   setDishes: (dishes: DishType[]) => set({ dishes }),
 
-  editDish: {},
+  editDish: {
+    _id: "",
+    name: "",
+    price: 0,
+    dishTypes: [],
+    portions: [],
+    tags: [],
+    availability: true,
+    visibility: true,
+    calories: "",
+    recommendationIds: [],
+    description: "",
+    addOnIds: [],
+    categoryIds: [],
+  },
   setEditDish: (dish: DishType) => set({ editDish: dish }),
 
   selectedDish: "",
@@ -454,7 +468,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   setVisibility: (visibility: boolean) => set({ visibility: visibility }),
 
   dishTypes: ["VEG"],
-  setDishTypes: (types: DishTypeEnumType[]) => set({ dishTypes: types }),
+  setDishTypes: (dishTypes: DishTypeEnumType[]) => set({ dishTypes }),
 
   portions: [],
   setPortions: (portions: PortionType[]) => set({ portions }),

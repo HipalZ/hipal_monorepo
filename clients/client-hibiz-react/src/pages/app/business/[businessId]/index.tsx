@@ -12,7 +12,6 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import Stairs from "@/assets/Stairs.png";
 import { cn } from "@hi/common";
-import { CiWarning } from "react-icons/ci";
 import { PiSealWarningFill } from "react-icons/pi";
 
 const Business = () => {

@@ -71,9 +71,7 @@ const MemoSelectSubCategory = () => {
                 }
                 className="mr-2 checkbox checkbox-sm checkbox-black"
               />
-              <h3 className="text-lg font-semibold truncate w-[80%]">
-                {category.name}
-              </h3>
+              <h3 className="text-lg font-semibold">{category.name}</h3>
             </label>
             <div className="absolute right-2">
               {category.visibility ? (

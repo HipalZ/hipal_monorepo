@@ -1,8 +1,15 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { BasicInfo } from "@/components/types/businessData";
-import { cn } from "@/components/utils/helper";
-import { lazy, memo, useEffect, useState, type ChangeEvent } from "react";
+import { cn, handleClick } from "@/components/utils/helper";
+import {
+  lazy,
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { CiEdit } from "react-icons/ci";
 
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
@@ -16,6 +23,8 @@ export interface IProps {
 }
 const MemoExplorePageSection = (props: IProps) => {
   const bizInfo = useExploreStore((s) => s.bizInfo);
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const { img, handleImageChange, handleBizName, handleBizInfo, basicInfos } =
     props;
   const { businessData } = useBusinessData((s) => ({
@@ -41,44 +50,47 @@ const MemoExplorePageSection = (props: IProps) => {
   }, [bizInfo]);
 
   return (
-    <section className="md:flex">
+    <section className="mt-16 md:flex">
       <section className="flex-1 mb-4">
         <SubHeader text="Banner" />
         <article
           className={cn(
-            "relative rounded-xl h-[18rem] w-full",
+            "relative rounded-xl h-[18rem] md:aspect-square",
             img?.banner?.length > 0
               ? ""
               : " border-dashed border-2 inline-block border-[#8C63FF]",
           )}
         >
           <input
-            onClick={() => document.getElementById("bannerInput")?.click()}
+            ref={bannerInputRef}
+            onClick={(e) => handleClick(e, bannerInputRef)}
             type="file"
             id="bannerInput"
             style={{ display: "none" }}
             onChange={handleImageChange}
             data-type="banner"
           />
-          <label
-            htmlFor="bannerInput"
-            className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
-          >
-            {img.banner ? (
-              <div className="relative w-[320px] h-[320px]">
-                <figure className="w-full h-full">
-                  <img
-                    src={img.banner}
-                    alt="Banner"
-                    className="object-cover w-full h-full rounded-2xl"
-                  />
-                </figure>
-                <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
-              </div>
-            ) : (
-              <PlusButton />
-            )}
-          </label>
+          <figure className="w-[320px] h-[320px]">
+            <label
+              htmlFor="bannerInput"
+              className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
+            >
+              {img.banner ? (
+                <div className="relative w-[320px] h-[320px]">
+                  <figure className="w-full h-full">
+                    <img
+                      src={img.banner}
+                      alt="Banner"
+                      className="object-cover w-full h-full rounded-2xl"
+                    />
+                  </figure>
+                  <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+                </div>
+              ) : (
+                <PlusButton />
+              )}
+            </label>
+          </figure>
         </article>
       </section>
       &nbsp;
@@ -94,7 +106,8 @@ const MemoExplorePageSection = (props: IProps) => {
             )}
           >
             <input
-              onClick={() => document.getElementById("logoInput")?.click()}
+              ref={logoInputRef}
+              onClick={(e) => handleClick(e, logoInputRef)}
               type="file"
               id="logoInput"
               style={{ display: "none" }}

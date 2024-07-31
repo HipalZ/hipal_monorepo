@@ -6,11 +6,7 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
-import {
-  DishSteps,
-  type SetImageFilesFunction,
-  type SetImagePreviewsFunction,
-} from "../store/useMenuStorage";
+import { DishSteps } from "../store/useMenuStorage";
 import { cropImage } from "../cropper";
 import toast from "react-hot-toast";
 
@@ -19,39 +15,45 @@ export async function storeImageAfterSave(
   imagePreview: string | null,
   setIsLoading?: (loading: boolean) => void,
 ) {
-  if (!image) return;
+  if (!image || !imagePreview) return;
+
   const imageId = crypto.randomUUID();
-  if (imagePreview) {
-    setIsLoading?.(true);
-    const blobBin = atob(imagePreview.toString().split(",")[1]);
-    const array = [];
+  setIsLoading?.(true);
+  try {
+    // Validate Base64 string
+    const base64Index = imagePreview.indexOf(",");
+    console.log("base64Index", base64Index);
+    if (base64Index === -1) return;
+
+    const base64Data = imagePreview.split(",")[1];
+    const blobBin = atob(base64Data);
+    const array = new Uint8Array(blobBin.length);
+
     for (let i = 0; i < blobBin.length; i++) {
-      array.push(blobBin.charCodeAt(i));
+      array[i] = blobBin.charCodeAt(i);
     }
-    const file = new Blob([new Uint8Array(array)], {
-      type: image.type,
-    });
-    const formdata = new FormData();
-    formdata.append("fileData", file);
-    formdata.append("fileName", `${imageId}`);
-    formdata.append("bucketName", "assets");
-    try {
-      const response = await axios.post(
-        "https://api.hipal.life/v1/storage",
-        formdata,
-      );
-      if (response.status === 201 || response.status === 200) {
-        setIsLoading?.(false);
-        return `https://storage.hipal.life/minio/assets/${imageId}`;
-      }
-    } catch (error) {
-      console.log(error);
+
+    const file = new Blob([array], { type: image.type });
+    const formData = new FormData();
+    formData.append("fileData", file);
+    formData.append("fileName", `${imageId}`);
+    formData.append("bucketName", "assets");
+
+    const response = await axios.post(
+      "https://api.hipal.life/v1/storage",
+      formData,
+    );
+
+    if (response.status === 201 || response.status === 200) {
       setIsLoading?.(false);
-      return toast.error("Failed to upload image");
+      return `https://storage.hipal.life/minio/assets/${imageId}`;
     }
+  } catch (error) {
+    console.error("Failed to store image:", error);
+    setIsLoading?.(false);
+    toast.error("Failed to upload image. Please check the image format.");
   }
 }
-
 //apply cn
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -136,10 +138,10 @@ export const TagsEnum = [
   "Popular",
 ];
 
-const MAX_WIDTH = 500;
-const MAX_HEIGHT = 500;
+const MAX_WIDTH = 1000;
+const MAX_HEIGHT = 1000;
 const MIME_TYPE = "image/webp";
-const QUALITY = 0.9;
+const QUALITY = 1;
 
 export const compressImage = (file, callback) => {
   const blobURL = URL.createObjectURL(file);
@@ -273,4 +275,14 @@ export const validateDish = (
     return false;
   }
   return true;
+};
+
+export const handleClick = (
+  e: React.MouseEvent<HTMLLabelElement, MouseEvent>,
+  inputRef: React.RefObject<HTMLInputElement>,
+) => {
+  if (inputRef.current) {
+    inputRef.current.value = "";
+    inputRef.current.click();
+  }
 };

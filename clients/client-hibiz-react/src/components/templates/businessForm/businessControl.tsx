@@ -62,9 +62,10 @@ const BusinessControl = () => {
           <button
             type="button"
             onClick={() => goToNextStep(1)}
-            className="w-16 px-4 py-1 mt-2 text-white bg-black rounded-3xl"
+            className="relative w-16 px-4 py-1 mt-2 text-white bg-black rounded-3xl"
           >
             Set
+            <div className="inset-0 shine2" />
           </button>
         </figcaption>
         <figcaption className="big-card">
@@ -73,9 +74,10 @@ const BusinessControl = () => {
           <button
             type="button"
             onClick={() => goToNextStep(1)}
-            className="w-24 px-6 py-1 mt-6 text-xl text-white bg-black rounded-3xl"
+            className="relative w-24 px-6 py-1 mt-6 text-xl text-white bg-black rounded-3xl"
           >
             Set
+            <div className="inset-0 shine2" />
           </button>
         </figcaption>
         <img className="image-class" src={Img} alt="Avatar" />

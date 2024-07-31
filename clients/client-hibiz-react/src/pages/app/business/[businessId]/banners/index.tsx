@@ -194,7 +194,7 @@ const MemoBanners = () => {
               Size matters! Express limitless with your customers about all the
               happenings at your place.
             </p>
-            <div className="flex justify-around mb-10 md:mb-4 md:justify-start md:space-x-10 md:ml-10">
+            <div className="flex justify-around mb-4 md:justify-start md:space-x-10 md:ml-10">
               <button
                 type="button"
                 onClick={() => setView(ViewType.BANNERS)}
@@ -223,7 +223,7 @@ const MemoBanners = () => {
         <article className="max-w-[69rem] flex justify-end">
           <button
             type="button"
-            className="z-20 px-4 py-2 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
+            className="z-20 h-8 px-4 py-2 mr-4 text-xs text-white bg-[#7D68FE] rounded-full"
             onClick={isArrangeMode ? handleSaveSequence : handleArrangeSequence}
           >
             {isArrangeMode ? "Save Sequence" : "Arrange Sequence"}
@@ -282,7 +282,7 @@ const MemoBanners = () => {
                   handleEditBanner={handleEditBanner}
                 />
                 {isArrangeMode && (
-                  <div className="absolute inset-0 z-1000 max-w-[12rem] h-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 rounded-2xl text-white text-2xl font-bold">
+                  <div className="absolute inset-0 z-1000 max-w-[12rem] md:max-w-[15rem] h-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 rounded-2xl text-white text-2xl font-bold">
                     {index + 1}
                   </div>
                 )}

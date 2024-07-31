@@ -2,8 +2,8 @@ import Paragraph from "@/components/atom/paragraph";
 import PlusButton from "@/components/atom/plusButton";
 import SubHeader from "@/components/atom/subHeader";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { cn } from "@/components/utils/helper";
-import { type ChangeEvent, memo } from "react";
+import { cn, handleClick } from "@/components/utils/helper";
+import { type ChangeEvent, memo, useRef } from "react";
 import { CiEdit } from "react-icons/ci";
 
 interface IFooterBanner {
@@ -15,6 +15,7 @@ interface IFooterBanner {
 }
 const MemoFooterBanner = (props: IFooterBanner) => {
   const bizInfo = useExploreStore((s) => s.bizInfo);
+  const footerInputRef = useRef<HTMLInputElement | null>(null);
   const {
     img,
     handleImageChange,
@@ -35,34 +36,37 @@ const MemoFooterBanner = (props: IFooterBanner) => {
           )}
         >
           <input
-            onClick={() => document.getElementById("footerInput")?.click()}
+            ref={footerInputRef}
+            onClick={(e) => handleClick(e, footerInputRef)}
             type="file"
             id="footerInput"
             style={{ display: "none" }}
             onChange={handleImageChange}
             data-type="footer"
           />
-          <label
-            htmlFor="footerInput"
-            className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
-          >
-            <figure className="w-[320px] h-[320px]">
-              {img.footer ? (
-                <div className="relative w-[320px] h-[320px]">
-                  <figure className="w-full h-full">
-                    <img
-                      src={img.footer}
-                      alt="Footer"
-                      className="object-cover w-full h-full rounded-2xl"
-                    />
-                  </figure>
-                  <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
-                </div>
-              ) : (
-                <PlusButton />
-              )}
-            </figure>
-          </label>
+          <figure className="w-[320px] h-[320px]">
+            <label
+              htmlFor="footerInput"
+              className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
+            >
+              <figure className="w-[320px] h-[320px]">
+                {img.footer ? (
+                  <div className="relative w-[320px] h-[320px]">
+                    <figure className="w-full h-full">
+                      <img
+                        src={img.footer}
+                        alt="Footer"
+                        className="object-cover w-full h-full rounded-2xl"
+                      />
+                    </figure>
+                    <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+                  </div>
+                ) : (
+                  <PlusButton />
+                )}
+              </figure>
+            </label>
+          </figure>
         </article>
       </section>
       <section className="w-full mt-10 md:mt-4">
