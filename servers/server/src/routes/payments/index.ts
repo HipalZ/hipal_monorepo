@@ -595,7 +595,11 @@ const paymentsRouter = new Hono()
 
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
-            { tableName: getOrder?.tableName, isAccepted: false },
+            {
+              tableName: getOrder?.tableName,
+              isAccepted: false,
+              alertType: "OFFLINE",
+            },
             { isAccepted: true, isRejected: true },
             { session },
           );
@@ -1279,6 +1283,35 @@ const paymentsRouter = new Hono()
         err: true,
         data: {},
         message: "Invalid date range",
+      });
+    },
+  )
+  .put(
+    "updateAll/payments",
+
+    zValidator("query", z.object({ update: z.string().optional() })),
+
+    async (c) => {
+      // Fetch all payments with paymentMode "offline" and paymentEventId null
+      const { update } = c.req.query();
+      const existingPayments = await Payment.find({
+        razorpayEventId: null,
+      });
+
+      if (update === "true") {
+        for (const payment of existingPayments) {
+          await Payment.findByIdAndUpdate(payment._id, {
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+          });
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: existingPayments,
+        message: "All payments updated successfully",
       });
     },
   );

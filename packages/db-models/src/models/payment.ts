@@ -40,6 +40,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     billValue: {
       required: true,
       type: Number,
+      default: 0,
     },
 
     tableName: {
@@ -77,6 +78,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
     razorpayAcquirerData: {
       type: Object,
+      default: {},
     },
     razorpayEventId: {
       type: String,

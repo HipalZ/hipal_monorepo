@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server-test
+  name: server-production
   namespace: hipalz
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: server-test
+      app: server-production
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: server-test
+        app: server-production
     spec:
       containers:
-        - name: server-test
-          image: registry.digitalocean.com/hipalz-repo/server-test:latest
+        - name: server-production
+          image: registry.digitalocean.com/hipalz-repo/server-production:latest
           imagePullPolicy: Always
           # imagePullSecrets: hipalz-repo
           ports:

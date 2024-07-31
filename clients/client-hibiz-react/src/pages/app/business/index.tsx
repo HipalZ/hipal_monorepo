@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-//
+///
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const { reset } = useBusinessCtrl();

@@ -13,12 +13,12 @@ FROM base AS server
 # RUN npm i -g bun
 RUN rm -r /app/clients
 WORKDIR /app/servers/server
-CMD ["bun", "run", "dev:prod"]
+CMD ["bun", "run", "start:prod"]
 
 
 FROM base AS client-hibiz-react-build
 WORKDIR /app/clients/client-hibiz-react
-RUN bun run bundle:test
+RUN bun run bundle:production
 
 FROM nginx:alpine AS client-hibiz-react
 COPY --from=client-hibiz-react-build /app/clients/client-hibiz-react/dist /usr/share/nginx/html
@@ -30,7 +30,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 FROM base AS client-hitable-react-build
 WORKDIR /app/clients/client-hitable-react
-RUN bun run bundle:test
+RUN bun run bundle:production
 
 FROM nginx:alpine AS client-hitable-react
 COPY --from=client-hitable-react-build /app/clients/client-hitable-react/dist /usr/share/nginx/html

@@ -5,7 +5,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
   {
     businessId: { type: ObjectId, required: true, ref: "Business" },
-    comment: { type: String, default: null },
+    comment: { type: String, default: "" },
     status: { type: String, default: null },
     userId: {
       type: ObjectId,
@@ -20,7 +20,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     order_id: { type: ObjectId, required: false, ref: "Order" },
 
     isAccepted: { type: Boolean, default: false },
-    message: { type: String, default: null },
+    message: { type: String, default: "" },
 
     isRejected: { type: Boolean, default: false },
     errorReason: { type: String, default: null },

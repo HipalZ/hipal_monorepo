@@ -1,8 +1,8 @@
-name: Build and Push client-hitable-test Server Image
+name: Build and Push client-hitable-production Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['production']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: client-hitable-test
+  DOCKER_REPOSITORY: client-hitable-production
 
 jobs:
   build-and-push:

@@ -13,14 +13,9 @@ spec:
     email: info@paltribe.in
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: letsencrypt-nginx-wcard-private
+      name: letsencrypt-nginx-private-key
     solvers:
       # Use the HTTP-01 challenge provider
       - http01:
           ingress:
             class: nginx
-      - dns01:
-          digitalocean:
-            tokenSecretRef:
-              key: access-token
-              name: digitalocean-dns
