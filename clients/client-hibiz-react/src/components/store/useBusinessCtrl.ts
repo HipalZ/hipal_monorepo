@@ -1,9 +1,14 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type bussinessControlPages = 'BUSINESS_CONTROL' | 'EXPLORE_PAGE' | 'MENU_PAGE' | 'SETTING' | 'CONGRATULATION';
-export type businessType = 'FOOD' | 'OTHER' | '';
-export type MenuLayout = 'MAIN_CATEGORY' | 'MAIN_AND_SUB_CATEGORY';
-export type exploreLayout = 'BUTTER' | 'SUNFLOWER';
+export type bussinessControlPages =
+  | "BUSINESS_CONTROL"
+  | "EXPLORE_PAGE"
+  | "MENU_PAGE"
+  | "SETTING"
+  | "CONGRATULATION";
+export type businessType = "FOOD" | "OTHER" | "";
+export type MenuLayout = "MAIN_CATEGORY" | "MAIN_AND_SUB_CATEGORY";
+export type exploreLayout = "BUTTER" | "SUNFLOWER";
 
 interface BusinessCtrl {
   step: number;
@@ -39,30 +44,34 @@ interface BusinessCtrl {
   paymentAndBusinessSettings: boolean;
   setPaymentAndBusinessSettings: (value: boolean) => void;
   reset: () => void;
+  layoutFlowEnabled: boolean;
+  setLayoutFlowEnabled: (value: boolean) => void;
+  enableLayoutFlow: () => void;
+  disableLayoutFlow: () => void;
 }
 
 const useBusinessCtrl = create<BusinessCtrl>((set) => ({
   step: 0,
   setStep: (step: number) => set({ step }),
-  exploreLayout: 'BUTTER',
+  exploreLayout: "BUTTER",
   setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
-  menuLayout: 'MAIN_AND_SUB_CATEGORY',
+  menuLayout: "MAIN_AND_SUB_CATEGORY",
   setMenuLayout: (layout: MenuLayout) => set({ menuLayout: layout }),
-  primaryColor: '',
+  primaryColor: "",
   setPrimaryColor: (color: string) => set({ primaryColor: color }),
-  secondaryColor: '',
+  secondaryColor: "",
   setSecondaryColor: (color: string) => set({ secondaryColor: color }),
-  businessType: '',
+  businessType: "",
   setBusinessType: (type: businessType) => set({ businessType: type }),
-  outletType: '',
+  outletType: "",
   setOutletType: (type: string) => set({ outletType: type }),
-  businessName: '',
+  businessName: "",
   setBusinessName: (name: string) => set({ businessName: name }),
-  customLink: '',
+  customLink: "",
   setCustomLink: (link: string) => set({ customLink: link }),
   branches: [],
   setBranches: (branches) => set({ branches }),
-  selectedBranch: '',
+  selectedBranch: "",
   setSelectedBranch: (branch: string) => set({ selectedBranch: branch }),
   menu: false,
   setMenu: (value: boolean) => set({ menu: value }),
@@ -71,24 +80,31 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => ({
   rewards: false,
   setRewards: (value: boolean) => set({ rewards: value }),
   paymentAndBusinessSettings: false,
-  setPaymentAndBusinessSettings: (value: boolean) => set({ paymentAndBusinessSettings: value }),
-  reset: () => set({
-    step: 0,
-    exploreLayout: 'BUTTER',
-    menuLayout: 'MAIN_AND_SUB_CATEGORY',
-    primaryColor: '',
-    secondaryColor: '',
-    businessType: '',
-    outletType: '',
-    businessName: '',
-    customLink: '',
-    branches: [],
-    selectedBranch: '',
-    menu: false,
-    themes: false,
-    rewards: false,
-    paymentAndBusinessSettings: false,
-  }),
+  setPaymentAndBusinessSettings: (value: boolean) =>
+    set({ paymentAndBusinessSettings: value }),
+  reset: () =>
+    set({
+      step: 0,
+      exploreLayout: "BUTTER",
+      menuLayout: "MAIN_AND_SUB_CATEGORY",
+      primaryColor: "",
+      secondaryColor: "",
+      businessType: "",
+      outletType: "",
+      businessName: "",
+      customLink: "",
+      branches: [],
+      selectedBranch: "",
+      menu: false,
+      themes: false,
+      rewards: false,
+      paymentAndBusinessSettings: false,
+    }),
+
+  layoutFlowEnabled: false,
+  setLayoutFlowEnabled: (value: boolean) => set({ layoutFlowEnabled: value }),
+  enableLayoutFlow: () => set({ layoutFlowEnabled: true }),
+  disableLayoutFlow: () => set({ layoutFlowEnabled: false }),
 }));
 
 export default useBusinessCtrl;

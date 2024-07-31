@@ -26,6 +26,7 @@ export const useBusinessData = create(
     isLoyaltyExists: boolean;
     setIsLoyaltyExists: (isLoyaltyExists: boolean) => void;
     updateAppliedTheme: (theme: boolean) => void;
+    updateThemeData: (data: Record<string, any>) => void;
     isLoading: boolean;
     setIsLoading: (isLoading: boolean) => void;
   }>(
@@ -53,12 +54,22 @@ export const useBusinessData = create(
         set({ isLoyaltyExists: isLoyaltyExists }),
       updateAppliedTheme: (theme: boolean) => {
         const currentBusinessData = get().businessData;
-        console.log("currentBusinessData", currentBusinessData);
         if (currentBusinessData) {
           set({
             businessData: {
               ...currentBusinessData,
               themeApplied: theme,
+            },
+          });
+        }
+      },
+      updateThemeData: (data) => {
+        const currentBusinessData = get().businessData;
+        if (currentBusinessData) {
+          set({
+            businessData: {
+              ...currentBusinessData,
+              ...data,
             },
           });
         }

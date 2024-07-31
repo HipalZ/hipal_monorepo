@@ -1,17 +1,38 @@
 import { IphoneCategory } from "@/components/atom/svgtheme";
-import useBusinessCtrl, { type MenuLayout } from "@/components/store/useBusinessCtrl";
+import useBusinessCtrl, {
+  type MenuLayout,
+} from "@/components/store/useBusinessCtrl";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useLayoutThemes } from "@/hooks/useLayoutThemes";
 import { memo, useCallback, useEffect, useState } from "react";
 
 const MenuPage = () => {
-  const { step, setStep, menuLayout, setMenuLayout, primaryColor, secondaryColor } = useBusinessCtrl((s) => ({
+  const {
+    step,
+    setStep,
+    menuLayout,
+    exploreLayout,
+    setMenuLayout,
+    primaryColor,
+    secondaryColor,
+  } = useBusinessCtrl((s) => ({
     step: s.step,
     setStep: s.setStep,
     menuLayout: s.menuLayout,
+    exploreLayout: s.exploreLayout,
     setMenuLayout: s.setMenuLayout,
     primaryColor: s.primaryColor,
     secondaryColor: s.secondaryColor,
   }));
   const [dimensions, setDimensions] = useState({ width: 350, height: 400 });
+  const { mutate } = useLayoutThemes();
+  const { businessData, themeApplied, updateThemeData } = useBusinessData(
+    (s) => ({
+      businessData: s.businessData,
+      themeApplied: s.businessData?.themeApplied,
+      updateThemeData: s.updateThemeData,
+    }),
+  );
 
   const updateDimensions = () => {
     if (window.innerWidth >= 1028) {
@@ -20,7 +41,9 @@ const MenuPage = () => {
       setDimensions({ width: 350, height: 400 });
     }
   };
-  const handleLayoutSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLayoutSelection = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setMenuLayout(event.target.value as MenuLayout);
   };
 
@@ -28,7 +51,30 @@ const MenuPage = () => {
     if (menuLayout) {
       setStep(step + 1);
     }
-  }, [menuLayout, step]);
+    if (themeApplied) {
+      const payload = {
+        exploreLayout: exploreLayout,
+        menuLayout: menuLayout,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+        businessType: businessData?.businessType || "FOOD",
+      };
+      mutate(payload);
+      updateThemeData({
+        exploreLayout: exploreLayout,
+        menuLayout: menuLayout,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+      });
+    }
+  }, [
+    exploreLayout,
+    step,
+    menuLayout,
+    primaryColor,
+    secondaryColor,
+    businessData?.businessType,
+  ]);
 
   useEffect(() => {
     updateDimensions();
@@ -41,7 +87,13 @@ const MenuPage = () => {
   return (
     <section className="explore_page_container">
       <center className="mt-4">
-        <IphoneCategory primary={primaryColor} secondary={secondaryColor} category={2} width={dimensions.width} height={dimensions.height} />
+        <IphoneCategory
+          primary={primaryColor}
+          secondary={secondaryColor}
+          category={2}
+          width={dimensions.width}
+          height={dimensions.height}
+        />
       </center>
 
       <section className="space-y-4 explore_page_selection h-[50vh]">
@@ -72,14 +124,17 @@ const MenuPage = () => {
             <span>With Main & Sub-Category</span>
           </article>
           <small className="opacity-50">
-            Tailored for menus exceeding 50 dishes, seamlessly categorized into a top-tier for efficient exploration.
+            Tailored for menus exceeding 50 dishes, seamlessly categorized into
+            a top-tier for efficient exploration.
           </small>
         </label>
       </section>
       <button
         type="button"
         className={`bottom_btn mt-4 px-4 py-2 rounded ${
-          !menuLayout ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-blue-500 text-white cursor-pointer"
+          !menuLayout
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : "bg-blue-500 text-white cursor-pointer"
         }`}
         onClick={handleNextStep}
         disabled={!menuLayout}

@@ -14,7 +14,6 @@ export const IphoneExplore: React.FC<CustomSvgProps> = ({
 }) => {
   const primaryColor = primary || "#D22888";
   const secondaryColor = secondary || "#FEF6F6";
-  console.log("primaryColor", primaryColor, secondaryColor);
   return (
     <svg
       height={height || "306"}

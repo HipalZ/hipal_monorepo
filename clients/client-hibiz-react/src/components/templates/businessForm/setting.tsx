@@ -9,7 +9,7 @@ import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { IBusinessData } from "@/components/types/businessData";
+import { useLayoutThemes } from "@/hooks/useLayoutThemes";
 
 const Setting = () => {
   const {
@@ -30,11 +30,14 @@ const Setting = () => {
     menuLayout: s.menuLayout,
   }));
 
-  const navigate = useNavigate();
-
-  const businessData = useBusinessData((s) => s.businessData);
-  const updateAppliedTheme = useBusinessData((s) => s.updateAppliedTheme);
-
+  const { mutate } = useLayoutThemes();
+  const { businessData, themeApplied, updateThemeData } = useBusinessData(
+    (s) => ({
+      businessData: s.businessData,
+      themeApplied: s.businessData?.themeApplied,
+      updateThemeData: s.updateThemeData,
+    }),
+  );
   const [selectedPrimaryColor, setSelectedPrimaryColor] =
     useState(primaryColor);
   const [selectedSecondaryColor, setSelectedSecondaryColor] =
@@ -77,30 +80,20 @@ const Setting = () => {
   };
 
   const apiCall = async () => {
-    const res = await apiRpc.businesses[":businessId"].$put({
-      json: {
-        exploreLayout: exploreLayout,
-        menuLayout: menuLayout,
-        primaryColor: primaryColor,
-        secondaryColor: secondaryColor,
-        businessType: businessData?.businessType || "FOOD",
-      },
-      param: {
-        businessId: businessData?._id,
-      },
+    const payload = {
+      exploreLayout: exploreLayout,
+      menuLayout: menuLayout,
+      primaryColor: primaryColor,
+      secondaryColor: secondaryColor,
+      businessType: businessData?.businessType || "FOOD",
+    };
+    mutate(payload);
+    updateThemeData({
+      exploreLayout: exploreLayout,
+      menuLayout: menuLayout,
+      primaryColor: primaryColor,
+      secondaryColor: secondaryColor,
     });
-    if (res.status === 400 || res.status === 403 || res.status === 409) {
-      toast.error("Please try again");
-      return;
-    }
-    if (res.status === 200 || res.status === 201) {
-      toast.success("Colors saved successfully");
-      updateAppliedTheme(true);
-      setStep(0);
-      startTransition(() => {
-        navigate(`/app/business/${businessData?._id}`);
-      });
-    }
   };
 
   return (
