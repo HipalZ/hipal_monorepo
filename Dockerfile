@@ -13,7 +13,7 @@ FROM base AS server
 # RUN npm i -g bun
 RUN rm -r /app/clients
 WORKDIR /app/servers/server
-CMD ["bun", "run", "dev:test"]
+CMD ["bun", "run", "dev:prod"]
 
 
 FROM base AS client-hibiz-react-build
