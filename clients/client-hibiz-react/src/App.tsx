@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import MainRouter from "./routes";
 
-//
+///
 
 function App() {
   const [isOnline, setIsOnline] = useState(true);
