@@ -16,11 +16,13 @@ const BusinessControl = () => {
     setSecondaryColor,
     setExploreLayout,
     setMenuLayout,
+    setLayoutFlowEnabled,
   } = useBusinessCtrl((s) => ({
     setPrimaryColor: s.setPrimaryColor,
     setSecondaryColor: s.setSecondaryColor,
     setExploreLayout: s.setExploreLayout,
     setMenuLayout: s.setMenuLayout,
+    setLayoutFlowEnabled: s.setLayoutFlowEnabled,
   }));
 
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ const BusinessControl = () => {
         setSecondaryColor(businessData?.secondaryColor || "#ffffff");
         setExploreLayout(businessData?.exploreLayout || "BUTTER");
         setMenuLayout(businessData?.menuLayout || "MAIN_AND_SUB_CATEGORY");
+        setLayoutFlowEnabled(businessData?.themeApplied || false);
       }
     },
     [

@@ -1,18 +1,39 @@
 import { IphoneExplore } from "@/components/atom/svgtheme";
-import useBusinessCtrl, { type exploreLayout } from "@/components/store/useBusinessCtrl";
+import useBusinessCtrl, {
+  type exploreLayout,
+} from "@/components/store/useBusinessCtrl";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useLayoutThemes } from "@/hooks/useLayoutThemes";
 import { memo, useCallback, useEffect, useState } from "react";
 
 const ExplorePage = () => {
-  const { step, setStep, exploreLayout, setExploreLayout, primaryColor, secondaryColor } = useBusinessCtrl((s) => ({
+  const {
+    step,
+    setStep,
+    exploreLayout,
+    setExploreLayout,
+    primaryColor,
+    secondaryColor,
+    menuLayout,
+  } = useBusinessCtrl((s) => ({
     step: s.step,
     setStep: s.setStep,
     exploreLayout: s.exploreLayout,
     setExploreLayout: s.setExploreLayout,
     primaryColor: s.primaryColor,
     secondaryColor: s.secondaryColor,
+    menuLayout: s.menuLayout,
   }));
 
   const [dimensions, setDimensions] = useState({ width: 350, height: 400 });
+  const { mutate } = useLayoutThemes();
+  const { businessData, themeApplied, updateThemeData } = useBusinessData(
+    (s) => ({
+      businessData: s.businessData,
+      themeApplied: s.businessData?.themeApplied,
+      updateThemeData: s.updateThemeData,
+    }),
+  );
 
   const updateDimensions = () => {
     if (window.innerWidth >= 1028) {
@@ -22,7 +43,9 @@ const ExplorePage = () => {
     }
   };
 
-  const handleLayoutSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLayoutSelection = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setExploreLayout(event.target.value as exploreLayout);
   };
 
@@ -30,7 +53,30 @@ const ExplorePage = () => {
     if (exploreLayout) {
       setStep(step + 1);
     }
-  }, [exploreLayout, step, setStep]);
+    if (themeApplied) {
+      const payload = {
+        exploreLayout: exploreLayout,
+        menuLayout: menuLayout,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+        businessType: businessData?.businessType || "FOOD",
+      };
+      mutate(payload);
+      updateThemeData({
+        exploreLayout: exploreLayout,
+        menuLayout: menuLayout,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+      });
+    }
+  }, [
+    exploreLayout,
+    step,
+    menuLayout,
+    primaryColor,
+    secondaryColor,
+    businessData?.businessType,
+  ]);
 
   useEffect(() => {
     updateDimensions();
@@ -45,7 +91,12 @@ const ExplorePage = () => {
       <section className="explore_page_container">
         <section>
           <center className="mt-4 opacity-50">
-            <IphoneExplore primary={primaryColor} secondary={secondaryColor} width={dimensions.width} height={dimensions.height} />
+            <IphoneExplore
+              primary={primaryColor}
+              secondary={secondaryColor}
+              width={dimensions.width}
+              height={dimensions.height}
+            />
           </center>
           <figcaption className="explore_page">
             <h5 className="text-[#7266FF]">
@@ -57,16 +108,29 @@ const ExplorePage = () => {
         <section className="space-y-4 explore_page_selection h-[50vh]">
           <label className="p-4 mx-4  bg-[#F4F4F4] rounded-xl ">
             <article className="flex items-center space-x-2">
-              <input type="radio" value="BUTTER" checked={exploreLayout === "BUTTER"} onChange={handleLayoutSelection} className="form-radio radio radio-black" />
+              <input
+                type="radio"
+                value="BUTTER"
+                checked={exploreLayout === "BUTTER"}
+                onChange={handleLayoutSelection}
+                className="form-radio radio radio-black"
+              />
               <span>Butter</span>
             </article>
             <small className="opacity-50">
-              A simple layout that focus on a quick navigation between Cover image , static stories, banners, must try and footer{" "}
+              A simple layout that focus on a quick navigation between Cover
+              image , static stories, banners, must try and footer{" "}
             </small>
           </label>
           <label className="p-4 mx-4 rounded-xl bg-[#F4F4F4]">
             <article className="flex items-center space-x-2">
-              <input type="radio" value="SUNFLOWER" checked={exploreLayout === "SUNFLOWER"} onChange={handleLayoutSelection} className="form-radio radio radio-black" />
+              <input
+                type="radio"
+                value="SUNFLOWER"
+                checked={exploreLayout === "SUNFLOWER"}
+                onChange={handleLayoutSelection}
+                className="form-radio radio radio-black"
+              />
               <span>Sunflower</span>
             </article>
             <small className="opacity-50">This layout is not available</small>
@@ -76,7 +140,9 @@ const ExplorePage = () => {
       <button
         type="button"
         className={`bottom_btn mt-4 px-4 py-2 rounded ${
-          !exploreLayout ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-blue-500 text-white cursor-pointer"
+          !exploreLayout
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : "bg-blue-500 text-white cursor-pointer"
         }`}
         onClick={handleNextStep}
         disabled={!exploreLayout}
