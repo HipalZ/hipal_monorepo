@@ -6,11 +6,12 @@ interface userToken {
   setAccessToken: (data: string) => void;
   refreshToken: string;
   setRefreshToken: (data: string) => void;
+  validateToken: () => boolean;
 }
 
 export const useUserToken = create(
   persist<userToken>(
-    (set) => ({
+    (set, get) => ({
       accessToken: "",
       setAccessToken: (data: string) => {
         set({ accessToken: data });
@@ -18,6 +19,10 @@ export const useUserToken = create(
       refreshToken: "",
       setRefreshToken: (data: string) => {
         set({ refreshToken: data });
+      },
+      validateToken: () => {
+        const { accessToken, refreshToken } = get();
+        return accessToken.length > 0 && refreshToken.length > 0;
       },
     }),
     {
