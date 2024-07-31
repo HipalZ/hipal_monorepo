@@ -122,33 +122,39 @@ const settingsRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json();
+
+      const {
+        registerName,
+        registerType,
+        establishmentYear,
+        panNumber,
+        gstNumber,
+        bankName,
+        accountNumber,
+        ifscCode,
+        branchName,
+        beneficiaryName,
+      } = requestData;
       const { settingsId } = c.req.param();
       const updateSetting = await BusinessSettings.findByIdAndUpdate(
         settingsId,
-        requestData,
+        {
+          registerName,
+          registerType,
+          establishmentYear,
+          panNumber,
+          gstNumber,
+          bankName,
+          accountNumber,
+          ifscCode,
+          branchName,
+          beneficiaryName,
+        },
         { new: true },
       );
       if (!updateSetting)
         return respond(c, "Error in updating setting", true, 400, {});
 
-      if (
-        updateSetting.razorpayKeyId &&
-        updateSetting.razorpayKeySecret &&
-        updateSetting.razorpayMerchantId &&
-        updateSetting.razorpayWebhookSecret
-      ) {
-        await razorpayWrapper
-          .create(updateSetting.razorpayMerchantId)
-          .then(() => {
-            console.log(
-              "Razorpay instance created successfully",
-              updateSetting.razorpayMerchantId,
-            );
-          })
-          .catch((err) => {
-            console.error("Error creating Razorpay instance", err);
-          });
-      }
       return respond(
         c,
         "Setting updated successfully",
