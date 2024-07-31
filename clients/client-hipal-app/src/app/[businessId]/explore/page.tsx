@@ -68,18 +68,18 @@ export default async function Explore({
           <HeroSection data={data} />
         </Suspense>
 
-        <div className="bg-base-200">
+        <div className="bg-base-300">
           <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
         </div>
         {data?.banners?.some(
           (banner: IBannerPayload) => banner?.isPublished,
         ) && (
           <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
-            <article className="bg-base-200">
-              <h2 className="py-4 mt-4 text-2xl font-bold text-center bg-base-200">
+            <article className="bg-base-300">
+              <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
               </h2>
-              <article className="h-[28rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap">
+              <article className="h-[28rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
                 <EmblaCarousel>
                   {data?.banners?.map(
                     (banner: IBannerPayload, index: number) => {

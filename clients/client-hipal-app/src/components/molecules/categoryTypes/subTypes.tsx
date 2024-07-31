@@ -41,7 +41,7 @@ function SubTypes(props: ISubTypes) {
   }, [isActiveCategory, subTypes]);
 
   return (
-    <section className="overflow-x-auto border shadow-2xl border-b-primary no-scrollbar bg-base-100">
+    <section className="overflow-x-auto border shadow-2xl border-b-primary no-scrollbar bg-base-100 text-primary">
   {subTypes?.length > 0 && (
     <Splide
       ref={splideRef}
@@ -65,7 +65,7 @@ function SubTypes(props: ISubTypes) {
           >
               <article
                 className={cn(
-                  isActiveCategory === item._id?.toString() ? "bg-primary text-white" : "",
+                  isActiveCategory === item._id?.toString() ? "bg-primary text-base-100" : "",
                   "flex border border-primary rounded-full items-center justify-between px-2 py-1"
                 )}
               >

@@ -7,18 +7,15 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import type {
   BusinessDetails,
   IBusinessData,
-  IExplore,
 } from "@/components/types/businessData";
-import { TiLocationOutline } from "react-icons/ti";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import RestaurantTimeMemo from "@/components/atoms/time/restaurant";
 import { preDefinedHeroButtons } from "@/components/utils/helpers";
-import { MdOutlineCall } from "react-icons/md";
 import MemoRewards from "@/components/templates/explore/rewards";
 import { cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { useLogin } from "@/components/store/useLogin";
+import { useCartStore } from "@/components/store/useCartStore";
 
 interface IHeroSection {
   data: IBusinessData;
@@ -29,14 +26,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
     setBusinessDetails: s.setBusinessDetails,
     businessDetails: s.businessDetails,
   }));
-
-  const setIsLogin = useLogin((s) => s.setIsLogin);
   const accessToken = useUserToken.getState().accessToken;
+  const setAccessToken = useUserToken.getState().setAccessToken;
+  const { setCartEmpty } = useCartStore();
   const { location, phone } = data?.outletInfo;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
   const business = data.business as BusinessDetails;
-
   const setBusinessData = _useAllBusiness((s) => s.setData);
 
   const goToLocation = useCallback(() => {
@@ -61,14 +57,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }, [data]);
 
   useEffect(() => {
+    console.log("resetting", businessDetails?.businessId, data?.business?.businessId);
     if (businessDetails?.businessId !== data?.business?.businessId) {
-      console.log(
-        "datttttaaaa",
-        data?.business?.businessId,
-        businessDetails?.businessId,
-      );
-      console.log("loop");
-      setIsLogin(false);
+      setAccessToken("");
+      setCartEmpty();
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
 
@@ -97,11 +89,11 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           </figure>
           <div>
             {name && (
-              <h4 className="-mt-1 text-lg font-semibold capitalize">{name}</h4>
+              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">{name}</h4>
             )}
             {address && (
               <>
-                <h6 className="w-48 mt-2 text-xs font-semibold capitalize truncate line-clamp-1">
+                <h6 className="w-48 mt-2 text-xs font-semibold capitalize text-[var(--sf)] truncate line-clamp-1">
                   {address}
                 </h6>
                 <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-[#3DC18B] text-white z-20">
@@ -121,7 +113,8 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         <article className="flex items-center justify-between gap-2 mt-3">
           {preDefinedHeroButtons.map((button) => {
             return (
-              <div
+              <button
+              type="button"
                 key={button?._id}
                 onClick={() => {
                   if (button?.label.toLowerCase() === "direction") {
@@ -132,28 +125,28 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
                     onBoardBusiness();
                   }
                 }}
-                className="h-[2rem] text-xs bg-base-100 text-primary rounded-full flex justify-center items-center px-2 space-x-2"
+                className="h-[2rem] text-xs bg-secondary-content text-primary rounded-full flex justify-center items-center px-2 space-x-2"
               >
-                <button.icon size={16} />
-                <span className="pr-1">{button?.label}</span>
-              </div>
+                <button.icon size={16} className="text-base-100" />
+                <span className="pr-1 text-base-100">{button?.label}</span>
+              </button>
             );
           })}
         </article>
       </section>
-      <div className="mt-36" />
+      <div className="pt-36" />
       <MemoRewards />
       <center
         className={cn(
-          "flex items-center justify-center text-xl font-bold line-clamp-2 divide-base-content",
+          "flex items-center justify-center text-xl font-bold line-clamp-2 divide-base-content text-primary",
           accessToken.length > 0 ? "pt-[8rem]" : "-pt-[1rem]",
         )}
       >
         {Array.isArray(tags) ? tags.join(" | ") : tags}
       </center>
-      <div className="mt-4 text-xs font-light text-center">
+      <center className="mt-4 text-sm text-primary">
         <ReadMore text={description} />
-      </div>
+      </center>
     </div>
   );
 }

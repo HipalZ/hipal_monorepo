@@ -384,11 +384,13 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
+      console.log("from fro", requestData);
       if (requestData?.primaryColor && requestData?.secondaryColor) {
         const convertedColors = convertToHsl({
           primary: requestData.primaryColor,
           accent: requestData.primaryColor,
-          "base-100": requestData.secondaryColor,
+          secondary: requestData.secondaryColor,
+          "base-100":requestData.secondaryColor,
         });
 
         const createTheme = await Theme.findOneAndUpdate(

@@ -1,14 +1,14 @@
 "use client";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useEffect } from "react";
 import img from "@/assets/img/cut.png";
 import type { BusinessDetails } from "@/components/types/businessData";
-import { useLogin } from "@/components/store/useLogin";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import useTableData from "@/components/store/useTableData";
-import toast from "react-hot-toast";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import Link from "next/link";
 
 const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const searchParams = useSearchParams();
@@ -16,22 +16,14 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const params = useParams();
   const customLink = params?.businessId as string;
   const tableName = searchParams?.get("tableName");
+  const accessToken = useUserToken.getState().accessToken;
   const { setTableName } = useTableData();
-
-  const router = useRouter();
-
-  const { isLogin } = useLogin();
 
   useEffect(() => {
     if (tableName !== null) {
       setTableName(tableName);
     }
   }, [tableName]);
-
-  const goToLoginPage = useCallback(() => {
-    if (!customLink) return toast.error("Invalid business id");
-    router.push(`${routePaths[PAGE_TYPES.SIGN_UP](customLink)}`);
-  }, [customLink, router]);
 
   return (
     <div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
@@ -48,11 +40,17 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
       />
 
       <div className="absolute top-0 right-0 flex justify-between px-4 py-3 mb-10">
-        {!isLogin && (
-          <div onClick={goToLoginPage} className="flex flex-row space-x-2">
-            <button type="button" className="glass-morphism">
-              Login/Sign up
-            </button>
+        {!accessToken && (
+          <div className="flex flex-row space-x-2">
+            <Link
+              href={
+                customLink ? routePaths[PAGE_TYPES.SIGN_UP](customLink) : "#"
+              }
+            >
+              <button type="button" className="glass-morphism">
+                Login/Sign up
+              </button>
+            </Link>
           </div>
         )}
       </div>

@@ -155,7 +155,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
             return (
               <section
                 key={item?._id}
-                className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200"
+                className="flex items-center justify-between px-2 py-3 my-2 rounded-lg bg-base-200 text-primary"
               >
                 <article className="flex space-x-0">
                   <figure className="w-[4rem] shrink-0 ">

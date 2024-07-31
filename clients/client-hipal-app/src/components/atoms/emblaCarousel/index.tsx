@@ -42,13 +42,13 @@ function MemoEmblaCarousel({ children }) {
       <div className="embla__viewport" ref={emblaRef}>
         <div className="-space-x-8 embla__container">{children}</div>
       </div>
-      <div className="px-10 py-4 mt-3 embla__button-container ">
+      <div className="px-4 py-4 mt-3 embla__button-container ">
         <button
           type="button"
           className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"
           onClick={onPrevClick}
         >
-          <FaAngleLeft size={24} />
+          <FaAngleLeft className="text-primary" size={24} />
         </button>
         <div className="embla__dots">
           {scrollSnaps.map((_, index) => (
@@ -69,7 +69,7 @@ function MemoEmblaCarousel({ children }) {
           className="px-2 border rounded-full border-primary embla__button embla__button--next border-1"
           onClick={onNextClick}
         >
-          <FaAngleRight size={24} />
+          <FaAngleRight className="text-primary" size={24} />
         </button>
       </div>
     </div>

@@ -29,7 +29,7 @@ function Header({ categories }: { categories: CategoryType[] }) {
   return (
     <div
       className={`bg-base-100 rounded-t-2xl pt-4 transition-transform duration-300
-         z-50 sticky top-0 flex flex-col space-y-2 text-4xl py-4 
+         z-50 sticky top-0 flex flex-col space-y-2 text-4xl py-4 text-primary
          `}
     >
       <div className="relative flex items-center justify-between w-full ">

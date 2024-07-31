@@ -21,13 +21,13 @@ const BillSummary = (props:IBillSummary) => {
     return (
         <div className='flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl'>
             <h6 className="mx-6 mt-4 text-xl">Bill Detailz</h6>
-            <div className='relative mx-6 text-[1.25rem] text-base-content border border-primary py-4 rounded-2xl'>
-                <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-content leading-[1.25rem]'>
+            <div className='relative mx-6 text-[1.25rem] text-base-100 border border-primary py-4 rounded-2xl'>
+                <div className='text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-base-100 leading-[1.25rem]'>
                     <h1>Total bill amount</h1>
                     <h1>₹ {billValue}</h1>
                 </div>
                 {claimedCoinz > 0 && (
-                    <div className='flex justify-between mx-4 mt-1 text-sm capitalize text-base-content'>
+                    <div className='flex justify-between mx-4 mt-1 text-sm capitalize text-base-100'>
                         <h1 className='text-[1rem]'>Hi-Coinz</h1>
                         <div className='flex'>
                             <span className='text-base'>
@@ -37,7 +37,7 @@ const BillSummary = (props:IBillSummary) => {
                     </div>
                 )}
                 <div className='mx-2 mt-2'>
-                    <div className='flex justify-between m-2 text-sm capitalize text-base-content'>
+                    <div className='flex justify-between m-2 text-sm capitalize text-base-100'>
                         <div className="flex items-center">
                             <div className="flex items-center" onClick={() => setIsTipActive(true)} >
                             <span><BsPatchPlusFill size={22} /></span>

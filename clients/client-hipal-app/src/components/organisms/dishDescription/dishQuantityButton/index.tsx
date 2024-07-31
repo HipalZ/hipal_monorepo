@@ -91,7 +91,7 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   return (
     <>
       {cartItem ? (
-        <div className="flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary">
+        <div className="flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
           <button
             type="button"
             onClick={() => handleDecreaseQuantity(cartItem)}

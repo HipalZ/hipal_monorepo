@@ -22,3 +22,4 @@ export const getRandomBlurImg = (w: number, h: number) => {
 
 	return `data:image/svg+xml;base64,${toBase64(shimmer(w, h))}`
 }
+  

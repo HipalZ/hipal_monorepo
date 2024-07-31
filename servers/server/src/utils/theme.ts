@@ -28,9 +28,9 @@ const colorNames = {
   'warning-content': '--wac',
   error: '--er',
   'error-content': '--erc',
-  'bg-base-100': '--bg-b1',
 };
 export function convertToHsl(input) {
+  console.log('input', input);
   const resultObj = {};
 
   if (typeof input === 'object' && input !== null) {
@@ -137,7 +137,7 @@ export function convertToHsl(input) {
 
       if (!input.hasOwnProperty('warning-content')) {
         if (input.hasOwnProperty('warning')) {
-          resultObj['--wac'] = generateForegroundColorFrom(input['warning']);
+          resultObj['--wac'] = generateForegroundColorFrom(input.warning);
         } else {
           resultObj['--wac'] = '43 100% 11%';
         }

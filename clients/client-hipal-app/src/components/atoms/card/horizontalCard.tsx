@@ -67,11 +67,11 @@ const HorizontalCard = ({
             {/* <DishTag tags={dishData.tags} /> */}
           </div>
 
-          <div className="overflow-hidden text-lg font-medium capitalize w-[95%]">
+          <div className="overflow-hidden text-lg font-medium capitalize w-[95%] text-primary">
             {dishData?.name || ""}
           </div>
           <div className="mt-1 ml-1 text-xs ">
-            <span className="text-base-content/80">
+            <span className="text-base-content">
               {getPrice(dishData?.price || 0)}
             </span>
           </div>
@@ -108,7 +108,7 @@ const HorizontalCard = ({
                   className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
                     }`}
                   placeholder="blur"
-                  blurDataURL={getRandomBlurImg(110, 110)}
+                  blurDataURL={getRandomBlurImg(300, 110)}
                 />
                 {!dishData.availability && (
                   <>

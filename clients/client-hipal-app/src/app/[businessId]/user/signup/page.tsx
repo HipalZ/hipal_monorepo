@@ -5,7 +5,6 @@ import { type FormEvent, memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import Welcome from "@/assets/login-background.png";
 import { BiArrowBack } from "react-icons/bi";
-import HipalLogo from "@/assets/hipalNewLogo.svg";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
@@ -13,7 +12,6 @@ import { apiRpc } from "@hi/common";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
-  const [logo, setLogo] = useState<string>("");
   const [phone, setPhone] = useState("");
   const { setUserDetails } = useLogin();
   const businessData = useBusinessDetails((s) => s.businessDetails);
@@ -62,12 +60,13 @@ const SignUp = memo(() => {
   return (
     <section className="relative bg-black">
       <section className="flex items-center justify-between">
-        <article
+        <button
+        type="button"
           onClick={goBack}
           className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
         >
           <BiArrowBack size={20} />
-        </article>
+        </button>
       </section>
       <section
         className="fixed inset-0 z-0 bg-black bg-center bg-no-repeat bg-contain"
@@ -85,7 +84,6 @@ const SignUp = memo(() => {
               height={84}
               src={businessData?.logoUrl}
               alt="business logo"
-              onError={() => setLogo(HipalLogo.src)}
             />
           </section>
         )}

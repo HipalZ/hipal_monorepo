@@ -17,7 +17,7 @@ function Section({
 	return (
 		<center className="flex flex-col no-scrollbar" {...props}>
 			<div className="px-4 mb-2 prose">
-				<CustomTag className={`!font-bold !text-2xl pb-2 uppercase ${tagClassName}`}>{title}</CustomTag>
+				<CustomTag className={`!font-semibold !text-2xl text-primary pb-2 ${tagClassName}`}>{title}</CustomTag>
 			</div>
 			<center>{children}</center>
 		</center>

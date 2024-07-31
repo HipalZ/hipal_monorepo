@@ -1,39 +1,55 @@
 "use client";
-import { type ButtonHTMLAttributes, memo, type ReactNode, useCallback, useEffect, useState } from "react";
-import { MdOutlineAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
+import {
+  type ButtonHTMLAttributes,
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import {
+  MdAccountBalanceWallet,
+  MdOutlineAccountBalanceWallet,
+  MdOutlineMenuBook,
+} from "react-icons/md";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
 import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { RiCouponFill } from "react-icons/ri";
+import {
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { HiOutlineHome } from "react-icons/hi";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 function BottomButton({
-  children
+  children,
 }: {
   children?: ReactNode;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
-  const pathname = usePathname()
-  const isLoyaltyPage = pathname.includes('loyalty')
   const [inputModal, setInputModal] = useState(false);
+  const searchParams = useSearchParams();
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
-  const { isLogin, setIsPayment, isPayment } = useLogin()
-  const customLink = useParams()?.businessId || ''
+  const accessToken = useUserToken.getState().accessToken;
+  const { setIsPayment } = useLogin();
+  const isPayment = searchParams.get("pay");
+  const customLink = useParams()?.businessId || "";
   const closeModal = useCallback(() => {
     setInputModal(false);
-    setIsPayment(false)
-  }, [inputModal,isPayment]);
+    setIsPayment(false);
+  }, [inputModal, isPayment]);
 
   const openModal = useCallback(() => {
-    console.log('is login',isLogin, tableName)
-    if (!isLogin) {
-      setDirection("explore")
-      setIsPayment(true)
+    if (!accessToken) {
+      setDirection("explore");
+      setIsPayment(true);
       router.push(`/${customLink}/user/signup`);
       return;
     }
@@ -41,70 +57,70 @@ function BottomButton({
   }, [inputModal, tableName]);
 
   useEffect(() => {
-    if (isPayment && isLogin && tableName) {
-      openModal()
+    if (isPayment === "true" && accessToken && tableName && !inputModal) {
+      openModal();
     }
-  }, [])
+  }, []);
 
   return (
     <>
       {children ? (
-        <center className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
+        <center className="fixed bottom-0 z-20 py-3 w-full max-w-[30rem] bg-primary">
           {children}
         </center>
       ) : (
         <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
-          <center className="relative flex items-center justify-between px-6">
-            {isLoyaltyPage ? (
-              <Link href={`/${customLink}/explore`}>
+          <center className="relative flex items-center justify-between text-xs">
+            <Link href={`/${customLink}/explore`}>
+              <center className="px-2 font-light text-base-100">
+                <RiHome4Fill size={20} className="mb-2" />
+                Home
+              </center>
+            </Link>
+            <Link
+              href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
+            >
+              <center className="px-2 font-light text-base-100">
+                <RiCouponFill size={20} className="mb-2" />
+                Rewards
+              </center>
+            </Link>
+            {tableName && (
+              <center
+                onClick={openModal}
+                className="px-2 font-light text-base-100"
+              >
+                <MdAccountBalanceWallet size={20} className="mb-2" />
+                <span className="w-full font-light text-base-100">
+                  {!tableName ? "Scan" : "Pay Bill"}
+                </span>
+              </center>
+            )}
+            {!tableName && (
+              <Link href={`/${customLink}/scan`}>
                 <center className="px-2 font-light text-base-100">
-                  <HiOutlineHome size={22} />
-                  Home
+                  <LuScanLine size={20} className="mb-2" />
+                  {!tableName ? "Scan" : "Pay Bill"}
                 </center>
               </Link>
-            )
-              : (
-                <Link href={`/${customLink}/${isLogin ? 'loyalty' : 'user/signup'}`}>
-                  <center className="px-2 font-light text-base-100">
-                    <RiCouponFill size={22} />
-                    Rewards
-                  </center>
-                </Link>
-              )}
-            {
-              tableName && (
-                <button type="button" onClick={openModal} className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[80%] border rounded-full left-1/2 border-primary bg-base-100">
-                  <MdOutlineAccountBalanceWallet size={36} />
-                </button>
-              )
-            }
-            {
-              !tableName && (
-                <Link href={`/${customLink}/scan`}>
-                  <button type="button" className="absolute top-0 p-3 transform -translate-x-1/2 -translate-y-[75%] border rounded-full left-1/2 border-primary bg-base-100">
-                    <LuScanLine size={36} />
-                  </button>
-                </Link>
-              )
-            }
-            <span className="w-full -mb-5 -ml-4 font-light mr-76 text-base-100">{!tableName ? "Scan" : "Pay Bill"}</span>
+            )}
             <Link href={`/${customLink}/category`}>
               <center className="w-full px-2 font-light text-base-100">
-                <MdOutlineMenuBook size={22} />
+                <MdOutlineMenuBook size={20} className="mb-2" />
                 Menu
               </center>
             </Link>
           </center>
         </section>
       )}
-      {inputModal &&
+      {inputModal && (
         <BottomPopUp show={inputModal} onClose={closeModal}>
           <AddAmountModal />
         </BottomPopUp>
-      }
+      )}
     </>
   );
 }
 
 const MemoBottomButton = memo(BottomButton);
-export default MemoBottomButton
+export default MemoBottomButton;
