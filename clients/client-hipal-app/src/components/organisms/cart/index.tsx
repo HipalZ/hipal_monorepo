@@ -4,14 +4,14 @@ import CartItem from "./cartItem";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import MemoCallTheWaiterComponent from "@/components/molecules/bottomButton/callTheWaiter";
 import useTableData from "@/components/store/useTableData";
-import { useLogin } from "@/components/store/useLogin";
 import { useCartStore } from "@/components/store/useCartStore";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const Cart = () => {
   const { cart } = useCartStore();
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const tableName = useTableData((s) => s.tableName);
-  const { isLogin } = useLogin();
+  const accessToken = useUserToken.getState().accessToken;
   const openCallWaiterModal = useCallback(() => {
     setCallWaiterModal(true);
   }, []);
@@ -21,7 +21,7 @@ const Cart = () => {
   }, []);
 
   return (
-    <div className="h-[80vh] min-h-[80vh] overflow-y-auto pb-[5rem]">
+    <div className="h-[80vh] min-h-[80vh] overflow-y-auto pb-[5rem] text-primary">
       <center className="pt-4 text-2xl text-primary">Bookmark</center>
       &nbsp;
       {cart.length === 0 ? (
@@ -38,11 +38,11 @@ const Cart = () => {
           ))}
         </div>
       )}
-      {isLogin && tableName && (
+      {accessToken && tableName && (
         <button
           onClick={openCallWaiterModal}
           type="button"
-          className="absolute w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4"
+          className="absolute w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
         >
           Call Waiter
         </button>

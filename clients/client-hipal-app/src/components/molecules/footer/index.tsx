@@ -20,21 +20,21 @@ interface IFooter {
 
 const iconMapping: { [key: string]: JSX.Element } = {
   instagram: (
-    <PiInstagramLogoFill className="my-auto text-3xl text-base-content/80" />
+    <PiInstagramLogoFill className="my-auto text-3xl text-base-content" />
   ),
   facebook: (
-    <IoLogoFacebook className="my-auto text-3xl text-base-content/80" />
+    <IoLogoFacebook className="my-auto text-3xl text-base-content" />
   ),
-  twitter: <IoLogoTwitter className="my-auto text-3xl text-base-content/80" />,
-  telegram: <FaTelegram className="my-auto text-3xl text-base-content/80" />,
+  twitter: <IoLogoTwitter className="my-auto text-3xl text-base-content" />,
+  telegram: <FaTelegram className="my-auto text-3xl text-base-content" />,
   linkedin: (
-    <IoLogoLinkedin className="my-auto text-3xl text-base-content/80" />
+    <IoLogoLinkedin className="my-auto text-3xl text-base-content" />
   ),
-  youtube: <IoLogoYoutube className="my-auto text-3xl text-base-content/80" />,
+  youtube: <IoLogoYoutube className="my-auto text-3xl text-base-content" />,
 };
 
 const Footer = (props: IFooter) => {
-  const { themes, socialMediaLinks, footerDescription } = props;
+  const { themes, socialMediaLinks } = props;
   const customLink = useParams()?.businessId as string;
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const Footer = (props: IFooter) => {
             ))
           : null}
       </section>
-      <section className="flex items-center justify-center h-12 mt-8 bg-base-200">
+      <section className="flex items-center justify-center h-12 mt-8 text-base-content underline-offset-2">
         <Link className="text-sm" href={`/${customLink}/terms`}>
           View Terms and Conditions
         </Link>

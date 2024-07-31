@@ -25,7 +25,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
 
   return (
     <>
-      <center className="flex items-center justify-center my-2">
+      <center className="flex items-center justify-center my-2 text-primary">
         <button
           type="button"
           onClick={openBillModal}
@@ -38,7 +38,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
       <h1 className="mx-4 text-xl font-semibold">Rewardz</h1>
       <article
         onClick={openModal}
-        className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200"
+        className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary"
       >
         <div className="flex items-center">
           <IoMdCard size={30} className="-rotate-45 " />
@@ -53,7 +53,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
         </div>
         <div className="flex items-center space-x-4">Apply</div>
       </article>
-      <article className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200">
+      <article className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary">
         <div className="flex items-center">
           <RiCouponFill size={30} className="-rotate-45 " />
           &nbsp; &nbsp;

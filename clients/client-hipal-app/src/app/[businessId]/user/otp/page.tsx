@@ -19,6 +19,7 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 function OtpPage() {

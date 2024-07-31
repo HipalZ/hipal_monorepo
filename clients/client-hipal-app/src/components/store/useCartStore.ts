@@ -52,6 +52,7 @@ interface ICartStore {
   addToCart: (item: ICartItem) => void;
   updateCartItem: (item: ICartItem) => void;
   removeFromCart: (id: string) => void;
+  setCartEmpty: () => void;
 
   dishes: DishType;
 }
@@ -105,6 +106,9 @@ export const useCartStore = create(
       },
 
         cart: [],
+        setCartEmpty: () => {
+          set({ cart: [] });
+        },
         addToCart: (item) => {
           set((state) => {
             return {

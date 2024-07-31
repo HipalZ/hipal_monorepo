@@ -508,7 +508,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         <ErrorPayment />
       ) : (
         <div>
-          <section className="z-20 w-full bg-base-100">
+          <section className="z-20 w-full bg-base-100 text-primary">
             <header className="bg-white h-[4.25rem] flex items-center space-x-8">
               {businessDetails?.logoUrl ? (
                 <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">

@@ -47,7 +47,7 @@ function MainTypes(props: IMainTypes) {
 
   useEffect(() => {
     if (!isActiveParentCategory) {
-      setActiveParentCategory(mainTypes[0]._id?.toString() ?? "");
+      setActiveParentCategory(mainTypes?.[0]?._id?.toString() ?? "");
     }
   }, [isActiveParentCategory, mainTypes, setActiveParentCategory]);
 

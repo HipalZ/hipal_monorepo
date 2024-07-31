@@ -13,7 +13,7 @@ function DishPopup({ dishData }:{dishData: IDish}) {
 	}
 
 	return (
-		<div className="relative max-h-[70vh] overflow-y-auto" onClick={(e) => handleInsideClick(e)}>
+		<div className="relative max-h-[70vh] overflow-y-auto text-primary" onClick={(e) => handleInsideClick(e)}>
 			{!isEmpty(dishData?.images) ? (
 				<div className="rounded-full">
 					<WallpaperCarousel wallpapers={dishData?.images} isAvailable={isAvailable} />
@@ -23,7 +23,10 @@ function DishPopup({ dishData }:{dishData: IDish}) {
 					<NotAvailable className="w-full h-32 overflow-hidden rounded-xl" />
 				</div>
 			) : (
-				<PlaceholderImg className='aspect-square' />
+				<div className="pb-4">
+					
+					<PlaceholderImg className='w-full h-[10rem]' />
+				</div>
 			)}
 
 			<FoodDescription dishData={dishData} />

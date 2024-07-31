@@ -73,8 +73,8 @@ const AddAmountModal = memo(() => {
     }
   }, [businessId, tableName]);
   return (
-    <section className="h-[80vh] overflow-y-auto overflow-x-hidden z-100">
-      <header className="bg-white h-[4.25rem] flex items-center">
+    <section className="h-[80vh] overflow-y-auto overflow-x-hidden">
+      <header className="bg-white h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
             <Image
@@ -124,10 +124,10 @@ const AddAmountModal = memo(() => {
               type="button"
               disabled={loading}
               onClick={callTheWaiter}
-              className="w-full px-8 py-3 text-sm border rounded-full border-primary"
+              className="w-full px-8 py-3 text-sm border rounded-full border-primary !text-primary"
             >
               {loading ? (
-                <span className="loader_spinner !border-t-primary"></span>
+                <span className="loader_spinner !border-t-primary "></span>
               ) : (
                 "Call Captain"
               )}

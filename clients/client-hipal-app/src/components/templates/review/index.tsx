@@ -218,7 +218,7 @@ function Review({ data }: { data: IBusinessData }) {
           &nbsp;
         </div>
         {mode === "offline" ? (
-          <center className="text-[0.825rem] bg-base-200 p-2 rounded-full my-2">
+          <center className="text-[0.825rem] bg-base-200 p-2 rounded-full my-2 text-primary">
             ⚠ You <span className="text-base font-bold"> choose offline</span> ,
             your pay will be confirmed by captain
           </center>
@@ -309,7 +309,7 @@ function Review({ data }: { data: IBusinessData }) {
           </div>
         </center>
         <Link href={`/${customLink}/loyalty?claim=${roundedOffClaim}`}>
-          <center className="pb-1 mb-8 underline">Skip</center>
+          <center className="pb-1 mb-8 underline text-primary">Skip</center>
         </Link>
         {rating && (
           <section className="border border-1 rounded-lg border-[#FFC814] bg-white">
@@ -346,18 +346,18 @@ function Review({ data }: { data: IBusinessData }) {
             <button
               type="button"
               onClick={() => setOpenComment(!openComment)}
-              className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full"
+              className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full text-primary"
             >
               <MdOutlineMessage size={20} />
-              <span>Comment</span>
+              <span className="text-primary">Comment</span>
             </button>
             <button
               type="button"
               onClick={() => setShowSuggestions(!showSuggestions)}
-              className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full"
+              className="flex items-center space-x-2 bg-base-200 px-3 py-1.5 rounded-full text-primary"
             >
               <MdOutlinePerson size={20} />
-              <span>Tag Staff</span>
+              <span className="text-primary">Tag Staff</span>
             </button>
           </article>
         )}
@@ -412,7 +412,7 @@ function Review({ data }: { data: IBusinessData }) {
                       onKeyDown={handleKeyDown}
                       onClick={() => handleSelectStaff(staff?.name)}
                       className={cn(
-                        "h-16 p-4 text-xl",
+                        "h-16 p-4 text-xl text-primary",
                         selectedStaff.includes(staff?.name) &&
                           "bg-primary text-white",
                       )}

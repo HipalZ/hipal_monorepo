@@ -7,7 +7,8 @@ interface ThemeData {
 export const updateTheme = (data: ThemeData | undefined): void => {
     if (typeof document === "undefined" || !data) return;
 
-    Object.keys(data).forEach((key) => {
-        document.documentElement.style.setProperty(`${key}`, `hsl(${data[key]})`)
-    })
+    for (const key of Object.keys(data)) {
+        console.log(key, data[key]);
+        document.documentElement.style.setProperty(`${key}`, `hsl(${data[key]})`);
+    }
 }

@@ -55,7 +55,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <>
-      <ul className="h-full overflow-auto">
+      <ul className="h-full overflow-auto text-primary">
         {messages.map((message) => (
           <li
             className="p-2 m-4 transition-colors duration-200 ease-in-out transform rounded-md cursor-pointer hover:bg-primary hover:text-base-100 hover:scale-105"
@@ -73,7 +73,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         className="w-[92%] mb-4 px-8 py-3 mx-4 text-sm border rounded-full bg-primary text-base-100"
       >
         {loading ? (
-          <span className="loader_spinner !border-t-base-100 " />
+          <span className="loader_spinner !border-t-base-100 text-primary" />
         ) : (
           "Call Captain"
         )}

@@ -12,7 +12,7 @@ interface ICategoryProps {
 function CategoryHeader(props: ICategoryProps) {
   const { parentCategory, childCategory } = props;
 
-  const {isSearchActive,setIsSearchActive} = useSearch();
+  const {isSearchActive} = useSearch();
 
   return (
     <>

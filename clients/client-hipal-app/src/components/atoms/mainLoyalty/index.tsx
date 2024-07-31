@@ -17,6 +17,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails"
 import PlaceholderImg from "../placeholder"
 import type { PatternKeys } from "@/components/utils/helpers"
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData"
+import { useUserToken } from "@hi/common/src/useUserToken"
 
 interface ILoyaltyCard {
 	logo?: string
@@ -30,14 +31,15 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 	const [image, setImage] = useState<any>("")
 	const [cardPattern, setCardPattern] = useState("")
 	const userName = useLogin((s) => s.userDetails.name)
-	const isLogin = useLogin((s) => s.isLogin)
+	const accessToken = useUserToken.getState().accessToken;
+	const refreshToken = useUserToken.getState().refreshToken;
 	const customLink = useParams()?.businessId as string
 	const setDirection = useLogin((s) => s.setDirection)
 	const router = useRouter()
 
 	const businessDetails = useBusinessDetails((s) => s.businessDetails)
 	const goToLoyalty = (str: string) => {
-		if (!isLogin) {
+		if (!accessToken) {
 			setDirection(str)
 			router.push(routePaths[PAGE_TYPES.SIGN_UP](customLink))
 		} else {
@@ -79,7 +81,7 @@ const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILo
 			<div className="py-4 text-xl font-semibold text-center text-primary syne-font">
 				<div>Treat yourself to a</div>
 
-				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails.businessName} align="center" />
+				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails.name} align="center" />
 
 				<div>with every bill you settle!!</div>
 			</div>

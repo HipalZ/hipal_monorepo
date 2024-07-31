@@ -12,7 +12,7 @@ function DishesTypes({
 }) {
 
 	return (
-		<section className="sticky z-50 -top-1">
+		<section className="sticky z-50 -top-1 text-primary">
 			<MainTypes parentCategory={parentCategory}/>
 			<SubTypes childCategory={childCategory} />
 		</section>

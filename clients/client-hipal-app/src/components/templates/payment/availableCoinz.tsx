@@ -37,7 +37,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     };
     return (
         <BottomPopUp show={isModalOpen} onClose={closeModal}>
-            <div className='h-[15rem] p-6'>
+            <div className='h-[15rem] p-6 text-primary'>
                 <h1 className='text-xl font-semibold'>
                     Available Coins : {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
                 </h1>
@@ -50,7 +50,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
                     placeholder="Enter the coinz to apply"
                     min={0}
                     max={userCoinz}
-                    className='border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 '
+                    className='border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 text-black'
                 />
             </div>
             <BottomButton>
