@@ -271,6 +271,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your menu",
     navigateTo: "menu",
   },
+  {
+    image: Love,
+    text: "Hi Pplz",
+    description: "Manage your Peoplez",
+    navigateTo: "pplz",
+  },
 ];
 export interface AccessControlMapping {
   [key: string]: string;

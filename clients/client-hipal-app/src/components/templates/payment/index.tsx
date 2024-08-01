@@ -22,6 +22,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
 import { apiRpc } from "@hi/common";
+import PaymentHeader from "./paymentHeader";
 
 const BottomButton = dynamic(
   () => import("@/components/molecules/bottomButton"),
@@ -114,8 +115,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     setCustomTip("");
   }, []);
 
-  console.log("merchantDetails", merchantDetails);
-
   const getMerchantKeySecret = async () => {
     const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
       param: {
@@ -162,6 +161,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
   const creatingRazorPayOptions = async (orderId: string) => {
     if (!orderId) {
+      setIsLoading(false); // Ensure isLoading is turned off if there's no orderId
       return;
     }
     const script = document.createElement("script");
@@ -181,6 +181,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         handler: (response) => {
           handlePaymentSuccess(response);
           window.onpopstate = null;
+          setIsLoading(false); // Set isLoading to false after successful payment
         },
         prefill: {
           name: userDetails.name,
@@ -197,6 +198,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             handlePaymentDismiss();
             window.onbeforeunload = null; // Remove the event listener on dismiss
             window.onpopstate = null;
+            setIsLoading(false); // Set isLoading to false after dismiss
           },
         },
         notes: {
@@ -223,13 +225,11 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         event.returnValue = ""; // Custom message is no longer supported in most browsers
         // Redirect to a specific URL
         window.location.href = `/${customLink}/payment?amount=${billValue}`; // Change to your desired URL
-        toast.error("Add the coinz to get the rewards");
       };
       window.onpopstate = (event) => {
         event.preventDefault();
         // Redirect to a specific URL
         window.location.href = `/${customLink}/payment?amount=${billValue}`; // Change to your desired URL
-        toast.error("Add the coinz to get the rewards");
       };
 
       rzp1.open();
@@ -237,13 +237,20 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
       // Remove the event listener when the user starts the payment process
       document.addEventListener("rzp_payment_start", () => {
         window.onbeforeunload = null;
+        setIsLoading(false); // Set isLoading to false once payment starts
       });
 
       rzp1.on("payment.failed", (response) => {
         handlePaymentFailure(response);
         window.onbeforeunload = null;
         window.onpopstate = null; // Remove the event listener on payment failure
+        setIsLoading(false); // Set isLoading to false on payment failure
       });
+    };
+
+    script.onerror = () => {
+      toast.error("Failed to load Razorpay. Please try again later.");
+      setIsLoading(false); // Set isLoading to false if script loading fails
     };
   };
 
@@ -390,13 +397,12 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     try {
       const orderId = await createRazorPayOrder(total);
-      await creatingRazorPayOptions(orderId);
+      await creatingRazorPayOptions(orderId); // Keep isLoading true until Razorpay options are opened
     } catch (error) {
       toast.error("Something went wrong! Please try again later.");
       setRazorPayPaymentId("");
       setRazorPaySignature("");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set isLoading to false only on error
     }
   };
 
@@ -508,40 +514,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
         <ErrorPayment />
       ) : (
         <div>
-          <section className="z-20 w-full bg-base-100 text-primary">
-            <header className="bg-white h-[4.25rem] flex items-center space-x-8">
-              {businessDetails?.logoUrl ? (
-                <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
-                  <button
-                    onClick={handleBack}
-                    type="button"
-                    className="h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce"
-                  >
-                    <MdOutlineChevronLeft className="text-3xl text-white " />
-                  </button>
-                  <Image
-                    src={businessDetails?.logoUrl}
-                    height={80}
-                    width={80}
-                    quality={95}
-                    objectFit="cover"
-                    alt="logo-businessDetails"
-                    className="object-center border rounded-full shadow-sm aspect-square"
-                    placeholder="blur"
-                    blurDataURL={getRandomBlurImg(100, 100)}
-                  />
-                </figure>
-              ) : (
-                <PlaceholderImg />
-              )}
-              <div>
-                Paying: <br />
-                <span className="font-bold text-primary">
-                  {businessDetails?.branchName || businessDetails?.name}
-                </span>
-              </div>
-            </header>
-          </section>
+          <PaymentHeader handleBack={handleBack} />
           {selectedMode === "INVOICE" ? (
             <>
               <PaymentCard
@@ -581,7 +554,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
             </>
           ) : (
             <PaymentComponent
-              data={data}
               tips={tips}
               billValue={billValue}
               handleCreateOrder={handleCreateOrder}
