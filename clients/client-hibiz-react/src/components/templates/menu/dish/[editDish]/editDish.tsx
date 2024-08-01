@@ -22,6 +22,8 @@ import { useDishesStore } from "@/components/store/useDishesStore";
 import toast from "react-hot-toast";
 import useErrorToasts from "@/hooks/useError";
 import AlertClosePopup from "@/components/common/alertClosePopup";
+import BottomButton from "@/components/atom/bottomButton";
+import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoEditDish = () => {
   const { resetDishesStore } = useDishesStore((s) => ({
@@ -40,6 +42,8 @@ const MemoEditDish = () => {
     showCropper,
     resetStore,
     editDish,
+    isLoading,
+    setIsLoading,
     resetDishStore,
   } = useMenuPageStore((s) => ({
     setEditOpenMenu: s.setEditOpenMenu,
@@ -55,6 +59,8 @@ const MemoEditDish = () => {
     resetStore: s.resetStore,
     editDish: s.editDish,
     resetDishStore: s.resetDishStore,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
   }));
 
   const errorToasts = useErrorToasts();
@@ -174,15 +180,23 @@ const MemoEditDish = () => {
             width={400}
             height={400}
           />
-          <center
-            role="button"
-            tabIndex={0}
-            onClick={handleSaveCropper}
-            onKeyUp={handleSaveCropper}
-            className="px-4 py-2 mx-4 mt-4 text-white bg-black rounded-full"
-          >
-            Save
-          </center>
+          <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
+            <button
+              type="button"
+              onClick={handleSaveCropper}
+              className="w-full py-3 text-white rounded-full bg-[#7D68FE]"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <SectionLoader />
+                  Loading...
+                </div>
+              ) : (
+                "Save"
+              )}
+            </button>
+          </footer>
         </section>
       )}
     </>
