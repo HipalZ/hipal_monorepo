@@ -86,12 +86,49 @@ export interface IUniquelyDishes {
   isDeleted: boolean;
   __v: number;
 }
+
+export interface IStyles {
+  "--p": string;
+  "--pf": string;
+  "--sf": string;
+  "--af": string;
+  "--nf": string;
+  "--b2": string;
+  "--b3": string;
+  "--bc": string;
+  "--pc": string;
+  "--sc": string;
+  "--ac": string;
+  "--nc": string;
+  "--inc": string;
+  "--suc": string;
+  "--wac": string;
+  "--erc": string;
+  "--rounded-box": string;
+  "--rounded-btn": string;
+  "--rounded-badge": string;
+  "--animation-btn": string;
+  "--animation-input": string;
+  "--btn-text-case": string;
+  "--btn-focus-scale": string;
+  "--border-btn": string;
+  "--tab-border": string;
+  "--tab-radius": string;
+  "--a": string;
+  "--s": string;
+  "--b1": string;
+  explore: {
+    openFrom: string;
+    openTill: string;
+  };
+}
+
 export interface IBusinessData {
-  outletInfo: { location: any; phone: any; };
+  outletInfo: { location: any; phone: any };
   businessId: string;
   banners: IBannerPayload[];
   _id: string;
-  settings?: ISettings;
+  settings?: IStyles;
   business?: BusinessDetails;
   dishesData?: IDish[];
   dishData?: IDish;

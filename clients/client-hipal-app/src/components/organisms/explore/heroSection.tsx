@@ -58,7 +58,6 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   useEffect(() => {
     if (!accessToken) {
-      console.log("accessToken is null");
       setAccessToken("");
     }
     if (businessDetails?.businessId !== data?.business?.businessId) {

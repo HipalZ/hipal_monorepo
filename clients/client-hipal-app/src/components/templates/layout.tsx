@@ -1,8 +1,7 @@
-import { useEffect } from 'react';
-import { AppProps } from 'next/app';
-import { updateTheme } from '@/components/utils/themes';
-import '../styles/global.css'; // Ensure your global CSS is imported
-
+import { useEffect } from "react";
+import type { AppProps } from "next/app";
+import { updateTheme } from "@/components/utils/themes";
+import "../styles/global.css"; // Ensure your global CSS is imported
 
 interface LayoutProps extends AppProps {
   Component: any;
@@ -10,11 +9,12 @@ interface LayoutProps extends AppProps {
 }
 
 const Layout = ({ Component, pageProps }: LayoutProps) => {
-    console.log("hello world");
+  console.log("hello world", pageProps?.data);
 
   useEffect(() => {
-    if (pageProps?.data?.settings?.themes) {
-      updateTheme(pageProps.data.settings.themes);
+    if (pageProps?.data?.settings) {
+      console.log("sakasl", pageProps.data.settings);
+      updateTheme(pageProps.data.setting);
     }
   }, [pageProps]);
 

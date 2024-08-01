@@ -237,7 +237,7 @@ export const cardButtons: ICardButton[] = [
 export const liteVersionCardButtons: ILiteVersionCardButton[] = [
   {
     image: Love,
-    text: "Themes",
+    text: "Themes ",
     description: "Make your app look good",
     navigateTo: "businessControl",
   },
@@ -271,6 +271,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your menu",
     navigateTo: "menu",
   },
+  {
+    image: Love,
+    text: "Hi People",
+    description: "Manage your PplZ Data",
+    navigateTo: "people",
+  }
 ];
 export interface AccessControlMapping {
   [key: string]: string;

@@ -171,7 +171,7 @@ const Business = () => {
                         item.navigateTo === "businessControl",
                     })}
                   >
-                    {businessData?.themeApplied
+                    {!businessData?.themeApplied
                       ? "Activate after Themes"
                       : item.description}
                   </h4>

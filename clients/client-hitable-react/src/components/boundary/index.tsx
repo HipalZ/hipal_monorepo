@@ -16,7 +16,7 @@ const Boundary = ({ children }: { children: ReactNode }) => {
     if (renderRef.current) return;
 
     if (!validateToken()) {
-      toast.error("Session expired or Invalid key, login again");
+//       toast.error("Session expired, please login again");
       navigate("/");
     }
 
