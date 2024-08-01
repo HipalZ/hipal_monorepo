@@ -57,7 +57,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }, [data]);
 
   useEffect(() => {
-    console.log("resetting", businessDetails?.businessId, data?.business?.businessId);
+    if (!accessToken) {
+      console.log("accessToken is null");
+      setAccessToken("");
+    }
     if (businessDetails?.businessId !== data?.business?.businessId) {
       setAccessToken("");
       setCartEmpty();
@@ -89,7 +92,9 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           </figure>
           <div>
             {name && (
-              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">{name}</h4>
+              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">
+                {name}
+              </h4>
             )}
             {address && (
               <>
@@ -114,7 +119,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           {preDefinedHeroButtons.map((button) => {
             return (
               <button
-              type="button"
+                type="button"
                 key={button?._id}
                 onClick={() => {
                   if (button?.label.toLowerCase() === "direction") {
