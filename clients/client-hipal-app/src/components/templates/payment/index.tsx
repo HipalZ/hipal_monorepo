@@ -399,10 +399,14 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
       const orderId = await createRazorPayOrder(total);
       await creatingRazorPayOptions(orderId); // Keep isLoading true until Razorpay options are opened
     } catch (error) {
-      toast.error("Something went wrong! Please try again later.");
+      console.log("error", error);
+      toast.error("Session Expired please login to continue");
       setRazorPayPaymentId("");
       setRazorPaySignature("");
       setIsLoading(false); // Set isLoading to false only on error
+      router.push(`/${customLink}/user/signup`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
