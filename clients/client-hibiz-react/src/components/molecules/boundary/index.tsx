@@ -4,10 +4,11 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { type ReactNode, Suspense, useEffect, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Boundary = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const validateToken = useUserToken((s) => s.validateToken);
   const renderRef = useRef(false);
 
@@ -15,12 +16,15 @@ const Boundary = ({ children }: { children: ReactNode }) => {
     if (renderRef.current) return;
 
     if (!validateToken()) {
-      toast.error("Session expired, please login again");
+      const from = location?.pathname || "";
+      if (from.includes("/app/")) {
+        toast.error("Session expired, please login again");
+      }
       navigate("/login");
     }
 
     renderRef.current = true;
-  }, [validateToken, navigate]);
+  }, [validateToken, navigate, location]);
 
   return (
     <ErrorBoundary fallback={<LoadingSpinner />}>

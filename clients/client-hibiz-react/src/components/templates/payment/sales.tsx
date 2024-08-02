@@ -1,7 +1,7 @@
 import Online from "@/assets/online.png";
 import PopUp from "@/components/atom/popUp";
 import useTimings from "@/components/store/useTimings";
-import { cn } from "@/components/utils/helper";
+import { cn, hideMiddleNumbers } from "@/components/utils/helper";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useMemo, useState } from "react";
 import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
@@ -57,13 +57,6 @@ const MemoPaymentSales = () => {
   }, []);
 
   // number privacy
-  const hideMiddleNumbers = (phone: string) => {
-    if (phone?.length <= 4) return phone;
-    const firstPart = phone?.slice(0, 3);
-    const lastPart = phone?.slice(-3);
-    return `${firstPart}****${lastPart}`;
-  };
-
   const handleBillsData = async () => {
     try {
       const response = await apiRpc.payments[":id"].bills.$get({
@@ -154,8 +147,9 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
-                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${
+                          focus ? "bg-gray-100 text-gray-900" : "text-black"
+                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("all")}
                       >
                         All
@@ -166,8 +160,9 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
-                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${
+                          focus ? "bg-gray-100 text-gray-900" : "text-black"
+                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("offline")}
                       >
                         Offline
@@ -178,8 +173,9 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
-                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${
+                          focus ? "bg-gray-100 text-gray-900" : "text-black"
+                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("online")}
                       >
                         Online
