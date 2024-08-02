@@ -11,7 +11,7 @@ export const fetchCache = "force-no-store";
 
 const MemoHipalTerms = () => {
   return (
-    <div className="container">
+    <main className="p-6 text-white bg-black">
       <Link href={"/"} className="relative">
         <HiChevronLeft className="mt-6 ml-2 text-3xl" />
       </Link>
@@ -451,7 +451,7 @@ const MemoHipalTerms = () => {
         </ol>
       </p>
       &nbsp; &nbsp;
-    </div>
+    </main>
   );
 };
 

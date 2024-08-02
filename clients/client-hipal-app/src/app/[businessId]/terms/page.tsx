@@ -18,7 +18,7 @@ const Terms = () => {
     router.back();
   };
   return (
-    <main className="container">
+    <main className="p-6 text-white bg-black">
       <div className="relative">
         <HiChevronLeft className="mt-6 ml-2 text-3xl" onClick={onBack} />
       </div>
