@@ -18,7 +18,7 @@ const Terms = () => {
     router.back();
   };
   return (
-    <div className="container">
+    <main className="container">
       <div className="relative">
         <HiChevronLeft className="mt-6 ml-2 text-3xl" onClick={onBack} />
       </div>
@@ -459,7 +459,7 @@ const Terms = () => {
         </ol>
       </p>
       &nbsp; &nbsp;
-    </div>
+    </main>
   );
 };
 

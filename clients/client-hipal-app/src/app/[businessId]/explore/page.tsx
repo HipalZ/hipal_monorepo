@@ -59,7 +59,7 @@ export default async function Explore({
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
 
   return (
-    <div className="relative flex flex-col w-full pb-16 overflow-hidden">
+    <main className="relative flex flex-col w-full pb-16 overflow-hidden">
       <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
         <MainBackground explore={data?.business} />
       </Suspense>
@@ -138,6 +138,6 @@ export default async function Explore({
       <Suspense fallback={<SkeletonLoader height={50} count={1} />}>
         <BottomButton />
       </Suspense>
-    </div>
+    </main>
   );
 }

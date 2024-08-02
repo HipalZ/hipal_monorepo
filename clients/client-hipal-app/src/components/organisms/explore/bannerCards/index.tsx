@@ -7,6 +7,7 @@ import {
   type IBannerPayload,
 } from "@/components/types/businessData";
 import Section from "@/components/molecules/section";
+import Image from "next/image";
 
 interface IBanner {
   banners: IBannerPayload[];
@@ -98,7 +99,7 @@ const MemoBannerCards = (props: IBanner) => {
                   className="flex flex-col justify-between flex-1 bg-white border aspect-square rounded-xl"
                 >
                   <figure className="h-1/2">
-                    <img
+                    <Image
                       src={banner?.bannerImage || layout3}
                       alt="banner"
                       className="object-cover w-full h-full"

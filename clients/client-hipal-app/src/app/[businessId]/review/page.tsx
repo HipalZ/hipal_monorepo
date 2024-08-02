@@ -13,5 +13,9 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
-  return <Review data={data} />;
+  return (
+    <main>
+      <Review data={data} />
+    </main>
+  );
 }

@@ -5,6 +5,7 @@ import type { IUniquelyDishes } from "@/components/types/businessData";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
+import Image from "next/image";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -39,10 +40,12 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
           className={baseGridOrder[index % baseGridOrder?.length]}
           onClick={() => handleRecommendedDishClick(item)}
         >
-          <img
+          <Image
             className="object-cover w-full h-full rounded-xl"
             src={item?.images?.[0]}
             alt={item.name}
+            width={400}
+            height={400}
           />
         </button>
       ))}

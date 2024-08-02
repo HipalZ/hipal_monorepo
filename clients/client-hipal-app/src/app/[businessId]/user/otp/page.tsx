@@ -171,7 +171,7 @@ function OtpPage() {
   }, [isModalOpen]);
 
   return (
-    <section className="relative bg-black">
+    <main className="relative bg-black">
       <section className="flex items-center justify-between">
         <article
           onClick={goBack}
@@ -369,7 +369,7 @@ function OtpPage() {
           </section>
         </section>
       )}
-    </section>
+    </main>
   );
 }
 
