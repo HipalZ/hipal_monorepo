@@ -2,8 +2,12 @@ import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
 import Hi from "@/assets/svg/hi.svg";
 import { cn } from "@hi/common";
-import Sidebar from "@/components/templates/menu/sideNavbaar";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
+import SidebarPeople from "@/components/templates/menu/sideNavbaar/peopleSideNavBar";
+import Summary from "@/components/templates/people/summary";
+import Client from "@/components/templates/people/client";
+
+
 
 const HiPeople = () => {
   const { selectedPage, setSelectedPage } = useHiPeopleStore();
@@ -22,6 +26,8 @@ const HiPeople = () => {
     },
     { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
   ];
+
+  
   return (
     <main>
       <div className="sticky top-0 z-50 w-full">
@@ -52,7 +58,19 @@ const HiPeople = () => {
           ))}
         </section>
       </div>
-      <Sidebar items={sidebarItems} />
+      <SidebarPeople items={sidebarItems} />
+      <br />
+      <br />
+      {
+        selectedPage === "SUMMARY" && (
+            <Summary />
+        )
+      }
+      {
+        selectedPage === "CLIENTS" && (
+            <Client />
+        )
+      }
     </main>
   );
 };
