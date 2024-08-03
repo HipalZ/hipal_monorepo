@@ -25,3 +25,4 @@ export * from "./user";
 export * from "./userAnalytics";
 export * from "./userReward";
 export * from "./userRewardHistory";
+export * from "./userTag";

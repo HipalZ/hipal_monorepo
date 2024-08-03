@@ -32,6 +32,22 @@ const tagSchema = new mongoose.Schema(
       required: false,
     },
 
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+
+    displayForCaptains: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+
+    reminderDate: {
+      type: Number,
+      required: false,
+    },
+
     isDeleted: {
       type: Boolean,
       required: false,

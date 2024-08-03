@@ -108,8 +108,7 @@ export const PaymentSchema = z.object({
     })
     .optional(),
 
-  tagId: ObjectIdSchema.optional(),
-  tagTypeId: ObjectIdSchema.optional(),
+  tagIds: z.array(ObjectIdSchema).optional(),
 
   reviewId: ObjectIdSchema.optional(),
 

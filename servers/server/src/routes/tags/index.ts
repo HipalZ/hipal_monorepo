@@ -199,17 +199,20 @@ const tagRouter = new Hono()
   )
   .put(
     "/:tagId",
-    zValidator("json", TagSchema),
+    zValidator("json", TagSchema.partial()),
 
     async (c) => {
       const { tagId } = c.req.param();
       const requestData = await c.req.json();
-      await TagModel.updateOne({ _id: tagId }, requestData);
+      const updateTag = await TagModel.findOneAndUpdate(
+        { _id: tagId },
+        requestData,
+      );
       return c.json(
         {
           message: "tag updated successfully",
           err: false,
-          data: {},
+          data: updateTag,
         },
         200,
       );

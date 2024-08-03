@@ -98,16 +98,12 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       default: 0,
       required: false,
     },
-    tagId: {
-      type: ObjectId,
+    tagIds: {
+      type: [ObjectId],
       required: false,
       ref: "Tag",
     },
-    tagTypeId: {
-      type: ObjectId,
-      required: false,
-      ref: "TagType",
-    },
+
     reviewId: {
       type: ObjectId,
       required: false,

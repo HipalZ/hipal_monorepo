@@ -14,6 +14,7 @@ import {
   UserAnalytic,
   UserReward,
   UserRewardHistory,
+  UserTags,
 } from "@hi/db-models";
 import type { PaymentType } from "@hi/db-models/src/validators";
 import {
@@ -1881,7 +1882,7 @@ const paymentsRouter = new Hono()
           })
           .populate({
             path: "reviewId",
-            select: "reviewRating",
+            select: "reviewRating foodTaste ambience hygiene service",
           });
 
         return c.json({
@@ -1918,7 +1919,7 @@ const paymentsRouter = new Hono()
           })
           .populate({
             path: "reviewId",
-            select: "reviewRating",
+            select: "reviewRating foodTaste ambience hygiene service",
           });
 
         return c.json({
@@ -2049,30 +2050,44 @@ const paymentsRouter = new Hono()
         paymentId: z.string({
           message: "paymentId is required",
         }),
+      }),
+    ),
 
-        tagId: z
-          .string({
-            message: "tagId is required",
-          })
-          .optional(),
-        comment: z
-          .string({
-            message: "comment is required",
-          })
-          .optional(),
+    zValidator(
+      "json",
+      z.object({
+        tagIds: z.array(z.string()).optional(),
+        comment: z.string().optional(),
+        userId: z.string({
+          message: "userId is required",
+        }),
+        businessId: z.string({
+          message: "businessId is required",
+        }),
       }),
     ),
 
     async (c) => {
       const { paymentId } = c.req.param();
       const requestData = await c.req.json();
-      const { tagId, comment } = requestData;
+      const { tagIds, comment, userId, businessId } = requestData;
 
       const payment = await Payment.findByIdAndUpdate(
         paymentId,
-        { tagId, comment },
+        { tagIds, comment },
         { new: true },
       );
+
+      for (let i = 0; i < tagIds.length; i++) {
+        const tagId = tagIds[i];
+
+        const createUserTag = await UserTags.create({
+          userId,
+          tagId,
+          businessId,
+          date: Date.now(),
+        });
+      }
 
       if (!payment) {
         return c.json({
@@ -2125,7 +2140,7 @@ const paymentsRouter = new Hono()
       }
 
       if (!from && !to) {
-        const existingTagAndNotes = await Payment.find({
+        const existingTagAndNotes = await UserTags.find({
           userId,
           businessId,
           date: {
@@ -2138,7 +2153,7 @@ const paymentsRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "tagId",
-            select: "name tagType",
+            select: "name tagType displayForCaptains",
           });
 
         const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
@@ -2161,12 +2176,12 @@ const paymentsRouter = new Hono()
         return c.json({
           err: false,
           data: Object.values(groupByTag),
-          message: "existing payment",
+          message: "existing tags",
         });
       }
 
       if (from && to) {
-        const existingTagAndNotes = await Payment.find({
+        const existingTagAndNotes = await UserTags.find({
           userId,
           businessId,
           date: {
@@ -2179,7 +2194,7 @@ const paymentsRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "tagId",
-            select: "name tagType",
+            select: "name tagType displayForCaptains",
           });
 
         const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
@@ -2202,7 +2217,7 @@ const paymentsRouter = new Hono()
         return c.json({
           err: false,
           data: Object.values(groupByTag),
-          message: "existing payment",
+          message: "existing tags",
         });
       }
 
