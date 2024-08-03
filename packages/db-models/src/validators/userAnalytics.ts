@@ -13,7 +13,32 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const UserAnalyticsAttrs = z.object({
   userId: ObjectIdSchema,
   businessId: ObjectIdSchema,
-  visit: z.number({
+  visitCount: z.number({
     message: "visit is required",
   }),
+  totalSpend: z.number({
+    message: "totalSpend is required",
+  }),
+  avgSpend: z.number({
+    message: "avgSpend is required",
+  }),
+  coinzIssued: z
+    .number({
+      message: "coinzIssued is required",
+    })
+    .optional(),
+
+  coinzUsed: z
+    .number({
+      message: "coinzIssued is required",
+    })
+    .optional(),
+
+  dateOfJoining: z
+    .number({
+      message: "dateOfJoining is required",
+    })
+    .optional(),
 });
+
+export type UserAnalytics = z.infer<typeof UserAnalyticsAttrs>;

@@ -10,6 +10,8 @@ import {
   PaymentAlert,
   Reviews,
   Subscriber,
+  User,
+  UserAnalytic,
   UserReward,
   UserRewardHistory,
 } from "@hi/db-models";
@@ -42,6 +44,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
+
 //dates
 const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
@@ -199,6 +202,7 @@ const addCoins = async (
     );
 
     if (coinsCalculated.finalReward > 0) {
+      console.log("useeeeeid", userId);
       await addRewardHistory(
         "PLUS",
         tableName,
@@ -441,6 +445,11 @@ const paymentsRouter = new Hono()
       const addReview = await Reviews.create(requestData);
 
       if (!addReview) return respond(c, "Review not created", true, 400, {});
+
+      await Payment.findOneAndUpdate(
+        { razorpayOrderId: order_id },
+        { reviewId: addReview._id },
+      );
 
       return respond(c, "Review created successfully", false, 200, addReview);
     },
@@ -753,6 +762,7 @@ const paymentsRouter = new Hono()
             ],
             { session },
           );
+
           if (payload.payment.entity.notes.loyaltyId) {
             if (claimCoins > 0) {
               await removeCoins(
@@ -771,6 +781,8 @@ const paymentsRouter = new Hono()
               claimCoins,
             );
 
+            console.log("userId", getOrder.userId.toString());
+
             const cashBackCoins = await addCoins(
               cashBack,
               getOrder?.userId.toString() || "",
@@ -782,6 +794,44 @@ const paymentsRouter = new Hono()
 
               session,
             );
+
+            const userAnalytics = await UserAnalytic.findOne({
+              userId: getOrder?.userId,
+            }).select("totalSpend");
+            if (userAnalytics) {
+              const countAvgSpend = Math.round(
+                userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
+              );
+              await UserAnalytic.findOneAndUpdate(
+                { userId: getOrder?.userId },
+                {
+                  $inc: {
+                    totalSpend: getOrder.total,
+                    visitCount: 1,
+                    coinzIssued: cashBackCoins,
+                    coinzUsed: claimCoins,
+                  },
+                  $set: { avgSpend: countAvgSpend },
+                },
+                { session },
+              );
+            } else {
+              await UserAnalytic.create(
+                [
+                  {
+                    userId: getOrder?.userId,
+                    businessId: getOrder?.businessId,
+                    visitCount: 1,
+                    totalSpend: getOrder.total,
+                    avgSpend: getOrder.total,
+                    dateOfJoining: Date.now(),
+                    coinzIssued: cashBackCoins,
+                    coinzUsed: claimCoins,
+                  },
+                ],
+                { session },
+              );
+            }
 
             await LoyaltyCoinsInfo.findOneAndUpdate(
               { businessId: getOrder?.businessId.toString() || "" },
@@ -1039,7 +1089,9 @@ const paymentsRouter = new Hono()
                 Number(order.claimedCoins),
               );
 
-              await addCoins(
+              console.log("userId", order.userId.toString());
+
+              const finalCashBack = await addCoins(
                 cashBack,
                 order.userId.toString(),
                 order._id.toString(),
@@ -1050,6 +1102,44 @@ const paymentsRouter = new Hono()
 
                 session,
               );
+
+              const userAnalytics = await UserAnalytic.findOne({
+                userId: order?.userId,
+              }).select("totalSpend");
+              if (userAnalytics) {
+                const countAvgSpend = Math.round(
+                  userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
+                );
+                await UserAnalytic.findOneAndUpdate(
+                  { userId: order?.userId },
+                  {
+                    $inc: {
+                      totalSpend: order?.total,
+                      visitCount: 1,
+                      coinzIssued: finalCashBack || 0,
+                      coinzUsed: order?.claimedCoins || 0,
+                    },
+                    $set: { avgSpend: countAvgSpend },
+                  },
+                  { session },
+                );
+              } else {
+                await UserAnalytic.create(
+                  [
+                    {
+                      userId: order?.userId,
+                      businessId: order?.businessId,
+                      visitCount: 1,
+                      totalSpend: order?.total,
+                      avgSpend: order?.total,
+                      dateOfJoining: Date.now(),
+                      coinzIssued: finalCashBack || 0,
+                      coinzUsed: order?.claimedCoins || 0,
+                    },
+                  ],
+                  { session },
+                );
+              }
 
               await LoyaltyCoinsInfo.findOneAndUpdate(
                 { businessId: order.businessId.toString() },
@@ -1583,6 +1673,544 @@ const paymentsRouter = new Hono()
         },
         200,
       );
+    },
+  )
+  .get(
+    "/users/Analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        dateOfJoining: z.string().optional(),
+        avgSpend: z.string().optional(),
+        visitCount: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to, dateOfJoining, avgSpend, visitCount } =
+        c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+      const joiningDate = Number(dateOfJoining);
+      const avgSpendValue = Number(avgSpend);
+      const visitCountValue = Number(visitCount);
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+
+      console.log("fromDate", fromDate);
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const sort: Record<string, number> = {};
+      if (dateOfJoining) sort.dateOfJoining = joiningDate;
+      if (avgSpend) sort.avgSpend = avgSpendValue;
+      if (visitCount) sort.visitCount = visitCountValue;
+      if (Object.keys(sort).length === 0) sort._id = -1;
+
+      console.log("sort", sort);
+
+      if (!from && !to) {
+        const existingUserAnalytics = await UserAnalytic.find({
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort(sort)
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "userId",
+            select: "name phone",
+          });
+
+        return c.json(
+          {
+            data: existingUserAnalytics,
+            message: "existing payment",
+            err: false,
+          },
+          200,
+        );
+      }
+
+      if (from && to) {
+        const existingUserAnalytics = await UserAnalytic.find({
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort(sort)
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate("userId");
+
+        return c.json(
+          {
+            data: existingUserAnalytics,
+            message: "existing payment",
+            err: false,
+          },
+          200,
+        );
+      }
+
+      return c.json({
+        err: true,
+        data: {},
+        message: "Invalid date range",
+      });
+    },
+  )
+  .get(
+    "/user/userByPhone",
+    zValidator(
+      "query",
+      z.object({
+        phone: z
+          .string()
+          .min(10, { message: "min 10 digit" })
+          .max(10, { message: "max 10 digit" }),
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { phone, businessId } = c.req.query();
+
+      // Find the user by phone number
+      const user = await User.findOne({ phone }).select("_id");
+
+      if (!user) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "User not found",
+        });
+      }
+
+      // Use the userId from the found user to query the UserAnalytic collection
+      const userAnalytic = await UserAnalytic.findOne({
+        userId: user._id,
+        businessId,
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
+
+      if (!userAnalytic) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "User analytic not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: userAnalytic,
+        message: "User analytic found",
+      });
+    },
+  )
+  .get(
+    "/userDashboard",
+
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        pageNumer: z.string().optional(),
+        userId: z.string({ message: "userId is required" }),
+        coinsUsage: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to, userId, tag } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      const userTotalSale = await UserAnalytic.findOne({ userId })
+        .select("totalSpend visitCount avgSpend coinzIssued coinzUsed")
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      if (!from && !to) {
+        const existingPayments = await Payment.find({
+          userId,
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "tagId",
+            select: "name",
+          })
+          .populate({
+            path: "reviewId",
+            select: "reviewRating",
+          });
+
+        return c.json({
+          err: false,
+          data: {
+            name: userTotalSale?.userId.name,
+            totalSale: userTotalSale?.totalSpend,
+            AvarageSale: userTotalSale?.avgSpend,
+            NumOfVisits: userTotalSale?.visitCount,
+            NumOfSessions: userTotalSale?.visitCount,
+            coinzIssued: userTotalSale?.coinzIssued,
+            coinzUsed: userTotalSale?.coinzUsed,
+            bill: existingPayments,
+          },
+          message: "existing payment",
+        });
+      }
+
+      if (from && to) {
+        const existingPayments = await Payment.find({
+          userId,
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "tagId",
+            select: "name",
+          })
+          .populate({
+            path: "reviewId",
+            select: "reviewRating",
+          });
+
+        return c.json({
+          err: false,
+          data: {
+            name: userTotalSale?.userId.name,
+            totalSale: userTotalSale?.totalSpend,
+            AvarageSale: userTotalSale?.avgSpend,
+            NumOfVisits: userTotalSale?.visitCount,
+            NumOfSessions: userTotalSale?.visitCount,
+            coinzIssued: userTotalSale?.coinzIssued,
+            coinzUsed: userTotalSale?.coinzUsed,
+            bill: existingPayments,
+          },
+          message: "existing payment",
+        });
+      }
+
+      return c.json(
+        {
+          err: false,
+          data: {},
+          message: "invalid date range",
+        },
+        400,
+      );
+    },
+  )
+  .get(
+    "/user/coinsUsage",
+    zValidator(
+      "query",
+      z.object({
+        loyaltyId: z.string({
+          message: "loyaltyId is required",
+        }),
+        userId: z.string({
+          message: "userId is required",
+        }),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { loyaltyId, from, to, userId } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      if (!from && !to) {
+        const existingRewardHistory = await UserRewardHistory.find({
+          userId,
+          loyaltyId,
+
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE);
+
+        console.log(
+          "existingRewardHistory",
+          startOfToday.getTime(),
+          endOfToday.getTime(),
+        );
+
+        return c.json({
+          err: false,
+          data: existingRewardHistory,
+          message: "existing payment",
+        });
+      }
+
+      if (from && to) {
+        const existingRewardHistory = await UserRewardHistory.find({
+          userId,
+          loyaltyId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE);
+
+        console.log(
+          "existingRewardHistory",
+          startOfToday.getTime(),
+          endOfToday.getTime(),
+        );
+
+        return c.json({
+          err: false,
+          data: existingRewardHistory,
+          message: "existing payment",
+        });
+      }
+
+      return c.json({
+        err: true,
+        data: {},
+        message: "Invalid date range",
+      });
+    },
+  )
+  .put(
+    "/updatePayment/:paymentId",
+
+    zValidator(
+      "param",
+      z.object({
+        paymentId: z.string({
+          message: "paymentId is required",
+        }),
+
+        tagId: z
+          .string({
+            message: "tagId is required",
+          })
+          .optional(),
+        comment: z
+          .string({
+            message: "comment is required",
+          })
+          .optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { paymentId } = c.req.param();
+      const requestData = await c.req.json();
+      const { tagId, comment } = requestData;
+
+      const payment = await Payment.findByIdAndUpdate(
+        paymentId,
+        { tagId, comment },
+        { new: true },
+      );
+
+      if (!payment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: payment,
+        message: "Payment updated successfully",
+      });
+    },
+  )
+  .get(
+    "/tagAndNotes",
+
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string({
+          message: "loyaltyId is required",
+        }),
+        userId: z.string({
+          message: "userId is required",
+        }),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to, userId } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      if (!from && !to) {
+        const existingTagAndNotes = await Payment.find({
+          userId,
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "tagId",
+            select: "name tagType",
+          });
+
+        const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
+          if (payment.tagId?._id) {
+            const tagIdStr = payment.tagId._id;
+            if (!acc[tagIdStr]) {
+              acc[tagIdStr] = {
+                tagId: payment.tagId,
+                // Assuming payment.name contains the name
+
+                count: 0,
+              };
+            }
+
+            acc[tagIdStr].count += 1;
+          }
+          return acc;
+        }, {});
+
+        return c.json({
+          err: false,
+          data: Object.values(groupByTag),
+          message: "existing payment",
+        });
+      }
+
+      if (from && to) {
+        const existingTagAndNotes = await Payment.find({
+          userId,
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort({ _id: -1 })
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "tagId",
+            select: "name tagType",
+          });
+
+        const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
+          if (payment.tagId?._id) {
+            const tagIdStr = payment.tagId._id;
+            if (!acc[tagIdStr]) {
+              acc[tagIdStr] = {
+                tagId: payment.tagId,
+                // Assuming payment.name contains the name
+
+                count: 0,
+              };
+            }
+
+            acc[tagIdStr].count += 1;
+          }
+          return acc;
+        }, {});
+
+        return c.json({
+          err: false,
+          data: Object.values(groupByTag),
+          message: "existing payment",
+        });
+      }
+
+      return c.json({
+        err: true,
+        data: {},
+        message: "Invalid date range",
+      });
     },
   );
 

@@ -33,6 +33,7 @@ export * from "./tagType";
 export * from "./token";
 export * from "./uniquelyYours";
 export * from "./user";
+export * from "./userAnalytics";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userRoles";

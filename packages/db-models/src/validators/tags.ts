@@ -24,6 +24,7 @@ export const TagSchema = z.object({
     }),
   description: z.string().optional(),
   businessId: ObjectIdSchema,
+  tagType: z.enum(["AUTO_TAG", "MANUAL_TAG"]),
   isDeleted: z.boolean().default(false).optional(),
   remainderDate: z.number().optional(),
 });

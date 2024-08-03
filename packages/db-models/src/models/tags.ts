@@ -25,6 +25,13 @@ const tagSchema = new mongoose.Schema(
       type: Number,
       required: false,
     },
+
+    tagType: {
+      type: String,
+      enum: ["AUTO_TAG", "MANUAL_TAG"],
+      required: false,
+    },
+
     isDeleted: {
       type: Boolean,
       required: false,

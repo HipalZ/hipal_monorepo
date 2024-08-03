@@ -22,5 +22,6 @@ export * from "./tagType";
 export * from "./theme";
 export * from "./uniquelyYours";
 export * from "./user";
+export * from "./userAnalytics";
 export * from "./userReward";
 export * from "./userRewardHistory";

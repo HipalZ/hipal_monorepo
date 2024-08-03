@@ -160,6 +160,39 @@ const groupRouter = new Hono()
         200,
       );
     },
+  )
+  .post(
+    "/addUsers",
+
+    zValidator(
+      "json",
+      z.object({
+        groupId: z.string({ message: "groupId is required" }),
+        userIds: z.array(z.string({ message: "userIds is required" })),
+      }),
+    ),
+
+    async (c) => {
+      const { groupId, userIds } = await c.req.json();
+      const group = await GroupModel.findOneAndUpdate(
+        {
+          _id: groupId,
+        },
+        {
+          $addToSet: { userIds: { $each: userIds } },
+        },
+        { new: true },
+      );
+
+      return c.json(
+        {
+          message: "Users added to group",
+          err: false,
+          data: group,
+        },
+        200,
+      );
+    },
   );
 
 export default groupRouter;

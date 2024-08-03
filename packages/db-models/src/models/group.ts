@@ -60,6 +60,10 @@ const groupSchema = new mongoose.Schema<Group>(
       required: true,
       default: false,
     },
+    userIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      required: false,
+    },
   },
   {
     timestamps: true,
