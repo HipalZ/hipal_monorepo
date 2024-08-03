@@ -9,6 +9,14 @@ interface IHiPeople {
   selectedPage: HiPeoplePages;
   setSelectedPage: (page: HiPeoplePages) => void;
 
+  selectedUserIds: string[];
+
+  toggleUserSelection: (id: string) => void;
+
+  selectAllUsers: (ids: string[]) => void;
+
+  clearAllUsers: () => void;
+
   selectedNavItem: NavItems;
   setSelectedNavItem: (item: NavItems) => void;
 
@@ -25,9 +33,27 @@ interface IHiPeople {
   setOpenTagPopup: (open: boolean) => void;
 }
 
-const useHiPeopleStore = create<IHiPeople>((set) => ({
+const useHiPeopleStore = create<IHiPeople>((set,get) => ({
   selectedPage: "SUMMARY",
   setSelectedPage: (page: HiPeoplePages) => set({ selectedPage: page }),
+
+  selectedUserIds: [],
+
+  toggleUserSelection: (id: string) => {
+    const selectedUserIds = get().selectedUserIds;
+    if (selectedUserIds.includes(id)) {
+      set({
+        selectedUserIds: selectedUserIds.filter((userId) => userId !== id),
+      });
+    } else {
+      set({ selectedUserIds: [...selectedUserIds, id] });
+    }
+  },
+
+  
+  selectAllUsers: (ids: string[]) => set({ selectedUserIds: ids }),
+
+  clearAllUsers: () => set({ selectedUserIds: [] }),
 
   selectedNavItem: "RECENT BILLS",
   setSelectedNavItem: (item: NavItems) => set({ selectedNavItem: item }),
@@ -44,5 +70,6 @@ const useHiPeopleStore = create<IHiPeople>((set) => ({
   openTagPopup: false,
   setOpenTagPopup: (open: boolean) => set({ openTagPopup: open }),
 }));
+
 
 export default useHiPeopleStore;
