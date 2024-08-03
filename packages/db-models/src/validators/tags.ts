@@ -25,6 +25,7 @@ export const TagSchema = z.object({
   description: z.string().optional(),
   businessId: ObjectIdSchema,
   isDeleted: z.boolean().default(false).optional(),
+  remainderDate: z.number().optional(),
 });
 
 export type TagType = z.infer<typeof TagSchema>;

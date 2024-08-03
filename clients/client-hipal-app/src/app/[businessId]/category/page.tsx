@@ -61,7 +61,7 @@ export default async function Page({
   const data = await fetchData(params.businessId);
   console.log("this sios my child  cate", data.childCategories);
   return (
-    <>
+    <main>
       <div className="relative flex flex-col w-full pb-14">
         <TopBackground specialBanner={data?.business?.specialBannerUrl} />
         <CategoryHeader
@@ -86,6 +86,6 @@ export default async function Page({
         </div>
       </div>
       <CategoryPageBtn />
-    </>
+    </main>
   );
 }

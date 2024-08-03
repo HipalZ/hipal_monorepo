@@ -286,3 +286,10 @@ export const handleClick = (
     inputRef.current.click();
   }
 };
+
+export const hideMiddleNumbers = (phone: string) => {
+  if (phone?.length <= 4) return phone;
+  const firstPart = phone?.slice(0, 3);
+  const lastPart = phone?.slice(-3);
+  return `${firstPart}****${lastPart}`;
+};

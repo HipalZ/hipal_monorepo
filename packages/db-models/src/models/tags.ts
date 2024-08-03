@@ -21,6 +21,10 @@ const tagSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    remainderDate: {
+      type: Number,
+      required: false,
+    },
     isDeleted: {
       type: Boolean,
       required: false,

@@ -2,7 +2,7 @@ import { memo } from "react";
 
 function MemoLoadingSpinner() {
   return (
-    <div
+    <main
       role="status"
       className="space-y-8 animate-pulse md:space-y-0 md:space-x-8 rtl:space-x-reverse md:flex md:items-center"
     >
@@ -27,7 +27,7 @@ function MemoLoadingSpinner() {
         <div className="h-[7.5rem] bg-gray-200 rounded-xl dark:bg-gray-700 max-w-[480px] mb-2.5" />
         <div className="h-[7.5rem] bg-gray-200 rounded-xl dark:bg-gray-700 max-w-[480px]" />
       </div>
-    </div>
+    </main>
   );
 }
 const LoadingSpinner = memo(MemoLoadingSpinner);

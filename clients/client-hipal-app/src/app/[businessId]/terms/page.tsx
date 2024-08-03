@@ -13,21 +13,19 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const Terms = () => {
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
-  const { logo: logoUrl } = businessDetails as IBiz;
   const router = useRouter();
   const onBack = () => {
     router.back();
   };
-
   return (
-    <div className="container">
+    <main className="p-6 text-white bg-black">
       <div className="relative">
         <HiChevronLeft className="mt-6 ml-2 text-3xl" onClick={onBack} />
       </div>
       <div className="flex items-center justify-center w-1/2 mx-auto mt-6 mb-12">
-        {!isEmpty(logoUrl) ? (
+        {!isEmpty(businessDetails?.logoUrl) ? (
           <Image
-            src={logoUrl ? logoUrl : Logo}
+            src={businessDetails?.logoUrl ? businessDetails?.logoUrl : Logo}
             height={100}
             width={100}
             quality={95}
@@ -43,7 +41,7 @@ const Terms = () => {
       </div>
       <h1 className="heading">
         <b>
-          <b>{businessDetails?.businessName}</b>
+          <b>{businessDetails?.name}</b>
         </b>{" "}
         - Terms of Use
       </h1>
@@ -51,7 +49,7 @@ const Terms = () => {
       <p className="paragraph">
         Welcome to{" "}
         <b>
-          <b>{businessDetails?.businessName}</b>
+          <b>{businessDetails?.name}</b>
         </b>{" "}
         a brand of <b>{businessDetails?.registeredName}</b> , a service powered
         by Hipalz technology provided by Paltribe Solutions Pvt Ltd. These terms
@@ -87,46 +85,45 @@ const Terms = () => {
       </p>
       <h3 className="subheading">6. Payments and Financial Transactions</h3>
       <p className="paragraph">
-        <b>{businessDetails?.businessName}</b> uses Hipalz to facilitate
-        transactions. <b>{businessDetails?.businessName}</b> is responsible for
-        all financial service issues, including disputes and billing
-        inaccuracies.
+        <b>{businessDetails?.name}</b> uses Hipalz to facilitate transactions.{" "}
+        <b>{businessDetails?.name}</b> is responsible for all financial service
+        issues, including disputes and billing inaccuracies.
       </p>
       <h3 className="subheading">7. Service Fulfillment</h3>
       <p className="paragraph">
-        While Hipalz provides the technology,{" "}
-        <b>{businessDetails?.businessName}</b> manages all direct services
-        related to food, products, and consultations. Any issues should be
-        directly addressed by <b>{businessDetails?.businessName}</b>
+        While Hipalz provides the technology, <b>{businessDetails?.name}</b>{" "}
+        manages all direct services related to food, products, and
+        consultations. Any issues should be directly addressed by{" "}
+        <b>{businessDetails?.name}</b>
       </p>
       <h3 className="subheading">8. Data Usage and Privacy</h3>
       <p className="paragraph">
-        <b>{businessDetails?.businessName}</b> and Hipalz collect and use
-        personal information (name, contact details, DOB, and more) to enhance
-        user experience, provide personalized services, and for marketing. By
-        using our services, you consent to the collection and use of your data
-        as described.
+        <b>{businessDetails?.name}</b> and Hipalz collect and use personal
+        information (name, contact details, DOB, and more) to enhance user
+        experience, provide personalized services, and for marketing. By using
+        our services, you consent to the collection and use of your data as
+        described.
       </p>
       <h3 className="subheading">9. User Consent for Data Sharing</h3>
       <p className="paragraph">
         Your personal information may be shared between{" "}
-        <b>{businessDetails?.businessName}</b> and Hipalz to improve services
-        and offer personalized promotions. We commit to protecting your privacy
-        and using information only as stated.
+        <b>{businessDetails?.name}</b> and Hipalz to improve services and offer
+        personalized promotions. We commit to protecting your privacy and using
+        information only as stated.
       </p>
       <h3 className="subheading">10. Contact Information</h3>
       <p className="paragraph">
         <ol className="unorderedlist">
-          For questions or concerns related to{" "}
-          <b>{businessDetails?.businessName}</b> services, please contact:
+          For questions or concerns related to <b>{businessDetails?.name}</b>{" "}
+          services, please contact:
           <br />
           <li>
             Company Name: <b>{businessDetails?.registeredName}</b>
           </li>
           <li>
-            Brand Name: <b>{businessDetails?.businessName}</b>
+            Brand Name: <b>{businessDetails?.name}</b>
           </li>
-          <li>Phone Number: {businessDetails?.phoneNumber}</li>
+          <li>Phone Number: {businessDetails?.phone}</li>
           <li>Contact : {businessDetails?.email}</li>
           <li>Address: {businessDetails?.address}</li>
         </ol>
@@ -414,28 +411,28 @@ const Terms = () => {
       </p>
       <h1 className="heading">Refund Policy</h1>
       <p className="paragraph">
-        <b>{businessDetails?.businessName}</b> is committed to ensuring
-        satisfaction for all our customers. If you are not satisfied with a
-        purchase or service provided by <b>{businessDetails?.businessName}</b>{" "}
-        and we find your point fair and acceptable, here are the terms
-        applicable to refunds: Products and Services: Eligible for a refund if a
-        cancellation request is made within the time of interaction or exchange
-        of the purchase or if there are significant discrepancies in the service
-        delivered or product received. Cancellation: Orders can be canceled
-        within a specified time frame, typically before the service provision
-        starts or product dispatch. Refunds for canceled orders will be
-        processed within 7-10 business days. Issues and Disputes: Any issues or
-        discrepancies related to payments, product quality, or service delivery
-        must be reported to <b>{businessDetails?.businessName}</b> as soon as
-        possible, wherein if the product or service was consumed within store
-        /outlet should reported immediately for other take home service it can
-        be within 48 hours of the transaction or service delivery date.
-        Processing Refunds: Refunds will be processed using the original method
-        of payment. If a refund is issued, it will typically appear on your
-        account statement within 7-10 business days. Please note that certain
-        conditions and exceptions may apply. For specific details related to
-        refund eligibility and process, please contact our customer service team
-        mentioned in the contact us form
+        <b>{businessDetails?.name}</b> is committed to ensuring satisfaction for
+        all our customers. If you are not satisfied with a purchase or service
+        provided by <b>{businessDetails?.name}</b> and we find your point fair
+        and acceptable, here are the terms applicable to refunds: Products and
+        Services: Eligible for a refund if a cancellation request is made within
+        the time of interaction or exchange of the purchase or if there are
+        significant discrepancies in the service delivered or product received.
+        Cancellation: Orders can be canceled within a specified time frame,
+        typically before the service provision starts or product dispatch.
+        Refunds for canceled orders will be processed within 7-10 business days.
+        Issues and Disputes: Any issues or discrepancies related to payments,
+        product quality, or service delivery must be reported to{" "}
+        <b>{businessDetails?.name}</b> as soon as possible, wherein if the
+        product or service was consumed within store /outlet should reported
+        immediately for other take home service it can be within 48 hours of the
+        transaction or service delivery date. Processing Refunds: Refunds will
+        be processed using the original method of payment. If a refund is
+        issued, it will typically appear on your account statement within 7-10
+        business days. Please note that certain conditions and exceptions may
+        apply. For specific details related to refund eligibility and process,
+        please contact our customer service team mentioned in the contact us
+        form
       </p>
       <h1 className="heading">Contact Paltribe Solutions Pvt</h1>
       <p className="paragraph">
@@ -444,7 +441,7 @@ const Terms = () => {
       <h3 className="subheading">7. Contact Information</h3>
       <p className="paragraph">
         <ol className="unorderedlist">
-          For support related to Hipalz technology, contact:
+          For support related to Hipalz technology, contact
           <li>
             Company Name: <b>Paltribe Solutions Pvt Ltd</b>
           </li>
@@ -462,7 +459,7 @@ const Terms = () => {
         </ol>
       </p>
       &nbsp; &nbsp;
-    </div>
+    </main>
   );
 };
 

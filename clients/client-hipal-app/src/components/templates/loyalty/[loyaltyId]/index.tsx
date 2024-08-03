@@ -85,7 +85,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   });
 
   return (
-    <div className="relative flex flex-col w-full pb-16 mt-6 syne-font">
+    <main className="relative flex flex-col w-full pb-16 mt-6 syne-font">
       <div className="mx-6 mb-[5rem]">
         <div className="flex items-center justify-between">
           <span className="flex items-center space-x-2">
@@ -207,7 +207,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
         </div>
       </div>
       <BottomButton />
-    </div>
+    </main>
   );
 };
 

@@ -13,5 +13,5 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
-  return <Payment data={data} />;
+  return <main><Payment data={data} /></main>
 }

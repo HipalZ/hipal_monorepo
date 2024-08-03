@@ -28,7 +28,6 @@ const HiPeople = () => {
         <article className="linear_gradient_background">
           <MemoizedHeader
             title="Hi PplZ"
-            // onBack={handleBack}
             leftIcon={<FaArrowLeft />}
             centerImage={Hi}
             rightImage={Hi}

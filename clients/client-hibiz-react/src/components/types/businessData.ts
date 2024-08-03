@@ -381,3 +381,55 @@ export interface BannerLayout {
   pattern: React.FC<PatternProps>;
   description: string;
 }
+
+export interface RazorpayAcquirerData {
+  rrn: string;
+}
+
+export interface Order {
+  _id: string;
+  businessId: string;
+  total: number;
+  currency: string;
+  billValue: number;
+  receipt: string;
+  userId: string;
+  tips: number;
+  claimedCoins: number;
+  discount: number;
+  order_id: string;
+  tableName: string | null;
+  date: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface UserDetails {
+  _id: string;
+  name: string;
+  phone: string;
+}
+
+export interface Payment {
+  _id: string;
+  businessId: string;
+  date: number;
+  total: number;
+  userId: UserDetails;
+  mode: string;
+  paymentMode: string;
+  billValue: number;
+  tableName: string;
+  order_id: Order;
+  tips: number;
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  claimedCoins: number;
+  razorpayAcquirerData: RazorpayAcquirerData;
+  razorpayEventId: string;
+  earnCoins: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}

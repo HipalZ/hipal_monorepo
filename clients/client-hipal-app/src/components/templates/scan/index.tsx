@@ -84,7 +84,7 @@ function Scan() {
 	}, []);
 
 	return (
-		<div className="bg-[#fbfbfb] h-screen">
+		<main className="bg-[#fbfbfb] h-screen">
 			<div className="pl-5 flex justify-between pt-2.5 pr-8">
 				<div>
 					<Image src={HipalLogo} alt="HipalLogo" loading="lazy" />
@@ -108,7 +108,7 @@ function Scan() {
 					<Image src={poweredBy} alt="HiLogo" loading="lazy" />
 				</figure>
 			</center>
-		</div>
+		</main>
 	);
 }
 

@@ -157,7 +157,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   });
 
   return (
-    <>
+    <main>
       <div className="relative flex flex-col w-full pt-4 pb-[5rem] bg-base-100 mb-20 text-primary">
         <div className="relative overflow-hidden">
           <div
@@ -417,7 +417,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
           />
         </DishData>
       )}
-    </>
+    </main>
   );
 }
 

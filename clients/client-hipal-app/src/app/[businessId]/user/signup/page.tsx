@@ -58,7 +58,7 @@ const SignUp = memo(() => {
   }, [router, customLink]);
 
   return (
-    <section className="relative bg-black">
+    <main className="relative bg-black">
       <section className="flex items-center justify-between">
         <button
         type="button"
@@ -119,7 +119,7 @@ const SignUp = memo(() => {
           </small>
         </center>
       </form>
-    </section>
+    </main>
   );
 });
 
