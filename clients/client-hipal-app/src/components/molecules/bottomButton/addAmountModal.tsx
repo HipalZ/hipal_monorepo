@@ -113,7 +113,7 @@ const AddAmountModal = memo(() => {
             placeholder="Enter Amount"
             value={amount || ""}
             onChange={saveAmount}
-            className="w-full px-4 py-3 border rounded-2xl border-primary focus:outline-none"
+            className="w-full px-4 py-3 border rounded-2xl border-primary bg-base-100 text-primary focus:outline-none"
             type="tel"
             maxLength={6}
             minLength={1}

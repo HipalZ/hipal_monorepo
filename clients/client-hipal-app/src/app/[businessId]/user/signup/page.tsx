@@ -74,7 +74,7 @@ const SignUp = memo(() => {
       />
       <form
         onSubmit={handleSubmit}
-        className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl"
+        className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl text-black"
       >
         {businessData?.logoUrl && (
           <section className="bg-inherit float-right w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden">
