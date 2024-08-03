@@ -26,7 +26,7 @@ export const TagSchema = z.object({
   createdBy: ObjectIdSchema,
   businessId: ObjectIdSchema,
   displayForCaptains: z.boolean().default(true).optional(),
-  reminderDate: z.number().optional(),
+
   tagType: z.enum(["AUTO_TAG", "MANUAL_TAG"]),
   isDeleted: z.boolean().default(false).optional(),
   remainderDate: z.number().optional(),

@@ -1,4 +1,4 @@
-import { TagModel, TagTypeModel } from "@hi/db-models";
+import { TagModel, TagTypeModel, UserTags } from "@hi/db-models";
 import { TagSchema, TagTypeSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -198,16 +198,50 @@ const tagRouter = new Hono()
     },
   )
   .put(
-    "/:tagId",
-    zValidator("json", TagSchema.partial()),
+    "/:tagId/:userId",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+        remainderDate: z
+          .number({ message: "remainderDate is required" })
+          .optional(),
+
+        displayForCaptains: z
+          .boolean({ message: "displayForCaptains is required" })
+          .optional(),
+      }),
+    ),
+    zValidator(
+      "param",
+      z.object({
+        tagId: z.string({ message: "tagId is required" }),
+        userId: z.string({ message: "userId is required" }),
+      }),
+    ),
 
     async (c) => {
-      const { tagId } = c.req.param();
+      const { tagId, userId } = c.req.param();
       const requestData = await c.req.json();
       const updateTag = await TagModel.findOneAndUpdate(
         { _id: tagId },
         requestData,
       );
+      if (!updateTag) {
+        return c.json(
+          {
+            message: "tag not updated",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+      const updateUserTag = await UserTags.updateMany({
+        tagId,
+        userId,
+        reminderDate: requestData.remainderDate,
+      });
       return c.json(
         {
           message: "tag updated successfully",

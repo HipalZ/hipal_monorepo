@@ -25,6 +25,10 @@ const UserTagSchema = new mongoose.Schema<UserTag>(
       type: Number,
       required: true,
     },
+    reminderDate: {
+      type: Number,
+      required: false,
+    },
     isDeleted: {
       type: Boolean,
       required: false,

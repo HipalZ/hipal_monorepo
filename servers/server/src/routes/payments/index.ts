@@ -1889,6 +1889,7 @@ const paymentsRouter = new Hono()
           err: false,
           data: {
             name: userTotalSale?.userId.name,
+            phone: userTotalSale?.userId.phone,
             totalSale: userTotalSale?.totalSpend,
             AvarageSale: userTotalSale?.avgSpend,
             NumOfVisits: userTotalSale?.visitCount,
@@ -1926,6 +1927,7 @@ const paymentsRouter = new Hono()
           err: false,
           data: {
             name: userTotalSale?.userId.name,
+            phone: userTotalSale?.userId.phone,
             totalSale: userTotalSale?.totalSpend,
             AvarageSale: userTotalSale?.avgSpend,
             NumOfVisits: userTotalSale?.visitCount,

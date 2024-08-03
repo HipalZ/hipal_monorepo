@@ -14,6 +14,7 @@ export const UserTagSchema = z.object({
   tagId: ObjectIdSchema,
   businessId: ObjectIdSchema,
   date: z.number().optional(),
+  reminderDate: z.number().optional(),
   isDeleted: z.boolean().default(false).optional(),
 });
 

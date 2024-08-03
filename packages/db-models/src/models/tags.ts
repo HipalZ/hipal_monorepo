@@ -43,11 +43,6 @@ const tagSchema = new mongoose.Schema(
       default: true,
     },
 
-    reminderDate: {
-      type: Number,
-      required: false,
-    },
-
     isDeleted: {
       type: Boolean,
       required: false,
