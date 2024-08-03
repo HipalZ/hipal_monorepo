@@ -511,7 +511,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   });
 
   return (
-    <>
+    <section className="h-screen bg-base-100">
       {isLoading ? (
         <PayLoader selectedMode={selectedMode} />
       ) : showError ? (
@@ -580,7 +580,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
           />
         </div>
       )}
-    </>
+    </section>
   );
 };
 

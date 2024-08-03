@@ -202,7 +202,7 @@ function OtpPage() {
         </section>
       )}
       <form
-        className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-xl"
+        className="fixed bottom-0 w-full p-4 text-black bg-white max-w-[30rem] z-10 rounded-t-xl"
         onSubmit={handleSubmit}
       >
         {businessLogo && (

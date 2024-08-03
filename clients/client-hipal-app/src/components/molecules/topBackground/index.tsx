@@ -15,7 +15,7 @@ function TopBackground({
   const customLink = useParams()?.businessId as string;
 
   return (
-    <div className={"relative h-[20vh] w-screen overflow-hidden"}>
+    <div className={"relative h-[20vh] overflow-hidden"}>
       {specialBanner ? (
         <Image
           src={specialBanner || ""}

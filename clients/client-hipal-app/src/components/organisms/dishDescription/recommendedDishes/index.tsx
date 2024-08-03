@@ -56,7 +56,7 @@ function RecommendedDishes({
             {processedDishes?.map((dish) => (
               <SplideSlide key={dish._id?.toString()}>
                 {dish && (
-                  <div className="relative z-[100]">
+                  <div className="relative z-[100] text-primary">
                     <div className="absolute bg-white left-2 top-2">
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>

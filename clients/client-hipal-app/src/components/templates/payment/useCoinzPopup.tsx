@@ -24,7 +24,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
   }, []);
 
   return (
-    <>
+    <section className="text-primary">
       <center className="flex items-center justify-center my-2 text-primary">
         <button
           type="button"
@@ -71,7 +71,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
           <AddAmountModal />
         </BottomPopUp>
       )}
-    </>
+    </section>
   );
 };
 

@@ -32,7 +32,7 @@ const BillSummary = (props: IBillSummary) => {
     handleSaveTip,
   } = props;
   return (
-    <div className="flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl">
+    <div className="flex flex-col pb-20 space-y-2 text-4xl transition-all shadow-none rounded-t-3xl text-primary">
       <h6 className="mx-6 mt-4 text-xl">Bill Detailz</h6>
       <div className="relative mx-6 text-[1.25rem] text-primary border border-primary py-4 rounded-2xl">
         <div className="text-base font-semibold flex justify-between mx-4 mb-4 capitalize text-primary leading-[1.25rem]">

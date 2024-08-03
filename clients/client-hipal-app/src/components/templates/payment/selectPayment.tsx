@@ -60,7 +60,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     createOrder(billValue, "ONLINE");
   };
   return (
-    <section className="h-[85vh]">
+    <section className="h-[90vh]">
       <div
         style={{
           backgroundImage: `url(${background.src})`,
@@ -103,7 +103,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           <Image width={480} height={200} src={Grid} alt="Payment Image" />
         </div>
       </div>
-      <section className="absolute bottom-6">
+      <section className="absolute bottom-6 text-primary">
         <center className=" text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
           How do you want to settle ?
         </center>
