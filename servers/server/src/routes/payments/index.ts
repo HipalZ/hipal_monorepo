@@ -1877,7 +1877,7 @@ const paymentsRouter = new Hono()
           .skip(skip)
           .limit(PAGE_SIZE)
           .populate({
-            path: "tagId",
+            path: "tagIds",
             select: "name",
           })
           .populate({
@@ -1914,7 +1914,7 @@ const paymentsRouter = new Hono()
           .skip(skip)
           .limit(PAGE_SIZE)
           .populate({
-            path: "tagId",
+            path: "tagIds",
             select: "name",
           })
           .populate({
@@ -2074,7 +2074,7 @@ const paymentsRouter = new Hono()
 
       const payment = await Payment.findByIdAndUpdate(
         paymentId,
-        { tagIds, comment },
+        { $addToSet: { tagIds: { $each: tagIds } }, comment },
         { new: true },
       );
 
