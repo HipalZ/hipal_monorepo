@@ -41,12 +41,17 @@ const groupSchema = new mongoose.Schema<Group>(
       required: false,
     },
     filter: {
-      type: filterSchema,
+      type: [filterSchema],
       required: false,
     },
 
     autoUpdate: {
       type: Boolean,
+      required: false,
+      default: false,
+    },
+    groupColor: {
+      type: String,
       required: false,
     },
 

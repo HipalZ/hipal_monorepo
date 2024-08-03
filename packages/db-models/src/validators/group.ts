@@ -53,7 +53,8 @@ export const groupSchema = z.object({
       message: "description must be atmost 100 characters long",
     })
     .optional(),
-  filter: groupFilter.optional(),
+  filter: z.array(groupFilter).optional(),
+  groupColor: z.string().optional(),
 
   autoUpdate: z.boolean().optional(),
 

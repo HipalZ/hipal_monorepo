@@ -9,6 +9,7 @@ const groupRouter = new Hono()
     const { businessId } = requestData;
     const existingGroup = await GroupModel.findOne({
       businessId,
+      name: requestData.name,
       isDeleted: false,
     });
 
@@ -45,6 +46,30 @@ const groupRouter = new Hono()
       201,
     );
   })
+  .get(
+    "/",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string({
+          message: "businessId is required",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.query();
+      const groups = await GroupModel.find({ businessId, isDeleted: false });
+      return c.json(
+        {
+          message: "Groups found",
+          err: false,
+          data: groups,
+        },
+        200,
+      );
+    },
+  )
   .get(
     "/:groupId",
     zValidator(
@@ -111,17 +136,26 @@ const groupRouter = new Hono()
   )
   .put(
     "/:groupId",
-    zValidator("json", groupSchema),
+    zValidator("json", groupSchema.partial()),
+    zValidator(
+      "param",
+      z.object({
+        groupId: z.string({ message: "groupId is required" }),
+      }),
+    ),
 
     async (c) => {
       const { groupId } = c.req.param();
       const requestData = await c.req.json();
-      await GroupModel.updateOne({ _id: groupId }, requestData);
+      const updateGroup = await GroupModel.findByIdAndUpdate(
+        groupId,
+        requestData,
+      );
       return c.json(
         {
           message: "Group updated successfully",
           err: false,
-          data: {},
+          data: updateGroup,
         },
         200,
       );

@@ -13,6 +13,7 @@ const subsCriberRouter = new Hono()
       businessId,
       isDeleted: false,
     });
+    console.log("existingSubscriber", existingSubscriber);
     //
     if (existingSubscriber) {
       return c.json(
@@ -30,6 +31,7 @@ const subsCriberRouter = new Hono()
     const createSubscriber = await Subscriber.create({
       ...requestData,
       date: Date.now(),
+      userCount: 1,
     });
 
     if (!createSubscriber) {
@@ -43,13 +45,22 @@ const subsCriberRouter = new Hono()
       );
     }
     const loyalty = await LoyaltySettings.findOne({ businessId });
+    console.log("loyalty", loyalty);
 
     if (loyalty?.signUpBonus && loyalty.signUpBonus > 0) {
-      await addSignUpBonus(userId, businessId, loyalty.signUpBonus);
+      await addSignUpBonus(
+        loyalty.loyaltyId.toString(),
+        userId,
+        loyalty.signUpBonus,
+      );
     }
 
     if (loyalty?.signUpBonus && loyalty.signUpBonus > 0) {
-      const userReward = await UserReward.findOne({ userId, businessId });
+      const userReward = await UserReward.findOne({
+        userId,
+        loyaltyId: loyalty.loyaltyId,
+      });
+
       if (!userReward) {
         return c.json(
           {
@@ -61,7 +72,7 @@ const subsCriberRouter = new Hono()
         );
       }
       return c.json({
-        message: "User already subscribed",
+        message: "User subscribed successfully",
         err: false,
         data: { signUpBonus: loyalty.signUpBonus },
       });
@@ -169,6 +180,39 @@ const subsCriberRouter = new Hono()
           message: "User updated successfully",
           err: false,
           data: {},
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/allSubscribers/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const subscribers = await Subscriber.find({
+        isDeleted: false,
+        businessId,
+      });
+
+      const totalUserCount = subscribers.reduce(
+        (acc, sub) => acc + (sub.userCount ?? 0),
+        0,
+      );
+
+      return c.json(
+        {
+          message: "Subscribers fetched successfully",
+          err: false,
+          data: {
+            totalUserCount,
+          },
         },
         200,
       );

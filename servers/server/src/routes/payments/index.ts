@@ -2,12 +2,14 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
+  GroupModel,
   LoyaltyCoinsInfo,
   LoyaltySettings,
   Order,
   Payment,
   PaymentAlert,
   Reviews,
+  Subscriber,
   UserReward,
   UserRewardHistory,
 } from "@hi/db-models";
@@ -236,6 +238,126 @@ const calculatedCashbackCoins = async (
   return Math.round(coinsToBeAdded);
 };
 
+const totalSubscribers = async (businessId: string) => {
+  const subscribers = await Subscriber.find({
+    isDeleted: false,
+    businessId,
+  }).select("userCount");
+
+  const totalUserCount = subscribers.reduce(
+    (acc, sub) => acc + (sub.userCount ?? 0),
+    0,
+  );
+
+  return totalUserCount;
+};
+
+const calculatePercentages = (totalReviewsLength: number, count: number) => {
+  return Math.round((count / totalReviewsLength) * 100);
+};
+
+const fetchData = async (
+  businessId: string,
+  fromDate: number,
+  toDate: number,
+) => {
+  const existingPayments = await Payment.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+  });
+
+  const totalSpend = existingPayments.reduce(
+    (acc, payment) => acc + (payment.total ?? 0),
+    0,
+  );
+
+  const averageSpend = Math.round(totalSpend / existingPayments.length);
+
+  const totalReviews = await Reviews.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+  });
+
+  const totalReviesCount = totalReviews.reduce(
+    (acc, review) => acc + (review.reviewRating ?? 0),
+    0,
+  );
+
+  const avgRating = Math.round(totalReviesCount / totalReviews.length);
+
+  const newUsers = await Subscriber.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+    userCount: { $eq: 1 },
+  });
+
+  const countOfFoodTaste = totalReviews.filter(
+    (review) => review.foodTaste === 1,
+  ).length;
+  const countOfBadFoodTaste = totalReviews.filter(
+    (review) => review.foodTaste === 0,
+  ).length;
+
+  const countOfAmbience = totalReviews.filter(
+    (review) => review.ambience === 1,
+  ).length;
+  const countOfBadAmbience = totalReviews.filter(
+    (review) => review.ambience === 0,
+  ).length;
+
+  const countOfHygiene = totalReviews.filter(
+    (review) => review.hygiene === 1,
+  ).length;
+  const countOfBadHygiene = totalReviews.filter(
+    (review) => review.hygiene === 0,
+  ).length;
+  const countOfService = totalReviews.filter(
+    (review) => review.service === 1,
+  ).length;
+  const countOfBadService = totalReviews.filter(
+    (review) => review.service === 0,
+  ).length;
+
+  return {
+    totalSpend,
+    averageSpend,
+    avgRating,
+    newUsers,
+    totalReviews,
+    countOfFoodTaste,
+    countOfBadFoodTaste,
+    countOfAmbience,
+    countOfBadAmbience,
+    countOfHygiene,
+    countOfBadHygiene,
+    countOfService,
+    countOfBadService,
+  };
+};
+
+function calculateTimestamps(days: number): {
+  fromTimestamp: number;
+  toTimestamp: number;
+} {
+  const currentDate = new Date();
+  const toTimestamp = currentDate.getTime();
+
+  const fromDate = new Date();
+  fromDate.setDate(currentDate.getDate() - days);
+  const fromTimestamp = fromDate.getTime();
+
+  return { fromTimestamp, toTimestamp };
+}
+
 const paymentsRouter = new Hono()
   .post(
     "/createOrder/:merchantId",
@@ -251,6 +373,7 @@ const paymentsRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
+        console.log("createOrder");
         const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
         const {
           total,
@@ -1313,6 +1436,153 @@ const paymentsRouter = new Hono()
         data: existingPayments,
         message: "All payments updated successfully",
       });
+    },
+  )
+  .get(
+    "/businessDashboard",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z
+          .string({
+            message: "businessId is required",
+          })
+          .min(24)
+          .max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (from && to && fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const totalSubscriberCount = await totalSubscribers(businessId);
+      const BestUserGroup = await GroupModel.findOne({
+        businessId,
+        name: "Best Users",
+      }).select("name filter groupColor ");
+      const averageUserGroup = await GroupModel.findOne({
+        businessId,
+        name: "average Users",
+      }).select("name filter groupColor");
+      const attensionUsers = await GroupModel.findOne({
+        businessId,
+        name: "attention Required Users",
+      }).select("name filter groupColor");
+      const lostUsers = await GroupModel.findOne({
+        businessId,
+        name: "lost Users",
+      }).select("name filter groupColor");
+
+      const customGroups = [];
+
+      const BestUserTimestamps = calculateTimestamps(
+        BestUserGroup?.filter?.[0].duration || 0,
+      );
+      const bestGroupPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: BestUserTimestamps.fromTimestamp,
+          $lte: BestUserTimestamps.toTimestamp,
+        },
+      });
+
+      const {
+        totalSpend,
+        averageSpend,
+        avgRating,
+        newUsers,
+        totalReviews,
+        countOfFoodTaste,
+        countOfBadFoodTaste,
+        countOfAmbience,
+        countOfBadAmbience,
+        countOfHygiene,
+        countOfBadHygiene,
+        countOfService,
+        countOfBadService,
+      } = await fetchData(businessId, fromDate, toDate);
+
+      const goodFoodTastePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfFoodTaste,
+      );
+      const badFoodTastePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadFoodTaste,
+      );
+
+      const goodAmbiencePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfAmbience,
+      );
+      const badAmbiencePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadAmbience,
+      );
+
+      const goodHygienePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfHygiene,
+      );
+      const badHygienePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadHygiene,
+      );
+
+      const goodServicePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfService,
+      );
+      const badServicePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadService,
+      );
+
+      return c.json(
+        {
+          err: false,
+          data: {
+            totalSubscriberCount: totalSubscriberCount || 0,
+            aboutCustomer: {
+              averageSpendAmount: averageSpend || 0,
+              averageReturnPercentage: 15,
+              averageReviewCount: avgRating || 0,
+              newUserCount: newUsers.length || 0,
+            },
+            userReviews: {
+              foodTaste: {
+                likePercentage: goodFoodTastePercentage || 0,
+                dislikePercentage: badFoodTastePercentage || 0,
+              },
+              ambience: {
+                likePercentage: goodAmbiencePercentage || 0,
+                dislikePercentage: badAmbiencePercentage || 0,
+              },
+              hygiene: {
+                likePercentage: goodHygienePercentage || 0,
+                dislikePercentage: badHygienePercentage || 0,
+              },
+              service: {
+                likePercentage: goodServicePercentage || 0,
+                dislikePercentage: badServicePercentage || 0,
+              },
+            },
+          },
+          message: "existing payment",
+        },
+        200,
+      );
     },
   );
 

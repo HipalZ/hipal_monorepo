@@ -15,7 +15,7 @@ const tagRouter = new Hono()
     if (existingTagType) {
       return c.json(
         {
-          message: "existingTagType already subscribed",
+          message: "existingTagType already exist",
           err: true,
           data: {},
         },
@@ -144,6 +144,23 @@ const tagRouter = new Hono()
       return c.json(
         {
           message: "tag found",
+          err: false,
+          data: tag,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/tagType/all",
+
+    async (c) => {
+      const tag = await TagTypeModel.find({
+        isDeleted: false,
+      });
+      return c.json(
+        {
+          message: "tagType found",
           err: false,
           data: tag,
         },

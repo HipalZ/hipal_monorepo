@@ -40,7 +40,7 @@ const BillSummary = (props: IBillSummary) => {
           <h1>₹ {billValue}</h1>
         </div>
         {claimedCoinz > 0 && (
-          <div className="flex justify-between mx-4 mt-1 text-sm capitalize text-primary">
+          <div className="flex justify-between mx-4 mt-1 text-sm capitalize text-primary ">
             <h1 className="text-[1rem]">Hi-Coinz</h1>
             <div className="flex">
               <span className="text-base">₹ {claimedCoinz || 0}</span>
