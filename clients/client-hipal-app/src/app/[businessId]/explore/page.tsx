@@ -81,34 +81,33 @@ export default async function Explore({
               </h2>
               <article className="h-[28rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
                 <EmblaCarousel>
-                  {data?.banners?.map(
-                    (banner: IBannerPayload, index: number) => {
-                      if (banner?.isPublished === false) return null;
-                      return (
-                        <BannerLayouts
-                          redirectionId={banner?.redirectionId || ""}
-                          redirectionName={banner?.redirectionName || ""}
-                          key={`banner?._id+${index.toString()}`}
-                          selectedLayout={banner?.layout || ""}
-                          heading={banner?.heading || ""}
-                          paragraph={banner?.paragraph || ""}
-                          callToAction={banner?.callToAction || ""}
-                          img={{ logo: banner?.bannerImage || "" }}
-                          selectedColor={{
-                            bgColor: banner?.backgroundColor || "",
-                            textColor: banner?.backgroundColor || "",
-                          }}
-                          paragraphStyle={{
-                            color: banner?.paragraphColor || "",
-                          }}
-                          buttonStyle={{
-                            color: banner?.buttonColor || "",
-                            buttonColor: banner?.buttonTextColor || "",
-                          }}
-                        />
-                      );
-                    },
-                  )}
+                  {data?.banners?.map((banner, index) => {
+                    if (!banner?.isPublished) return null;
+                    return (
+                      <div key={index} className="embla__slide">
+                          <BannerLayouts
+                            redirectionId={banner?.redirectionId || ""}
+                            redirectionName={banner?.redirectionName || ""}
+                            selectedLayout={banner?.layout || ""}
+                            heading={banner?.heading || ""}
+                            paragraph={banner?.paragraph || ""}
+                            callToAction={banner?.callToAction || ""}
+                            img={{ logo: banner?.bannerImage || "" }}
+                            selectedColor={{
+                              bgColor: banner?.backgroundColor || "",
+                              textColor: banner?.backgroundColor || "",
+                            }}
+                            paragraphStyle={{
+                              color: banner?.paragraphColor || "",
+                            }}
+                            buttonStyle={{
+                              color: banner?.buttonColor || "",
+                              buttonColor: banner?.buttonTextColor || "",
+                            }}
+                          />
+                      </div>
+                    );
+                  })}
                 </EmblaCarousel>
               </article>
             </article>

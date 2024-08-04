@@ -57,10 +57,10 @@ function RecommendedDishes({
               <SplideSlide key={dish._id?.toString()}>
                 {dish && (
                   <div className="relative z-[100]">
-                    <div className="absolute bg-white left-2 top-2">
+                    <div className="absolute bg-white rounded-xl left-2 top-2">
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>
-                    <div className="z-10 flex flex-col overflow-hidden bg-white border w-[8.5rem] rounded-xl h-44 border-base-200">
+                    <div className="z-10 flex flex-col overflow-hidden bg-white border w-[8.5rem] rounded-xl h-44 border-base-200 text-primary">
                       <div
                         onClick={() => openModal(dish)}
                         className="w-full h-32 overflow-hidden"

@@ -124,7 +124,7 @@ export interface IStyles {
 }
 
 export interface IBusinessData {
-  outletInfo: { location: any; phone: any };
+  outletInfo: { location: string; phone: string ; outLetType: string }; 
   businessId: string;
   banners: IBannerPayload[];
   _id: string;

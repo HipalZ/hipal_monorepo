@@ -11,11 +11,10 @@ interface IDishesProps {
 }
 
 const DishesList: FC<IDishesProps> = (props) => {
-  const { childCategory, parentCategory } = props;
+  const { childCategory } = props;
   const {
     isActiveDishType,
     isActiveCategory,
-    isActiveParentCategory,
   } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
@@ -63,7 +62,7 @@ const DishesList: FC<IDishesProps> = (props) => {
           <div
             className={cn(
               { "border-t-2 border-primary": category.dishIds.length !== 0 },
-              "z-40 flex flex-row justify-between px-6 pb-2 font-bold prose bg-base-200",
+              "z-40 flex flex-row justify-between px-4 font-bold prose bg-base-200",
             )}
           >
             <h3 className="my-4 text-xl font-medium capitalize text-primary">

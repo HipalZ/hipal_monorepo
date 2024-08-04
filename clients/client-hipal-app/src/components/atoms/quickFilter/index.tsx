@@ -28,7 +28,7 @@ export const foodTypeIcons = {
 
 const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
 	<div
-		className={`${isActive ? 'bg-primary text-base-100' : ''} flex justify-center items-center px-2 rounded-full py-2 border border-primary `}
+		className={`${isActive ? 'bg-primary text-base-100' : ''} flex justify-center items-center px-2 rounded-full py-1 border border-primary `}
 		onClick={onClick}
 	>
 		<div className="w-4 h-4 p-[0.125rem] border-2" style={{ borderColor: color }}>
@@ -86,7 +86,7 @@ const QuickFilter = () => {
 				/>
 				<div
 					onClick={openModal}
-					className="p-2 ml-2 text-xs font-semibold border rounded-full text-primary border-primary"
+					className="px-2 py-1 ml-2 text-xs font-semibold border rounded-full text-primary border-primary"
 				>
 					{activeIcon}
 				</div>
@@ -95,7 +95,7 @@ const QuickFilter = () => {
 				<QuickFilterPopup show={isModalOpen} onClose={closeModal}>
 					<div className="pt-4 pb-8 w-[7rem] text-base-content bg-base-100 rounded-xl mb-4">
 						<div className="mb-4 text-xl text-center text-primary">Filters</div>
-						<div className="mx-[1rem]  font-medium space-y-4">
+						<div className="mx-[1rem] font-medium space-y-4">
 							<FilterOption
 								isActive={isActiveDishType.toLowerCase() === "vegan"}
 								onClick={() => handleFilter("VEGAN")}

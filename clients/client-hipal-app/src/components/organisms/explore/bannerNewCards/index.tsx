@@ -75,64 +75,64 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <div
-            className="relative flex flex-col shrink-0 h-[20rem] aspect-square"
-            key={layout?._id}
-            onClick={() =>
-              handleNavigation(redirectionId || "", redirectionName || "")
-            }
-          >
-            <article key={layout?._id} className="max-h-[20rem]">
-              <figure className="w-full rounded-2xl">
-                <Image
-                  src={img?.logo || layout?.image || pastaDummy}
-                  alt={layout?.title}
-                  className="rounded-xl h-[20rem] bg-cover aspect-square shrink-0"
-                  width={320}
-                  height={320}
-                />
-              </figure>
-              <article
-                style={{
-                  backgroundColor: selectedColor?.bgColor || "white",
-                }}
-                className="absolute bottom-0 z-10 w-full max-w-[20rem] p-2 rounded-b-xl"
-              >
-                <div className="flex items-center justify-between">
-                  <h1
-                    style={paragraphStyle}
-                    className={cn(
-                      "text-[1rem] leading-5",
-                      layout?.isButton ? "w-[70%]" : "w-[100%]",
-                    )}
-                  >
-                    {heading ? truncateDescription(heading) : "Heading"}
-                  </h1>
-                  {layout?.isButton && (
-                    <div style={buttonStyleTags} className={defaultButtonStyle}>
-                      <button type="button">{callToAction || "Explore"}</button>
-                      <span className="text-[0.8rem]">
-                        <LuArrowUpRight />
-                      </span>
-                    </div>
+          className="relative flex flex-col shrink-0 h-[20rem] aspect-square embla__parallax"
+          key={layout?._id}
+          onClick={() =>
+            handleNavigation(redirectionId || "", redirectionName || "")
+          }
+        >
+          <article key={layout?._id} className="max-h-[20rem]">
+            <figure className="w-full rounded-2xl">
+              <Image
+                src={img?.logo || layout?.image}
+                alt={layout?.title}
+                className="rounded-xl h-[20rem] bg-cover aspect-square shrink-0 embla__parallax__img"
+                width={320}
+                height={320}
+              />
+            </figure>
+            <article
+              style={{
+                backgroundColor: selectedColor?.bgColor || "white",
+              }}
+              className="absolute bottom-0 z-10 w-full max-w-[20rem] p-2 rounded-b-xl"
+            >
+              <div className="flex items-center justify-between ">
+                <h1
+                  style={paragraphStyle}
+                  className={cn(
+                    "text-[1rem] leading-5 text-primary",
+                    layout?.isButton ? "w-[70%]" : "w-[100%]",
                   )}
-                </div>
-                <p
-                  style={{
-                    WebkitLineClamp: 2,
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    ...paragraphStyle,
-                  }}
-                  className="text-[0.8rem] leading-5 mt-2"
                 >
-                  {paragraph
-                    ? truncateDescription(paragraph)
-                    : layout?.paragraph}
-                </p>
-              </article>
+                  {heading ? truncateDescription(heading) : "Heading"}
+                </h1>
+                {layout?.isButton && (
+                  <div style={buttonStyleTags} className={defaultButtonStyle}>
+                    <button type="button">{callToAction || "Explore"}</button>
+                    <span className="text-[0.8rem]">
+                      <LuArrowUpRight />
+                    </span>
+                  </div>
+                )}
+              </div>
+              <p
+                style={{
+                  WebkitLineClamp: 2,
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  ...paragraphStyle,
+                }}
+                className="text-[0.8rem] leading-5 mt-2 text-primary"
+              >
+                {paragraph
+                  ? truncateDescription(paragraph)
+                  : layout?.paragraph}
+              </p>
             </article>
-          </div>
+          </article>
+        </div>
         );
       })}
       {bannerLayouts2.map((layout) => {
@@ -159,7 +159,7 @@ const MemoBannersLayout = (props: Props) => {
                 }}
                 className="absolute bottom-2 w-[19rem] md:max-w-[20rem] mx-2 p-2 rounded-xl"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between text-primary">
                   <h1
                     style={paragraphStyle}
                     className={cn(
@@ -186,7 +186,7 @@ const MemoBannersLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphStyle,
                   }}
-                  className="text-[0.8rem] leading-5"
+                  className="text-[0.8rem] leading-5 text-primary"
                 >
                   {paragraph
                     ? truncateDescription(paragraph)

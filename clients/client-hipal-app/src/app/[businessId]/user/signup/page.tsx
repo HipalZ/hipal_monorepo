@@ -1,7 +1,7 @@
 "use client";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Image from "next/image";
-import { type FormEvent, memo, useCallback, useState } from "react";
+import { type FormEvent, memo, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Welcome from "@/assets/login-background.png";
 import { BiArrowBack } from "react-icons/bi";
@@ -12,12 +12,14 @@ import { apiRpc } from "@hi/common";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
-  const [phone, setPhone] = useState("");
-  const { setUserDetails } = useLogin();
+  const { setUserDetails ,userDetails } = useLogin();
+  const [phone, setPhone] = useState( "");
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
+
+  console.log("userDetails",phone, userDetails);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,13 +27,13 @@ const SignUp = memo(() => {
 
     setLoader(true);
 
-    if (phone.length !== 10) {
+    if (phone.length !== 10 ) {
       toast.error("Please enter a valid phone number");
       return;
     }
 
     const userData = {
-      phone: phone,
+      phone: phone ,
       role: ["HIPAL_CUSTOMER"],
     };
 
@@ -56,6 +58,13 @@ const SignUp = memo(() => {
   const goBack = useCallback(() => {
     router.push(`/${customLink}/explore`);
   }, [router, customLink]);
+
+  useEffect(() => {
+    
+    if (userDetails.phone) {
+      setPhone(userDetails.phone);
+    }
+  },[])
 
   return (
     <main className="relative bg-black">
@@ -91,7 +100,7 @@ const SignUp = memo(() => {
           <b>Hurry up for a rewarding journey✨</b>
           <input
             onChange={(e) => setPhone(e.target.value)}
-            value={phone}
+            value={phone || userDetails.phone}
             type="tel"
             id="floating_outlined2"
             className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"

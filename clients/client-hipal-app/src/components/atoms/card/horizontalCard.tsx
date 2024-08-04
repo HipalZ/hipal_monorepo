@@ -12,6 +12,7 @@ import PlaceholderImg from "../placeholder";
 import type { DishType } from "@hi/db-models/src/validators";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import { useCartStore } from "@/components/store/useCartStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const HorizontalCard = ({
   dishData,
@@ -25,8 +26,8 @@ const HorizontalCard = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState({} as DishType);
   const { cart } = useCartStore();
+  const outletInfo = _useAllBusiness(s=>s.data.outletInfo)
   const openModal = useCallback((dishData: DishType) => {
-    console.log("dishData", dishData);
     setSelectedDish(dishData);
     setIsModalOpen(true);
   }, []);
@@ -45,13 +46,13 @@ const HorizontalCard = ({
     <section
       id={`${dishData?._id}`}
       className={`
-  ${dishData.availability ? "mx-6" : "opacity-80 px-6"}
+  ${dishData.availability ? "mx-4" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-center py-4 space-x-12 prose">
+      <div className="flex flex-row items-end py-4 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
-            {dishData?.dishTypes && (
+            {dishData?.dishTypes && outletInfo.outLetType !== "OTHER" && (
               <div className="my-auto">
                 <FoodType types={dishData?.dishTypes} />
               </div>
@@ -67,7 +68,7 @@ const HorizontalCard = ({
             {/* <DishTag tags={dishData.tags} /> */}
           </div>
 
-          <div className="overflow-hidden text-lg font-medium capitalize w-[95%] text-primary">
+          <div className="py-1 overflow-hidden text-lg font-medium leading-6 capitalize text-primary">
             {dishData?.name || ""}
           </div>
           <div className="mt-1 ml-1 text-xs ">

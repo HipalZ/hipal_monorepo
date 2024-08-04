@@ -70,10 +70,7 @@ const CategoryPageBtn = () => {
       setIsPayment(true);
       return router.push(`/${customLink}/user/signup`);
     }
-    if (!isPayment) {
-      openModal();
-      return;
-    }
+    openModal();
   }, [
     setDirection,
     accessToken,

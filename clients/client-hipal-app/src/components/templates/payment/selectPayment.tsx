@@ -103,14 +103,14 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           <Image width={480} height={200} src={Grid} alt="Payment Image" />
         </div>
       </div>
-      <section className="absolute bottom-6">
+      <section className="absolute bottom-6 text-primary">
         <center className=" text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
           How do you want to settle ?
         </center>
         <section className="flex w-[92%] gap-4 mx-4">
           <article
             onClick={() => createOrder(billValue, "OFFLINE")}
-            className={`w-full max-w-[12.625rem] h-[15.65rem]  relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl`}
+            className="w-full max-w-[12.625rem] h-[15.65rem]  relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl"
           >
             <center
               style={{

@@ -507,7 +507,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   });
 
   return (
-    <section className="bg-base-100">
+    <section className="h-screen bg-base-100">
       {isLoading ? (
         <PayLoader selectedMode={selectedMode} />
       ) : showError ? (
