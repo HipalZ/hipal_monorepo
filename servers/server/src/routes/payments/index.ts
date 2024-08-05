@@ -2204,6 +2204,24 @@ const paymentsRouter = new Hono()
         message: "Invalid date range",
       });
     },
+  )
+  .post(
+    "/getGroupUser",
+    zValidator(
+      "json",
+      z.object({
+        userIds: z.array(z.string()),
+      }),
+    ),
+    async (c) => {
+      const { userIds = [] } = await c.req.json();
+      const users = await UserAnalytic.find({ userId: { $in: userIds } });
+      return c.json({
+        data: users,
+        err: false,
+        message: "User found",
+      });
+    },
   );
 
 export default paymentsRouter;

@@ -466,7 +466,9 @@ const groupRouter = new Hono()
           },
           {
             userCount: matchedUsers.length,
-            userPercentage: (matchedUsers.length / subscriber) * 100,
+            userPercentage: Math.round(
+              (matchedUsers.length / subscriber) * 100,
+            ),
             businessId,
             date: Date.now(),
           },
@@ -607,7 +609,9 @@ const groupRouter = new Hono()
           },
           {
             userCount: matchedUsers.length,
-            userPercentage: (matchedUsers.length / subscriber) * 100,
+            userPercentage: Math.round(
+              (matchedUsers.length / subscriber) * 100,
+            ),
             businessId,
             date: Date.now(),
           },
@@ -748,7 +752,9 @@ const groupRouter = new Hono()
           },
           {
             userCount: matchedUsers.length,
-            userPercentage: (matchedUsers.length / subscriber) * 100,
+            userPercentage: Math.round(
+              (matchedUsers.length / subscriber) * 100,
+            ),
             businessId,
             date: Date.now(),
           },
