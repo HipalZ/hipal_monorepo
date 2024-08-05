@@ -115,7 +115,7 @@ const Terms = () => {
       <p className="paragraph">
         <ol className="unorderedlist">
           For questions or concerns related to <b>{businessDetails?.name}</b>{" "}
-          services, please contact:
+          services, please approach us at the following contact points:
           <br />
           <li>
             Company Name: <b>{businessDetails?.registeredName}</b>
@@ -124,7 +124,9 @@ const Terms = () => {
             Brand Name: <b>{businessDetails?.name}</b>
           </li>
           <li>Phone Number: {businessDetails?.phone}</li>
-          <li>Contact : {businessDetails?.email}</li>
+          {businessDetails?.email ? (
+            <li>Email : {businessDetails?.email}</li>
+          ) : null}
           <li>Address: {businessDetails?.address}</li>
         </ol>
       </p>

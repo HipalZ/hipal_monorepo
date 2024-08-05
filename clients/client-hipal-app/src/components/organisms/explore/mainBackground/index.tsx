@@ -20,9 +20,7 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const { setTableName } = useTableData();
 
   useEffect(() => {
-    if (tableName !== null) {
-      setTableName(tableName);
-    }
+    setTableName(tableName || "");
   }, [tableName]);
 
   return (
