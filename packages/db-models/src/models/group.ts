@@ -1,6 +1,6 @@
 import mongoose, { type Model } from "mongoose";
 import { type FilterGroupType, type Group, VisitEnum } from "../validators";
-
+const ObjectId = mongoose.Schema.Types.ObjectId;
 const filterSchema = new mongoose.Schema<FilterGroupType>({
   duration: {
     type: Number,
@@ -33,7 +33,7 @@ const groupSchema = new mongoose.Schema<Group>(
       required: true,
     },
     businessId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       required: true,
     },
     description: {
@@ -61,7 +61,7 @@ const groupSchema = new mongoose.Schema<Group>(
       default: false,
     },
     userIds: {
-      type: [mongoose.Schema.Types.ObjectId],
+      type: [ObjectId],
       required: false,
     },
   },

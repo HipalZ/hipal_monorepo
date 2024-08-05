@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
-  GroupModel,
+  GroupAnalytic,
   LoyaltyCoinsInfo,
   LoyaltySettings,
   Order,
@@ -1557,39 +1557,13 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const totalSubscriberCount = await totalSubscribers(businessId);
-      const BestUserGroup = await GroupModel.findOne({
-        businessId,
-        name: "Best Users",
-      }).select("name filter groupColor ");
-      const averageUserGroup = await GroupModel.findOne({
-        businessId,
-        name: "average Users",
-      }).select("name filter groupColor");
-      const attensionUsers = await GroupModel.findOne({
-        businessId,
-        name: "attention Required Users",
-      }).select("name filter groupColor");
-      const lostUsers = await GroupModel.findOne({
-        businessId,
-        name: "lost Users",
-      }).select("name filter groupColor");
-
-      const customGroups = [];
-
-      const BestUserTimestamps = calculateTimestamps(
-        BestUserGroup?.filter?.[0].duration || 0,
-      );
-      const bestGroupPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: BestUserTimestamps.fromTimestamp,
-          $lte: BestUserTimestamps.toTimestamp,
-        },
+      const groupAnalytics = await GroupAnalytic.find({ businessId }).sort({
+        date: -1,
       });
 
+      const totalSubscriberCount = await totalSubscribers(businessId);
+
       const {
-        totalSpend,
         averageSpend,
         avgRating,
         newUsers,
@@ -1645,6 +1619,7 @@ const paymentsRouter = new Hono()
           err: false,
           data: {
             totalSubscriberCount: totalSubscriberCount || 0,
+            groups: groupAnalytics || [],
             aboutCustomer: {
               averageSpendAmount: averageSpend || 0,
               averageReturnPercentage: 15,
@@ -1842,7 +1817,7 @@ const paymentsRouter = new Hono()
     ),
 
     async (c) => {
-      const { businessId, from, to, userId, tag } = c.req.query();
+      const { businessId, from, to, userId } = c.req.query();
       const fromDate = Number(from);
       const toDate = Number(to);
 
