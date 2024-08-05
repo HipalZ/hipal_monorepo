@@ -1232,6 +1232,31 @@ const groupRouter = new Hono()
         data: groupAnalytics,
       });
     },
+  )
+  .post(
+    "/users/sendBulkMessage",
+
+    zValidator(
+      "json",
+      z.object({
+        userIds: z.array(z.string({ message: "userIds is required" })),
+        message: z.string({ message: "message is required" }).optional(),
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { userIds = [], message, businessId } = await c.req.json();
+      console.log(userIds, message, businessId);
+      return c.json(
+        {
+          message: "Message sent successfully",
+          err: false,
+          data: { userIds },
+        },
+        200,
+      );
+    },
   );
 
 export default groupRouter;
