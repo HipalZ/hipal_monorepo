@@ -31,7 +31,7 @@ const groupRouter = new Hono()
     if (existingGroup) {
       return c.json(
         {
-          message: "Group already subscribed",
+          message: "Group already exists",
           err: true,
           data: {},
         },
