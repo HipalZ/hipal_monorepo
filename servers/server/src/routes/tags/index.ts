@@ -142,7 +142,7 @@ const tagRouter = new Hono()
       const tag = await TagModel.find({
         businessId,
         isDeleted: false,
-      }).select("name tagTypeId businessId _id tagType");
+      }).select("name tagTypeId businessId _id tagType duration");
       return c.json(
         {
           message: "tag found",
