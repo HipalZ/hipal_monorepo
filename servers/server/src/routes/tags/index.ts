@@ -198,7 +198,7 @@ const tagRouter = new Hono()
     },
   )
   .put(
-    "/:tagId/:userId",
+    "/update/:userId",
     zValidator(
       "json",
       z.object({
@@ -206,10 +206,16 @@ const tagRouter = new Hono()
         remainderDate: z
           .number({ message: "remainderDate is required" })
           .optional(),
+        tagIds: z.array(z.string({ message: "tagIds is required" })).optional(),
 
         displayForCaptains: z
           .boolean({ message: "displayForCaptains is required" })
           .optional(),
+        noteDescription: z
+          .string({ message: "noteDescription is required" })
+          .optional(),
+        noteTitle: z.string({ message: "noteTitle is required" }).optional(),
+        noteUrl: z.string({ message: "noteUrl is required" }).optional(),
       }),
     ),
     zValidator(
@@ -221,10 +227,13 @@ const tagRouter = new Hono()
     ),
 
     async (c) => {
-      const { tagId, userId } = c.req.param();
+      const { userId } = c.req.param();
       const requestData = await c.req.json();
-      const updateTag = await TagModel.findOneAndUpdate(
-        { _id: tagId },
+      const { tagIds } = requestData;
+      const updateTag = await TagModel.updateMany(
+        {
+          _id: { $in: tagIds },
+        },
         requestData,
       );
       if (!updateTag) {
@@ -238,8 +247,13 @@ const tagRouter = new Hono()
         );
       }
       const updateUserTag = await UserTags.updateMany({
-        tagId,
+        tagId: { $in: tagIds },
+
         userId,
+        noteDescription: requestData.noteDescription,
+        noteTitle: requestData.noteTitle,
+        noteUrl: requestData.noteUrl,
+
         reminderDate: requestData.remainderDate,
       });
       return c.json(

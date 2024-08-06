@@ -61,6 +61,7 @@ export const groupSchema = z.object({
   isDeleted: z.boolean().default(false).optional(),
 
   userIds: z.array(ObjectIdSchema).optional(),
+  groupType: z.string().optional(),
 });
 
 export type Group = z.infer<typeof groupSchema>;

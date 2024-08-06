@@ -64,6 +64,10 @@ const groupSchema = new mongoose.Schema<Group>(
       type: [ObjectId],
       required: false,
     },
+    groupType: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

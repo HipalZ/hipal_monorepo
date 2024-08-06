@@ -29,7 +29,7 @@ export const TagSchema = z.object({
 
   tagType: z.enum(["AUTO_TAG", "MANUAL_TAG"]),
   isDeleted: z.boolean().default(false).optional(),
-  remainderDate: z.number().optional(),
+  duration: z.number().optional(),
 });
 
 export type TagType = z.infer<typeof TagSchema>;

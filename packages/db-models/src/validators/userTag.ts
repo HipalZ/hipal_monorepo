@@ -15,6 +15,9 @@ export const UserTagSchema = z.object({
   businessId: ObjectIdSchema,
   date: z.number().optional(),
   reminderDate: z.number().optional(),
+  noteDescription: z.string().optional(),
+  noteTitle: z.string().optional(),
+  noteUrl: z.string().optional(),
   isDeleted: z.boolean().default(false).optional(),
 });
 
