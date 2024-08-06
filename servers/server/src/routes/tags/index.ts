@@ -258,7 +258,7 @@ const tagRouter = new Hono()
 
             reminderDate: requestData.remainderDate,
           },
-          { upser: true },
+          { upsert: true },
         );
       }
 
