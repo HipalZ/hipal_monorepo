@@ -247,16 +247,19 @@ const tagRouter = new Hono()
       }
 
       for (let i = 0; i < tagIds.length; i++) {
-        const updateUserTag = await UserTags.updateMany({
-          tagId: tagIds[i],
+        const updateUserTag = await UserTags.updateMany(
+          {
+            tagId: tagIds[i],
 
-          userId,
-          noteDescription: requestData.noteDescription,
-          noteTitle: requestData.noteTitle,
-          noteUrl: requestData.noteUrl,
+            userId,
+            noteDescription: requestData.noteDescription,
+            noteTitle: requestData.noteTitle,
+            noteUrl: requestData.noteUrl,
 
-          reminderDate: requestData.remainderDate,
-        });
+            reminderDate: requestData.remainderDate,
+          },
+          { upser: true },
+        );
       }
 
       return c.json(
