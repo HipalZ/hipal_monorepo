@@ -246,20 +246,27 @@ const tagRouter = new Hono()
         );
       }
 
+      console.log("date", Date.now());
+
       for (let i = 0; i < tagIds.length; i++) {
-        const updateUserTag = await UserTags.updateMany(
+        const updateUserTag = await UserTags.findOneAndUpdate(
           {
             tagId: tagIds[i],
-
             userId,
-            noteDescription: requestData.noteDescription,
-            noteTitle: requestData.noteTitle,
-            noteUrl: requestData.noteUrl,
-
-            reminderDate: requestData.remainderDate,
           },
-          { upsert: true },
+          {
+            $set: {
+              noteDescription: requestData.noteDescription,
+              noteTitle: requestData.noteTitle,
+              businessId: requestData.businessId,
+              noteUrl: requestData.noteUrl,
+              date: Date.now(),
+              reminderDate: requestData.remainderDate,
+            },
+          },
+          { upsert: true, new: true }, // Ensure upsert is true and return the updated document
         );
+        console.log("create a tag", updateUserTag);
       }
 
       return c.json(

@@ -2120,10 +2120,6 @@ const paymentsRouter = new Hono()
         const existingTagAndNotes = await UserTags.find({
           userId,
           businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
         })
           .sort({ _id: -1 })
           .skip(skip)
@@ -2132,6 +2128,8 @@ const paymentsRouter = new Hono()
             path: "tagId",
             select: "name tagType displayForCaptains",
           });
+
+        console.log("existingTagAndNotes", existingTagAndNotes);
 
         const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
           if (payment.tagId?._id) {
