@@ -171,16 +171,17 @@ const tagRouter = new Hono()
     },
   )
   .delete(
-    "/:tagId",
+    "/:tagId/:userId",
     zValidator(
       "param",
       z.object({
         tagId: z.string({ message: "tagId is required" }),
+        userId: z.string({ message: "userId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { tagId } = c.req.param();
+      const { tagId, userId } = c.req.param();
       await TagModel.updateOne(
         {
           _id: tagId,
@@ -189,6 +190,7 @@ const tagRouter = new Hono()
       );
       await UserTags.deleteMany({
         tagId,
+        userId,
       });
       return c.json(
         {
