@@ -1,6 +1,16 @@
 import mongoose, { type Model } from "mongoose";
 import { type FilterGroupType, type Group, VisitEnum } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
+const tagsSchema = new mongoose.Schema({
+  tagId: {
+    type: ObjectId,
+    required: true,
+  },
+  count: {
+    type: Number,
+    required: true,
+  },
+});
 const filterSchema = new mongoose.Schema<FilterGroupType>({
   duration: {
     type: Number,
@@ -8,21 +18,54 @@ const filterSchema = new mongoose.Schema<FilterGroupType>({
   },
   visit: {
     type: Number,
-    required: true,
+    required: false,
   },
   visitType: {
     type: String,
-    required: true,
+    required: false,
     enum: VisitEnum, // Assuming VisitType is an object with enum values
   },
   spend: {
     type: Number,
-    required: true,
+    required: false,
   },
   spendType: {
     type: String,
-    required: true,
+    required: false,
     enum: VisitEnum,
+  },
+  cardBalance: {
+    type: Number,
+    required: false,
+  },
+  cardBalanceType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming cardBalanceType is an object with enum values
+  },
+
+  coinzIssued: {
+    type: Number,
+    required: false,
+  },
+  coinzIssuedType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming coinzIssuedType is an object with enum values
+  },
+
+  coinzUsed: {
+    type: Number,
+    required: false,
+  },
+
+  coinzUsedType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming coinzUsedType is an object with enum values
+  },
+  tags: {
+    type: [tagsSchema],
   },
 });
 
@@ -66,6 +109,7 @@ const groupSchema = new mongoose.Schema<Group>(
     },
     groupType: {
       type: String,
+      enum: ["DYNAMIC", "MANUAL"],
       required: true,
     },
   },
