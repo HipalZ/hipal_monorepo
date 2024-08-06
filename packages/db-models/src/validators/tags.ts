@@ -11,7 +11,6 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 export const TagSchema = z.object({
-  tagTypeId: ObjectIdSchema,
   name: z
     .string({
       message: "name is required",
@@ -27,7 +26,6 @@ export const TagSchema = z.object({
   businessId: ObjectIdSchema,
   displayForCaptains: z.boolean().default(true).optional(),
 
-  tagType: z.enum(["AUTO_TAG", "MANUAL_TAG"]),
   isDeleted: z.boolean().default(false).optional(),
   duration: z.number().optional(),
 });

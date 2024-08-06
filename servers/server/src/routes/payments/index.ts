@@ -2126,7 +2126,7 @@ const paymentsRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "tagId",
-            select: "name tagType displayForCaptains",
+            select: "name  displayForCaptains",
           });
 
         console.log("existingTagAndNotes", existingTagAndNotes);

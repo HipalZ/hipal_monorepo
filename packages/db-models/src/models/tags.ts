@@ -4,11 +4,6 @@ import type { TagType } from "../validators";
 
 const tagSchema = new mongoose.Schema(
   {
-    tagTypeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "TagType",
-    },
     name: {
       type: String,
       required: true,
@@ -23,12 +18,6 @@ const tagSchema = new mongoose.Schema(
     },
     duration: {
       type: Number,
-      required: false,
-    },
-
-    tagType: {
-      type: String,
-      enum: ["AUTO_TAG", "MANUAL_TAG"],
       required: false,
     },
 

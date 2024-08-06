@@ -52,7 +52,6 @@ const tagRouter = new Hono()
     const existingTag = await TagModel.findOne({
       name: requestData.name,
       businessId: requestData.businessId,
-      tagTypeId: requestData.tagTypeId,
 
       isDeleted: false,
     });
@@ -60,7 +59,7 @@ const tagRouter = new Hono()
     if (existingTag) {
       return c.json(
         {
-          message: "existingTag already subscribed",
+          message: "existingTag already exist",
           err: true,
           data: {},
         },
@@ -142,7 +141,7 @@ const tagRouter = new Hono()
       const tag = await TagModel.find({
         businessId,
         isDeleted: false,
-      }).select("name tagTypeId businessId _id tagType duration");
+      }).select("name businessId _id tagType duration");
       return c.json(
         {
           message: "tag found",
