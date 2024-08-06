@@ -221,7 +221,6 @@ const tagRouter = new Hono()
     zValidator(
       "param",
       z.object({
-        tagId: z.string({ message: "tagId is required" }),
         userId: z.string({ message: "userId is required" }),
       }),
     ),
@@ -246,16 +245,20 @@ const tagRouter = new Hono()
           400,
         );
       }
-      const updateUserTag = await UserTags.updateMany({
-        tagId: { $in: tagIds },
 
-        userId,
-        noteDescription: requestData.noteDescription,
-        noteTitle: requestData.noteTitle,
-        noteUrl: requestData.noteUrl,
+      for (let i = 0; i < tagIds.length; i++) {
+        const updateUserTag = await UserTags.updateMany({
+          tagId: tagIds[i],
 
-        reminderDate: requestData.remainderDate,
-      });
+          userId,
+          noteDescription: requestData.noteDescription,
+          noteTitle: requestData.noteTitle,
+          noteUrl: requestData.noteUrl,
+
+          reminderDate: requestData.remainderDate,
+        });
+      }
+
       return c.json(
         {
           message: "tag updated successfully",
