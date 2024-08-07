@@ -16,7 +16,7 @@ const MemoDeleteDish = (props: Props) => {
     setDishStep(DishSteps.DISH_STEP_1);
   };
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center my-6">
       <section className="h-[20rem] w-[20rem] border-1 border rounded-2xl p-6">
         <AiFillAlert color="red" size="28" />
         <h1 className="mt-2 mb-6 text-2xl font-bold">Delete Dish!</h1>

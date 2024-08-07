@@ -1962,7 +1962,11 @@ const paymentsRouter = new Hono()
         })
           .sort({ _id: -1 })
           .skip(skip)
-          .limit(PAGE_SIZE);
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "order_id",
+            select: "billValue",
+          });
 
         console.log(
           "existingRewardHistory",
@@ -1988,7 +1992,11 @@ const paymentsRouter = new Hono()
         })
           .sort({ _id: -1 })
           .skip(skip)
-          .limit(PAGE_SIZE);
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "order_id",
+            select: "billValue",
+          });
 
         console.log(
           "existingRewardHistory",
@@ -2080,7 +2088,7 @@ const paymentsRouter = new Hono()
       "query",
       z.object({
         businessId: z.string({
-          message: "loyaltyId is required",
+          message: "businessId is required",
         }),
         userId: z.string({
           message: "userId is required",
@@ -2118,7 +2126,8 @@ const paymentsRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "tagId",
-            select: "name  displayForCaptains",
+            select:
+              "name tagType displayForCaptains duration time remainderInDuration noteTitle noteDescription noteUrl",
           });
 
         console.log("existingTagAndNotes", existingTagAndNotes);
@@ -2161,7 +2170,8 @@ const paymentsRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "tagId",
-            select: "name tagType displayForCaptains",
+            select:
+              "name tagType displayForCaptains duration time remainderInDuration noteTitle noteDescription noteUrl",
           });
 
         const groupByTag = existingTagAndNotes.reduce((acc, payment) => {

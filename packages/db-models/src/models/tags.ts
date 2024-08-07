@@ -24,8 +24,21 @@ const tagSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
 
+    noteTitle: {
+      type: String,
+      required: false,
+    },
+    noteDescription: {
+      type: String,
+      required: false,
+    },
+    noteUrl: {
+      type: String,
+      required: false,
+    },
     displayForCaptains: {
       type: Boolean,
       required: false,
@@ -37,7 +50,12 @@ const tagSchema = new mongoose.Schema(
     },
     time: {
       type: Number,
-      default: 0,
+      required: false,
+    },
+
+    remainderInDuration: {
+      type: String,
+      required: false,
     },
 
     isDeleted: {

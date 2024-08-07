@@ -412,6 +412,8 @@ export interface UserDetails {
 }
 
 export interface Payment {
+  comment: string;
+  waiterName: string;
   _id: string;
   businessId: string;
   date: number;
@@ -431,6 +433,15 @@ export interface Payment {
   earnCoins: number;
   createdAt: string;
   updatedAt: string;
+  phone: string;
+  reviewId: {
+    _id: string;
+    reviewRating: number;
+  };
+  tagId: {
+    _id: string;
+    name: string;
+  };
   __v: number;
 }
 
@@ -484,7 +495,6 @@ export interface ICustomerRecord {
   coinzUsed?: number;
 }
 
-
 export interface IGroupFilter {
   duration: number;
   visit: number;
@@ -507,4 +517,105 @@ export interface IUserGroup {
   __v: number;
   userIds: string[];
   groupColor: string;
+}
+export interface UserDashboardDetails {
+  currentCoinz: number;
+  name: string;
+  totalSale: number;
+  AvarageSale: number;
+  NumOfVisits: number;
+  NumOfSessions: number;
+  coinzIssued: number;
+  coinzUsed: number;
+  bill: Payment[];
+}
+
+export interface UserTags {
+  remainderInDuration: string;
+  displayForCaptains: boolean;
+  duration: number;
+  tagType: string;
+  _id: string;
+  tagTypeId: string;
+  name: string;
+  businessId: string;
+}
+
+export interface UserUpdateTag {
+  _id: string;
+  tagIds: string[];
+  userId: string;
+  comment: string;
+}
+
+export interface TagArray {
+  tagId: Tag;
+  count: number;
+}
+export interface Tag {
+  time: number;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+  remainderInDuration: string;
+  reminderDate: number;
+  _id: string;
+  name: string;
+  tagType: string;
+  displayForCaptains: boolean;
+}
+
+export interface TagDetails {
+  tagId: Tag;
+  count: number;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+}
+
+export interface UserTagDetails {
+  displayForCaptains: boolean;
+  remainderData: number;
+}
+
+export interface ICoinzUsage {
+  _id: string;
+  userId: string;
+  rewards: number;
+  status: string;
+  date: number;
+  tableName: string;
+  order_id: string;
+  loyaltyId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface ILoyaltyData {
+  _id: string;
+  businessId: string;
+  password: string;
+  loyaltyId: string;
+  origin: boolean;
+  cardPattern: string;
+  cardColor: string;
+  fontColor: string;
+  logo: string;
+  expiryDate: string;
+  rewardLimit: number;
+  signUpBonus: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  setCashBackPercentage: number;
+  setClaimedPercentage: number;
+}
+
+export interface IHistory {
+  remainder: string;
+  duration: string;
+  time: string;
 }

@@ -9,6 +9,12 @@ import { DishTypeEnum } from "@hi/db-models/src/validators";
 import { DishSteps } from "../store/useMenuStorage";
 import { cropImage } from "../cropper";
 import toast from "react-hot-toast";
+import {
+  differenceInDays,
+  differenceInMonths,
+  differenceInYears,
+  format,
+} from "date-fns";
 
 export async function storeImageAfterSave(
   image: File,
@@ -311,4 +317,109 @@ export const hexToRgba = (hex: string) => {
     b = Number.parseInt(hex[5] + hex[6], 16);
   }
   return `rgba(${r},${g},${b},${alpha})`;
+};
+export const calculateFutureTimestamp = (
+  remainder: string,
+  duration: string,
+  time: string,
+): number => {
+  // Calculate the future date based on remainder and duration
+  const futureDate = calculateFutureDate(remainder, duration);
+  console.log("futureDate", futureDate);
+  // Split the time into hours and minutes
+  const [hour, minute] = time.split(":").map(Number);
+
+  // Set the hours and minutes on the future date
+  futureDate.setHours(hour);
+  futureDate.setMinutes(minute);
+  futureDate.setSeconds(0); // Optionally set seconds to 0
+
+  // Convert the future date to a Unix timestamp (milliseconds since Jan 1, 1970)
+  return futureDate.getTime();
+};
+
+export const parseRemainderDate = (remainderDate) => {
+  const now = new Date();
+  const futureDate = new Date(remainderDate);
+
+  let remainder = 0;
+  let duration = "";
+
+  // Calculate differences
+  const totalDayDifference = Math.abs(
+    Math.floor((futureDate - now) / (1000 * 60 * 60 * 24)),
+  );
+
+  const yearDifference = differenceInYears(futureDate, now);
+  const monthDifference = differenceInMonths(futureDate, now);
+  const dayDifference =
+    totalDayDifference - (yearDifference * 365 + monthDifference * 30); // approximate months to 30 days
+
+  if (yearDifference > 0) {
+    remainder = yearDifference;
+    duration = "Years";
+  } else if (monthDifference > 0) {
+    remainder = monthDifference;
+    duration = "Months";
+  } else if (dayDifference > 0) {
+    remainder = dayDifference;
+    duration = "Days";
+  }
+
+  // Extract time in HH:mm format
+  const time = format(futureDate, "HH:mm");
+
+  return { remainder, duration, time };
+};
+
+// tagz conversions to milliseconds
+export const convertToTime = (milliseconds: number) => {
+  const totalMinutes = Math.floor(milliseconds / (60 * 1000));
+  const hours24 = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 || 12; // Convert 0 to 12 for 12 AM/PM
+
+  const formattedHours = String(hours12);
+  const formattedMinutes = String(minutes).padStart(2, "0");
+
+  return `${formattedHours}:${formattedMinutes} ${period}`;
+};
+
+export const convertToMilliSeconds = (time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+
+  const hoursInMilliseconds = hours * 3600 * 1000;
+  const minutesInMilliseconds = minutes * 60 * 1000;
+
+  const totalMilliseconds = hoursInMilliseconds + minutesInMilliseconds;
+  return totalMilliseconds;
+};
+
+export const formatTime = (time) => {
+  const [hour, minute] = time.split(":");
+  const period = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${minute} ${period}`;
+};
+
+export const calculateFutureDate = (remainder, duration: string) => {
+  const now = new Date();
+  if (duration === "Days") {
+    now.setDate(now.getDate() + Number.parseInt(remainder, 10));
+  } else if (duration === "Months") {
+    now.setMonth(now.getMonth() + Number.parseInt(remainder, 10));
+  } else if (duration === "Years") {
+    now.setFullYear(now.getFullYear() + Number.parseInt(remainder, 10));
+  }
+  return now;
+};
+
+export const formatDate = (date: Date) => {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };

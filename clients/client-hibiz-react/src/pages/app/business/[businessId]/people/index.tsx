@@ -6,8 +6,7 @@ import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import SidebarPeople from "@/components/templates/menu/sideNavbaar/peopleSideNavBar";
 import Summary from "@/components/templates/people/summary";
 import Client from "@/components/templates/people/client";
-
-
+import Tagz from "@/components/templates/people/tagz";
 
 const HiPeople = () => {
   const { selectedPage, setSelectedPage } = useHiPeopleStore();
@@ -24,10 +23,14 @@ const HiPeople = () => {
       text: "Target Groups",
       onClick: () => setSelectedPage("TARGET GROUPS"),
     },
+    {
+      icons: Hi,
+      text: "Tagz",
+      onClick: () => setSelectedPage("TAGZ"),
+    },
     { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
   ];
 
-  
   return (
     <main>
       <div className="sticky top-0 z-50 w-full">
@@ -40,7 +43,7 @@ const HiPeople = () => {
             isIconBusinessShow={false}
           />
         </article>
-        <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
+        <section className="absolute w-full px-4 space-x-4 overflow-x-auto text-sm whitespace-nowrap mobile-only">
           {sidebarItems.map((item) => (
             <button
               className={cn(
@@ -61,16 +64,9 @@ const HiPeople = () => {
       <SidebarPeople items={sidebarItems} />
       <br />
       <br />
-      {
-        selectedPage === "SUMMARY" && (
-            <Summary />
-        )
-      }
-      {
-        selectedPage === "CLIENTS" && (
-            <Client />
-        )
-      }
+      {selectedPage === "SUMMARY" && <Summary />}
+      {selectedPage === "CLIENTS" && <Client />}
+      {selectedPage === "TAGZ" && <Tagz />}
     </main>
   );
 };

@@ -26,6 +26,10 @@ export const TagSchema = z.object({
   businessId: ObjectIdSchema,
   displayForCaptains: z.boolean().default(true).optional(),
   repeat: z.number().optional(),
+  remainderInDuration: z.string().optional(),
+  noteTitle: z.string().optional(),
+  noteDescription: z.string().optional(),
+  noteUrl: z.string().optional(),
 
   isDeleted: z.boolean().default(false).optional(),
   duration: z.number().optional(),

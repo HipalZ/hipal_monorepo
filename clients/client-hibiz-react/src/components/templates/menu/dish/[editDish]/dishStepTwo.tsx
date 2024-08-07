@@ -114,8 +114,7 @@ const MemoDishFormTwo = () => {
     const images: string[] = [firstImage, secondImage, thirdImage].filter(
       Boolean,
     );
-    console.log("removeRecommendationIds:", removeRecommendationIds);
-    console.log("recommendationIds:", recommendationIds);
+
     const payload: DishType = {
       _id: editDish?._id,
       businessId: Object(businessId),

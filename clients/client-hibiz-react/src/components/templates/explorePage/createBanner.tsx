@@ -29,6 +29,7 @@ import { cropImage } from "@/components/cropper";
 import { BsGrid } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
 import { BannerPage } from "@/components/utils/bannerLayouts";
+import CropperPopup from "@/components/common/cropperPopup";
 
 // Lazy load components
 const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
@@ -615,7 +616,7 @@ const MemoCreateBanner = () => {
           </button>
         </footer>
       </main>
-      <MiddlePopUp
+      <CropperPopup
         show={showCropper}
         onSave={handleCrop}
         onClose={() => setShowCropper(false)}
@@ -626,7 +627,7 @@ const MemoCreateBanner = () => {
           width={400}
           height={400}
         />
-      </MiddlePopUp>
+      </CropperPopup>
       {colorWheelBackground && (
         <PopUp
           show={colorWheelBackground}

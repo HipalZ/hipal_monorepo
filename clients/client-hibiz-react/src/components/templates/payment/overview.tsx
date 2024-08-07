@@ -7,7 +7,6 @@ import { timestampToDateTime } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);

@@ -173,7 +173,7 @@ const MemoEditDish = () => {
         {dishStep === "ALERT" && <AlertClosePopup />}
       </div>
       {dishStep === "SHOW_CROPPER" && (
-        <section>
+        <>
           <ReactCropper
             image={cropping.image}
             ref={cropperRef}
@@ -197,7 +197,7 @@ const MemoEditDish = () => {
               )}
             </button>
           </footer>
-        </section>
+        </>
       )}
     </>
   );

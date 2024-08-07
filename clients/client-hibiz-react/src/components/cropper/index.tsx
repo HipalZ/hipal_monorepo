@@ -1,7 +1,6 @@
 import { useCroppedImage } from "@/components/store/useCroppedImage";
 import { forwardRef, memo, useImperativeHandle, useRef } from "react";
 import {
-  Cropper,
   FixedCropper,
   type FixedCropperRef,
   ImageRestriction,
@@ -72,18 +71,18 @@ const MemoReactCropper = forwardRef(({ image, width, height }, ref) => {
   };
 
   return (
-    <section className="z-100 flex justify-center items-start lg:h-[600px] lg:w-full">
+    <section className="z-100 flex justify-center items-start h-[20rem]">
       <FixedCropper
         ref={cropperRef}
         src={image}
         onChange={onChange}
         stencilProps={{
-          movable: false,
+          movable: true,
           resizable: true,
         }}
         stencilSize={{
-          width: width ? width : 100,
-          height: height ? height : 100,
+          width: width ? width : 320,
+          height: height ? height : 320,
         }}
         imageRestriction={ImageRestriction.stencil}
       />

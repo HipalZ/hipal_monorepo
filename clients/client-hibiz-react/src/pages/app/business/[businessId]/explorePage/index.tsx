@@ -540,12 +540,7 @@ const MemoExplorePage = () => {
               onSave={handleCrop}
               onClose={() => setShowCropper(false)}
             >
-              <ReactCropper
-                image={cropping.image}
-                ref={cropperRef}
-                width={250}
-                height={250}
-              />
+              <ReactCropper image={cropping.image} ref={cropperRef} />
             </CropperPopup>
             {showUniquePopUp && (
               <PopUp
