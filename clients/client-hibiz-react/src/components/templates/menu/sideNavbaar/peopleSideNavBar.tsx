@@ -24,7 +24,7 @@ const MemoiseSidebarPeople: React.FC<SidebarProps> = ({ items }) => {
 
 
   return (
-    <section className="sidebar">
+    <section className="sidebar linear_gradient_background">
       <button type="button" onClick={goToHome} className="flex flex-col items-center mt-8 mb-4 text-center cursor-pointer">
         <img src={logoPlaceholder} alt="logo placeholder" />
         <span>Home</span>

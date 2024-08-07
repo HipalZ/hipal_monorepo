@@ -133,7 +133,6 @@ export const useUpdateCategory = () => {
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (payload: any) => {
-      console.log(payload);
       const res = await apiRpc.categories[":id"].$put({
         json: payload,
         param: {
@@ -225,7 +224,6 @@ export const useBulkUploadDishes = () => {
               const dishes = JSON.parse(
                 formData.get("data") as string
               ) as DishType[];
-            console.log(dishes);
             try {
               const res = await apiRpc.dishes[":businessId"].bulkUpload.$post({
                 param: {

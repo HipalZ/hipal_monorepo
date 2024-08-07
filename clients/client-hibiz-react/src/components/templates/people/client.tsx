@@ -1,80 +1,126 @@
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import PopUp from "@/components/atom/popUp";
+import MemoizedHeader from "@/components/molecules/header";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
-import { memo } from "react";
-import { BiRightArrow } from "react-icons/bi";
-import { FaMoneyBills } from "react-icons/fa6";
-import { IoMdArrowRoundForward } from "react-icons/io";
-import { SlLocationPin } from "react-icons/sl";
-
-const userArray = [
-  {
-    _id: "1",
-    name: "Rishabh Hurshan",
-    number: "8668229890",
-    visits: "21",
-    payment: "200",
-  },
-  {
-    _id: "2",
-    name: "Sankalesh Harak",
-    number: "9309544032",
-    visits: "25",
-    payment: "400",
-  },
-];
+import { useGetGroupData } from "@/hooks/usePeopleData";
+import { memo, useCallback, useState } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import Hi from "@/assets/svg/hi.svg";
+import AddToGroup from "./addToGroup";
+import Confirm from "./confirm";
+import CreateGroup from "./createGroup";
+import UsersList from "./usersList";
 
 const MemoClient = () => {
-  const { selectedUserIds, toggleUserSelection, selectAllUsers, clearAllUsers } = useHiPeopleStore();
-  const allSelected = selectedUserIds.length === userArray.length;
+  const {
+    selectedUserIds,
 
-  const handleSelectUser = (id: string) => {
-    toggleUserSelection(id);
-  };
+    addGroupModal,
+    setAddGroupModal,
+    setAddGroupPage,
+    addGroupPage,
+    reset,
+  } = useHiPeopleStore((state) => ({
+    selectedUserIds: state.selectedUserIds,
+    addGroupModal: state.addGroupModal,
+    setAddGroupModal: state.setAddGroupModal,
+    setAddGroupPage: state.setAddGroupPage,
+    addGroupPage: state.addGroupPage,
+    reset: state.reset,
+  }));
+  const [fetchGroupData, setFetchGroupData] = useState<boolean>(false);
+  const { groupData, groupLoading } = useGetGroupData(fetchGroupData);
 
-  const handleSelectAll = () => {
-    if (allSelected) {
-      clearAllUsers();
-    } else {
-      selectAllUsers(userArray.map((user) => user._id));
+  const openGroup = useCallback(() => {
+    setAddGroupModal(true);
+    setFetchGroupData(true);
+    setAddGroupPage("ADD TO GROUP");
+  }, []);
+
+  const closeGroupModel = useCallback(() => {
+    setAddGroupModal(false);
+    setFetchGroupData(false);
+    reset();
+  }, []);
+
+  const onBack = useCallback(() => {
+    switch (addGroupPage) {
+      case "ADD TO GROUP":
+        closeGroupModel();
+        break;
+      case "CONFIRM":
+        setAddGroupPage("ADD TO GROUP");
+        break;
+      case "CREATE GROUP":
+        setAddGroupPage("ADD TO GROUP");
+        break;
+        case "ADD MORE USERS":
+        setAddGroupPage("CREATE GROUP");
+        break;
+      default:
+        break;
     }
-  };
+  }, [addGroupPage, addGroupModal]);
+
+  const dynamicHeader = useCallback(() => {
+    switch (addGroupPage) {
+      case "ADD TO GROUP":
+        return "Add to group";
+      case "CONFIRM":
+        return "Confirm";
+      case "CREATE GROUP":
+        return "Create manual group";
+      default:
+        return "Add to group";
+    }
+  }, [addGroupPage, addGroupModal]);
+
+  if (groupLoading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="my-4">
-      <div className="flex items-center mb-4 ml-10">
-        <input
-          type="checkbox"
-          checked={allSelected}
-          onChange={handleSelectAll}
-          className="mr-2 checkbox checkbox-black"
-        />
-        <span className="text-[#6F649B]">Select {selectedUserIds.length}</span>
-      </div>
-      {userArray.map((user) => (
-        <article
-          key={user._id}
-          className="relative flex items-center justify-between p-4 mx-6 mb-4 bg-white rounded-2xl"
-        >
-          <section className="flex items-center">
-            <input
-              type="checkbox"
-              checked={selectedUserIds.includes(user._id)}
-              onChange={() => handleSelectUser(user._id)}
-              className="mr-2 checkbox checkbox-black"
-            />
-            <div>
-              <h3>{user.name}</h3>
-              <p>{user.number}</p>
-            </div>
+      <UsersList />
+      {addGroupModal && (
+        <PopUp show={addGroupModal} onClose={closeGroupModel}>
+          <section className="h-[85dvh] overflow-auto">
+            <article className="sticky top-0 bg-[#f4f4f4] rounded-t-2xl">
+              <MemoizedHeader
+                title={dynamicHeader()}
+                onBack={onBack}
+                leftIcon={<FaArrowLeft />}
+                centerImage={Hi}
+                rightImage={Hi}
+                isIconBusinessShow={false}
+                hideBack={addGroupPage === "ADD MORE USERS"}
+              />
+            </article>
+
+            {addGroupPage === "ADD TO GROUP" && (
+              <AddToGroup groupData={groupData} />
+            )}
+
+            {addGroupPage === "CREATE GROUP" && <CreateGroup />}
+
+            {
+              addGroupPage === "ADD MORE USERS" && <UsersList hide />
+            }
+
+            {addGroupPage === "CONFIRM" && <Confirm />}
           </section>
-          <div className="flex items-center gap-2 text-[#6F649B]">
-            <SlLocationPin />
-            {user.visits} visits
-            <FaMoneyBills />
-            {user.payment}
-          </div>
-          <IoMdArrowRoundForward size={24} className="absolute -rotate-45 top-1 right-1" />
-        </article>
-      ))}
+        </PopUp>
+      )}
+
+      {selectedUserIds.length > 0 && (
+        <button onClick={openGroup} type="button" className="bottom_btn">
+          Add users to group
+        </button>
+      )}
     </div>
   );
 };

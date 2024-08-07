@@ -433,3 +433,78 @@ export interface Payment {
   updatedAt: string;
   __v: number;
 }
+
+export interface GroupData {
+  _id: string;
+  groupId: string;
+  businessId: string;
+  duration: number;
+  visitCount?: number;
+  visitType?: "ABOVE" | "BELOW";
+  spendAmount?: number;
+  spendType?: "ABOVE" | "BELOW";
+  userCount: number;
+  userPercentage: number;
+  groupName: string;
+  __v: number;
+  groupColor: string;
+  date: number;
+}
+
+export interface AboutCustomerData {
+  averageSpendAmount: number;
+  averageReturnPercentage: number;
+  averageReviewCount: number;
+  newUserCount: number;
+}
+
+export interface UserReviewData {
+  likePercentage: number;
+  dislikePercentage: number;
+}
+
+export interface SummarizedPeopleData {
+  totalSubscriberCount: number;
+  groups: GroupData[];
+  aboutCustomer: AboutCustomerData;
+  userReviews: Record<string, UserReviewData>;
+}
+
+// Define the type for each record in the array
+export interface ICustomerRecord {
+  _id: string;
+  userId: User;
+  businessId: string;
+  visitCount: number;
+  totalSpend: number;
+  avgSpend: number;
+  dateOfJoining: number;
+  __v: number;
+  coinzIssued?: number;
+  coinzUsed?: number;
+}
+
+
+export interface IGroupFilter {
+  duration: number;
+  visit: number;
+  visitType: "ABOVE" | "BELOW";
+  spend: number;
+  spendType: "ABOVE" | "BELOW";
+  _id: string;
+}
+
+export interface IUserGroup {
+  _id: string;
+  name: string;
+  businessId: string;
+  description: string;
+  filter: IGroupFilter[];
+  autoUpdate: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  userIds: string[];
+  groupColor: string;
+}
