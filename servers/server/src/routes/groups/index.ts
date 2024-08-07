@@ -162,10 +162,36 @@ const groupRouter = new Hono()
     async (c) => {
       const { groupId } = c.req.param();
       const requestData = await c.req.json();
+      const { removeUserIds = [] } = requestData;
       const updateGroup = await GroupModel.findByIdAndUpdate(
         groupId,
         requestData,
       );
+
+      if (!updateGroup) {
+        return c.json(
+          {
+            message: "Group not updated",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+
+      if (updateGroup.groupType === "MANUAL") {
+        if (removeUserIds.length > 0) {
+          await GroupModel.updateOne(
+            {
+              _id: groupId,
+            },
+            {
+              $pull: { userIds: { $in: removeUserIds } },
+            },
+          );
+        }
+      }
+
       return c.json(
         {
           message: "Group updated successfully",

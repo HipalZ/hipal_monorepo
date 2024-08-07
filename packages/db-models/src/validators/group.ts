@@ -114,6 +114,7 @@ export const groupSchema = z.object({
   isDeleted: z.boolean().default(false).optional(),
 
   userIds: z.array(ObjectIdSchema).optional(),
+  removeUserIds: z.array(ObjectIdSchema).optional(),
 });
 
 export type Group = z.infer<typeof groupSchema>;

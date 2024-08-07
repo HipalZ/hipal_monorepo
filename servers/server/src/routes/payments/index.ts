@@ -703,29 +703,6 @@ const paymentsRouter = new Hono()
         });
 
         if (!paymentAlreadyExist && getOrder) {
-          const createPayment = await Payment.create(
-            [
-              {
-                businessId: getOrder?.businessId,
-                total: getOrder?.total,
-                billValue: getOrder?.billValue,
-                mode: payload.payment.entity.method,
-                userId: getOrder?.userId,
-                order_id: getOrder?._id,
-                paymentMode: "online",
-                tableName: getOrder?.tableName,
-                claimedCoins: getOrder?.claimedCoins,
-                tips: getOrder?.tips,
-                razorpayPaymentId: payload.payment.entity.id,
-                razorpayOrderId: payload.payment.entity.order_id,
-                razorpayAcquirerData: payload.payment.entity.acquirer_data,
-                razorpayEventId: razorpayEventId,
-                date: Date.now(),
-              },
-            ],
-            { session },
-          );
-
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
@@ -744,25 +721,8 @@ const paymentsRouter = new Hono()
               Number(getOrder?.total),
             );
           }
-          await PaymentAlert.create(
-            [
-              {
-                businessId: getOrder?.businessId,
-                alertType: "ONLINE",
-                payment_id: createPayment[0]._id,
-                coinsApplied: claimCoins > 0,
-                status: "SUCCESS",
-                order_id: getOrder?._id,
-                message: `Paid ${getOrder?.total}`,
-                tableName: getOrder?.tableName,
-                isAccepted: false,
-                userId: getOrder?.userId,
-                posDiscount: posDiscount,
-                date: Date.now(),
-              },
-            ],
-            { session },
-          );
+
+          let getCashBack = 0;
 
           if (payload.payment.entity.notes.loyaltyId) {
             if (claimCoins > 0) {
@@ -782,8 +742,6 @@ const paymentsRouter = new Hono()
               claimCoins,
             );
 
-            console.log("userId", getOrder.userId.toString());
-
             const cashBackCoins = await addCoins(
               cashBack,
               getOrder?.userId.toString() || "",
@@ -795,6 +753,7 @@ const paymentsRouter = new Hono()
 
               session,
             );
+            getCashBack = cashBackCoins;
 
             const userAnalytics = await UserAnalytic.findOne({
               userId: getOrder?.userId,
@@ -833,18 +792,51 @@ const paymentsRouter = new Hono()
                 { session },
               );
             }
-
-            await LoyaltyCoinsInfo.findOneAndUpdate(
-              { businessId: getOrder?.businessId.toString() || "" },
-              {
-                $inc: {
-                  coinzIssued: cashBackCoins,
-                  coinzRedeemed: claimCoins,
-                },
-              },
-              { upsert: true, session },
-            );
           }
+
+          const createPayment = await Payment.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                total: getOrder?.total,
+                billValue: getOrder?.billValue,
+                mode: payload.payment.entity.method,
+                userId: getOrder?.userId,
+                order_id: getOrder?._id,
+                paymentMode: "online",
+                tableName: getOrder?.tableName,
+                claimedCoins: getOrder?.claimedCoins,
+                tips: getOrder?.tips,
+                razorpayPaymentId: payload.payment.entity.id,
+                razorpayOrderId: payload.payment.entity.order_id,
+                razorpayAcquirerData: payload.payment.entity.acquirer_data,
+                razorpayEventId: razorpayEventId,
+                earnCoins: getCashBack,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+
+          await PaymentAlert.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                alertType: "ONLINE",
+                payment_id: createPayment[0]._id,
+                coinsApplied: claimCoins > 0,
+                status: "SUCCESS",
+                order_id: getOrder?._id,
+                message: `Paid ${getOrder?.total}`,
+                tableName: getOrder?.tableName,
+                isAccepted: false,
+                userId: getOrder?.userId,
+                posDiscount: posDiscount,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
         }
       }
 
