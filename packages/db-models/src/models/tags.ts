@@ -31,6 +31,14 @@ const tagSchema = new mongoose.Schema(
       required: false,
       default: true,
     },
+    repeat: {
+      type: Number,
+      default: 0,
+    },
+    time: {
+      type: Number,
+      default: 0,
+    },
 
     isDeleted: {
       type: Boolean,

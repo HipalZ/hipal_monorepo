@@ -25,9 +25,11 @@ export const TagSchema = z.object({
   createdBy: ObjectIdSchema,
   businessId: ObjectIdSchema,
   displayForCaptains: z.boolean().default(true).optional(),
+  repeat: z.number().optional(),
 
   isDeleted: z.boolean().default(false).optional(),
   duration: z.number().optional(),
+  time: z.number().optional(),
 });
 
 export type TagType = z.infer<typeof TagSchema>;

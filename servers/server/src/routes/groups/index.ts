@@ -1,4 +1,10 @@
-import { GroupAnalytic, GroupModel, Payment, Subscriber } from "@hi/db-models";
+import {
+  GroupAnalytic,
+  GroupModel,
+  Payment,
+  Subscriber,
+  UserReward,
+} from "@hi/db-models";
 import { groupSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -278,10 +284,18 @@ const groupRouter = new Hono()
 
       const userAnalytics = users.reduce((acc, user) => {
         if (!acc[user.userId]) {
+          const userReward = UserReward.findOne({
+            userId: user.userId,
+            loyaltyId: user.businessId,
+          });
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
             spend: 0,
+            cardBalance: userReward.rewards,
+            coinzIssued: user.earnCoins,
+            coinzUsed: user.claimedCoins,
+            tags: user.tagIds,
           };
         }
 
