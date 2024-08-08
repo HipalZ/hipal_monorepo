@@ -1874,6 +1874,11 @@ const paymentsRouter = new Hono()
           select: "name phone",
         });
 
+      const userReward = await UserReward.find({
+        userId,
+        loyaltyId: businessId,
+      }).select("rewards");
+
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -1908,6 +1913,7 @@ const paymentsRouter = new Hono()
           data: {
             name: userTotalSale?.userId.name,
             phone: userTotalSale?.userId.phone,
+            userCurrentReward: userReward.rewards,
             totalSale: userTotalSale?.totalSpend,
             AvarageSale: userTotalSale?.avgSpend,
             NumOfVisits: userTotalSale?.visitCount,
@@ -1946,6 +1952,7 @@ const paymentsRouter = new Hono()
           data: {
             name: userTotalSale?.userId.name,
             phone: userTotalSale?.userId.phone,
+            userCurrentReward: userReward.rewards,
             totalSale: userTotalSale?.totalSpend,
             AvarageSale: userTotalSale?.avgSpend,
             NumOfVisits: userTotalSale?.visitCount,
