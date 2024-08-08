@@ -1684,6 +1684,31 @@ const groupRouter = new Hono()
         200,
       );
     },
+  )
+  .get(
+    "/userGroups/:businessId/:userId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+        userId: z.string({ message: "userId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, userId } = c.req.param();
+
+      const groups = await GroupModel.find({
+        businessId,
+        userIds: userId,
+      }).select("name");
+
+      return c.json({
+        message: "User groups found",
+        err: false,
+        data: groups,
+      });
+    },
   );
 
 export default groupRouter;
