@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 import ReactCropper, { cropImage } from "@/components/cropper";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@/components/utils/helper";
 import { useAddNotes } from "@/hooks/useHipeople";
 import { type ChangeEvent, lazy, memo, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { CiEdit } from "react-icons/ci";
 import { useParams } from "react-router-dom";
 
@@ -35,6 +37,7 @@ const MemoAddNotes = () => {
     setDescriptionNotes,
     setIsLoading,
     setOpenAddNotes,
+    isLoading,
   } = useHiPeopleStore((s) => ({
     userDashboardDetails: s.userDashboardDetails,
     cropping: s.cropping,
@@ -51,6 +54,7 @@ const MemoAddNotes = () => {
     setDescriptionNotes: s.setDescriptionNotes,
     setIsLoading: s.setIsLoading,
     setOpenAddNotes: s.setOpenAddNotes,
+    isLoading: s.isLoading,
   }));
 
   const { mutate } = useAddNotes();
@@ -114,6 +118,15 @@ const MemoAddNotes = () => {
         img?.logo,
         setIsLoading,
       );
+    }
+    if (imageUrl.length === 0) {
+      return toast.error("Please upload the image");
+    }
+    if (titleNotes.length === 0) {
+      return toast.error("Please enter the title");
+    }
+    if (descriptionNotes.length === 0) {
+      return toast.error("Please enter the description");
     }
     const payload = {
       businessId: businessId,
@@ -208,6 +221,7 @@ const MemoAddNotes = () => {
       >
         <ReactCropper image={cropping.image} ref={cropperRef} />
       </CropperPopup>
+      {isLoading ? <LoadingSpinner /> : null}
       <BottomButton
         buttons={[
           {

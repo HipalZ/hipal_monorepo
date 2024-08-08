@@ -438,6 +438,7 @@ export const useCreateTag = () => {
 };
 
 export const useAddNotes = () => {
+  const queryClient = useQueryClient();
   const { setImageFiles, setImg, setTitleNotes, setDescriptionNotes } =
     useHiPeopleStore((s) => ({
       setImageFiles: s.setImageFiles,
@@ -460,6 +461,9 @@ export const useAddNotes = () => {
       setImg({});
       setTitleNotes("");
       setDescriptionNotes("");
+      queryClient.invalidateQueries({
+        queryKey: ["userNotes"],
+      });
     },
     onError: (error) => {
       console.error("Error creating notes:", error);
