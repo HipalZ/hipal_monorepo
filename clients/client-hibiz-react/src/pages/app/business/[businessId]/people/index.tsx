@@ -7,6 +7,7 @@ import SidebarPeople from "@/components/templates/menu/sideNavbaar/peopleSideNav
 import Summary from "@/components/templates/people/summary";
 import Client from "@/components/templates/people/client";
 import Tagz from "@/components/templates/people/tagz";
+import TargetGroups from "@/components/templates/people/targetGropus";
 
 const HiPeople = () => {
   const { selectedPage, setSelectedPage } = useHiPeopleStore();
@@ -24,7 +25,7 @@ const HiPeople = () => {
       onClick: () => setSelectedPage("TARGET GROUPS"),
     },
     {
-      icons: Hi,
+      icon: Hi,
       text: "Tagz",
       onClick: () => setSelectedPage("TAGZ"),
     },
@@ -67,6 +68,7 @@ const HiPeople = () => {
       {selectedPage === "SUMMARY" && <Summary />}
       {selectedPage === "CLIENTS" && <Client />}
       {selectedPage === "TAGZ" && <Tagz />}
+      {selectedPage === "TARGET GROUPS" && <TargetGroups />}
     </main>
   );
 };

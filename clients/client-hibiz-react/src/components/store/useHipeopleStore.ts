@@ -9,6 +9,7 @@ import type {
   UserTags,
   UserUpdateTag,
   SummarizedPeopleData,
+  IUserGroup,
 } from "../types/businessData";
 import type {
   ImageFiles,
@@ -213,6 +214,14 @@ interface IHiPeople {
 
   openDisplayForCaptains: boolean;
   setOpenDisplayForCaptains: (open: boolean) => void;
+
+  groupDetailsModal: boolean;
+  setGroupDetailsModal: (open: boolean) => void;
+
+  selectedGroup: IUserGroup;
+  setSelectedGroup: (group: IUserGroup) => void;
+
+
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -248,8 +257,8 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
   singleBillData: {} as Payment,
   setSingleBillData: (data: Payment) => set({ singleBillData: data }),
 
-  singleTagData: {},
-  setSingleTagData: (data: any) => set({ singleTagData: data }),
+  // singleTagData: {},
+  // setSingleTagData: (data: any) => set({ singleTagData: data }),
 
   openTagPopup: false,
   setOpenTagPopup: (open: boolean) => set({ openTagPopup: open }),
@@ -409,6 +418,12 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   openDisplayForCaptains: false,
   setOpenDisplayForCaptains: (open) => set({ openDisplayForCaptains: open }),
+
+  groupDetailsModal: false,
+  setGroupDetailsModal: (open: boolean) => set({ groupDetailsModal: open }),
+
+  selectedGroup: {} as IUserGroup,
+  setSelectedGroup: (group) => set({ selectedGroup: group }),
 }));
 
 export default useHiPeopleStore;

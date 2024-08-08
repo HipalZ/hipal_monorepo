@@ -211,6 +211,16 @@ input[type="color" i] {
     margin: 0 auto;
 }
 
+.business_system_cards_groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap:0 1rem;
+  padding: 0 1rem 5rem 1rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
 .business_Control {
   border-radius: 1rem;
   display: flex;

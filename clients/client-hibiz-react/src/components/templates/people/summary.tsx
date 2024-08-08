@@ -85,11 +85,12 @@ const MemoSummary = () => {
               <section className="flex items-center justify-between w-full p-4 bg-white ">
                 <article
                   className="flex-1"
+                  
                   style={{ color: group?.groupColor }}
                 >
                   <section className="flex items-center gap-2">
                     <div
-                      className="w-6 h-6 rounded-full"
+                      className="w-6 h-6 rounded-full bg-[#5197F8]"
                       style={{ backgroundColor: group?.groupColor }}
                     />
                     <h3 className="font-semibold capitalize">

@@ -2237,7 +2237,12 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { userIds = [] } = await c.req.json();
-      const users = await UserAnalytic.find({ userId: { $in: userIds } });
+      const users = await UserAnalytic.find({
+        userId: { $in: userIds },
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
       return c.json({
         data: users,
         err: false,

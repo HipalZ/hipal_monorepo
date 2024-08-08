@@ -123,8 +123,9 @@ export const useGetGroupData = (enabled: boolean) => {
 
   return { groupData, groupLoading };
 };
+
 export const useAddUserToGroup = () => {
-  const { reset,clearAllUsers } = useHiPeopleStore((state) => ({
+  const { reset, clearAllUsers } = useHiPeopleStore((state) => ({
     reset: state.reset,
     clearAllUsers: state.clearAllUsers,
   }));
@@ -136,7 +137,7 @@ export const useAddUserToGroup = () => {
     }
     if (data) {
       toast.success("User added to group successfully");
-      clearAllUsers()
+      clearAllUsers();
       reset();
     }
   };
@@ -163,5 +164,77 @@ export const useAddUserToGroup = () => {
   return {
     mutateAddUserToGroup,
     isAddingUserPending,
+  };
+};
+
+export const useSingleGroupData = (groupId: string) => {
+
+  const getSingleGroupData = useCallback(async () => {
+    const res = await apiRpc.groups[":groupId"].$get({
+      param: {
+        groupId,
+      },
+    });
+
+    const data = (await res.json()).data as IUserGroup;
+    if (res.status === 400) {
+      toast.error("No group data found");
+      return;
+    }
+    if (res.status === 401 || res.status === 403) {
+      toast.error("Unauthorized");
+      return;
+    }
+    if (res.status === 200 || res.status === 201) {
+      return data;
+    }
+  }, [groupId]);
+
+  const { data: groupData, isLoading: groupLoading } = useQuery({
+    queryKey: ["getSingleGroupData", groupId],
+    queryFn: getSingleGroupData,
+    enabled: !!groupId,
+  });
+
+  return { groupData, groupLoading };
+};
+
+export const useAllUserBelongToGroup = () => {
+  const getUserBelongToGroup = useCallback(async (userId: string[]) => {
+    const res = await apiRpc.payments.getGroupUser.$post({
+      json: {
+        userIds: userId,
+      },
+    });
+
+    const data = (await res.json()).data as ICustomerRecord[];
+    if (res.status === 400) {
+      toast.error("No group data found");
+      return;
+    }
+    if (res.status === 401 || res.status === 403) {
+      toast.error("Unauthorized");
+      return;
+    }
+    if (res.status === 200 || res.status === 201) {
+      return data;
+    }
+  }, []);
+
+  const { mutateAsync: mutateGetUserBelongToGroup, isPending: groupUserLoading } = useMutation({
+    mutationFn: getUserBelongToGroup,
+    onSuccess: (data) => {
+      if (data) {
+        toast.success("Group data retrieved successfully");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to retrieve group data");
+    },
+  });
+
+  return {
+    mutateGetUserBelongToGroup,
+    groupUserLoading,
   };
 };

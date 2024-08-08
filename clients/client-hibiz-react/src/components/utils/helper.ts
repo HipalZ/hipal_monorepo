@@ -306,11 +306,11 @@ export const hexToRgba = (hex: string) => {
   let b = 0;
   const alpha = 0.1;
   // 3 digits
-  if (hex.length === 4) {
+  if (hex?.length === 4) {
     r = Number.parseInt(hex[1] + hex[1], 16);
     g = Number.parseInt(hex[2] + hex[2], 16);
     b = Number.parseInt(hex[3] + hex[3], 16);
-  } else if (hex.length === 7) {
+  } else if (hex?.length === 7) {
     // 6 digits
     r = Number.parseInt(hex[1] + hex[2], 16);
     g = Number.parseInt(hex[3] + hex[4], 16);
