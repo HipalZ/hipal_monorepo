@@ -8,10 +8,12 @@ import Summary from "@/components/templates/people/summary";
 import Client from "@/components/templates/people/client";
 import Tagz from "@/components/templates/people/tagz";
 import TargetGroups from "@/components/templates/people/targetGropus";
+import { useNavigate, useParams } from "react-router-dom";
 
 const HiPeople = () => {
   const { selectedPage, setSelectedPage } = useHiPeopleStore();
-
+  const navigate = useNavigate();
+  const { businessId } = useParams<{ businessId: string }>();
   const sidebarItems = [
     { icon: Hi, text: "Summary", onClick: () => setSelectedPage("SUMMARY") },
     {
@@ -32,6 +34,10 @@ const HiPeople = () => {
     { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
   ];
 
+  const handleBack = () => {
+    navigate(`/app/business/${businessId}`);
+  };
+
   return (
     <main>
       <div className="sticky top-0 z-50 w-full">
@@ -42,6 +48,7 @@ const HiPeople = () => {
             centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
+            onBack={handleBack}
           />
         </article>
         <section className="absolute w-full px-4 space-x-4 overflow-x-auto text-sm whitespace-nowrap mobile-only">

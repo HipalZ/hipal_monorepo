@@ -1,5 +1,5 @@
 import { Switch } from "@headlessui/react";
-import { lazy, memo, useMemo, useState } from "react";
+import { lazy, memo, useState } from "react";
 import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
 import { FaRegUserCircle } from "react-icons/fa";
 import { LuBellRing } from "react-icons/lu";
@@ -22,7 +22,6 @@ const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateTag = () => {
   const {
-    singleTagData,
     showRemainder,
     setShowRemainder,
     displayToCaptain,
@@ -58,23 +57,10 @@ const MemoCreateTag = () => {
     history: s.history,
     setHistory: s.setHistory,
   }));
-
   const createdById = useOwnerLogin((s) => s?.user?._id);
   const createdBy = useOwnerLogin((s) => s?.user?.name);
 
   const [futureTimestamp, setFutureTimestamp] = useState<number>(0);
-
-  const defaultBgOpacityColor = useMemo(() => {
-    return singleTagData?.tagId?.tagType === "AUTO_TAG"
-      ? "bg-[#FFA50020]"
-      : "bg-[#8C63FF20]";
-  }, [singleTagData?.tagId?.tagType]);
-
-  const defaultColor = useMemo(() => {
-    return singleTagData?.tagId?.tagType === "AUTO_TAG"
-      ? "[#FFA500]"
-      : "[#8C63FF]";
-  }, [singleTagData?.tagId?.tagType]);
 
   const { businessId } = useParams<{
     businessId?: string;
@@ -171,16 +157,14 @@ const MemoCreateTag = () => {
             <Switch
               checked={displayToCaptain}
               onChange={setDisplayToCaptain}
-              className={`mt-2 group relative flex h-3 w-10 cursor-pointer rounded-full border-2 border-${defaultColor} transition-colors duration-200 ease-in-out focus:outline-none ${
-                displayToCaptain ? `bg-${defaultColor}` : "bg-transparent"
+              className={`mt-2 group relative flex h-3 w-10 cursor-pointer rounded-full border-2 border-[#8C63FF] transition-colors duration-200 ease-in-out focus:outline-none ${
+                displayToCaptain ? "bg-[#8C63FF]" : "bg-transparent"
               }`}
             >
               <span
                 aria-hidden="true"
-                className={`pointer-events-none inline-block h-5 w-5 transform absolute -top-[6px] -left-1 rounded-full border-2 border-${defaultColor} transition duration-200 ease-in-out ${
-                  displayToCaptain
-                    ? "translate-x-5 bg-white"
-                    : `bg-${defaultColor}`
+                className={`pointer-events-none inline-block h-5 w-5 transform absolute -top-[6px] -left-1 rounded-full border-2 border-[#8C63FF] transition duration-200 ease-in-out ${
+                  displayToCaptain ? "translate-x-5 bg-white" : "bg-[#8C63FF]"
                 }`}
               />
             </Switch>
@@ -194,13 +178,17 @@ const MemoCreateTag = () => {
               <CiCircleMinus
                 onClick={toggleAddRemainder}
                 size={24}
-                className={`transition-transform transform rotate-0 text-${defaultColor}`}
+                className={
+                  "transition-transform transform rotate-0 text-[#8C63FF]"
+                }
               />
             ) : (
               <CiCirclePlus
                 onClick={toggleAddRemainder}
                 size={24}
-                className={`transition-transform transform rotate-0 text-${defaultColor}`}
+                className={
+                  "transition-transform transform rotate-0 text-[#8C63FF]"
+                }
               />
             )}
           </article>
@@ -214,13 +202,17 @@ const MemoCreateTag = () => {
                     value={remainder || 0}
                     onChange={(e) => setRemainder(e.target.value)}
                     id="remainder"
-                    className={`block w-[6.4rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
+                    className={
+                      "block w-[6.4rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
+                    }
                     placeholder="Remind"
                     required
                   />
                   <label
                     htmlFor="remainder"
-                    className={`bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-xs text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:text-${defaultColor}`}
+                    className={
+                      "bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-xs text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:text-[#8C63FF]"
+                    }
                   >
                     Remainder in
                   </label>
@@ -230,7 +222,9 @@ const MemoCreateTag = () => {
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
                     id="duration"
-                    className={`block w-[7rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
+                    className={
+                      "block w-[7rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
+                    }
                     required
                   >
                     <option value="" disabled>
@@ -242,7 +236,9 @@ const MemoCreateTag = () => {
                   </select>
                   <label
                     htmlFor="duration"
-                    className={`bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-xs text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:text-${defaultColor}`}
+                    className={
+                      "bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-xs text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:text-[#8C63FF]"
+                    }
                   >
                     Duration
                   </label>
@@ -253,7 +249,9 @@ const MemoCreateTag = () => {
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
                     id="time"
-                    className={`block w-[7rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
+                    className={
+                      "block w-[7rem] lg:w-[7.5rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
+                    }
                     placeholder=""
                     required
                   />
@@ -268,7 +266,7 @@ const MemoCreateTag = () => {
               <button
                 type="button"
                 onClick={handleSave}
-                className={`bg-${defaultColor} mb-4 px-4 py-2 text-white rounded-lg`}
+                className={"bg-[#8C63FF] mb-4 px-4 py-2 text-white rounded-lg"}
               >
                 Save
               </button>
@@ -280,7 +278,7 @@ const MemoCreateTag = () => {
               history.map((item, index) => (
                 <article
                   key={item?.remainder + index.toString()}
-                  className={`p-3 space-y-2 ${defaultBgOpacityColor} rounded-xl mb-2`}
+                  className={"p-3 space-y-2 bg-[#8C63FF20] rounded-xl mb-2"}
                 >
                   <div className="flex justify-between">
                     <h1>

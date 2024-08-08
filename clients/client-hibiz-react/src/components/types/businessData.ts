@@ -519,6 +519,8 @@ export interface IUserGroup {
   groupColor: string;
 }
 export interface UserDashboardDetails {
+  email: string;
+  phone: number;
   currentCoinz: number;
   name: string;
   totalSale: number;

@@ -4,8 +4,9 @@ import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { cn } from "@/components/utils/helper";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { memo } from "react";
 
-const DateRangePicker = () => {
+const MemoDateRangePicker = () => {
   const {
     dateRange,
     setDateRange,
@@ -209,4 +210,5 @@ const DateRangePicker = () => {
   );
 };
 
+const DateRangePicker = memo(MemoDateRangePicker);
 export default DateRangePicker;

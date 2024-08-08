@@ -11,6 +11,10 @@ const MemoPredefinedContacts = () => {
   }));
 
   const handleContactClick = (type: string, value: string) => {
+    if (type === "email" || type === "direct") {
+      return;
+    }
+
     switch (type) {
       case "call":
         window.open(`tel:${value}`);
@@ -72,8 +76,13 @@ const MemoPredefinedContacts = () => {
       {predefinedContacts.map((contact) => (
         <section
           key={contact?.id}
+          title={contact?.text}
           onClick={() => handleContactClick(contact?.type, contact?.value)}
-          className="text-center cursor-pointer"
+          className={`text-center cursor-pointer ${
+            contact.type === "email" || contact.type === "direct"
+              ? "cursor-not-allowed opacity-50"
+              : ""
+          }`}
         >
           <article className="bg-[#E3DCFF] p-4 rounded-full">
             <center>{contact?.symbol}</center>

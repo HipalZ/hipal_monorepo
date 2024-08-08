@@ -26,6 +26,7 @@ import RemoveTag from "@/components/templates/people/removeTag";
 import DateRangePicker from "@/components/templates/people/dateRangePicker";
 import { SlCalender } from "react-icons/sl";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { format } from "date-fns";
 
 const MemoUserId = () => {
   const {
@@ -45,6 +46,7 @@ const MemoUserId = () => {
     openDatePickerModal,
     setOpenDatePickerModal,
     isLoading,
+    dateRange,
   } = useHiPeopleStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
@@ -62,7 +64,14 @@ const MemoUserId = () => {
     openDatePickerModal: s.openDatePickerModal,
     setOpenDatePickerModal: s.setOpenDatePickerModal,
     isLoading: s.isLoading,
+    dateRange: s.dateRange,
   }));
+  const [from, to] = dateRange;
+
+  const formattedFrom = from
+    ? format(from, "dd MMM yyyy")
+    : "Select Start Date";
+  const formattedTo = to ? format(to, "dd MMM yyyy") : "Select End Date";
 
   const sidebarItems = [
     {
@@ -169,6 +178,9 @@ const MemoUserId = () => {
           >
             <SlCalender /> Choose Date
           </button>
+          <h3 className="text-[#5197f8] text-sm mt-1">
+            {formattedFrom} - {formattedTo}
+          </h3>
         </center>
       ) : null}
       {selectedNavItem === "RECENT BILLS" ? <RecentBills /> : null}

@@ -96,8 +96,11 @@ const MemoAddTagz = () => {
                   </span>
                 </h2>
                 <p className="text-sm text-[#6F649B]">
-                  Remainder: {tag?.remainderInDuration}; Time:
-                  {convertToTime(tag?.time)}
+                  Remainder: {tag?.remainderInDuration}
+                  <span className="ml-6">
+                    Time:
+                    {convertToTime(tag?.time)}
+                  </span>
                 </p>
               </div>
             </article>
