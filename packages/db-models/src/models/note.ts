@@ -8,6 +8,11 @@ const noteSchema = new mongoose.Schema<NoteType>({
     required: true,
     ref: "Business",
   },
+  userId: {
+    type: ObjectId,
+    required: true,
+    ref: "User",
+  },
   noteUrl: {
     type: String,
     required: false,
