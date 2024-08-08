@@ -9,12 +9,7 @@ import { DishTypeEnum } from "@hi/db-models/src/validators";
 import { DishSteps } from "../store/useMenuStorage";
 import { cropImage } from "../cropper";
 import toast from "react-hot-toast";
-import {
-  differenceInDays,
-  differenceInMonths,
-  differenceInYears,
-  format,
-} from "date-fns";
+import { differenceInMonths, differenceInYears, format } from "date-fns";
 
 export async function storeImageAfterSave(
   image: File,
@@ -306,11 +301,11 @@ export const hexToRgba = (hex: string) => {
   let b = 0;
   const alpha = 0.1;
   // 3 digits
-  if (hex?.length === 4) {
+  if (hex && hex?.length === 4) {
     r = Number.parseInt(hex[1] + hex[1], 16);
     g = Number.parseInt(hex[2] + hex[2], 16);
     b = Number.parseInt(hex[3] + hex[3], 16);
-  } else if (hex?.length === 7) {
+  } else if (hex && hex?.length === 7) {
     // 6 digits
     r = Number.parseInt(hex[1] + hex[2], 16);
     g = Number.parseInt(hex[3] + hex[4], 16);
@@ -422,4 +417,11 @@ export const formatDate = (date: Date) => {
     day: "numeric",
     year: "numeric",
   });
+};
+
+export const convertMillisecondsToTime = (milliseconds) => {
+  const date = new Date(milliseconds);
+  const hours = date.getUTCHours().toString().padStart(2, "0");
+  const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
 };

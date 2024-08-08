@@ -18,12 +18,14 @@ import { useParams } from "react-router-dom";
 import PredefinedContacts from "@/components/templates/people/predefinedContacts";
 import PredefinedAnalytics from "@/components/templates/people/predefinedAnalytics";
 import SidebarUser from "@/components/templates/menu/sideNavbaar/userSideNavBar";
-import MemoizedDateRangePicker from "@/components/molecules/dateRangePicker";
 import Pagination from "@/components/atom/pagination";
 import CoinzUsage from "@/components/templates/people/coinzUsage";
 import AddTagz from "@/components/templates/people/addTagz";
 import AddNotes from "@/components/templates/people/addNotes";
 import RemoveTag from "@/components/templates/people/removeTag";
+import DateRangePicker from "@/components/templates/people/dateRangePicker";
+import { SlCalender } from "react-icons/sl";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoUserId = () => {
   const {
@@ -40,6 +42,9 @@ const MemoUserId = () => {
     setOpenAddNotes,
     openDeletePopup,
     setOpenDeletePopup,
+    openDatePickerModal,
+    setOpenDatePickerModal,
+    isLoading,
   } = useHiPeopleStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
@@ -54,6 +59,9 @@ const MemoUserId = () => {
     setOpenAddNotes: s.setOpenAddNotes,
     openDeletePopup: s.openDeletePopup,
     setOpenDeletePopup: s.setOpenDeletePopup,
+    openDatePickerModal: s.openDatePickerModal,
+    setOpenDatePickerModal: s.setOpenDatePickerModal,
+    isLoading: s.isLoading,
   }));
 
   const sidebarItems = [
@@ -75,7 +83,7 @@ const MemoUserId = () => {
   ];
 
   const params = useParams<{ userId: string }>();
-  const { isLoading } = useUserDashboard(params?.userId as string);
+  const { isLoading: isLoadings } = useUserDashboard(params?.userId as string);
 
   const handleCloseTagz = () => {
     setOpenAddTagz(false);
@@ -92,7 +100,7 @@ const MemoUserId = () => {
   useLoyaltyData();
   userCoinzDetails();
 
-  if (isLoading) {
+  if (isLoadings) {
     return <div>Loading...</div>;
   }
 
@@ -141,8 +149,28 @@ const MemoUserId = () => {
         ))}
       </nav>
       <SidebarUser items={sidebarItems} />
-      {selectedNavItem !== "TAGS & NOTES" ? <MemoizedDateRangePicker /> : null}
-      <br />
+      {openDatePickerModal ? (
+        <PopUp
+          show={openDatePickerModal}
+          onClose={() => setOpenDatePickerModal(!openDatePickerModal)}
+          hide
+        >
+          <section className="h-[30rem]">
+            <DateRangePicker />
+          </section>
+        </PopUp>
+      ) : null}
+      {selectedNavItem !== "TAGS & NOTES" ? (
+        <center>
+          <button
+            onClick={() => setOpenDatePickerModal(true)}
+            type="button"
+            className="px-4 gap-2 py-2 flex justify-center items-center bg-[#5197F8] rounded-full text-white mt-4"
+          >
+            <SlCalender /> Choose Date
+          </button>
+        </center>
+      ) : null}
       {selectedNavItem === "RECENT BILLS" ? <RecentBills /> : null}
       {selectedNavItem === "TAGS & NOTES" ? <TagsAndNotes /> : null}
       {selectedNavItem === "RECENT BILLS" && (
@@ -172,6 +200,7 @@ const MemoUserId = () => {
         </PopUp>
       )}
       {selectedNavItem !== "TAGS & NOTES" ? <Pagination /> : null}
+      {isLoading ? <LoadingSpinner /> : null}
     </main>
   );
 };

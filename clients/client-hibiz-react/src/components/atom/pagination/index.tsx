@@ -10,7 +10,7 @@ const MemoPagination = () => {
   }));
 
   return (
-    <div className="fixed bottom-[3rem] left-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">
+    <div className="fixed bottom-[3rem] left-1/2 z-50 flex -translate-x-1/2 transform items-center justify-center space-x-4">
       {dataLength >= 0 ? (
         <button
           type="button"

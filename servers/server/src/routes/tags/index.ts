@@ -103,7 +103,7 @@ const tagRouter = new Hono()
         businessId,
         isDeleted: false,
       }).select(
-        "name businessId _id tagType duration displayForCaptains remainderInDuration time",
+        "name businessId _id tagType duration displayForCaptains remainderInDuration time note",
       );
       return c.json(
         {

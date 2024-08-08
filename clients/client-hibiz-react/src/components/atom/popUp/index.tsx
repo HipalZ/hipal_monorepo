@@ -1,16 +1,37 @@
-import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
 import { Fragment, memo } from "react";
 import { HiX } from "react-icons/hi";
 
-function MemoizedPopUp({ children, show, onClose, hide }: { children: React.ReactNode; show: boolean; onClose: () => void; hide?: boolean }) {
-
+function MemoizedPopUp({
+  children,
+  show,
+  onClose,
+  hide,
+}: {
+  children: React.ReactNode;
+  show: boolean;
+  onClose: () => void;
+  hide?: boolean;
+}) {
   const stopClosing = (e: any) => {
+    if (hide) {
+      return onClose();
+    }
     e.preventDefault();
-  }
+  };
 
   return (
     <Transition appear show={show} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={stopClosing}>
+      <Dialog
+        as="div"
+        className="fixed inset-0 z-50 overflow-y-auto"
+        onClose={stopClosing}
+      >
         <div className="fixed inset-0 flex items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[4rem]">
           <TransitionChild
             as={Fragment}
@@ -22,11 +43,14 @@ function MemoizedPopUp({ children, show, onClose, hide }: { children: React.Reac
             leaveTo="opacity-0 translate-y-full"
           >
             <DialogPanel className="bg-base-100 relative w-full max-w-[48rem] rounded-t-[1.5rem] lg:rounded-2xl shadow-md ">
-              {!hide &&
+              {!hide && (
                 <div className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2">
-                  <HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer" onClick={onClose} />
+                  <HiX
+                    className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer"
+                    onClick={onClose}
+                  />
                 </div>
-              }
+              )}
               {children}
             </DialogPanel>
           </TransitionChild>

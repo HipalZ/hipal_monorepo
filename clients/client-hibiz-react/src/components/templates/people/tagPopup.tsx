@@ -6,23 +6,23 @@ import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { cn, convertToTime } from "@/components/utils/helper";
 
 const MemoTagPopup = () => {
-  const { singleTagData } = useHiPeopleStore((s) => ({
-    singleTagData: s.singleTagData,
+  const { tagNotesData } = useHiPeopleStore((s) => ({
+    tagNotesData: s.tagNotesData,
   }));
 
   const defaultBgOpacityColor = useMemo(() => {
-    return singleTagData?.tagId?.tagType === "AUTO_TAG"
+    return tagNotesData?.tagId?.tagType === "AUTO_TAG"
       ? "bg-[#FFA50020]"
       : "bg-[#8C63FF20]";
-  }, [singleTagData?.tagId?.tagType]);
+  }, [tagNotesData?.tagId?.tagType]);
 
   const defaultColor = useMemo(() => {
-    return singleTagData?.tagId?.tagType === "AUTO_TAG"
+    return tagNotesData?.tagId?.tagType === "AUTO_TAG"
       ? "[#FFA500]"
       : "[#8C63FF]";
-  }, [singleTagData?.tagId?.tagType]);
+  }, [tagNotesData?.tagId?.tagType]);
 
-  console.log(singleTagData);
+  console.log(tagNotesData);
 
   return (
     <>
@@ -35,26 +35,24 @@ const MemoTagPopup = () => {
             )}
           >
             #{" "}
-            {singleTagData?.tagId?.tagType === "AUTO_TAG"
+            {tagNotesData?.tagId?.tagType === "AUTO_TAG"
               ? "Auto Tag"
               : "Manual Tag"}
           </span>
         </center>
         <center className={cn(`text-${defaultColor} text-3xl mt-2`)}>
-          # {singleTagData?.tagId?.name}
+          # {tagNotesData?.tagId?.name}
         </center>
         <section className="mt-4">
           <article className="flex justify-between ">
             <h1>
               Number:{" "}
-              <span className="font-semibold">
-                {singleTagData?.count} times
-              </span>
+              <span className="font-semibold">{tagNotesData?.count} times</span>
             </h1>
             <h1>
               Created by:{" "}
               <span className="font-semibold">
-                {singleTagData?.tagId?.createdBy?.name || "Captain"}
+                {tagNotesData?.tagId?.createdBy?.name || "Captain"}
               </span>
             </h1>
           </article>
@@ -71,15 +69,15 @@ const MemoTagPopup = () => {
               className={`p-3 space-y-2 ${defaultBgOpacityColor} rounded-xl my-4`}
             >
               <div className="flex justify-between">
-                <h1>{singleTagData?.tagId?.remainderInDuration} </h1>
+                <h1>{tagNotesData?.tagId?.remainderInDuration} </h1>
                 <h6 className="flex items-center space-x-2">
                   <HiOutlineBellAlert color="black" size={20} />
-                  <span>{convertToTime(singleTagData?.tagId?.time)}</span>
+                  <span>{convertToTime(tagNotesData?.tagId?.time)}</span>
                 </h6>
               </div>
               <div className="flex items-center space-x-2">
                 <FaRegUserCircle />
-                <p>{singleTagData?.tagId?.createdBy?.name || "Captain"}</p>
+                <p>{tagNotesData?.tagId?.createdBy?.name || "Captain"}</p>
               </div>
             </article>
           </section>

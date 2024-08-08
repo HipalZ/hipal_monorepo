@@ -1,6 +1,3 @@
-import BottomButton from "@/components/atom/bottomButton";
-import PlusButton from "@/components/atom/plusButton";
-import CropperPopup from "@/components/common/cropperPopup";
 import ReactCropper, { cropImage } from "@/components/cropper";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import {
@@ -9,11 +6,14 @@ import {
   handleClick,
   storeImageAfterSave,
 } from "@/components/utils/helper";
-import { useUserPaymentTags } from "@/hooks/useHipeople";
-import { type ChangeEvent, memo, useCallback, useRef } from "react";
+import { useAddNotes } from "@/hooks/useHipeople";
+import { type ChangeEvent, lazy, memo, useCallback, useRef } from "react";
 import { CiEdit } from "react-icons/ci";
 import { useParams } from "react-router-dom";
 
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
+const PlusButton = lazy(() => import("@/components/atom/plusButton"));
+const CropperPopup = lazy(() => import("@/components/common/cropperPopup"));
 const MemoAddNotes = () => {
   const { businessId, userId } = useParams<{
     businessId: string;
@@ -53,7 +53,7 @@ const MemoAddNotes = () => {
     setOpenAddNotes: s.setOpenAddNotes,
   }));
 
-  const { mutate } = useUserPaymentTags();
+  const { mutate } = useAddNotes();
 
   const cropperRef = useRef(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +107,7 @@ const MemoAddNotes = () => {
   };
 
   const handleNotes = async () => {
-    let imageUrl: string;
+    let imageUrl = "";
     if (imageFiles?.logo) {
       imageUrl = await storeImageAfterSave(
         imageFiles?.logo,

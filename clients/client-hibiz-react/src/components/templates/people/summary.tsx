@@ -161,7 +161,7 @@ const MemoSummary = () => {
             <article className="flex items-center gap-2">
               <PiPersonArmsSpreadFill size={30} className="bg-[#5197f8]" />
               <h3 className="text-[#5197f8] text-sm">
-              About Customer <br /> {formattedFrom} - {formattedTo} 
+                About Customer <br /> {formattedFrom} - {formattedTo}
               </h3>
             </article>
             <button

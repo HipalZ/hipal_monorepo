@@ -10,7 +10,9 @@ import type {
   UserUpdateTag,
   SummarizedPeopleData,
   IUserGroup,
+  INotes,
 } from "../types/businessData";
+import { DatePickerEnum } from "../types/businessData";
 import type {
   ImageFiles,
   ImagePreviews,
@@ -37,6 +39,8 @@ export type AddToGroup =
   | "CONFIRM"
   | ""
   | "ADD MORE USERS";
+
+export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
 
 const today = new Date();
 const startOfToday = new Date(
@@ -82,8 +86,11 @@ interface IHiPeople {
   singleBillData: Payment;
   setSingleBillData: (data: Payment) => void;
 
-  singleTagData: TagDetails;
-  setSingleTagData: (data: TagDetails) => void;
+  tagNotesData: TagDetails;
+  setTagNotesData: (data: TagDetails) => void;
+
+  singleTagData: Tag;
+  setSingleTagData: (data: Tag) => void;
 
   openTagPopup: boolean;
   setOpenTagPopup: (open: boolean) => void;
@@ -94,8 +101,8 @@ interface IHiPeople {
   dateRange: [Date, Date];
   setDateRange: (range: [Date, Date]) => void;
 
-  selectedOption: string;
-  setSelectedOption: (option: string) => void;
+  selectedOption: DatePickerEnum;
+  setSelectedOption: (option: DatePickerEnum) => void;
 
   openDatePickerModal: boolean;
   setOpenDatePickerModal: (open: boolean) => void;
@@ -221,7 +228,11 @@ interface IHiPeople {
   selectedGroup: IUserGroup;
   setSelectedGroup: (group: IUserGroup) => void;
 
+  openEditTagPopup: boolean;
+  setOpenEditTagPopup: (open: boolean) => void;
 
+  notesData: INotes;
+  setNotesData: (data: INotes) => void;
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -257,8 +268,11 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
   singleBillData: {} as Payment,
   setSingleBillData: (data: Payment) => set({ singleBillData: data }),
 
-  // singleTagData: {},
-  // setSingleTagData: (data: any) => set({ singleTagData: data }),
+  tagNotesData: {} as TagDetails,
+  setTagNotesData: (data) => set({ tagNotesData: data }),
+
+  singleTagData: {} as Tag,
+  setSingleTagData: (data) => set({ singleTagData: data }),
 
   openTagPopup: false,
   setOpenTagPopup: (open: boolean) => set({ openTagPopup: open }),
@@ -269,8 +283,9 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
   dateRange: [new Date(), new Date()],
   setDateRange: (range) => set({ dateRange: range }),
 
-  selectedOption: "Today",
-  setSelectedOption: (option: string) => set({ selectedOption: option }),
+  selectedOption: DatePickerEnum.TODAY,
+  setSelectedOption: (option: DatePickerEnum) =>
+    set({ selectedOption: option }),
 
   openDatePickerModal: false,
   setOpenDatePickerModal: (open: boolean) => set({ openDatePickerModal: open }),
@@ -424,6 +439,11 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   selectedGroup: {} as IUserGroup,
   setSelectedGroup: (group) => set({ selectedGroup: group }),
+  openEditTagPopup: false,
+  setOpenEditTagPopup: (open) => set({ openEditTagPopup: open }),
+
+  notesData: {},
+  setNotesData: (data) => set({ notesData: data }),
 }));
 
 export default useHiPeopleStore;

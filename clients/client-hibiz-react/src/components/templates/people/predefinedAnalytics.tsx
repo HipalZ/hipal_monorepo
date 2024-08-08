@@ -15,43 +15,43 @@ const MemoPredefinedAnalytics = () => {
     {
       id: "1",
       text: "Total Sales",
-      icon: <LuIndianRupee size={14} />,
+      icon: <LuIndianRupee size={20} />,
       value: userDashboardDetails?.totalSale,
     },
     {
       id: "2",
       text: "Average Sales",
-      icon: <LuIndianRupee size={14} />,
+      icon: <LuIndianRupee size={20} />,
       value: userDashboardDetails?.AvarageSale,
     },
     {
       id: "3",
       text: "Num of visits",
-      icon: <IoHomeOutline size={14} />,
+      icon: <IoHomeOutline size={20} />,
       value: userDashboardDetails?.NumOfVisits,
     },
     {
       id: "4",
       text: "Num of sessions",
-      icon: <SlLocationPin size={14} />,
+      icon: <SlLocationPin size={20} />,
       value: userDashboardDetails?.NumOfSessions,
     },
     {
       id: "5",
       text: "Coinz issued",
-      icon: <LiaCoinsSolid size={14} />,
+      icon: <LiaCoinsSolid size={20} />,
       value: userDashboardDetails?.coinzIssued,
     },
     {
       id: "6",
       text: "Coinz used",
-      icon: <PiHandCoinsLight size={14} />,
+      icon: <PiHandCoinsLight size={20} />,
       value: userDashboardDetails?.coinzUsed,
     },
     {
       id: "7",
       text: "Available Coinz",
-      icon: <PiHandCoinsLight size={14} />,
+      icon: <PiHandCoinsLight size={20} />,
       value: userDashboardDetails?.currentCoinz || 0,
     },
   ];
@@ -61,7 +61,7 @@ const MemoPredefinedAnalytics = () => {
       {predefinedAnalytics.map((buttons, index) => {
         return (
           <article
-            className={`border border-1 border-[#525E5F] w-full h-[5.5rem] p-2 rounded-lg space-y-4 
+            className={`border border-1 border-[#525E5F] w-full h-[7rem] lg:w-[10rem] p-2 rounded-lg flex flex-col justify-between
             ${index === 0 ? "col-span-2 md:col-span-1" : ""}`}
             key={buttons?.id}
           >
@@ -69,7 +69,11 @@ const MemoPredefinedAnalytics = () => {
               {buttons?.icon} &nbsp;
               {buttons?.text}
             </h1>
-            <p className="text-[#6F649B]">{buttons?.value}</p>
+            <p className="text-[#6F649B]">
+              {typeof buttons?.value === "number"
+                ? buttons.value.toLocaleString("en-IN")
+                : 0}
+            </p>
           </article>
         );
       })}

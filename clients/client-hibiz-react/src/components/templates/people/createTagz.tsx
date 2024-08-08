@@ -1,11 +1,10 @@
 import { Switch } from "@headlessui/react";
-import { memo, useMemo, useState } from "react";
+import { lazy, memo, useMemo, useState } from "react";
 import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
 import { FaRegUserCircle } from "react-icons/fa";
 import { LuBellRing } from "react-icons/lu";
 import { TiTick } from "react-icons/ti";
 import { HiOutlineBellAlert } from "react-icons/hi2";
-import BottomButton from "@/components/atom/bottomButton";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import {
   calculateFutureDate,
@@ -19,6 +18,7 @@ import { useCreateTag } from "@/hooks/useHipeople";
 import { useParams } from "react-router-dom";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import toast from "react-hot-toast";
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateTag = () => {
   const {
@@ -40,7 +40,7 @@ const MemoCreateTag = () => {
     history,
     setHistory,
   } = useHiPeopleStore((s) => ({
-    singleTagData: s.singleTagData,
+    singleTagData: s.tagNotesData,
     showRemainder: s.showRemainder,
     setShowRemainder: s.setShowRemainder,
     displayToCaptain: s.displayToCaptain,
@@ -63,29 +63,6 @@ const MemoCreateTag = () => {
   const createdBy = useOwnerLogin((s) => s?.user?.name);
 
   const [futureTimestamp, setFutureTimestamp] = useState<number>(0);
-
-  // useEffect(() => {
-  //   console.log(singleTagData);
-  //   if (singleTagData) {
-  //     setDisplayToCaptain(singleTagData?.tagId?.displayForCaptains);
-  //   }
-  //   if (singleTagData?.tagId?.reminderDate) {
-  //     const { remainder, duration, time } = parseRemainderDate(
-  //       singleTagData?.tagId?.reminderDate,
-  //     );
-  //     setRemainder(remainder.toString());
-  //     setHistory([
-  //       {
-  //         remainder,
-  //         duration,
-  //         time,
-  //       },
-  //     ]);
-  //     setDuration(duration);
-  //     setTime(time);
-  //     console.log(remainder, duration, time);
-  //   }
-  // }, [singleTagData]);
 
   const defaultBgOpacityColor = useMemo(() => {
     return singleTagData?.tagId?.tagType === "AUTO_TAG"
@@ -139,7 +116,7 @@ const MemoCreateTag = () => {
     const payload = {
       businessId: businessId,
       name: tagName,
-      description: tagNotes,
+      note: tagNotes,
       tagType: "MANUAL_TAG",
       displayForCaptains: displayToCaptain,
       duration: differenceTimeStamp,
@@ -232,31 +209,15 @@ const MemoCreateTag = () => {
             <>
               <section className="flex mb-4 space-x-2">
                 <div className="relative">
-                  <select
-                    value={remainder}
+                  <input
+                    type="number"
+                    value={remainder || 0}
                     onChange={(e) => setRemainder(e.target.value)}
                     id="remainder"
-                    style={{ maxHeight: "150px", overflowY: "auto" }}
                     className={`block w-[6.4rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
+                    placeholder="Remind"
                     required
-                  >
-                    <option
-                      value=""
-                      disabled
-                      className="py-1 text-sm h-[2.5rem]"
-                    >
-                      Remind
-                    </option>
-                    {Array.from({ length: 31 }, (_, i) => (
-                      <option
-                        key={i + 1}
-                        value={i + 1}
-                        className="py-1 text-sm"
-                      >
-                        {i + 1}
-                      </option>
-                    ))}
-                  </select>
+                  />
                   <label
                     htmlFor="remainder"
                     className={`bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-xs text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:text-${defaultColor}`}

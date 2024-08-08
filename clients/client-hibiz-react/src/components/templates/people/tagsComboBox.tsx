@@ -9,7 +9,7 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import { FaChevronDown } from "react-icons/fa";
 
@@ -61,23 +61,29 @@ const MemoTagsComboBox = () => {
     }
   };
 
-  const handleRemoveTag = (tagToRemove: UserTags) => {
-    setTags(tags.filter((tag) => tag._id !== tagToRemove._id));
-  };
+  const handleRemoveTag = useCallback(
+    (tagToRemove: UserTags) => {
+      setTags(tags.filter((tag) => tag._id !== tagToRemove._id));
+    },
+    [tags],
+  );
 
-  const toggleSelectTagData = (tagData: UserTags) => {
-    setTempSelected((prevSelected) => {
-      const isSelected = prevSelected.some((p) => p._id === tagData._id);
+  const toggleSelectTagData = useCallback(
+    (tagData: UserTags) => {
+      setTempSelected((prevSelected) => {
+        const isSelected = prevSelected.some((p) => p._id === tagData._id);
 
-      if (isSelected) {
-        // Remove tag from tempSelected
-        return prevSelected.filter((p) => p._id !== tagData._id);
-      } else {
-        // Add tag to tempSelected
-        return [...prevSelected, tagData];
-      }
-    });
-  };
+        if (isSelected) {
+          // Remove tag from tempSelected
+          return prevSelected.filter((p) => p._id !== tagData._id);
+        } else {
+          // Add tag to tempSelected
+          return [...prevSelected, tagData];
+        }
+      });
+    },
+    [tempSelected],
+  );
 
   const filteredPeople = useMemo(() => {
     if (query === "") {

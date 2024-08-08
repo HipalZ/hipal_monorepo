@@ -14,7 +14,6 @@ import UsersList from "./usersList";
 const MemoClient = () => {
   const {
     selectedUserIds,
-
     addGroupModal,
     setAddGroupModal,
     setAddGroupPage,
@@ -54,7 +53,7 @@ const MemoClient = () => {
       case "CREATE GROUP":
         setAddGroupPage("ADD TO GROUP");
         break;
-        case "ADD MORE USERS":
+      case "ADD MORE USERS":
         setAddGroupPage("CREATE GROUP");
         break;
       default:
@@ -107,9 +106,7 @@ const MemoClient = () => {
 
             {addGroupPage === "CREATE GROUP" && <CreateGroup />}
 
-            {
-              addGroupPage === "ADD MORE USERS" && <UsersList hide />
-            }
+            {addGroupPage === "ADD MORE USERS" && <UsersList hide />}
 
             {addGroupPage === "CONFIRM" && <Confirm />}
           </section>

@@ -1,9 +1,9 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import usePaginationStore from "@/components/store/usePaginationStore";
-import useTimings from "@/components/store/useTimings";
 import type {
   ILoyaltyData,
+  INotes,
   TagArray,
   UserDashboardDetails,
   UserTags,
@@ -15,28 +15,25 @@ import { useParams } from "react-router-dom";
 
 export const useUserDashboard = (userId: string) => {
   const { businessId } = useParams<{ businessId?: string }>();
-  const { setUserDashboardDetails, selectedNavItem } = useHiPeopleStore(
-    (s) => ({
+  const { setUserDashboardDetails, selectedNavItem, dateInTimeStamp } =
+    useHiPeopleStore((s) => ({
       setUserDashboardDetails: s.setUserDashboardDetails,
       selectedNavItem: s.selectedNavItem,
-    }),
-  );
+      dateInTimeStamp: s.dateInTimeStamp,
+    }));
   const { pageNumber, setDateLength } = usePaginationStore((s) => ({
     pageNumber: s.pageNumber,
     setDateLength: s.setDateLength,
   }));
-  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
-    timeStampStart: s.timeStampStart,
-    timeStampEnd: s.timeStampEnd,
-  }));
+
   const getAllUserDashboardData = async (businessId: string) => {
     const userDashboardResponse = await apiRpc.payments.userDashboard.$get({
       query: {
         businessId: businessId,
         userId: userId,
         pageNumber: pageNumber.toString(),
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
+        from: dateInTimeStamp?.from?.toString(),
+        to: dateInTimeStamp?.to.toString(),
       },
     });
     const data = await userDashboardResponse.json();
@@ -50,16 +47,16 @@ export const useUserDashboard = (userId: string) => {
       "userDashboard",
       businessId,
       userId,
-      timeStampStart,
-      timeStampEnd,
+      dateInTimeStamp?.from,
+      dateInTimeStamp?.to,
       pageNumber,
     ],
     queryFn: () => getAllUserDashboardData(businessId ?? ""),
     enabled:
       !!businessId &&
       !!userId &&
-      !!timeStampStart &&
-      !!timeStampEnd &&
+      !!dateInTimeStamp?.from &&
+      !!dateInTimeStamp?.to &&
       !!pageNumber &&
       selectedNavItem === "RECENT BILLS",
   });
@@ -77,8 +74,9 @@ export const useTagsNotes = () => {
     setDateLength: s.setDateLength,
   }));
 
-  const { setTagData, selectedNavItem } = useHiPeopleStore((s) => ({
+  const { setTagData, selectedNavItem, tagData } = useHiPeopleStore((s) => ({
     setTagData: s.setTagData,
+    tagData: s.tagData,
     selectedNavItem: s.selectedNavItem,
   }));
 
@@ -103,6 +101,34 @@ export const useTagsNotes = () => {
   return { data, isLoading, isError };
 };
 
+export const useGetUserNotes = () => {
+  const { businessId, userId } = useParams<{
+    businessId?: string;
+    userId?: string;
+  }>();
+
+  const getAllNotes = async () => {
+    const userNotesResponse = await apiRpc.tags.note[":businessId"][
+      ":userId"
+    ].$get({
+      param: {
+        businessId: businessId,
+        userId: userId,
+      },
+    });
+    const data = await userNotesResponse.json();
+    return data?.data as INotes[];
+  };
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["userNotes", businessId, userId],
+    queryFn: getAllNotes,
+    enabled: !!businessId && !!userId,
+  });
+
+  return { data, isLoading, isError };
+};
+
 export const userCoinzDetails = () => {
   const { businessId, userId } = useParams<{
     businessId?: string;
@@ -118,15 +144,12 @@ export const userCoinzDetails = () => {
     existingLoyalty: s.existingLoyalty,
   }));
 
-  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
-    timeStampStart: s.timeStampStart,
-    timeStampEnd: s.timeStampEnd,
-  }));
-
-  const { setUserCoinzDetails, selectedNavItem } = useHiPeopleStore((s) => ({
-    setUserCoinzDetails: s.setUserCoinzDetails,
-    selectedNavItem: s.selectedNavItem,
-  }));
+  const { setUserCoinzDetails, selectedNavItem, dateInTimeStamp } =
+    useHiPeopleStore((s) => ({
+      setUserCoinzDetails: s.setUserCoinzDetails,
+      selectedNavItem: s.selectedNavItem,
+      dateInTimeStamp: s.dateInTimeStamp,
+    }));
 
   const getUserCoinz = async (businessId: string) => {
     const userCoinzResponse = await apiRpc.payments.user.coinsUsage.$get({
@@ -134,13 +157,12 @@ export const userCoinzDetails = () => {
         businessId: businessId,
         userId: userId?.toString(),
         loyaltyId: existingLoyalty?.loyaltyId,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
+        from: dateInTimeStamp?.from?.toString(),
+        to: dateInTimeStamp?.to?.toString(),
         pageNumber: pageNumber.toString(),
       },
     });
     const data = await userCoinzResponse.json();
-    console.log(data?.data);
     setUserCoinzDetails(data?.data);
     setDateLength(Object.keys(data?.data)?.length);
     return data?.data;
@@ -151,8 +173,8 @@ export const userCoinzDetails = () => {
       "userCoinz",
       businessId,
       userId,
-      timeStampStart,
-      timeStampEnd,
+      dateInTimeStamp?.from,
+      dateInTimeStamp?.to,
       pageNumber,
       selectedNavItem,
     ],
@@ -160,8 +182,8 @@ export const userCoinzDetails = () => {
     enabled:
       !!businessId &&
       !!userId &&
-      !!timeStampStart &&
-      !!timeStampEnd &&
+      !!dateInTimeStamp?.from &&
+      !!dateInTimeStamp?.to &&
       !!pageNumber &&
       selectedNavItem === "COINZ USAGE",
   });
@@ -220,6 +242,24 @@ export const useUserUpdateTags = () => {
 
 // updating the userPayment Tags, notes
 export const useUserPaymentTags = () => {
+  const queryClient = useQueryClient();
+  const {
+    setOpenEditTagPopup,
+    openEditTagPopup,
+    setTagNotes,
+    setRemainder,
+    setDuration,
+    setTime,
+    setDisplayToCaptain,
+  } = useHiPeopleStore((s) => ({
+    setOpenEditTagPopup: s.setOpenEditTagPopup,
+    openEditTagPopup: s.openEditTagPopup,
+    setTagNotes: s.setTagNotes,
+    setRemainder: s.setRemainder,
+    setDuration: s.setDuration,
+    setTime: s.setTime,
+    setDisplayToCaptain: s.setDisplayToCaptain,
+  }));
   const updateUserPaymentTags = async (payload) => {
     const userTagsResponse = await apiRpc.tags.update[":userId"].$put({
       json: payload,
@@ -234,7 +274,14 @@ export const useUserPaymentTags = () => {
   const mutation = useMutation({
     mutationFn: updateUserPaymentTags,
     onSuccess: () => {
-      console.log("Success");
+      toast.success("Tag updated successfully");
+      setOpenEditTagPopup(!openEditTagPopup);
+      setTagNotes("");
+      setRemainder("");
+      setDuration("");
+      setTime("");
+      setDisplayToCaptain(false);
+      queryClient.invalidateQueries({});
     },
     onError: (error) => {
       console.error("Error updating user tags:", error);
@@ -275,7 +322,10 @@ export const useLoyaltyData = () => {
 // get all tags in displaying list of tags
 export const useAllTags = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-
+  const { setTags, tags } = useHiPeopleStore((s) => ({
+    setTags: s.setTags,
+    tags: s.tags,
+  }));
   const getAllTags = async (businessId: string) => {
     const response = await apiRpc.tags.$get({
       query: {
@@ -283,13 +333,14 @@ export const useAllTags = () => {
       },
     });
     const data = await response.json();
+    setTags(data?.data as UserTags[]);
     return data?.data as UserTags[];
   };
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["allTags", businessId],
     queryFn: () => getAllTags(businessId ?? ""),
-    enabled: !!businessId,
+    enabled: !!businessId && tags?.length === 0,
   });
 
   return { data, isLoading, isError };
@@ -315,7 +366,6 @@ export const useRemoveTag = () => {
   const mutation = useMutation({
     mutationFn: deleteTag,
     onSuccess: () => {
-      console.log("Success");
       queryClient.invalidateQueries({
         queryKey: ["allTags"],
       });
@@ -342,6 +392,7 @@ export const useCreateTag = () => {
     setTime,
     setRemainder,
     setHistory,
+    setSingleTagData,
   } = useHiPeopleStore((s) => ({
     setOpenCreateTagPopup: s.setOpenCreateTagPopup,
     setTagName: s.setTagName,
@@ -351,6 +402,7 @@ export const useCreateTag = () => {
     setTime: s.setTime,
     setRemainder: s.setRemainder,
     setHistory: s.setHistory,
+    setSingleTagData: s.setSingleTagData,
   }));
   const createTag = async (payload) => {
     const response = await apiRpc.tags.$post({
@@ -372,12 +424,45 @@ export const useCreateTag = () => {
       setTime("");
       setRemainder("");
       setHistory([]);
+      setSingleTagData({});
       queryClient.invalidateQueries({
         queryKey: ["allTags"],
       });
     },
     onError: (error) => {
       console.error("Error creating tag:", error);
+    },
+  });
+
+  return mutation;
+};
+
+export const useAddNotes = () => {
+  const { setImageFiles, setImg, setTitleNotes, setDescriptionNotes } =
+    useHiPeopleStore((s) => ({
+      setImageFiles: s.setImageFiles,
+      setImg: s.setImg,
+      setTitleNotes: s.setTitleNotes,
+      setDescriptionNotes: s.setDescriptionNotes,
+    }));
+  const createNotes = async (payload: INotes) => {
+    const response = await apiRpc.tags.note.$post({
+      json: payload,
+    });
+    const data = await response.json();
+    return data?.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: createNotes,
+    onSuccess: () => {
+      setImageFiles([]);
+      setImg({});
+      setTitleNotes("");
+      setDescriptionNotes("");
+    },
+    onError: (error) => {
+      console.error("Error creating notes:", error);
     },
   });
 

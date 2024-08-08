@@ -1,33 +1,36 @@
-import BottomButton from "@/components/atom/bottomButton";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { convertToTime, filterPayload } from "@/components/utils/helper";
 import { useAllTags, useUserPaymentTags } from "@/hooks/useHipeople";
-import { memo, useState, useMemo } from "react";
+import { memo, useState, useMemo, lazy } from "react";
 import { useParams } from "react-router-dom";
 
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const MemoAddTagz = () => {
-  const { data: allTagz } = useAllTags();
+  useAllTags();
   const { businessId, userId } = useParams<{
     businessId: string;
     userId: string;
   }>();
   const { mutate } = useUserPaymentTags();
-  const { userDashboardDetails, setOpenAddTagz } = useHiPeopleStore((s) => ({
-    userDashboardDetails: s.userDashboardDetails,
-    setOpenAddTagz: s.setOpenAddTagz,
-  }));
+  const { userDashboardDetails, setOpenAddTagz, tags } = useHiPeopleStore(
+    (s) => ({
+      userDashboardDetails: s.userDashboardDetails,
+      setOpenAddTagz: s.setOpenAddTagz,
+      tags: s.tags,
+    }),
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
 
   // Filtered tags based on search query
   const filteredTags = useMemo(() => {
     if (!searchQuery) {
-      return allTagz;
+      return tags;
     }
-    return allTagz?.filter((tag) =>
+    return tags?.filter((tag) =>
       tag.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery, allTagz]);
+  }, [searchQuery, tags]);
 
   // Handle checkbox change
   const handleCheckboxChange = (tagId: string) => {

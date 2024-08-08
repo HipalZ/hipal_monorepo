@@ -1,9 +1,9 @@
 import { cn } from "@/components/utils/helper";
-import { memo } from "react";
+import { lazy, memo } from "react";
 import { LiaTagSolid } from "react-icons/lia";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import type { Payment } from "@/components/types/businessData";
-import OnlineImgCard from "./onlineImgCard";
+const OnlineImgCard = lazy(() => import("./onlineImgCard"));
 
 const MemoRecentBills = () => {
   const { setOpenBillPopup, setSingleBillData, userDashboardDetails } =
@@ -19,7 +19,7 @@ const MemoRecentBills = () => {
   };
 
   return (
-    <section className="relative grid pb-[5rem] md:grid-cols-2 lg:grid-cols-3 pb-[10rem]">
+    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 pb-[10rem]">
       {userDashboardDetails?.bill && userDashboardDetails?.bill.length > 0 ? (
         userDashboardDetails?.bill.map((data) => (
           <section

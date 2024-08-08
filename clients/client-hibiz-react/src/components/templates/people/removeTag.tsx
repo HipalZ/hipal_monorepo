@@ -1,26 +1,31 @@
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { useRemoveTag } from "@/hooks/useHipeople";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { AiFillAlert } from "react-icons/ai";
 
 const MemoRemoveTag = () => {
   const { mutate } = useRemoveTag();
-  const { setSelectedDeleteTagId, setOpenDeletePopup } = useHiPeopleStore(
-    (s) => ({
-      setSelectedDeleteTagId: s.setSelectedDeleteTagId,
-      setOpenDeletePopup: s.setOpenDeletePopup,
-    }),
-  );
+  const {
+    setSelectedDeleteTagId,
+    selectedDeleteTagId,
+    setOpenDeletePopup,
+    openDeletePopup,
+  } = useHiPeopleStore((s) => ({
+    setSelectedDeleteTagId: s.setSelectedDeleteTagId,
+    setOpenDeletePopup: s.setOpenDeletePopup,
+    selectedDeleteTagId: s.selectedDeleteTagId,
+    openDeletePopup: s.openDeletePopup,
+  }));
 
   const handleDeleteTag = async () => {
     await mutate();
     setOpenDeletePopup(false);
   };
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setSelectedDeleteTagId("");
     setOpenDeletePopup(false);
-  };
+  }, [selectedDeleteTagId, openDeletePopup]);
 
   return (
     <div className="flex justify-center my-6">

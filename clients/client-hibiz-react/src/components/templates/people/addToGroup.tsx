@@ -1,11 +1,11 @@
-import BottomButton from "@/components/atom/bottomButton";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import type { IUserGroup } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
-import { memo, useCallback } from "react";
+import { lazy, memo, useCallback } from "react";
 import { IoMdArrowRoundForward } from "react-icons/io";
 import { PiPersonArmsSpreadFill } from "react-icons/pi";
 
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const MemoAddToGroup = ({
   groupData,
 }: { groupData: IUserGroup[] | undefined }) => {
@@ -14,8 +14,8 @@ const MemoAddToGroup = ({
     setSelectedGroupId,
     setSelectedGroupName,
     selectedGroupId,
-    addGroupPage
-  } = useHiPeopleStore(state=>({
+    addGroupPage,
+  } = useHiPeopleStore((state) => ({
     setAddGroupPage: state.setAddGroupPage,
     setSelectedGroupId: state.setSelectedGroupId,
     setSelectedGroupName: state.setSelectedGroupName,
@@ -98,8 +98,8 @@ const MemoAddToGroup = ({
                     }`}
                   >
                     Avg spend{" "}
-                    {filter?.spendType === "ABOVE" ? "more than" : "less than"} ₹
-                    {filter?.spend} in total
+                    {filter?.spendType === "ABOVE" ? "more than" : "less than"}{" "}
+                    ₹{filter?.spend} in total
                   </span>
                 </article>
               </section>
@@ -107,7 +107,11 @@ const MemoAddToGroup = ({
           </button>
         );
       })}
-      <button onClick={createGroup} type="button" className="bg-[#000000] text-white text-sm px-4 py-3 rounded-full absolute right-4 bottom-16 lg:top-6 lg:bottom-auto"> 
+      <button
+        onClick={createGroup}
+        type="button"
+        className="bg-[#000000] text-white text-sm px-4 py-3 rounded-full absolute right-4 bottom-16 lg:top-6 lg:bottom-auto"
+      >
         Create a new group
       </button>
       {selectedGroupId && (

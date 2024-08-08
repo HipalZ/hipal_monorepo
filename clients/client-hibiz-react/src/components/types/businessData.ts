@@ -553,6 +553,7 @@ export interface TagArray {
   count: number;
 }
 export interface Tag {
+  note: string;
   time: number;
   createdBy: {
     _id: string;
@@ -618,4 +619,23 @@ export interface IHistory {
   remainder: string;
   duration: string;
   time: string;
+}
+
+export interface INotes {
+  _id: string;
+  businessId: string;
+  userId: string;
+  noteTitle: string;
+  noteDescription: string;
+  noteUrl: string;
+  tagIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum DatePickerEnum {
+  TODAY = "TODAY",
+  YESTERDAY = "YESTERDAY",
+  ONE_MONTH = "ONE MONTH",
+  CUSTOM_DATE = "CUSTOM DATE",
 }

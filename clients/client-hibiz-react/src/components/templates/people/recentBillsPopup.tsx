@@ -1,12 +1,14 @@
-import { ChangeEvent, memo } from "react";
-import OnlineImgCard from "./onlineImgCard";
+import { type ChangeEvent, memo, useCallback } from "react";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { MdOutlineMessage } from "react-icons/md";
 import { cn } from "@/components/utils/helper";
 import { LiaTagSolid } from "react-icons/lia";
-import BottomButton from "@/components/atom/bottomButton";
-import TagsComboBox from "./tagsComboBox";
 import { useUserUpdateTags } from "@/hooks/useHipeople";
+import { lazy } from "react";
+
+const TagsComboBox = lazy(() => import("./tagsComboBox"));
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
+const OnlineImgCard = lazy(() => import("./onlineImgCard"));
 
 const MemoRecentBillsPopup = () => {
   const {
@@ -21,15 +23,14 @@ const MemoRecentBillsPopup = () => {
     tags: s.tags,
   }));
 
-  const handleComment = (e: ChangeEvent<HTMLAreaElement>) => {
+  const handleComment = useCallback((e: ChangeEvent<HTMLAreaElement>) => {
     setUserComment(e.target.value);
-  };
+  }, []);
 
   const { mutate } = useUserUpdateTags();
 
   const handleApply = () => {
     mutate(tags);
-    console.log("Applying...", tags);
   };
 
   return (

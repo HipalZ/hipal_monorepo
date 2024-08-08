@@ -1,15 +1,15 @@
-import { memo, useState, useMemo } from "react";
+import { memo, useState, useMemo, lazy, useCallback } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
-import CreateTag from "./createTagz";
-import PopUp from "@/components/atom/popUp";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { useAllTags } from "@/hooks/useHipeople";
 import { MdDeleteOutline } from "react-icons/md";
 import RemoveTag from "./removeTag";
 import { cn } from "@/components/utils/helper";
 import { TiStarburstOutline } from "react-icons/ti";
-import DisplayforCaptains from "./displayforCaptains";
 import Fuse from "fuse.js";
+import EditTagz from "./editTagz";
+const CreateTag = lazy(() => import("./createTagz"));
+const PopUp = lazy(() => import("@/components/atom/popUp"));
 
 const MemoTagz = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -20,18 +20,38 @@ const MemoTagz = () => {
     openDeletePopup,
     setOpenDeletePopup,
     setSelectedDeleteTagId,
-    openDisplayForCaptains,
-    setOpenDisplayForCaptains,
-    setSelectedTagId,
+    selectedDeleteTagId,
+    setSingleTagData,
+    openEditTagPopup,
+    time,
+    duration,
+    remainder,
+    tagNotes,
+    setOpenEditTagPopup,
+    setDisplayToCaptain,
+    setDuration,
+    setRemainder,
+    setTime,
+    setTagNotes,
   } = useHiPeopleStore((s) => ({
     openCreateTagPopup: s.openCreateTagPopup,
     setOpenCreateTagPopup: s.setOpenCreateTagPopup,
     openDeletePopup: s.openDeletePopup,
     setOpenDeletePopup: s.setOpenDeletePopup,
     setSelectedDeleteTagId: s.setSelectedDeleteTagId,
-    openDisplayForCaptains: s.openDisplayForCaptains,
-    setOpenDisplayForCaptains: s.setOpenDisplayForCaptains,
-    setSelectedTagId: s.setSelectedTagId,
+    selectedDeleteTagId: s.selectedDeleteTagId,
+    setSingleTagData: s.setSingleTagData,
+    openEditTagPopup: s.openEditTagPopup,
+    time: s.time,
+    duration: s.duration,
+    remainder: s.remainder,
+    tagNotes: s.tagNotes,
+    setOpenEditTagPopup: s.setOpenEditTagPopup,
+    setDuration: s.setDuration,
+    setRemainder: s.setRemainder,
+    setTime: s.setTime,
+    setDisplayToCaptain: s.setDisplayToCaptain,
+    setTagNotes: s.setTagNotes,
   }));
 
   const { data: tagData } = useAllTags();
@@ -50,32 +70,47 @@ const MemoTagz = () => {
     return result.map(({ item }) => item);
   }, [searchQuery, tagData]);
 
-  const toggleSearch = () => {
+  const toggleSearch = useCallback(() => {
     setIsSearchOpen(!isSearchOpen);
     setSearchQuery("");
-  };
+  }, [searchQuery, isSearchOpen]);
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const handleSearchChange = useCallback(
+    (e) => {
+      setSearchQuery(e.target.value);
+    },
+    [searchQuery],
+  );
 
-  const handleCloseDelete = () => {
+  const handleCloseDelete = useCallback(() => {
     setOpenDeletePopup(false);
-  };
+  }, [openDeletePopup]);
 
-  const handleDelete = (id) => {
-    setOpenDeletePopup(!openDeletePopup);
-    setSelectedDeleteTagId(id);
-  };
+  const handleDelete = useCallback(
+    (e, id) => {
+      e.stopPropagation();
+      setOpenDeletePopup(!openDeletePopup);
+      setSelectedDeleteTagId(id);
+    },
+    [openDeletePopup, selectedDeleteTagId],
+  );
 
-  // const handleDisplayToCaptains = (id) => {
-  //   setSelectedTagId(id);
-  //   setOpenDisplayForCaptains(!openDisplayForCaptains);
-  // };
+  const handleEditTag = useCallback(
+    (tag: any) => {
+      setSingleTagData(tag);
+      setOpenEditTagPopup(true);
+    },
+    [openEditTagPopup],
+  );
 
-  const handleEditTag = (tag: any) => {
-    console.log("Edit Tag", tag);
-  };
+  const handleClose = useCallback(() => {
+    setOpenEditTagPopup(!openEditTagPopup);
+    setTagNotes("");
+    setRemainder("");
+    setDuration("");
+    setTime("");
+    setDisplayToCaptain(false);
+  }, [openEditTagPopup, tagNotes, remainder, duration, time]);
 
   return (
     <main>
@@ -111,9 +146,9 @@ const MemoTagz = () => {
               <article
                 key={tag?._id}
                 onClick={() => handleEditTag(tag)}
-                className="border border-1 border-[#6F649B] rounded-2xl p-2 space-y-4"
+                className="border border-1 border-[#6F649B] rounded-2xl p-2 space-y-4 bg-white"
               >
-                <section className="flex items-center justify-between">
+                <section className="flex items-center justify-between ">
                   <h1 className="text-[#6F649B] text-xl font-semibold">#</h1>
                   <article className="flex space-x-2">
                     <span
@@ -132,14 +167,17 @@ const MemoTagz = () => {
                     </span>
                     <span
                       className="p-1 bg-red-100 rounded-full cursor-pointer"
-                      onClick={() => handleDelete(tag?._id)}
-                      onKeyDown={() => handleDelete(tag?._id)}
+                      onClick={(e) => handleDelete(e, tag?._id)}
+                      onKeyDown={(e) => handleDelete(e, tag?._id)}
                     >
                       <MdDeleteOutline color="red" />
                     </span>
                   </article>
                 </section>
-                <p title={tag?.name} className="truncate cursor-pointer">
+                <p
+                  title={tag?.name}
+                  className="text-[#6F649B] truncate cursor-pointer"
+                >
                   {tag?.name}
                 </p>
               </article>
@@ -164,19 +202,16 @@ const MemoTagz = () => {
           <CreateTag />
         </PopUp>
       ) : null}
-      {openDeletePopup && (
+      {openDeletePopup ? (
         <PopUp show={openDeletePopup} onClose={handleCloseDelete}>
           <RemoveTag />
         </PopUp>
-      )}
-      {openDisplayForCaptains && (
-        <PopUp
-          show={openDisplayForCaptains}
-          onClose={() => setOpenDisplayForCaptains(!openDisplayForCaptains)}
-        >
-          <DisplayforCaptains />
+      ) : null}
+      {openEditTagPopup ? (
+        <PopUp show={openEditTagPopup} onClose={handleClose}>
+          <EditTagz />
         </PopUp>
-      )}
+      ) : null}
     </main>
   );
 };
