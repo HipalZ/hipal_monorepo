@@ -29,18 +29,7 @@ const UserTagSchema = new mongoose.Schema<UserTag>(
       type: Number,
       required: false,
     },
-    noteDescription: {
-      type: String,
-      required: false,
-    },
-    noteTitle: {
-      type: String,
-      required: false,
-    },
-    noteUrl: {
-      type: String,
-      required: false,
-    },
+
     isDeleted: {
       type: Boolean,
       required: false,

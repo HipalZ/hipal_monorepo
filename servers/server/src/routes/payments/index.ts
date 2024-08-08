@@ -10,6 +10,7 @@ import {
   PaymentAlert,
   Reviews,
   Subscriber,
+  TagModel,
   User,
   UserAnalytic,
   UserReward,
@@ -32,6 +33,7 @@ import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
+import { schedule } from "node-cron";
 import { z } from "zod";
 import {
   ClientRoles,
@@ -2104,14 +2106,44 @@ const paymentsRouter = new Hono()
         { new: true },
       );
 
+      const user = await User.findById(userId).select("name phone");
+
+      const date = Date.now();
+      const customDate = new Date(date).setHours(0, 0, 0, 0);
+
       for (let i = 0; i < tagIds.length; i++) {
         const tagId = tagIds[i];
+        const tag = await TagModel.findById(tagIds[i]).select("duration time");
 
         const createUserTag = await UserTags.create({
           userId,
           tagId,
           businessId,
           date: Date.now(),
+          reminderDate: customDate + tag.duration + tag.time,
+        });
+        const reminderDateObj = new Date(createUserTag.reminderDate);
+        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+          reminderDateObj.getMonth() + 1
+        } *`;
+
+        schedule(cronExpression, async () => {
+          const options = {
+            method: "POST",
+            url: "https://control.msg91.com/api/v5/flow/",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              authkey: "387796AmyGlDBq63b2d75aP1",
+            },
+            data: {
+              template_id: "66b1f189d6fc055e463e3b63",
+              sender: "HiPalc",
+              mobiles: `91${user.phone}`,
+              var: `${user.name}`,
+            },
+          };
+          await axios(options);
         });
       }
 

@@ -1,7 +1,9 @@
-import { Note, TagModel, TagTypeModel, UserTags } from "@hi/db-models";
+import { Note, TagModel, TagTypeModel, User, UserTags } from "@hi/db-models";
 import { TagSchema, noteSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
+import { schedule } from "node-cron";
 import { z } from "zod";
 const tagRouter = new Hono()
 
@@ -206,13 +208,14 @@ const tagRouter = new Hono()
         );
       }
 
-      console.log("date", Date.now());
-
       const date = Date.now();
       const customDate = new Date(date).setHours(0, 0, 0, 0);
 
+      const user = await User.findById(userId).select("phone name");
+
       for (let i = 0; i < tagIds.length; i++) {
         const tag = await TagModel.findById(tagIds[i]).select("duration time");
+        console.log("tag", tag);
         const updateUserTag = await UserTags.findOneAndUpdate(
           {
             tagId: tagIds[i],
@@ -232,7 +235,29 @@ const tagRouter = new Hono()
           },
           { upsert: true, new: true }, // Ensure upsert is true and return the updated document
         );
-        console.log("create a tag", updateUserTag);
+        const reminderDateObj = new Date(updateUserTag.reminderDate);
+        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+          reminderDateObj.getMonth() + 1
+        } *`;
+
+        schedule(cronExpression, async () => {
+          const options = {
+            method: "POST",
+            url: "https://control.msg91.com/api/v5/flow/",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              authkey: "387796AmyGlDBq63b2d75aP1",
+            },
+            data: {
+              template_id: "66b1f189d6fc055e463e3b63",
+              sender: "HiPalc",
+              mobiles: `91${user.phone}`,
+              var: `${user.name}`,
+            },
+          };
+          await axios(options);
+        });
       }
 
       return c.json(
