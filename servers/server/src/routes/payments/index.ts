@@ -753,6 +753,7 @@ const paymentsRouter = new Hono()
 
               session,
             );
+
             getCashBack = cashBackCoins;
 
             const userAnalytics = await UserAnalytic.findOne({
@@ -793,6 +794,7 @@ const paymentsRouter = new Hono()
               );
             }
           }
+          console.log("getCashBack", getCashBack);
 
           const createPayment = await Payment.create(
             [
@@ -2093,115 +2095,49 @@ const paymentsRouter = new Hono()
         userId: z.string({
           message: "userId is required",
         }),
-        from: z.string().optional(),
-        to: z.string().optional(),
-        pageNumber: z.string().optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, from, to, userId } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const { businessId, userId } = c.req.query();
 
-      const PAGE_SIZE = 20;
-      const pageNumber = c.req.query("pageNumber") as string;
-      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      const existingTagAndNotes = await UserTags.find({
+        userId,
+        businessId,
+      })
+        .sort({ _id: -1 })
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date",
-        });
-      }
-
-      if (!from && !to) {
-        const existingTagAndNotes = await UserTags.find({
-          userId,
-          businessId,
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "tagId",
-            select:
-              "name tagType displayForCaptains duration time remainderInDuration noteTitle noteDescription noteUrl",
-          });
-
-        console.log("existingTagAndNotes", existingTagAndNotes);
-
-        const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
-          if (payment.tagId?._id) {
-            const tagIdStr = payment.tagId._id;
-            if (!acc[tagIdStr]) {
-              acc[tagIdStr] = {
-                tagId: payment.tagId,
-                // Assuming payment.name contains the name
-
-                count: 0,
-              };
-            }
-
-            acc[tagIdStr].count += 1;
-          }
-          return acc;
-        }, {});
-
-        return c.json({
-          err: false,
-          data: Object.values(groupByTag),
-          message: "existing tags",
-        });
-      }
-
-      if (from && to) {
-        const existingTagAndNotes = await UserTags.find({
-          userId,
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
+        .populate({
+          path: "tagId",
+          select:
+            "name tagType displayForCaptains duration time remainderInDuration",
+          populate: {
+            path: "createdBy",
+            select: "name", // Adjust the fields you want to select from the createdBy document
           },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "tagId",
-            select:
-              "name tagType displayForCaptains duration time remainderInDuration noteTitle noteDescription noteUrl",
-          });
-
-        const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
-          if (payment.tagId?._id) {
-            const tagIdStr = payment.tagId._id;
-            if (!acc[tagIdStr]) {
-              acc[tagIdStr] = {
-                tagId: payment.tagId,
-                // Assuming payment.name contains the name
-
-                count: 0,
-              };
-            }
-
-            acc[tagIdStr].count += 1;
-          }
-          return acc;
-        }, {});
-
-        return c.json({
-          err: false,
-          data: Object.values(groupByTag),
-          message: "existing tags",
         });
-      }
+
+      const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
+        if (payment.tagId?._id) {
+          const tagIdStr = payment.tagId._id;
+          if (!acc[tagIdStr]) {
+            acc[tagIdStr] = {
+              tagId: payment.tagId,
+              // Assuming payment.name contains the name
+
+              count: 0,
+            };
+          }
+
+          acc[tagIdStr].count += 1;
+        }
+        return acc;
+      }, {});
 
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: Object.values(groupByTag),
+        message: "existing tags",
       });
     },
   )

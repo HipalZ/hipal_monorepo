@@ -27,18 +27,6 @@ const tagSchema = new mongoose.Schema(
       ref: "User",
     },
 
-    noteTitle: {
-      type: String,
-      required: false,
-    },
-    noteDescription: {
-      type: String,
-      required: false,
-    },
-    noteUrl: {
-      type: String,
-      required: false,
-    },
     displayForCaptains: {
       type: Boolean,
       required: false,
@@ -54,6 +42,10 @@ const tagSchema = new mongoose.Schema(
     },
 
     remainderInDuration: {
+      type: String,
+      required: false,
+    },
+    note: {
       type: String,
       required: false,
     },

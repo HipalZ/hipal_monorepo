@@ -27,9 +27,7 @@ export const TagSchema = z.object({
   displayForCaptains: z.boolean().default(true).optional(),
   repeat: z.number().optional(),
   remainderInDuration: z.string().optional(),
-  noteTitle: z.string().optional(),
-  noteDescription: z.string().optional(),
-  noteUrl: z.string().optional(),
+  note: z.string().min(2).max(100).optional(),
 
   isDeleted: z.boolean().default(false).optional(),
   duration: z.number().optional(),

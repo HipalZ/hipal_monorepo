@@ -282,17 +282,22 @@ const groupRouter = new Hono()
         businessId: businessId,
       }).count();
 
-      const userAnalytics = users.reduce((acc, user) => {
+      const userAnalytics = await users.reduce(async (accPromise, user) => {
+        const acc = await accPromise;
+
         if (!acc[user.userId]) {
-          const userReward = UserReward.findOne({
+          const userReward = await UserReward.findOne({
             userId: user.userId,
             loyaltyId: user.businessId,
           });
+
+          console.log("gggggggggggggg", user);
+
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
             spend: 0,
-            cardBalance: userReward.rewards,
+            cardBalance: userReward ? userReward.rewards : 0,
             coinzIssued: user.earnCoins,
             coinzUsed: user.claimedCoins,
             tags: user.tagIds,
@@ -301,13 +306,20 @@ const groupRouter = new Hono()
 
         acc[user.userId].visit += 1;
         acc[user.userId].spend += user.total;
+        acc[user.userId].coinzIssued += user.earnCoins;
+        acc[user.userId].coinzUsed += user.claimedCoins;
+        acc[user.tagIds] = user.tagIds;
+
         return acc;
-      }, {});
+      }, Promise.resolve({}));
 
       const matchCondition = (data: Record<string, any>, condition: any) => {
         return Object.values(data).filter((user) => {
           let visitMatch = false;
           let spendMatch = false;
+          let cardBalanceMatch = false;
+          let coinzIssuedMatch = false;
+          let coinzUsedMatch = false;
 
           switch (condition.visitType) {
             case "ABOVE":
@@ -333,7 +345,49 @@ const groupRouter = new Hono()
               break;
           }
 
-          return visitMatch && spendMatch;
+          switch (condition.cardBalanceType) {
+            case "ABOVE":
+              cardBalanceMatch = user.cardBalance > condition.cardBalance;
+              break;
+            case "BELOW":
+              cardBalanceMatch = user.cardBalance < condition.cardBalance;
+              break;
+            case "EQUAL":
+              cardBalanceMatch = user.cardBalance === condition.cardBalance;
+              break;
+          }
+
+          switch (condition.coinzIssuedType) {
+            case "ABOVE":
+              coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
+              break;
+            case "BELOW":
+              coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
+              break;
+            case "EQUAL":
+              coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
+              break;
+          }
+
+          switch (condition.coinzUsedType) {
+            case "ABOVE":
+              coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
+              break;
+            case "BELOW":
+              coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
+              break;
+            case "EQUAL":
+              coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
+              break;
+          }
+
+          return (
+            visitMatch &&
+            spendMatch &&
+            cardBalanceMatch &&
+            coinzIssuedMatch &&
+            coinzUsedMatch
+          );
         });
       };
 

@@ -12,6 +12,7 @@ export * from "./group";
 export * from "./groupAnalytics";
 export * from "./loyaltyCoinsInfo";
 export * from "./loyaltySetting";
+export * from "./note";
 export * from "./order";
 export * from "./outLetInfo";
 export * from "./payment";

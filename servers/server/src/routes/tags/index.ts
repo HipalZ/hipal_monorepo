@@ -1,51 +1,10 @@
-import { TagModel, TagTypeModel, UserTags } from "@hi/db-models";
-import { TagSchema, TagTypeSchema } from "@hi/db-models/src/validators";
+import { Note, TagModel, TagTypeModel, UserTags } from "@hi/db-models";
+import { TagSchema, noteSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 const tagRouter = new Hono()
-  .post("/tagType", zValidator("json", TagTypeSchema), async (c) => {
-    const requestData = await c.req.json();
 
-    const existingTagType = await TagTypeModel.findOne({
-      tagType: requestData.tagType,
-      isDeleted: false,
-    });
-
-    if (existingTagType) {
-      return c.json(
-        {
-          message: "existingTagType already exist",
-          err: true,
-          data: {},
-        },
-        409,
-      );
-    }
-    //
-
-    const createTagType = await TagTypeModel.create(requestData);
-
-    if (!createTagType) {
-      return c.json(
-        {
-          message: "createTagType not created",
-          err: true,
-          data: {},
-        },
-        400,
-      );
-    }
-
-    return c.json(
-      {
-        message: "createTagType created successfully",
-        err: false,
-        data: createTagType,
-      },
-      201,
-    );
-  })
   .post("/", zValidator("json", TagSchema), async (c) => {
     const requestData = await c.req.json();
 
@@ -283,6 +242,48 @@ const tagRouter = new Hono()
         },
         200,
       );
+    },
+  )
+  .post("/note", zValidator("json", noteSchema), async (c) => {
+    const requestData = await c.req.json();
+
+    const createNote = await Note.create(requestData);
+
+    if (!createNote) {
+      return c.json(
+        {
+          message: "createNote not created",
+          err: true,
+          data: {},
+        },
+        400,
+      );
+    }
+
+    return c.json({
+      message: "Note created successfully",
+      err: false,
+      data: createNote,
+    });
+  })
+  .get(
+    "/note/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const note = await Note.find({
+        businessId,
+      });
+      return c.json({
+        message: "note found",
+        err: false,
+        data: note,
+      });
     },
   );
 

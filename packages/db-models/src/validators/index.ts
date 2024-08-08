@@ -29,6 +29,7 @@ export * from "./analytic";
 export * from "./businessSubscriber";
 export * from "./group";
 export * from "./groupAnalytics";
+export * from "./note";
 export * from "./tags";
 export * from "./tagType";
 export * from "./token";
