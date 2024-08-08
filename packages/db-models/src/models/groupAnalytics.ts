@@ -14,28 +14,7 @@ const groupAnalyticsSchema = new mongoose.Schema<groupAnalyticsType>({
     required: true,
     ref: "Business",
   },
-  duration: {
-    type: Number,
-    required: true,
-  },
-  visitCount: {
-    type: Number,
-    required: false,
-  },
-  visitType: {
-    type: String,
-    enum: ["ABOVE", "BELOW"],
-    required: false,
-  },
-  spendAmount: {
-    type: Number,
-    required: false,
-  },
-  spendType: {
-    type: String,
-    enum: ["ABOVE", "BELOW"],
-    required: false,
-  },
+
   userCount: {
     type: Number,
     required: false,
@@ -44,14 +23,7 @@ const groupAnalyticsSchema = new mongoose.Schema<groupAnalyticsType>({
     type: Number,
     required: false,
   },
-  groupColor: {
-    type: String,
-    required: false,
-  },
-  groupName: {
-    type: String,
-    required: false,
-  },
+
   date: {
     type: Number,
   },

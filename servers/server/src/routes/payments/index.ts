@@ -67,6 +67,8 @@ const calculateDiscount = (
   return finalDiscount;
 };
 
+//filter groups
+
 const calculateReward = async (
   exist: number,
   reward: number,
@@ -1551,9 +1553,28 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const groupAnalytics = await GroupAnalytic.find({ businessId }).sort({
-        date: -1,
-      });
+      const groupAnalytics = await GroupAnalytic.find({ businessId })
+        .sort({
+          date: -1,
+        })
+        .populate({
+          path: "groupId",
+          select: {
+            name: 1,
+            groupColor: 1,
+            "filter.duration": 1,
+            "filter.visit": 1,
+            "filter.visitType": 1,
+            "filter.spend": 1,
+            "filter.spendType": 1,
+            "filter.cardBalance": 1,
+            "filter.cardBalanceType": 1,
+            "filter.coinzIssued": 1,
+            "filter.coinzIssuedType": 1,
+            "filter.coinzUsed": 1,
+            "filter.coinzUsedType": 1,
+          },
+        });
 
       const totalSubscriberCount = await totalSubscribers(businessId);
 

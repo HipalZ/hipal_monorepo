@@ -282,6 +282,18 @@ const groupRouter = new Hono()
         businessId: businessId,
       }).count();
 
+      const tagCountMap = new Map();
+
+      users.forEach((user) => {
+        user.tagIds.forEach((tagId) => {
+          if (tagCountMap.has(tagId)) {
+            tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
+          } else {
+            tagCountMap.set(tagId, 1);
+          }
+        });
+      });
+
       const userAnalytics = await users.reduce(async (accPromise, user) => {
         const acc = await accPromise;
 
@@ -291,8 +303,6 @@ const groupRouter = new Hono()
             loyaltyId: user.businessId,
           });
 
-          console.log("gggggggggggggg", user);
-
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
@@ -300,7 +310,7 @@ const groupRouter = new Hono()
             cardBalance: userReward ? userReward.rewards : 0,
             coinzIssued: user.earnCoins,
             coinzUsed: user.claimedCoins,
-            tags: user.tagIds,
+            tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
           };
         }
 
@@ -308,77 +318,98 @@ const groupRouter = new Hono()
         acc[user.userId].spend += user.total;
         acc[user.userId].coinzIssued += user.earnCoins;
         acc[user.userId].coinzUsed += user.claimedCoins;
-        acc[user.tagIds] = user.tagIds;
+
+        user.tagIds.forEach((tagId) => {
+          const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
+          if (tag) {
+            tag.count = tagCountMap.get(tagId);
+          } else {
+            acc[user.userId].tags.push({
+              tagId,
+              count: tagCountMap.get(tagId),
+            });
+          }
+        });
 
         return acc;
       }, Promise.resolve({}));
 
       const matchCondition = (data: Record<string, any>, condition: any) => {
         return Object.values(data).filter((user) => {
-          let visitMatch = false;
-          let spendMatch = false;
-          let cardBalanceMatch = false;
-          let coinzIssuedMatch = false;
-          let coinzUsedMatch = false;
+          let visitMatch = true;
+          let spendMatch = true;
+          let cardBalanceMatch = true;
+          let coinzIssuedMatch = true;
+          let coinzUsedMatch = true;
 
-          switch (condition.visitType) {
-            case "ABOVE":
-              visitMatch = user.visit > condition.visit;
-              break;
-            case "BELOW":
-              visitMatch = user.visit < condition.visit;
-              break;
-            case "EQUAL":
-              visitMatch = user.visit === condition.visit;
-              break;
+          if (condition.visitType) {
+            switch (condition.visitType) {
+              case "ABOVE":
+                visitMatch = user.visit > condition.visit;
+                break;
+              case "BELOW":
+                visitMatch = user.visit < condition.visit;
+                break;
+              case "EQUAL":
+                visitMatch = user.visit === condition.visit;
+                break;
+            }
           }
 
-          switch (condition.spendType) {
-            case "ABOVE":
-              spendMatch = user.spend > condition.spend;
-              break;
-            case "BELOW":
-              spendMatch = user.spend < condition.spend;
-              break;
-            case "EQUAL":
-              spendMatch = user.spend === condition.spend;
-              break;
+          if (condition.spendType) {
+            switch (condition.spendType) {
+              case "ABOVE":
+                spendMatch = user.spend > condition.spend;
+                break;
+              case "BELOW":
+                spendMatch = user.spend < condition.spend;
+                break;
+              case "EQUAL":
+                spendMatch = user.spend === condition.spend;
+                break;
+            }
           }
 
-          switch (condition.cardBalanceType) {
-            case "ABOVE":
-              cardBalanceMatch = user.cardBalance > condition.cardBalance;
-              break;
-            case "BELOW":
-              cardBalanceMatch = user.cardBalance < condition.cardBalance;
-              break;
-            case "EQUAL":
-              cardBalanceMatch = user.cardBalance === condition.cardBalance;
-              break;
+          if (condition.cardBalanceType) {
+            switch (condition.cardBalanceType) {
+              case "ABOVE":
+                cardBalanceMatch = user.cardBalance > condition.cardBalance;
+                break;
+              case "BELOW":
+                cardBalanceMatch = user.cardBalance < condition.cardBalance;
+                break;
+              case "EQUAL":
+                cardBalanceMatch = user.cardBalance === condition.cardBalance;
+                break;
+            }
           }
 
-          switch (condition.coinzIssuedType) {
-            case "ABOVE":
-              coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
-              break;
-            case "BELOW":
-              coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
-              break;
-            case "EQUAL":
-              coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
-              break;
+          if (condition.coinzIssuedType) {
+            switch (condition.coinzIssuedType) {
+              case "ABOVE":
+                coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
+                break;
+              case "BELOW":
+                coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
+                break;
+              case "EQUAL":
+                coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
+                break;
+            }
           }
 
-          switch (condition.coinzUsedType) {
-            case "ABOVE":
-              coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
-              break;
-            case "BELOW":
-              coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
-              break;
-            case "EQUAL":
-              coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
-              break;
+          if (condition.coinzUsedType) {
+            switch (condition.coinzUsedType) {
+              case "ABOVE":
+                coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
+                break;
+              case "BELOW":
+                coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
+                break;
+              case "EQUAL":
+                coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
+                break;
+            }
           }
 
           return (
@@ -396,11 +427,22 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0],
       );
 
+      matchedUsers.map((user) => {
+        user.tags = user.tags.filter((tag) => {
+          return bestUserGroup.filter[0].tags.some(
+            (condition) =>
+              condition.tagId.toString() === tag.tagId.toString() &&
+              condition.count === tag.count,
+          );
+        });
+        return user;
+      });
+
       matchedUsers.forEach((user) => {
         userIds.push(user.userId.toString());
       });
 
-      const group = await GroupModel.findOneAndUpdate(
+      await GroupModel.findOneAndUpdate(
         {
           _id: groupId,
         },
@@ -426,16 +468,10 @@ const groupRouter = new Hono()
       } else {
         await GroupAnalytic.create({
           groupId,
-          duration: bestUserGroup.filter[0].duration,
           businessId,
-          visitCount: bestUserGroup.filter[0].visit,
-          visitType: bestUserGroup.filter[0].visitType,
-          spendAmount: bestUserGroup.filter[0].spend,
-          spendType: bestUserGroup.filter[0].spendType,
           userCount: matchedUsers.length,
           userPercentage: Math.round((matchedUsers.length / subscriber) * 100),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
+
           date: Date.now(),
         });
       }
@@ -477,6 +513,8 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0].duration,
       );
 
+      const userIds: string[] = [];
+
       const users = await Payment.find({
         businessId,
         date: { $gte: fromTimestamp, $lte: toTimestamp },
@@ -486,50 +524,143 @@ const groupRouter = new Hono()
         businessId: businessId,
       }).count();
 
-      const userAnalytics = users.reduce((acc, user) => {
+      const tagCountMap = new Map();
+
+      users.forEach((user) => {
+        user.tagIds.forEach((tagId) => {
+          if (tagCountMap.has(tagId)) {
+            tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
+          } else {
+            tagCountMap.set(tagId, 1);
+          }
+        });
+      });
+
+      const userAnalytics = await users.reduce(async (accPromise, user) => {
+        const acc = await accPromise;
+
         if (!acc[user.userId]) {
+          const userReward = await UserReward.findOne({
+            userId: user.userId,
+            loyaltyId: user.businessId,
+          });
+
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
             spend: 0,
+            cardBalance: userReward ? userReward.rewards : 0,
+            coinzIssued: user.earnCoins,
+            coinzUsed: user.claimedCoins,
+            tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
           };
         }
 
         acc[user.userId].visit += 1;
         acc[user.userId].spend += user.total;
+        acc[user.userId].coinzIssued += user.earnCoins;
+        acc[user.userId].coinzUsed += user.claimedCoins;
+
+        user.tagIds.forEach((tagId) => {
+          const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
+          if (tag) {
+            tag.count = tagCountMap.get(tagId);
+          } else {
+            acc[user.userId].tags.push({
+              tagId,
+              count: tagCountMap.get(tagId),
+            });
+          }
+        });
+
         return acc;
-      }, {});
+      }, Promise.resolve({}));
 
       const matchCondition = (data: Record<string, any>, condition: any) => {
         return Object.values(data).filter((user) => {
-          let visitMatch = false;
-          let spendMatch = false;
+          let visitMatch = true;
+          let spendMatch = true;
+          let cardBalanceMatch = true;
+          let coinzIssuedMatch = true;
+          let coinzUsedMatch = true;
 
-          switch (condition.visitType) {
-            case "ABOVE":
-              visitMatch = user.visit > condition.visit;
-              break;
-            case "BELOW":
-              visitMatch = user.visit < condition.visit;
-              break;
-            case "EQUAL":
-              visitMatch = user.visit === condition.visit;
-              break;
+          if (condition.visitType) {
+            switch (condition.visitType) {
+              case "ABOVE":
+                visitMatch = user.visit > condition.visit;
+                break;
+              case "BELOW":
+                visitMatch = user.visit < condition.visit;
+                break;
+              case "EQUAL":
+                visitMatch = user.visit === condition.visit;
+                break;
+            }
           }
 
-          switch (condition.spendType) {
-            case "ABOVE":
-              spendMatch = user.spend > condition.spend;
-              break;
-            case "BELOW":
-              spendMatch = user.spend < condition.spend;
-              break;
-            case "EQUAL":
-              spendMatch = user.spend === condition.spend;
-              break;
+          if (condition.spendType) {
+            switch (condition.spendType) {
+              case "ABOVE":
+                spendMatch = user.spend > condition.spend;
+                break;
+              case "BELOW":
+                spendMatch = user.spend < condition.spend;
+                break;
+              case "EQUAL":
+                spendMatch = user.spend === condition.spend;
+                break;
+            }
           }
 
-          return visitMatch && spendMatch;
+          if (condition.cardBalanceType) {
+            switch (condition.cardBalanceType) {
+              case "ABOVE":
+                cardBalanceMatch = user.cardBalance > condition.cardBalance;
+                break;
+              case "BELOW":
+                cardBalanceMatch = user.cardBalance < condition.cardBalance;
+                break;
+              case "EQUAL":
+                cardBalanceMatch = user.cardBalance === condition.cardBalance;
+                break;
+            }
+          }
+
+          if (condition.coinzIssuedType) {
+            switch (condition.coinzIssuedType) {
+              case "ABOVE":
+                coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
+                break;
+              case "BELOW":
+                coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
+                break;
+              case "EQUAL":
+                coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
+                break;
+            }
+          }
+
+          if (condition.coinzUsedType) {
+            switch (condition.coinzUsedType) {
+              case "ABOVE":
+                coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
+                break;
+              case "BELOW":
+                coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
+                break;
+              case "EQUAL":
+                coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
+                break;
+            }
+          }
+
+          return (
+            visitMatch &&
+            spendMatch &&
+            cardBalanceMatch &&
+            coinzIssuedMatch &&
+            coinzUsedMatch
+          );
         });
       };
 
@@ -537,12 +668,23 @@ const groupRouter = new Hono()
         userAnalytics,
         bestUserGroup.filter[0],
       );
-      const userIds: string[] = [];
+
+      matchedUsers.map((user) => {
+        user.tags = user.tags.filter((tag) => {
+          return bestUserGroup.filter[0].tags.some(
+            (condition) =>
+              condition.tagId.toString() === tag.tagId.toString() &&
+              condition.count === tag.count,
+          );
+        });
+        return user;
+      });
+
       matchedUsers.forEach((user) => {
         userIds.push(user.userId.toString());
       });
 
-      const group = await GroupModel.findOneAndUpdate(
+      await GroupModel.findOneAndUpdate(
         {
           _id: groupId,
         },
@@ -551,8 +693,6 @@ const groupRouter = new Hono()
       );
 
       const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-
-      console.log("groupAnalytics", groupAnalytics);
       if (groupAnalytics) {
         await GroupAnalytic.findOneAndUpdate(
           {
@@ -570,16 +710,10 @@ const groupRouter = new Hono()
       } else {
         await GroupAnalytic.create({
           groupId,
-          duration: bestUserGroup.filter[0].duration,
           businessId,
-          visitCount: bestUserGroup.filter[0].visit,
-          visitType: bestUserGroup.filter[0].visitType,
-          spendAmount: bestUserGroup.filter[0].spend,
-          spendType: bestUserGroup.filter[0].spendType,
           userCount: matchedUsers.length,
           userPercentage: Math.round((matchedUsers.length / subscriber) * 100),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
+
           date: Date.now(),
         });
       }
@@ -621,6 +755,8 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0].duration,
       );
 
+      const userIds: string[] = [];
+
       const users = await Payment.find({
         businessId,
         date: { $gte: fromTimestamp, $lte: toTimestamp },
@@ -630,64 +766,166 @@ const groupRouter = new Hono()
         businessId: businessId,
       }).count();
 
-      const userAnalytics = users.reduce((acc, user) => {
+      const tagCountMap = new Map();
+
+      users.forEach((user) => {
+        user.tagIds.forEach((tagId) => {
+          if (tagCountMap.has(tagId)) {
+            tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
+          } else {
+            tagCountMap.set(tagId, 1);
+          }
+        });
+      });
+
+      const userAnalytics = await users.reduce(async (accPromise, user) => {
+        const acc = await accPromise;
+
         if (!acc[user.userId]) {
+          const userReward = await UserReward.findOne({
+            userId: user.userId,
+            loyaltyId: user.businessId,
+          });
+
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
             spend: 0,
+            cardBalance: userReward ? userReward.rewards : 0,
+            coinzIssued: user.earnCoins,
+            coinzUsed: user.claimedCoins,
+            tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
           };
         }
 
         acc[user.userId].visit += 1;
         acc[user.userId].spend += user.total;
+        acc[user.userId].coinzIssued += user.earnCoins;
+        acc[user.userId].coinzUsed += user.claimedCoins;
+
+        user.tagIds.forEach((tagId) => {
+          const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
+          if (tag) {
+            tag.count = tagCountMap.get(tagId);
+          } else {
+            acc[user.userId].tags.push({
+              tagId,
+              count: tagCountMap.get(tagId),
+            });
+          }
+        });
+
         return acc;
-      }, {});
+      }, Promise.resolve({}));
 
       const matchCondition = (data: Record<string, any>, condition: any) => {
         return Object.values(data).filter((user) => {
-          let visitMatch = false;
-          let spendMatch = false;
+          let visitMatch = true;
+          let spendMatch = true;
+          let cardBalanceMatch = true;
+          let coinzIssuedMatch = true;
+          let coinzUsedMatch = true;
 
-          switch (condition.visitType) {
-            case "ABOVE":
-              visitMatch = user.visit > condition.visit;
-              break;
-            case "BELOW":
-              visitMatch = user.visit < condition.visit;
-              break;
-            case "EQUAL":
-              visitMatch = user.visit === condition.visit;
-              break;
+          if (condition.visitType) {
+            switch (condition.visitType) {
+              case "ABOVE":
+                visitMatch = user.visit > condition.visit;
+                break;
+              case "BELOW":
+                visitMatch = user.visit < condition.visit;
+                break;
+              case "EQUAL":
+                visitMatch = user.visit === condition.visit;
+                break;
+            }
           }
 
-          switch (condition.spendType) {
-            case "ABOVE":
-              spendMatch = user.spend > condition.spend;
-              break;
-            case "BELOW":
-              spendMatch = user.spend < condition.spend;
-              break;
-            case "EQUAL":
-              spendMatch = user.spend === condition.spend;
-              break;
+          if (condition.spendType) {
+            switch (condition.spendType) {
+              case "ABOVE":
+                spendMatch = user.spend > condition.spend;
+                break;
+              case "BELOW":
+                spendMatch = user.spend < condition.spend;
+                break;
+              case "EQUAL":
+                spendMatch = user.spend === condition.spend;
+                break;
+            }
           }
 
-          return visitMatch && spendMatch;
+          if (condition.cardBalanceType) {
+            switch (condition.cardBalanceType) {
+              case "ABOVE":
+                cardBalanceMatch = user.cardBalance > condition.cardBalance;
+                break;
+              case "BELOW":
+                cardBalanceMatch = user.cardBalance < condition.cardBalance;
+                break;
+              case "EQUAL":
+                cardBalanceMatch = user.cardBalance === condition.cardBalance;
+                break;
+            }
+          }
+
+          if (condition.coinzIssuedType) {
+            switch (condition.coinzIssuedType) {
+              case "ABOVE":
+                coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
+                break;
+              case "BELOW":
+                coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
+                break;
+              case "EQUAL":
+                coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
+                break;
+            }
+          }
+
+          if (condition.coinzUsedType) {
+            switch (condition.coinzUsedType) {
+              case "ABOVE":
+                coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
+                break;
+              case "BELOW":
+                coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
+                break;
+              case "EQUAL":
+                coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
+                break;
+            }
+          }
+
+          return (
+            visitMatch &&
+            spendMatch &&
+            cardBalanceMatch &&
+            coinzIssuedMatch &&
+            coinzUsedMatch
+          );
         });
       };
-
       const matchedUsers = matchCondition(
         userAnalytics,
         bestUserGroup.filter[0],
       );
 
-      const userIds: string[] = [];
+      matchedUsers.map((user) => {
+        user.tags = user.tags.filter((tag) => {
+          return bestUserGroup.filter[0].tags.some(
+            (condition) =>
+              condition.tagId.toString() === tag.tagId.toString() &&
+              condition.count === tag.count,
+          );
+        });
+        return user;
+      });
+
       matchedUsers.forEach((user) => {
         userIds.push(user.userId.toString());
       });
 
-      const group = await GroupModel.findOneAndUpdate(
+      await GroupModel.findOneAndUpdate(
         {
           _id: groupId,
         },
@@ -713,22 +951,16 @@ const groupRouter = new Hono()
       } else {
         await GroupAnalytic.create({
           groupId,
-          duration: bestUserGroup.filter[0].duration,
           businessId,
-          visitCount: bestUserGroup.filter[0].visit,
-          visitType: bestUserGroup.filter[0].visitType,
-          spendAmount: bestUserGroup.filter[0].spend,
-          spendType: bestUserGroup.filter[0].spendType,
           userCount: matchedUsers.length,
           userPercentage: Math.round((matchedUsers.length / subscriber) * 100),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
+
           date: Date.now(),
         });
       }
 
       return c.json({
-        message: "Attension users found",
+        message: "Best users found",
         err: false,
         data: matchedUsers,
       });
@@ -764,6 +996,8 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0].duration,
       );
 
+      const userIds: string[] = [];
+
       const users = await Payment.find({
         businessId,
         date: { $gte: fromTimestamp, $lte: toTimestamp },
@@ -773,50 +1007,143 @@ const groupRouter = new Hono()
         businessId: businessId,
       }).count();
 
-      const userAnalytics = users.reduce((acc, user) => {
+      const tagCountMap = new Map();
+
+      users.forEach((user) => {
+        user.tagIds.forEach((tagId) => {
+          if (tagCountMap.has(tagId)) {
+            tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
+          } else {
+            tagCountMap.set(tagId, 1);
+          }
+        });
+      });
+
+      const userAnalytics = await users.reduce(async (accPromise, user) => {
+        const acc = await accPromise;
+
         if (!acc[user.userId]) {
+          const userReward = await UserReward.findOne({
+            userId: user.userId,
+            loyaltyId: user.businessId,
+          });
+
           acc[user.userId] = {
             userId: user.userId,
             visit: 0,
             spend: 0,
+            cardBalance: userReward ? userReward.rewards : 0,
+            coinzIssued: user.earnCoins,
+            coinzUsed: user.claimedCoins,
+            tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
           };
         }
 
         acc[user.userId].visit += 1;
         acc[user.userId].spend += user.total;
+        acc[user.userId].coinzIssued += user.earnCoins;
+        acc[user.userId].coinzUsed += user.claimedCoins;
+
+        user.tagIds.forEach((tagId) => {
+          const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
+          if (tag) {
+            tag.count = tagCountMap.get(tagId);
+          } else {
+            acc[user.userId].tags.push({
+              tagId,
+              count: tagCountMap.get(tagId),
+            });
+          }
+        });
+
         return acc;
-      }, {});
+      }, Promise.resolve({}));
 
       const matchCondition = (data: Record<string, any>, condition: any) => {
         return Object.values(data).filter((user) => {
-          let visitMatch = false;
-          let spendMatch = false;
+          let visitMatch = true;
+          let spendMatch = true;
+          let cardBalanceMatch = true;
+          let coinzIssuedMatch = true;
+          let coinzUsedMatch = true;
 
-          switch (condition.visitType) {
-            case "ABOVE":
-              visitMatch = user.visit > condition.visit;
-              break;
-            case "BELOW":
-              visitMatch = user.visit < condition.visit;
-              break;
-            case "EQUAL":
-              visitMatch = user.visit === condition.visit;
-              break;
+          if (condition.visitType) {
+            switch (condition.visitType) {
+              case "ABOVE":
+                visitMatch = user.visit > condition.visit;
+                break;
+              case "BELOW":
+                visitMatch = user.visit < condition.visit;
+                break;
+              case "EQUAL":
+                visitMatch = user.visit === condition.visit;
+                break;
+            }
           }
 
-          switch (condition.spendType) {
-            case "ABOVE":
-              spendMatch = user.spend > condition.spend;
-              break;
-            case "BELOW":
-              spendMatch = user.spend < condition.spend;
-              break;
-            case "EQUAL":
-              spendMatch = user.spend === condition.spend;
-              break;
+          if (condition.spendType) {
+            switch (condition.spendType) {
+              case "ABOVE":
+                spendMatch = user.spend > condition.spend;
+                break;
+              case "BELOW":
+                spendMatch = user.spend < condition.spend;
+                break;
+              case "EQUAL":
+                spendMatch = user.spend === condition.spend;
+                break;
+            }
           }
 
-          return visitMatch && spendMatch;
+          if (condition.cardBalanceType) {
+            switch (condition.cardBalanceType) {
+              case "ABOVE":
+                cardBalanceMatch = user.cardBalance > condition.cardBalance;
+                break;
+              case "BELOW":
+                cardBalanceMatch = user.cardBalance < condition.cardBalance;
+                break;
+              case "EQUAL":
+                cardBalanceMatch = user.cardBalance === condition.cardBalance;
+                break;
+            }
+          }
+
+          if (condition.coinzIssuedType) {
+            switch (condition.coinzIssuedType) {
+              case "ABOVE":
+                coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
+                break;
+              case "BELOW":
+                coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
+                break;
+              case "EQUAL":
+                coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
+                break;
+            }
+          }
+
+          if (condition.coinzUsedType) {
+            switch (condition.coinzUsedType) {
+              case "ABOVE":
+                coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
+                break;
+              case "BELOW":
+                coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
+                break;
+              case "EQUAL":
+                coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
+                break;
+            }
+          }
+
+          return (
+            visitMatch &&
+            spendMatch &&
+            cardBalanceMatch &&
+            coinzIssuedMatch &&
+            coinzUsedMatch
+          );
         });
       };
 
@@ -825,12 +1152,24 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0],
       );
 
-      const userIds: string[] = [];
+      console.log("matchedUsers", matchedUsers);
+
+      matchedUsers.map((user) => {
+        user.tags = user.tags.filter((tag) => {
+          return bestUserGroup.filter[0].tags.some(
+            (condition) =>
+              condition.tagId.toString() === tag.tagId.toString() &&
+              condition.count === tag.count,
+          );
+        });
+        return user;
+      });
+
       matchedUsers.forEach((user) => {
         userIds.push(user.userId.toString());
       });
 
-      const group = await GroupModel.findOneAndUpdate(
+      await GroupModel.findOneAndUpdate(
         {
           _id: groupId,
         },
@@ -856,16 +1195,10 @@ const groupRouter = new Hono()
       } else {
         await GroupAnalytic.create({
           groupId,
-          duration: bestUserGroup.filter[0].duration,
           businessId,
-          visitCount: bestUserGroup.filter[0].visit,
-          visitType: bestUserGroup.filter[0].visitType,
-          spendAmount: bestUserGroup.filter[0].spend,
-          spendType: bestUserGroup.filter[0].spendType,
           userCount: matchedUsers.length,
           userPercentage: Math.round((matchedUsers.length / subscriber) * 100),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
+
           date: Date.now(),
         });
       }
