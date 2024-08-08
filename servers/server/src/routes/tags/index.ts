@@ -176,11 +176,6 @@ const tagRouter = new Hono()
         displayForCaptains: z
           .boolean({ message: "displayForCaptains is required" })
           .optional(),
-        noteDescription: z
-          .string({ message: "noteDescription is required" })
-          .optional(),
-        noteTitle: z.string({ message: "noteTitle is required" }).optional(),
-        noteUrl: z.string({ message: "noteUrl is required" }).optional(),
       }),
     ),
     zValidator(
@@ -213,7 +208,11 @@ const tagRouter = new Hono()
 
       console.log("date", Date.now());
 
+      const date = Date.now();
+      const customDate = new Date(date).setHours(0, 0, 0, 0);
+
       for (let i = 0; i < tagIds.length; i++) {
+        const tag = await TagModel.findById(tagIds[i]).select("duration time");
         const updateUserTag = await UserTags.findOneAndUpdate(
           {
             tagId: tagIds[i],
@@ -226,7 +225,9 @@ const tagRouter = new Hono()
               businessId: requestData.businessId,
               noteUrl: requestData.noteUrl,
               date: Date.now(),
-              reminderDate: requestData.remainderDate,
+              reminderDate:
+                requestData.remainderDate ||
+                customDate + tag?.duration + tag?.time,
             },
           },
           { upsert: true, new: true }, // Ensure upsert is true and return the updated document
