@@ -60,20 +60,20 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
             <section className="flex items-center">
               <input
                 type="checkbox"
-                checked={selectedUserIds.includes(user?.userId._id)}
+                checked={selectedUserIds.includes(user?.userId?._id)}
                 onChange={() => handleSelectUser(user?.userId?._id)}
                 className="mr-2 checkbox checkbox-black"
               />
               <div>
-                <h3>{user.userId.name}</h3>
-                <p>{user.userId.phone}</p>
+                <h3>{user?.userId?.name}</h3>
+                <p>{user?.userId?.phone}</p>
               </div>
             </section>
             <div className="flex items-center gap-2 text-[#6F649B]">
               <SlLocationPin />
-              {user.visitCount} visits
+              {user?.visitCount} visits
               <FaMoneyBills />
-              {user.avgSpend}
+              {user?.avgSpend}
             </div>
             {!hide && (
               <IoMdArrowRoundForward
