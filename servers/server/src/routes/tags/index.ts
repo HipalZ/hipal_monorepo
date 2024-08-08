@@ -267,17 +267,19 @@ const tagRouter = new Hono()
     });
   })
   .get(
-    "/note/:businessId",
+    "/note/:businessId/:userId",
     zValidator(
       "param",
       z.object({
         businessId: z.string({ message: "businessId is required" }),
+        userId: z.string({ message: "userId is required" }),
       }),
     ),
     async (c) => {
-      const { businessId } = c.req.param();
+      const { businessId, userId } = c.req.param();
       const note = await Note.find({
         businessId,
+        userId,
       });
       return c.json({
         message: "note found",
