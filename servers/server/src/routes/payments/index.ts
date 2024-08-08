@@ -45,7 +45,31 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
+const transformData = (data: any[]) => {
+  return data
+    .filter((item) => item.groupId != null) // Filter out items with null groupId
+    .map((item) => {
+      const filter = item.groupId.filter[0]; // Assuming there's only one filter object
 
+      return {
+        duration: filter?.duration || 0,
+        visitCount: filter?.visit || 0,
+        visitType: filter?.visitType,
+        spendAmount: filter?.spend || 0,
+        spendType: filter?.spendType,
+        cardBalance: filter?.cardBalance || 0,
+        cardBalanceType: filter?.cardBalanceType,
+        coinzIssued: filter?.coinzIssued || 0,
+        coinzIssuedType: filter?.coinzIssuedType,
+        coinzUsed: filter?.coinzUsed || 0,
+        coinzUsedType: filter?.coinzUsedType,
+        userCount: item.userCount || 0,
+        userPercentage: item.userPercentage || 0,
+        groupColor: item.groupId.groupColor || "",
+        groupName: item.groupId.name || "",
+      };
+    });
+};
 //dates
 const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
@@ -1576,6 +1600,8 @@ const paymentsRouter = new Hono()
           },
         });
 
+      const transformedData = transformData(groupAnalytics);
+
       const totalSubscriberCount = await totalSubscribers(businessId);
 
       const {
@@ -1634,7 +1660,7 @@ const paymentsRouter = new Hono()
           err: false,
           data: {
             totalSubscriberCount: totalSubscriberCount || 0,
-            groups: groupAnalytics || [],
+            groups: transformedData || [],
             aboutCustomer: {
               averageSpendAmount: averageSpend || 0,
               averageReturnPercentage: 15,
