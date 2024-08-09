@@ -3,7 +3,6 @@ import { createHmac } from "node:crypto";
 import {
   BusinessSettings,
   GroupAnalytic,
-  LoyaltyCoinsInfo,
   LoyaltySettings,
   Order,
   Payment,
@@ -823,7 +822,6 @@ const paymentsRouter = new Hono()
               );
             }
           }
-          console.log("getCashBack", getCashBack);
 
           const createPayment = await Payment.create(
             [
@@ -1066,30 +1064,6 @@ const paymentsRouter = new Hono()
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
             const order = await Order.findById(alert.order_id);
-            await Payment.create(
-              [
-                {
-                  businessId: alert.businessId,
-                  order_id: order?._id,
-                  total: order?.total,
-                  mode: "offline",
-                  status: "SUCCESS",
-                  paymentMode: "offline",
-                  userId: order?.userId,
-                  claimedCoins: order?.claimedCoins,
-                  billValue: order?.billValue,
-                  tips: order?.tips,
-                  tableName: order?.tableName,
-                  razorpayEventId: nanoid(15),
-                  razorpayOrderId: nanoid(15),
-                  razorpayPaymentId: nanoid(15),
-
-                  waiterName,
-                  date: Date.now(),
-                },
-              ],
-              { session },
-            );
 
             if (order?.claimedCoins && order?.claimedCoins > 0) {
               const existingLoyalty = await LoyaltySettings.findOne({
@@ -1113,8 +1087,6 @@ const paymentsRouter = new Hono()
                 Number(order.claimedCoins),
               );
 
-              console.log("userId", order.userId.toString());
-
               const finalCashBack = await addCoins(
                 cashBack,
                 order.userId.toString(),
@@ -1125,6 +1097,32 @@ const paymentsRouter = new Hono()
                 existingLoyalty?.loyaltyId.toString() || "",
 
                 session,
+              );
+
+              await Payment.create(
+                [
+                  {
+                    businessId: alert.businessId,
+                    order_id: order?._id,
+                    total: order?.total,
+                    mode: "offline",
+                    status: "SUCCESS",
+                    paymentMode: "offline",
+                    userId: order?.userId,
+                    claimedCoins: order?.claimedCoins,
+                    billValue: order?.billValue,
+                    tips: order?.tips,
+                    tableName: order?.tableName,
+                    earnCoins: finalCashBack,
+                    razorpayEventId: nanoid(15),
+                    razorpayOrderId: nanoid(15),
+                    razorpayPaymentId: nanoid(15),
+
+                    waiterName,
+                    date: Date.now(),
+                  },
+                ],
+                { session },
               );
 
               const userAnalytics = await UserAnalytic.findOne({
@@ -1164,18 +1162,6 @@ const paymentsRouter = new Hono()
                   { session },
                 );
               }
-
-              await LoyaltyCoinsInfo.findOneAndUpdate(
-                { businessId: order.businessId.toString() },
-
-                {
-                  $inc: {
-                    coinzIssued: cashBack,
-                    coinzRedeemed: Number(order.claimedCoins),
-                  },
-                },
-                { upsert: true, session },
-              );
             }
           }
 
@@ -1337,10 +1323,6 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({
-        businessId,
-      }).select("coinzIssued coinzRedeemed");
-
       if (!from && !to) {
         const existingPayments = await Payment.find({
           businessId,
@@ -1355,6 +1337,11 @@ const paymentsRouter = new Hono()
         );
         const totalCoins = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
+          0,
+        );
+
+        const totalCoinsIssued = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
           0,
         );
 
@@ -1377,7 +1364,7 @@ const paymentsRouter = new Hono()
             totalDiscount: totalCoins,
             totalOnlineSale,
             totalOfflineSale,
-            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzIssued: totalCoinsIssued,
             coinzRedeemed: totalCoins,
           },
           message: "existing payment",
@@ -1399,6 +1386,10 @@ const paymentsRouter = new Hono()
           (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
           0,
         );
+        const totalCoinsIssued = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
+          0,
+        );
 
         const totalOnlineSale = existingPayments.reduce(
           (acc, payment: PaymentType) =>
@@ -1419,7 +1410,7 @@ const paymentsRouter = new Hono()
             totalDiscount: totalCoins,
             totalOnlineSale,
             totalOfflineSale,
-            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzIssued: totalCoinsIssued,
             coinzRedeemed: totalCoins,
           },
           message: "existing payment",

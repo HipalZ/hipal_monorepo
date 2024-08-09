@@ -1,6 +1,7 @@
 // books.ts
 import {
   LoyaltyCoinsInfo,
+  Subscriber,
   User,
   UserReward,
   UserRewardHistory,
@@ -817,6 +818,32 @@ const usersRouter = new Hono()
         existingUser._id?.toString() || "",
         "HIPAL_CUSTOMER",
       );
+
+      const subscriber = await Subscriber.findOne({
+        userId: existingUser._id,
+        businessId: loyaltyId,
+      }).select("_id");
+
+      if (!subscriber) {
+        await Subscriber.create({
+          userId: userId,
+          businessId: loyaltyId,
+          userCount: 1,
+          date: Date.now(),
+        });
+      } else {
+        await Subscriber.findOneAndUpdate(
+          {
+            userId: userId,
+            businessId: loyaltyId,
+          },
+          {
+            $inc: {
+              userCount: 1,
+            },
+          },
+        );
+      }
 
       return respond(c, "User logged in successfully", false, 200, {
         user: existingUser,

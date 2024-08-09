@@ -1,4 +1,10 @@
-import { LoyaltySettings, Subscriber, UserReward } from "@hi/db-models";
+import {
+  Business,
+  LoyaltySettings,
+  Subscriber,
+  User,
+  UserReward,
+} from "@hi/db-models";
 import { businessSubscriberValidator } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -13,7 +19,7 @@ const subsCriberRouter = new Hono()
       businessId,
       isDeleted: false,
     });
-    console.log("existingSubscriber", existingSubscriber);
+
     //
     if (existingSubscriber) {
       return c.json(
@@ -26,8 +32,6 @@ const subsCriberRouter = new Hono()
       );
     }
 
-    const date = Date.now();
-    console.log("createSubscriber", date);
     const createSubscriber = await Subscriber.create({
       ...requestData,
       date: Date.now(),
@@ -45,7 +49,6 @@ const subsCriberRouter = new Hono()
       );
     }
     const loyalty = await LoyaltySettings.findOne({ businessId });
-    console.log("loyalty", loyalty);
 
     if (loyalty?.signUpBonus && loyalty.signUpBonus > 0) {
       await addSignUpBonus(
@@ -74,7 +77,7 @@ const subsCriberRouter = new Hono()
       return c.json({
         message: "User subscribed successfully",
         err: false,
-        data: { signUpBonus: loyalty.signUpBonus },
+        data: { reward: loyalty.signUpBonus, count: userReward.scanCount },
       });
     }
 
@@ -217,6 +220,36 @@ const subsCriberRouter = new Hono()
         200,
       );
     },
-  );
+  )
+  .get("/bulkSubscriber", async (c) => {
+    const businesses = await Business.find({});
+    const users = await User.find({});
+
+    for (const business of businesses) {
+      for (const user of users) {
+        const existingSubscriber = await Subscriber.findOne({
+          userId: user._id,
+          businessId: business._id,
+        });
+        if (!existingSubscriber) {
+          await Subscriber.create({
+            userId: user._id,
+            businessId: business._id,
+            userCount: 1,
+            date: Date.now(),
+          });
+        }
+      }
+    }
+
+    return c.json(
+      {
+        message: "Bulk subscribers created successfully",
+        err: false,
+        data: {},
+      },
+      201,
+    );
+  });
 
 export default subsCriberRouter;
