@@ -6,7 +6,6 @@ import type { CategoryType } from "@hi/db-models/src/validators";
 import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Splide, SplideSlide } from '@splidejs/react-splide';
-import Link from "next/link";
 
 interface ISubTypes {
   childCategory: CategoryType[];
@@ -41,7 +40,7 @@ function SubTypes(props: ISubTypes) {
   }, [isActiveCategory, subTypes]);
 
   return (
-    <section className="overflow-x-auto border shadow-2xl border-b-primary no-scrollbar bg-base-100 text-primary">
+    <section className="overflow-x-auto border-b shadow-2xl border-b-primary no-scrollbar bg-base-100 text-primary">
   {subTypes?.length > 0 && (
     <Splide
       ref={splideRef}

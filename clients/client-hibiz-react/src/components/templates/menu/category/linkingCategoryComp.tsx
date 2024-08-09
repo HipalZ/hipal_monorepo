@@ -22,6 +22,8 @@ const MemoLinkingCategoryComp = () => {
     isCatDelete: s.isCatDelete,
     selectSingleParentCat: s.selectSingleParentCat,
   }));
+
+  console.log(selectSingleParentCat);
   
   return (
     <>

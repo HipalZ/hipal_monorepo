@@ -110,7 +110,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         <section className="flex w-[92%] gap-4 mx-4">
           <article
             onClick={() => createOrder(billValue, "OFFLINE")}
-            className={`w-full max-w-[12.625rem] h-[15.65rem]  relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl`}
+            className="w-full max-w-[12.625rem] h-[15.65rem]  relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl"
           >
             <center
               style={{

@@ -94,7 +94,10 @@ const MemoListOfParentCategory = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
+    <section className="flex relative flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
+      <h3 className="absolute left-0 text-xl font-semibold text-black lg:top-[2rem] top-[4rem]">
+       main category ({filteredCategories?.length})
+      </h3>
       {filteredCategories.map((category) => (
         <button
           type="button"

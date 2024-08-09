@@ -5,8 +5,9 @@ import type { ICustomerRecord } from "@/components/types/businessData";
 import { useGetAllPeoples } from "@/hooks/usePeopleData";
 import { memo, useCallback } from "react";
 import { FaMoneyBills } from "react-icons/fa6";
-import { IoMdArrowRoundForward } from "react-icons/io";
+import { MdArrowOutward } from "react-icons/md";
 import { SlLocationPin } from "react-icons/sl";
+import { Link } from "react-router-dom";
 
 const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   const {
@@ -76,10 +77,12 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
               {user?.avgSpend}
             </div>
             {!hide && (
-              <IoMdArrowRoundForward
+              <Link to={`/app/business/${user.businessId}/people/${user.userId._id}`} className="absolute top-1 right-1" >
+              <MdArrowOutward 
                 size={24}
-                className="absolute -rotate-45 top-1 right-1"
               />
+              </Link>
+              
             )}
           </article>
         ))}

@@ -9,8 +9,25 @@ function MemoEmblaCarousel({ children }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState([]);
 
-  const onPrevClick = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const onNextClick = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  const onPrevClick = useCallback(() => {
+    if (!emblaApi) return;
+
+    if (selectedIndex === 0) {
+      emblaApi.scrollTo(scrollSnaps.length - 1);
+    } else {
+      emblaApi.scrollPrev();
+    }
+  }, [emblaApi, selectedIndex, scrollSnaps]);
+
+  const onNextClick = useCallback(() => {
+    if (!emblaApi) return;
+
+    if (selectedIndex === scrollSnaps.length - 1) {
+      emblaApi.scrollTo(0);
+    } else {
+      emblaApi.scrollNext();
+    }
+  }, [emblaApi, selectedIndex, scrollSnaps]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -42,7 +59,7 @@ function MemoEmblaCarousel({ children }) {
       <div className="embla__viewport" ref={emblaRef}>
         <div className="-space-x-8 embla__container">{children}</div>
       </div>
-      <div className="px-4 py-4 mt-3 embla__button-container ">
+      <div className="px-4 py-4 mt-3 embla__button-container">
         <button
           type="button"
           className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"
