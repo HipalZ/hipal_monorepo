@@ -57,13 +57,12 @@ const MemoUniquelyDishes = (props: Props) => {
   const { uniquelyDishes } = props;
 
   return (
-    <Section title="Uniquely Yours" tag="h3">
-      <div className="pt-4" />
-
+    <>
+      <center className="pb-8 text-2xl text-primary">Must Try Dishes</center>
       {uniquelyDishes && uniquelyDishes.length > 0 && (
         <DynamicImageGrid images={uniquelyDishes?.slice(0, 6)} />
       )}
-    </Section>
+    </>
   );
 };
 

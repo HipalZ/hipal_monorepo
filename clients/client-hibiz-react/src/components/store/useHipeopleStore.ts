@@ -41,6 +41,36 @@ export type AddToGroup =
   | "ADD MORE USERS";
 
 export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
+  export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "";
+
+  export interface FilterValue {
+    value: string;
+    type: "ABOVE" | "BELOW" | "EQUAL" | "";
+  }
+  
+  export interface Filter {
+    label: string;
+    key: keyof FilterValues;
+  }
+  
+ export  interface FilterValues {
+    visit: FilterValue;
+    spend: FilterValue;
+    cardBalance: FilterValue;
+    coinzIssued: FilterValue;
+    coinzUsed: FilterValue;
+  }
+  
+  export interface GroupData {
+    name: string;
+    description: string;
+    groupType: "MANUAL" | "DYNAMIC";
+    groupColor: string;
+    filters: Filter[];
+    filterValues: FilterValues;
+    durationType?: "days" | "months" | "years" | ""; 
+    durationValue?: string; 
+  }
 
 const today = new Date();
 const startOfToday = new Date(
@@ -233,6 +263,17 @@ interface IHiPeople {
 
   notesData: INotes;
   setNotesData: (data: INotes) => void;
+  selectedGroupPage: TargetGroupsPages;
+  setSelectedGroupPage: (page: TargetGroupsPages) => void;
+
+  groupData: GroupData;
+  setGroupData: (data: Partial<GroupData>) => void;
+
+  showDuration: boolean;
+  setShowDuration: (show: boolean) => void;
+
+  untilNow: boolean;
+  setUntilNow: (untilNow: boolean) => void;
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -444,6 +485,42 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   notesData: {},
   setNotesData: (data) => set({ notesData: data }),
+
+  selectedGroupPage: "",
+  setSelectedGroupPage: (page) => set({ selectedGroupPage: page }),
+
+  groupData: {
+    name: "",
+    description: "",
+    groupType: "MANUAL",
+    groupColor: "#E43065",
+    filters: [
+      { label: "Every bill is considered as a visit", key: "visit" },
+      { label: "Avg bill value", key: "spend" },
+      { label: "Card Balance", key: "cardBalance" },
+      { label: "Coinz rewarded", key: "coinzIssued" },
+      { label: "Coinz used", key: "coinzUsed" },
+    ],
+    filterValues: {
+      visit: { value: "", type: "" },
+      spend: { value: "", type: "" },
+      cardBalance: { value: "", type: "" },
+      coinzIssued: { value: "", type: "" },
+      coinzUsed: { value: "", type: "" },
+    },
+    durationType: "",
+    durationValue: "",
+  },
+  setGroupData: (data) =>
+    set((state) => ({
+      groupData: { ...state.groupData, ...data },
+    })),
+
+  showDuration: false,
+  setShowDuration: (show) => set({ showDuration: show }),
+
+  untilNow: false,
+  setUntilNow: (untilNow) => set({ untilNow }),
 }));
 
 export default useHiPeopleStore;

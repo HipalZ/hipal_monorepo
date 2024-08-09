@@ -22,7 +22,7 @@ const Cart = () => {
 
   return (
     <div className="h-[80vh] min-h-[80vh] overflow-y-auto pb-[5rem] text-primary">
-      <center className="pt-4 text-2xl text-primary">Bookmark</center>
+      <center className="pt-4 text-2xl text-primary">Cart</center>
       &nbsp;
       {cart.length === 0 ? (
         <div className="flex flex-col items-center justify-center pt-[20vh]">

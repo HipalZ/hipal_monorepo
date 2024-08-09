@@ -320,6 +320,7 @@ const MemoExplorePage = () => {
   };
 
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
+    console.log("handleSaveExplorePage", imageFiles);
     e.preventDefault();
     if (!businessId) return;
     let bannerExplore: string | undefined;
@@ -335,26 +336,18 @@ const MemoExplorePage = () => {
         setIsLoading,
       );
     }
-    if (
-      imageFiles?.logo !== null &&
-      !img?.banner?.includes("https://storage.hipal.life")
-    ) {
-      logoExplore = await storeImageAfterSave(
-        imageFiles?.logo,
-        img?.logo,
-        setIsLoading,
-      );
-    }
-    if (
-      imageFiles?.footer !== null &&
-      !img?.banner?.includes("https://storage.hipal.life")
-    ) {
-      footerExplore = await storeImageAfterSave(
-        imageFiles?.footer,
-        img?.footer,
-        setIsLoading,
-      );
-    }
+
+    logoExplore = await storeImageAfterSave(
+      imageFiles?.logo,
+      img?.logo,
+      setIsLoading,
+    );
+
+    footerExplore = await storeImageAfterSave(
+      imageFiles?.footer,
+      img?.footer,
+      setIsLoading,
+    );
 
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
 
@@ -374,7 +367,7 @@ const MemoExplorePage = () => {
 
     const payload: IBizPayload = {
       businessId,
-      logoUrl: logoExplore,
+      logoUrl: await logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
       socialMediaLinks: filteredSocialMedia,

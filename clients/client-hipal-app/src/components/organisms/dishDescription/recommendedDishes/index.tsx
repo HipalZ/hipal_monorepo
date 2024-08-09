@@ -28,7 +28,7 @@ function RecommendedDishes({
   if (processedDishes.length === 0) return null;
 
   return (
-    <div className="-mt-6">
+    <div className="-mt-4">
       <Section title="" tag="h3">
         <div className="">
           <div className="flex flex-row gap-4 mb-4 text-primary">
@@ -57,10 +57,10 @@ function RecommendedDishes({
               <SplideSlide key={dish._id?.toString()}>
                 {dish && (
                   <div className="relative z-[100] text-primary">
-                    <div className="absolute bg-white left-2 top-2">
+                    <div className="absolute bg-white left-2 top-2 rounded-xl">
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>
-                    <div className="z-10 flex flex-col overflow-hidden bg-white border w-[8.5rem] rounded-xl h-44 border-base-200">
+                    <div className="z-10 flex flex-col overflow-hidden bg-base-content border w-[8.5rem] rounded-xl h-44 border-base-200 text-base-100">
                       <div
                         onClick={() => openModal(dish)}
                         className="w-full h-32 overflow-hidden"

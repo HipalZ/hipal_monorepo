@@ -71,7 +71,6 @@ export default async function Page({
         <div>
           <div className="!mt-0 !scroll-smooth">
             <DishesList
-              parentCategory={data?.parentCategories}
               childCategory={data?.childCategories}
             />
           </div>

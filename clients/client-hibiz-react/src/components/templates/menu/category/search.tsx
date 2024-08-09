@@ -31,7 +31,7 @@ const MemoSearch = () => {
             }
 
             {searchVisible && (
-                <div className="absolute top-[8rem] lg:top-[5rem] my-4 right-0 w-[92%] lg:max-w-[21.5rem]">
+                <div className="absolute top-[8rem] lg:top-[5rem] my-4 right-2 lg:right-4 w-[92%] lg:max-w-[21.5rem]">
                     <input
                         type="text"
                         placeholder="Search"

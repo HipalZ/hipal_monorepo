@@ -1,7 +1,7 @@
 "use client";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Image from "next/image";
-import { type FormEvent, memo, useCallback, useState } from "react";
+import { type FormEvent, memo, useCallback,useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Welcome from "@/assets/login-background.png";
 import { BiArrowBack } from "react-icons/bi";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
   const [phone, setPhone] = useState("");
-  const { setUserDetails } = useLogin();
+  const { setUserDetails ,userDetails } = useLogin();
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
@@ -56,6 +56,13 @@ const SignUp = memo(() => {
   const goBack = useCallback(() => {
     router.push(`/${customLink}/explore`);
   }, [router, customLink]);
+
+  useEffect(() => {
+
+    if (userDetails.phone) {
+      setPhone(userDetails.phone);
+    }
+  },[])
 
   return (
     <main className="relative bg-black">

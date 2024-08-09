@@ -6,7 +6,7 @@ import type {
   SummarizedPeopleData,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
@@ -168,7 +168,6 @@ export const useAddUserToGroup = () => {
 };
 
 export const useSingleGroupData = (groupId: string) => {
-
   const getSingleGroupData = useCallback(async () => {
     const res = await apiRpc.groups[":groupId"].$get({
       param: {
@@ -221,13 +220,11 @@ export const useAllUserBelongToGroup = () => {
     }
   }, []);
 
-  const { mutateAsync: mutateGetUserBelongToGroup, isPending: groupUserLoading } = useMutation({
+  const {
+    mutateAsync: mutateGetUserBelongToGroup,
+    isPending: groupUserLoading,
+  } = useMutation({
     mutationFn: getUserBelongToGroup,
-    onSuccess: (data) => {
-      if (data) {
-        toast.success("Group data retrieved successfully");
-      }
-    },
     onError: (error) => {
       toast.error("Failed to retrieve group data");
     },
@@ -236,5 +233,37 @@ export const useAllUserBelongToGroup = () => {
   return {
     mutateGetUserBelongToGroup,
     groupUserLoading,
+  };
+};
+
+export const useCreateGroup = () => {
+  const queryClient = useQueryClient();
+  const handleApiResponse = (data: any) => {
+    if (data.err) {
+      toast.error(data.message);
+      return;
+    }
+    if (data) {
+      toast.success("Group created successfully");
+      queryClient.invalidateQueries({ queryKey: ["getGroupData"] });
+    }
+  };
+
+  const { mutateAsync: mutateCreateGroup, isPending: isCreatingGroupPending } =
+    useMutation({
+      mutationFn: async (payload: any) => {
+        const res = await apiRpc.groups.$post({
+          json: payload
+        });
+        return res.json();
+      },
+      onSuccess: (data) => {
+        handleApiResponse(data);
+      },
+    });
+
+  return {
+    mutateCreateGroup,
+    isCreatingGroupPending,
   };
 };
