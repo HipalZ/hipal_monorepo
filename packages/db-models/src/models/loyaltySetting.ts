@@ -1,5 +1,6 @@
 import mongoose, { type Model } from "mongoose";
 import type { LoyaltyType } from "../validators";
+import { CardPatternEnum } from "../validators/loyaltySetting";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const loyaltySchema = new mongoose.Schema<LoyaltyType>(
@@ -32,7 +33,9 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     },
     cardPattern: {
       type: String,
-      default: "beans",
+      enum: CardPatternEnum,
+      required: false,
+      default: "BEANS",
     },
 
     cardColor: {
@@ -50,6 +53,7 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
 
     loyaltyExpiryDate: {
       type: Number,
+      required: true,
     },
     rewardLimit: {
       type: Number,
@@ -58,6 +62,15 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
     signUpBonus: {
       type: Number,
       default: 0,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
