@@ -91,6 +91,13 @@ const categoriesRouter = new Hono()
             { session: session },
           );
         }
+        if (parentCategoryIds.length > 0) {
+          await Category.updateMany(
+            { _id: { $in: parentCategoryIds } },
+            { $addToSet: { subCategoryIds: creatingCategory[0]._id } },
+            { session: session },
+          );
+        }
         if (dishIds.length > 0) {
           await Dish.updateMany(
             { _id: { $in: dishIds } },
