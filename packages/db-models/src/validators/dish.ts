@@ -9,7 +9,15 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
-export const DishTypeEnum = ["VEG", "NON_VEG", "EGG", "VEGAN"] as const;
+export const DishTypeEnum = [
+  "VEG",
+  "NON_VEG",
+  "EGG",
+  "VEGAN",
+  "GLUTEN_FREE",
+  "MIX",
+  "ORGANIC",
+] as const;
 
 export type DishTypeEnumType = (typeof DishTypeEnum)[number];
 export const portionSchema = z.object({
