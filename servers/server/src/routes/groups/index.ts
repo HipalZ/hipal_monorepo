@@ -18,6 +18,12 @@ function calculateTimestamps(days: number): {
   const currentDate = new Date();
   const toTimestamp = currentDate.getTime();
 
+  if (days === 0) {
+    const fromDate = new Date("2024-01-01T00:00:00Z");
+    const fromTimestamp = fromDate.getTime();
+    return { fromTimestamp, toTimestamp };
+  }
+
   const fromDate = new Date();
   fromDate.setDate(currentDate.getDate() - days);
   const fromTimestamp = fromDate.getTime();
