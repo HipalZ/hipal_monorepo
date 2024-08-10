@@ -1,5 +1,5 @@
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
-import type { TagDetails } from "@/components/types/businessData";
+import type { INotes, TagDetails } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
 import { useGetUserNotes, useTagsNotes } from "@/hooks/useHipeople";
 import { memo, useCallback, useMemo } from "react";
@@ -30,6 +30,9 @@ const MemoTagsAndNotes = () => {
     setRemainder,
     setHistory,
     setSingleTagData,
+    setOpenEditNotes,
+    openEditNotes,
+    setSingleNotesData,
   } = useHiPeopleStore((s) => ({
     openTagPopup: s.openTagPopup,
     openAddTagz: s.openAddTagz,
@@ -53,6 +56,9 @@ const MemoTagsAndNotes = () => {
     setRemainder: s.setRemainder,
     setHistory: s.setHistory,
     setSingleTagData: s.setSingleTagData,
+    setOpenEditNotes: s.setOpenEditNotes,
+    openEditNotes: s.openEditNotes,
+    setSingleNotesData: s.setSingleNotesData,
   }));
 
   const { data: tags } = useTagsNotes();
@@ -86,6 +92,14 @@ const MemoTagsAndNotes = () => {
       setTagNotesData(tagData);
     },
     [openTagPopup],
+  );
+
+  const handleOpenEditNotes = useCallback(
+    (notesData: INotes) => {
+      setOpenEditNotes(!openEditNotes);
+      setSingleNotesData(notesData);
+    },
+    [openEditNotes],
   );
 
   const handleAddTagz = useCallback(() => {
@@ -222,6 +236,7 @@ const MemoTagsAndNotes = () => {
               return (
                 <section
                   key={item.data._id}
+                  onClick={() => handleOpenEditNotes(item?.data)}
                   className="bg-white col-span-full md:col-span-2 rounded-2xl"
                 >
                   <h1 className="text-sm text-[#5197F8] px-4 pt-2 pb-2 w-12 rounded-full">

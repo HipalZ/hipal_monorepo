@@ -66,7 +66,7 @@ const MemoCropperPopUp = ({
                 <button
                   type="button"
                   onClick={onSave}
-                  className="on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto"
+                  className="cursor-pointer on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto"
                 >
                   Save
                 </button>

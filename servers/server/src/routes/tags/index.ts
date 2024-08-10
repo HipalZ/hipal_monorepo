@@ -313,6 +313,54 @@ const tagRouter = new Hono()
         data: note,
       });
     },
-  );
+  )
+  .put("/note/:noteId", zValidator("json", noteSchema.partial()), async (c) => {
+    const requestData = await c.req.json();
+
+    const createNote = await Note.findByIdAndUpdate(
+      c.req.param().noteId,
+      requestData,
+      { new: true },
+    );
+
+    if (!createNote) {
+      return c.json(
+        {
+          message: "createNote not created",
+          err: true,
+          data: {},
+        },
+        400,
+      );
+    }
+
+    return c.json({
+      message: "Note updated successfully",
+      err: false,
+      data: createNote,
+    });
+  })
+  .delete("/note/:noteId", async (c) => {
+    const { noteId } = c.req.param();
+
+    const createNote = await Note.findByIdAndDelete(noteId);
+
+    if (!createNote) {
+      return c.json(
+        {
+          message: "createNote not created",
+          err: true,
+          data: {},
+        },
+        400,
+      );
+    }
+
+    return c.json({
+      message: "Note updated successfully",
+      err: false,
+      data: createNote,
+    });
+  });
 
 export default tagRouter;

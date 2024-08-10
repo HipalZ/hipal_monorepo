@@ -112,6 +112,12 @@ const MemoAddNotes = () => {
 
   const handleNotes = async () => {
     let imageUrl = "";
+    if (titleNotes.length === 0 || titleNotes.length <= 4) {
+      return toast.error("Please enter the title more than 4 characters");
+    }
+    if (descriptionNotes.length === 0 || descriptionNotes.length <= 4) {
+      return toast.error("Please enter the description more than 4 characters");
+    }
     if (imageFiles?.logo) {
       imageUrl = await storeImageAfterSave(
         imageFiles?.logo,
@@ -119,14 +125,8 @@ const MemoAddNotes = () => {
         setIsLoading,
       );
     }
-    if (imageUrl.length === 0) {
+    if (imageUrl && imageUrl.length === 0) {
       return toast.error("Please upload the image");
-    }
-    if (titleNotes.length === 0) {
-      return toast.error("Please enter the title");
-    }
-    if (descriptionNotes.length === 0) {
-      return toast.error("Please enter the description");
     }
     const payload = {
       businessId: businessId,
@@ -137,99 +137,107 @@ const MemoAddNotes = () => {
       tagIds: [],
     };
     mutate(payload);
-    setOpenAddNotes(false);
   };
 
   return (
     <section className="h-[80dvh] overflow-y-auto pb-[5rem] bg-white rounded-t-3xl">
-      <center className="my-4">
-        <h1 className="px-4 py-1 text-3xl text-[#6F649B] bg-opacity-50 rounded-xl">
-          Add Notes
-        </h1>
-        <span className="text-[#6F649B]">
-          For :- {userDashboardDetails?.name}
-        </span>
-      </center>
-      <article
-        className={cn(
-          "shrink-0 relative rounded-xl h-[8rem] w-[8rem] mx-6",
-          img?.logo?.length > 0
-            ? ""
-            : " border-dashed border-2 inline-block border-[#8C63FF]",
-        )}
-      >
-        <input
-          ref={logoInputRef}
-          onClick={(e) => handleClick(e, logoInputRef)}
-          type="file"
-          id="logoInput"
-          style={{ display: "none" }}
-          onChange={handleImageChange}
-          data-type="logo"
-        />
-        <label
-          htmlFor="logoInput"
-          className="flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
-        >
-          {img?.logo ? (
-            <div className="relative w-full h-full">
-              <figure className="w-full h-full">
-                <img
-                  src={img?.logo}
-                  alt="Logo"
-                  className="object-cover w-full h-full rounded-xl"
-                />
-              </figure>
-              <CiEdit className="absolute top-0 right-0 w-6 h-6 p-1 text-black bg-white rounded-full cursor-pointer" />
-            </div>
-          ) : (
-            <PlusButton />
-          )}
-        </label>
-      </article>
-      <div className="relative mx-6 mt-4">
-        <input
-          type="text"
-          value={titleNotes}
-          minLength={4}
-          maxLength={30}
-          onChange={(e) => setTitleNotes(e.target.value)}
-          placeholder="Enter the title..."
-          className="w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-        />
-        <small className="absolute bottom-2 right-4">
-          {titleNotes?.length || titleNotes?.length}/{30}
-        </small>
-      </div>
-      <div className="relative mx-6 mt-4">
-        <textarea
-          value={descriptionNotes}
-          minLength={4}
-          maxLength={200}
-          onChange={(e) => setDescriptionNotes(e.target.value)}
-          placeholder="Enter the Note..."
-          className="resize-none h-48 w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-        />
-        <small className="absolute bottom-2 right-4">
-          {descriptionNotes?.length || descriptionNotes?.length}/{200}
-        </small>
-      </div>
-      <CropperPopup
-        show={showCropper}
-        onSave={handleCrop}
-        onClose={() => setShowCropper(false)}
-      >
-        <ReactCropper image={cropping.image} ref={cropperRef} />
-      </CropperPopup>
-      {isLoading ? <LoadingSpinner /> : null}
-      <BottomButton
-        buttons={[
-          {
-            text: "Add Notes",
-            onClick: handleNotes,
-          },
-        ]}
-      />
+      {showCropper ? (
+        <section>
+          <ReactCropper image={cropping.image} ref={cropperRef} />
+          <BottomButton
+            buttons={[
+              {
+                text: "Crop",
+                onClick: handleCrop,
+              },
+            ]}
+          />
+        </section>
+      ) : (
+        <>
+          <center className="my-4">
+            <h1 className="px-4 py-1 text-3xl text-[#6F649B] bg-opacity-50 rounded-xl">
+              Add Notes
+            </h1>
+            <span className="text-[#6F649B]">
+              For :- {userDashboardDetails?.name}
+            </span>
+          </center>
+          <article
+            className={cn(
+              "shrink-0 relative rounded-xl h-[8rem] w-[8rem] mx-6",
+              img?.logo?.length > 0
+                ? ""
+                : " border-dashed border-2 inline-block border-[#8C63FF]",
+            )}
+          >
+            <input
+              ref={logoInputRef}
+              onClick={(e) => handleClick(e, logoInputRef)}
+              type="file"
+              id="logoInput"
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+              data-type="logo"
+            />
+            <label
+              htmlFor="logoInput"
+              className="flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
+            >
+              {img?.logo ? (
+                <div className="relative w-full h-full">
+                  <figure className="w-full h-full">
+                    <img
+                      src={img?.logo}
+                      alt="Logo"
+                      className="object-cover w-full h-full rounded-xl"
+                    />
+                  </figure>
+                  <CiEdit className="absolute top-0 right-0 w-6 h-6 p-1 text-black bg-white rounded-full cursor-pointer" />
+                </div>
+              ) : (
+                <PlusButton />
+              )}
+            </label>
+          </article>
+          <div className="relative mx-6 mt-4">
+            <input
+              type="text"
+              value={titleNotes}
+              minLength={4}
+              maxLength={30}
+              onChange={(e) => setTitleNotes(e.target.value)}
+              placeholder="Enter the title..."
+              className="w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+            />
+            <small className="absolute bottom-2 right-4">
+              {titleNotes?.length || titleNotes?.length}/{30}
+            </small>
+          </div>
+          <div className="relative mx-6 mt-4">
+            <textarea
+              value={descriptionNotes}
+              minLength={4}
+              maxLength={200}
+              onChange={(e) => setDescriptionNotes(e.target.value)}
+              placeholder="Enter the Note..."
+              className="resize-none h-48 w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+            />
+            <small className="absolute bottom-2 right-4">
+              {descriptionNotes?.length || descriptionNotes?.length}/{200}
+            </small>
+          </div>
+          {isLoading ? <LoadingSpinner /> : null}
+          <BottomButton
+            buttons={[
+              {
+                text: "Add Notes",
+                onClick: handleNotes,
+              },
+            ]}
+          />
+        </>
+      )}
     </section>
   );
 };

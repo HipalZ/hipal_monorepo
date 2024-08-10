@@ -2,6 +2,7 @@ import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { convertToTime, filterPayload } from "@/components/utils/helper";
 import { useAllTags, useUserPaymentTags } from "@/hooks/useHipeople";
 import { memo, useState, useMemo, lazy } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
@@ -51,6 +52,8 @@ const MemoAddTagz = () => {
       tagIds: selectedTags,
     };
     const filteredTags = filterPayload(payload);
+    if (selectedTags.length === 0)
+      return toast.error("Please select atleast one tag.");
     mutate(filteredTags);
     setOpenAddTagz(false);
   };

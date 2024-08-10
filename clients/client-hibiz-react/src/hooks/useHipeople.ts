@@ -302,6 +302,9 @@ export const useUserPaymentTags = () => {
       setDuration("");
       setTime("");
       setDisplayToCaptain(false);
+      queryClient.invalidateQueries({
+        queryKey: ["userTags"],
+      });
     },
     onError: (error) => {
       console.error("Error updating user tags:", error);
@@ -468,34 +471,137 @@ export const useCreateTag = () => {
 
 export const useAddNotes = () => {
   const queryClient = useQueryClient();
-  const { setImageFiles, setImg, setTitleNotes, setDescriptionNotes } =
-    useHiPeopleStore((s) => ({
-      setImageFiles: s.setImageFiles,
-      setImg: s.setImg,
-      setTitleNotes: s.setTitleNotes,
-      setDescriptionNotes: s.setDescriptionNotes,
-    }));
+  const errorToasts = useShowErrorToasts();
+  const {
+    setImageFiles,
+    setImg,
+    setTitleNotes,
+    setDescriptionNotes,
+    setOpenAddNotes,
+  } = useHiPeopleStore((s) => ({
+    setImageFiles: s.setImageFiles,
+    setImg: s.setImg,
+    setTitleNotes: s.setTitleNotes,
+    setDescriptionNotes: s.setDescriptionNotes,
+    setOpenAddNotes: s.setOpenAddNotes,
+  }));
+
   const createNotes = async (payload: INotes) => {
     const response = await apiRpc.tags.note.$post({
       json: payload,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("errorData", errorData?.error);
+      errorToasts(errorData?.error);
+      throw new Error(errorData?.error?.message || "Failed to create tag");
+    }
+
+    const data = await response.json();
+    return { data: data?.data, status: response.status };
+  };
+
+  const mutation = useMutation({
+    mutationFn: createNotes,
+    onSettled: (result, error) => {
+      if (result?.status && result.status >= 200 && result.status < 300) {
+        // If the status code is in the 2xx range, execute the success actions
+        setImageFiles([]);
+        setImg({});
+        setTitleNotes("");
+        setDescriptionNotes("");
+        setOpenAddNotes(false);
+        queryClient.invalidateQueries({
+          queryKey: ["userNotes"],
+        });
+      } else if (error) {
+        // Log the error
+        console.error("Error creating notes:", error);
+      }
+    },
+  });
+
+  return mutation;
+};
+
+export const useUpdateNotes = () => {
+  const queryClient = useQueryClient();
+  const errorToasts = useShowErrorToasts();
+  const {
+    setImageFiles,
+    setImg,
+    setTitleNotes,
+    setDescriptionNotes,
+    singleNotesData,
+    setOpenEditNotes,
+  } = useHiPeopleStore((s) => ({
+    setImageFiles: s.setImageFiles,
+    setImg: s.setImg,
+    setTitleNotes: s.setTitleNotes,
+    setDescriptionNotes: s.setDescriptionNotes,
+    singleNotesData: s.singleNotesData,
+    setOpenEditNotes: s.setOpenEditNotes,
+  }));
+  const updateNotes = async (payload: INotes) => {
+    const response = await apiRpc.tags.note[":noteId"].$put({
+      json: payload,
+      param: {
+        noteId: singleNotesData?._id,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("errorData", errorData?.error);
+      errorToasts(errorData?.error);
+      throw new Error(errorData?.error?.message || "Failed to create tag");
+    }
+    const data = await response.json();
+    return data?.data;
+  };
+
+  const mutation = useMutation({
+    mutationFn: updateNotes,
+    onSettled: (data, error) => {
+      if (!error) {
+        setOpenEditNotes(false);
+        setImageFiles([]);
+        setImg({});
+        setTitleNotes("");
+        setDescriptionNotes("");
+        queryClient.invalidateQueries({
+          queryKey: ["userNotes"],
+        });
+      } else {
+        console.error("Error updating notes:", error);
+      }
+    },
+  });
+
+  return mutation;
+};
+
+export const useDeleteNotes = () => {
+  const queryClient = useQueryClient();
+  const deleteNotes = async (noteId: string) => {
+    const response = await apiRpc.tags.note[":noteId"].$delete({
+      param: {
+        noteId: noteId,
+      },
     });
     const data = await response.json();
     return data?.data;
   };
 
   const mutation = useMutation({
-    mutationFn: createNotes,
+    mutationFn: deleteNotes,
     onSuccess: () => {
-      setImageFiles([]);
-      setImg({});
-      setTitleNotes("");
-      setDescriptionNotes("");
       queryClient.invalidateQueries({
         queryKey: ["userNotes"],
       });
     },
     onError: (error) => {
-      console.error("Error creating notes:", error);
+      console.error("Error deleting notes:", error);
     },
   });
 

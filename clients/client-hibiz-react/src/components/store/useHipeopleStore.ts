@@ -122,6 +122,9 @@ interface IHiPeople {
   singleTagData: Tag;
   setSingleTagData: (data: Tag) => void;
 
+  singleNotesData: INotes;
+  setSingleNotesData: (data: INotes) => void;
+
   openTagPopup: boolean;
   setOpenTagPopup: (open: boolean) => void;
 
@@ -172,7 +175,7 @@ interface IHiPeople {
   setAppliedUserTags: (tags: UserTags[]) => void;
 
   removeTagIds: string[];
-  setRemoveTagIds: (tagId: string) => void;
+  setRemoveTagIds: (updateFn: (prevIds: string[]) => string[]) => void;
 
   userTags: UserUpdateTag;
   setUserTags: (tags: UserUpdateTag) => void;
@@ -233,6 +236,9 @@ interface IHiPeople {
 
   openCreateTagPopup: boolean;
   setOpenCreateTagPopup: (open: boolean) => void;
+
+  openEditNotes: boolean;
+  setOpenEditNotes: (open: boolean) => void;
 
   tagName: string;
   setTagName: (name: string) => void;
@@ -465,6 +471,12 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   openCreateTagPopup: false,
   setOpenCreateTagPopup: (open) => set({ openCreateTagPopup: open }),
+
+  openEditNotes: false,
+  setOpenEditNotes: (open) => set({ openEditNotes: open }),
+
+  singleNotesData: {} as INotes,
+  setSingleNotesData: (data) => set({ singleNotesData: data }),
 
   tagName: "",
   setTagName: (name) => set({ tagName: name }),
