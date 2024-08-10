@@ -1,5 +1,5 @@
 import { Switch } from "@headlessui/react";
-import { lazy, memo, useState } from "react";
+import { type ChangeEvent, lazy, memo, useState } from "react";
 import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
 import { FaRegUserCircle } from "react-icons/fa";
 import { LuBellRing } from "react-icons/lu";
@@ -11,8 +11,10 @@ import {
   calculateFutureTimestamp,
   cn,
   convertToMilliSeconds,
+  filterPayload,
   formatDate,
   formatTime,
+  handleAllChecks,
 } from "@/components/utils/helper";
 import { useCreateTag } from "@/hooks/useHipeople";
 import { useParams } from "react-router-dom";
@@ -57,6 +59,7 @@ const MemoCreateTag = () => {
     history: s.history,
     setHistory: s.setHistory,
   }));
+
   const createdById = useOwnerLogin((s) => s?.user?._id);
   const createdBy = useOwnerLogin((s) => s?.user?.name);
 
@@ -96,9 +99,20 @@ const MemoCreateTag = () => {
 
   const { mutate } = useCreateTag();
 
-  const handleApplyTags = () => {
+  const handleApplyTags = (e) => {
+    e.preventDefault();
     const date = Date.now();
-    const differenceTimeStamp = futureTimestamp - date;
+    let differenceTimeStamp = null;
+    if (futureTimestamp) {
+      differenceTimeStamp = futureTimestamp - date;
+    }
+    const convertedTime = convertToMilliSeconds(time) || "";
+    let final = "";
+    if (remainder !== "" || duration !== "") {
+      final = `${remainder} ${duration}`;
+    } else {
+      final = "";
+    }
     const payload = {
       businessId: businessId,
       name: tagName,
@@ -106,15 +120,30 @@ const MemoCreateTag = () => {
       tagType: "MANUAL_TAG",
       displayForCaptains: displayToCaptain,
       duration: differenceTimeStamp,
-      remainderInDuration: `${remainder} ${duration}`,
-      time: convertToMilliSeconds(time),
+      remainderInDuration: final,
+      time: convertedTime,
       createdBy: createdById,
     };
-    mutate(payload);
+    const filteredPayload = filterPayload(payload);
+    handleAllChecks(payload);
+    mutate(filteredPayload);
+  };
+
+  const handleRemainder = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value.toString().length > 3) return;
+    setRemainder(e.target.value);
+  };
+
+  const handleTagName = (e: ChangeEvent<HTMLInputElement>) => {
+    setTagName(e.target.value);
+  };
+
+  const handleTagNotes = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setTagNotes(e.target.value);
   };
 
   return (
-    <>
+    <form onSubmit={handleApplyTags}>
       <section className="px-6 pt-2 bg-white rounded-2xl overflow-auto h-[80dvh] pb-[5rem]">
         <center className={cn("text-[#6F649B] text-3xl mt-2")}>Add Tagz</center>
         <section className="mt-4">
@@ -123,9 +152,10 @@ const MemoCreateTag = () => {
               <input
                 type="text"
                 value={tagName}
-                minLength={4}
+                minLength={3}
                 maxLength={30}
-                onChange={(e) => setTagName(e.target.value)}
+                onChange={handleTagName}
+                required
                 placeholder="Enter the Tag Name..."
                 className="w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               />
@@ -136,9 +166,10 @@ const MemoCreateTag = () => {
             <div className="relative mt-4">
               <textarea
                 value={tagNotes}
-                minLength={4}
+                minLength={3}
                 maxLength={200}
-                onChange={(e) => setTagNotes(e.target.value)}
+                onChange={handleTagNotes}
+                required
                 placeholder="Add Note..."
                 className="resize-none h-48 w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               />
@@ -199,14 +230,13 @@ const MemoCreateTag = () => {
                 <div className="relative">
                   <input
                     type="number"
-                    value={remainder || 0}
-                    onChange={(e) => setRemainder(e.target.value)}
+                    value={remainder}
+                    onChange={handleRemainder}
                     id="remainder"
                     className={
                       "block w-[6.4rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
                     }
                     placeholder="Remind"
-                    required
                   />
                   <label
                     htmlFor="remainder"
@@ -225,7 +255,6 @@ const MemoCreateTag = () => {
                     className={
                       "block w-[7rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
                     }
-                    required
                   >
                     <option value="" disabled>
                       Duration
@@ -253,7 +282,6 @@ const MemoCreateTag = () => {
                       "block w-[7rem] lg:w-[7.5rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-[#8C63FF] dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
                     }
                     placeholder=""
-                    required
                   />
                   <label
                     htmlFor="time"
@@ -303,10 +331,13 @@ const MemoCreateTag = () => {
       </section>
       <BottomButton
         buttons={[
-          { text: "Create Tagz", type: "button", onClick: handleApplyTags },
+          {
+            text: "Create Tagz",
+            type: "submit",
+          },
         ]}
       />
-    </>
+    </form>
   );
 };
 

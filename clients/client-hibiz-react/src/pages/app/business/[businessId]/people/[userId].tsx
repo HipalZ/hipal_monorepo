@@ -185,7 +185,7 @@ const MemoUserId = () => {
       ) : null}
       {selectedNavItem === "RECENT BILLS" ? <RecentBills /> : null}
       {selectedNavItem === "TAGS & NOTES" ? <TagsAndNotes /> : null}
-      {selectedNavItem === "RECENT BILLS" && (
+      {selectedNavItem === "RECENT BILLS" && openBillPopup && (
         <PopUp show={openBillPopup} onClose={() => setOpenBillPopup(false)}>
           <RecentBillsPopup />
         </PopUp>

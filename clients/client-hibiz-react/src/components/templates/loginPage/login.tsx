@@ -69,7 +69,6 @@ const Login: React.FC = () => {
       return;
     }
     if (response.status === 200) {
-      console.log("user", user);
       setAccessToken(user.data.accessToken);
       setRefreshToken(user.data.refreshToken);
       setUser(user.data.user);

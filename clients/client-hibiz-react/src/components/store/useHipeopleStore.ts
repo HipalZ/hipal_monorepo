@@ -41,36 +41,36 @@ export type AddToGroup =
   | "ADD MORE USERS";
 
 export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
-  export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "";
+export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "";
 
-  export interface FilterValue {
-    value: string;
-    type: "ABOVE" | "BELOW" | "EQUAL" | "";
-  }
-  
-  export interface Filter {
-    label: string;
-    key: keyof FilterValues;
-  }
-  
- export  interface FilterValues {
-    visit: FilterValue;
-    spend: FilterValue;
-    cardBalance: FilterValue;
-    coinzIssued: FilterValue;
-    coinzUsed: FilterValue;
-  }
-  
-  export interface GroupData {
-    name: string;
-    description: string;
-    groupType: "MANUAL" | "DYNAMIC";
-    groupColor: string;
-    filters: Filter[];
-    filterValues: FilterValues;
-    durationType?: "days" | "months" | "years" | ""; 
-    durationValue?: string; 
-  }
+export interface FilterValue {
+  value: string;
+  type: "ABOVE" | "BELOW" | "EQUAL" | "";
+}
+
+export interface Filter {
+  label: string;
+  key: keyof FilterValues;
+}
+
+export interface FilterValues {
+  visit: FilterValue;
+  spend: FilterValue;
+  cardBalance: FilterValue;
+  coinzIssued: FilterValue;
+  coinzUsed: FilterValue;
+}
+
+export interface GroupData {
+  name: string;
+  description: string;
+  groupType: "MANUAL" | "DYNAMIC";
+  groupColor: string;
+  filters: Filter[];
+  filterValues: FilterValues;
+  durationType?: "days" | "months" | "years" | "";
+  durationValue?: string;
+}
 
 const today = new Date();
 const startOfToday = new Date(
@@ -167,6 +167,12 @@ interface IHiPeople {
 
   tags: UserTags[];
   setTags: (tags: UserTags[]) => void;
+
+  appliedUserTags: UserTags[];
+  setAppliedUserTags: (tags: UserTags[]) => void;
+
+  removeTagIds: string[];
+  setRemoveTagIds: (tagId: string) => void;
 
   userTags: UserUpdateTag;
   setUserTags: (tags: UserUpdateTag) => void;
@@ -380,6 +386,15 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   tags: [],
   setTags: (tags) => set({ tags }),
+
+  appliedUserTags: [],
+  setAppliedUserTags: (tags: UserTags[]) => set({ appliedUserTags: tags }),
+
+  removeTagIds: [],
+  setRemoveTagIds: (updateFn: (prevIds: string[]) => string[]) =>
+    set((state) => ({
+      removeTagIds: updateFn(state.removeTagIds),
+    })),
 
   userTags: {} as UserUpdateTag,
   setUserTags: (tags) => set({ userTags: tags }),

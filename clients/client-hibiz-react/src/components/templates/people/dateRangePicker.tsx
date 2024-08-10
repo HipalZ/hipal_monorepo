@@ -185,7 +185,7 @@ const MemoDateRangePicker = () => {
       </article>
 
       {DatePickerEnum.CUSTOM_DATE === selectedOption && (
-        <section className="mt-6 w-[62%] lg:w-[48%] ">
+        <section className="mx-4 mt-6 w-[62%] lg:w-[48%] ">
           <DatePicker
             selectsRange={true}
             startDate={startDate}

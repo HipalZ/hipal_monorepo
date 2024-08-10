@@ -1,3 +1,4 @@
+import useShowErrorToasts from "@/components/atom/errorToasts";
 import useBusinessData from "@/components/store/useBusinessData";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import usePaginationStore from "@/components/store/usePaginationStore";
@@ -74,10 +75,9 @@ export const useTagsNotes = () => {
     setDateLength: s.setDateLength,
   }));
 
-  const { setTagData, selectedNavItem, tagData } = useHiPeopleStore((s) => ({
+  const { setTagData, setTags } = useHiPeopleStore((s) => ({
     setTagData: s.setTagData,
-    tagData: s.tagData,
-    selectedNavItem: s.selectedNavItem,
+    setTags: s.setTags,
   }));
 
   const getAllUserTags = async (businessId: string, userId: string) => {
@@ -89,13 +89,14 @@ export const useTagsNotes = () => {
     });
     const data = await userTagsResponse.json();
     setTagData(data?.data as TagArray[]);
+    setTags(data?.data as UserTags[]);
     setDateLength(data?.data?.length);
     return data?.data;
   };
   const { data, isLoading, isError } = useQuery({
     queryKey: ["userTags", businessId, userId],
     queryFn: () => getAllUserTags(businessId ?? "", userId ?? ""),
-    enabled: !!businessId && !!userId && selectedNavItem === "TAGS & NOTES",
+    enabled: !!businessId && !!userId,
   });
 
   return { data, isLoading, isError };
@@ -193,15 +194,26 @@ export const userCoinzDetails = () => {
 
 // updating the user tags comments and adding tagIds
 export const useUserUpdateTags = () => {
+  const queryClient = useQueryClient();
   const { businessId } = useParams<{ businessId?: string }>();
-  const { singleBillData, setOpenBillPopup, setIsLoading } = useHiPeopleStore(
-    (s) => ({
-      singleBillData: s.singleBillData,
-      setOpenBillPopup: s.setOpenBillPopup,
-      setIsLoading: s.setIsLoading,
-    }),
-  );
-  setIsLoading(true);
+  const {
+    userComment,
+    singleBillData,
+    setUserComment,
+    setOpenBillPopup,
+    setIsLoading,
+    setAppliedUserTags,
+    removeTagIds,
+  } = useHiPeopleStore((s) => ({
+    userComment: s.userComment,
+    singleBillData: s.singleBillData,
+    setOpenBillPopup: s.setOpenBillPopup,
+    setIsLoading: s.setIsLoading,
+    setUserComment: s.setUserComment,
+    setAppliedUserTags: s.setAppliedUserTags,
+    removeTagIds: s.removeTagIds,
+  }));
+
   const updateUserTags = async (tags: string[]) => {
     const userTagsResponse = await apiRpc.payments.updatePayment[
       ":paymentId"
@@ -215,10 +227,11 @@ export const useUserUpdateTags = () => {
       json: {
         businessId: businessId || "",
         tagIds: tags
-          .filter((tag) => tag?._id?.toString())
-          .map((tag) => tag?._id?.toString()),
+          .filter((tag) => tag && tag._id)
+          .map((tag) => tag._id.toString()),
         userId: singleBillData.userId.toString(),
-        comment: singleBillData.comment,
+        removeTagIds: removeTagIds,
+        comment: userComment,
       },
     });
     const data = await userTagsResponse.json();
@@ -227,9 +240,17 @@ export const useUserUpdateTags = () => {
 
   const mutation = useMutation({
     mutationFn: updateUserTags,
+    onMutate: () => {
+      setIsLoading(true);
+    },
     onSuccess: () => {
       setOpenBillPopup(false);
       setIsLoading(false);
+      setUserComment("");
+      setAppliedUserTags([]);
+      queryClient.invalidateQueries({
+        queryKey: ["userDashboard"],
+      });
     },
     onError: (error) => {
       console.error("Error updating user tags:", error);
@@ -281,7 +302,6 @@ export const useUserPaymentTags = () => {
       setDuration("");
       setTime("");
       setDisplayToCaptain(false);
-      queryClient.invalidateQueries({});
     },
     onError: (error) => {
       console.error("Error updating user tags:", error);
@@ -322,9 +342,8 @@ export const useLoyaltyData = () => {
 // get all tags in displaying list of tags
 export const useAllTags = () => {
   const { businessId } = useParams<{ businessId?: string }>();
-  const { setTags, tags } = useHiPeopleStore((s) => ({
+  const { setTags } = useHiPeopleStore((s) => ({
     setTags: s.setTags,
-    tags: s.tags,
   }));
   const getAllTags = async (businessId: string) => {
     const response = await apiRpc.tags.$get({
@@ -340,7 +359,7 @@ export const useAllTags = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["allTags", businessId],
     queryFn: () => getAllTags(businessId ?? ""),
-    enabled: !!businessId && tags?.length === 0,
+    enabled: !!businessId,
   });
 
   return { data, isLoading, isError };
@@ -383,6 +402,7 @@ export const useRemoveTag = () => {
 
 export const useCreateTag = () => {
   const queryClient = useQueryClient();
+  const errorToasts = useShowErrorToasts();
   const {
     setOpenCreateTagPopup,
     setTagName,
@@ -393,6 +413,7 @@ export const useCreateTag = () => {
     setRemainder,
     setHistory,
     setSingleTagData,
+    setTags,
   } = useHiPeopleStore((s) => ({
     setOpenCreateTagPopup: s.setOpenCreateTagPopup,
     setTagName: s.setTagName,
@@ -403,11 +424,18 @@ export const useCreateTag = () => {
     setRemainder: s.setRemainder,
     setHistory: s.setHistory,
     setSingleTagData: s.setSingleTagData,
+    setTags: s.setTags,
   }));
   const createTag = async (payload) => {
     const response = await apiRpc.tags.$post({
       json: payload,
     });
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("errorData", errorData?.error);
+      errorToasts(errorData?.error);
+      throw new Error(errorData?.error?.message || "Failed to create tag");
+    }
     const data = await response.json();
     return data?.data;
   };
@@ -425,6 +453,7 @@ export const useCreateTag = () => {
       setRemainder("");
       setHistory([]);
       setSingleTagData({});
+      setTags([]);
       queryClient.invalidateQueries({
         queryKey: ["allTags"],
       });

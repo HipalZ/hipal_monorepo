@@ -33,7 +33,11 @@ const MemoTagz = () => {
     setRemainder,
     setTime,
     setTagNotes,
+    setTagName,
+    setHistory,
   } = useHiPeopleStore((s) => ({
+    setTagName: s.setTagName,
+    setHistory: s.setHistory,
     openCreateTagPopup: s.openCreateTagPopup,
     setOpenCreateTagPopup: s.setOpenCreateTagPopup,
     openDeletePopup: s.openDeletePopup,
@@ -112,6 +116,18 @@ const MemoTagz = () => {
     setDisplayToCaptain(false);
   }, [openEditTagPopup, tagNotes, remainder, duration, time]);
 
+  const handleCreateTagz = useCallback(() => {
+    setOpenCreateTagPopup(!openCreateTagPopup);
+    setTagName("");
+    setTagNotes("");
+    setDisplayToCaptain(false);
+    setDuration("");
+    setTime("");
+    setRemainder("");
+    setHistory([]);
+    setSingleTagData({});
+  }, [openCreateTagPopup]);
+
   return (
     <main>
       <section className="relative m-4 min-h-[65dvh] ">
@@ -146,6 +162,7 @@ const MemoTagz = () => {
               <article
                 key={tag?._id}
                 onClick={() => handleEditTag(tag)}
+                onKeyDown={() => handleEditTag(tag)}
                 className="border border-1 border-[#6F649B] rounded-2xl p-2 space-y-4 bg-white"
               >
                 <section className="flex items-center justify-between ">
@@ -174,10 +191,7 @@ const MemoTagz = () => {
                     </span>
                   </article>
                 </section>
-                <p
-                  title={tag?.name}
-                  className="text-[#6F649B] truncate cursor-pointer"
-                >
+                <p title={tag?.name} className="text-[#6F649B] cursor-pointer">
                   {tag?.name}
                 </p>
               </article>
@@ -188,17 +202,14 @@ const MemoTagz = () => {
         </section>
       </section>
       <button
-        onClick={() => setOpenCreateTagPopup(!openCreateTagPopup)}
+        onClick={handleCreateTagz}
         className="z-50 flex items-center float-right h-10 px-4 py-2 mr-6 text-white bg-black rounded-full cursor-pointer"
         type="button"
       >
         <span>Create Tagz</span>
       </button>
       {openCreateTagPopup ? (
-        <PopUp
-          show={openCreateTagPopup}
-          onClose={() => setOpenCreateTagPopup(!openCreateTagPopup)}
-        >
+        <PopUp show={openCreateTagPopup} onClose={handleCreateTagz}>
           <CreateTag />
         </PopUp>
       ) : null}

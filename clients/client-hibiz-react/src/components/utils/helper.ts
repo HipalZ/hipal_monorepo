@@ -425,3 +425,12 @@ export const convertMillisecondsToTime = (milliseconds) => {
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
 };
+
+export const handleAllChecks = (filteredPayload) => {
+  if (filteredPayload?.name.length <= 3) {
+    return toast.error("Please enter tag name more than 3 characters");
+  }
+  if (filteredPayload?.note.length <= 2) {
+    return toast.error("Please enter tag notes more than 2 characters");
+  }
+};

@@ -11,26 +11,26 @@ const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const OnlineImgCard = lazy(() => import("./onlineImgCard"));
 
 const MemoRecentBillsPopup = () => {
+  const { mutate } = useUserUpdateTags();
+
   const {
     singleBillData: data,
     setUserComment,
     userComment,
-    tags,
+    appliedUserTags,
   } = useHiPeopleStore((s) => ({
     singleBillData: s.singleBillData,
     setUserComment: s.setUserComment,
     userComment: s.userComment,
-    tags: s.tags,
+    appliedUserTags: s.appliedUserTags,
   }));
 
   const handleComment = useCallback((e: ChangeEvent<HTMLAreaElement>) => {
     setUserComment(e.target.value);
   }, []);
 
-  const { mutate } = useUserUpdateTags();
-
   const handleApply = () => {
-    mutate(tags);
+    mutate(appliedUserTags);
   };
 
   return (

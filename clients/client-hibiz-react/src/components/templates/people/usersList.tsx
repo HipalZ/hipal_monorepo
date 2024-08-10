@@ -63,7 +63,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
                 type="checkbox"
                 checked={selectedUserIds.includes(user?.userId?._id)}
                 onChange={() => handleSelectUser(user?.userId?._id)}
-                className="mr-2 checkbox checkbox-black"
+                className="w-5 h-5 mr-3 text-black rounded"
               />
               <div>
                 <h3>{user?.userId?.name}</h3>
@@ -77,12 +77,12 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
               {user?.avgSpend}
             </div>
             {!hide && (
-              <Link to={`/app/business/${user.businessId}/people/${user.userId._id}`} className="absolute top-1 right-1" >
-              <MdArrowOutward 
-                size={24}
-              />
+              <Link
+                to={`/app/business/${user.businessId}/people/${user.userId._id}`}
+                className="absolute top-1 right-1"
+              >
+                <MdArrowOutward size={24} />
               </Link>
-              
             )}
           </article>
         ))}

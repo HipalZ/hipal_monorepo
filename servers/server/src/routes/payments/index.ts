@@ -2091,13 +2091,38 @@ const paymentsRouter = new Hono()
         businessId: z.string({
           message: "businessId is required",
         }),
+        removeTagIds: z.array(z.string()).optional(),
       }),
     ),
 
     async (c) => {
       const { paymentId } = c.req.param();
       const requestData = await c.req.json();
-      const { tagIds, comment, userId, businessId } = requestData;
+      const {
+        tagIds = [],
+        comment,
+        userId,
+        businessId,
+        removeTagIds = [],
+      } = requestData;
+
+      if (removeTagIds.length > 0) {
+        await Payment.findByIdAndUpdate(
+          {
+            _id: paymentId,
+          },
+          {
+            $pull: {
+              tagIds: { $in: removeTagIds },
+            },
+          },
+        );
+
+        await UserTags.deleteMany({
+          userId,
+          tagId: { $in: removeTagIds },
+        });
+      }
 
       const payment = await Payment.findByIdAndUpdate(
         paymentId,

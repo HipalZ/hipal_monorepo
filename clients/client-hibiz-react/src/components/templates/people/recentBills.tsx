@@ -15,6 +15,7 @@ const MemoRecentBills = () => {
 
   const handleBillData = (data: Payment) => {
     setSingleBillData(data);
+    console.log("data", data);
     setOpenBillPopup(true);
   };
 
@@ -25,7 +26,6 @@ const MemoRecentBills = () => {
           <section
             key={data?._id}
             className="payment_card_ui"
-            onKeyDown={() => handleBillData(data)}
             onClick={() => handleBillData(data)}
           >
             <OnlineImgCard data={data} />

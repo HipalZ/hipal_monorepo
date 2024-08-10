@@ -1,5 +1,12 @@
 import { Switch } from "@headlessui/react";
-import { lazy, memo, useMemo, useState, useEffect } from "react";
+import {
+  lazy,
+  memo,
+  useMemo,
+  useState,
+  useEffect,
+  type ChangeEvent,
+} from "react";
 import { CiCircleMinus, CiCirclePlus } from "react-icons/ci";
 import { FaRegUserCircle } from "react-icons/fa";
 import { LuBellRing } from "react-icons/lu";
@@ -7,14 +14,13 @@ import { TiTick } from "react-icons/ti";
 import { HiOutlineBellAlert } from "react-icons/hi2";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import {
-  calculateFutureDate,
   calculateFutureTimestamp,
   cn,
   convertMillisecondsToTime,
   convertToMilliSeconds,
   filterPayload,
-  formatDate,
   formatTime,
+  handleAllChecks,
 } from "@/components/utils/helper";
 import { useUserPaymentTags } from "@/hooks/useHipeople";
 import { useParams } from "react-router-dom";
@@ -117,9 +123,13 @@ const MemoEditTagz = () => {
 
   const { mutate } = useUserPaymentTags();
 
-  const handleApplyTags = () => {
+  const handleApplyTags = (e) => {
+    e.preventDefault();
     const date = Date.now();
-    const differenceTimeStamp = futureTimestamp - date;
+    let differenceTimeStamp = null;
+    if (futureTimestamp) {
+      differenceTimeStamp = futureTimestamp - date;
+    }
     const convertedTime = convertToMilliSeconds(time) || "";
     let final = "";
     if (remainder !== "" || duration !== "") {
@@ -142,11 +152,27 @@ const MemoEditTagz = () => {
       tagIds: [singleTagData?._id],
     };
     const filteredPayload = filterPayload(payload);
+    handleAllChecks(filteredPayload);
     mutate(filteredPayload);
   };
 
+  const handleRemainder = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value.toString().length > 3) return;
+    setRemainder(e.target.value);
+  };
+
+  const handleTagNotes = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setTagNotes(e.target.value);
+  };
+
+  const handleTagNotesValidation = () => {
+    if (tagNotes.length <= 2) {
+      return toast.error("Please enter tag notes more than 2 characters");
+    }
+  };
+
   return (
-    <>
+    <form onSubmit={handleApplyTags}>
       <section className="px-6 pt-2 bg-white rounded-2xl overflow-auto h-[80dvh] pb-[5rem]">
         <center className={cn("text-[#6F649B] text-3xl mt-2")}>
           Edit Tagz
@@ -157,9 +183,10 @@ const MemoEditTagz = () => {
               <input
                 type="text"
                 value={singleTagData?.name}
-                minLength={4}
+                minLength={3}
                 maxLength={30}
                 disabled={true}
+                required
                 placeholder="Enter the Tag Name..."
                 className="w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               />
@@ -171,9 +198,11 @@ const MemoEditTagz = () => {
             <div className="relative mt-4">
               <textarea
                 value={tagNotes}
-                minLength={4}
+                minLength={3}
                 maxLength={200}
-                onChange={(e) => setTagNotes(e.target.value)}
+                required
+                onChange={handleTagNotes}
+                onBlur={handleTagNotesValidation}
                 placeholder="Add Note..."
                 className="resize-none h-48 w-full p-2 pr-14 bg-white border border-[#8C63FF] rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               />
@@ -233,11 +262,10 @@ const MemoEditTagz = () => {
                   <input
                     type="number"
                     value={remainder}
-                    onChange={(e) => setRemainder(e.target.value)}
+                    onChange={handleRemainder}
                     id="remainder"
                     className={`block w-[5rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
                     placeholder="Remind"
-                    required
                   />
                   <label
                     htmlFor="remainder"
@@ -252,7 +280,6 @@ const MemoEditTagz = () => {
                     onChange={(e) => setDuration(e.target.value)}
                     id="duration"
                     className={`block w-[6rem] h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
-                    required
                   >
                     <option value="" disabled>
                       Duration
@@ -276,7 +303,6 @@ const MemoEditTagz = () => {
                     id="time"
                     className={`block h-[2.5rem] pt-2 pb-2 pl-3 pr-3 mb-0 ml-0 mr-0 text-sm text-gray-900 bg-transparent border border-${defaultColor} dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600`}
                     placeholder=""
-                    required
                   />
                   <label
                     htmlFor="time"
@@ -327,12 +353,8 @@ const MemoEditTagz = () => {
           </section>
         </section>
       </section>
-      <BottomButton
-        buttons={[
-          { text: "Update Tagz", type: "button", onClick: handleApplyTags },
-        ]}
-      />
-    </>
+      <BottomButton buttons={[{ text: "Update Tagz", type: "submit" }]} />
+    </form>
   );
 };
 
