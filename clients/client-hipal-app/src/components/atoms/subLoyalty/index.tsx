@@ -91,7 +91,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     queryFn: handleUserCoinz,
     enabled: !!userDetails._id && !!loyalty?.loyaltyId,
   });
-  
+
   if (!loyalty?._id) {
     return <></>;
   }
@@ -99,9 +99,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   return (
     <section className="py-10 h-[25rem] !mt-0 bg-primary">
       <center>
-        <h4 className="pb-4 text-2xl font-bold text-base-100">
-          REWARDZ
-        </h4>
+        <h4 className="pb-4 text-2xl font-bold text-base-100">REWARDZ</h4>
       </center>
       <section className="relative flex items-center justify-center gap-2 px-4 mt-4 overflow-hidden">
         <center
@@ -151,7 +149,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 type="button"
                 className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
               >
-                claim Now
+                Claim Now
               </button>
             </Link>
           )}
@@ -161,7 +159,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 type="button"
                 className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
               >
-                claim Now
+                Claim Now
               </button>
             </Link>
           )}

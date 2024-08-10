@@ -65,7 +65,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       setCartEmpty();
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
-
+  console.log("name", name);
   return (
     <div className="relative flex flex-col items-center px-8">
       <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-squircle px-4 pt-4 text-base-100">
@@ -91,13 +91,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           </figure>
           <div>
             {name && (
-              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">
+              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--ac)]">
                 {name}
               </h4>
             )}
             {address && (
               <>
-                <h6 className="w-48 mt-2 text-xs font-semibold capitalize text-[var(--sf)] truncate line-clamp-1">
+                <h6 className="w-48 mt-2 text-xs font-semibold capitalize text-[var(--ac)] truncate line-clamp-1">
                   {address}
                 </h6>
                 <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-[#3DC18B] text-white z-20">
@@ -129,10 +129,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
                     onBoardBusiness();
                   }
                 }}
-                className="h-[2rem] text-xs bg-secondary-content text-primary rounded-full flex justify-center items-center px-2 space-x-2"
+                className="h-[2rem] text-xs bg-secondary-content rounded-full flex justify-center items-center px-2 space-x-2"
               >
-                <button.icon size={16} className="text-base-100" />
-                <span className="pr-1 text-base-100">{button?.label}</span>
+                <button.icon size={16} className="text-[var(--sf)] " />
+                <span className="pr-1 text-[var(--sf)] ">{button?.label}</span>
               </button>
             );
           })}
