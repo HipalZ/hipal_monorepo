@@ -184,19 +184,22 @@ const MemoDateRangePicker = () => {
         </button>
       </article>
 
-      {/* {selectedOption === "Custom Date" && ( */}
-      <section className="mt-6 text-center">
-        <DatePicker
-          selectsRange={true}
-          startDate={startDate}
-          endDate={endDate}
-          onChange={handleDateChange}
-          dateFormat="dd/MM/yyyy"
-          isClearable
-          icon={null}
-        />
-      </section>
-      {/* )} */}
+      {DatePickerEnum.CUSTOM_DATE === selectedOption && (
+        <section className="mt-6 w-[62%] lg:w-[48%] ">
+          <DatePicker
+            selectsRange={true}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={handleDateChange}
+            dateFormat="dd/MM/yyyy"
+            withPortal
+            isClearable
+            icon={null}
+            className="rounded-full"
+          />
+        </section>
+      )}
+
       <BottomButton
         buttons={[
           {

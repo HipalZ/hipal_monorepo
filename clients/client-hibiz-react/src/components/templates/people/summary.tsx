@@ -229,6 +229,8 @@ const MemoSummary = () => {
         <PopUp
           show={openDatePickerModal}
           onClose={() => setOpenDatePickerModal(false)}
+          width="w-[30rem]"
+          height="h-[30rem]"
         >
           <section className="h-[75vh]">
             <DateRangePicker />

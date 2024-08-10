@@ -15,7 +15,7 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
   return (
     <article
       className={cn(
-        "absolute bottom-0 w-full px-4 py-2 bg-white lg:bg-transparent md:max-w-[30rem] md:left-4 md:right-0 md:mx-auto",
+        "absolute bottom-0 w-full px-4 py-2 bg-white lg:bg-transparent md:max-w-[28rem] md:left-0 md:right-0 md:mx-auto",
       )}
     >
       <div
@@ -57,12 +57,12 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
                   r="10"
                   stroke="currentColor"
                   strokeWidth="4"
-                ></circle>
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                ></path>
+                />
               </svg>
             ) : (
               button.text
