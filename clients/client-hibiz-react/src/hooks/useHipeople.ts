@@ -251,6 +251,7 @@ export const useUserUpdateTags = () => {
       queryClient.invalidateQueries({
         queryKey: ["userDashboard"],
       });
+      toast.success("data updated successfully");
     },
     onError: (error) => {
       console.error("Error updating user tags:", error);

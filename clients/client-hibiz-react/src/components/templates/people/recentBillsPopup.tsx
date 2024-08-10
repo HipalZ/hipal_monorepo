@@ -1,4 +1,4 @@
-import { type ChangeEvent, memo, useCallback } from "react";
+import { type ChangeEvent, memo, useCallback, useEffect } from "react";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { MdOutlineMessage } from "react-icons/md";
 import { cn } from "@/components/utils/helper";
@@ -24,6 +24,10 @@ const MemoRecentBillsPopup = () => {
     userComment: s.userComment,
     appliedUserTags: s.appliedUserTags,
   }));
+
+  useEffect(() => {
+    setUserComment(data?.comment || "");
+  }, []);
 
   const handleComment = useCallback((e: ChangeEvent<HTMLAreaElement>) => {
     setUserComment(e.target.value);
@@ -55,7 +59,6 @@ const MemoRecentBillsPopup = () => {
             ))}
         </section>
 
-        <br />
         <div className="md:flex md:justify-between">
           <section>
             <article className="flex items-center space-x-2">
@@ -65,7 +68,7 @@ const MemoRecentBillsPopup = () => {
             <div className="mt-2 mb-4">
               <textarea
                 id="floating_outlined3"
-                value={data?.comment || userComment}
+                value={userComment}
                 onChange={handleComment}
                 className="block w-full md:w-[20rem] mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600 dark:text-white"
                 placeholder="Enter Comment here..."
