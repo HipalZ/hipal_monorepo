@@ -28,6 +28,7 @@ import { SlCalender } from "react-icons/sl";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { format } from "date-fns";
 import EditNotes from "@/components/templates/people/editNotes";
+import DeleteNote from "@/components/templates/people/removeNote";
 
 const MemoUserId = () => {
   const {
@@ -50,6 +51,8 @@ const MemoUserId = () => {
     dateRange,
     openEditNotes,
     setOpenEditNotes,
+    openDeleteNotePopup,
+    setOpenDeleteNotePopup,
   } = useHiPeopleStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
@@ -70,6 +73,8 @@ const MemoUserId = () => {
     dateRange: s.dateRange,
     openEditNotes: s.openEditNotes,
     setOpenEditNotes: s.setOpenEditNotes,
+    openDeleteNotePopup: s.openDeleteNotePopup,
+    setOpenDeleteNotePopup: s.setOpenDeleteNotePopup,
   }));
   const [from, to] = dateRange;
 
@@ -113,6 +118,10 @@ const MemoUserId = () => {
 
   const handleCloseEditNotes = () => {
     setOpenEditNotes(false);
+  };
+
+  const handleCloseDeleteNote = () => {
+    setOpenDeleteNotePopup(false);
   };
 
   useLoyaltyData();
@@ -223,6 +232,11 @@ const MemoUserId = () => {
       {openEditNotes && (
         <PopUp show={openEditNotes} onClose={handleCloseEditNotes}>
           <EditNotes />
+        </PopUp>
+      )}
+      {openDeleteNotePopup && (
+        <PopUp show={openDeleteNotePopup} onClose={handleCloseDeleteNote}>
+          <DeleteNote />
         </PopUp>
       )}
       {selectedNavItem !== "TAGS & NOTES" ? <Pagination /> : null}

@@ -228,11 +228,17 @@ interface IHiPeople {
   selectedDeleteTagId: string;
   setSelectedDeleteTagId: (id: string) => void;
 
+  selectedDeleteNoteId: string;
+  setSelectedDeleteNoteId: (id: string) => void;
+
   selectedTagId: string;
   setSelectedTagId: (id: string) => void;
 
   openDeletePopup: boolean;
   setOpenDeletePopup: (open: boolean) => void;
+
+  openDeleteNotePopup: boolean;
+  setOpenDeleteNotePopup: (open: boolean) => void;
 
   openCreateTagPopup: boolean;
   setOpenCreateTagPopup: (open: boolean) => void;
@@ -462,6 +468,12 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   selectedDeleteTagId: "",
   setSelectedDeleteTagId: (id) => set({ selectedDeleteTagId: id }),
+
+  selectedDeleteNoteId: "",
+  setSelectedDeleteNoteId: (id) => set({ selectedDeleteNoteId: id }),
+
+  openDeleteNotePopup: false,
+  setOpenDeleteNotePopup: (open) => set({ openDeleteNotePopup: open }),
 
   selectedTagId: "",
   setSelectedTagId: (id) => set({ selectedTagId: id }),

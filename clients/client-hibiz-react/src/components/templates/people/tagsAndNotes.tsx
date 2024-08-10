@@ -33,6 +33,9 @@ const MemoTagsAndNotes = () => {
     setOpenEditNotes,
     openEditNotes,
     setSingleNotesData,
+    setSelectedDeleteNoteId,
+    openDeleteNotePopup,
+    setOpenDeleteNotePopup,
   } = useHiPeopleStore((s) => ({
     openTagPopup: s.openTagPopup,
     openAddTagz: s.openAddTagz,
@@ -59,6 +62,9 @@ const MemoTagsAndNotes = () => {
     setOpenEditNotes: s.setOpenEditNotes,
     openEditNotes: s.openEditNotes,
     setSingleNotesData: s.setSingleNotesData,
+    setSelectedDeleteNoteId: s.setSelectedDeleteNoteId,
+    openDeleteNotePopup: s.openDeleteNotePopup,
+    setOpenDeleteNotePopup: s.setOpenDeleteNotePopup,
   }));
 
   const { data: tags } = useTagsNotes();
@@ -122,7 +128,7 @@ const MemoTagsAndNotes = () => {
     setDescriptionNotes("");
   }, [openAddNotes]);
 
-  const handleDelete = useCallback(
+  const handleDeleteTag = useCallback(
     (e, id: string) => {
       e.stopPropagation();
       setOpenDeletePopup(!openDeletePopup);
@@ -130,6 +136,12 @@ const MemoTagsAndNotes = () => {
     },
     [openDeletePopup],
   );
+
+  const handleDeleteNote = useCallback((e, id: string) => {
+    e.stopPropagation();
+    setOpenDeleteNotePopup(!openDeleteNotePopup);
+    setSelectedDeleteNoteId(id);
+  }, []);
 
   return (
     <>
@@ -198,7 +210,7 @@ const MemoTagsAndNotes = () => {
                       size={20}
                       color="red"
                       className="on_active_bounce"
-                      onClick={(e) => handleDelete(e, item?.data?.tagId._id)}
+                      onClick={(e) => handleDeleteTag(e, item?.data?.tagId._id)}
                     />
                   </div>
                   <div className="flex space-x-2 space-y-2">
@@ -237,11 +249,19 @@ const MemoTagsAndNotes = () => {
                 <section
                   key={item.data._id}
                   onClick={() => handleOpenEditNotes(item?.data)}
-                  className="bg-white col-span-full md:col-span-2 rounded-2xl"
+                  className="relative bg-white col-span-full md:col-span-2 rounded-2xl"
                 >
-                  <h1 className="text-sm text-[#5197F8] px-4 pt-2 pb-2 w-12 rounded-full">
-                    Note
-                  </h1>
+                  <article className="flex justify-between px-4 py-2">
+                    <h1 className="text-sm text-[#5197F8] w-12 rounded-full">
+                      Note
+                    </h1>
+                    <MdDelete
+                      size={20}
+                      color="red"
+                      className="on_active_bounce"
+                      onClick={(e) => handleDeleteNote(e, item?.data?._id)}
+                    />
+                  </article>
                   <article className="flex px-4 pt-0 pb-4 space-x-4">
                     <img
                       src={item.data.noteUrl}

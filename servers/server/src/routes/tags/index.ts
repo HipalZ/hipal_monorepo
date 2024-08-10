@@ -340,7 +340,7 @@ const tagRouter = new Hono()
       data: createNote,
     });
   })
-  .delete("/note/:noteId", async (c) => {
+  .delete("/note/remove/:noteId", async (c) => {
     const { noteId } = c.req.param();
 
     const createNote = await Note.findByIdAndDelete(noteId);

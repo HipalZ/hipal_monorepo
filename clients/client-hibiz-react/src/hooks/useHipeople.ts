@@ -583,10 +583,13 @@ export const useUpdateNotes = () => {
 
 export const useDeleteNotes = () => {
   const queryClient = useQueryClient();
-  const deleteNotes = async (noteId: string) => {
-    const response = await apiRpc.tags.note[":noteId"].$delete({
+  const { selectedDeleteNoteId } = useHiPeopleStore((s) => ({
+    selectedDeleteNoteId: s.selectedDeleteNoteId,
+  }));
+  const deleteNotes = async () => {
+    const response = await apiRpc.tags.note.remove[":noteId"].$delete({
       param: {
-        noteId: noteId,
+        noteId: selectedDeleteNoteId,
       },
     });
     const data = await response.json();
