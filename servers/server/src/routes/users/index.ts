@@ -789,6 +789,8 @@ const usersRouter = new Hono()
           loyaltyId,
         });
 
+        const totalCoins = signUpBonus + userReward?.rewards || 0;
+
         const accessToken = createAccessToken(
           existingUser._id?.toString() || "",
           "HIPAL_CUSTOMER",
@@ -800,6 +802,7 @@ const usersRouter = new Hono()
         const modifyUser = {
           ...existingUser,
           reward: signUpBonus,
+          totalCoins,
           count: userReward?.scanCount,
         };
         return respond(c, "User logged in successfully", false, 200, {
