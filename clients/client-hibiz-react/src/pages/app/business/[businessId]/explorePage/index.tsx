@@ -320,7 +320,6 @@ const MemoExplorePage = () => {
   };
 
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
-    console.log("handleSaveExplorePage", imageFiles);
     e.preventDefault();
     if (!businessId) return;
     let bannerExplore: string | undefined;

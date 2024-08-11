@@ -179,10 +179,14 @@ const MemoCreateDynamicGroup = () => {
               id="groupName"
               value={groupData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600 peer"
+              className="block w-full h-16 pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600 peer"
               maxLength={30}
+              minLength={3}
               required
             />
+            <small className="absolute bottom-10 right-4">
+              {groupData.name?.length}/{30}
+            </small>
             <label
               htmlFor="groupName"
               className="absolute text-sm text-[#000000] dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-[#8c63ff] peer-focus:dark:text-[#8c63ff] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"
@@ -191,14 +195,22 @@ const MemoCreateDynamicGroup = () => {
             </label>
           </div>
           <div className="relative flex-1 mt-4 md:mt-0 lg:mt-0">
-            <textarea
-              id="groupDescription"
-              value={groupData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600 peer"
-              maxLength={50}
-              required
-            />
+            <div className="relative">
+              <textarea
+                id="groupDescription"
+                value={groupData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                className="resize-none h-24 block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600 peer"
+                maxLength={50}
+                minLength={3}
+                required
+              />
+              <small className="absolute bottom-2 right-2">
+                {groupData.description?.length}/{50}
+              </small>
+            </div>
             <label
               htmlFor="groupDescription"
               className="absolute text-sm text-[#000000] dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-[#8c63ff] peer-focus:dark:text-[#8c63ff] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1"

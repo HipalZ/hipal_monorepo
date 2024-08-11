@@ -1,3 +1,4 @@
+import useShowErrorToasts from "@/components/atom/errorToasts";
 import useBusinessData from "@/components/store/useBusinessData";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import type {
@@ -238,7 +239,8 @@ export const useAllUserBelongToGroup = () => {
 
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
-  const {setGroupDetailsModal} = useHiPeopleStore()
+  const { setGroupDetailsModal } = useHiPeopleStore();
+  const errorToasts = useShowErrorToasts();
   const handleApiResponse = (data: any) => {
     if (data.err) {
       toast.error(data.message);
@@ -255,8 +257,14 @@ export const useCreateGroup = () => {
     useMutation({
       mutationFn: async (payload: any) => {
         const res = await apiRpc.groups.$post({
-          json: payload
+          json: payload,
         });
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.log("errorData", errorData?.error);
+          errorToasts(errorData?.error);
+          throw new Error(errorData?.error?.message || "Failed to create tag");
+        }
         return res.json();
       },
       onSuccess: (data) => {

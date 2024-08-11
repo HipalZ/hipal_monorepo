@@ -86,34 +86,45 @@ const MemoDishFormTwo = () => {
 
   const errorToasts = useErrorToasts();
 
-  const handleAddDish = async () => {
+  const handleUpdateDish = async () => {
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
       return toast.error("Please fill all the required fields");
     }
-    setIsLoading(true);
-    let firstImage: string = editDish?.images?.[0] ?? "";
-    let secondImage: string = editDish?.images?.[1] ?? "";
-    let thirdImage: string = editDish?.images?.[2] ?? "";
-    firstImage = (await updateImage(
-      imageFiles?.first as File,
-      imagePreviews?.first as string,
-      firstImage,
-    )) as string;
-    secondImage = (await updateImage(
-      imageFiles?.second as File,
-      imagePreviews?.second as string,
-      secondImage,
-    )) as string;
-    thirdImage = (await updateImage(
-      imageFiles?.third as File,
-      imagePreviews?.third as string,
-      thirdImage,
-    )) as string;
 
+    // setIsLoading(true);
+    let firstImage = imagePreviews?.first ?? "";
+    let secondImage = imagePreviews?.second ?? "";
+    let thirdImage = imagePreviews?.third ?? "";
+
+    if (imagePreviews?.first !== null && imagePreviews?.first !== "") {
+      firstImage = (await updateImage(
+        imageFiles?.first as File,
+        imagePreviews?.first as string,
+        firstImage as string,
+      )) as string;
+    }
+    if (imagePreviews?.second !== "" && imagePreviews?.second !== null) {
+      secondImage = (await updateImage(
+        imageFiles?.second as File,
+        imagePreviews?.second as string,
+        secondImage as string,
+      )) as string;
+    }
+    if (imagePreviews?.third !== "" && imagePreviews?.third !== null) {
+      thirdImage = (await updateImage(
+        imageFiles?.third as File,
+        imagePreviews?.third as string,
+        thirdImage as string,
+      )) as string;
+    }
     // Collect images
-    const images: string[] = [firstImage, secondImage, thirdImage].filter(
+    let images: string[] = [firstImage, secondImage, thirdImage].filter(
       Boolean,
     );
+
+    if (firstImage === "" && secondImage === "" && thirdImage === "") {
+      images = [];
+    }
 
     const payload: DishType = {
       _id: editDish?._id,
@@ -136,7 +147,10 @@ const MemoDishFormTwo = () => {
       images: images,
     };
     const filteredPayload = filterPayload(payload);
-    const { data, dishResponse } = await putDishData(filteredPayload);
+    const { data, dishResponse } = await putDishData({
+      ...filteredPayload,
+      images,
+    });
     if (dishResponse?.status === 200) {
       resetStore();
       resetDishStore();
@@ -280,7 +294,7 @@ const MemoDishFormTwo = () => {
       <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
         <button
           type="button"
-          onClick={handleAddDish}
+          onClick={handleUpdateDish}
           className="w-full py-3 text-white bg-black rounded-full"
           disabled={isLoading}
         >

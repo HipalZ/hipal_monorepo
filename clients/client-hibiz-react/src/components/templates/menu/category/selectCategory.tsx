@@ -59,7 +59,7 @@ const MemoSelectCategory = () => {
         {filteredCategories?.map((category: CategoryType) => (
           <div
             key={category._id?.toString()}
-            className="flex relative items-center justify-between w-[90%] p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
+            className="flex relative items-center justify-between w-full p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
           >
             <label className="flex items-center">
               <input
@@ -70,11 +70,11 @@ const MemoSelectCategory = () => {
                 onChange={() =>
                   setSelectSingleParentCat(category._id?.toString() ?? "")
                 }
-                className="mr-2 checkbox checkbox-sm checkbox-black"
+                className="mr-2 text-sm text-black rounded"
               />
               <h3 className="text-lg font-semibold">{category.name}</h3>
             </label>
-            <div className="absolute right-6">
+            <div className="absolute right-2">
               {category.visibility ? (
                 <FaEye className="text-green-500" />
               ) : (
