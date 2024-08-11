@@ -2,7 +2,7 @@
 import ReadMore from "@/components/atoms/readMore";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import type {
   BusinessDetails,
@@ -13,9 +13,15 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import RestaurantTimeMemo from "@/components/atoms/time/restaurant";
 import { preDefinedHeroButtons } from "@/components/utils/helpers";
 import MemoRewards from "@/components/templates/explore/rewards";
-import { cn } from "@hi/common";
+import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useCartStore } from "@/components/store/useCartStore";
+import { type IUserData, useLogin } from "@/components/store/useLogin";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
+import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import { useParams, useRouter } from "next/navigation";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+import SubScribeModal from "../subscribe";
 
 interface IHeroSection {
   data: IBusinessData;
@@ -28,12 +34,21 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }));
   const accessToken = useUserToken.getState().accessToken;
   const setAccessToken = useUserToken.getState().setAccessToken;
+  const { userDetails, setUserCoinZ } = useLogin((s) => ({
+    userDetails: s.userDetails,
+    setUserCoinZ: s.setUserCoinZ,
+  }));
   const { setCartEmpty } = useCartStore();
   const { location, phone } = data?.outletInfo;
+  const customLink = useParams()?.businessId as string;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
   const business = data.business as BusinessDetails;
   const setBusinessData = _useAllBusiness((s) => s.setData);
+  const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
+  const [subscribeModal, setSubscribeModal] = useState<boolean>(false);
+  const [isLoader, setIsLoader] = useState<boolean>(false);
+  const router = useRouter();
 
   const goToLocation = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -49,6 +64,35 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
     window.open(`https://wa.me/${phone}`, "_blank");
   }, [phone]);
 
+  const isSubscribe = async (userDetails: IUserData) => {
+    const { business } = data;
+
+    const { loyaltyId } = loyaltyInfo;
+
+    const payload = {
+      businessId: business?.businessId?.toString() ?? "",
+      userId: userDetails._id,
+      ...(loyaltyId && { loyaltyId }),
+    };
+
+    const response = await apiRpc.subscribers.$get({
+      query: payload,
+    });
+    const res = await response.json();
+    if (response.status === 404) {
+      setSubscribeModal(true);
+    }
+    if (response.status === 200) {
+      setUserCoinZ(res?.rewards);
+    }
+  };
+
+  const closeSubscribeModal = useCallback(() => {
+    setSubscribeModal(false);
+    setAccessToken("");
+    return router.push(`/${customLink}/explore`);
+  }, [accessToken, subscribeModal]);
+
   useEffect(() => {
     setBusinessData(data);
     if (business) {
@@ -61,30 +105,39 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       setAccessToken("");
     }
     if (businessDetails?.businessId !== data?.business?.businessId) {
-      setAccessToken("");
       setCartEmpty();
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
-  console.log("name", name);
+
+  useEffect(() => {
+    if (userDetails?._id) {
+      isSubscribe(userDetails);
+    }
+  }, [customLink, userDetails._id]);
+
+  if (isLoader) {
+    return <LoadingSpinnerCircle />;
+  }
+
   return (
     <div className="relative flex flex-col items-center px-8">
       <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-squircle px-4 pt-4 text-base-100">
         <article className="flex pb-4 space-x-4">
           <figure>
             {logoUrl ? (
-              <center className="w-[65px] h-[65px]">
+              <div className="w-[65px] h-[65px] flex justify-center items-center">
                 <Image
                   src={logoUrl}
                   height={86}
                   width={86}
                   quality={95}
-                  objectFit="cover"
                   alt="logo-business"
                   className="object-center rounded-full aspect-square"
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(65, 65)}
+                  style={{ objectFit: "cover" }}
                 />
-              </center>
+              </div>
             ) : (
               <PlaceholderImg />
             )}
@@ -151,6 +204,20 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
       <center className="mt-4 text-sm text-primary">
         <ReadMore text={description} />
       </center>
+      {subscribeModal && (
+        <MemoBottomPopUp
+          show={subscribeModal}
+          onClose={closeSubscribeModal}
+          hide
+        >
+          <SubScribeModal
+            closeSubscribeModal={closeSubscribeModal}
+            setIsLoader={setIsLoader}
+            business={business}
+            setSubscribeModal={setSubscribeModal}
+          />
+        </MemoBottomPopUp>
+      )}
     </div>
   );
 }

@@ -238,6 +238,7 @@ export const useAllUserBelongToGroup = () => {
 
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
+  const {setGroupDetailsModal} = useHiPeopleStore()
   const handleApiResponse = (data: any) => {
     if (data.err) {
       toast.error(data.message);
@@ -245,6 +246,7 @@ export const useCreateGroup = () => {
     }
     if (data) {
       toast.success("Group created successfully");
+      setGroupDetailsModal(false);
       queryClient.invalidateQueries({ queryKey: ["getGroupData"] });
     }
   };

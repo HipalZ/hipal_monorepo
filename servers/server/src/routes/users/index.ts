@@ -737,11 +737,13 @@ const usersRouter = new Hono()
         name: z.string().min(3).max(100).optional(),
         userId: z.string(),
         phone: z.string().min(10).max(10),
+        businessId: z.string().optional(),
       }),
     ),
     async (c) => {
       const requestData = await c.req.json();
-      const { otp, loyaltyId, signUpBonus, name, userId, phone } = requestData;
+      const { otp, loyaltyId, signUpBonus, name, userId, phone, businessId } =
+        requestData;
 
       let existingUser: UserType | null = null;
       existingUser = await User.findByIdAndUpdate(
@@ -805,6 +807,31 @@ const usersRouter = new Hono()
           totalCoins,
           count: userReward?.scanCount,
         };
+        const subscriber = await Subscriber.findOne({
+          userId: existingUser._id,
+          businessId: loyaltyId,
+        }).select("_id");
+
+        if (!subscriber) {
+          await Subscriber.create({
+            userId: userId,
+            businessId: loyaltyId,
+            userCount: 1,
+            date: Date.now(),
+          });
+        } else {
+          await Subscriber.findOneAndUpdate(
+            {
+              userId: userId,
+              businessId: loyaltyId,
+            },
+            {
+              $inc: {
+                userCount: 1,
+              },
+            },
+          );
+        }
         return respond(c, "User logged in successfully", false, 200, {
           user: modifyUser,
           accessToken,
@@ -813,24 +840,15 @@ const usersRouter = new Hono()
         });
       }
 
-      const accessToken = createAccessToken(
-        existingUser._id?.toString() || "",
-        "HIPAL_CUSTOMER",
-      );
-      const refreshToken = createRefreshToken(
-        existingUser._id?.toString() || "",
-        "HIPAL_CUSTOMER",
-      );
-
       const subscriber = await Subscriber.findOne({
         userId: existingUser._id,
-        businessId: loyaltyId,
+        businessId: loyaltyId || businessId,
       }).select("_id");
 
       if (!subscriber) {
         await Subscriber.create({
           userId: userId,
-          businessId: loyaltyId,
+          businessId: loyaltyId || businessId,
           userCount: 1,
           date: Date.now(),
         });
@@ -847,6 +865,15 @@ const usersRouter = new Hono()
           },
         );
       }
+
+      const accessToken = createAccessToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
+      const refreshToken = createRefreshToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
 
       return respond(c, "User logged in successfully", false, 200, {
         user: existingUser,

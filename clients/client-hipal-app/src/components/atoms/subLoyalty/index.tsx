@@ -32,8 +32,6 @@ const MainLoyalty = dynamic(() => import("@/components/atoms/mainLoyalty"), {
 
 const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const { loyaltySetting, setLoyaltySetting } = useLoyaltyData();
-  const userDetails = useLogin((s) => s.userDetails);
-  const setUserCoinZ = useLogin((s) => s.setUserCoinZ);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -68,29 +66,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
       findPattern(loyalty?.cardPattern);
     }
   }, []);
-
-  const handleUserCoinz = async () => {
-    const res = await apiRpc.users[":businessId"].getUserReward.$get({
-      param: {
-        businessId: loyalty?.businessId || "",
-      },
-      query: {
-        userId: userDetails?._id,
-        loyaltyId: loyalty?.loyaltyId,
-      },
-    });
-    const response = (await res.json()) as unknown as { data: IUserReward };
-    if (res.status === 200) {
-      setUserCoinZ(response?.data?.rewards);
-    }
-    return response?.data?.rewards;
-  };
-
-  useQuery({
-    queryKey: ["getUserReward", userDetails._id, loyalty?.loyaltyId],
-    queryFn: handleUserCoinz,
-    enabled: !!userDetails._id && !!loyalty?.loyaltyId,
-  });
+ 
 
   if (!loyalty?._id) {
     return <></>;
