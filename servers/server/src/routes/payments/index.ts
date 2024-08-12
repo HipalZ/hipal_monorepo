@@ -231,7 +231,6 @@ const addCoins = async (
     );
 
     if (coinsCalculated.finalReward > 0) {
-      console.log("useeeeeid", userId);
       await addRewardHistory(
         "PLUS",
         tableName,
@@ -257,7 +256,6 @@ const calculatedCashbackCoins = async (
     "rewardLimit setCashBackPercentage",
   );
 
-  console.log("LoyaltySetting", businessId);
   if (!LoyaltySetting) {
     console.error("LoyaltySetting not found or setReward is not a number");
     return 0; // Or handle this case as appropriate for your application
@@ -1852,9 +1850,7 @@ const paymentsRouter = new Hono()
     ),
 
     async (c) => {
-      const { businessId, from, to, userId } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const { businessId, userId } = c.req.query();
 
       const PAGE_SIZE = 20;
       const pageNumber = c.req.query("pageNumber") as string;
@@ -1871,100 +1867,38 @@ const paymentsRouter = new Hono()
         loyaltyId: businessId,
       }).select("rewards");
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date",
-        });
-      }
-
-      if (!from && !to) {
-        const existingPayments = await Payment.find({
-          userId,
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
+      const existingPayments = await Payment.find({
+        userId,
+        businessId,
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "tagIds",
+          select: "name",
         })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "tagIds",
-            select: "name",
-          })
-          .populate({
-            path: "reviewId",
-            select: "reviewRating foodTaste ambience hygiene service",
-          });
-
-        return c.json({
-          err: false,
-          data: {
-            name: userTotalSale?.userId.name,
-            phone: userTotalSale?.userId.phone,
-            userCurrentReward: userReward.rewards,
-            totalSale: userTotalSale?.totalSpend,
-            AvarageSale: userTotalSale?.avgSpend,
-            NumOfVisits: userTotalSale?.visitCount,
-            NumOfSessions: userTotalSale?.visitCount,
-            coinzIssued: userTotalSale?.coinzIssued,
-            coinzUsed: userTotalSale?.coinzUsed,
-            bill: existingPayments,
-          },
-          message: "existing payment",
+        .populate({
+          path: "reviewId",
+          select: "reviewRating foodTaste ambience hygiene service",
         });
-      }
 
-      if (from && to) {
-        const existingPayments = await Payment.find({
-          userId,
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "tagIds",
-            select: "name",
-          })
-          .populate({
-            path: "reviewId",
-            select: "reviewRating foodTaste ambience hygiene service",
-          });
-
-        return c.json({
-          err: false,
-          data: {
-            name: userTotalSale?.userId.name,
-            phone: userTotalSale?.userId.phone,
-            userCurrentReward: userReward.rewards,
-            totalSale: userTotalSale?.totalSpend,
-            AvarageSale: userTotalSale?.avgSpend,
-            NumOfVisits: userTotalSale?.visitCount,
-            NumOfSessions: userTotalSale?.visitCount,
-            coinzIssued: userTotalSale?.coinzIssued,
-            coinzUsed: userTotalSale?.coinzUsed,
-            bill: existingPayments,
-          },
-          message: "existing payment",
-        });
-      }
-
-      return c.json(
-        {
-          err: false,
-          data: {},
-          message: "invalid date range",
+      return c.json({
+        err: false,
+        data: {
+          name: userTotalSale?.userId.name,
+          phone: userTotalSale?.userId.phone,
+          userCurrentReward: userReward.rewards,
+          totalSale: userTotalSale?.totalSpend,
+          AvarageSale: userTotalSale?.avgSpend,
+          NumOfVisits: userTotalSale?.visitCount,
+          NumOfSessions: userTotalSale?.visitCount,
+          coinzIssued: userTotalSale?.coinzIssued,
+          coinzUsed: userTotalSale?.coinzUsed,
+          bill: existingPayments,
         },
-        400,
-      );
+        message: "existing payment",
+      });
     },
   )
   .get(
