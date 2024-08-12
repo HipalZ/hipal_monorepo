@@ -77,7 +77,11 @@ const subsCriberRouter = new Hono()
       return c.json({
         message: "User subscribed successfully",
         err: false,
-        data: { reward: loyalty.signUpBonus, count: userReward.scanCount },
+        data: {
+          reward: loyalty.signUpBonus,
+          count: userReward.scanCount,
+          totalCoins: userReward.rewards,
+        },
       });
     }
 
