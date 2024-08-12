@@ -56,8 +56,6 @@ const MemoSubScribeModal = ({
       ...(loyaltyId && { loyaltyId }),
     };
 
-    setIsLoader(true);
-
     const res = await apiRpc.subscribers.$post({
       json: payload,
     });
@@ -68,15 +66,14 @@ const MemoSubScribeModal = ({
     }
     if (res.status === 201 || res.status === 200) {
       if (response?.reward > 0 && response?.count === 1) {
-        setCoinz(response.reward);
         setIsModalOpen(true);
+        setCoinz(response.reward);
         triggerConfettiBlast();
         setTimeout(triggerConfettiBlast, 1000);
         setTimeout(triggerConfettiBlast, 2000);
         return;
       }
       setSubscribeModal(false);
-      setIsLoader(false);
     }
   };
   const goNext = useCallback(() => {

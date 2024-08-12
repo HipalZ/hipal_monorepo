@@ -13,7 +13,7 @@ const MemoSignUpBonus = ({goNext,coinZ}:{
   return (
     <section
     id="my_modal_1"
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm"
   >
     <section className="absolute inset-0 flex items-center justify-center">
       <center className="absolute w-[900px] animate-glow">

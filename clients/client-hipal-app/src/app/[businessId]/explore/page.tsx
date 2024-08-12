@@ -45,8 +45,6 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-// removed getStaticPaths
-
 export async function generateMetadata() {
   return {
     title: "Explore",
