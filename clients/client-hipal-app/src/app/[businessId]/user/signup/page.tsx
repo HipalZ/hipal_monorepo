@@ -15,10 +15,13 @@ export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
   const [phone, setPhone] = useState("");
   const { setUserDetails, userDetails } = useLogin();
+
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
+
+  console.log("userDetails",phone, userDetails);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -26,13 +29,13 @@ const SignUp = memo(() => {
 
     setLoader(true);
 
-    if (phone.length !== 10) {
+    if (phone.length !== 10 ) {
       toast.error("Please enter a valid phone number");
       return;
     }
 
     const userData = {
-      phone: phone,
+      phone: phone ,
       role: ["HIPAL_CUSTOMER"],
     };
 
@@ -62,7 +65,8 @@ const SignUp = memo(() => {
     if (userDetails.phone) {
       setPhone(userDetails.phone);
     }
-  }, []);
+  },[])
+
 
   return (
     <main className="relative bg-[#748FFC]">
@@ -90,7 +94,7 @@ const SignUp = memo(() => {
       </section>
       <form
         onSubmit={handleSubmit}
-        className="fixed bottom-0 w-full p-4 bg-white text-black max-w-[30rem] z-10 rounded-t-2xl"
+        className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl text-black"
       >
         {businessData?.logoUrl && (
           <section className="bg-inherit float-left w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4.5rem] p-1 border border-[#00000050] overflow-hidden">
@@ -107,7 +111,7 @@ const SignUp = memo(() => {
           <b>Hurry up for a rewarding journey✨</b>
           <input
             onChange={(e) => setPhone(e.target.value)}
-            value={phone}
+            value={phone || userDetails.phone}
             type="tel"
             id="floating_outlined2"
             className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"

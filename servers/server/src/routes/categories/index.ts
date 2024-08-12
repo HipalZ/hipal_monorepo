@@ -49,19 +49,6 @@ const categoriesRouter = new Hono()
         console.log("menuType", menuType);
         if (!menuType) return respond(c, "Business not found", true, 404, {});
 
-        if (
-          (parentCategoryIds.length > 0 || subCategoryIds.length > 0) &&
-          menuType.menuLayout !== "MAIN_AND_SUB_CATEGORY"
-        ) {
-          return respond(
-            c,
-            "MAIN_AND_SUB_CATEGORY menuLayout is not enabled for this business",
-            true,
-            400,
-            {},
-          );
-        }
-
         const creatingCategory = await Category.create(
           [
             {

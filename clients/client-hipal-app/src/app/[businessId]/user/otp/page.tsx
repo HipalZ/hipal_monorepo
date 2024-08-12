@@ -229,14 +229,14 @@ function OtpPage() {
                 value={customerName}
                 type="text"
                 id="floating_outlined"
-                className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full px-4 py-3 text-black border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 placeholder="Enter your name"
                 maxLength={18}
                 required
               />
             </>
           ) : null}
-          <div className="!-mb-2 text-sm font-semibold">
+          <div className="!-mb-2 text-sm font-semibold text-black">
             Check your phone for OTP
           </div>
           <section className="flex">
@@ -249,7 +249,7 @@ function OtpPage() {
                 max={1}
                 min={0}
                 ref={inputRefs[index]}
-                className={`border border-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
+                className={`border border-black text-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
                   error && "border-red-500"
                 }`}
                 required
@@ -264,7 +264,7 @@ function OtpPage() {
             </div>
           )}
           <Link href={`${routePaths[PAGE_TYPES.SIGN_UP](`${customLink}`)}`}>
-            <article className="flex items-center !mb-2 !mt-4">
+            <article className="flex items-center !mb-2 !mt-4 text-black">
               <small>
                 Sent to{" "}
                 <span className="text-[#3E3CFF] underline">
@@ -289,7 +289,7 @@ function OtpPage() {
               "Sign up"
             )}
           </button>
-          <small className="flex justify-center mt-2">
+          <small className="flex justify-center mt-2 text-black">
             Didn’t receive the code? &nbsp;
             <button
               type="button"

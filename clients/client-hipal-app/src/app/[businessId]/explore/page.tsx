@@ -78,26 +78,27 @@ export default async function Explore({
                     if (!banner?.isPublished) return null;
                     return (
                       <div key={index} className="embla__slide">
-                        <BannerLayouts
-                          redirectionId={banner?.redirectionId || ""}
-                          redirectionName={banner?.redirectionName || ""}
-                          selectedLayout={banner?.layout || ""}
-                          heading={banner?.heading || ""}
-                          paragraph={banner?.paragraph || ""}
-                          callToAction={banner?.callToAction || ""}
-                          img={{ logo: banner?.bannerImage || "" }}
-                          selectedColor={{
-                            bgColor: banner?.backgroundColor || "",
-                            textColor: banner?.backgroundColor || "",
-                          }}
-                          paragraphStyle={{
-                            color: banner?.paragraphColor || "",
-                          }}
-                          buttonStyle={{
-                            color: banner?.buttonColor || "",
-                            buttonColor: banner?.buttonTextColor || "",
-                          }}
-                        />
+
+                          <BannerLayouts
+                            redirectionId={banner?.redirectionId || ""}
+                            redirectionName={banner?.redirectionName || ""}
+                            selectedLayout={banner?.layout || ""}
+                            heading={banner?.heading || ""}
+                            paragraph={banner?.paragraph || ""}
+                            callToAction={banner?.callToAction || ""}
+                            img={{ logo: banner?.bannerImage || "" }}
+                            selectedColor={{
+                              bgColor: banner?.backgroundColor || "",
+                              textColor: banner?.backgroundColor || "",
+                            }}
+                            paragraphStyle={{
+                              color: banner?.paragraphColor || "",
+                            }}
+                            buttonStyle={{
+                              color: banner?.buttonColor || "",
+                              buttonColor: banner?.buttonTextColor || "",
+                            }}
+                          />
                       </div>
                     );
                   })}

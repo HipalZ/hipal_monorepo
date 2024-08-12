@@ -53,6 +53,7 @@ const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
   </div>
 );
 
+
 const QuickFilter = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { setActiveDishType, isActiveDishType } = useActiveClass();
@@ -84,59 +85,59 @@ const QuickFilter = () => {
     </div>
   );
 
-  return (
-    <div>
-      <section className="flex space-x-2 text-xs justify-evenly text-nowrap">
-        <FilterOption
-          isActive={isActiveDishType.toLowerCase() === "veg"}
-          onClick={() => handleFilter("VEG")}
-          color="#55CB1E"
-          label="Veg"
-        />
-        <FilterOption
-          isActive={isActiveDishType.toLowerCase() === "non_veg"}
-          onClick={() => handleFilter("NON_VEG")}
-          color="#FF6363"
-          label="Non Veg"
-        />
-        <div
-          onClick={openModal}
-          className="px-2 py-1 ml-2 text-xs font-semibold border rounded-full text-primary border-primary"
-        >
-          {activeIcon}
-        </div>
-      </section>
-      {isModalOpen && (
-        <QuickFilterPopup show={isModalOpen} onClose={closeModal}>
-          <div className="pt-4 pb-8 w-[7rem] text-base-content bg-base-100 rounded-xl mb-4">
-            <div className="mb-4 text-xl text-center text-primary">Filters</div>
-            <div className="mx-[1rem] font-medium space-y-4">
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "vegan"}
-                onClick={() => handleFilter("VEGAN")}
-                color="#02614b"
-                label="Vegan"
-              />
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "egg"}
-                onClick={() => handleFilter("EGG")}
-                color="#D2C903"
-                label="Egg"
-              />
-              <FilterOption
-                isActive={isActiveDishType === "all"}
-                onClick={() => handleFilter("ALL")}
-                color="transparent"
-                label="None"
-                isNone
-              />
-            </div>
-          </div>
-        </QuickFilterPopup>
-      )}
-    </div>
-  );
-};
+	return (
+		<div>
+			<section className="flex space-x-2 text-xs justify-evenly text-nowrap">
+				<FilterOption
+					isActive={isActiveDishType.toLowerCase() === "veg"}
+					onClick={() => handleFilter("VEG")}
+					color="#55CB1E"
+					label="Veg"
+				/>
+				<FilterOption
+					isActive={isActiveDishType.toLowerCase() === "non_veg"}
+					onClick={() => handleFilter("NON_VEG")}
+					color="#FF6363"
+					label="Non Veg"
+				/>
+				<div
+					onClick={openModal}
+					className="px-2 py-1 ml-2 text-xs font-semibold border rounded-full text-primary border-primary"
+				>
+					{activeIcon}
+				</div>
+			</section>
+			{isModalOpen && (
+				<QuickFilterPopup show={isModalOpen} onClose={closeModal}>
+					<div className="pt-4 pb-8 w-[7rem] text-base-content bg-base-100 rounded-xl mb-4">
+						<div className="mb-4 text-xl text-center text-primary">Filters</div>
+						<div className="mx-[1rem] font-medium space-y-4">
+							<FilterOption
+								isActive={isActiveDishType.toLowerCase() === "vegan"}
+								onClick={() => handleFilter("VEGAN")}
+								color="#02614b"
+								label="Vegan"
+							/>
+							<FilterOption
+								isActive={isActiveDishType.toLowerCase() === "egg"}
+								onClick={() => handleFilter("EGG")}
+								color="#D2C903"
+								label="Egg"
+							/>
+							<FilterOption
+								isActive={isActiveDishType === "all"}
+								onClick={() => handleFilter("ALL")}
+								color="transparent"
+								label="None"
+								isNone
+							/>
+						</div>
+					</div>
+				</QuickFilterPopup>
+			)}
+		</div>
+	)
+}
 
 const MemoQuickFilter = memo(QuickFilter);
 export default MemoQuickFilter;

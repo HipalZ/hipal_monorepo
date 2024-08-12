@@ -35,17 +35,17 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
       {images.map((item, index) => (
         <button
           type="button"
-          style={{ overflow: "hidden", position: "relative" }}
+          style={{ position: "relative" }}
           key={item._id?.toString()}
           className={baseGridOrder[index % baseGridOrder?.length]}
           onClick={() => handleRecommendedDishClick(item)}
         >
           <Image
-            className="object-cover w-full h-full rounded-xl"
+            className="object-cover w-full h-full max-w-[30rem] max-h-[220px] rounded-xl"
             src={item?.images?.[0]}
             alt={item.name}
-            width={400}
-            height={400}
+            width={480}
+            height={480}
           />
         </button>
       ))}

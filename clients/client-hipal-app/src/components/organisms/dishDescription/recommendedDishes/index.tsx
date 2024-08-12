@@ -61,6 +61,7 @@ function RecommendedDishes({
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>
                     <div className="z-10 flex flex-col overflow-hidden bg-base-content border w-[8.5rem] rounded-xl h-44 border-base-200 text-base-100">
+
                       <div
                         onClick={() => openModal(dish)}
                         className="w-full h-32 overflow-hidden"
