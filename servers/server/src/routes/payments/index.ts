@@ -1918,87 +1918,28 @@ const paymentsRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { loyaltyId, from, to, userId } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const { loyaltyId, userId } = c.req.query();
 
       const PAGE_SIZE = 20;
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date",
+      const existingRewardHistory = await UserRewardHistory.find({
+        userId,
+        loyaltyId,
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "order_id",
+          select: "billValue",
         });
-      }
-
-      if (!from && !to) {
-        const existingRewardHistory = await UserRewardHistory.find({
-          userId,
-          loyaltyId,
-
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-            select: "billValue",
-          });
-
-        console.log(
-          "existingRewardHistory",
-          startOfToday.getTime(),
-          endOfToday.getTime(),
-        );
-
-        return c.json({
-          err: false,
-          data: existingRewardHistory,
-          message: "existing payment",
-        });
-      }
-
-      if (from && to) {
-        const existingRewardHistory = await UserRewardHistory.find({
-          userId,
-          loyaltyId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-            select: "billValue",
-          });
-
-        console.log(
-          "existingRewardHistory",
-          startOfToday.getTime(),
-          endOfToday.getTime(),
-        );
-
-        return c.json({
-          err: false,
-          data: existingRewardHistory,
-          message: "existing payment",
-        });
-      }
 
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: existingRewardHistory,
+        message: "existing payment",
       });
     },
   )
