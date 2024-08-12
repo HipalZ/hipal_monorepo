@@ -316,7 +316,7 @@ function Review({ data }: { data: IBusinessData }) {
             {improvementAreas.length > 0 &&
               improvementAreas.map((each) => (
                 <article key={each.name} className="flex justify-between m-5">
-                  <h1 className="text-sm">{each.name}</h1>
+                  <h1 className="text-sm text-primary">{each.name}</h1>
                   <div>
                     <span
                       className={`p-2 rounded-full ${
