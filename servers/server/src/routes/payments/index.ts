@@ -1317,7 +1317,7 @@ const paymentsRouter = new Hono()
         return c.json({
           err: true,
           data: {},
-          message: "from date should be less than to date",
+          message: "from date should be less than to date.",
         });
       }
 
@@ -1328,7 +1328,7 @@ const paymentsRouter = new Hono()
             $gte: startOfToday.getTime(),
             $lte: endOfToday.getTime(),
           },
-        }).select("total claimedCoins paymentMode");
+        }).select("total claimedCoins paymentMode earnCoins");
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
@@ -1375,7 +1375,7 @@ const paymentsRouter = new Hono()
             $gte: fromDate,
             $lte: toDate,
           },
-        }).select("total claimedCoins paymentMode");
+        }).select("total claimedCoins paymentMode earnCoins");
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
