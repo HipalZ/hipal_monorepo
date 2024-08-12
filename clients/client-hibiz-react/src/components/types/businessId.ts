@@ -276,6 +276,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     text: "Hi People",
     description: "Manage your PplZ Data",
     navigateTo: "people",
+  },
+  {
+    image: Love,
+    text: "Loyalty",
+    description: "Manage your Loyalty",
+    navigateTo: "loyalty",
   }
 ];
 export interface AccessControlMapping {

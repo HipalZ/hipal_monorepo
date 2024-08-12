@@ -33,7 +33,7 @@ const BottomPopUp = ({
               initial={{ opacity: 0, y: "100%" }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: "100%" }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
+              transition={{ duration: 0.6, ease: "easeInOut",type:"spring" }}
               className={cn(
                 "relative w-full max-w-md shadow-md bg-base-100",
                 !hide && "rounded-t-[1rem]",

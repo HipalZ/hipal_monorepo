@@ -29,6 +29,7 @@
     "embla-carousel-autoplay": "^8.1.7",
     "env-cmd": "^10.1.0",
     "framer-motion": "^9.1.7",
+    "gsap": "^3.12.5",
     "hono": "^4.4.3",
     "html5-qrcode": "^2.3.8",
     "lodash-es": "^4.17.21",
