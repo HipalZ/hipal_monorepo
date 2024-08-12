@@ -1,6 +1,16 @@
 import mongoose, { type Model } from "mongoose";
 import { type FilterGroupType, type Group, VisitEnum } from "../validators";
-
+const ObjectId = mongoose.Schema.Types.ObjectId;
+const tagsSchema = new mongoose.Schema({
+  tagId: {
+    type: ObjectId,
+    required: true,
+  },
+  count: {
+    type: Number,
+    required: true,
+  },
+});
 const filterSchema = new mongoose.Schema<FilterGroupType>({
   duration: {
     type: Number,
@@ -8,21 +18,54 @@ const filterSchema = new mongoose.Schema<FilterGroupType>({
   },
   visit: {
     type: Number,
-    required: true,
+    required: false,
   },
   visitType: {
     type: String,
-    required: true,
+    required: false,
     enum: VisitEnum, // Assuming VisitType is an object with enum values
   },
   spend: {
     type: Number,
-    required: true,
+    required: false,
   },
   spendType: {
     type: String,
-    required: true,
+    required: false,
     enum: VisitEnum,
+  },
+  cardBalance: {
+    type: Number,
+    required: false,
+  },
+  cardBalanceType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming cardBalanceType is an object with enum values
+  },
+
+  coinzIssued: {
+    type: Number,
+    required: false,
+  },
+  coinzIssuedType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming coinzIssuedType is an object with enum values
+  },
+
+  coinzUsed: {
+    type: Number,
+    required: false,
+  },
+
+  coinzUsedType: {
+    type: String,
+    required: false,
+    enum: VisitEnum, // Assuming coinzUsedType is an object with enum values
+  },
+  tags: {
+    type: [tagsSchema],
   },
 });
 
@@ -33,7 +76,7 @@ const groupSchema = new mongoose.Schema<Group>(
       required: true,
     },
     businessId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: ObjectId,
       required: true,
     },
     description: {
@@ -41,12 +84,17 @@ const groupSchema = new mongoose.Schema<Group>(
       required: false,
     },
     filter: {
-      type: filterSchema,
+      type: [filterSchema],
       required: false,
     },
 
     autoUpdate: {
       type: Boolean,
+      required: false,
+      default: false,
+    },
+    groupColor: {
+      type: String,
       required: false,
     },
 
@@ -54,6 +102,15 @@ const groupSchema = new mongoose.Schema<Group>(
       type: Boolean,
       required: true,
       default: false,
+    },
+    userIds: {
+      type: [ObjectId],
+      required: false,
+    },
+    groupType: {
+      type: String,
+      enum: ["DYNAMIC", "MANUAL"],
+      required: true,
     },
   },
   {

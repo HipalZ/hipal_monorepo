@@ -16,7 +16,6 @@ import type {
   IExistingPayments,
 } from "@/components/types/businessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const MemoPaymentSales = () => {
   const [open, setOpen] = useState(false);

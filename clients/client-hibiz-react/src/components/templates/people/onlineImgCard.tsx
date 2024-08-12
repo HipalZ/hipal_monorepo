@@ -27,33 +27,39 @@ const MemoOnlineImgCard = (props: Props) => {
             }}
             className="text-2xl"
           >
-            ₹ {data?.order_id?.total}
+            ₹ {data?.total}
           </h3>
         </section>
       </section>
       <section className="flex justify-between py-2">
         <article>
-          <small className="text-base">
+          <h1 className="mb-2 text-base">
             Bill value :{" "}
-            <span className="font-semibold">{data?.order_id?.billValue}</span>
-          </small>
-          <br />
-          <small className="text-base">
-            Review :{" "}
-            {[...Array(3)].map((_, index) => (
-              <span key={index.toString()} className="text-lg">
-                &#9733;
-              </span>
-            ))}
-          </small>
+            <span className="font-semibold">{data?.billValue}</span>
+          </h1>
+          {data?.reviewId && (
+            <small className="text-base">
+              Review :{" "}
+              {[...Array(data?.reviewId?.reviewRating)].map((_, index) => (
+                <span key={index.toString()} className="text-lg">
+                  &#9733;
+                </span>
+              ))}
+            </small>
+          )}
         </article>
         <article className="text-base">
-          <h1>
-            Captain : <span className="font-semibold">R Rajkumar</span>
-          </h1>
-          <h1>
-            Tips : ₹ <span className="font-semibold">20</span>
-          </h1>
+          {data?.waiterName ? (
+            <h1>
+              Captain :{" "}
+              <span className="font-semibold">{data?.waiterName}</span>
+            </h1>
+          ) : null}
+          {data?.tips ? (
+            <h1>
+              Tips : ₹ <span className="font-semibold">{data?.tips}</span>
+            </h1>
+          ) : null}
         </article>
       </section>
     </>

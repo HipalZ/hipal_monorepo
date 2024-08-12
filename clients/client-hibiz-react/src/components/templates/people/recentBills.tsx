@@ -1,25 +1,27 @@
 import { cn } from "@/components/utils/helper";
-import { billsCards } from "@/pages/app/business/[businessId]/people/[userId]";
-import { memo } from "react";
+import { lazy, memo } from "react";
 import { LiaTagSolid } from "react-icons/lia";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import type { Payment } from "@/components/types/businessData";
-import OnlineImgCard from "./onlineImgCard";
+const OnlineImgCard = lazy(() => import("./onlineImgCard"));
 
 const MemoRecentBills = () => {
-  const { setOpenBillPopup, setSingleBillData } = useHiPeopleStore((s) => ({
-    setOpenBillPopup: s.setOpenBillPopup,
-    setSingleBillData: s.setSingleBillData,
-  }));
+  const { setOpenBillPopup, setSingleBillData, userDashboardDetails } =
+    useHiPeopleStore((s) => ({
+      setOpenBillPopup: s.setOpenBillPopup,
+      setSingleBillData: s.setSingleBillData,
+      userDashboardDetails: s.userDashboardDetails,
+    }));
 
   const handleBillData = (data: Payment) => {
     setSingleBillData(data);
     setOpenBillPopup(true);
   };
+
   return (
-    <section className="grid pb-[5rem] md:grid-cols-2 lg:grid-cols-3">
-      {billsCards && billsCards.length > 0 ? (
-        billsCards.map((data) => (
+    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 pb-[10rem]">
+      {userDashboardDetails?.bill && userDashboardDetails?.bill.length > 0 ? (
+        userDashboardDetails?.bill.map((data) => (
           <section
             key={data?._id}
             className="payment_card_ui"
@@ -40,22 +42,26 @@ const MemoRecentBills = () => {
                   {data?.paymentMode} Payment
                 </small>
               </button>
-              <button
-                type="button"
-                className="flex items-center justify-center space-x-2 rounded-2xl bg-[#e7fedc] px-2 py-1 text-[#23B371]"
-              >
-                <LiaTagSolid />
-                <small>{data?.order_id?.claimedCoins} Coinz used </small>
-              </button>
+              {data?.claimedCoins > 0 ? (
+                <button
+                  type="button"
+                  className="flex items-center justify-center space-x-2 rounded-2xl bg-[#e7fedc] px-2 py-1 text-[#23B371]"
+                >
+                  <LiaTagSolid />
+                  <small>{data?.claimedCoins} Coinz used </small>
+                </button>
+              ) : null}
             </section>
-            <section className="flex gap-4 mt-2">
-              <button
-                type="button"
-                className="flex items-center justify-center space-x-2 rounded-2xl bg-[#E3DCFF] px-2 py-1 text-[#6F649B] text-xs"
-              >
-                # Take Away
-              </button>
-            </section>
+            {data?.tagId?.name ? (
+              <section className="flex gap-4 mt-2">
+                <button
+                  type="button"
+                  className="flex items-center justify-center space-x-2 rounded-2xl bg-[#E3DCFF] px-2 py-1 text-[#6F649B] text-xs"
+                >
+                  # {data?.tagId?.name}
+                </button>
+              </section>
+            ) : null}
           </section>
         ))
       ) : (

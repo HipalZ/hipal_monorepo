@@ -11,6 +11,7 @@ interface HeaderProps {
   title?: string;
   onBack?: () => void;
   children?: React.ReactNode;
+  hideBack?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = memo(
@@ -22,6 +23,7 @@ const Header: React.FC<HeaderProps> = memo(
     rightButton,
     children,
     onBack,
+    hideBack
   }) => {
     const navigate = useNavigate();
 
@@ -50,7 +52,9 @@ const Header: React.FC<HeaderProps> = memo(
 
     return (
       <>
-        <div className="flex items-center justify-between px-6 pt-6">
+        <div className="flex items-center justify-between px-6 pt-6 ">
+          {
+            hideBack ? <div />:
           <button
             type="button"
             onClick={handleBackClick}
@@ -58,6 +62,7 @@ const Header: React.FC<HeaderProps> = memo(
           >
             {leftIcon || <FaArrowLeft />}
           </button>
+          }
           <div
             className={`${
               centerImage ? "flex items-center justify-center" : ""
@@ -74,7 +79,7 @@ const Header: React.FC<HeaderProps> = memo(
                 centerImage
                   ? "mr-8"
                   : "absolute transform -translate-x-1/2 left-1/2"
-              } text-2xl font-medium capitalize`}
+              } text-2xl font-medium capitalize text-nowrap`}
             >
               {title}
             </span>

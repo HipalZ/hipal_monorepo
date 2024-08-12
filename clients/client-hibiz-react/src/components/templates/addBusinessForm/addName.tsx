@@ -249,8 +249,8 @@ const AddName = () => {
             onChange={addCustomLink}
             required
           />
-          <span className="absolute text-[#2900FF] bg-[#E4E0F9] py-3 px-4 transform -translate-y-1/2 right-0 top-1/2 rounded-r-2xl">
-            .hipal.life
+          <span className="absolute text-[#2900FF] bg-[#E4E0F9] py-3 px-4 transform -translate-y-1/2 right-0.5 top-1/2 rounded-r-2xl">
+            .hipalz.com
           </span>
         </div>
         {validCustomLink ? (

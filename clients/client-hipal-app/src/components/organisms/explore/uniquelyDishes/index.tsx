@@ -58,7 +58,7 @@ const MemoUniquelyDishes = (props: Props) => {
 
   return (
     <>
-      <center className="pb-4 text-2xl text-primary">Must Try Dishes</center>
+      <center className="pb-8 text-2xl text-primary">Must Try Dishes</center>
       {uniquelyDishes && uniquelyDishes.length > 0 && (
         <DynamicImageGrid images={uniquelyDishes?.slice(0, 6)} />
       )}

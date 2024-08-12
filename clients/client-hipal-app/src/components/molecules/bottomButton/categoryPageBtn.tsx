@@ -1,9 +1,9 @@
 "use client";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import BottomButton from ".";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
+
 import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
@@ -41,7 +41,7 @@ const CategoryPageBtn = () => {
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const { setShowCart, showCart } = useCart();
   const cart = useCartStore((s) => s.cart);
-  const isPayment = useLogin((s) => s.isPayment);
+
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -165,9 +165,9 @@ const CategoryPageBtn = () => {
       )}
 
       {inputModal && (
-        <BottomPopUp show={inputModal} onClose={closeModal}>
+        <MemoBottomPopUp show={inputModal} onClose={closeModal}>
           <AddAmountModal />
-        </BottomPopUp>
+        </MemoBottomPopUp>
       )}
 
       {callWaiterModal && (
@@ -176,9 +176,9 @@ const CategoryPageBtn = () => {
         </MemoBottomPopUp>
       )}
       {showCart && (
-        <BottomPopUp show={showCart} onClose={showingCart}>
+        <MemoBottomPopUp show={showCart} onClose={showingCart}>
           <Cart />
-        </BottomPopUp>
+        </MemoBottomPopUp>
       )}
     </>
   );

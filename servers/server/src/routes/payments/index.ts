@@ -2,14 +2,19 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
-  LoyaltyCoinsInfo,
+  GroupAnalytic,
   LoyaltySettings,
   Order,
   Payment,
   PaymentAlert,
   Reviews,
+  Subscriber,
+  TagModel,
+  User,
+  UserAnalytic,
   UserReward,
   UserRewardHistory,
+  UserTags,
 } from "@hi/db-models";
 import type { PaymentType } from "@hi/db-models/src/validators";
 import {
@@ -23,10 +28,12 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
+import { schedule } from "node-cron";
 import { z } from "zod";
 import {
   ClientRoles,
@@ -40,6 +47,31 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
+const transformData = (data: any[]) => {
+  return data
+    .filter((item) => item.groupId != null) // Filter out items with null groupId
+    .map((item) => {
+      const filter = item.groupId.filter[0]; // Assuming there's only one filter object
+
+      return {
+        duration: filter?.duration || 0,
+        visitCount: filter?.visit || 0,
+        visitType: filter?.visitType,
+        spendAmount: filter?.spend || 0,
+        spendType: filter?.spendType,
+        cardBalance: filter?.cardBalance || 0,
+        cardBalanceType: filter?.cardBalanceType,
+        coinzIssued: filter?.coinzIssued || 0,
+        coinzIssuedType: filter?.coinzIssuedType,
+        coinzUsed: filter?.coinzUsed || 0,
+        coinzUsedType: filter?.coinzUsedType,
+        userCount: item.userCount || 0,
+        userPercentage: item.userPercentage || 0,
+        groupColor: item.groupId.groupColor || "",
+        groupName: item.groupId.name || "",
+      };
+    });
+};
 //dates
 const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
@@ -60,6 +92,8 @@ const calculateDiscount = (
 
   return finalDiscount;
 };
+
+//filter groups
 
 const calculateReward = async (
   exist: number,
@@ -222,7 +256,6 @@ const calculatedCashbackCoins = async (
     "rewardLimit setCashBackPercentage",
   );
 
-  console.log("LoyaltySetting", businessId);
   if (!LoyaltySetting) {
     console.error("LoyaltySetting not found or setReward is not a number");
     return 0; // Or handle this case as appropriate for your application
@@ -235,6 +268,126 @@ const calculatedCashbackCoins = async (
   }
   return Math.round(coinsToBeAdded);
 };
+
+const totalSubscribers = async (businessId: string) => {
+  const subscribers = await Subscriber.find({
+    isDeleted: false,
+    businessId,
+  }).select("userCount");
+
+  const totalUserCount = subscribers.reduce(
+    (acc, sub) => acc + (sub.userCount ?? 0),
+    0,
+  );
+
+  return totalUserCount;
+};
+
+const calculatePercentages = (totalReviewsLength: number, count: number) => {
+  return Math.round((count / totalReviewsLength) * 100);
+};
+
+const fetchData = async (
+  businessId: string,
+  fromDate: number,
+  toDate: number,
+) => {
+  const existingPayments = await Payment.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+  });
+
+  const totalSpend = existingPayments.reduce(
+    (acc, payment) => acc + (payment.total ?? 0),
+    0,
+  );
+
+  const averageSpend = Math.round(totalSpend / existingPayments.length);
+
+  const totalReviews = await Reviews.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+  });
+
+  const totalReviesCount = totalReviews.reduce(
+    (acc, review) => acc + (review.reviewRating ?? 0),
+    0,
+  );
+
+  const avgRating = Math.round(totalReviesCount / totalReviews.length);
+
+  const newUsers = await Subscriber.find({
+    businessId,
+    date: {
+      $gte: fromDate,
+      $lte: toDate,
+    },
+    userCount: { $eq: 1 },
+  });
+
+  const countOfFoodTaste = totalReviews.filter(
+    (review) => review.foodTaste === 1,
+  ).length;
+  const countOfBadFoodTaste = totalReviews.filter(
+    (review) => review.foodTaste === 0,
+  ).length;
+
+  const countOfAmbience = totalReviews.filter(
+    (review) => review.ambience === 1,
+  ).length;
+  const countOfBadAmbience = totalReviews.filter(
+    (review) => review.ambience === 0,
+  ).length;
+
+  const countOfHygiene = totalReviews.filter(
+    (review) => review.hygiene === 1,
+  ).length;
+  const countOfBadHygiene = totalReviews.filter(
+    (review) => review.hygiene === 0,
+  ).length;
+  const countOfService = totalReviews.filter(
+    (review) => review.service === 1,
+  ).length;
+  const countOfBadService = totalReviews.filter(
+    (review) => review.service === 0,
+  ).length;
+
+  return {
+    totalSpend,
+    averageSpend,
+    avgRating,
+    newUsers,
+    totalReviews,
+    countOfFoodTaste,
+    countOfBadFoodTaste,
+    countOfAmbience,
+    countOfBadAmbience,
+    countOfHygiene,
+    countOfBadHygiene,
+    countOfService,
+    countOfBadService,
+  };
+};
+
+function calculateTimestamps(days: number): {
+  fromTimestamp: number;
+  toTimestamp: number;
+} {
+  const currentDate = new Date();
+  const toTimestamp = currentDate.getTime();
+
+  const fromDate = new Date();
+  fromDate.setDate(currentDate.getDate() - days);
+  const fromTimestamp = fromDate.getTime();
+
+  return { fromTimestamp, toTimestamp };
+}
 
 const paymentsRouter = new Hono()
   .post(
@@ -251,6 +404,7 @@ const paymentsRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
+        console.log("createOrder");
         const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
         const {
           total,
@@ -318,6 +472,11 @@ const paymentsRouter = new Hono()
       const addReview = await Reviews.create(requestData);
 
       if (!addReview) return respond(c, "Review not created", true, 400, {});
+
+      await Payment.findOneAndUpdate(
+        { razorpayOrderId: order_id },
+        { reviewId: addReview._id },
+      );
 
       return respond(c, "Review created successfully", false, 200, addReview);
     },
@@ -570,29 +729,6 @@ const paymentsRouter = new Hono()
         });
 
         if (!paymentAlreadyExist && getOrder) {
-          const createPayment = await Payment.create(
-            [
-              {
-                businessId: getOrder?.businessId,
-                total: getOrder?.total,
-                billValue: getOrder?.billValue,
-                mode: payload.payment.entity.method,
-                userId: getOrder?.userId,
-                order_id: getOrder?._id,
-                paymentMode: "online",
-                tableName: getOrder?.tableName,
-                claimedCoins: getOrder?.claimedCoins,
-                tips: getOrder?.tips,
-                razorpayPaymentId: payload.payment.entity.id,
-                razorpayOrderId: payload.payment.entity.order_id,
-                razorpayAcquirerData: payload.payment.entity.acquirer_data,
-                razorpayEventId: razorpayEventId,
-                date: Date.now(),
-              },
-            ],
-            { session },
-          );
-
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
@@ -611,25 +747,9 @@ const paymentsRouter = new Hono()
               Number(getOrder?.total),
             );
           }
-          await PaymentAlert.create(
-            [
-              {
-                businessId: getOrder?.businessId,
-                alertType: "ONLINE",
-                payment_id: createPayment[0]._id,
-                coinsApplied: claimCoins > 0,
-                status: "SUCCESS",
-                order_id: getOrder?._id,
-                message: `Paid ${getOrder?.total}`,
-                tableName: getOrder?.tableName,
-                isAccepted: false,
-                userId: getOrder?.userId,
-                posDiscount: posDiscount,
-                date: Date.now(),
-              },
-            ],
-            { session },
-          );
+
+          let getCashBack = 0;
+
           if (payload.payment.entity.notes.loyaltyId) {
             if (claimCoins > 0) {
               await removeCoins(
@@ -660,17 +780,90 @@ const paymentsRouter = new Hono()
               session,
             );
 
-            await LoyaltyCoinsInfo.findOneAndUpdate(
-              { businessId: getOrder?.businessId.toString() || "" },
-              {
-                $inc: {
-                  coinzIssued: cashBackCoins,
-                  coinzRedeemed: claimCoins,
+            getCashBack = cashBackCoins;
+
+            const userAnalytics = await UserAnalytic.findOne({
+              userId: getOrder?.userId,
+            }).select("totalSpend");
+            if (userAnalytics) {
+              const countAvgSpend = Math.round(
+                userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
+              );
+              await UserAnalytic.findOneAndUpdate(
+                { userId: getOrder?.userId },
+                {
+                  $inc: {
+                    totalSpend: getOrder.total,
+                    visitCount: 1,
+                    coinzIssued: cashBackCoins,
+                    coinzUsed: claimCoins,
+                  },
+                  $set: { avgSpend: countAvgSpend },
                 },
-              },
-              { upsert: true, session },
-            );
+                { session },
+              );
+            } else {
+              await UserAnalytic.create(
+                [
+                  {
+                    userId: getOrder?.userId,
+                    businessId: getOrder?.businessId,
+                    visitCount: 1,
+                    totalSpend: getOrder.total,
+                    avgSpend: getOrder.total,
+                    dateOfJoining: Date.now(),
+                    coinzIssued: cashBackCoins,
+                    coinzUsed: claimCoins,
+                  },
+                ],
+                { session },
+              );
+            }
           }
+
+          const createPayment = await Payment.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                total: getOrder?.total,
+                billValue: getOrder?.billValue,
+                mode: payload.payment.entity.method,
+                userId: getOrder?.userId,
+                order_id: getOrder?._id,
+                paymentMode: "online",
+                tableName: getOrder?.tableName,
+                claimedCoins: getOrder?.claimedCoins,
+                tips: getOrder?.tips,
+                razorpayPaymentId: payload.payment.entity.id,
+                razorpayOrderId: payload.payment.entity.order_id,
+                razorpayAcquirerData: payload.payment.entity.acquirer_data,
+                razorpayEventId: razorpayEventId,
+                earnCoins: getCashBack,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+
+          await PaymentAlert.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                alertType: "ONLINE",
+                payment_id: createPayment[0]._id,
+                coinsApplied: claimCoins > 0,
+                status: "SUCCESS",
+                order_id: getOrder?._id,
+                message: `Paid ${getOrder?.total}`,
+                tableName: getOrder?.tableName,
+                isAccepted: false,
+                userId: getOrder?.userId,
+                posDiscount: posDiscount,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
         }
       }
 
@@ -869,30 +1062,6 @@ const paymentsRouter = new Hono()
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
             const order = await Order.findById(alert.order_id);
-            await Payment.create(
-              [
-                {
-                  businessId: alert.businessId,
-                  order_id: order?._id,
-                  total: order?.total,
-                  mode: "offline",
-                  status: "SUCCESS",
-                  paymentMode: "offline",
-                  userId: order?.userId,
-                  claimedCoins: order?.claimedCoins,
-                  billValue: order?.billValue,
-                  tips: order?.tips,
-                  tableName: order?.tableName,
-                  razorpayEventId: nanoid(15),
-                  razorpayOrderId: nanoid(15),
-                  razorpayPaymentId: nanoid(15),
-
-                  waiterName,
-                  date: Date.now(),
-                },
-              ],
-              { session },
-            );
 
             if (order?.claimedCoins && order?.claimedCoins > 0) {
               const existingLoyalty = await LoyaltySettings.findOne({
@@ -916,7 +1085,7 @@ const paymentsRouter = new Hono()
                 Number(order.claimedCoins),
               );
 
-              await addCoins(
+              const finalCashBack = await addCoins(
                 cashBack,
                 order.userId.toString(),
                 order._id.toString(),
@@ -928,17 +1097,69 @@ const paymentsRouter = new Hono()
                 session,
               );
 
-              await LoyaltyCoinsInfo.findOneAndUpdate(
-                { businessId: order.businessId.toString() },
+              await Payment.create(
+                [
+                  {
+                    businessId: alert.businessId,
+                    order_id: order?._id,
+                    total: order?.total,
+                    mode: "offline",
+                    status: "SUCCESS",
+                    paymentMode: "offline",
+                    userId: order?.userId,
+                    claimedCoins: order?.claimedCoins,
+                    billValue: order?.billValue,
+                    tips: order?.tips,
+                    tableName: order?.tableName,
+                    earnCoins: finalCashBack,
+                    razorpayEventId: nanoid(15),
+                    razorpayOrderId: nanoid(15),
+                    razorpayPaymentId: nanoid(15),
 
-                {
-                  $inc: {
-                    coinzIssued: cashBack,
-                    coinzRedeemed: Number(order.claimedCoins),
+                    waiterName,
+                    date: Date.now(),
                   },
-                },
-                { upsert: true, session },
+                ],
+                { session },
               );
+
+              const userAnalytics = await UserAnalytic.findOne({
+                userId: order?.userId,
+              }).select("totalSpend");
+              if (userAnalytics) {
+                const countAvgSpend = Math.round(
+                  userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
+                );
+                await UserAnalytic.findOneAndUpdate(
+                  { userId: order?.userId },
+                  {
+                    $inc: {
+                      totalSpend: order?.total,
+                      visitCount: 1,
+                      coinzIssued: finalCashBack || 0,
+                      coinzUsed: order?.claimedCoins || 0,
+                    },
+                    $set: { avgSpend: countAvgSpend },
+                  },
+                  { session },
+                );
+              } else {
+                await UserAnalytic.create(
+                  [
+                    {
+                      userId: order?.userId,
+                      businessId: order?.businessId,
+                      visitCount: 1,
+                      totalSpend: order?.total,
+                      avgSpend: order?.total,
+                      dateOfJoining: Date.now(),
+                      coinzIssued: finalCashBack || 0,
+                      coinzUsed: order?.claimedCoins || 0,
+                    },
+                  ],
+                  { session },
+                );
+              }
             }
           }
 
@@ -1096,13 +1317,9 @@ const paymentsRouter = new Hono()
         return c.json({
           err: true,
           data: {},
-          message: "from date should be less than to date",
+          message: "from date should be less than to date.",
         });
       }
-
-      const loyaltyCoinInfo = await LoyaltyCoinsInfo.findOne({
-        businessId,
-      }).select("coinzIssued coinzRedeemed");
 
       if (!from && !to) {
         const existingPayments = await Payment.find({
@@ -1111,13 +1328,18 @@ const paymentsRouter = new Hono()
             $gte: startOfToday.getTime(),
             $lte: endOfToday.getTime(),
           },
-        }).select("total claimedCoins paymentMode");
+        }).select("total claimedCoins paymentMode earnCoins");
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
         const totalCoins = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
+          0,
+        );
+
+        const totalCoinsIssued = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
           0,
         );
 
@@ -1140,7 +1362,7 @@ const paymentsRouter = new Hono()
             totalDiscount: totalCoins,
             totalOnlineSale,
             totalOfflineSale,
-            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzIssued: totalCoinsIssued,
             coinzRedeemed: totalCoins,
           },
           message: "existing payment",
@@ -1153,13 +1375,17 @@ const paymentsRouter = new Hono()
             $gte: fromDate,
             $lte: toDate,
           },
-        }).select("total claimedCoins paymentMode");
+        }).select("total claimedCoins paymentMode earnCoins");
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
         const totalCoins = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
+          0,
+        );
+        const totalCoinsIssued = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
           0,
         );
 
@@ -1182,7 +1408,7 @@ const paymentsRouter = new Hono()
             totalDiscount: totalCoins,
             totalOnlineSale,
             totalOfflineSale,
-            coinzIssued: loyaltyCoinInfo?.coinzIssued,
+            coinzIssued: totalCoinsIssued,
             coinzRedeemed: totalCoins,
           },
           message: "existing payment",
@@ -1312,6 +1538,607 @@ const paymentsRouter = new Hono()
         err: false,
         data: existingPayments,
         message: "All payments updated successfully",
+      });
+    },
+  )
+  .get(
+    "/businessDashboard",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z
+          .string({
+            message: "businessId is required",
+          })
+          .min(24)
+          .max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (from && to && fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const groupAnalytics = await GroupAnalytic.find({ businessId })
+        .sort({
+          date: -1,
+        })
+        .populate({
+          path: "groupId",
+          select: {
+            name: 1,
+            groupColor: 1,
+            "filter.duration": 1,
+            "filter.visit": 1,
+            "filter.visitType": 1,
+            "filter.spend": 1,
+            "filter.spendType": 1,
+            "filter.cardBalance": 1,
+            "filter.cardBalanceType": 1,
+            "filter.coinzIssued": 1,
+            "filter.coinzIssuedType": 1,
+            "filter.coinzUsed": 1,
+            "filter.coinzUsedType": 1,
+          },
+        });
+
+      const transformedData = transformData(groupAnalytics);
+
+      const totalSubscriberCount = await totalSubscribers(businessId);
+
+      const {
+        averageSpend,
+        avgRating,
+        newUsers,
+        totalReviews,
+        countOfFoodTaste,
+        countOfBadFoodTaste,
+        countOfAmbience,
+        countOfBadAmbience,
+        countOfHygiene,
+        countOfBadHygiene,
+        countOfService,
+        countOfBadService,
+      } = await fetchData(businessId, fromDate, toDate);
+
+      const goodFoodTastePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfFoodTaste,
+      );
+      const badFoodTastePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadFoodTaste,
+      );
+
+      const goodAmbiencePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfAmbience,
+      );
+      const badAmbiencePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadAmbience,
+      );
+
+      const goodHygienePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfHygiene,
+      );
+      const badHygienePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadHygiene,
+      );
+
+      const goodServicePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfService,
+      );
+      const badServicePercentage = calculatePercentages(
+        totalReviews.length,
+        countOfBadService,
+      );
+
+      return c.json(
+        {
+          err: false,
+          data: {
+            totalSubscriberCount: totalSubscriberCount || 0,
+            groups: transformedData || [],
+            aboutCustomer: {
+              averageSpendAmount: averageSpend || 0,
+              averageReturnPercentage: 15,
+              averageReviewCount: avgRating || 0,
+              newUserCount: newUsers.length || 0,
+            },
+            userReviews: {
+              foodTaste: {
+                likePercentage: goodFoodTastePercentage || 0,
+                dislikePercentage: badFoodTastePercentage || 0,
+              },
+              ambience: {
+                likePercentage: goodAmbiencePercentage || 0,
+                dislikePercentage: badAmbiencePercentage || 0,
+              },
+              hygiene: {
+                likePercentage: goodHygienePercentage || 0,
+                dislikePercentage: badHygienePercentage || 0,
+              },
+              service: {
+                likePercentage: goodServicePercentage || 0,
+                dislikePercentage: badServicePercentage || 0,
+              },
+            },
+          },
+          message: "existing payment",
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/users/Analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        dateOfJoining: z.string().optional(),
+        avgSpend: z.string().optional(),
+        visitCount: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to, dateOfJoining, avgSpend, visitCount } =
+        c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+      const joiningDate = Number(dateOfJoining);
+      const avgSpendValue = Number(avgSpend);
+      const visitCountValue = Number(visitCount);
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+
+      console.log("fromDate", fromDate);
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const sort: Record<string, number> = {};
+      if (dateOfJoining) sort.dateOfJoining = joiningDate;
+      if (avgSpend) sort.avgSpend = avgSpendValue;
+      if (visitCount) sort.visitCount = visitCountValue;
+      if (Object.keys(sort).length === 0) sort._id = -1;
+
+      console.log("sort", sort);
+
+      if (!from && !to) {
+        const existingUserAnalytics = await UserAnalytic.find({
+          businessId,
+          date: {
+            $gte: startOfToday.getTime(),
+            $lte: endOfToday.getTime(),
+          },
+        })
+          .sort(sort)
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate({
+            path: "userId",
+            select: "name phone",
+          });
+
+        return c.json(
+          {
+            data: existingUserAnalytics,
+            message: "existing payment",
+            err: false,
+          },
+          200,
+        );
+      }
+
+      if (from && to) {
+        const existingUserAnalytics = await UserAnalytic.find({
+          businessId,
+          date: {
+            $gte: fromDate,
+            $lte: toDate,
+          },
+        })
+          .sort(sort)
+          .skip(skip)
+          .limit(PAGE_SIZE)
+          .populate("userId");
+
+        return c.json(
+          {
+            data: existingUserAnalytics,
+            message: "existing payment",
+            err: false,
+          },
+          200,
+        );
+      }
+
+      return c.json({
+        err: true,
+        data: {},
+        message: "Invalid date range",
+      });
+    },
+  )
+  .get(
+    "/user/userByPhone",
+    zValidator(
+      "query",
+      z.object({
+        phone: z
+          .string()
+          .min(10, { message: "min 10 digit" })
+          .max(10, { message: "max 10 digit" }),
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { phone, businessId } = c.req.query();
+
+      // Find the user by phone number
+      const user = await User.findOne({ phone }).select("_id");
+
+      if (!user) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "User not found",
+        });
+      }
+
+      // Use the userId from the found user to query the UserAnalytic collection
+      const userAnalytic = await UserAnalytic.findOne({
+        userId: user._id,
+        businessId,
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
+
+      if (!userAnalytic) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "User analytic not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: userAnalytic,
+        message: "User analytic found",
+      });
+    },
+  )
+  .get(
+    "/userDashboard",
+
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        pageNumer: z.string().optional(),
+        userId: z.string({ message: "userId is required" }),
+        coinsUsage: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, userId } = c.req.query();
+
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      const userTotalSale = await UserAnalytic.findOne({ userId })
+        .select("totalSpend visitCount avgSpend coinzIssued coinzUsed")
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
+
+      const userReward = await UserReward.find({
+        userId,
+        loyaltyId: businessId,
+      }).select("rewards");
+
+      const existingPayments = await Payment.find({
+        userId,
+        businessId,
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "tagIds",
+          select: "name",
+        })
+        .populate({
+          path: "reviewId",
+          select: "reviewRating foodTaste ambience hygiene service",
+        });
+
+      return c.json({
+        err: false,
+        data: {
+          name: userTotalSale?.userId.name,
+          phone: userTotalSale?.userId.phone,
+          userCurrentReward: userReward.rewards,
+          totalSale: userTotalSale?.totalSpend,
+          AvarageSale: userTotalSale?.avgSpend,
+          NumOfVisits: userTotalSale?.visitCount,
+          NumOfSessions: userTotalSale?.visitCount,
+          coinzIssued: userTotalSale?.coinzIssued,
+          coinzUsed: userTotalSale?.coinzUsed,
+          bill: existingPayments,
+        },
+        message: "existing payment",
+      });
+    },
+  )
+  .get(
+    "/user/coinsUsage",
+    zValidator(
+      "query",
+      z.object({
+        loyaltyId: z.string({
+          message: "loyaltyId is required",
+        }),
+        userId: z.string({
+          message: "userId is required",
+        }),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { loyaltyId, userId } = c.req.query();
+
+      const PAGE_SIZE = 20;
+      const pageNumber = c.req.query("pageNumber") as string;
+      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+
+      const existingRewardHistory = await UserRewardHistory.find({
+        userId,
+        loyaltyId,
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "order_id",
+          select: "billValue",
+        });
+
+      return c.json({
+        err: false,
+        data: existingRewardHistory,
+        message: "existing payment",
+      });
+    },
+  )
+  .put(
+    "/updatePayment/:paymentId",
+
+    zValidator(
+      "param",
+      z.object({
+        paymentId: z.string({
+          message: "paymentId is required",
+        }),
+      }),
+    ),
+
+    zValidator(
+      "json",
+      z.object({
+        tagIds: z.array(z.string()).optional(),
+        comment: z.string().optional(),
+        userId: z.string({
+          message: "userId is required",
+        }),
+        businessId: z.string({
+          message: "businessId is required",
+        }),
+        removeTagIds: z.array(z.string()).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { paymentId } = c.req.param();
+      const requestData = await c.req.json();
+      const {
+        tagIds = [],
+        comment,
+        userId,
+        businessId,
+        removeTagIds = [],
+      } = requestData;
+
+      if (removeTagIds.length > 0) {
+        await Payment.findByIdAndUpdate(
+          {
+            _id: paymentId,
+          },
+          {
+            $pull: {
+              tagIds: { $in: removeTagIds },
+            },
+          },
+        );
+
+        await UserTags.deleteMany({
+          userId,
+          tagId: { $in: removeTagIds },
+        });
+      }
+
+      const payment = await Payment.findByIdAndUpdate(
+        paymentId,
+        { $addToSet: { tagIds: { $each: tagIds } }, comment },
+        { new: true },
+      );
+
+      const user = await User.findById(userId).select("name phone");
+
+      const date = Date.now();
+      const customDate = new Date(date).setHours(0, 0, 0, 0);
+
+      for (let i = 0; i < tagIds.length; i++) {
+        const tagId = tagIds[i];
+        const tag = await TagModel.findById(tagIds[i]).select("duration time");
+
+        const createUserTag = await UserTags.create({
+          userId,
+          tagId,
+          businessId,
+          date: Date.now(),
+          reminderDate: customDate + tag.duration + tag.time,
+        });
+        const reminderDateObj = new Date(createUserTag.reminderDate);
+        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+          reminderDateObj.getMonth() + 1
+        } *`;
+
+        schedule(cronExpression, async () => {
+          const options = {
+            method: "POST",
+            url: "https://control.msg91.com/api/v5/flow/",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              authkey: "387796AmyGlDBq63b2d75aP1",
+            },
+            data: {
+              template_id: "66b1f189d6fc055e463e3b63",
+              sender: "HiPalc",
+              mobiles: `91${user.phone}`,
+              var: `${user.name}`,
+            },
+          };
+          await axios(options);
+        });
+      }
+
+      if (!payment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: payment,
+        message: "Payment updated successfully",
+      });
+    },
+  )
+  .get(
+    "/tagAndNotes",
+
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string({
+          message: "businessId is required",
+        }),
+        userId: z.string({
+          message: "userId is required",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, userId } = c.req.query();
+
+      const existingTagAndNotes = await UserTags.find({
+        userId,
+        businessId,
+      })
+        .sort({ _id: -1 })
+
+        .populate({
+          path: "tagId",
+          select:
+            "name tagType displayForCaptains duration time remainderInDuration",
+          populate: {
+            path: "createdBy",
+            select: "name", // Adjust the fields you want to select from the createdBy document
+          },
+        });
+
+      const groupByTag = existingTagAndNotes.reduce((acc, payment) => {
+        if (payment.tagId?._id) {
+          const tagIdStr = payment.tagId._id;
+          if (!acc[tagIdStr]) {
+            acc[tagIdStr] = {
+              tagId: payment.tagId,
+              // Assuming payment.name contains the name
+
+              count: 0,
+            };
+          }
+
+          acc[tagIdStr].count += 1;
+        }
+        return acc;
+      }, {});
+
+      return c.json({
+        err: false,
+        data: Object.values(groupByTag),
+        message: "existing tags",
+      });
+    },
+  )
+  .post(
+    "/getGroupUser",
+    zValidator(
+      "json",
+      z.object({
+        userIds: z.array(z.string()),
+      }),
+    ),
+    async (c) => {
+      const { userIds = [] } = await c.req.json();
+      const users = await UserAnalytic.find({
+        userId: { $in: userIds },
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
+      return c.json({
+        data: users,
+        err: false,
+        message: "User found",
       });
     },
   );

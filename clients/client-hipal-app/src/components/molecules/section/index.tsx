@@ -14,7 +14,7 @@ function Section({
 }) {
 
 	return (
-		<center className="flex flex-col no-scrollbar">
+		<center className="flex flex-col text-base no-scrollbar">
 			<center>{children}</center>
 		</center>
 	)

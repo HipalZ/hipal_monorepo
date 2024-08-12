@@ -96,7 +96,7 @@ const MemoFilter = () => {
                   } group flex rounded-md items-center w-full p-2 text-sm`}
                   onClick={() => setSortOrder("dec")}
                 >
-                  Sort Ascending
+                  Sort Descending
                 </button>
               )}
             </MenuItem>

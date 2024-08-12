@@ -412,6 +412,8 @@ export interface UserDetails {
 }
 
 export interface Payment {
+  comment: string;
+  waiterName: string;
   _id: string;
   businessId: string;
   date: number;
@@ -431,5 +433,211 @@ export interface Payment {
   earnCoins: number;
   createdAt: string;
   updatedAt: string;
+  phone: string;
+  reviewId: {
+    _id: string;
+    reviewRating: number;
+  };
+  tagId: {
+    _id: string;
+    name: string;
+  };
   __v: number;
+}
+
+export interface GroupData {
+  _id: string;
+  groupId: string;
+  businessId: string;
+  duration: number;
+  visitCount?: number;
+  visitType?: "ABOVE" | "BELOW";
+  spendAmount?: number;
+  spendType?: "ABOVE" | "BELOW";
+  userCount: number;
+  userPercentage: number;
+  groupName: string;
+  __v: number;
+  groupColor: string;
+  date: number;
+}
+
+export interface AboutCustomerData {
+  averageSpendAmount: number;
+  averageReturnPercentage: number;
+  averageReviewCount: number;
+  newUserCount: number;
+}
+
+export interface UserReviewData {
+  likePercentage: number;
+  dislikePercentage: number;
+}
+
+export interface SummarizedPeopleData {
+  totalSubscriberCount: number;
+  groups: GroupData[];
+  aboutCustomer: AboutCustomerData;
+  userReviews: Record<string, UserReviewData>;
+}
+
+// Define the type for each record in the array
+export interface ICustomerRecord {
+  _id: string;
+  userId: User;
+  businessId: string;
+  visitCount: number;
+  totalSpend: number;
+  avgSpend: number;
+  dateOfJoining: number;
+  __v: number;
+  coinzIssued?: number;
+  coinzUsed?: number;
+}
+
+export interface IGroupFilter {
+  duration: number;
+  visit: number;
+  visitType: "ABOVE" | "BELOW";
+  spend: number;
+  spendType: "ABOVE" | "BELOW";
+  _id: string;
+}
+
+export interface IUserGroup {
+  _id: string;
+  name: string;
+  businessId: string;
+  description: string;
+  filter: IGroupFilter[];
+  autoUpdate: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  userIds: string[];
+  groupColor: string;
+}
+export interface UserDashboardDetails {
+  email: string;
+  phone: number;
+  currentCoinz: number;
+  name: string;
+  totalSale: number;
+  AvarageSale: number;
+  NumOfVisits: number;
+  NumOfSessions: number;
+  coinzIssued: number;
+  coinzUsed: number;
+  bill: Payment[];
+}
+
+export interface UserTags {
+  remainderInDuration: string;
+  displayForCaptains: boolean;
+  duration: number;
+  tagType: string;
+  _id: string;
+  tagTypeId: string;
+  name: string;
+  businessId: string;
+}
+
+export interface UserUpdateTag {
+  _id: string;
+  tagIds: string[];
+  userId: string;
+  comment: string;
+}
+
+export interface TagArray {
+  tagId: Tag;
+  count: number;
+}
+export interface Tag {
+  note: string;
+  time: number;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+  remainderInDuration: string;
+  reminderDate: number;
+  _id: string;
+  name: string;
+  tagType: string;
+  displayForCaptains: boolean;
+}
+
+export interface TagDetails {
+  tagId: Tag;
+  count: number;
+  createdBy: {
+    _id: string;
+    name: string;
+  };
+}
+
+export interface UserTagDetails {
+  displayForCaptains: boolean;
+  remainderData: number;
+}
+
+export interface ICoinzUsage {
+  _id: string;
+  userId: string;
+  rewards: number;
+  status: string;
+  date: number;
+  tableName: string;
+  order_id: string;
+  loyaltyId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface ILoyaltyData {
+  _id: string;
+  businessId: string;
+  password: string;
+  loyaltyId: string;
+  origin: boolean;
+  cardPattern: string;
+  cardColor: string;
+  fontColor: string;
+  logo: string;
+  expiryDate: string;
+  rewardLimit: number;
+  signUpBonus: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  setCashBackPercentage: number;
+  setClaimedPercentage: number;
+}
+
+export interface IHistory {
+  remainder: string;
+  duration: string;
+  time: string;
+}
+
+export interface INotes {
+  _id: string;
+  businessId: string;
+  userId: string;
+  noteTitle: string;
+  noteDescription: string;
+  noteUrl: string;
+  tagIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum DatePickerEnum {
+  TODAY = "TODAY",
+  YESTERDAY = "YESTERDAY",
+  ONE_MONTH = "ONE MONTH",
+  CUSTOM_DATE = "CUSTOM DATE",
 }

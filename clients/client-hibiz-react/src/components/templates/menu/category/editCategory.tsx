@@ -18,8 +18,6 @@ const QUALITY = 0.9;
 
 const MemoEditCategory = () => {
   const {
-    availability,
-    setAvailability,
     catId,
     imagePreview,
     setImagePreview,
@@ -45,10 +43,8 @@ const MemoEditCategory = () => {
     categoryStep: s.categoryStep,
     imagePreview: s.imagePreview,
     categoryName: s.categoryName,
-    availability: s.availability,
     catId: s.catId,
     visibility: s.visibility,
-    setAvailability: s.setAvailability,
     setVisibility: s.setVisibility,
     setImagePreview: s.setImagePreview,
     selectedFile: s.selectedFile,
@@ -173,7 +169,6 @@ const MemoEditCategory = () => {
       name: categoryName,
       businessId: businessData?._id.toString() || "",
       coverImage: imageUrl,
-      availability: availability,
       visibility: visibility,
       _id: catId,
     };

@@ -60,7 +60,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     createOrder(billValue, "ONLINE");
   };
   return (
-    <section className="h-[85vh]">
+    <section className="h-[90vh]">
       <div
         style={{
           backgroundImage: `url(${background.src})`,

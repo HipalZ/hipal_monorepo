@@ -39,7 +39,7 @@ const MemoListOfDishes = () => {
   const fuse = useMemo(
     () =>
       new Fuse(dishes, {
-        keys: ["name"],
+        keys: ["name", "description"],
         threshold: 0.3,
       }),
     [dishes],
@@ -47,7 +47,9 @@ const MemoListOfDishes = () => {
 
   const filteredDishes = useMemo(() => {
     let filtered = search
-      ? fuse.search(search).map((result) => result.item)
+      ? fuse.search(search).map((result) => {
+          return result.item;
+        })
       : dishes;
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
@@ -58,7 +60,7 @@ const MemoListOfDishes = () => {
     return sortOrder === "asc"
       ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
-  }, [search, dishes, fuse, visibilityFilter, sortOrder]);
+  }, [search, fuse, visibilityFilter, sortOrder]);
 
   const handleEditDish = useCallback(
     (dish: DishType) => {
@@ -79,14 +81,17 @@ const MemoListOfDishes = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+    <section className="flex relative flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+      <h3 className="absolute left-0 text-xl -top-[2.5rem] lg:-top-[3.5rem] font-semibold">
+        Dishes ({filteredDishes?.length})
+      </h3>
       {filteredDishes
         ? filteredDishes.map((dish) => (
             <button
               onClick={() => handleEditDish(dish)}
               type="button"
               key={dish.name}
-              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[22rem]"
+              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[21.5rem]"
             >
               <h3
                 title={dish.name}

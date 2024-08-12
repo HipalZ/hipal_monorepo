@@ -119,13 +119,15 @@ const MemoDishesManager = () => {
             <h2 className="w-full text-lg font-semibold opacity-50">
               Unlinked Dishes
             </h2>
-            {unlinkedDishes.map((dish) => (
-              <DishButton
-                key={dish._id?.toString()}
-                dish={dish}
-                onEdit={handleEditDish}
-              />
-            ))}
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 ">
+              {unlinkedDishes.map((dish) => (
+                <DishButton
+                  key={dish._id?.toString()}
+                  dish={dish}
+                  onEdit={handleEditDish}
+                />
+              ))}
+            </div>
           </>
         )}
       </section>
@@ -139,7 +141,7 @@ const MemoDishesManager = () => {
                   <h2 className="my-4 text-lg font-semibold opacity-50">
                     {category.name}
                   </h2>
-                  <article className="flex flex-wrap justify-start gap-4">
+                  <article className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 ">
                     {category.dishIds.map((dish: DishType) => (
                       <DishButton
                         key={dish._id?.toString()}

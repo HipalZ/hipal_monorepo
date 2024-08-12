@@ -1,7 +1,7 @@
 "use client";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
 import img from "@/assets/img/cut.png";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { useParams, useSearchParams } from "next/navigation";
@@ -9,6 +9,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import Link from "next/link";
+import { useLogin } from "@/components/store/useLogin";
 
 const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const searchParams = useSearchParams();
@@ -16,12 +17,15 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const params = useParams();
   const customLink = params?.businessId as string;
   const tableName = searchParams?.get("tableName");
-  const accessToken = useUserToken.getState().accessToken;
   const { setTableName } = useTableData();
+  const setDirection = useLogin(s=>s.setDirection);
+
+  // Move accessToken check to client side
+  const accessToken = useUserToken.getState().accessToken;
 
   useEffect(() => {
     if (tableName !== null) {
-      setTableName(tableName);
+      setTableName(tableName || "");
     }
   }, [tableName]);
 
@@ -40,14 +44,14 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
       />
 
       <div className="absolute top-0 right-0 flex justify-between px-4 py-3 mb-10">
-        {!accessToken && (
+        { !accessToken && (
           <div className="flex flex-row space-x-2">
             <Link
               href={
                 customLink ? routePaths[PAGE_TYPES.SIGN_UP](customLink) : "#"
               }
             >
-              <button type="button" className="glass-morphism">
+              <button onClick={()=>setDirection("explore")} type="button" className="glass-morphism">
                 Login/Sign up
               </button>
             </Link>

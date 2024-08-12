@@ -1,19 +1,9 @@
-import type { IBusinessData } from "@/components/types/businessData";
+import type {
+  IBusinessData,
+  ILoyaltyData,
+} from "@/components/types/businessData";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
-interface IExistingLoyalty {
-  signUpBonus: number;
-  rewardLimit: number;
-  loyaltyId: string;
-  cardColor: string;
-  fontColor: string;
-  password: string;
-  expiryDate: string;
-  setReward: number;
-  setClaimAmount: number;
-  logo?: string;
-}
 
 export const useBusinessData = create(
   persist<{
@@ -21,8 +11,8 @@ export const useBusinessData = create(
     setBusinessData: (data: IBusinessData) => void;
     themes: Record<string, any>;
     setThemes: (themes: Record<string, any>) => void;
-    existingLoyalty: IExistingLoyalty;
-    setExistingLoyalty: (existingLoyalty: IExistingLoyalty) => void;
+    existingLoyalty: ILoyaltyData;
+    setExistingLoyalty: (existingLoyalty: ILoyaltyData) => void;
     isLoyaltyExists: boolean;
     setIsLoyaltyExists: (isLoyaltyExists: boolean) => void;
     updateAppliedTheme: (theme: boolean) => void;
@@ -36,18 +26,21 @@ export const useBusinessData = create(
       themes: {},
       setThemes: (themes) => set({ themes: themes }),
       existingLoyalty: {
+        businessId: "",
+        password: "",
         loyaltyId: "",
+        origin: false,
+        cardPattern: "",
         cardColor: "",
         fontColor: "",
-        setReward: 0,
-        setClaimAmount: 0,
+        setCashBackPercentage: 0,
+        setClaimedPercentage: 0,
         logo: "",
-        password: "",
         expiryDate: "",
         rewardLimit: 0,
         signUpBonus: 0,
       },
-      setExistingLoyalty: (existingLoyalty: IExistingLoyalty) =>
+      setExistingLoyalty: (existingLoyalty: ILoyaltyData) =>
         set({ existingLoyalty: existingLoyalty }),
       isLoyaltyExists: false,
       setIsLoyaltyExists: (isLoyaltyExists: boolean) =>

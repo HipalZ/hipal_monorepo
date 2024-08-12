@@ -51,7 +51,7 @@ const MemoCropperPopUp = ({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <div className="inline-block w-full max-w-xs p-2 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+            <div className="inline-block w-full max-w-xs p-2 my-8 overflow-y-auto text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -66,7 +66,7 @@ const MemoCropperPopUp = ({
                 <button
                   type="button"
                   onClick={onSave}
-                  className="on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto"
+                  className="cursor-pointer on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto"
                 >
                   Save
                 </button>

@@ -1,15 +1,7 @@
 import MemoizedHeader from "@/components/molecules/header";
 import { memo } from "react";
 import Hi from "@/assets/svg/hi.svg";
-import { SlLocationPin } from "react-icons/sl";
 import { FaArrowLeft } from "react-icons/fa";
-import { IoMdCall } from "react-icons/io";
-import { MdOutlineSms, MdWavingHand } from "react-icons/md";
-import { AiOutlineMail } from "react-icons/ai";
-import { IoHomeOutline, IoLogoWhatsapp } from "react-icons/io5";
-import { LuIndianRupee } from "react-icons/lu";
-import { LiaCoinsSolid } from "react-icons/lia";
-import { PiHandCoinsLight } from "react-icons/pi";
 import { cn } from "@/components/utils/helper";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import RecentBills from "@/components/templates/people/recentBills";
@@ -17,394 +9,80 @@ import TagsAndNotes from "@/components/templates/people/tagsAndNotes";
 import PopUp from "@/components/atom/popUp";
 import RecentBillsPopup from "@/components/templates/people/recentBillsPopup";
 import TagPopup from "@/components/templates/people/tagPopup";
-
-const predefinedContacts = [
-  {
-    id: "1",
-    text: "call",
-    symbol: <IoMdCall size={24} />,
-  },
-  {
-    id: "2",
-    text: "sms",
-    symbol: <MdOutlineSms size={24} />,
-  },
-  {
-    id: "3",
-    text: "email",
-    symbol: <AiOutlineMail size={24} />,
-  },
-  {
-    id: "4",
-    text: "direct",
-    symbol: <MdWavingHand size={24} />,
-  },
-  {
-    id: "5",
-    text: "whatsapp",
-    symbol: <IoLogoWhatsapp size={24} />,
-  },
-];
-
-const predefinedAnalytics = [
-  {
-    id: "1",
-    text: "Total Sales",
-    icon: <LuIndianRupee size={14} />,
-    value: 1212112122,
-  },
-  {
-    id: "2",
-    text: "Average Sales",
-    icon: <LuIndianRupee size={14} />,
-    value: 523.25,
-  },
-  {
-    id: "3",
-    text: "Num of visits",
-    icon: <IoHomeOutline size={14} />,
-    value: 25,
-  },
-  {
-    id: "4",
-    text: "Num of sessions",
-    icon: <SlLocationPin size={14} />,
-    value: 42,
-  },
-  {
-    id: "5",
-    text: "Coinz issued",
-    icon: <LiaCoinsSolid size={14} />,
-    value: 225000,
-  },
-  {
-    id: "6",
-    text: "Coinz used",
-    icon: <PiHandCoinsLight size={14} />,
-    value: 22 % 52000,
-  },
-];
-
-export const billsCards = [
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-  {
-    _id: "66ac748597c7e0fe581e92e5",
-    businessId: "66a7fcb5d1afb0385308ba63",
-    date: 1722578053087,
-    total: 882,
-    userId: {
-      _id: "66ac742fc88e8035f92c7168",
-      name: "Joel",
-      phone: "9539021335",
-    },
-    mode: "upi",
-    paymentMode: "online",
-    billValue: 882,
-    tableName: "fbd169-T-2",
-    order_id: {
-      _id: "66ac746f97c7e0fe581e92df",
-      businessId: "66a7fcb5d1afb0385308ba63",
-      total: 882,
-      currency: "INR",
-      billValue: 882,
-      receipt: "6yVsIxU6Zk9UMlh",
-      userId: "66ac742fc88e8035f92c7168",
-      tips: 0,
-      claimedCoins: 0,
-      discount: 0,
-      order_id: "order_OfvFSN6eyN98RD",
-      tableName: "fbd169-T-2",
-      date: 1722578031486,
-      createdAt: "2024-08-02T05:53:51.488Z",
-      updatedAt: "2024-08-02T05:53:51.488Z",
-      __v: 0,
-    },
-    tips: 0,
-    razorpayPaymentId: "pay_OfvFZTMAgazx1h",
-    razorpayOrderId: "order_OfvFSN6eyN98RD",
-    claimedCoins: 0,
-    razorpayAcquirerData: {
-      rrn: "458149630535",
-    },
-    razorpayEventId: "OfvFpmbiF0MFHE",
-    earnCoins: 0,
-    createdAt: "2024-08-02T05:54:13.088Z",
-    updatedAt: "2024-08-02T05:54:13.088Z",
-    __v: 0,
-  },
-];
+import {
+  useLoyaltyData,
+  userCoinzDetails,
+  useUserDashboard,
+} from "@/hooks/useHipeople";
+import { useParams } from "react-router-dom";
+import PredefinedContacts from "@/components/templates/people/predefinedContacts";
+import PredefinedAnalytics from "@/components/templates/people/predefinedAnalytics";
+import SidebarUser from "@/components/templates/menu/sideNavbaar/userSideNavBar";
+import Pagination from "@/components/atom/pagination";
+import CoinzUsage from "@/components/templates/people/coinzUsage";
+import AddTagz from "@/components/templates/people/addTagz";
+import AddNotes from "@/components/templates/people/addNotes";
+import RemoveTag from "@/components/templates/people/removeTag";
+import DateRangePicker from "@/components/templates/people/dateRangePicker";
+import { SlCalender } from "react-icons/sl";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { format } from "date-fns";
+import EditNotes from "@/components/templates/people/editNotes";
+import DeleteNote from "@/components/templates/people/removeNote";
 
 const MemoUserId = () => {
+  const {
+    selectedNavItem,
+    setSelectedNavItem,
+    openBillPopup,
+    setOpenBillPopup,
+    openTagPopup,
+    setOpenTagPopup,
+    userDashboardDetails,
+    openAddTagz,
+    setOpenAddTagz,
+    openAddNotes,
+    setOpenAddNotes,
+    openDeletePopup,
+    setOpenDeletePopup,
+    openDatePickerModal,
+    setOpenDatePickerModal,
+    isLoading,
+    dateRange,
+    openEditNotes,
+    setOpenEditNotes,
+    openDeleteNotePopup,
+    setOpenDeleteNotePopup,
+  } = useHiPeopleStore((s) => ({
+    selectedNavItem: s.selectedNavItem,
+    setSelectedNavItem: s.setSelectedNavItem,
+    openBillPopup: s.openBillPopup,
+    setOpenBillPopup: s.setOpenBillPopup,
+    openTagPopup: s.openTagPopup,
+    setOpenTagPopup: s.setOpenTagPopup,
+    userDashboardDetails: s.userDashboardDetails,
+    openAddTagz: s.openAddTagz,
+    setOpenAddTagz: s.setOpenAddTagz,
+    openAddNotes: s.openAddNotes,
+    setOpenAddNotes: s.setOpenAddNotes,
+    openDeletePopup: s.openDeletePopup,
+    setOpenDeletePopup: s.setOpenDeletePopup,
+    openDatePickerModal: s.openDatePickerModal,
+    setOpenDatePickerModal: s.setOpenDatePickerModal,
+    isLoading: s.isLoading,
+    dateRange: s.dateRange,
+    openEditNotes: s.openEditNotes,
+    setOpenEditNotes: s.setOpenEditNotes,
+    openDeleteNotePopup: s.openDeleteNotePopup,
+    setOpenDeleteNotePopup: s.setOpenDeleteNotePopup,
+  }));
+  const [from, to] = dateRange;
+
+  const formattedFrom = from
+    ? format(from, "dd MMM yyyy")
+    : "Select Start Date";
+  const formattedTo = to ? format(to, "dd MMM yyyy") : "Select End Date";
+
   const sidebarItems = [
     {
       icon: Hi,
@@ -423,21 +101,35 @@ const MemoUserId = () => {
     },
   ];
 
-  const {
-    selectedNavItem,
-    setSelectedNavItem,
-    openBillPopup,
-    setOpenBillPopup,
-    openTagPopup,
-    setOpenTagPopup,
-  } = useHiPeopleStore((s) => ({
-    selectedNavItem: s.selectedNavItem,
-    setSelectedNavItem: s.setSelectedNavItem,
-    openBillPopup: s.openBillPopup,
-    setOpenBillPopup: s.setOpenBillPopup,
-    openTagPopup: s.openTagPopup,
-    setOpenTagPopup: s.setOpenTagPopup,
-  }));
+  const params = useParams<{ userId: string }>();
+  const { isLoading: isLoadings } = useUserDashboard(params?.userId as string);
+
+  const handleCloseTagz = () => {
+    setOpenAddTagz(false);
+  };
+
+  const handleCloseNotes = () => {
+    setOpenAddNotes(false);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDeletePopup(false);
+  };
+
+  const handleCloseEditNotes = () => {
+    setOpenEditNotes(false);
+  };
+
+  const handleCloseDeleteNote = () => {
+    setOpenDeleteNotePopup(false);
+  };
+
+  useLoyaltyData();
+  userCoinzDetails();
+
+  if (isLoadings) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <main className="min-h-screen">
@@ -455,39 +147,17 @@ const MemoUserId = () => {
           className="h-[7rem] relative rounded-xl mx-6"
         >
           <article className="h-[5rem] w-[5rem] rounded-full absolute -translate-x-1/2 -top-8 left-1/2 bg-gray-200 flex items-center justify-center">
-            <h1 className="text-3xl">R</h1>
+            <h1 className="text-3xl capitalize">
+              {userDashboardDetails?.name?.charAt(0)}
+            </h1>
           </article>
-          <center className="pt-16 text-2xl text-white">Rishabh Hurshan</center>
+          <center className="pt-16 text-2xl text-white">
+            {userDashboardDetails?.name}
+          </center>
         </article>
-        <section className="flex items-center justify-between mx-6 my-4">
-          {predefinedContacts.map((contact) => {
-            return (
-              <section key={contact?.id} className="text-center">
-                <article className="bg-[#E3DCFF] p-4 rounded-full">
-                  <center>{contact?.symbol}</center>
-                </article>
-                <p className="text-sm text-gray-500">{contact?.text}</p>
-              </section>
-            );
-          })}
-        </section>
+        <PredefinedContacts />
       </header>
-      <section className="grid grid-cols-2 gap-3 px-6 py-6 bg-white md:grid-cols-4 lg:grid-cols-6 place-items-center">
-        {predefinedAnalytics.map((buttons) => {
-          return (
-            <article
-              className="border border-1 border-[#525E5F] w-full h-[5.5rem] p-2 rounded-lg space-y-4"
-              key={buttons?.id}
-            >
-              <h1 className="flex items-center text-[#525E5F]">
-                {buttons?.icon} &nbsp;
-                {buttons?.text}
-              </h1>
-              <p className="text-[#525E5F]">{buttons?.value}</p>
-            </article>
-          );
-        })}
-      </section>
+      <PredefinedAnalytics />
       <nav className="sticky top-0 z-50 flex justify-between w-full px-4 space-x-4 text-sm bg-white mobile-only">
         {sidebarItems.map((item) => (
           <button
@@ -505,18 +175,72 @@ const MemoUserId = () => {
           </button>
         ))}
       </nav>
+      <SidebarUser items={sidebarItems} />
+      {openDatePickerModal ? (
+        <PopUp
+          show={openDatePickerModal}
+          onClose={() => setOpenDatePickerModal(!openDatePickerModal)}
+          hide
+        >
+          <section className="h-[30rem]">
+            <DateRangePicker />
+          </section>
+        </PopUp>
+      ) : null}
+      {selectedNavItem !== "TAGS & NOTES" ? (
+        <center>
+          <button
+            onClick={() => setOpenDatePickerModal(true)}
+            type="button"
+            className="px-4 gap-2 py-2 flex justify-center items-center bg-[#5197F8] rounded-full text-white mt-4"
+          >
+            <SlCalender /> Choose Date
+          </button>
+          <h3 className="text-[#5197f8] text-sm mt-1">
+            {formattedFrom} - {formattedTo}
+          </h3>
+        </center>
+      ) : null}
       {selectedNavItem === "RECENT BILLS" ? <RecentBills /> : null}
       {selectedNavItem === "TAGS & NOTES" ? <TagsAndNotes /> : null}
-      {selectedNavItem === "RECENT BILLS" && (
+      {selectedNavItem === "RECENT BILLS" && openBillPopup && (
         <PopUp show={openBillPopup} onClose={() => setOpenBillPopup(false)}>
           <RecentBillsPopup />
         </PopUp>
       )}
+      {selectedNavItem === "COINZ USAGE" ? <CoinzUsage /> : null}
       {selectedNavItem === "TAGS & NOTES" && (
         <PopUp show={openTagPopup} onClose={() => setOpenTagPopup(false)}>
           <TagPopup />
         </PopUp>
       )}
+      {openAddTagz && (
+        <PopUp show={openAddTagz} onClose={handleCloseTagz}>
+          <AddTagz />
+        </PopUp>
+      )}
+      {openAddNotes && (
+        <PopUp show={openAddNotes} onClose={handleCloseNotes}>
+          <AddNotes />
+        </PopUp>
+      )}
+      {openDeletePopup && (
+        <PopUp show={openDeletePopup} onClose={handleCloseDelete}>
+          <RemoveTag />
+        </PopUp>
+      )}
+      {openEditNotes && (
+        <PopUp show={openEditNotes} onClose={handleCloseEditNotes}>
+          <EditNotes />
+        </PopUp>
+      )}
+      {openDeleteNotePopup && (
+        <PopUp show={openDeleteNotePopup} onClose={handleCloseDeleteNote}>
+          <DeleteNote />
+        </PopUp>
+      )}
+      {selectedNavItem !== "TAGS & NOTES" ? <Pagination /> : null}
+      {isLoading ? <LoadingSpinner /> : null}
     </main>
   );
 };

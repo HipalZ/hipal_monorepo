@@ -4,11 +4,6 @@ import type { TagType } from "../validators";
 
 const tagSchema = new mongoose.Schema(
   {
-    tagTypeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "TagType",
-    },
     name: {
       type: String,
       required: true,
@@ -21,10 +16,40 @@ const tagSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    remainderDate: {
+    duration: {
       type: Number,
       required: false,
     },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+
+    displayForCaptains: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    repeat: {
+      type: Number,
+      default: 0,
+    },
+    time: {
+      type: Number,
+      required: false,
+    },
+
+    remainderInDuration: {
+      type: String,
+      required: false,
+    },
+    note: {
+      type: String,
+      required: false,
+    },
+
     isDeleted: {
       type: Boolean,
       required: false,

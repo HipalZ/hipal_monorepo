@@ -6,7 +6,6 @@ import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 
 interface IDishesProps {
-  parentCategory: CategoryType[];
   childCategory: CategoryType[];
 }
 

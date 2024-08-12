@@ -17,6 +17,7 @@ import {
   BranchSchema,
   BusinessSchema,
   UpdateBusinessSchema,
+  loyaltySchema,
   outLetInfoSchema,
   paramsSchema,
   permissionsSchema,
@@ -390,7 +391,7 @@ const businessesRouter = new Hono()
           primary: requestData.primaryColor,
           accent: requestData.primaryColor,
           secondary: requestData.secondaryColor,
-          "base-100":requestData.secondaryColor,
+          "base-100": requestData.secondaryColor,
         });
 
         const createTheme = await Theme.findOneAndUpdate(
@@ -659,6 +660,119 @@ const businessesRouter = new Hono()
       status: 200,
       error: false,
     });
-  });
+  })
+  .post(
+    "/:businessId/loyalty",
+    zValidator("json", loyaltySchema),
+
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+
+      const existingSettings = await LoyaltySettings.findOne({
+        businessId: businessId,
+      });
+
+      if (existingSettings) {
+        return c.json(
+          {
+            data: existingSettings,
+            Message: "loyalty settings already exist",
+
+            err: true,
+          },
+          409,
+        );
+      }
+
+      const createSettings = await LoyaltySettings.create({
+        businessId: businessId,
+        ...requestData,
+      });
+
+      return c.json({
+        data: createSettings,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  .put(
+    "/:loyaltyId/loyalty",
+    zValidator("json", loyaltySchema.partial()),
+
+    zValidator(
+      "param",
+      z.object({
+        loyaltyId: z.string({ message: "loyaltyId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { loyaltyId } = c.req.param();
+      const requestData = await c.req.json();
+
+      const updateSettings = await LoyaltySettings.findByIdAndUpdate(
+        loyaltyId,
+        requestData,
+        { new: true },
+      );
+
+      if (!updateSettings)
+        return c.json(
+          {
+            data: {},
+
+            err: true,
+            message: "loyalty settings not found",
+          },
+          404,
+        );
+
+      return c.json({
+        data: updateSettings,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+  .put(
+    "/:loyaltyId/pauseLoyalty",
+
+    zValidator(
+      "param",
+      z.object({
+        loyaltyId: z.string({ message: "loyaltyId is required" }),
+      }),
+    ),
+
+    zValidator(
+      "json",
+      z.object({ isActive: z.boolean({ message: "isActive is required" }) }),
+    ),
+
+    async (c) => {
+      const { loyaltyId } = c.req.param();
+
+      const updateSettings = await LoyaltySettings.findByIdAndUpdate(
+        loyaltyId,
+        { isActive: false },
+        { new: true },
+      );
+
+      return c.json({
+        data: updateSettings,
+        status: 200,
+        error: false,
+      });
+    },
+  );
 
 export default businessesRouter;

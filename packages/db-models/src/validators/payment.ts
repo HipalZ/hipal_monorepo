@@ -108,9 +108,11 @@ export const PaymentSchema = z.object({
     })
     .optional(),
 
+  tagIds: z.array(ObjectIdSchema).optional(),
+
+  reviewId: ObjectIdSchema.optional(),
+
   earnCoins: z.coerce.number({}).optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;
-// export type PaymentItemType = z.infer<typeof Item>;
-// export type PaymentSwiggyBillObjType = z.infer<typeof SwiggyBillObj>;

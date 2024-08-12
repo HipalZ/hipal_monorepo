@@ -45,8 +45,6 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-// removed getStaticPaths
-
 export async function generateMetadata() {
   return {
     title: "Explore",
@@ -59,22 +57,17 @@ export default async function Explore({
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
 
   return (
+    <Suspense fallback={<SkeletonLoader height={200} />}>
     <main className="relative flex flex-col w-full pb-16 overflow-hidden">
-      <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
         <MainBackground explore={data?.business} />
-      </Suspense>
       <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
-        <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <HeroSection data={data} />
-        </Suspense>
-
         <div className="bg-base-300">
           <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
         </div>
         {data?.banners?.some(
           (banner: IBannerPayload) => banner?.isPublished,
         ) && (
-          <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
             <article className="bg-base-300">
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
@@ -85,6 +78,7 @@ export default async function Explore({
                     if (!banner?.isPublished) return null;
                     return (
                       <div key={index} className="embla__slide">
+
                           <BannerLayouts
                             redirectionId={banner?.redirectionId || ""}
                             redirectionName={banner?.redirectionName || ""}
@@ -111,32 +105,22 @@ export default async function Explore({
                 </EmblaCarousel>
               </article>
             </article>
-          </Suspense>
         )}
-        <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <SubLoyalty loyalty={data?.loyalty} />
-        </Suspense>
         {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
           <div className="mt-12 overflow-auto">
-            <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
-            </Suspense>
           </div>
         ) : null}
-        <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
             footerDescription={data?.business?.footerDescription}
           />
-        </Suspense>
-        <Suspense fallback={<SkeletonLoader height={300} count={1} />}>
           <PageName />
-        </Suspense>
       </div>
-      <Suspense fallback={<SkeletonLoader height={50} count={1} />}>
         <BottomButton />
-      </Suspense>
     </main>
+    </Suspense>
   );
 }

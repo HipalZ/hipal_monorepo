@@ -28,7 +28,7 @@ const MemoListOfChildCategory = () => {
     isMenuManager,
     setRecommendationIds,
     setRemoveRecommendationIds,
-    setSelectSingleParentCat
+    setSelectSingleParentCat,
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -74,14 +74,16 @@ const MemoListOfChildCategory = () => {
   }, [search, subCategories, fuse, visibilityFilter, sortOrder]);
 
   const editCategory = useCallback((category: CategoryType) => {
+    if(category.parentCategoryIds.length > 0) {
+      setSelectSingleParentCat(category.parentCategoryIds[0]);
+    }
     setCategoryStep("EDIT_SUB_CATEGORY");
     setVisibility(category.visibility ?? false);
     setAvailability(category.availability ?? false);
     setImagePreview(category.coverImage ?? null);
-    setSelectSingleParentCat(category.parentCategoryIds[0]);
     setIdCheck(category.parentCategoryIds);
     setRecommendationIds(category.dishIds);
-    setRemoveRecommendationIds(category.dishIds)
+    setRemoveRecommendationIds(category.dishIds);
     setCategoryName(category.name);
     setCatId(category._id?.toString() ?? "");
     setOpenMenu(true);
@@ -97,7 +99,10 @@ const MemoListOfChildCategory = () => {
   }
 
   return (
-    <section className="flex flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
+    <section className="flex relative flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
+      <h3 className="absolute left-0 text-xl font-semibold text-black lg:top-[2rem] top-[4rem]">
+       sub category ({filteredCategories?.length})
+      </h3>{" "}
       {filteredCategories?.map((category) => (
         <button
           type="button"

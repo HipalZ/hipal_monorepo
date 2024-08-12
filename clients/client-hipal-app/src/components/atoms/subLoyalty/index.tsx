@@ -32,8 +32,6 @@ const MainLoyalty = dynamic(() => import("@/components/atoms/mainLoyalty"), {
 
 const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const { loyaltySetting, setLoyaltySetting } = useLoyaltyData();
-  const userDetails = useLogin((s) => s.userDetails);
-  const setUserCoinZ = useLogin((s) => s.setUserCoinZ);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -68,30 +66,8 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
       findPattern(loyalty?.cardPattern);
     }
   }, []);
+ 
 
-  const handleUserCoinz = async () => {
-    const res = await apiRpc.users[":businessId"].getUserReward.$get({
-      param: {
-        businessId: loyalty?.businessId || "",
-      },
-      query: {
-        userId: userDetails?._id,
-        loyaltyId: loyalty?.loyaltyId,
-      },
-    });
-    const response = (await res.json()) as unknown as { data: IUserReward };
-    if (res.status === 200) {
-      setUserCoinZ(response?.data?.rewards);
-    }
-    return response?.data?.rewards;
-  };
-
-  useQuery({
-    queryKey: ["getUserReward", userDetails._id, loyalty?.loyaltyId],
-    queryFn: handleUserCoinz,
-    enabled: !!userDetails._id && !!loyalty?.loyaltyId,
-  });
-  
   if (!loyalty?._id) {
     return <></>;
   }
@@ -99,9 +75,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   return (
     <section className="py-10 h-[25rem] !mt-0 bg-primary">
       <center>
-        <h4 className="pb-4 text-2xl font-bold text-base-100">
-          REWARDZ
-        </h4>
+        <h4 className="pb-4 text-2xl font-bold text-base-100">REWARDZ</h4>
       </center>
       <section className="relative flex items-center justify-center gap-2 px-4 mt-4 overflow-hidden">
         <center
@@ -151,7 +125,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 type="button"
                 className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
               >
-                claim Now
+                Claim Now
               </button>
             </Link>
           )}
@@ -161,7 +135,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 type="button"
                 className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
               >
-                claim Now
+                Claim Now
               </button>
             </Link>
           )}

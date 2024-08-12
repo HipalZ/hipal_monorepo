@@ -11,7 +11,6 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 export const TagSchema = z.object({
-  tagTypeId: ObjectIdSchema,
   name: z
     .string({
       message: "name is required",
@@ -23,9 +22,16 @@ export const TagSchema = z.object({
       message: "name must be atmost 100 characters long",
     }),
   description: z.string().optional(),
+  createdBy: ObjectIdSchema,
   businessId: ObjectIdSchema,
+  displayForCaptains: z.boolean().default(true).optional(),
+  repeat: z.number().optional(),
+  remainderInDuration: z.string().optional(),
+  note: z.string().min(2).max(100).optional(),
+
   isDeleted: z.boolean().default(false).optional(),
-  remainderDate: z.number().optional(),
+  duration: z.number().optional(),
+  time: z.number().optional(),
 });
 
 export type TagType = z.infer<typeof TagSchema>;

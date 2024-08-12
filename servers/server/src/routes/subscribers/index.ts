@@ -1,4 +1,10 @@
-import { LoyaltySettings, Subscriber, UserReward } from "@hi/db-models";
+import {
+  Business,
+  LoyaltySettings,
+  Subscriber,
+  User,
+  UserReward,
+} from "@hi/db-models";
 import { businessSubscriberValidator } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -13,6 +19,7 @@ const subsCriberRouter = new Hono()
       businessId,
       isDeleted: false,
     });
+
     //
     if (existingSubscriber) {
       return c.json(
@@ -25,11 +32,10 @@ const subsCriberRouter = new Hono()
       );
     }
 
-    const date = Date.now();
-    console.log("createSubscriber", date);
     const createSubscriber = await Subscriber.create({
       ...requestData,
       date: Date.now(),
+      userCount: 1,
     });
 
     if (!createSubscriber) {
@@ -45,11 +51,19 @@ const subsCriberRouter = new Hono()
     const loyalty = await LoyaltySettings.findOne({ businessId });
 
     if (loyalty?.signUpBonus && loyalty.signUpBonus > 0) {
-      await addSignUpBonus(userId, businessId, loyalty.signUpBonus);
+      await addSignUpBonus(
+        loyalty.loyaltyId.toString(),
+        userId,
+        loyalty.signUpBonus,
+      );
     }
 
     if (loyalty?.signUpBonus && loyalty.signUpBonus > 0) {
-      const userReward = await UserReward.findOne({ userId, businessId });
+      const userReward = await UserReward.findOne({
+        userId,
+        loyaltyId: loyalty.loyaltyId,
+      });
+
       if (!userReward) {
         return c.json(
           {
@@ -61,9 +75,13 @@ const subsCriberRouter = new Hono()
         );
       }
       return c.json({
-        message: "User already subscribed",
+        message: "User subscribed successfully",
         err: false,
-        data: { signUpBonus: loyalty.signUpBonus },
+        data: {
+          reward: loyalty.signUpBonus,
+          count: userReward.scanCount,
+          totalCoins: userReward.rewards,
+        },
       });
     }
 
@@ -173,6 +191,69 @@ const subsCriberRouter = new Hono()
         200,
       );
     },
-  );
+  )
+  .get(
+    "/allSubscribers/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const subscribers = await Subscriber.find({
+        isDeleted: false,
+        businessId,
+      });
+
+      const totalUserCount = subscribers.reduce(
+        (acc, sub) => acc + (sub.userCount ?? 0),
+        0,
+      );
+
+      return c.json(
+        {
+          message: "Subscribers fetched successfully",
+          err: false,
+          data: {
+            totalUserCount,
+          },
+        },
+        200,
+      );
+    },
+  )
+  .get("/bulkSubscriber", async (c) => {
+    const businesses = await Business.find({});
+    const users = await User.find({});
+
+    for (const business of businesses) {
+      for (const user of users) {
+        const existingSubscriber = await Subscriber.findOne({
+          userId: user._id,
+          businessId: business._id,
+        });
+        if (!existingSubscriber) {
+          await Subscriber.create({
+            userId: user._id,
+            businessId: business._id,
+            userCount: 1,
+            date: Date.now(),
+          });
+        }
+      }
+    }
+
+    return c.json(
+      {
+        message: "Bulk subscribers created successfully",
+        err: false,
+        data: {},
+      },
+      201,
+    );
+  });
 
 export default subsCriberRouter;

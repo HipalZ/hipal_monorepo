@@ -1,73 +1,89 @@
-import React, { memo, useCallback, useState } from "react"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import QuickFilterPopup from "../quickFilterPopup"
-import Image from "next/image"
-import Mixed from "@/assets/svg/Mixed.svg"
+import React, { memo, useCallback, useState } from "react";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import QuickFilterPopup from "../quickFilterPopup";
+import Image from "next/image";
+import Mixed from "@/assets/svg/Mixed.svg";
 import { FaCaretDown } from "react-icons/fa";
 
 export const foodTypeIcons = {
-		
-	vegan: (
-		<div className="w-4 h-4 p-[0.125rem] border-2 border-[#02614b]">
-			<div className="w-[0.5rem] h-[0.5rem] bg-[#02614b] rounded-full"/>
-		</div>
-	),
-	egg: (
-		<div className="w-4 h-4 p-[0.125rem] border-2 border-[#D2C903]">
-			<div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full"/>
-		</div>
-	),
-	mixed: (
-		<div className="flex flex-row -mt-2 -mb-8">
-			<Image src={Mixed} width={20} height={4} alt="mixed" />
-		</div>
-	),
-	all: <div className="flex items-center"><FaCaretDown size={20} />Filter</div>
-}
-
+  vegan: (
+    <div className="w-4 h-4 p-[0.125rem] border-2 border-[#02614b]">
+      <div className="w-[0.5rem] h-[0.5rem] bg-[#02614b] rounded-full" />
+    </div>
+  ),
+  egg: (
+    <div className="w-4 h-4 p-[0.125rem] border-2 border-[#D2C903]">
+      <div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full" />
+    </div>
+  ),
+  mixed: (
+    <div className="flex flex-row -mt-2 -mb-8">
+      <Image src={Mixed} width={20} height={4} alt="mixed" />
+    </div>
+  ),
+  all: (
+    <div className="flex items-center">
+      <FaCaretDown size={20} />
+      Filter
+    </div>
+  ),
+};
 
 const FilterOption = ({ isActive, onClick, color, label, isNone = false }) => (
-	<div
-		className={`${isActive ? 'bg-primary text-base-100' : ''} flex justify-center items-center px-2 rounded-full py-1 border border-primary `}
-		onClick={onClick}
-	>
-		<div className="w-4 h-4 p-[0.125rem] border-2" style={{ borderColor: color }}>
-			{!isNone ? (
-				<div className="w-[0.5rem] h-[0.5rem] rounded-full" style={{ backgroundColor: color }}/>
-			) : (
-				<></>
-			)}
-		</div>
-		<div className='ml-1 text-[0.75rem]'>{label}</div>
-	</div>
-)
+  <div
+    className={`${
+      isActive ? "bg-primary text-base-100" : ""
+    } flex justify-center items-center px-2 rounded-full py-1 border border-primary `}
+    onClick={onClick}
+  >
+    <div
+      className="w-4 h-4 p-[0.125rem] border-2"
+      style={{ borderColor: color }}
+    >
+      {!isNone ? (
+        <div
+          className="w-[0.5rem] h-[0.5rem] rounded-full"
+          style={{ backgroundColor: color }}
+        />
+      ) : (
+        <></>
+      )}
+    </div>
+    <div className="ml-1 text-[0.75rem]">{label}</div>
+  </div>
+);
+
 
 const QuickFilter = () => {
-	const [isModalOpen, setIsModalOpen] = useState(false)
-	const { setActiveDishType, isActiveDishType } = useActiveClass()
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setActiveDishType, isActiveDishType } = useActiveClass();
 
-	const openModal = useCallback(() => {
-		setIsModalOpen(true)
-	}, [])
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
-	const closeModal = useCallback(() => {
-		setIsModalOpen(false)
-	}, [])
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
-	const handleFilter = useCallback((str: string) => {
-		if (isActiveDishType.toLowerCase() === str.toLowerCase()) {
-			setActiveDishType("all")
-			setIsModalOpen(false)
-			return
-		}
-		setActiveDishType(str)
-		setIsModalOpen(false)
-	}, [setActiveDishType, isActiveDishType])
+  const handleFilter = useCallback(
+    (str: string) => {
+      if (isActiveDishType.toLowerCase() === str.toLowerCase()) {
+        setActiveDishType("all");
+        setIsModalOpen(false);
+        return;
+      }
+      setActiveDishType(str);
+      setIsModalOpen(false);
+    },
+    [setActiveDishType, isActiveDishType],
+  );
 
-	
-	const activeIcon = foodTypeIcons[isActiveDishType.toLowerCase()] || (
-	<div className="flex items-center"><FaCaretDown size={20} /> Filter</div>
-	)
+  const activeIcon = foodTypeIcons[isActiveDishType.toLowerCase()] || (
+    <div className="flex items-center">
+      <FaCaretDown size={20} /> Filter
+    </div>
+  );
 
 	return (
 		<div>
@@ -123,5 +139,5 @@ const QuickFilter = () => {
 	)
 }
 
-const MemoQuickFilter = memo(QuickFilter)
-export default MemoQuickFilter
+const MemoQuickFilter = memo(QuickFilter);
+export default MemoQuickFilter;

@@ -69,7 +69,7 @@ const MemoSelectSubCategory = () => {
                 onChange={() =>
                   handleCategoryChange(category._id?.toString() ?? "")
                 }
-                className="mr-2 checkbox checkbox-sm checkbox-black"
+                className="mr-2 text-sm text-black rounded"
               />
               <h3 className="text-lg font-semibold">{category.name}</h3>
             </label>

@@ -52,6 +52,7 @@ const HorizontalCard = ({
       <div className="flex flex-row items-end py-4 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
+
             {dishData?.dishTypes && outletInfo.outLetType !== "OTHER" && (
               <div className="my-auto">
                 <FoodType types={dishData?.dishTypes} />

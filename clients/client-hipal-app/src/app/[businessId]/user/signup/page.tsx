@@ -3,17 +3,19 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Image from "next/image";
 import { type FormEvent, memo, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import Welcome from "@/assets/login-background.png";
+import Welcome from "@/assets/login/waveHand.png";
 import { BiArrowBack } from "react-icons/bi";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
+import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const SignUp = memo(() => {
-  const { setUserDetails ,userDetails } = useLogin();
-  const [phone, setPhone] = useState( "");
+  const [phone, setPhone] = useState("");
+  const { setUserDetails, userDetails } = useLogin();
+
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
@@ -60,33 +62,42 @@ const SignUp = memo(() => {
   }, [router, customLink]);
 
   useEffect(() => {
-    
     if (userDetails.phone) {
       setPhone(userDetails.phone);
     }
   },[])
 
+
   return (
-    <main className="relative bg-black">
+    <main className="relative bg-[#748FFC]">
       <section className="flex items-center justify-between">
         <button
-        type="button"
+          type="button"
           onClick={goBack}
           className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
         >
-          <BiArrowBack size={20} />
+          <BiArrowBack className="text-black" size={20} />
         </button>
+        <article className="sticky z-20 top-4 right-4">
+          <Image src={HipalWhiteLogo} alt="logo" />
+        </article>
       </section>
+
       <section
-        className="fixed inset-0 z-0 bg-black bg-center bg-no-repeat bg-contain"
+        className="fixed inset-0 z-0 bg-[#748FFC] bg-center bg-no-repeat bg-contain"
         style={{ backgroundImage: `url(${Welcome.src})` }}
       />
+      <section className="absolute text-white top-[10vh] left-6">
+        <b className="block text-3xl gradient-text">Let’s get </b>
+        <b className="text-3xl capitalize gradient-text">Party started</b>{" "}
+        <b className="text-4xl wave-hand">👋</b>
+      </section>
       <form
         onSubmit={handleSubmit}
         className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-2xl text-black"
       >
         {businessData?.logoUrl && (
-          <section className="bg-inherit float-right w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4rem] p-1 shadow-xl overflow-hidden">
+          <section className="bg-inherit float-left w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[4.5rem] p-1 border border-[#00000050] overflow-hidden">
             <Image
               className="aspect-square w-[4.75rem] h-[4.75rem]"
               width={84}
@@ -113,7 +124,7 @@ const SignUp = memo(() => {
         <button
           disabled={loader}
           type="submit"
-          className="w-full mt-4 text-white bg-black rounded-full on_active_bounce btn"
+          className="w-full text-white bg-black rounded-full on_active_bounce btn"
         >
           {loader ? (
             <span className="loader_spinner text-white !border-t-base-100 " />
@@ -121,7 +132,7 @@ const SignUp = memo(() => {
             "Get Started"
           )}
         </button>
-        <center className="mx-12 mt-4 text-xs">
+        <center className="mx-12 mt-2 text-xs">
           By continuing you are agreeing to the{" "}
           <small className="text-[#2364E6]">
             Terms of Service and Privacy Policy.

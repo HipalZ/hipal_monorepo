@@ -9,7 +9,6 @@ import {
 } from "react";
 import {
   MdAccountBalanceWallet,
-  MdOutlineAccountBalanceWallet,
   MdOutlineMenuBook,
 } from "react-icons/md";
 import Link from "next/link";
@@ -24,7 +23,6 @@ import {
   useSearchParams,
 } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
-import { HiOutlineHome } from "react-icons/hi";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
 function BottomButton({

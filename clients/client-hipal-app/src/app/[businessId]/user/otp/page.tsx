@@ -1,17 +1,14 @@
 "use client";
-import { type IUserData, useLogin } from "@/components/store/useLogin";
+import { useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import Welcome from "@/assets/otp_image.png";
+import Welcome from "@/assets/login/otp.png";
 import { BiArrowBack, BiEditAlt } from "react-icons/bi";
-import Sunlight from "@/assets/Ellipse 1-min.png";
 import Image from "next/image";
 import confetti from "canvas-confetti";
-import Hi_Coin from "@/assets/hi-coin.svg";
-import CoinsAnimation from "@/components/atoms/coinAnimation";
-import NumberAnimation from "@/components/atoms/coinsScroll";
+
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import HipalLogo from "@/assets/hipalNewLogo.svg";
@@ -19,7 +16,7 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import SignUpBonus from "@/components/organisms/explore/signupbonus";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 function OtpPage() {
@@ -30,6 +27,7 @@ function OtpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logoUrl);
+  const businessId = useBusinessDetails((s) => s.businessDetails._id);
   const [logo, setLogo] = useState(businessLogo);
   const setAccessToken = useUserToken.getState().setAccessToken;
   const setRefreshToken = useUserToken.getState().setRefreshToken;
@@ -115,6 +113,7 @@ function OtpPage() {
         loyaltyId: loyaltyId,
         signUpBonus: signUpBonus,
         name: customerName || userDetails.name,
+        businessId: businessId,
       },
       param: { id: customLink },
     });
@@ -171,21 +170,22 @@ function OtpPage() {
   }, [isModalOpen]);
 
   return (
-    <main className="relative bg-black">
+    <main className="relative bg-[#748FFC]">
       <section className="flex items-center justify-between">
-        <article
+        <button
+          type="button"
           onClick={goBack}
           className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
         >
-          <BiArrowBack size={20} />
-        </article>
+          <BiArrowBack className="text-black" size={20} />
+        </button>
         <article className="sticky z-20 top-4 right-4">
           <Image src={HipalWhiteLogo} alt="logo" />
         </article>
       </section>
       <section
         className="fixed inset-0 z-0 w-full max-w-[30rem]
-				 bg-black bg-center bg-no-repeat bg-contain  mx-auto"
+				 bg-[#748FFC] bg-center bg-no-repeat bg-contain mx-auto"
         style={{ backgroundImage: `url(${Welcome.src})` }}
       />
       {userDetails?.name === "" ? (
@@ -202,7 +202,7 @@ function OtpPage() {
         </section>
       )}
       <form
-        className="fixed bottom-0 w-full p-4 bg-white max-w-[30rem] z-10 rounded-t-xl"
+        className="fixed bottom-0 w-full p-4 text-black bg-white max-w-[30rem] z-10 rounded-t-xl"
         onSubmit={handleSubmit}
       >
         {businessLogo && (
@@ -302,73 +302,7 @@ function OtpPage() {
           </small>
         </section>
       </form>
-      {isModalOpen && (
-        <section
-          id="my_modal_1"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        >
-          <section className="absolute inset-0 flex items-center justify-center">
-            <center className="absolute w-[900px] animate-glow">
-              <Image
-                className="animate-spin"
-                width={1080}
-                height={1080}
-                src={Sunlight}
-                alt="Sunlight"
-              />
-            </center>
-          </section>
-          <section className="absolute inset-0 flex items-center justify-center">
-            <section className="absolute rotate-[-30deg] left-6 top-[12vh]">
-              <Image
-                className="zoomIn"
-                width={76}
-                height={76}
-                src={Hi_Coin}
-                alt="Hi Coin"
-              />
-            </section>
-            <section className="absolute rotate-45 right-6 top-[20vh] z-20">
-              <Image
-                className="zoomIn"
-                width={76}
-                height={76}
-                src={Hi_Coin}
-                alt="Hi Coin"
-              />
-            </section>
-          </section>
-
-          <section
-            id="shine-card"
-            className="relative mt-[5rem] p-6 bg-[#F8D76E] rounded-2xl shadow-lg mx-auto w-[80%] max-w-[26rem] z-10 zoomIn overflow-hidden"
-          >
-            <div className="shine-effect"></div>
-            <center>
-              <CoinsAnimation />
-            </center>
-            <center className="text-xl font-bold uppercase text-[#8D0F16] mt-6">
-              Congratulations!!
-            </center>
-            <center className="text-lg font-medium uppercase text-[#8D0F16] mt-2">
-              you got
-            </center>
-            <div className="loyalty_card_gradient" />
-            <div className="loyalty_card_gradient2" />
-            {coinZ > 0 && <NumberAnimation number={coinZ} />}
-            <center className="text-xl font-medium uppercase text-[#8D0F16]">
-              CoinZ
-            </center>
-            <button
-              type="button"
-              className="relative z-20 w-full px-4 py-2 mt-6 text-white bg-[#015845] transition-all duration-300 rounded-full shadow-lg"
-              onClick={goNext}
-            >
-              Explore
-            </button>
-          </section>
-        </section>
-      )}
+      {isModalOpen && <SignUpBonus coinZ={coinZ} goNext={goNext} />}
     </main>
   );
 }
