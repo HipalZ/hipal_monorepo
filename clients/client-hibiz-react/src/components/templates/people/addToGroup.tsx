@@ -42,7 +42,7 @@ const MemoAddToGroup = ({
 
   return (
     <article className="flex flex-wrap justify-center items-center mx-0 md:mx-4 gap-x-4 pb-[7rem]">
-      {groupData?.map((group) => {
+      {groupData?.filter(group =>group.groupType !== "DYNAMIC")?.map((group) => {
         const isSelected = selectedGroupId === group._id;
         return (
           <button

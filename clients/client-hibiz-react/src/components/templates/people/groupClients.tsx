@@ -32,29 +32,29 @@ const GroupClients = ({
         {selectedGroup.name}
       </h3>
 
-      <section className="bg-[#E3DCFF] rounded-3xl px-4 py-3 justify-evenly mx-6 mt-4 flex items-center relative z-10">
-        {topNavigationArr.map((item) => (
-          <article key={item.name}>
+      <section className="bg-[#E3DCFF] rounded-3xl opacity-50 px-4 py-3 justify-evenly mx-6 mt-4 flex items-center relative z-10">
+        {topNavigationArr?.map((item) => (
+          <article key={item?.name}>
             <button
               type="button"
               className="flex items-center gap-2 p-4 bg-black text-white rounded-full max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
             >
               <item.icon />
             </button>
-            <h3 className="text-sm">{item.name}</h3>
+            <h3 className="text-sm">{item?.name}</h3>
           </article>
         ))}
       </section>
 
       <section className="flex flex-wrap justify-start mt-6 pb-[7rem] gap-4 mx-4 lg:pb-[5rem]">
-        {groupUserData.map((user: ICustomerRecord) => (
+        {groupUserData?.map((user: ICustomerRecord) => (
           <button
             key={user._id}
             type="button"
             className="relative w-full p-4 bg-white rounded-2xl max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
           >
             <article className="flex items-center justify-between">
-              <h3>{user?.userId.name}</h3>
+              <h3>{user?.userId?.name}</h3>
               <p>
                 {user?.userId?.phone?.slice(0, 2)}******
                 {user?.userId?.phone?.slice(-2)}

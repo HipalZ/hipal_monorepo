@@ -78,7 +78,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
             </div>
             {!hide && (
               <Link
-                to={`/app/business/${user.businessId}/people/${user.userId._id}`}
+                to={`/app/business/${user?.businessId}/people/${user?.userId?._id}`}
                 className="absolute top-1 right-1"
               >
                 <MdArrowOutward size={24} />
