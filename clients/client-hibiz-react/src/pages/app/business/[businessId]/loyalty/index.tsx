@@ -1,9 +1,9 @@
-import CardOne from "@/assets/cards/card23.png";
+import { useState, useEffect, useRef } from "react";
+import CardOne from "@/assets/cards/card21.png";
+import CardTwo from "@/assets/cards/card22.png";
+import CardThree from "@/assets/cards/card23.png";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { gsap } from "gsap";
-import { Draggable } from "gsap/Draggable";
-import { useEffect, useRef } from "react";
 
 const points = [
   "Create a loyalty card in 5 easy steps 😋",
@@ -12,40 +12,26 @@ const points = [
   "Don’t miss out—start building lasting connections that drive repeat business 🚀",
 ];
 
+const cards = [CardOne, CardTwo, CardThree];
+
 const Loyalty = () => {
+  const [currentCard, setCurrentCard] = useState(0);
+  const [fade, setFade] = useState(true); // State for managing fade effect
   const cardRef = useRef<HTMLDivElement>(null);
 
   const businessData = useBusinessData((s) => s.businessData);
   const userDetails = useOwnerLogin((s) => s.user);
 
   useEffect(() => {
-    gsap.registerPlugin(Draggable);
-  
-    if (cardRef.current) {
-      Draggable.create(cardRef.current, {
-        type: "rotation",
-        onDrag: (event) => {
-          const rotationX = event.deltaY / 5;
-          const rotationY = event.deltaX / 5;
-          gsap.to(event.target, {
-            rotationX: `+=${rotationX}`,
-            rotationY: `+=${rotationY}`,
-            transformPerspective: 1000,
-            ease: "elastic.out(1, 0.3)",
-          });
-        },
-        onThrowUpdate: (event) => {
-          const rotationX = event.deltaY / 5;
-          const rotationY = event.deltaX / 5;
-          gsap.to(event.target, {
-            rotationX: `+=${rotationX}`,
-            rotationY: `+=${rotationY}`,
-            transformPerspective: 1000,
-            ease: "elastic.out(1, 0.3)",
-          });
-        },
-      });
-    }
+    const intervalId = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setCurrentCard((prevCard) => (prevCard + 1) % cards.length);
+        setFade(true); 
+      }, 500); 
+    }, 3000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
@@ -65,14 +51,24 @@ const Loyalty = () => {
           }}
         >
           <img
-            src={CardOne}
-            alt="CardOne"
-            className="object-cover w-full h-full rounded-2xl"
+            src={cards[currentCard]}
+            alt={`Card ${currentCard + 1}`}
+            className={`object-cover w-full h-full rounded-2xl transition-opacity duration-500 ${
+              fade ? "opacity-100" : "opacity-50"
+            }`}
           />
           <figure className="absolute text-white top-4 left-4 h-[5rem] aspect-square w-[5rem] rounded-xl">
-            <img className="rounded-xl" width={75} height={75} src={businessData?.logo} alt=" logo" />
+            <img
+              className="rounded-xl"
+              width={75}
+              height={75}
+              src={businessData?.logo}
+              alt=" logo"
+            />
           </figure>
-          <h3 className="absolute text-white bottom-4 left-4">{userDetails.name || "name"}</h3>
+          <h3 className="absolute text-white bottom-4 left-4">
+            {userDetails.name || "name"}
+          </h3>
         </article>
         <article
           style={{ height: "calc(100dvh - 22rem)" }}
