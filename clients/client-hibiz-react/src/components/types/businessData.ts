@@ -511,6 +511,7 @@ export interface IUserGroup {
   description: string;
   filter: IGroupFilter[];
   autoUpdate: boolean;
+  groupType: "MANUAL" | "DYNAMIC";
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
