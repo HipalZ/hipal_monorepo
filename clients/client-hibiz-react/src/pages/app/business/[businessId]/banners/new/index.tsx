@@ -22,7 +22,6 @@ const MemoNewBanner = () => {
   }));
 
   const handleBack = () => {
-    console.log("handleBack");
     startTransition(() => {
       navigate(`/app/business/${businessId}/banners`);
     });

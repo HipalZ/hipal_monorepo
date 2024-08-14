@@ -28,14 +28,16 @@ import { useBannerStore } from "@/components/store/useBannerStore";
 import { cropImage } from "@/components/cropper";
 import { BsGrid } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
-import { BannerPage } from "@/components/utils/bannerLayouts";
+import { BannerPage, BannerType } from "@/components/utils/bannerLayouts";
 import CropperPopup from "@/components/common/cropperPopup";
+import { CiNoWaitingSign } from "react-icons/ci";
+import BottomButton from "@/components/atom/bottomButton";
+import MiddlePopUp from "@/components/atom/middlePopUp";
 
 // Lazy load components
 const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
 const ReactCropper = lazy(() => import("@/components/cropper"));
 const PopUp = lazy(() => import("@/components/atom/popUp"));
-const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const RedirectionPopUp = lazy(() => import("./redirectionPopUp"));
@@ -45,13 +47,22 @@ const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const buttonColors = [
-  { bgColor: "#FACA50", textColor: "#000000" },
-  { bgColor: "#F3764A", textColor: "#000000" },
-  { bgColor: "#8D0F16", textColor: "#ffffff" },
-  { bgColor: "#FDF5D7", textColor: "#000000" },
+  { bgColor: "#FFFFFF", textColor: "#000000" }, // Mint green with black text
+  { bgColor: "#9013FE", textColor: "#ffffff" }, // Purple with white text
+  { bgColor: "#F5A623", textColor: "#000000" }, // Orange with black text
+  { bgColor: "#000000", textColor: "#ffffff" }, // Red with white text
+  { bgColor: "#7ED321", textColor: "#000000" }, // Lime green with black text
+  { bgColor: "transparent", textColor: "#ffffff" }, // Black with white text
 ];
 
-const preDefinedColors = ["#FACA50", "#F3764A", "#8D0F16", "#FDF5D7"];
+const preDefinedColors = [
+  "#FFFFFF", // White
+  "#9013FE", // Purple
+  "#F5A623", // Orange
+  "#000000", // Black
+  "#7ED321", // Lime green
+  "transparent",
+];
 
 const MemoCreateBanner = () => {
   const cropperRef = useRef(null);
@@ -76,19 +87,27 @@ const MemoCreateBanner = () => {
   const [colorWheelParagraph, setColorWheelParagraph] = useState(false);
   const [colorWheelButton, setColorWheelButton] = useState(false);
   const {
-    setSelectedBannerType,
     selectedBannerType,
     isButtonExists,
     setBannerPage,
     isPatternExists,
     editBanner,
+    onlyImage,
+    setIsButtonExists,
+    setOnlyImage,
+    openPreview,
+    setOpenPreview,
   } = useBannerStore((s) => ({
-    setSelectedBannerType: s.setSelectedBannerType,
     selectedBannerType: s.selectedBannerType,
     isButtonExists: s.isButtonExists,
     setBannerPage: s.setBannerPage,
     isPatternExists: s.isPatternExists,
     editBanner: s.editBanner,
+    onlyImage: s.onlyImage,
+    setOnlyImage: s.setOnlyImage,
+    setIsButtonExists: s.setIsButtonExists,
+    openPreview: s.openPreview,
+    setOpenPreview: s.setOpenPreview,
   }));
 
   const [isLoading, setIsLoading] = useState(false);
@@ -128,6 +147,12 @@ const MemoCreateBanner = () => {
       }));
       setItemName(editingBanner?.redirectionName || "");
       setIsPublished(editingBanner?.isPublished || false);
+      setIsButtonExists(!!editingBanner?.callToAction);
+      if (editingBanner?.layout === BannerType.BANNER_TYPE_14) {
+        setOnlyImage(true);
+      } else {
+        setOnlyImage(false);
+      }
     }
   }, [editingBanner, editBanner]);
 
@@ -226,7 +251,7 @@ const MemoCreateBanner = () => {
 
   const handleCreateBanner = async (isPublish?: boolean) => {
     if (!businessId) return;
-    if (heading.length === 0) {
+    if ((heading.length === 0 || paragraph.length === 0) && !onlyImage) {
       return toast.error("Heading and Description are required");
     }
     if (img && !img.logo && !isPatternExists) {
@@ -259,7 +284,6 @@ const MemoCreateBanner = () => {
       redirectionType,
       redirectionName: itemName,
     };
-    console.log("payload", payload);
     const filteredPayload = Object.fromEntries(
       Object.entries(payload).filter(
         ([_, value]) => value !== null && value !== "",
@@ -312,48 +336,66 @@ const MemoCreateBanner = () => {
     setColorWheelParagraph(!colorWheelParagraph);
   }, [colorWheelParagraph]);
 
+  const handlePreview = () => {
+    setOpenPreview(!openPreview);
+  };
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <main className="relative h-screen">
-        <section className="fixed top-0 bg-white w-full h-[17rem] z-10 max-w-[69rem]">
-          <HisiteHeader isIconBusinessShow={false} onBack={handleBackClick} />
-          <section className="absolute flex justify-center mt-[4rem] -translate-x-1/2 -top-8 left-1/2 bg-white">
-            <BannerDynamicLayout
-              img={img}
-              selectedColor={selectedColor}
-              buttonStyle={buttonStyle}
-              callToAction={callToAction}
-              paragraphStyle={paragraphStyle}
-              heading={heading}
-              paragraph={paragraph}
-            />
-          </section>
+      <main className="lg:flex">
+        <section className="fixed top-0 lg:relative bg-white lg:bg-transparent w-full h-[16rem] md:h-[30rem] lg:h-screen z-10 max-w-[69rem]">
+          <HisiteHeader
+            isIconBusinessShow={false}
+            onBack={handleBackClick}
+            rightButton={
+              <button
+                type="button"
+                onClick={handlePreview}
+                className="block px-4 py-1 text-white bg-[#7A68FE] scale-90 border rounded-full shadow md:hidden border-1"
+              >
+                Preview
+              </button>
+            }
+          />
+          {openPreview ? null : (
+            <section className="absolute lg:relative flex justify-center mt-[4rem] lg:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
+              <BannerDynamicLayout
+                img={img}
+                selectedColor={selectedColor}
+                buttonStyle={buttonStyle}
+                callToAction={callToAction}
+                paragraphStyle={paragraphStyle}
+                heading={heading}
+                paragraph={paragraph}
+              />
+              <center className="absolute -bottom-10">
+                <button
+                  type="button"
+                  onClick={handleChangeLayout}
+                  className="flex items-center justify-center px-3 py-1 space-x-2 text-sm text-white bg-black rounded-full"
+                >
+                  <BsGrid /> <span>Change Layout</span>
+                </button>
+              </center>
+            </section>
+          )}
           &nbsp;
-          <center className="absolute -translate-x-1/2 -bottom-4 left-1/2">
-            <button
-              type="button"
-              onClick={handleChangeLayout}
-              className="flex items-center justify-center px-3 py-1 space-x-2 text-sm text-white bg-black rounded-full"
-            >
-              <BsGrid /> <span>Change Layout</span>
-            </button>
-          </center>
         </section>
-        <section>
-          <section className="mt-[18rem] mx-4">
+        <section className="w-full">
+          <section className="mt-[18rem] lg:mt-16 mx-4 md:mt-[30rem]">
             <SubHeader text="Banner Details" />
-            <section className="bg-white md:flex md:items-center">
+            <section className="w-full bg-white rounded-2xl">
               <section className="flex items-center justify-between flex-1 p-4 mt-4 space-x-4 md:justify-start">
-                <section className="flex items-center flex-1 gap-6">
+                <section className="flex gap-4 md:gap-6">
                   {isPatternExists ? null : (
                     <article>
-                      <h1 className="mb-2 text-gray-500">Add an Image</h1>
+                      <h1 className="mb-2 text-gray-500">Image</h1>
                       <article
                         className={cn(
                           "shrink-0 relative rounded-xl h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] inline-block",
                           img?.logo
                             ? ""
-                            : "border-dashed border-2  border-[#8C63FF]",
+                            : "border-dashed border-2 border-[#8C63FF]",
                         )}
                       >
                         <input
@@ -374,10 +416,10 @@ const MemoCreateBanner = () => {
                               <img src={img.logo} alt="Logo" />
                               <button
                                 type="button"
-                                className="absolute p-1 bg-white rounded-full top-2 right-2"
+                                className="absolute p-0.5 bg-white backdrop-blur-3xl rounded-full top-1 right-1"
                                 onClick={() => handleRemoveImage("logo")}
                               >
-                                <FaTimes />
+                                <FaTimes size={12} />
                               </button>
                             </>
                           ) : (
@@ -387,181 +429,223 @@ const MemoCreateBanner = () => {
                       </article>
                     </article>
                   )}
-                  <article>
-                    <h1 className="mb-2 text-gray-500">Banner Color</h1>
-                    <article
-                      onClick={() =>
-                        setColorWheelBackground(!colorWheelBackground)
-                      }
-                      style={{
-                        background: selectedColor.bgColor || "transparent",
-                      }}
-                      className={cn(
-                        "relative px-3 py-2 inline-block rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
-                        selectedColor?.bgColor?.length
-                          ? ""
-                          : "border-dashed border-2  border-[#8C63FF]",
-                      )}
-                    >
-                      <PlusButton />
-                      <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
-                        <TfiPaintBucket size={16} />
-                      </span>
+                  {onlyImage ? null : (
+                    <article>
+                      <h1 className="mb-2 text-gray-500">Banner Color</h1>
+                      <article
+                        onClick={() =>
+                          setColorWheelBackground(!colorWheelBackground)
+                        }
+                        style={{
+                          background: selectedColor.bgColor || "transparent",
+                          border:
+                            selectedColor.bgColor === "transparent" ||
+                            selectedColor.bgColor === ""
+                              ? "2px dashed #8C63FF"
+                              : "1px solid black",
+                        }}
+                        className={cn(
+                          "relative px-3 py-2 rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
+                        )}
+                      >
+                        <PlusButton />
+                        <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
+                          <TfiPaintBucket size={16} />
+                        </span>
+                      </article>
                     </article>
-                  </article>
-                  <section className="mb-4">
-                    <h1 className="mb-2 text-gray-500">Suggested Colors</h1>
-                    <article className="grid grid-cols-2 gap-4">
-                      {preDefinedColors.map((color) => {
-                        return (
-                          <article
-                            key={color}
-                            onClick={() => handleCustomColor("banner", color)}
-                            style={{ background: color }}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        );
-                      })}
-                    </article>
-                  </section>
-                </section>
-              </section>
-              <article className="">
-                <section className="m-4">
-                  <div className="relative">
-                    <input
-                      maxLength={20}
-                      type="text"
-                      className="w-full rounded-2xl"
-                      value={heading}
-                      onChange={handleHeadingChange}
-                      placeholder="Heading"
-                    />
-                    <small className="absolute text-gray-700 bottom-3 right-2">
-                      {heading.length}/20
-                    </small>
-                  </div>
-                </section>
-                <section className="m-4">
-                  <div className="relative">
-                    <textarea
-                      maxLength={70}
-                      className="w-full h-24 resize-none md:w-72 lg:w-96 rounded-2xl"
-                      value={paragraph}
-                      onChange={handleDescriptionChange}
-                      placeholder="Description"
-                    />
-                    <small className="absolute text-gray-700 bottom-4 right-2">
-                      {paragraph.length}/70
-                    </small>
-                  </div>
-                </section>
-              </article>
-            </section>
-            <article className="flex justify-around p-4 bg-white md:justify-start md:gap-10 md:space-x-10">
-              <h1 className="text-gray-500">Text Color</h1>
-              <h1 className="text-gray-500">Suggested Colors</h1>
-            </article>
-            <section className="flex items-center justify-around md:justify-start bg-white pb-[2rem] p-4 md:gap-4">
-              <section>
-                <article
-                  onClick={handleParagraphColor}
-                  style={{
-                    background: paragraphStyle?.color || "transparent",
-                  }}
-                  className={cn(
-                    "relative px-3 py-2 inline-block rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
-                    paragraphStyle?.color?.length
-                      ? ""
-                      : "border-dashed border-2  border-[#8C63FF]",
                   )}
-                >
-                  <PlusButton />
-                  <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
-                    <TfiPaintBucket size={16} />
-                  </span>
-                </article>
+                  {onlyImage ? null : (
+                    <section className="mb-4">
+                      <h1 className="mb-2 text-gray-500">Colors</h1>
+                      <article className="grid grid-cols-2 gap-4">
+                        {preDefinedColors.map((color) => {
+                          return (
+                            <article
+                              key={color}
+                              onClick={() => handleCustomColor("banner", color)}
+                              style={{
+                                background:
+                                  color === "transparent" ? "none" : color,
+                                border: "1px solid",
+                              }}
+                              className="w-8 h-8 rounded-full"
+                            >
+                              {color === "transparent" && (
+                                <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
+                                  <CiNoWaitingSign size={20} />
+                                </span>
+                              )}
+                            </article>
+                          );
+                        })}
+                      </article>
+                    </section>
+                  )}
+                </section>
               </section>
-              <section>
-                <article className="flex gap-4">
+              {onlyImage ? null : (
+                <article>
+                  <section className="m-4">
+                    <div className="relative">
+                      <input
+                        maxLength={20}
+                        type="text"
+                        className="w-full rounded-2xl"
+                        value={heading}
+                        onChange={handleHeadingChange}
+                        placeholder="Heading"
+                      />
+                      <small className="absolute text-gray-700 bottom-3 right-2">
+                        {heading.length || 0}/20
+                      </small>
+                    </div>
+                  </section>
+                  <section className="m-4">
+                    <div className="relative">
+                      <textarea
+                        maxLength={70}
+                        className="w-full h-24 resize-none rounded-2xl"
+                        value={paragraph}
+                        onChange={handleDescriptionChange}
+                        placeholder="Description"
+                      />
+                      <small className="absolute text-gray-700 bottom-4 right-2">
+                        {paragraph.length || 0}/70
+                      </small>
+                    </div>
+                  </section>
+                </article>
+              )}
+            </section>
+            {onlyImage ? null : (
+              <article className="flex justify-around pt-4 bg-white rounded-t-2xl md:justify-start md:pl-6 md:gap-16">
+                <h1 className="text-gray-500">Text Color</h1>
+                <h1 className="text-gray-500">Colors</h1>
+              </article>
+            )}
+            {onlyImage ? null : (
+              <section className="rounded-b-2xl flex items-center justify-around md:justify-start bg-white pb-[2rem] p-4 md:gap-4">
+                <section>
+                  <article
+                    onClick={handleParagraphColor}
+                    style={{
+                      background: paragraphStyle?.color || "transparent",
+                      border:
+                        paragraphStyle?.color === "transparent"
+                          ? "2px dashed #8C63FF"
+                          : "1px solid black",
+                    }}
+                    className={cn(
+                      "relative px-3 py-2 rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
+                      paragraphStyle?.color?.length
+                        ? ""
+                        : "border-dashed border-2  border-[#8C63FF]",
+                    )}
+                  >
+                    <PlusButton />
+                    <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
+                      <TfiPaintBucket size={16} />
+                    </span>
+                  </article>
+                </section>
+                <article className="grid grid-cols-2 gap-4">
                   {preDefinedColors.map((color) => {
                     return (
                       <article
                         key={color}
                         onClick={() => handleCustomColor("paragraph", color)}
                         style={{ background: color }}
-                        className="w-8 h-8 rounded-full"
-                      />
+                        className="w-8 h-8 rounded-full border border-1 border-[#000]"
+                      >
+                        {color === "transparent" && (
+                          <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
+                            <CiNoWaitingSign size={20} />
+                          </span>
+                        )}
+                      </article>
                     );
                   })}
                 </article>
               </section>
-            </section>
-            <article className="flex-2"></article>
+            )}
+            <article className="flex-2" />
           </section>
-          {isButtonExists ? (
+          {isButtonExists && !onlyImage ? (
             <section className="m-6">
               <SubHeader text="Add Button Name" />
-              <article className="flex items-center justify-between p-2 bg-white rounded-2xl">
-                <article className="md:flex md:justify-around md:items-center md:gap-4">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="w-full rounded-2xl"
-                      maxLength={10}
-                      value={callToAction}
-                      onChange={handleButtonName}
-                      placeholder="Button Name"
-                    />
-                    <small className="absolute text-gray-700 right-2 bottom-2">
-                      {callToAction.length}/10
-                    </small>
-                  </div>
-                  <div className="flex gap-4 mt-4 md:mt-0">
-                    {preDefinedButtons.map((btn) => {
+              <article className="justify-between gap-10 p-2 pb-4 bg-white rounded-2xl">
+                <div className="relative shrink-0">
+                  <input
+                    type="text"
+                    className="w-full rounded-2xl"
+                    maxLength={10}
+                    value={callToAction}
+                    onChange={handleButtonName}
+                    placeholder="Button Name"
+                  />
+                  <small className="absolute text-gray-700 right-2 bottom-2">
+                    {callToAction.length}/10
+                  </small>
+                </div>
+                <div className="flex gap-4 mt-4">
+                  {preDefinedButtons.map((btn) => {
+                    const isSelected = callToAction === btn;
+                    return (
+                      <button
+                        key={btn}
+                        type="button"
+                        onClick={() => setCallToAction(btn)}
+                        className={`px-6 py-2 text-[0.75rem] rounded-full ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : "bg-[#8C63FF40] text-[#8C63FF]"
+                        }`}
+                      >
+                        {btn}
+                      </button>
+                    );
+                  })}
+                </div>
+                <article className="gap-4 mt-4 md:mt-0">
+                  <h1 className="my-2 text-gray-500">Color of action button</h1>
+                  <div className="flex gap-4">
+                    {buttonColors.map((color) => {
                       return (
-                        <button
-                          key={btn}
-                          type="button"
-                          onClick={() => setCallToAction(btn)}
-                          className="px-6 py-2 text-[0.75rem] bg-[#8C63FF40] text-[#8C63FF] rounded-full"
+                        <article
+                          key={color?.bgColor}
+                          onClick={() =>
+                            handleCustomColor(
+                              "button",
+                              color?.bgColor === "transparent"
+                                ? "gray"
+                                : color?.bgColor,
+                              color?.textColor,
+                            )
+                          }
+                          style={{
+                            background:
+                              color?.bgColor === "transparent"
+                                ? "white"
+                                : color?.bgColor,
+                            color: color?.textColor,
+                          }}
+                          className="w-8 h-8 rounded-full  border border-1 border-[#000]"
                         >
-                          {btn}
-                        </button>
+                          {color?.bgColor === "transparent" && (
+                            <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
+                              <CiNoWaitingSign size={20} color="#000" />
+                            </span>
+                          )}
+                        </article>
                       );
                     })}
                   </div>
-                  <article className="gap-4 mt-4 md:mt-0">
-                    <h1 className="my-2 text-gray-500">
-                      Color of action button
-                    </h1>
-                    <div className="flex gap-4">
-                      {buttonColors.map((color) => {
-                        return (
-                          <article
-                            key={color?.bgColor}
-                            onClick={() =>
-                              handleCustomColor(
-                                "button",
-                                color?.bgColor,
-                                color?.textColor,
-                              )
-                            }
-                            style={{
-                              background: color?.bgColor,
-                              color: color?.textColor,
-                            }}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        );
-                      })}
-                    </div>
-                  </article>
                 </article>
               </article>
             </section>
           ) : null}
-          <section className="m-6 pb-[7rem] md:pb-0 lg:pb-[7rem]">
+          <section className="m-6 pb-[7rem]">
             <SubHeader text="Link Items" />
             <article className="p-4 bg-white rounded-2xl">
               <button
@@ -576,45 +660,43 @@ const MemoCreateBanner = () => {
               </button>
             </article>
           </section>
+          <BottomButton
+            buttons={[
+              {
+                text: isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <SectionLoader />
+                    Loading...
+                  </div>
+                ) : isPublished ? (
+                  "Save & Unpublish"
+                ) : (
+                  "Save & Publish"
+                ),
+                onClick: () => {
+                  const newIsPublished = !isPublished;
+                  setIsPublished(newIsPublished);
+                  handleCreateBanner(newIsPublished);
+                },
+                disabled: isLoading,
+                className: "w-full py-3 text-white bg-[#7D68FE] rounded-full",
+              },
+              {
+                text: isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <SectionLoader />
+                    Loading...
+                  </div>
+                ) : (
+                  "Save"
+                ),
+                onClick: () => handleCreateBanner(isPublished),
+                disabled: isLoading,
+                className: "w-full py-3 text-white bg-black rounded-full",
+              },
+            ]}
+          />
         </section>
-        <footer className="fixed bottom-0 w-[92%] flex gap-4 mx-4 mb-4">
-          <button
-            type="submit"
-            className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
-            disabled={isLoading}
-            onClick={() => {
-              const newIsPublished = !isPublished;
-              setIsPublished(newIsPublished);
-              handleCreateBanner(newIsPublished);
-            }}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <SectionLoader />
-                Loading...
-              </div>
-            ) : isPublished ? (
-              "Unpublish"
-            ) : (
-              "Publish"
-            )}
-          </button>
-          <button
-            onClick={() => handleCreateBanner(isPublished)}
-            type="button"
-            disabled={isLoading}
-            className="w-full py-3 text-white bg-black rounded-full"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <SectionLoader />
-                Loading...
-              </div>
-            ) : (
-              "Save"
-            )}
-          </button>
-        </footer>
       </main>
       <CropperPopup
         show={showCropper}
@@ -679,6 +761,21 @@ const MemoCreateBanner = () => {
             setClickRedirect={setClickRedirect}
           />
         </PopUp>
+      )}
+      {openPreview && (
+        <MiddlePopUp show={openPreview} onClose={() => setOpenPreview(false)}>
+          <center className="m-4">
+            <BannerDynamicLayout
+              img={img}
+              selectedColor={selectedColor}
+              buttonStyle={buttonStyle}
+              callToAction={callToAction}
+              paragraphStyle={paragraphStyle}
+              heading={heading}
+              paragraph={paragraph}
+            />
+          </center>
+        </MiddlePopUp>
       )}
       {isLoading ? <SectionLoader /> : null}
     </Suspense>

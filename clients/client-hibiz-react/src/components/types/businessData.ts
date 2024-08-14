@@ -343,6 +343,7 @@ export interface IBizPayload {
 
 export interface IBannerPayload {
   layout?: string;
+  layoutId?: string;
   businessId?: string;
   isPublished?: boolean;
   bannerType?: string;
@@ -370,6 +371,7 @@ interface PatternProps {
   color: string;
 }
 export interface BannerLayout {
+  onlyImage: boolean | undefined;
   _id: BannerType;
   heading: string;
   paragraph: string;

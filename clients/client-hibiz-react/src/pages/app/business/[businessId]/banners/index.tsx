@@ -13,7 +13,7 @@ import { useExploreStore } from "@/components/store/useExploreStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { BannerPage } from "@/components/utils/bannerLayouts";
+import { BannerPage, BannerType } from "@/components/utils/bannerLayouts";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
@@ -39,13 +39,19 @@ const MemoBanners = () => {
   const banners = useExploreStore((s) => s.banners) || [];
   const setBanners = useExploreStore((s) => s.setBanners);
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner, setBannerPage, bannerPage, setEditBanner } =
-    useBannerStore((s) => ({
-      setSelectedBanner: s.setSelectedBanner,
-      setBannerPage: s.setBannerPage,
-      bannerPage: s.bannerPage,
-      setEditBanner: s.setEditBanner,
-    }));
+  const {
+    setSelectedBanner,
+    setBannerPage,
+    bannerPage,
+    setEditBanner,
+    handleBannerType,
+  } = useBannerStore((s) => ({
+    setSelectedBanner: s.setSelectedBanner,
+    setBannerPage: s.setBannerPage,
+    bannerPage: s.bannerPage,
+    setEditBanner: s.setEditBanner,
+    handleBannerType: s.handleBannerType,
+  }));
 
   const [addSpotlight, setAddSpotlight] = useState(false);
   const [view, setView] = useState(ViewType.BANNERS);

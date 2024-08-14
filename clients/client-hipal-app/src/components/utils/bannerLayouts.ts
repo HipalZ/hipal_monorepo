@@ -17,6 +17,7 @@ export enum BannerType {
   BANNER_TYPE_11 = "BANNER_TYPE_11",
   BANNER_TYPE_12 = "BANNER_TYPE_12",
   BANNER_TYPE_13 = "BANNER_TYPE_13",
+  BANNER_TYPE_14 = "BANNER_TYPE_14",
 }
 export const bannerLayouts = [
   {
@@ -181,6 +182,20 @@ export const bannerLayouts6 = [
   },
 ];
 
+export const bannerLayouts7 = [
+  {
+    _id: BannerType.BANNER_TYPE_14,
+    heading: "",
+    paragraph: "",
+    isButton: false,
+    buttonText: "",
+    title: "Plain Image",
+    isPattern: false,
+    onlyImage: true,
+    image: "",
+    description: "Works best with 680x680 -1:1 Images with desc & link",
+  },
+];
 export const truncateDescription = (textContent: string) => {
   return textContent.length > 70
     ? `${textContent.substring(0, 70)}...`

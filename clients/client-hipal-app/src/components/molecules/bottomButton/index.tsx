@@ -7,21 +7,14 @@ import {
   useEffect,
   useState,
 } from "react";
-import {
-  MdAccountBalanceWallet,
-  MdOutlineMenuBook,
-} from "react-icons/md";
+import { MdAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
 import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import {
-  useParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
@@ -67,7 +60,7 @@ function BottomButton({
           {children}
         </center>
       ) : (
-        <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary">
+        <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
               <center className="px-2 font-light text-base-100">

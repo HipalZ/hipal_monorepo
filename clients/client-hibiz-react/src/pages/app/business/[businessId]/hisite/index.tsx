@@ -45,7 +45,7 @@ const MemoHiSites = () => {
             <button
               onClick={handleThemes}
               type="button"
-              className="px-4 py-1 bg-white rounded-full"
+              className="px-4 py-1 scale-75 bg-white rounded-full"
             >
               Themes & Layout
             </button>
@@ -66,16 +66,18 @@ const MemoHiSites = () => {
               type="button"
               onClick={() => handleRoute(service?.navigateTo)}
               key={service?._id}
-              className="h-[7rem] w-full max-w-[28rem] rounded-2xl bg-white p-4"
+              className="w-full max-w-[28rem] rounded-2xl bg-white p-4"
             >
               <header className="relative flex items-center mb-4 space-x-4">
                 <img src={service?.icon} alt={service?.icon} loading="lazy" />
-                <h1 className="text-2xl">{service?.title}</h1>
+                <h1 className="text-lg">{service?.title}</h1>
                 <div className="absolute -rotate-45 right-2 top-2">
                   <FaArrowRight />
                 </div>
               </header>
-              <p className="float-start">{service?.description}</p>
+              <p className="text-base opacity-75 float-start">
+                {service?.description}
+              </p>
             </button>
           );
         })}

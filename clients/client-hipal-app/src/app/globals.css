@@ -7,7 +7,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap');
 
-
+body {
+	font-family: 'Darker Grotesque Variable', sans-serif;
+  }
 /* Or create a specific class to use the font */
 
 :root {
@@ -1762,4 +1764,20 @@ input[type='password'] {
 	  border-radius: 3rem;
 	  transform: translateX(-50%);
 	}
+  }
+
+  @keyframes Marquescroll {
+	0% {
+	  transform: translateX(100%);
+	}
+	100% {
+	  transform: translateX(-100%);
+	}
+  }
+  
+  .scrolling-text {
+	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	animation: Marquescroll 10s linear infinite;
   }

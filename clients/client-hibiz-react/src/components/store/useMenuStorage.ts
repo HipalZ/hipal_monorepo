@@ -3,7 +3,6 @@ import type {
   DishType,
   DishTypeEnumType,
   PortionType,
-  TagsEnumType,
 } from "@hi/db-models/src/validators";
 import { create } from "zustand";
 
@@ -178,8 +177,8 @@ interface MenuPageStore {
   dishImages: string[];
   setDishImages: (images: string[]) => void;
 
-  tags: TagsEnumType[];
-  setTags: (tags: TagsEnumType[]) => void;
+  tags: string[];
+  setTags: (tags: string[]) => void;
 
   availability: boolean;
   setAvailability: (avail: boolean) => void;
@@ -480,7 +479,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   setDishImages: (images: string[]) => set({ dishImages: images }),
 
   tags: [],
-  setTags: (tags: TagsEnumType[]) => set({ tags: tags }),
+  setTags: (tags: string[]) => set({ tags: tags }),
 
   delayTime: 0,
   setDelayTime: (time: number) => set({ delayTime: time }),

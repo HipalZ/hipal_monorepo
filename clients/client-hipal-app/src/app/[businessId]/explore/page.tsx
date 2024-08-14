@@ -58,16 +58,16 @@ export default async function Explore({
 
   return (
     <Suspense fallback={<SkeletonLoader height={200} />}>
-    <main className="relative flex flex-col w-full pb-16 overflow-hidden">
+      <main className="relative flex flex-col w-full pb-16 overflow-hidden">
         <MainBackground explore={data?.business} />
-      <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
+        <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-        <div className="bg-base-300">
-          <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
-        </div>
-        {data?.banners?.some(
-          (banner: IBannerPayload) => banner?.isPublished,
-        ) && (
+          <div className="bg-base-300">
+            <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
+          </div>
+          {data?.banners?.some(
+            (banner: IBannerPayload) => banner?.isPublished,
+          ) && (
             <article className="bg-base-300">
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
@@ -76,51 +76,52 @@ export default async function Explore({
                 <EmblaCarousel>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
+                    console.log("bc", banner?.buttonColor);
+                    console.log("btn c", banner?.buttonTextColor);
                     return (
-                      <div key={index} className="embla__slide">
-
-                          <BannerLayouts
-                            redirectionId={banner?.redirectionId || ""}
-                            redirectionName={banner?.redirectionName || ""}
-                            selectedLayout={banner?.layout || ""}
-                            heading={banner?.heading || ""}
-                            paragraph={banner?.paragraph || ""}
-                            callToAction={banner?.callToAction || ""}
-                            img={{ logo: banner?.bannerImage || "" }}
-                            selectedColor={{
-                              bgColor: banner?.backgroundColor || "",
-                              textColor: banner?.backgroundColor || "",
-                            }}
-                            paragraphStyle={{
-                              color: banner?.paragraphColor || "",
-                            }}
-                            buttonStyle={{
-                              color: banner?.buttonColor || "",
-                              buttonColor: banner?.buttonTextColor || "",
-                            }}
-                          />
+                      <div key={index.toString()} className="embla__slide">
+                        <BannerLayouts
+                          redirectionId={banner?.redirectionId || ""}
+                          redirectionName={banner?.redirectionName || ""}
+                          selectedLayout={banner?.layout || ""}
+                          heading={banner?.heading || ""}
+                          paragraph={banner?.paragraph || ""}
+                          callToAction={banner?.callToAction || ""}
+                          img={{ logo: banner?.bannerImage || "" }}
+                          selectedColor={{
+                            bgColor: banner?.backgroundColor || "",
+                            textColor: banner?.backgroundColor || "",
+                          }}
+                          paragraphStyle={{
+                            color: banner?.paragraphColor || "",
+                          }}
+                          buttonStyle={{
+                            color: banner?.buttonColor || "",
+                            buttonColor: banner?.buttonTextColor || "",
+                          }}
+                        />
                       </div>
                     );
                   })}
                 </EmblaCarousel>
               </article>
             </article>
-        )}
+          )}
           <SubLoyalty loyalty={data?.loyalty} />
-        {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
-          <div className="mt-12 overflow-auto">
+          {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
+            <div className="mt-12 overflow-auto">
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
-          </div>
-        ) : null}
+            </div>
+          ) : null}
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
             footerDescription={data?.business?.footerDescription}
           />
           <PageName />
-      </div>
+        </div>
         <BottomButton />
-    </main>
+      </main>
     </Suspense>
   );
 }

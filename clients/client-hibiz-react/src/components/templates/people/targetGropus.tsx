@@ -23,6 +23,7 @@ const MemoTargetGroups = () => {
     setSelectedGroup,
     selectedGroupPage,
     setSelectedGroupPage,
+    reset,
   } = useHiPeopleStore();
   const [groupUserData, setGroupUserData] = useState([]);
   const { mutateGetUserBelongToGroup, groupUserLoading } =
@@ -46,7 +47,8 @@ const MemoTargetGroups = () => {
   const createGroup = useCallback(() => {
     setGroupDetailsModal(true);
     setSelectedGroupPage("CREATE GROUP");
-  }, [selectedGroupPage, groupDetailsModal]);
+    reset();
+  }, [selectedGroupPage, groupDetailsModal, reset]);
 
   if (groupLoading || groupUserLoading)
     return (

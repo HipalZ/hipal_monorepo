@@ -17,6 +17,7 @@
     "bundle": "next build"
   },
   "dependencies": {
+    "@fontsource-variable/darker-grotesque": "^5.0.5",
     "@headlessui/react": "^2.0.4",
     "@hi/common": "workspace:*",
     "@material-tailwind/react": "^2.1.9",

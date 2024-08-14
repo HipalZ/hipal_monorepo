@@ -21,7 +21,7 @@ const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
       className="relative flex flex-col"
       key={layout?._id}
     >
-      <article className="max-h-[11.5rem]">
+      <article className="max-h-[11.5rem] max-w-[12rem] shadow-xl">
         <figure className="w-full max-w-[12rem] rounded-2xl">
           <img
             src={layout?.image}
@@ -29,16 +29,18 @@ const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
             className="rounded-t-xl w-[12rem] h-[8.5rem]"
           />
         </figure>
-        <article className="bg-white w-full max-w-[12rem] p-2 rounded-b-xl h-[3.5rem]">
+        <article className="bg-white w-full max-w-[12rem] p-2 rounded-b-xl h-[3.5rem] relative">
           <div className="flex justify-between">
-            <h1 className="text-[0.7rem] truncate">{layout?.heading}</h1>
+            <h1 className="text-[0.7rem] font-semibold truncate">
+              {layout?.heading}
+            </h1>
             {layout?.isButton && (
-              <div className="flex items-center bg-red-700 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
+              <article className="absolute right-2 flex items-center py-[0.1rem] px-1.5 text-[0.5rem] text-white bg-red-700 rounded-full">
                 <button type="button">{layout?.buttonText}</button>{" "}
-                <span className="text-[0.6rem]">
+                <span className="text-[0.5rem]">
                   <LuArrowUpRight />
                 </span>
-              </div>
+              </article>
             )}
           </div>
           <p
