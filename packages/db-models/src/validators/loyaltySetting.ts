@@ -94,9 +94,11 @@ export const loyaltySchema = z.object({
   loyaltyExpiryDate: z.coerce.number({
     message: "loyaltyExpiryDate need timestamp",
   }),
-  rewardLimit: z.coerce.number({
-    message: "rewardLimit need number",
-  }),
+  rewardLimit: z.coerce
+    .number({
+      message: "rewardLimit need number",
+    })
+    .optional(),
   signUpBonus: z.coerce
     .number({
       message: "signUpBonus need number",
