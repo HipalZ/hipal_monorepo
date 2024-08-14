@@ -32,7 +32,6 @@ const colorNames = {
 export function convertToHsl(input) {
   console.log('input', input);
   const resultObj = {};
-
   if (typeof input === 'object' && input !== null) {
     Object.entries(input).forEach(([rule, value]) => {
       if (colorNames.hasOwnProperty(rule)) {

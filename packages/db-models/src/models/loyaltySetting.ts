@@ -66,6 +66,10 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       type: Number,
       required: true,
     },
+    loyaltyStartDate: {
+      type: Number,
+      required: true,
+    },
     rewardLimit: {
       type: Number,
       default: 4999,

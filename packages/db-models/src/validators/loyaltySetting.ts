@@ -115,6 +115,9 @@ export const loyaltySchema = z.object({
       message: "termAndCondition need max 500",
     })
     .optional(),
+  loyaltyStartDate: z.coerce.number({
+    message: "loyaltyStartDate need timestamp",
+  }),
 });
 
 export type LoyaltyType = z.infer<typeof loyaltySchema>;
