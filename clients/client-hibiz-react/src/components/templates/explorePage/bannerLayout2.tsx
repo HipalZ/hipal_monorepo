@@ -14,12 +14,6 @@ const MemoBannerLayout2 = ({ layout }: { layout: BannerLayout }) => {
         handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
       }
       onClick={() => {
-        console.log(
-          "Banner Type Parameters:",
-          layout?._id,
-          layout?.isButton,
-          layout?.isPattern,
-        );
         handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
       }}
       key={layout?._id}
@@ -29,7 +23,7 @@ const MemoBannerLayout2 = ({ layout }: { layout: BannerLayout }) => {
           <img
             src={layout?.image}
             alt={layout?.title}
-            className="rounded-xl w-[12rem] h-[11rem] bg-cover"
+            className="rounded-xl w-[12rem] h-[12rem] bg-cover"
           />
         </figure>
         <article className="absolute bottom-2 bg-white w-100% max-w-[11rem] mx-2 p-2 rounded-xl h-[3.5rem]">

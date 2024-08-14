@@ -16,7 +16,7 @@ const BannerLayout2 = lazy(() => import("./bannerLayout2"));
 const BannerLayout3 = lazy(() => import("./bannerLayout3"));
 const BannerLayout4 = lazy(() => import("./bannerLayout4"));
 const BannerLayout5 = lazy(() => import("./bannerLayout5"));
-const BannerLayouts6 = lazy(() => import("./bannerLayouts6"));
+const BannerLayouts6 = lazy(() => import("./bannerLayout6"));
 const BannerLayouts7 = lazy(() => import("./bannerLayout7"));
 
 const MemoBannerLayouts = () => {

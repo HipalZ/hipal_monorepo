@@ -1,7 +1,6 @@
 import { useBannerStore } from "@/components/store/useBannerStore";
 import type { BannerLayout } from "@/components/types/businessData";
 import { memo } from "react";
-import { LuArrowUpRight } from "react-icons/lu";
 import SelectingCardLayout from "./selectingCardLayout";
 
 const MemoBannerLayout7 = ({ layout }: { layout: BannerLayout }) => {
@@ -29,41 +28,11 @@ const MemoBannerLayout7 = ({ layout }: { layout: BannerLayout }) => {
       }
       key={layout?._id}
     >
-      <article className="relative flex justify-center shrink-0 max-w-[12rem]">
-        <figure className="w-full max-w-[12rem] rounded-2xl">
-          <img
-            src={layout?.image}
-            alt={layout?.title}
-            className="rounded-xl w-[11.5rem] aspect-square bg-cover"
-          />
-        </figure>
-        <article className="absolute bottom-0 w-full p-2 rounded-xl h-[3.5rem]">
-          <div className="flex justify-between">
-            <h1 className="text-[0.7rem] truncate text-white">
-              {layout?.heading}
-            </h1>
-            {layout?.isButton && (
-              <div className="flex items-center border border-1 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
-                <button type="button">{layout?.buttonText}</button>{" "}
-                <span className="text-[0.6rem]">
-                  <LuArrowUpRight />
-                </span>
-              </div>
-            )}
-          </div>
-          <p
-            style={{
-              WebkitLineClamp: 2,
-              display: "-webkit-box",
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-            className="text-[0.5rem] text-white"
-          >
-            {layout?.paragraph}
-          </p>
-        </article>
-      </article>
+      <img
+        src={layout?.image}
+        alt={layout?.title}
+        className="bg-cover rounded-2xl w-full max-w-[11.5rem] h-[11.5rem] aspect-square"
+      />
       <SelectingCardLayout layout={layout} />
     </section>
   );

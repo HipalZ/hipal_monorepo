@@ -618,7 +618,7 @@ const MemoCreateBanner = () => {
                             handleCustomColor(
                               "button",
                               color?.bgColor === "transparent"
-                                ? "gray"
+                                ? "#808080"
                                 : color?.bgColor,
                               color?.textColor,
                             )
