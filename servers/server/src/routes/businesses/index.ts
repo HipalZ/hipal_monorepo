@@ -65,6 +65,17 @@ const businessesRouter = new Hono()
           message: "business not created !",
         });
       }
+      await OutLetInfo.findOneAndUpdate(
+        {
+          businessId: business._id,
+        },
+        {
+          $set: {
+            name: business.name,
+          },
+        },
+        { upsert: true, new: true },
+      );
 
       return respond(c, "business created", false, 201, business);
     },
