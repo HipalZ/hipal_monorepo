@@ -86,7 +86,7 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
                 className={`flex flex-row w-5 h-5 border-2 rounded-md ${classes[currentType].border}`}
               >
                 <div
-                  className={`m-auto rounded-full  w-[0.676rem] h-[0.676rem] ${classes[currentType].circle}`}
+                  className={`m-auto rounded-full  w-[0.5rem] h-[0.5rem] ${classes[currentType].circle}`}
                 />
               </div>
             );

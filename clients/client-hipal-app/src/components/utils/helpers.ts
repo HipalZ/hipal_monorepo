@@ -23,7 +23,7 @@ export const getPrice = (price: number | string) => {
     return "";
   }
 
-  return `₹${price}`;
+  return `${price}`;
 };
 
 export const getTimeIn12HrFormat = (time: string) => {

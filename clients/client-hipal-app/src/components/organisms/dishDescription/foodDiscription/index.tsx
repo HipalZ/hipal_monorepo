@@ -1,7 +1,7 @@
-import React, { memo } from "react";
-import FoodType  from "@/components/atoms/foodType";
+import React, { memo, useMemo } from "react";
+import FoodType from "@/components/atoms/foodType";
 import ReadMore from "@/components/atoms/readMore";
-import {  getPrice } from "@/components/utils/helpers";
+import { getPrice } from "@/components/utils/helpers";
 import { isEmpty } from "lodash-es";
 import { MdOutlineRiceBowl } from "react-icons/md";
 import DishQuantityButton from "../dishQuantityButton";
@@ -13,7 +13,12 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 function FoodDescription({ dishData }: { dishData: DishType }) {
   const isAvailable = dishData?.availability;
 
-  const {outLetType} = _useAllBusiness((s) => s.data.outletInfo);
+  const { outLetType } = _useAllBusiness((s) => s.data.outletInfo);
+
+  const price = useMemo(
+    () => getPrice(dishData?.price || 0),
+    [dishData?.price],
+  );
 
   return (
     <div className="flex flex-col !mt-0 space-y-4 no-scrollbar">
@@ -29,9 +34,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
 
           {isAvailable && (
             <div className="my-1 ml-auto shrink-0">
-              <DishQuantityButton
-                dishData={dishData}
-              />
+              <DishQuantityButton dishData={dishData} />
             </div>
           )}
           <div
@@ -42,7 +45,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             {dishData?.name || ""}
           </div>
           <div className="my-2">
-            <span className="text-base">{getPrice(dishData?.price || 0)}</span>
+            <span className="text-base">{price}</span>
           </div>
         </div>
         {/* Description */}

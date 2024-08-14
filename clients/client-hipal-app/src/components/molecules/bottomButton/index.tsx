@@ -63,7 +63,7 @@ function BottomButton({
         <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
-              <center className="px-2 font-light text-base-100">
+              <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
                 <RiHome4Fill size={20} className="mb-2" />
                 Home
               </center>
@@ -71,7 +71,7 @@ function BottomButton({
             <Link
               href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             >
-              <center className="px-2 font-light text-base-100">
+              <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
                 <RiCouponFill size={20} className="mb-2" />
                 Rewards
               </center>
@@ -79,7 +79,7 @@ function BottomButton({
             {tableName && (
               <center
                 onClick={openModal}
-                className="px-2 font-light text-base-100"
+                className="px-2 font-light on_active_bounce text-base-100 active:scale-90"
               >
                 <MdAccountBalanceWallet size={20} className="mb-2" />
                 <span className="w-full font-light text-base-100">
@@ -89,14 +89,14 @@ function BottomButton({
             )}
             {!tableName && (
               <Link href={`/${customLink}/scan`}>
-                <center className="px-2 font-light text-base-100">
+                <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
                   <LuScanLine size={20} className="mb-2" />
                   {!tableName ? "Scan" : "Pay Bill"}
                 </center>
               </Link>
             )}
             <Link href={`/${customLink}/category`}>
-              <center className="w-full px-2 font-light text-base-100">
+              <center className="w-full px-2 font-light on_active_bounce text-base-100 active:scale-90">
                 <MdOutlineMenuBook size={20} className="mb-2" />
                 Menu
               </center>

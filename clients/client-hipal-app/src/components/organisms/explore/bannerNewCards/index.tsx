@@ -468,7 +468,7 @@ const MemoBannersLayout = (props: Props) => {
             <img
               src={img?.logo || layout?.image || pastaDummy}
               alt={layout?.title}
-              className="h-[20rem] aspect-square object-cover"
+              className="h-[20rem] w-full object-cover"
             />
           </section>
         );

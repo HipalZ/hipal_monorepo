@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@react-spring/web": "^9.7.4",
     "@types/formidable": "^3.4.5",
     "@types/lru-cache": "^7.10.10",
     "@types/node-cron": "^3.0.11",
