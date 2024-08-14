@@ -42,7 +42,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
 
   const buttonStyleTags = {
     backgroundColor:
-      buttonStyle?.color === "transparent"
+      buttonStyle?.color === "transparent" || buttonStyle?.color === "#808080"
         ? "transparent"
         : buttonStyle?.color || "#808080",
     color: buttonStyle?.buttonColor || "white",
@@ -59,11 +59,24 @@ const MemoBannerDynamicLayout = (props: Props) => {
   };
 
   const buttonClassNames = `flex items-center justify-center md:px-3
-  rounded-full space-x-1 transition-all duration-300 ease-in-out transform shadow-lg 
-  hover:scale-105 hover:shadow-xl active:scale-95 shadow-inner ${
-    openPreview ? "text-[0.75rem] px-3 py-1" : "text-[0.6rem] px-2 py-0.5"
+  rounded-full space-x-1 transition-all duration-300 ease-in-out transform shadow-sm
+  hover:scale-105 active:scale-95 shadow-inner ${
+    openPreview
+      ? "text-[0.75rem] px-3 py-1"
+      : "text-[0.5rem] px-1.5 py-0.5 md:text-[1rem]"
   }`;
 
+  const arrowButtonStyles = `${
+    openPreview ? "text-[0.9rem]" : "text-[0.6rem] md:text-[1rem]"
+  }`;
+  const headingTextStyle = `text-white ${
+    openPreview ? "text-[1.2rem]" : "text-[0.85rem] md:text-[1.5rem]"
+  }`;
+  const paragraphTextStyle = `text-white ${
+    openPreview
+      ? "text-[0.8rem] text-justify"
+      : "text-[0.6rem] md:text-[1.25rem] text-justify"
+  }`;
   const paragraphPropsStyle = {
     color:
       paragraphStyle?.color === "transparent" ? "white" : paragraphStyle?.color,
@@ -115,28 +128,20 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     : "md:w-[25rem] md:max-w-[25rem] md:h-[7rem] h-[3.5rem]"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center justify-between gap-2 mb-1">
                   <h1
                     style={paragraphPropsStyle}
-                    className={`truncate ${
-                      openPreview
-                        ? "text-[1.5rem]"
-                        : "text-[0.9rem] md:text-[1.5rem]"
-                    }`}
+                    className={`${headingTextStyle} truncate !text-black`}
                   >
                     {heading ? heading : "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div
                       style={buttonStyleTags}
-                      className={`${buttonClassNames} mt-0.5`}
+                      className={`${buttonClassNames} mt-0.5 pl-2 py-1`}
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
-                      <span
-                        className={`text-[0.7rem] ${
-                          openPreview ? "" : "md:text-[1rem]"
-                        }`}
-                      >
+                      <span className={arrowButtonStyles}>
                         <LuArrowUpRight />
                       </span>
                     </div>
@@ -150,9 +155,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className={`text-[0.5rem] text-left ${
-                    openPreview ? "text-[1rem]" : "md:text-[1rem]"
-                  }`}
+                  className={`${paragraphTextStyle} !text-black`}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -204,18 +207,15 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 } md:p-4 md:space-y-1 md:min-h-[5rem]`}
               >
                 <div className="flex justify-between w-full">
-                  <h1
-                    style={paragraphPropsStyle}
-                    className="text-[1rem] truncate text-white"
-                  >
+                  <h1 style={paragraphPropsStyle} className={headingTextStyle}>
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
                     <div style={buttonStyleTags} className={buttonClassNames}>
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span
-                        className={`text-[0.6rem] ${
-                          openPreview ? "text-[1.25rem]" : ""
+                        className={`text-[0.5rem] ${
+                          openPreview ? "text-[0.75rem]" : ""
                         } md:text-[1rem]`}
                       >
                         <LuArrowUpRight />
@@ -231,7 +231,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.8rem] text-white text-left"
+                  className={paragraphTextStyle}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -242,6 +242,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
           </section>
         );
       })}
+
       {bannerLayouts3.map((layout) => {
         if (layout?._id !== selectedBannerType) return null;
         const sizeClasses = openPreview
@@ -268,13 +269,10 @@ const MemoBannerDynamicLayout = (props: Props) => {
                           selectedColor?.bgColor || "black"
                         }80 90%)`,
                 }}
-                className="absolute bottom-0 w-full p-2 pb-6 rounded-xl"
+                className="absolute bottom-0 w-full p-2 rounded-xl"
               >
-                <div className="flex justify-between mb-2">
-                  <h1
-                    style={paragraphPropsStyle}
-                    className="text-[1rem] truncate text-white"
-                  >
+                <div className="flex justify-between mb-2 text-white">
+                  <h1 style={paragraphPropsStyle} className={headingTextStyle}>
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
@@ -283,7 +281,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                       className={buttonClassNames}
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
-                      <span className="text-[0.8rem]">
+                      <span className={arrowButtonStyles}>
                         <LuArrowUpRight />
                       </span>
                     </div>
@@ -297,7 +295,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.8rem] text-white -mb-4 text-left"
+                  className={paragraphTextStyle}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -308,6 +306,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
           </section>
         );
       })}
+
       {bannerLayouts4.map((layout) => {
         if (layout?._id !== selectedBannerType) return null;
         const sizeClasses = openPreview
@@ -336,21 +335,18 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 }}
                 className="absolute bottom-1/2 translate-y-1/2 w-full flex flex-col items-center justify-center p-2 rounded-xl h-[10rem]"
               >
-                <h1
-                  style={paragraphPropsStyle}
-                  className="text-[1rem] truncate text-white "
-                >
+                <h1 style={paragraphPropsStyle} className={headingTextStyle}>
                   {heading ? truncateDescription(heading) : "Heading"}
                 </h1>
                 <p
                   style={{
-                    WebkitLineClamp: 3,
+                    WebkitLineClamp: 2,
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.8rem] text-white bg-opacity-50 text-justify"
+                  className={paragraphTextStyle}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -396,14 +392,11 @@ const MemoBannerDynamicLayout = (props: Props) => {
                       ? null
                       : `linear-gradient(to top, transparent 10%, ${
                           selectedColor?.bgColor || "black"
-                        } 90%)`,
+                        }60 90%)`,
                 }}
-                className="absolute top-0 flex flex-col items-start justify-center w-full p-2 space-y-2 bg-black rounded-xl"
+                className="absolute top-0 flex flex-col items-start justify-center w-full p-2 space-y-2 rounded-xl"
               >
-                <h1
-                  style={paragraphPropsStyle}
-                  className="text-[1rem] truncate text-white"
-                >
+                <h1 style={paragraphPropsStyle} className={headingTextStyle}>
                   {heading ? truncateDescription(heading) : "Heading"}
                 </h1>
                 <p
@@ -414,7 +407,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.8rem] text-white bg-opacity-50 text-justify"
+                  className={paragraphTextStyle}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -457,10 +450,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 {layout?.isPattern && <layout.pattern color={patternColor} />}
               </figure>
               <article className="absolute flex flex-col items-center justify-center w-full p-2 space-y-2 translate-y-1/2 bottom-1/2 rounded-xl">
-                <h1
-                  style={paragraphPropsStyle}
-                  className="text-[1rem] truncate text-white"
-                >
+                <h1 style={paragraphPropsStyle} className={headingTextStyle}>
                   {heading ? truncateDescription(heading) : "Heading"}
                 </h1>
                 <p
@@ -471,7 +461,8 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.8rem] bg-opacity-50"
+                  // className="text-[0.8rem] bg-opacity-50 text-justify"
+                  className={paragraphTextStyle}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -483,7 +474,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     className={buttonClassNames}
                   >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
-                    <span className="text-[0.8rem]">
+                    <span className={arrowButtonStyles}>
                       <LuArrowUpRight />
                     </span>
                   </div>

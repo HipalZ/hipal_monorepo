@@ -69,13 +69,6 @@ const MemoCreatedBannersLayout = (props: Props) => {
     <>
       {bannerLayouts.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
-        console.log(
-          "buttonStyle",
-          "layout",
-          layout?.heading,
-          buttonStyle?.buttonColor,
-        );
-
         return (
           <div
             className={cn(
@@ -130,7 +123,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 {layout?.isButton && (
                   <div
                     style={buttonStyleTags}
-                    className="flex items-center px-1 py-0.5 text-[0.6rem] rounded-full space-x-0.5 scale-75 -mr-1"
+                    className="flex items-center px-2 py-0.5 text-[0.6rem] rounded-full space-x-0.5 scale-75 -mr-1"
                   >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.6rem]">
@@ -147,7 +140,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   overflow: "hidden",
                   ...paragraphPropsStyle,
                 }}
-                className="text-[0.5rem]"
+                className="text-[0.5rem] leading-3 mt-0.5"
               >
                 {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
               </p>
@@ -255,7 +248,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <div className="flex items-center justify-between">
                   <h1
                     style={paragraphPropsStyle}
-                    className="text-[0.7rem] truncate text-white mb-2"
+                    className="text-[0.7rem] truncate text-white mb-1"
                   >
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
@@ -465,7 +458,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className="text-[0.5rem] text-white bg-opacity-50"
+                  className="text-[0.5rem] text-white bg-opacity-50 text-justify"
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
