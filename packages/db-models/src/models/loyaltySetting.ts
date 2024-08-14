@@ -1,6 +1,7 @@
 import mongoose, { type Model } from "mongoose";
 import type { LoyaltyType } from "../validators";
-import { CardPatternEnum } from "../validators/loyaltySetting";
+import { CardLayoutEnum, CardPatternEnum } from "../validators/loyaltySetting";
+
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const loyaltySchema = new mongoose.Schema<LoyaltyType>(
@@ -31,11 +32,17 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       type: Boolean,
       default: false,
     },
-    cardPattern: {
+    cardType: {
       type: String,
       enum: CardPatternEnum,
       required: false,
-      default: "BEANS",
+      default: "CARD_ONE",
+    },
+    cardLayout: {
+      type: String,
+      enum: CardLayoutEnum,
+      required: false,
+      default: "LAYOUT_ONE",
     },
 
     cardColor: {
@@ -47,6 +54,10 @@ const loyaltySchema = new mongoose.Schema<LoyaltyType>(
       default: "FAE8CA",
     },
     logo: {
+      type: String,
+      default: "",
+    },
+    termAndCondition: {
       type: String,
       default: "",
     },
