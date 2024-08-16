@@ -1,15 +1,26 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import SubHeader from "@/components/atom/subHeader";
 import PlusButton from "@/components/atom/plusButton";
-import { useExploreStore } from "@/components/store/useExploreStore";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import CreatedBannersLayouts from "./createdBannerLayouts";
+import { useParams } from "react-router-dom";
 
-interface IProps {
-  handleNavigation: () => void;
-}
-const MemoBannerSection = (props: IProps) => {
-  const { handleNavigation } = props;
+const MemoBannerSection = () => {
+  const businessId = useParams()?.businessId;
+  const { toggleExplorePages, setToggleExplorePages } = useExploreStore(
+    (state) => ({
+      toggleExplorePages: state.toggleExplorePages,
+      setToggleExplorePages: state.setToggleExplorePages,
+    }),
+  );
+  const handleNavigation = useCallback(() => {
+    setToggleExplorePages(ExplorePages.BANNERS);
+  }, [businessId, toggleExplorePages]);
+
   const banners = useExploreStore((s) => s.banners);
 
   return (
@@ -17,6 +28,7 @@ const MemoBannerSection = (props: IProps) => {
       <SubHeader text="Banners" />
       <article
         onClick={handleNavigation}
+        onKeyDown={handleNavigation}
         className="flex items-center gap-4 p-2 overflow-x-auto bg-white rounded-lg flex-nowrap"
       >
         {banners?.map((banner: IBannerPayload, index: number) => {

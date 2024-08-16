@@ -1,19 +1,14 @@
-import {
-  lazy,
-  memo,
-  startTransition,
-  Suspense,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { lazy, memo, Suspense, useCallback, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import { useExploreStore } from "@/components/store/useExploreStore";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { BannerPage, BannerType } from "@/components/utils/bannerLayouts";
+import { BannerPage } from "@/components/utils/bannerLayouts";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
@@ -35,28 +30,28 @@ const CreatedBannersLayouts = lazy(
 const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
 
 const MemoBanners = () => {
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBannerId, setSelectedBannerId] = useState("");
   const banners = useExploreStore((s) => s.banners) || [];
-  const setBanners = useExploreStore((s) => s.setBanners);
-  const businessId = useParams()?.businessId;
-  const {
-    setSelectedBanner,
-    setBannerPage,
-    bannerPage,
-    setEditBanner,
-    handleBannerType,
-  } = useBannerStore((s) => ({
-    setSelectedBanner: s.setSelectedBanner,
-    setBannerPage: s.setBannerPage,
-    bannerPage: s.bannerPage,
-    setEditBanner: s.setEditBanner,
-    handleBannerType: s.handleBannerType,
-  }));
-
-  const [addSpotlight, setAddSpotlight] = useState(false);
   const [view, setView] = useState(ViewType.BANNERS);
   const [isArrangeMode, setIsArrangeMode] = useState(false);
   const [firstCardIndex, setFirstCardIndex] = useState<number | null>(null);
+
+  const { setBanners, setToggleExplorePages, toggleExplorePages } =
+    useExploreStore((s) => ({
+      setBanners: s.setBanners,
+      setToggleExplorePages: s.setToggleExplorePages,
+      toggleExplorePages: s.toggleExplorePages,
+    }));
+  const businessId = useParams()?.businessId;
+  const { setSelectedBanner, setBannerPage, bannerPage, setEditBanner } =
+    useBannerStore((s) => ({
+      setSelectedBanner: s.setSelectedBanner,
+      setBannerPage: s.setBannerPage,
+      bannerPage: s.bannerPage,
+      setEditBanner: s.setEditBanner,
+      handleBannerType: s.handleBannerType,
+    }));
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
     setSelectedBannerType: s.setSelectedBannerType,
@@ -64,24 +59,18 @@ const MemoBanners = () => {
 
   const handleNewBanner = useCallback(() => {
     setBannerPage(BannerPage.VIEW);
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/banners/new`);
-    });
-  }, [businessId, bannerPage]);
+    setToggleExplorePages(ExplorePages.BANNERLAYOUTS);
+  }, [businessId, bannerPage, toggleExplorePages]);
 
   const handleEditBanner = useCallback((banner: IBannerPayload) => {
     setSelectedBanner(banner);
     setSelectedBannerType(banner?.layout || "");
     setEditBanner(banner?._id || "");
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/banners/${banner?._id}`);
-    });
+    setToggleExplorePages(ExplorePages.EDITBANNER);
   }, []);
 
   const handleNavigate = useCallback(() => {
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/explorePage`);
-    });
+    setToggleExplorePages(ExplorePages.MAINFORM);
   }, [businessId]);
 
   const filteredBanners = useMemo(() => {
@@ -131,22 +120,17 @@ const MemoBanners = () => {
     [banners, isArrangeMode, firstCardIndex],
   );
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBannerId, setSelectedBannerId] = useState("");
-
   const deleteBanners = async (id: string) => {
     const response = await apiRpc.settings.banners[":bannerId"].$delete({
       param: {
         bannerId: id,
       },
     });
-    const res = await response.json();
+    await response.json();
     if (response.status === 200) {
       toast.success("Banner deleted successfully");
       setBanners(banners.filter((banner) => banner._id !== id));
-      console.log(banners.filter((banner) => banner._id !== id));
     }
-    console.log(res);
   };
   const openModal = (id: string) => {
     setSelectedBannerId(id);
@@ -175,7 +159,6 @@ const MemoBanners = () => {
       });
       const response = (await res.json()).data;
       setBanners(response);
-      // remove the edit banner id
       setEditBanner("");
       return response;
     },
@@ -268,6 +251,7 @@ const MemoBanners = () => {
                     : "",
                 )}
                 onClick={() => handleCardClick(index)}
+                onKeyDown={() => handleCardClick(index)}
               >
                 <CreatedBannersLayouts
                   selectedLayout={banner?.layout || ""}
@@ -309,31 +293,6 @@ const MemoBanners = () => {
             </center>
           )}
         </section>
-        {addSpotlight && (
-          <MiddlePopUp
-            show={addSpotlight}
-            onClose={() => {
-              setAddSpotlight(false);
-            }}
-            onlyPopUp={false}
-          >
-            <section className="p-4">
-              <h1 className="my-4 text-2xl font-semibold">Select One</h1>
-              <p className="my-4 text-xl">
-                Create New Banner or continue with drafts
-              </p>
-              <article className="flex gap-10 my-4">
-                <button
-                  onClick={handleNewBanner}
-                  type="button"
-                  className="on_active_bounce h-16 bg-[#F1EAFA] text-black rounded-2xl w-full p-2"
-                >
-                  New Banner
-                </button>
-              </article>
-            </section>
-          </MiddlePopUp>
-        )}
         <MiddlePopUp show={isModalOpen} onClose={closeModal} onlyPopUp={true}>
           <section className="h-[15rem] space-y-16 p-6">
             <h1 className="text-2xl">

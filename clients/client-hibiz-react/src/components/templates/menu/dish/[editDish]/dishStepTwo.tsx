@@ -91,7 +91,6 @@ const MemoDishFormTwo = () => {
       return toast.error("Please fill all the required fields");
     }
 
-    // setIsLoading(true);
     let firstImage = imagePreviews?.first ?? "";
     let secondImage = imagePreviews?.second ?? "";
     let thirdImage = imagePreviews?.third ?? "";
@@ -125,6 +124,8 @@ const MemoDishFormTwo = () => {
     if (firstImage === "" && secondImage === "" && thirdImage === "") {
       images = [];
     }
+
+    setIsLoading(true);
 
     const payload: DishType = {
       _id: editDish?._id,

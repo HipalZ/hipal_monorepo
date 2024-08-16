@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = memo(
     rightButton,
     children,
     onBack,
-    hideBack
+    hideBack,
   }) => {
     const navigate = useNavigate();
 
@@ -53,16 +53,17 @@ const Header: React.FC<HeaderProps> = memo(
     return (
       <>
         <div className="flex items-center justify-between px-6 pt-6 ">
-          {
-            hideBack ? <div />:
-          <button
-            type="button"
-            onClick={handleBackClick}
-            className="px-4 py-2 bg-[#FFFFFF] border border-[#00000050] rounded-3xl on_active_bounce"
-          >
-            {leftIcon || <FaArrowLeft />}
-          </button>
-          }
+          {hideBack ? (
+            <div />
+          ) : (
+            <button
+              type="button"
+              onClick={handleBackClick}
+              className="transition-transform transform px-4 active:shadow-sm active:translate-y-1 py-2 bg-[#FFFFFF] border border-[#00000050] rounded-3xl"
+            >
+              {leftIcon || <FaArrowLeft />}
+            </button>
+          )}
           <div
             className={`${
               centerImage ? "flex items-center justify-center" : ""
@@ -85,7 +86,7 @@ const Header: React.FC<HeaderProps> = memo(
             </span>
           </div>
           <div className="absolute text-sm right-6">{rightButton}</div>
-          <div>
+          <div className="transition-transform transform shadow-2xl active:shadow-sm active:translate-y-1 ">
             {isIconBusinessShow && (
               <button onClick={profile} type="button">
                 <TbSettings size={24} />

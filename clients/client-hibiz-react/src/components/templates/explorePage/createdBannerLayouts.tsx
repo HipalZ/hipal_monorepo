@@ -1,4 +1,4 @@
-import { type CSSProperties, memo, useMemo } from "react";
+import { type CSSProperties, memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import type { IBannerPayload } from "@/components/types/businessData";
 import {
@@ -12,8 +12,8 @@ import {
   BannerType,
   truncateDescription,
 } from "@/components/utils/bannerLayouts";
-import { useLocation } from "react-router-dom";
 import { cn } from "@/components/utils/helper";
+import { useIsExplorePage } from "@/hooks/useExplore";
 
 interface Props {
   heading?: string;
@@ -55,10 +55,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
     border: `1px solid ${buttonStyle?.color || "white"}`,
   };
 
-  const location = useLocation();
-  const isExplorePage = useMemo(() => {
-    return location?.pathname.includes("explorePage");
-  }, [location.pathname]);
+  const isExplorePage = useIsExplorePage();
 
   const paragraphPropsStyle = {
     color:
@@ -73,7 +70,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
           <div
             className={cn(
               "flex flex-col shrink-0 relative",
-              isExplorePage ? "h-[12rem]" : "",
+              isExplorePage ? "h-full max-h-[12rem] w-[12rem]" : "",
               "border border-1 border-[#00000050]",
             )}
             key={layout?._id}
@@ -83,15 +80,15 @@ const MemoCreatedBannersLayout = (props: Props) => {
           >
             <article
               key={layout?._id}
-              className={cn(isExplorePage ? "max-h-[12rem]" : "")}
+              className={cn(isExplorePage ? "h-full max-h-[12rem]" : "")}
             >
               <figure>
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "w-full rounded-t-xl h-full max-h-[8.3rem]",
-                    isExplorePage ? "" : "md:w-[15rem]",
+                    "w-full rounded-t-xl h-full max-h-[8.3rem] object-cover",
+                    isExplorePage ? "h-full max-h-[8.5rem]" : "md:w-[15rem]",
                   )}
                 />
               </figure>
@@ -104,7 +101,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
               }}
               className={cn(
                 "p-2 rounded-b-xl border border-[#000000]",
-                isExplorePage ? "max-w-[12rem] " : "w-full md:max-w-[15rem]",
+                isExplorePage
+                  ? "max-w-[12rem] "
+                  : "w-full md:max-w-[15rem] min-h-[3.7rem]",
               )}
             >
               <div className="flex justify-between ">
@@ -163,7 +162,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "rounded-2xl w-[12rem] h-[12rem]",
+                    "rounded-2xl w-[12rem] h-[12rem] object-cover",
                     isExplorePage ? "" : "md:w-[15rem]",
                   )}
                 />
@@ -231,7 +230,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] w-[13rem] bg-cover"
+                  className="rounded-xl h-[12rem] w-[13rem] object-cover"
                 />
               </figure>
               <article
@@ -298,7 +297,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] bg-cover",
+                  "rounded-xl h-[12rem] object-cover",
                   isExplorePage ? "w-[12rem] md:w-[13rem]" : " w-[15rem]",
                 )}
               />
@@ -362,7 +361,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] bg-cover",
+                  "rounded-xl h-[12rem] object-cover",
                   isExplorePage ? "w-[12rem] " : "w-[15rem] ",
                 )}
               />

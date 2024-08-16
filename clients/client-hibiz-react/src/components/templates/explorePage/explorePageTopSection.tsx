@@ -1,10 +1,20 @@
 import useBusinessData from "@/components/store/useBusinessData";
-import { useExploreStore } from "@/components/store/useExploreStore";
-import type { BasicInfo } from "@/components/types/businessData";
-import { cn, handleClick } from "@/components/utils/helper";
+import {
+  ExplorePages,
+  ImageFiles,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
+import { basicInfos } from "@/components/templates/explorePage/explorePageStore";
+import {
+  cn,
+  compressImage,
+  handleClick,
+  handleImageChange,
+} from "@/components/utils/helper";
 import {
   lazy,
   memo,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -14,22 +24,72 @@ import { CiEdit } from "react-icons/ci";
 
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
-export interface IProps {
-  img: { banner: string; logo: string; footer: string };
-  handleImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  handleBizName?: (e: ChangeEvent<HTMLInputElement>) => void;
-  handleBizInfo: () => void;
-  basicInfos: BasicInfo[];
-}
-const MemoExplorePageSection = (props: IProps) => {
-  const bizInfo = useExploreStore((s) => s.bizInfo);
+
+const MemoExplorePageSection = () => {
+  const {
+    bizInfo,
+    toggleExplorePages,
+    setToggleExplorePages,
+    img,
+    toggleBizInfo,
+    setToggleBizInfo,
+    setBizInfo,
+    setCropping,
+    setShowCropper,
+    imageFiles,
+    setImageFiles,
+  } = useExploreStore((s) => ({
+    bizInfo: s.bizInfo,
+    toggleExplorePages: s.toggleExplorePages,
+    setToggleExplorePages: s.setToggleExplorePages,
+    img: s.img,
+    toggleBizInfo: s.toggleBizInfo,
+    setToggleBizInfo: s.setToggleBizInfo,
+    setBizInfo: s.setBizInfo,
+    setCropping: s.setCropping,
+    setShowCropper: s.setShowCropper,
+    imageFiles: s.imageFiles,
+    setImageFiles: s.setImageFiles,
+  }));
+
+  const handleImageChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const type = event.target.dataset.type as keyof ImageFiles;
+      const file = event.target.files?.[0];
+      if (file) {
+        compressImage(file, (compressedFile) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(compressedFile);
+          reader.onloadend = () => {
+            setCropping({ image: reader.result, type });
+            setShowCropper(true);
+            setImageFiles({ [type]: compressedFile });
+          };
+        });
+      }
+    },
+    [imageFiles],
+  );
+
+  const handleBizName = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setBizInfo({ ...bizInfo, name: e.target.value });
+    },
+    [bizInfo],
+  );
+
+  const handleBizInfo = useCallback(() => {
+    setToggleBizInfo(!toggleBizInfo);
+    setToggleExplorePages(ExplorePages.BIZINFO);
+  }, [toggleBizInfo, toggleExplorePages]);
+
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
-  const { img, handleImageChange, handleBizName, handleBizInfo, basicInfos } =
-    props;
+
   const { businessData } = useBusinessData((s) => ({
     businessData: s.businessData,
   }));
+
   const [bizInfoFilled, setBizInfoFilled] = useState({
     description: false,
     phone: false,
@@ -153,6 +213,7 @@ const MemoExplorePageSection = (props: IProps) => {
           <SubHeader text="Basic Information" />
           <article
             onClick={handleBizInfo}
+            onKeyDown={handleBizInfo}
             className="flex flex-wrap gap-4 p-2 mt-4 bg-white rounded-xl"
           >
             {basicInfos.map((info) => {

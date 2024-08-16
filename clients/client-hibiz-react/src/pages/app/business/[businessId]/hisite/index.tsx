@@ -1,6 +1,6 @@
 import HiSiteMiddleImage from "@/assets/hisite/hisiteHeader.png";
 import { hisiteServices } from "@/components/templates/businessForm/businessCtrlStore";
-import { lazy, memo, startTransition, useCallback, useEffect } from "react";
+import { lazy, memo, useCallback } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
@@ -12,28 +12,18 @@ const MemoHiSites = () => {
 
   const handleRoute = useCallback(
     (navigateTo: string) => {
-      startTransition(() => {
-        navigate(`/app/business/${businessId}/${navigateTo}`);
-      });
+      navigate(`/app/business/${businessId}/${navigateTo}`);
     },
     [businessId],
   );
 
   const handleThemes = useCallback(() => {
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/businesscontrol`);
-    });
+    navigate(`/app/business/${businessId}/businesscontrol`);
   }, [businessId]);
 
   const goBack = useCallback(() => {
-    startTransition(() => {
-      navigate(`/app/business/${businessId}`);
-    });
-  }, []);
-
-  useEffect(() => {
-    localStorage.removeItem("banner-store");
-  }, []);
+    navigate(`/app/business/${businessId}`);
+  }, [businessId]);
 
   return (
     <main>
@@ -45,7 +35,7 @@ const MemoHiSites = () => {
             <button
               onClick={handleThemes}
               type="button"
-              className="px-4 py-2 scale-75 bg-white rounded-full lg:scale-100"
+              className="px-4 py-1 transition-transform transform scale-75 bg-white rounded-full shadow-lg active:shadow-sm active:translate-y-1"
             >
               Themes & Layout
             </button>

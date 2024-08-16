@@ -1,27 +1,30 @@
 import SubHeader from "@/components/atom/subHeader";
-import { memo, type ChangeEvent } from "react";
+import { useExploreStore } from "@/components/store/useExploreStore";
+import type { SocialMediaLink } from "@/components/types/businessData";
+import { memo, useCallback, type ChangeEvent } from "react";
 
-interface ISocialMediaLinks {
-  selectedSocialMedia: string;
-  handleIconClick: (icon: string) => void;
+interface Props {
   handleSaveSocialMediaLink: (e: ChangeEvent<HTMLInputElement>) => void;
-  socialMediaLinks: {
-    _id: number;
-    icon: string;
-    logo: JSX.Element;
-    link: string;
-  }[];
+  socialMediaLinks: SocialMediaLink;
 }
+const MemoSocialMediaLinks = (props: Props) => {
+  const { handleSaveSocialMediaLink, socialMediaLinks } = props;
+  const { selectedSocialMedia, setSelectedSocialMedia } = useExploreStore(
+    (s) => ({
+      selectedSocialMedia: s.selectedSocialMedia,
+      setSelectedSocialMedia: s.setSelectedSocialMedia,
+    }),
+  );
 
-const MemoSocialMediaLinks = (props: ISocialMediaLinks) => {
-  const {
-    selectedSocialMedia,
-    handleIconClick,
-    handleSaveSocialMediaLink,
-    socialMediaLinks,
-  } = props;
   const selectedLink = socialMediaLinks.find(
     (link) => link.icon === selectedSocialMedia,
+  );
+
+  const handleIconClick = useCallback(
+    (icon: string) => {
+      setSelectedSocialMedia(icon);
+    },
+    [setSelectedSocialMedia],
   );
 
   return (
@@ -33,6 +36,7 @@ const MemoSocialMediaLinks = (props: ISocialMediaLinks) => {
             <div
               key={link._id}
               onClick={() => handleIconClick(link.icon)}
+              onKeyDown={() => handleIconClick(link.icon)}
               className={`${
                 selectedSocialMedia === link.icon
                   ? "bg-black text-white"

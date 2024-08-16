@@ -3,20 +3,29 @@ import type { BannerLayout } from "@/components/types/businessData";
 import { memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import SelectingCardLayout from "./selectingCardLayout";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 
 const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
   const { handleBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
   }));
+  const { setToggleExplorePages } = useExploreStore((s) => ({
+    setToggleExplorePages: s.setToggleExplorePages,
+  }));
 
   return (
     <section
-      onKeyDown={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
-      onClick={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
+      onKeyDown={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
+      onClick={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
       key={layout?._id}
     >
       <article className="relative flex justify-center shrink-0 max-w-[12rem]">

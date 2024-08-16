@@ -3,8 +3,15 @@ import type { BannerLayout } from "@/components/types/businessData";
 import { memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import SelectingCardLayout from "./selectingCardLayout";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 
 const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
+  const { setToggleExplorePages } = useExploreStore((s) => ({
+    setToggleExplorePages: s.setToggleExplorePages,
+  }));
   const { handleBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
     selectedBannerType: s.selectedBannerType,
@@ -12,12 +19,14 @@ const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
 
   return (
     <div
-      onKeyDown={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
-      onClick={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
+      onKeyDown={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
+      onClick={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
       className="relative flex flex-col"
       key={layout?._id}
     >

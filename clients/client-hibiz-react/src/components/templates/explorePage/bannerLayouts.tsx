@@ -100,6 +100,7 @@ const MemoBannerLayouts = () => {
                     : "bg-gray-200"
                 }`}
                 onClick={() => toggleFilter("withButton")}
+                onKeyDown={() => toggleFilter("withButton")}
               >
                 With Button
               </div>
@@ -110,6 +111,7 @@ const MemoBannerLayouts = () => {
                     : "bg-gray-200"
                 }`}
                 onClick={() => toggleFilter("withoutButton")}
+                onKeyDown={() => toggleFilter("withoutButton")}
               >
                 Without Button
               </div>
@@ -120,6 +122,7 @@ const MemoBannerLayouts = () => {
                     : "bg-gray-200"
                 }`}
                 onClick={() => toggleFilter("withImage")}
+                onKeyDown={() => toggleFilter("withImage")}
               >
                 With Image
               </div>
@@ -130,11 +133,13 @@ const MemoBannerLayouts = () => {
                     : "bg-gray-200"
                 }`}
                 onClick={() => toggleFilter("withPattern")}
+                onKeyDown={() => toggleFilter("withPattern")}
               >
                 No Image
               </div>
             </div>
             <button
+              type="button"
               className="px-4 py-2 mt-4 !text-sm text-white bg-red-500 rounded-full"
               onClick={clearFilters}
             >

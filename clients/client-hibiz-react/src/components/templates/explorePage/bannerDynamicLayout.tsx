@@ -104,7 +104,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className={`rounded-t-xl w-[14rem] h-[10rem] shadow-xl ${
+                  className={`rounded-t-xl w-[14rem] h-[10rem] shadow-xl object-cover ${
                     openPreview
                       ? "w-[20rem] h-[17rem]"
                       : "md:w-[25rem] md:h-[18rem]"
@@ -193,7 +193,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className={`rounded-xl h-[13rem] w-[13rem] ${
+                  className={`rounded-xl h-[13rem] w-[13rem] object-cover ${
                     openPreview ? "h-[25rem] w-[25rem]" : ""
                   } md:h-[25rem] md:w-[25rem] bg-cover aspect-square`}
                 />
@@ -257,7 +257,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className={`rounded-xl aspect-square bg-cover ${sizeClasses}`}
+                  className={`rounded-xl aspect-square object-cover ${sizeClasses}`}
                 />
               </figure>
               <article

@@ -1,7 +1,6 @@
 import {
   type ChangeEvent,
   memo,
-  startTransition,
   useEffect,
   useRef,
   useState,
@@ -11,7 +10,7 @@ import {
 } from "react";
 import { TfiPaintBucket } from "react-icons/tfi";
 import { apiRpc } from "@hi/common";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   cn,
   handleClick,
@@ -33,6 +32,10 @@ import CropperPopup from "@/components/common/cropperPopup";
 import { CiNoWaitingSign } from "react-icons/ci";
 import BottomButton from "@/components/atom/bottomButton";
 import MiddlePopUp from "@/components/atom/middlePopUp";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 
 // Lazy load components
 const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
@@ -67,7 +70,6 @@ const preDefinedColors = [
 const MemoCreateBanner = () => {
   const cropperRef = useRef(null);
   const [isPublished, setIsPublished] = useState(false);
-  const navigate = useNavigate();
   const { businessId } = useParams();
   const bannerRef = useRef<HTMLInputElement | null>(null);
 
@@ -108,6 +110,10 @@ const MemoCreateBanner = () => {
     setIsButtonExists: s.setIsButtonExists,
     openPreview: s.openPreview,
     setOpenPreview: s.setOpenPreview,
+  }));
+
+  const { setToggleExplorePages } = useExploreStore((s) => ({
+    setToggleExplorePages: s.setToggleExplorePages,
   }));
 
   const [isLoading, setIsLoading] = useState(false);
@@ -306,22 +312,18 @@ const MemoCreateBanner = () => {
     await res.json();
     if (res.status === 200 || res.status === 201) {
       toast.success("Banner Created Successfully");
-      navigate(`/app/business/${businessId}/banners`);
+      setToggleExplorePages(ExplorePages.MAINFORM);
     }
     setBannerPage(BannerPage.VIEW);
   };
 
   const handleBackClick = () => {
     setBannerPage(BannerPage.VIEW);
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/banners`);
-    });
+    setToggleExplorePages(ExplorePages.BANNERS);
   };
   const handleChangeLayout = () => {
     setBannerPage(BannerPage.VIEW);
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/banners/new`);
-    });
+    setToggleExplorePages(ExplorePages.NEWBANNER);
   };
 
   const handleRemoveImage = useCallback(
@@ -464,6 +466,9 @@ const MemoCreateBanner = () => {
                             <article
                               key={color}
                               onClick={() => handleCustomColor("banner", color)}
+                              onKeyDown={() =>
+                                handleCustomColor("banner", color)
+                              }
                               style={{
                                 background:
                                   color === "transparent" ? "none" : color,
@@ -529,6 +534,7 @@ const MemoCreateBanner = () => {
                 <section>
                   <article
                     onClick={handleParagraphColor}
+                    onKeyDown={handleParagraphColor}
                     style={{
                       background: paragraphStyle?.color || "transparent",
                       border:
@@ -555,6 +561,7 @@ const MemoCreateBanner = () => {
                       <article
                         key={color}
                         onClick={() => handleCustomColor("paragraph", color)}
+                        onKeyDown={() => handleCustomColor("paragraph", color)}
                         style={{ background: color }}
                         className="w-8 h-8 rounded-full border border-1 border-[#000]"
                       >
@@ -615,6 +622,15 @@ const MemoCreateBanner = () => {
                         <article
                           key={color?.bgColor}
                           onClick={() =>
+                            handleCustomColor(
+                              "button",
+                              color?.bgColor === "transparent"
+                                ? "#808080"
+                                : color?.bgColor,
+                              color?.textColor,
+                            )
+                          }
+                          onKeyDown={() =>
                             handleCustomColor(
                               "button",
                               color?.bgColor === "transparent"

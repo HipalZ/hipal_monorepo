@@ -644,3 +644,10 @@ export enum DatePickerEnum {
   ONE_MONTH = "ONE MONTH",
   CUSTOM_DATE = "CUSTOM DATE",
 }
+
+export interface SocialMediaLink {
+  _id: number;
+  icon: string;
+  logo: JSX.Element;
+  link: string;
+}

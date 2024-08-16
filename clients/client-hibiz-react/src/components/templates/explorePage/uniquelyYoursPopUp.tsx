@@ -1,40 +1,94 @@
 import type { IDish } from "@/components/types/businessData";
-import { memo, useEffect, type ChangeEvent, useMemo } from "react";
+import { memo, useEffect, type ChangeEvent, useMemo, useCallback } from "react";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import Fuse from "fuse.js";
+import { apiRpc } from "@hi/common";
+import { useParams } from "react-router-dom";
 
-interface IUniqueProps {
-  dishes: IDish[];
-  uniquelyDishes: IDish[];
-  selectedDishes: IDish[];
-  handleSearch: (e: ChangeEvent<HTMLInputElement>) => void;
-  searchQuery: string;
-  handleDishSelect: (dish: IDish) => void;
-  handleSaveDish: () => void;
-  setSelectedDishes: (dishes: IDish[]) => void;
-}
-
-const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
-  const { originalDishes } = useExploreStore((s) => ({
-    originalDishes: s.originalDishes,
-  }));
-
+const MemoUniquelyYoursPopUp = () => {
+  const businessId = useParams()?.businessId;
   const {
-    uniquelyDishes,
+    originalDishes,
     dishes,
+    uniquelyDishes,
     setSelectedDishes,
     selectedDishes,
-    handleSearch,
     searchQuery,
-    handleDishSelect,
-    handleSaveDish,
-  } = props;
+    setSearchQuery,
+    setDishes,
+    setUniquelyDishes,
+    setShowUniquePopUp,
+  } = useExploreStore((s) => ({
+    originalDishes: s.originalDishes,
+    dishes: s.dishes,
+    uniquelyDishes: s.uniquelyDishes,
+    setSelectedDishes: s.setSelectedDishes,
+    selectedDishes: s.selectedDishes,
+    searchQuery: s.searchQuery,
+    setSearchQuery: s.setSearchQuery,
+    setDishes: s.setDishes,
+    setUniquelyDishes: s.setUniquelyDishes,
+    setShowUniquePopUp: s.setShowUniquePopUp,
+  }));
 
   useEffect(() => {
     setSelectedDishes(uniquelyDishes);
   }, []);
+
+  const handleSearch = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const search = e.target.value;
+    setSearchQuery(search);
+    const filteredDishes = dishes.filter((dish) =>
+      dish.name.toLowerCase().includes(search.toLowerCase()),
+    );
+    setDishes(filteredDishes);
+    if (search.trim() === "") {
+      setDishes(originalDishes);
+    }
+  }, []);
+
+  const handleDishSelect = useCallback(
+    (selectedDish: IDish) => {
+      const isAlreadySelected = selectedDishes.some(
+        (dish) => dish._id === selectedDish._id,
+      );
+      let updatedSelectedDishes: IDish[];
+      if (isAlreadySelected) {
+        updatedSelectedDishes = selectedDishes.filter(
+          (dish) => dish._id !== selectedDish._id,
+        );
+      } else {
+        updatedSelectedDishes = [...selectedDishes, selectedDish];
+      }
+
+      setSelectedDishes(updatedSelectedDishes);
+    },
+    [selectedDishes],
+  );
+
+  const handleSaveDish = async () => {
+    setUniquelyDishes(selectedDishes);
+    await handleUniquelyYours(selectedDishes);
+    setShowUniquePopUp(false);
+  };
+
+  const handleUniquelyYours = async (selectedDishes: IDish[]) => {
+    apiRpc.dishes.uniquelyYours.$post({
+      json: {
+        dishArray: selectedDishes.map((dish) => {
+          return {
+            dishId: dish._id,
+            name: dish.name,
+            images: dish.images,
+            dishTypes: dish?.dishTypes,
+            businessId,
+          };
+        }),
+      },
+    });
+  };
 
   // Function to filter unique dishes with images
   const getUniqueDishesWithImages = (dishesList: IDish[]) => {
@@ -43,7 +97,7 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
       if (
         dish.images &&
         dish.images.length > 0 &&
-        !uniqueDishesMap.has(dish._name)
+        !uniqueDishesMap.has(dish.name)
       ) {
         uniqueDishesMap.set(dish.name, dish);
       }
@@ -161,7 +215,6 @@ const MemoUniquelyYoursPopUp = (props: IUniqueProps) => {
               );
             })}
       </div>
-  
       <button onClick={handleSaveDish} type="button" className="bottom_btn">
         Save
       </button>
