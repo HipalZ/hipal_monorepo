@@ -97,7 +97,7 @@ const MemoBannersLayout = (props: Props) => {
                   width={320}
                   height={224}
                   className={
-                    "rounded-t-xl w-[20rem] h-[14rem] embla__parallax__img "
+                    "rounded-t-xl w-[20rem] h-[14rem] embla__parallax__img object-cover"
                   }
                 />
               </figure>
@@ -159,7 +159,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] w-full bg-cover shrink-0"
+                  className="rounded-xl h-[20rem] w-full object-cover shrink-0"
                   height={320}
                   width={320}
                 />
@@ -178,7 +178,10 @@ const MemoBannersLayout = (props: Props) => {
                     {heading ? truncateDescription(heading) : "Heading"}
                   </h1>
                   {layout?.isButton && (
-                    <div style={buttonStyleTags} className={defaultButtonStyle}>
+                    <div
+                      style={buttonStyleTags}
+                      className={`${defaultButtonStyle} mt-2`}
+                    >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.8rem]">
                         <LuArrowUpRight />
@@ -217,7 +220,7 @@ const MemoBannersLayout = (props: Props) => {
               <Image
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
-                className="rounded-xl aspect-square h-[20rem] bg-cover shrink-0"
+                className="rounded-xl aspect-square h-[20rem] object-cover shrink-0"
                 width={320}
                 height={320}
               />
@@ -281,7 +284,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] aspect-square bg-cover shrink-0"
+                  className="rounded-xl h-[20rem] aspect-square object-cover shrink-0"
                   width={320}
                   height={320}
                 />
@@ -346,7 +349,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] aspect-square bg-cover"
+                  className="rounded-xl h-[20rem] aspect-square object-cover"
                   width={320}
                   height={320}
                 />

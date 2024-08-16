@@ -17,8 +17,10 @@ import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import SignUpBonus from "@/components/organisms/explore/signupbonus";
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
 function OtpPage() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");

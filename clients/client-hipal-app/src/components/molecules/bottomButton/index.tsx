@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { MdAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
@@ -14,7 +15,12 @@ import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
@@ -24,6 +30,7 @@ function BottomButton({
   children?: ReactNode;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
+  const pathname = usePathname(); // Get the current path
   const [inputModal, setInputModal] = useState(false);
   const searchParams = useSearchParams();
   const tableName = useTableData((s) => s.tableName);
@@ -32,6 +39,8 @@ function BottomButton({
   const { setIsPayment } = useLogin();
   const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
+  const [selectedButton, setSelectedButton] = useState("");
+
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false);
@@ -53,6 +62,16 @@ function BottomButton({
     }
   }, []);
 
+  // Function to toggle the selected button
+  const handleButtonClick = useCallback((buttonName: string) => {
+    setSelectedButton(buttonName);
+  }, []);
+
+  const defaultStyle = useMemo(
+    () => "px-2 font-light text-base-100 active:scale-90 on_active_bounce",
+    [],
+  );
+
   return (
     <>
       {children ? (
@@ -63,25 +82,55 @@ function BottomButton({
         <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
-              <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
-                <RiHome4Fill size={20} className="mb-2" />
+              <center
+                onClick={() => handleButtonClick("home")}
+                className={defaultStyle}
+              >
+                <RiHome4Fill
+                  size={20}
+                  className={`mb-2 ${
+                    selectedButton === "home"
+                      ? "bg-base-100 text-primary rounded-2xl"
+                      : ""
+                  }`}
+                />
                 Home
               </center>
             </Link>
             <Link
               href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             >
-              <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
-                <RiCouponFill size={20} className="mb-2" />
+              <center
+                onClick={() => handleButtonClick("rewards")}
+                className={defaultStyle}
+              >
+                <RiCouponFill
+                  size={20}
+                  className={`mb-2 ${
+                    selectedButton === "rewards"
+                      ? "bg-base-100 text-primary"
+                      : ""
+                  }`}
+                />
                 Rewards
               </center>
             </Link>
             {tableName && (
               <center
-                onClick={openModal}
-                className="px-2 font-light on_active_bounce text-base-100 active:scale-90"
+                onClick={() => {
+                  openModal();
+                  handleButtonClick("payBill");
+                }}
+                className={defaultStyle}
               >
-                <MdAccountBalanceWallet size={20} className="mb-2" />
+                <MdAccountBalanceWallet
+                  size={20}
+                  className={`mb-2 ${
+                    selectedButton === "payBill"
+                      ? "bg-base-100 text-primary"
+                      : ""
+                  }`}
+                />
                 <span className="w-full font-light text-base-100">
                   {!tableName ? "Scan" : "Pay Bill"}
                 </span>
@@ -89,15 +138,33 @@ function BottomButton({
             )}
             {!tableName && (
               <Link href={`/${customLink}/scan`}>
-                <center className="px-2 font-light on_active_bounce text-base-100 active:scale-90">
-                  <LuScanLine size={20} className="mb-2" />
+                <center
+                  onClick={() => handleButtonClick("scan")}
+                  className={defaultStyle}
+                >
+                  <LuScanLine
+                    size={20}
+                    className={`mb-2 ${
+                      selectedButton === "scan"
+                        ? "bg-base-100 text-primary"
+                        : ""
+                    }`}
+                  />
                   {!tableName ? "Scan" : "Pay Bill"}
                 </center>
               </Link>
             )}
             <Link href={`/${customLink}/category`}>
-              <center className="w-full px-2 font-light on_active_bounce text-base-100 active:scale-90">
-                <MdOutlineMenuBook size={20} className="mb-2" />
+              <center
+                onClick={() => handleButtonClick("menu")}
+                className={defaultStyle}
+              >
+                <MdOutlineMenuBook
+                  size={20}
+                  className={`mb-2 ${
+                    selectedButton === "menu" ? "bg-base-100 text-primary" : ""
+                  }`}
+                />
                 Menu
               </center>
             </Link>

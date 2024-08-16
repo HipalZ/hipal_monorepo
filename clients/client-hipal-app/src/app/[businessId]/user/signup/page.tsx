@@ -10,8 +10,10 @@ import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
 const SignUp = memo(() => {
   const [phone, setPhone] = useState("");
   const { setUserDetails, userDetails } = useLogin();
@@ -21,21 +23,19 @@ const SignUp = memo(() => {
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
 
-  console.log("userDetails",phone, userDetails);
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (loader) return toast.error("Please wait for a moment");
 
     setLoader(true);
 
-    if (phone.length !== 10 ) {
+    if (phone.length !== 10) {
       toast.error("Please enter a valid phone number");
       return;
     }
 
     const userData = {
-      phone: phone ,
+      phone: phone,
       role: ["HIPAL_CUSTOMER"],
     };
 
@@ -65,8 +65,7 @@ const SignUp = memo(() => {
     if (userDetails.phone) {
       setPhone(userDetails.phone);
     }
-  },[])
-
+  }, []);
 
   return (
     <main className="relative bg-[#748FFC]">

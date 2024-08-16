@@ -53,7 +53,6 @@ async function fetchBusinessData(customLink: string) {
     "settings.explore.openTill",
     getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill || ""),
   );
-  console.log("data", data);
   return data;
 }
 
