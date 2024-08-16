@@ -65,7 +65,9 @@ const MemoCardSelection = () => {
   const navigate = useNavigate();
 
   const goBack = useCallback(() => {
-    setSelectedPage("GET_STARTED");
+    startTransition(() => {
+      navigate(`/app/business/${businessId}`);
+    })
   }, [setSelectedPage]);
 
   const LoyaltyToggleArray = [

@@ -52,7 +52,7 @@ const Overview = () => {
       ) : (
         <>
           <section className="payment_layout">
-            <article className="card_payment_overview">
+            <article className="card_payment_overview lg:ml-4">
               <div className="sales_payment_background_effect1" />
               <div className="sales_payment_background_effect2" />
               <div className="sales_payment_background_effect3" />
@@ -60,7 +60,7 @@ const Overview = () => {
                 {timestampToDateTime(timeStampStart)}
               </center>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-[0.125rem] bg-white h-[50%] mt-10"></div>
+                <div className="w-[0.125rem] bg-white h-[50%] mt-10"/>
               </div>
               <section>
                 <h3 className="absolute left-4 bottom-14 opacity-60">
@@ -81,7 +81,7 @@ const Overview = () => {
             </article>
             <section className="flex gap-4 mx-4">
               <article className="online_card1">
-                <div className="sales_payment_background_effect4"></div>
+                <div className="sales_payment_background_effect4"/>
                 <p className="flex">
                   <CiGlobe className="mr-2" />
                   <small>Online</small>
@@ -92,7 +92,7 @@ const Overview = () => {
               </article>
 
               <article className="online_card2">
-                <div className="sales_payment_background_effect5"></div>
+                <div className="sales_payment_background_effect5"/>
                 <p className="flex">
                   <CiGlobe className="mr-2" />
                   <small>On floor</small>

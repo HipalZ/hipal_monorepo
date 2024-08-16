@@ -102,7 +102,7 @@ const MemoListOfParentCategory = () => {
         <button
           type="button"
           key={category.name}
-          className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+          className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
         >
           {isMenuManager ? (
             <figure className="flex items-center gap-4">

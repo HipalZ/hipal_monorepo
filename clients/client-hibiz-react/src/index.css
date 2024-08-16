@@ -8,8 +8,8 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --color-chart-primary: 78, 115, 223; /* Primary color in RGB */
-  --color-chart-secondary: 28, 200, 138; /* Secondary color in RGB */
+  --color-chart-primary: 78, 115, 223;
+  --color-chart-secondary: 28, 200, 138;
   --star-size: 32px;
   --star-color: #eee;
   --star-background: #fc0;
@@ -27,7 +27,7 @@
 main {
   position: relative;
   width: 100%;
-  max-width: 69rem;
+  max-width: 64rem;
   margin: 0 auto;
 }
 
@@ -518,9 +518,7 @@ input[type='color' i] {
 .payment_card_ui {
   background-color: #fff;
   border-radius: 1.25rem;
-  width: 90%;
   max-width: 28rem;
-  margin: 1.5rem auto 0 auto;
   border: #f4f4f4 1px solid;
   padding: 0.75rem;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
@@ -714,7 +712,10 @@ input[type='color' i] {
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1281px) {
+  main {
+    max-width: 69rem;
+  }
   .masonry-layout {
     column-count: 4;
   }

@@ -136,7 +136,7 @@ const HorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={`z-20 flex flex-col items-center w-full mx-auto ${
+              className={` flex flex-col items-center w-full mx-auto ${
                 dishData?.images?.length > 0 || noDescription
                   ? " -mt-6"
                   : " -mt-4 -ml-6"
@@ -149,7 +149,7 @@ const HorizontalCard = ({
                   }`}
                 >
                   <DishQuantityButton dishData={dishData} />
-                  <span className="text-sm opacity-50">
+                  <span className="text-sm opacity-50 text-base-content">
                     {dishData?.addOnIds?.length > 0 ? "customizable" : null}
                   </span>
                 </div>

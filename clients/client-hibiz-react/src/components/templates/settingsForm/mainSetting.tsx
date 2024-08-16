@@ -10,7 +10,6 @@ import {
   useBusinessFormStore,
 } from "@/components/store/useOutlet";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoSettings = () => {
@@ -69,13 +68,13 @@ const MemoSettings = () => {
   }, []);
 
   return (
-    <section className="p-6 space-y-6">
+    <section className="flex flex-col flex-wrap gap-4 m-4 lg:flex-row">
       {settingServices.map((service) => {
         return (
           <article
             onClick={() => goToForm(service?.navigateTo)}
             key={service?._id}
-            className="bg-white h-[6.5rem] rounded-2xl p-4"
+            className="bg-white h-[6.5rem] w-[100%] lg:max-w-[21.5rem] rounded-2xl p-4"
           >
             <header className="relative flex items-center mb-4 space-x-4">
               <article className="flex items-center justify-center w-8 h-8 bg-purple-700 rounded-full">

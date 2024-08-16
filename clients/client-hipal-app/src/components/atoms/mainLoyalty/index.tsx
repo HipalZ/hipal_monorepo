@@ -1,170 +1,82 @@
-import { useLogin } from "@/components/store/useLogin"
-import React, { memo, useEffect, useState } from "react"
-import {
-	beans,
-	bowl,
-	bud,
-	flower,
-	love,
-	triangleToDataurl,
-	waveToDataUrl,
-} from "../card/pathPattern"
-import Image from "next/image"
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes"
-import { useParams, useRouter } from "next/navigation"
-import TitleTransition from "../titletransition"
-import useBusinessDetails from "@/components/store/useBusinessDetails"
-import PlaceholderImg from "../placeholder"
-import type { PatternKeys } from "@/components/utils/helpers"
-import type { ILoyaltySetting } from "@/components/store/useLoyaltyData"
-import { useUserToken } from "@hi/common/src/useUserToken"
+import { useLogin } from "@/components/store/useLogin";
+import React, { memo } from "react";
+import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
+import { useParams, useRouter } from "next/navigation";
+import TitleTransition from "../titletransition";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import CardSection from "../cardSection";
 
 interface ILoyaltyCard {
-	logo?: string
-	cardColor: string
-	fontColor: string
-	hiCode?: string
-	loyaltySetting: ILoyaltySetting
+  logo?: string;
+  cardColor: string;
+  fontColor: string;
+  hiCode?: string;
+  loyaltySetting: ILoyaltySetting;
 }
 
-const MainLoyalty = ({ logo, cardColor, fontColor, hiCode, loyaltySetting }: ILoyaltyCard) => {
-	const [image, setImage] = useState<any>("")
-	const [cardPattern, setCardPattern] = useState("")
-	const userName = useLogin((s) => s.userDetails.name)
-	const accessToken = useUserToken.getState().accessToken;
-	const refreshToken = useUserToken.getState().refreshToken;
-	const customLink = useParams()?.businessId as string
-	const setDirection = useLogin((s) => s.setDirection)
-	const router = useRouter()
+const MainLoyalty = ({
+  logo,
+  cardColor,
+  fontColor,
+  hiCode,
+  loyaltySetting,
+}: ILoyaltyCard) => {
+  const accessToken = useUserToken.getState().accessToken;
+  const customLink = useParams()?.businessId as string;
+  const setDirection = useLogin((s) => s.setDirection);
+  const router = useRouter();
 
-	const businessDetails = useBusinessDetails((s) => s.businessDetails)
-	const goToLoyalty = (str: string) => {
-		if (!accessToken) {
-			setDirection(str)
-			router.push(routePaths[PAGE_TYPES.SIGN_UP](customLink))
-		} else {
-			setDirection("")
-			router.push(routePaths[PAGE_TYPES.LOYALTY](customLink))
-		}
-	}
+  const businessDetails = useBusinessDetails((s) => s.businessDetails);
+  const goToLoyalty = (str: string) => {
+    if (!accessToken) {
+      setDirection(str);
+      router.push(routePaths[PAGE_TYPES.SIGN_UP](customLink));
+    } else {
+      setDirection("");
+      router.push(routePaths[PAGE_TYPES.LOYALTY](customLink));
+    }
+  };
 
-	const handleClaimNowClick = () => {
-		goToLoyalty("loyalty")
-	}
+  const handleClaimNowClick = () => {
+    goToLoyalty("loyalty");
+  };
 
-	useEffect(() => {
-		setCardPattern(loyaltySetting?.cardPattern)
-	}, [loyaltySetting])
+  return (
+    <div className="pt-2 bg-base-100">
+      <div className="py-4 text-xl font-semibold text-center text-primary syne-font">
+        <div>Treat yourself to a</div>
+        <TitleTransition
+          loyaltySetting={loyaltySetting}
+          data={businessDetails.name}
+          align="center"
+        />
+        <div>with every bill you settle!!</div>
+      </div>
 
-	useEffect(() => {
-		const patterns = (cardPattern: PatternKeys, fontColor: string) => {
-			const defaultColor = "#FAE8CA"
-			fontColor = fontColor || defaultColor
+      <CardSection />
+      <center className="text-xl text-primary">
+        CVV :- <span className="text-2xl font-bold">{hiCode}</span>
+      </center>
+      <div className="py-4 mx-6 text-sm text-center text-primary">
+        Get {loyaltySetting?.setCashBackPercentage}% cash back every time you
+        Pay bill! It&#39;s our way of saying thanks for choosing us. Simple
+        savings, just for you!
+      </div>
+      {!hiCode && (
+        <div onClick={handleClaimNowClick} className="w-full px-4 pt-2 pb-4">
+          <button
+            type="button"
+            className="w-full py-3 rounded-full bg-primary text-primary-content"
+          >
+            Claim now
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
-			const src = {
-				wave: waveToDataUrl(fontColor, "white").wave,
-				triangle: triangleToDataurl("white").triangle,
-				beans: beans(fontColor).beans,
-				bud: bud(fontColor).bud,
-				bowl: bowl(fontColor).bowl,
-				love: love(fontColor).love,
-				flower: flower(fontColor).flower,
-			}
-			return src[cardPattern]
-		}
-		patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor)
-		setImage(patterns(loyaltySetting?.cardPattern, loyaltySetting?.fontColor))
-	}, [loyaltySetting, cardPattern, fontColor])
-
-	return (
-		<div className="pt-2">
-			<div className="py-4 text-xl font-semibold text-center text-primary syne-font">
-				<div>Treat yourself to a</div>
-
-				<TitleTransition loyaltySetting={loyaltySetting} data={businessDetails.name} align="center" />
-
-				<div>with every bill you settle!!</div>
-			</div>
-			<div className="w-full py-4">
-				<div
-					className="relative w-[85%] h-[25vh] m-auto bg-primary rounded-xl tilted-card"
-					style={{
-						backgroundImage: `url(${image})`,
-						backgroundColor: cardColor,
-						backgroundSize:
-							cardPattern === "beans" ||
-								cardPattern === "bowl" ||
-								cardPattern === "love" ||
-								cardPattern === "flower" ||
-								cardPattern === "bud"
-								? "100px 75px"
-								: "cover",
-						backgroundPosition:
-							cardPattern === "beans" ||
-								cardPattern === "bowl" ||
-								cardPattern === "love" ||
-								cardPattern === "flower" ||
-								cardPattern === "bud"
-								? "right 5% top 50%"
-								: "",
-						backgroundRepeat: "no-repeat",
-					}}
-				>
-					<h1
-						style={{
-							maxWidth: "calc(100% - 2rem)",
-							whiteSpace: "nowrap",
-							color: `${fontColor}`,
-						}}
-						className="absolute top-4 text-[0.5rem] ml-[1rem] font-semibold flex self-start"
-					>
-						{logo ? (
-							<Image src={logo} alt="logo" height={50} width={50} />
-						) : (
-							<PlaceholderImg />
-						)}
-					</h1>
-					{hiCode && (
-						<div className="absolute text-2xl transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
-							<div
-								style={{
-									color: `${fontColor}`,
-								}}
-							>
-								{hiCode}
-							</div>
-						</div>
-					)}
-
-					<h1
-						style={{
-							maxWidth: "calc(100% - 2rem)",
-							whiteSpace: "nowrap",
-							color: `${fontColor}`,
-						}}
-						className="absolute flex self-start ml-5 text-lg font-normal bottom-4"
-					>
-						{userName ? userName : "Name"}
-					</h1>
-				</div>
-			</div>
-			<div className="py-4 mx-6 text-sm text-center text-primary">
-				Get {loyaltySetting?.setCashBackPercentage}% cash back every time you Pay bill! It&#39;s our way of saying thanks for choosing us.
-				Simple savings, just for you!
-			</div>
-			{!hiCode && (
-				<div onClick={handleClaimNowClick} className="w-full px-4 pt-2 pb-4">
-					<button
-						type="button"
-						className="w-full py-3 rounded-full bg-primary text-primary-content"
-					>
-						Claim now
-					</button>
-				</div>
-			)}
-		</div>
-	)
-}
-
-const MemoMainLoyalty = memo(MainLoyalty)
-export default MemoMainLoyalty
+const MemoMainLoyalty = memo(MainLoyalty);
+export default MemoMainLoyalty;
