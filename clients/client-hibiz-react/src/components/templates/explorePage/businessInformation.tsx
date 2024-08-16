@@ -213,7 +213,8 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
     handleTimings();
   };
 
-  const handleCreateInfo = async () => {
+  const handleCreateInfo = async (e) => {
+    e.preventDefault();
     if (!businessId) return;
     setIsLoading(true);
     const payload: IBizPayload = {
@@ -267,7 +268,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
   };
 
   return (
-    <section className="px-4 mt-16">
+    <form onSubmit={handleCreateInfo} className="px-4 mt-16">
       <section>
         <SubHeader text="Basic Information" />
         <article className="p-4 bg-white rounded-2xl lg:flex lg:justify-around lg:space-x-4">
@@ -431,8 +432,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
       <button
         className="fixed bottom-2 w-[88%] rounded-full bg-black text-white text-center py-3 left-6 right-6 md:max-w-[26rem]
          md:left-0 md:right-0 md:mx-auto"
-        onClick={handleCreateInfo}
-        type="button"
+        type="submit"
       >
         Save
       </button>
@@ -533,7 +533,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
         </section>
       </PopUp>
       {isLoading && <LoadingSpinner />}
-    </section>
+    </form>
   );
 };
 

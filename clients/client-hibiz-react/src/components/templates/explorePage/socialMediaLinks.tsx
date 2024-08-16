@@ -5,7 +5,7 @@ import { memo, useCallback, type ChangeEvent } from "react";
 
 interface Props {
   handleSaveSocialMediaLink: (e: ChangeEvent<HTMLInputElement>) => void;
-  socialMediaLinks: SocialMediaLink;
+  socialMediaLinks: SocialMediaLink[];
 }
 const MemoSocialMediaLinks = (props: Props) => {
   const { handleSaveSocialMediaLink, socialMediaLinks } = props;

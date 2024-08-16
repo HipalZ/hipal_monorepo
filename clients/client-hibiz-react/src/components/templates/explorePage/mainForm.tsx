@@ -9,14 +9,12 @@ import {
   lazy,
   memo,
   useCallback,
-  useEffect,
   useRef,
   useState,
 } from "react";
 import toast from "react-hot-toast";
 import { IoMdArrowUp } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSocialMediaLinks } from "@/components/utils/commonFunc";
 import { BsInstagram } from "react-icons/bs";
 import { CiFacebook } from "react-icons/ci";
 import { FaXTwitter } from "react-icons/fa6";
@@ -145,8 +143,6 @@ const MemoMainForm = () => {
     }
 
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
-    console.log("socialMediaLinks", socialMediaLinks);
-    console.log("validSocialMediaLinks", validSocialMediaLinks);
 
     // Then, check each non-empty link for the "https://" prefix
     const filteredSocialMedia = validSocialMediaLinks.reduce<
