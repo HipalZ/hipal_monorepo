@@ -257,8 +257,10 @@ const MemoCreateBanner = () => {
 
   const handleCreateBanner = async (isPublish?: boolean) => {
     if (!businessId) return;
-    if ((heading.length === 0 || paragraph.length === 0) && !onlyImage) {
-      return toast.error("Heading and Description are required");
+    if ((heading.length < 4 || paragraph.length < 4) && !onlyImage) {
+      return toast.error(
+        "Heading and Description should be more than 4 characters",
+      );
     }
     if (img && !img.logo && !isPatternExists) {
       return toast.error("Please upload an image");
@@ -311,8 +313,12 @@ const MemoCreateBanner = () => {
     }
     await res.json();
     if (res.status === 200 || res.status === 201) {
-      toast.success("Banner Created Successfully");
-      setToggleExplorePages(ExplorePages.MAINFORM);
+      toast.success(
+        editBanner
+          ? "Banner Updated Successfully"
+          : "Banner Created Successfully",
+      );
+      setToggleExplorePages(ExplorePages.BANNERS);
     }
     setBannerPage(BannerPage.VIEW);
   };
@@ -323,7 +329,7 @@ const MemoCreateBanner = () => {
   };
   const handleChangeLayout = () => {
     setBannerPage(BannerPage.VIEW);
-    setToggleExplorePages(ExplorePages.NEWBANNER);
+    setToggleExplorePages(ExplorePages.BANNERLAYOUTS);
   };
 
   const handleRemoveImage = useCallback(

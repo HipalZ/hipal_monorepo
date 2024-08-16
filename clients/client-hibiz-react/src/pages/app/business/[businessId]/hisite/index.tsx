@@ -35,7 +35,7 @@ const MemoHiSites = () => {
             <button
               onClick={handleThemes}
               type="button"
-              className="px-4 py-1 transition-transform transform scale-75 bg-white rounded-full shadow-lg active:shadow-sm active:translate-y-1"
+              className="px-4 py-1 scale-75 bg-white rounded-full"
             >
               Themes & Layout
             </button>

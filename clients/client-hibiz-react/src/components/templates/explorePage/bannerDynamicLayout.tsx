@@ -69,19 +69,24 @@ const MemoBannerDynamicLayout = (props: Props) => {
   const arrowButtonStyles = `${
     openPreview ? "text-[0.9rem]" : "text-[0.6rem] md:text-[1rem]"
   }`;
-  const headingTextStyle = `text-white ${
-    openPreview ? "text-[1.2rem]" : "text-[0.85rem] md:text-[1.5rem]"
-  }`;
-  const paragraphTextStyle = `text-white ${
+  const headingTextStyle = `${
+    selectedBannerType !== BannerType.BANNER_TYPE_1 ? "text-white" : ""
+  } ${openPreview ? "text-[1.2rem]" : "text-[0.85rem] md:text-[1.5rem]"}`;
+
+  const paragraphTextStyle = `${
+    selectedBannerType !== BannerType.BANNER_TYPE_1 ? "text-white" : ""
+  } ${
     openPreview
       ? "text-[0.8rem] text-justify"
       : "text-[0.6rem] md:text-[1.25rem] text-justify"
   }`;
+
   const paragraphPropsStyle = {
     color:
       paragraphStyle?.color === "transparent" ? "white" : paragraphStyle?.color,
   };
 
+  console.log("BannerDynamicLayout", selectedColor);
   return (
     <>
       {bannerLayouts.map((layout) => {
@@ -117,9 +122,9 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     selectedColor?.bgColor === "transparent"
                       ? "transparent"
                       : `linear-gradient(137.02deg, ${
-                          selectedColor?.bgColor || "white"
+                          selectedColor?.bgColor || "black"
                         }80 1.64%, ${
-                          selectedColor?.bgColor || "white"
+                          selectedColor?.bgColor || "black"
                         }30 98.36%)`,
                 }}
                 className={`w-full rounded-b-xl max-w-[14rem] shadow-xl px-2 py-0.5 ${
@@ -131,7 +136,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <h1
                     style={paragraphPropsStyle}
-                    className={`${headingTextStyle} truncate !text-black`}
+                    className={`${headingTextStyle} truncate`}
                   >
                     {heading ? heading : "Heading"}
                   </h1>
@@ -155,7 +160,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphPropsStyle,
                   }}
-                  className={`${paragraphTextStyle} !text-black`}
+                  className={`${paragraphTextStyle}`}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
