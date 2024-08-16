@@ -91,7 +91,7 @@ const businessesRouter = new Hono()
           [{ ...requestData, outlet: false }],
           { session },
         );
-        if (requestData.parentBranchId) {
+        if (requestData.parentOutLetId) {
           const {
             menu,
             themes,
