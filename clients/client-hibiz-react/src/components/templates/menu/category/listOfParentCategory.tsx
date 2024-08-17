@@ -48,14 +48,10 @@ const MemoListOfParentCategory = () => {
   }));
   const { isLoading } = useParentCategories();
 
-  const fuse = useMemo(
-    () =>
-      new Fuse(categories, {
-        keys: ["name"],
-        threshold: 0.3,
-      }),
-    [categories],
-  );
+  const fuse = new Fuse(categories, {
+    keys: ["name"],
+    threshold: 0.1,
+  });
 
   const filteredCategories = useMemo(() => {
     let filtered = search
@@ -96,7 +92,7 @@ const MemoListOfParentCategory = () => {
   return (
     <section className="flex relative flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
       <h3 className="absolute left-0 text-xl font-semibold text-black lg:top-[2rem] top-[4rem]">
-       main category ({filteredCategories?.length})
+        main category ({filteredCategories?.length})
       </h3>
       {filteredCategories.map((category) => (
         <button
@@ -135,7 +131,6 @@ const MemoListOfParentCategory = () => {
 
           <article className="flex">
             {!isMenuManager ? (
-              
               <div>
                 {category.visibility ? (
                   <FaEye className="text-green-500" />
@@ -143,7 +138,6 @@ const MemoListOfParentCategory = () => {
                   <FaEyeSlash className="text-red-500" />
                 )}
               </div>
-              
             ) : (
               <div className="flex items-center gap-1 font-semibold opacity-50">
                 <FaCodeBranch className="rotate-180" />

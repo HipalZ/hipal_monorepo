@@ -4,7 +4,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishStore, useLinkedDishes } from "@/hooks/useDishStore";
+import { useDishes, useLinkedDishes } from "@/hooks/useDishStore";
 import DishButton from "./dishesManagerCard";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
@@ -36,35 +36,48 @@ const MemoDishesManager = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishStore();
+  const { isLoading } = useDishes();
   const { data: linkedCategories } = useLinkedDishes();
 
-  const fuse = useMemo(
-    () =>
-      new Fuse(dishes, {
-        keys: ["name"],
-        threshold: 0.3,
-      }),
-    [dishes],
-  );
+  const allDishes = useMemo(() => {
+    const linkedDishes =
+      linkedCategories?.flatMap((category) => category.dishIds) || [];
+    return [...dishes, ...linkedDishes];
+  }, [dishes, linkedCategories]);
+
+  const fuse = new Fuse(allDishes, {
+    keys: ["name", "description"],
+    threshold: 0.3,
+  });
 
   const filteredDishes = useMemo(() => {
     let filtered = search
       ? fuse.search(search).map((result) => result.item)
-      : dishes;
+      : allDishes;
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
-        (c) => c.visibility === (visibilityFilter === "visible"),
+        (c) => c?.visibility === (visibilityFilter === "visible"),
       );
     }
     return sortOrder === "asc"
-      ? filtered.sort((a, b) => a.name.localeCompare(b.name))
-      : filtered.sort((a, b) => b.name.localeCompare(a.name));
-  }, [search, dishes, fuse, visibilityFilter, sortOrder]);
+      ? filtered.sort((a, b) => a?.name.localeCompare(b?.name))
+      : filtered.sort((a, b) => b?.name.localeCompare(a?.name));
+  }, [search, allDishes, fuse, visibilityFilter, sortOrder]);
+
+  const filteredLinkedCategories = useMemo(() => {
+    return linkedCategories
+      ?.map((category) => ({
+        ...category,
+        dishIds: category.dishIds.filter((dish) =>
+          filteredDishes.some((filteredDish) => filteredDish._id === dish._id),
+        ),
+      }))
+      .filter((category) => category.dishIds.length > 0);
+  }, [linkedCategories, filteredDishes]);
 
   const { unlinkedDishes } = useMemo(() => {
     const unlinked = filteredDishes.filter(
-      (dish) => !dish.categoryIds || dish.categoryIds.length === 0,
+      (dish) => !dish?.categoryIds || dish?.categoryIds.length === 0,
     );
     return { unlinkedDishes: unlinked };
   }, [filteredDishes]);
@@ -79,16 +92,19 @@ const MemoDishesManager = () => {
     [dishStep, setEditDish, setDishStep, setEditOpenMenu, setEditDishFunction],
   );
 
-  const redirectionDish = () => {
+  const redirectionDish = useCallback(() => {
     setShowPopUp(!showPopUp);
-  };
+  }, [showPopUp]);
 
-  const toggleCategory = (categoryId: string) => {
-    setOpenCategoryIds((prev) => ({
-      ...prev,
-      [categoryId]: !prev[categoryId],
-    }));
-  };
+  const toggleCategory = useCallback(
+    (categoryId: string) => {
+      setOpenCategoryIds((prev) => ({
+        ...prev,
+        [categoryId]: !prev[categoryId],
+      }));
+    },
+    [openCategoryIds],
+  );
 
   const handleDishClick = (dishId: string) => {
     setShowPopUp(false);
@@ -132,9 +148,9 @@ const MemoDishesManager = () => {
         )}
       </section>
       <section className="pb-[5rem] mx-4 flex flex-wrap justify-start gap-4">
-        {linkedCategories &&
-          linkedCategories?.length > 0 &&
-          linkedCategories?.map(
+        {filteredLinkedCategories &&
+          filteredLinkedCategories?.length > 0 &&
+          filteredLinkedCategories?.map(
             (category) =>
               category.dishIds.length > 0 && (
                 <div key={category._id?.toString()} className="w-full">
@@ -158,8 +174,8 @@ const MemoDishesManager = () => {
         <section className="pt-4">
           <h1 className="ml-6 text-base font-semibold">Categories</h1>
           <section className="h-[60dvh] overflow-y-auto flex flex-wrap justify-center">
-            {linkedCategories && linkedCategories?.length > 0
-              ? linkedCategories?.map((category) => (
+            {filteredLinkedCategories && filteredLinkedCategories?.length > 0
+              ? filteredLinkedCategories?.map((category) => (
                   <div
                     key={category?._id}
                     className="relative flex flex-col w-[90%] p-2 rounded-lg md:max-w-[14rem] lg:max-w-[14rem]"

@@ -39,7 +39,7 @@ export const useChildCategories = (dishStep: string) => {
   return { data, isLoading, isError };
 };
 
-export const useDishStore = () => {
+export const useDishes = () => {
   const { businessId } = useParams<{ businessId?: string }>();
   const { setDishes } = useDishesStore((s) => ({
     setDishes: s.setDishes,

@@ -5,7 +5,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishStore } from "@/hooks/useDishStore";
+import { useDishes } from "@/hooks/useDishStore";
 
 const MemoListOfDishes = () => {
   const {
@@ -34,13 +34,11 @@ const MemoListOfDishes = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishStore();
+  const { isLoading } = useDishes();
 
   const fuse = new Fuse(dishes, {
     keys: ["name", "description"],
     threshold: 0.1,
-    includeScore: true,
-    useExtendedSearch: true,
   });
 
   const filteredDishes = useMemo(() => {
@@ -49,7 +47,6 @@ const MemoListOfDishes = () => {
           return result.item;
         })
       : dishes;
-    console.log("filtered", filtered);
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
         (c) => c.visibility === (visibilityFilter === "visible"),
@@ -60,10 +57,6 @@ const MemoListOfDishes = () => {
       ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
   }, [search, fuse, visibilityFilter, sortOrder, dishes]);
-
-  console.log("search", search);
-  console.log("fuse", fuse.search(search));
-  console.log("dishes", dishes);
 
   const handleEditDish = useCallback(
     (dish: DishType) => {

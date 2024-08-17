@@ -11,7 +11,7 @@ import {
   deleteDishData,
   useAddons,
   useChildCategories,
-  useDishStore,
+  useDishes,
 } from "@/hooks/useDishStore";
 import LinkTags from "./linkTags";
 import LinkAddons from "./linkAddons";
@@ -66,7 +66,7 @@ const MemoEditDish = () => {
   const errorToasts = useErrorToasts();
 
   useChildCategories(dishStep);
-  const { refetch } = useDishStore();
+  const { refetch } = useDishes();
   const { data: addons } = useAddons(dishStep);
 
   const goBack = useCallback(() => {
