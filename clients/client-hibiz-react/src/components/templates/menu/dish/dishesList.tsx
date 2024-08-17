@@ -51,6 +51,7 @@ const MemoListOfDishes = () => {
           return result.item;
         })
       : dishes;
+    console.log("filtered", filtered);
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
         (c) => c.visibility === (visibilityFilter === "visible"),
@@ -61,6 +62,10 @@ const MemoListOfDishes = () => {
       ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
   }, [search, fuse, visibilityFilter, sortOrder]);
+
+  console.log("search", search);
+  console.log("fuse", fuse);
+  console.log("dishes", dishes);
 
   const handleEditDish = useCallback(
     (dish: DishType) => {
