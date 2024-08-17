@@ -33,7 +33,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
   const customLink = useParams()?.businessId as string;
-const getUserReward = async () => {
+  const getUserReward = async () => {
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
@@ -135,14 +135,14 @@ const getUserReward = async () => {
           >
             <RiArrowLeftLine className="text-black" />
           </button>
-          <h3 className="ml-2">Sankalesh</h3>
+          <h3 className="ml-2">{data?.business?.name}</h3>
         </Link>
 
         <Link href={`/${customLink}/loyalty/${loyaltySetting?.loyaltyId}`}>
           <button
             type="button"
             style={{ color: `${data.loyalty.cardColor}` }}
-            className="px-4 py-2 font-semibold bg-white border rounded-full on_active_bounce"
+            className="px-3 py-0.5 font-semibold bg-white border rounded-full on_active_bounce"
           >
             History
           </button>
@@ -197,7 +197,12 @@ const getUserReward = async () => {
                 Check your coinz history
               </p>
             </div>
-            <button type="button" className="rounded-full bg-[#183D2E] py-2 px-3 text-sm">Check</button>
+            <button
+              type="button"
+              className="rounded-full bg-[#183D2E] py-2 px-3 text-sm"
+            >
+              Check
+            </button>
           </article>
         </Link>
         <Link href={`/${customLink}/terms`}>
@@ -211,8 +216,12 @@ const getUserReward = async () => {
                 {businessDetails?.branchName || businessDetails?.name}
               </p>
             </div>
-            <button type="button" className="rounded-full bg-[#183D2E] py-2 px-5 text-sm">Visit</button>
-
+            <button
+              type="button"
+              className="rounded-full bg-[#183D2E] py-2 px-5 text-sm"
+            >
+              Visit
+            </button>
           </article>
         </Link>
       </section>
