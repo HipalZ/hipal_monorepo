@@ -55,6 +55,9 @@ const Loyalty = () => {
       setCardColor(loyaltyData?.cardColor ?? "#C4E4B4");
       setSelectedPage("CARD_SELECTION");
     }
+    else{
+      setSelectedPage("GET_STARTED");
+    }
 
     return loyaltyData;
   };
