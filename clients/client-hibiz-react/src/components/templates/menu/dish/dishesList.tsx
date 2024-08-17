@@ -36,14 +36,15 @@ const MemoListOfDishes = () => {
 
   const { isLoading } = useDishStore();
 
-  const fuse = useMemo(
-    () =>
-      new Fuse(dishes, {
-        keys: ["name", "description"],
-        threshold: 0.3,
-      }),
-    [dishes],
-  );
+  const fuse = useMemo(() => {
+    console.log("dishes", dishes);
+    return new Fuse(dishes, {
+      keys: ["name", "description"],
+      threshold: 0.1,
+      includeScore: true,
+      useExtendedSearch: true,
+    });
+  }, [dishes]);
 
   const filteredDishes = useMemo(() => {
     let filtered = search
@@ -64,7 +65,7 @@ const MemoListOfDishes = () => {
   }, [search, fuse, visibilityFilter, sortOrder]);
 
   console.log("search", search);
-  console.log("fuse", fuse);
+  console.log("fuse", fuse.search(search));
   console.log("dishes", dishes);
 
   const handleEditDish = useCallback(
