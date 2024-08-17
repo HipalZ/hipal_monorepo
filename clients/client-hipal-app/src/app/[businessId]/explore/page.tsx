@@ -76,8 +76,6 @@ export default async function Explore({
                 <EmblaCarousel>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
-                    console.log("bc", banner?.buttonColor);
-                    console.log("btn c", banner?.buttonTextColor);
                     return (
                       <div key={index.toString()} className="embla__slide">
                         <BannerLayouts

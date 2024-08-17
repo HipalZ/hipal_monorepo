@@ -204,7 +204,9 @@ body::-webkit-scrollbar {
 li {
 	list-style-type: none;
 }
-
+.custom-list-item {
+	list-style-type: disc !important;
+  }
 html, body {
     position: fixed;
     top: 0;
@@ -680,6 +682,15 @@ input[type='password'] {
 	line-height: 1rem; 
   }
 
+  .custom-list-color li::before{
+	content: "•"; 
+	color: #fff;
+	position: absolute;
+	left: 0;
+	font-size: 1.2rem;
+	line-height: 1rem; 
+  }
+
   .loader_spinner {
     border: 2px solid transparent;
     border-radius: 50%;
@@ -721,13 +732,7 @@ input[type='password'] {
 	transition: margin-top 2s ease;
 }
 
-
-
 /* Or create a specific class to use the font */
-
-
-
-
 
 @keyframes bounce {
 	0%,
@@ -1780,4 +1785,16 @@ input[type='password'] {
 	white-space: nowrap;
 	overflow: hidden;
 	animation: Marquescroll 10s linear infinite;
+  }
+
+  .button_bounce_effect {
+	transition: transform 0.2s; /* Adjust the duration as needed */
+	transform: translateY(0);
+	padding-left: 1rem; /* Equivalent to px-4 in Tailwind */
+	padding-right: 1rem; /* Equivalent to px-4 in Tailwind */
+  }
+  
+  .button_bounce_effect:active {
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Equivalent to shadow-sm in Tailwind */
+	transform: translateY(0.25rem); /* Equivalent to translate-y-1 in Tailwind */
   }

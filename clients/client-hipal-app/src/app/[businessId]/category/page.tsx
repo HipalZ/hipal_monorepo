@@ -59,7 +59,6 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await fetchData(params.businessId);
-  console.log("this sios my child  cate", data.childCategories);
   return (
     <main>
       <div className="relative flex flex-col w-full pb-14">

@@ -14,12 +14,10 @@ function CategoryHeader(props: ICategoryProps) {
   const { parentCategory, childCategory } = props;
   const { isSearchActive } = useSearch();
   const [showHeader, setShowHeader] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0); // State to track the last scroll position
+  const [lastScrollY, setLastScrollY] = useState(0);
   const headerRef = useRef(null);
 
-  // Function to handle scroll and determine if the user is scrolling up or down
   const handleScroll = () => {
-    // Get the current scroll position using document.documentElement.scrollTop
     const currentScrollY =
       document.documentElement.scrollTop || document.body.scrollTop;
     if (currentScrollY > lastScrollY && currentScrollY > 200) {
@@ -28,7 +26,7 @@ function CategoryHeader(props: ICategoryProps) {
       setShowHeader(true);
     }
 
-    setLastScrollY(currentScrollY); // Update the last scroll position
+    setLastScrollY(currentScrollY);
   };
 
   useEffect(() => {

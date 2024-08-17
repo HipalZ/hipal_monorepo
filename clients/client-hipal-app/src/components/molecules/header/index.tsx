@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { HiSearch } from "react-icons/hi";
 import QuickFilter from "@/components/atoms/quickFilter";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
@@ -30,7 +30,10 @@ function Header({
     }, []);
   }, [categories]);
 
-  const openSearchModal = () => setIsSearchActive(true);
+  const openSearchModal = useCallback(
+    () => setIsSearchActive(true),
+    [isSearchActive],
+  );
 
   return (
     <div
