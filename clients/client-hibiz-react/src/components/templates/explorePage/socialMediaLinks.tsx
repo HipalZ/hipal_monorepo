@@ -24,7 +24,7 @@ const MemoSocialMediaLinks = (props: Props) => {
     (icon: string) => {
       setSelectedSocialMedia(icon);
     },
-    [setSelectedSocialMedia],
+    [selectedSocialMedia],
   );
 
   return (

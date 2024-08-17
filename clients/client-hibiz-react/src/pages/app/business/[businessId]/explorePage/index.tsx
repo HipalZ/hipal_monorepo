@@ -45,6 +45,7 @@ const MemoExplorePage = () => {
     setDishes,
     toggleExplorePages,
     setToggleExplorePages,
+    setImg,
   } = useExploreStore((state) => ({
     setBizInfo: state.setBizInfo,
     originalDishes: state.originalDishes,
@@ -59,6 +60,7 @@ const MemoExplorePage = () => {
     setDishes: state.setDishes,
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
+    setImg: state.setImg,
   }));
 
   const { bannerPage, setBannerPage } = useBannerStore((s) => ({
@@ -136,6 +138,11 @@ const MemoExplorePage = () => {
     queryFn: async () => {
       const res = await getAllBizInfo();
       const response = await res.json();
+      setImg({
+        banner: response?.data?.specialBannerUrl,
+        logo: response?.data?.logoUrl,
+        footer: response?.data?.endBannerUrl,
+      });
       setBizInfo(response?.data as IBizInfo);
       setToggleExplorePages(ExplorePages.MAINFORM);
       updateSocialMediaLinks(response?.data);
