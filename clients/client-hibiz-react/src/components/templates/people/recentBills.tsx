@@ -19,7 +19,7 @@ const MemoRecentBills = () => {
   };
 
   return (
-    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 pb-[10rem]">
+    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 gap-4 pb-[10rem] mx-4 lg:mx-0">
       {userDashboardDetails?.bill && userDashboardDetails?.bill.length > 0 ? (
         userDashboardDetails?.bill.map((data) => (
           <section

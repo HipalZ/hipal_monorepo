@@ -78,7 +78,8 @@ export const useGetAllPeoples = () => {
       return [];
     }
     if (res.status === 200 || res.status === 201) {
-      return data;
+      const filteredData = data.filter(item => item.userId !== null);
+      return filteredData;
     }
   }, [businessData?._id]);
 

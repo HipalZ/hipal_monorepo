@@ -305,7 +305,7 @@ const AddName = () => {
               ))}
             </section>
             <br />
-            <br />
+          </section>
             <BottomButton
               buttons={[
                 {
@@ -315,7 +315,6 @@ const AddName = () => {
                 },
               ]}
             />
-          </section>
         </PopUp>
       )}
       {isLoading && <LoadingSpinner />}

@@ -48,7 +48,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
           type="checkbox"
           checked={allSelected}
           onChange={handleSelectAll}
-          className="mr-2 checkbox checkbox-black"
+          className="mr-2 text-black rounded-md"
         />
         <span className="text-[#6F649B]">Select {selectedUserIds.length}</span>
       </div>
@@ -67,7 +67,11 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
               />
               <div>
                 <h3>{user?.userId?.name}</h3>
-                <p>{user?.userId?.phone}</p>
+                <p>
+                  {" "}
+                  {user?.userId?.phone?.slice(0, 2)}******
+                  {user?.userId?.phone?.slice(-2)}
+                </p>
               </div>
             </section>
             <div className="flex items-center gap-2 text-[#6F649B]">

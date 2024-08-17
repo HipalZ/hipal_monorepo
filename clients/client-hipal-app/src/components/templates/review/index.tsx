@@ -26,7 +26,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import poweredBy from "@/assets/img/powered_hipalz.png";
 import { apiRpc } from "@hi/common";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const MiddlePopUp = dynamic(() => import("@/components/atoms/middlePopUp"));
 
@@ -45,7 +44,6 @@ interface Payload {
 }
 
 function Review({ data }: { data: IBusinessData }) {
-  console.log("BUSIN", data);
   const router = useRouter();
   const businessId = data?.business?.businessId;
   const customLink = useParams()?.businessId as string;
@@ -177,7 +175,7 @@ function Review({ data }: { data: IBusinessData }) {
   }, [data?.settings]);
 
   return (
-    <div className="p-4 animate-fade-up animate-once">
+    <div className="p-4 animate-fade-up animate-once bg-base-100 text-primary">
       <figure className="z-10 flex items-center space-x-4 rounded-full">
         <Image src={logo} alt="logo" height={38} width={38} />
         <span className="text-xl capitalize">{businessName}</span>
@@ -436,7 +434,7 @@ function Review({ data }: { data: IBusinessData }) {
           </figure>
         </center>
         {rating && rating.length > 0 ? (
-          <article className="flex justify-center">
+          <article className="flex justify-center bg-base-100">
             <button
               type="button"
               onClick={result}

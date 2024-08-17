@@ -9,7 +9,7 @@ const MemoCoinzUsage = () => {
   }));
 
   return (
-    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 pb-[10rem]">
+    <section className="relative grid md:grid-cols-2 lg:grid-cols-3 pb-[10rem] gap-4 mx-4 mt-4 lg:mx-0">
       {userCoinzDetails && userCoinzDetails.length > 0 ? (
         userCoinzDetails.map((data) => (
           <section key={data?._id} className="payment_card_ui">

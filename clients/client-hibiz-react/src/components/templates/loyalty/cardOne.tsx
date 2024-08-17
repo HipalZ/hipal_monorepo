@@ -78,7 +78,7 @@ const MemoCardOneLayout = ({
           <img
             width={64}
             height={64}
-            src={logo || hipalLogo}
+            src={logo ??  hipalLogo}
             alt="logo"
             className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
             style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}

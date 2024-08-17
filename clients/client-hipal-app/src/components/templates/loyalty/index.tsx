@@ -1,24 +1,15 @@
 "use client";
-import {
-  beans,
-  bowl,
-  bud,
-  flower,
-  love,
-  triangleToDataurl,
-  waveToDataUrl,
-} from "@/components/atoms/card/pathPattern";
+
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { memo, useEffect, useState } from "react";
 import MainLoyalty from "@/components/atoms/mainLoyalty";
 import DishData from "@/components/atoms/dishDescription";
 import { useQuery } from "@tanstack/react-query";
 import type { IBusinessData } from "@/components/types/businessData";
 import BottomButton from "@/components/molecules/bottomButton";
-import type { PatternKeys } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import Link from "next/link";
@@ -31,39 +22,18 @@ import Avtaar from "@/assets/login/cat.png";
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
-  const [rewards, setRewards] = useState<number>();
-  const { userDetails } = useLogin();
+  const { userDetails, setUserCoinZ } = useLogin((s) => ({
+    userDetails: s.userDetails,
+    setUserCoinZ: s.setUserCoinZ,
+  }));
   const setUserReward = useUserReward((s) => s.setUserReward);
   const { setUserTotalHistory, userTotalHistory } = useUserReward();
-  const [image, setImage] = useState<string>("");
   const [isHiCodeModalOpen, setIsHiCodeModalOpen] = useState(false);
   const [animate, setAnimate] = useState(false);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
-  const searchParams = useSearchParams();
-  const claim = searchParams?.get("claim");
   const customLink = useParams()?.businessId as string;
-  useEffect(() => {
-    const patterns = (cardPattern: PatternKeys, fontColor: string) => {
-      const defaultColor = "#FAE8CA";
-      const effectiveColor = fontColor || defaultColor;
-
-      const src = {
-        wave: waveToDataUrl("#000000", "white").wave,
-        triangle: triangleToDataurl("white").triangle,
-        beans: beans(effectiveColor).beans,
-        bud: bud(effectiveColor).bud,
-        bowl: bowl(effectiveColor).bowl,
-        love: love(effectiveColor).love,
-        flower: flower(effectiveColor).flower,
-      };
-      return src[cardPattern];
-    };
-    patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor || "#FAE8CA");
-    setImage(patterns(data?.loyalty?.cardPattern, data?.loyalty?.fontColor));
-  }, [data?.loyalty, data?.loyalty?.cardPattern, data?.loyalty?.fontColor]);
-
-  const getUserReward = async () => {
+const getUserReward = async () => {
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
@@ -86,8 +56,8 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     }
     if (userReward.status === 200 || userReward.status === 201) {
       setHiCode(response?.password);
-      setRewards(response?.rewards);
       setUserReward(response);
+      setUserCoinZ(response?.rewards);
     }
     return response;
   };

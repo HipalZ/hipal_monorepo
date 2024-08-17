@@ -7,11 +7,10 @@ import CardThreeLayout from "./cardThree";
 import CardFiveLayout from "./cardFive";
 import CardSixLayout from "./cardSix";
 import CardFourLayout from "./cardFour";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
 
 const MemoCardSection = () => {
-  const { cardType } = _useAllBusiness((state) => state.data.loyalty);
-  console.log(cardType);
+  const cardType = useLoyaltyData(s=>s.loyaltySetting.cardType);
   return (
     <section>
       <center className="mx-auto overflow-hidden">

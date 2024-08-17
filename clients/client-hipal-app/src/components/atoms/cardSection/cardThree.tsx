@@ -6,9 +6,10 @@ import { memo } from "react";
 import Image from "next/image";
 import hipalLogo from "@/assets/HIPAL_LOGO.svg";
 import { useLogin } from "@/components/store/useLogin";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
 
 const MemoCardThreeLayout = () => {
-  const { cardLayout } = _useAllBusiness((state) => state.data?.loyalty);
+  const cardLayout = useLoyaltyData((s) => s.loyaltySetting.cardLayout);
   const business = _useAllBusiness((state) => state.data?.business);
   const userDetails = useLogin((s) => s.userDetails);
   const userCoinZ = useLogin((state) => state.userCoinZ);
