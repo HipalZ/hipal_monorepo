@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { HiSearch } from "react-icons/hi";
 import QuickFilter from "@/components/atoms/quickFilter";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
@@ -6,11 +6,9 @@ import SearchPanelCom from "./searchPanelCom";
 import { useSearch } from "@/components/store/useSearch";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
-function Header({
-  categories,
-  showHeader,
-}: { categories: CategoryType[]; showHeader?: boolean }) {
-  const { isSearchActive, setIsSearchActive } = useSearch();
+function Header({ categories }: { categories: CategoryType[] }) {
+  const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
+    useSearch();
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
@@ -30,10 +28,10 @@ function Header({
     }, []);
   }, [categories]);
 
-  const openSearchModal = useCallback(
-    () => setIsSearchActive(true),
-    [isSearchActive],
-  );
+  const openSearchModal = useCallback(() => {
+    setIsSearchActive(true);
+    setShowHeader(true);
+  }, [showHeader, isSearchActive]);
 
   return (
     <div

@@ -12,15 +12,13 @@ interface ICategoryProps {
 
 function CategoryHeader(props: ICategoryProps) {
   const { parentCategory, childCategory } = props;
-  const { isSearchActive } = useSearch();
-  const [showHeader, setShowHeader] = useState(true);
+  const { isSearchActive, showHeader, setShowHeader } = useSearch();
   const [lastScrollY, setLastScrollY] = useState(0);
   const headerRef = useRef(null);
 
   const handleScroll = () => {
-    const currentScrollY =
-      document.documentElement.scrollTop || document.body.scrollTop;
-    if (currentScrollY > lastScrollY && currentScrollY > 200) {
+    const currentScrollY = document.body.scrollTop;
+    if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 1000) {
       setShowHeader(false);
     } else if (currentScrollY < lastScrollY) {
       setShowHeader(true);
@@ -43,7 +41,7 @@ function CategoryHeader(props: ICategoryProps) {
           showHeader ? "sticky top-0 z-50 opacity-100" : "opacity-0"
         } transition-all duration-300 ease-in-out`}
       >
-        <Header categories={childCategory} showHeader={showHeader} />
+        <Header categories={childCategory} />
       </div>
       {!isSearchActive && (
         <DishesTypes
