@@ -121,7 +121,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   return (
     <div className="relative flex flex-col items-center px-8">
-      <section className="absolute -top-[4rem] bg-primary w-[85%] h-[10rem] rounded-squircle px-4 pt-4 text-base-100">
+      <section className="absolute -top-[4rem] bg-primary w-[90%] h-[11rem] rounded-squircle px-4 pt-4 text-base-100 shadow-2xl">
         <article className="flex pb-4 space-x-4">
           <figure>
             {logoUrl ? (
@@ -150,9 +150,11 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             )}
             {address && (
               <>
-                <h6 className="w-48 mt-2 text-xs font-semibold capitalize text-[var(--ac)] truncate line-clamp-1">
-                  {address}
-                </h6>
+                <div style={{ overflow: "hidden" }}>
+                  <h6 className="h-6 text-xs font-semibold capitalize text-[var(--ac)] scrolling-text">
+                    {address}
+                  </h6>
+                </div>
                 <h6 className="absolute top-[2rem] px-2 py-1 text-xs rounded-md -right-4 bg-[#3DC18B] text-white z-20">
                   OPEN
                 </h6>
@@ -165,7 +167,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             </article>
           </div>
         </article>
-        <hr className="-mx-6 opacity-30" />
+        <hr className="-mx-4 opacity-30" />
 
         <article className="flex items-center justify-between gap-2 mt-3">
           {preDefinedHeroButtons.map((button) => {

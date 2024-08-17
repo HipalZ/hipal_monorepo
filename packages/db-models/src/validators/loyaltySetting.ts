@@ -10,16 +10,23 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 
 export const CardPatternEnum = [
-  "BEANS",
-  "LOVE",
-  "FLOWER",
-  "TRIANGLE",
-  "BUD",
-  "WAVE",
-  "BOWL",
+  "CARD_ONE",
+  "CARD_TWO",
+  "CARD_THREE",
+  "CARD_FOUR",
+  "CARD_FIVE",
+  "CARD_SIX",
+] as const;
+
+export const CardLayoutEnum = [
+  "LAYOUT_ONE",
+  "LAYOUT_TWO",
+  "LAYOUT_THREE",
 ] as const;
 
 export type CardPatternType = (typeof CardPatternEnum)[number];
+
+export type CardLayoutType = (typeof CardLayoutEnum)[number];
 
 export const loyaltySchema = z.object({
   _id: ObjectIdSchema.optional(),
@@ -41,10 +48,17 @@ export const loyaltySchema = z.object({
     })
     .optional(),
   origin: z.boolean().optional(),
-  cardPattern: z
+  cardType: z
     .enum(CardPatternEnum, {
       message:
-        "cardPattern need to be one of BEANS, LOVE, FLOWER, TRIANGLE, BUD, WAVE, BOWL",
+        "cardPattern need to be one of CARD_ONE, CARD_TWO, CARD_THREE, CARD_FOUR, CARD_FIVE, CARD_SIX",
+    })
+    .optional(),
+
+  cardLayout: z
+    .enum(CardLayoutEnum, {
+      message:
+        "cardLayout need to be one of LAYOUT_ONE, LAYOUT_TWO, LAYOUT_THREE",
     })
     .optional(),
   cardColor: z
@@ -80,9 +94,11 @@ export const loyaltySchema = z.object({
   loyaltyExpiryDate: z.coerce.number({
     message: "loyaltyExpiryDate need timestamp",
   }),
-  rewardLimit: z.coerce.number({
-    message: "rewardLimit need number",
-  }),
+  rewardLimit: z.coerce
+    .number({
+      message: "rewardLimit need number",
+    })
+    .optional(),
   signUpBonus: z.coerce
     .number({
       message: "signUpBonus need number",
@@ -90,6 +106,18 @@ export const loyaltySchema = z.object({
     .optional(),
   isDeleted: z.boolean().default(false).optional(),
   isActive: z.boolean().default(true).optional(),
+  termAndCondition: z
+    .string()
+    .min(2, {
+      message: "termAndCondition need min 2",
+    })
+    .max(500, {
+      message: "termAndCondition need max 500",
+    })
+    .optional(),
+  loyaltyStartDate: z.coerce.number({
+    message: "loyaltyStartDate need timestamp",
+  }),
 });
 
 export type LoyaltyType = z.infer<typeof loyaltySchema>;

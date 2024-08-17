@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
 } from "react";
+import SplideSlideWrapper from "./spliderSlide";
 
 interface IMainTypes {
   parentCategory: CategoryType[];
@@ -25,12 +26,9 @@ function MainTypes(props: IMainTypes) {
     isActiveParentCategory,
     setActiveParentCategory,
     setActiveParentCategoryName,
-    setActiveCategory
+    setActiveCategory,
   } = useActiveClass();
 
-  const SplideSlideWrapper = ({ children }: { children?: ReactNode }) => {
-    return <SplideSlide>{children}</SplideSlide>;
-  };
   const containerStyles: CSSProperties = {
     display: "flex",
     flexDirection: "row",
@@ -46,13 +44,14 @@ function MainTypes(props: IMainTypes) {
   };
 
   useEffect(() => {
-    if (!isActiveParentCategory) {
-      setActiveParentCategory(mainTypes?.[0]?._id?.toString() ?? "");
-    }
-  }, [isActiveParentCategory, mainTypes, setActiveParentCategory]);
+    const firstCategory = mainTypes[0];
+    setActiveParentCategory(firstCategory._id?.toString() ?? "");
+    setActiveParentCategoryName(firstCategory.name ?? "");
+    setActiveCategory(firstCategory.subCategoryIds[0]?.toString() ?? "");
+  }, []);
 
   return mainTypes.length > 0 ? (
-    <div className="flex w-full px-4 mx-auto hide-scrollbar bg-base-300 no-scrollbar">
+    <div className="flex items-center w-full px-2 mx-auto hide-scrollbar bg-base-300 no-scrollbar">
       <div style={containerStyles} className="whitespace-nowrap no-scrollbar">
         {mainTypes
           .filter((item) => item?.visibility)

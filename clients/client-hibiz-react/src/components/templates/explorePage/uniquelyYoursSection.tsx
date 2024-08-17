@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import dummyImage from "@/assets/hisite/placeholder.png";
 import SubHeader from "@/components/atom/subHeader";
 import Paragraph from "@/components/atom/paragraph";
@@ -6,13 +6,18 @@ import PlusButton from "@/components/atom/plusButton";
 import type { IDish } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
 
-interface IUniqueSection {
-  handleOpenPopUp: () => void;
-}
+const MemoUniquelyYoursSection = () => {
+  const { uniquelyDishes, showUniquePopUp, setShowUniquePopUp } =
+    useExploreStore((s) => ({
+      uniquelyDishes: s.uniquelyDishes,
+      showUniquePopUp: s.showUniquePopUp,
+      setShowUniquePopUp: s.setShowUniquePopUp,
+    }));
 
-const MemoUniquelyYoursSection = (props: IUniqueSection) => {
-  const uniquelyDishes = useExploreStore((s) => s.uniquelyDishes);
-  const { handleOpenPopUp } = props;
+  const handleOpenPopUp = useCallback(() => {
+    setShowUniquePopUp(true);
+  }, [showUniquePopUp]);
+
   return (
     <section className="mb-4">
       <SubHeader text="Uniquely Yours" />

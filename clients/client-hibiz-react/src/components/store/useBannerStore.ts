@@ -16,6 +16,9 @@ interface IBannerStore {
   isPatternExists: boolean;
   setIsPatternExists: (patternExists: boolean) => void;
 
+  onlyImage: boolean;
+  setOnlyImage: (image: boolean) => void;
+
   patternType: string;
   setPatternType: (patternType: string) => void;
 
@@ -35,6 +38,7 @@ interface IBannerStore {
     id: string,
     isButton: boolean,
     isPatternExists: boolean,
+    onlyImage?: boolean,
   ) => void;
 
   editBanner: string;
@@ -45,6 +49,9 @@ interface IBannerStore {
 
   selectedRedirectionName: string;
   setSelectedRedirectionName: (name: string) => void;
+
+  openPreview: boolean;
+  setOpenPreview: (preview: boolean) => void;
 }
 
 export const useBannerStore = create(
@@ -69,6 +76,9 @@ export const useBannerStore = create(
       setIsPatternExists: (patternExists) =>
         set(() => ({ isPatternExists: patternExists })),
 
+      onlyImage: false,
+      setOnlyImage: (image) => set(() => ({ onlyImage: image })),
+
       bannerPage: BannerPage.CREATE,
       setBannerPage: (toggleLayouts) => set({ bannerPage: toggleLayouts }),
 
@@ -86,10 +96,12 @@ export const useBannerStore = create(
         id: string,
         isButton: boolean,
         isPatternExists: boolean,
+        onlyImage?: boolean,
       ) => {
         set(() => ({
           isButtonExists: isButton,
           isPatternExists: isPatternExists,
+          onlyImage: onlyImage || false,
           selectedBannerType: id,
           bannerPage: BannerPage.CREATE,
           isLoading: false,
@@ -105,6 +117,9 @@ export const useBannerStore = create(
       selectedRedirectionName: "",
       setSelectedRedirectionName: (name) =>
         set(() => ({ selectedRedirectionName: name })),
+
+      openPreview: false,
+      setOpenPreview: (preview) => set(() => ({ openPreview: preview })),
     }),
     {
       name: "banner-store",

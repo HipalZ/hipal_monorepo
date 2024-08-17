@@ -4,7 +4,8 @@ import { useSearch } from "@/components/store/useSearch";
 import { BiArrowBack } from "react-icons/bi";
 
 const SearchPanelCom = ({ allDishes }) => {
-  const { searchText, setSearchText, setIsSearchActive } = useSearch();
+  const { searchText, setSearchText, setIsSearchActive, setShowHeader } =
+    useSearch();
 
   const filteredDishes = useMemo(() => {
     if (!searchText) return allDishes;

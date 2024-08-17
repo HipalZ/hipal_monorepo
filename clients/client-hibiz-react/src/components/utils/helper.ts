@@ -6,10 +6,11 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
-import { DishSteps } from "../store/useMenuStorage";
+import { DishSteps, type ImageFiles } from "../store/useMenuStorage";
 import { cropImage } from "../cropper";
 import toast from "react-hot-toast";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
+import type { ChangeEvent } from "react";
 
 export async function storeImageAfterSave(
   image: File,
@@ -23,7 +24,7 @@ export async function storeImageAfterSave(
   try {
     // Validate Base64 string
     const base64Index = imagePreview.indexOf(",");
-    console.log("base64Index", base64Index);
+
     if (base64Index === -1) return;
 
     const base64Data = imagePreview.split(",")[1];
@@ -150,6 +151,9 @@ export const compressImage = (file, callback) => {
   img.src = blobURL;
   img.onerror = () => {
     URL.revokeObjectURL(img.src);
+    if (file.type === "image/heic" || file.type === "image/heif") {
+      toast.error("unsupported format. Try jp(e)g/png/webp.");
+    }
   };
   img.onload = () => {
     URL.revokeObjectURL(img.src);
@@ -167,8 +171,6 @@ export const compressImage = (file, callback) => {
               type: MIME_TYPE,
               lastModified: Date.now(),
             });
-            console.log("Original File:", file);
-            console.log("Compressed File:", compressedFile);
             callback(compressedFile);
           }
         },
@@ -246,9 +248,10 @@ export const updateImage = async (
   file: File,
   preview: string | undefined,
   currentImage: string | undefined,
+  setIsLoading?: (loading: boolean) => void,
 ) => {
   if (preview !== "" && file) {
-    return await storeImageAfterSave(file, preview as string);
+    return await storeImageAfterSave(file, preview as string, setIsLoading);
   }
   return currentImage;
 };
@@ -260,9 +263,6 @@ export const validateDish = (
   dishPrice: number,
   dishTypes: string[],
 ) => {
-  console.log("dishTypes", dishTypes);
-  console.log("dishname", dishName);
-  console.log("dishPrice", dishPrice);
   if (dishName.length === 0) {
     toast.error("Please enter dish name");
     return false;
@@ -320,7 +320,6 @@ export const calculateFutureTimestamp = (
 ): number => {
   // Calculate the future date based on remainder and duration
   const futureDate = calculateFutureDate(remainder, duration);
-  console.log("futureDate", futureDate);
   // Split the time into hours and minutes
   const [hour, minute] = time.split(":").map(Number);
 
@@ -419,7 +418,7 @@ export const formatDate = (date: Date) => {
   });
 };
 
-export const convertMillisecondsToTime = (milliseconds) => {
+export const convertMillisecondsToTime = (milliseconds: number) => {
   const date = new Date(milliseconds);
   const hours = date.getUTCHours().toString().padStart(2, "0");
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
@@ -432,5 +431,44 @@ export const handleAllChecks = (filteredPayload) => {
   }
   if (filteredPayload?.note.length <= 2) {
     return toast.error("Please enter tag notes more than 2 characters");
+  }
+};
+
+export function hexToRGBA(hex: string, opacity: string) {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (hex && hex.length === 4) {
+    r = Number.parseInt(hex[1] + hex[1], 16);
+    g = Number.parseInt(hex[2] + hex[2], 16);
+    b = Number.parseInt(hex[3] + hex[3], 16);
+  } else if (hex && hex.length === 7) {
+    r = Number.parseInt(hex[1] + hex[2], 16);
+    g = Number.parseInt(hex[3] + hex[4], 16);
+    b = Number.parseInt(hex[5] + hex[6], 16);
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+export const handleImageChange = async (
+  event: ChangeEvent<HTMLInputElement>,
+) => {
+  const type = event.target.dataset.type as keyof ImageFiles;
+  const file = event.target.files?.[0];
+  if (file) {
+    return new Promise((resolve) => {
+      compressImage(file, (compressedFile) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(compressedFile);
+        reader.onloadend = () => {
+          resolve({
+            image: reader.result,
+            type,
+            compressedFile,
+          });
+        };
+      });
+    });
   }
 };

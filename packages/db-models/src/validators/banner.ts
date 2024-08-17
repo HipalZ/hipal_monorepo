@@ -9,20 +9,6 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
-// export const LayOutTypeEnum = [
-//   "FIT_WITH_LINK",
-//   "FIT_WITH_NO_LINK",
-//   "HANGING_CARD_WITH_LINK",
-//   "HANGING_CARD_WITH_NO_LINK",
-//   "EXPAND_WITH_LINK",
-//   "EXPAND_WITH_NO_LINK",
-//   "EXPAND_CENTER_WITH_LINK",
-//   "EXPAND_CENTER_WITH_NO_LINK",
-//   "EXPAND_TOP_WITH_LINK",
-//   "EXPAND_TOP_WITH_NO_LINK",
-//   "COOL_TEXT_WITH_LINK",
-//   "COOL_TEXT_WITH_NO_LINK",
-// ] as const;
 export const LayOutTypeEnum = [
   "BANNER_TYPE_1",
   "BANNER_TYPE_2",
@@ -37,6 +23,7 @@ export const LayOutTypeEnum = [
   "BANNER_TYPE_11",
   "BANNER_TYPE_12",
   "BANNER_TYPE_13",
+  "BANNER_TYPE_14",
 ] as const;
 
 export const FontWeight = [

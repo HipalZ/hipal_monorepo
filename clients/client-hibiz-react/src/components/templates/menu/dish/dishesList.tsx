@@ -5,7 +5,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishStore } from "@/hooks/useDishStore";
+import { useDishes } from "@/hooks/useDishStore";
 
 const MemoListOfDishes = () => {
   const {
@@ -34,16 +34,12 @@ const MemoListOfDishes = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishStore();
+  const { isLoading } = useDishes();
 
-  const fuse = useMemo(
-    () =>
-      new Fuse(dishes, {
-        keys: ["name", "description"],
-        threshold: 0.3,
-      }),
-    [dishes],
-  );
+  const fuse = new Fuse(dishes, {
+    keys: ["name", "description"],
+    threshold: 0.1,
+  });
 
   const filteredDishes = useMemo(() => {
     let filtered = search
@@ -60,7 +56,7 @@ const MemoListOfDishes = () => {
     return sortOrder === "asc"
       ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
-  }, [search, fuse, visibilityFilter, sortOrder]);
+  }, [search, fuse, visibilityFilter, sortOrder, dishes]);
 
   const handleEditDish = useCallback(
     (dish: DishType) => {
@@ -91,7 +87,7 @@ const MemoListOfDishes = () => {
               onClick={() => handleEditDish(dish)}
               type="button"
               key={dish.name}
-              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[21.5rem]"
+              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
             >
               <h3
                 title={dish.name}

@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 interface Props {
     number: number;
@@ -66,12 +66,12 @@ const RollingNumber = (props: Props) => {
 
     return (
         <div id="counter" ref={containerRef}>
-            <ul className="digits digits-first"></ul>
-            <ul className="digits digits-second"></ul>
-            <ul className="digits digits-third"></ul>
-            <ul className="digits digits-fourth"></ul>
-            <ul className="digits digits-fifth"></ul>
-            <ul className="digits digits-sixth"></ul>
+            <ul className="digits digits-first" />
+            <ul className="digits digits-second" />
+            <ul className="digits digits-third" />
+            <ul className="digits digits-fourth" />
+            <ul className="digits digits-fifth" />
+            <ul className="digits digits-sixth" />
         </div>
     );
 };

@@ -90,8 +90,7 @@ const MemoDishFormTwo = () => {
     if (dishTypes.length === 0 || dishName.length === 0 || dishPrice === 0) {
       return toast.error("Please fill all the required fields");
     }
-
-    // setIsLoading(true);
+    setIsLoading(true);
     let firstImage = imagePreviews?.first ?? "";
     let secondImage = imagePreviews?.second ?? "";
     let thirdImage = imagePreviews?.third ?? "";
@@ -101,6 +100,7 @@ const MemoDishFormTwo = () => {
         imageFiles?.first as File,
         imagePreviews?.first as string,
         firstImage as string,
+        setIsLoading,
       )) as string;
     }
     if (imagePreviews?.second !== "" && imagePreviews?.second !== null) {
@@ -108,6 +108,7 @@ const MemoDishFormTwo = () => {
         imageFiles?.second as File,
         imagePreviews?.second as string,
         secondImage as string,
+        setIsLoading,
       )) as string;
     }
     if (imagePreviews?.third !== "" && imagePreviews?.third !== null) {
@@ -115,6 +116,7 @@ const MemoDishFormTwo = () => {
         imageFiles?.third as File,
         imagePreviews?.third as string,
         thirdImage as string,
+        setIsLoading,
       )) as string;
     }
     // Collect images

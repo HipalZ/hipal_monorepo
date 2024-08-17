@@ -63,8 +63,13 @@ export const businessCtrlServices = [
   },
   {
     image: PlaceHolder,
-    Title: "Manage Pages",
-    tags: ["Explore Page", "Blogz"],
+    Title: "Loyalty",
+    tags: ["Loyalty", "Rewards"],
+  },
+  {
+    image: PlaceHolder,
+    Title: "Hi Pplz",
+    tags: ["Groups", "Clientz"],
   },
 ];
 

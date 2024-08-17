@@ -8,7 +8,6 @@ import { cn } from "@hi/common";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import { RxCross2 } from "react-icons/rx";
 import { TagsEnum } from "@/components/utils/helper";
-import BottomButton from "@/components/atom/bottomButton";
 
 const tagImageMap = {
   New: newTag,

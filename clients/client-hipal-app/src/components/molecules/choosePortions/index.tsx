@@ -15,16 +15,18 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
     return null;
   }
 
-  const handlePortionSelect = useCallback((portion: {
-    _id: number;
-    name: string;
-    price: number;
-  }) => {
-    setSelectedPortion(portion);
-  },[]);
+  const handlePortionSelect = useCallback(
+    (portion: {
+      _id: number;
+      name: string;
+      price: number;
+    }) => {
+      setSelectedPortion(portion);
+    },
+    [],
+  );
 
   console.log("selectedPortion", selectedPortion);
-  
 
   return (
     <div className="mx-6">

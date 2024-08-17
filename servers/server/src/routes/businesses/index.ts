@@ -65,6 +65,17 @@ const businessesRouter = new Hono()
           message: "business not created !",
         });
       }
+      await OutLetInfo.findOneAndUpdate(
+        {
+          businessId: business._id,
+        },
+        {
+          $set: {
+            name: business.name,
+          },
+        },
+        { upsert: true, new: true },
+      );
 
       return respond(c, "business created", false, 201, business);
     },
@@ -595,16 +606,29 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const exitingSettings =
-        (await LoyaltySettings.findOne({
-          businessId: businessId,
-        })) || {};
-      return c.json({
-        data: exitingSettings,
-        message: "loyalty settings found",
-        status: 200,
-        error: false,
+      const exitingSettings = await LoyaltySettings.findOne({
+        businessId: businessId,
       });
+
+      if (!exitingSettings)
+        return c.json(
+          {
+            data: {},
+            message: "loyalty settings not found",
+
+            err: true,
+          },
+          404,
+        );
+      return c.json(
+        {
+          data: exitingSettings,
+          message: "loyalty settings found",
+          status: 200,
+          error: false,
+        },
+        200,
+      );
     },
   )
   .get(

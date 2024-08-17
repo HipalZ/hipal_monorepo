@@ -56,7 +56,7 @@ export const outLetInfoSchema = z.object({
     .max(100)
     .optional(),
   description: z.string().min(4).max(250).optional(),
-  tags: z.array(z.string().min(4).max(30)).optional(),
+  tags: z.array(z.string().min(3).max(30)).optional(),
   phone: z
     .string({ message: "enter valid 10 digit phone" })
     .min(10)

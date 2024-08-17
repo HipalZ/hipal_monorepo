@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import type {
   businessType,
   exploreLayout,
@@ -343,6 +344,7 @@ export interface IBizPayload {
 
 export interface IBannerPayload {
   layout?: string;
+  layoutId?: string;
   businessId?: string;
   isPublished?: boolean;
   bannerType?: string;
@@ -370,6 +372,7 @@ interface PatternProps {
   color: string;
 }
 export interface BannerLayout {
+  onlyImage: boolean | undefined;
   _id: BannerType;
   heading: string;
   paragraph: string;
@@ -641,4 +644,11 @@ export enum DatePickerEnum {
   YESTERDAY = "YESTERDAY",
   ONE_MONTH = "ONE MONTH",
   CUSTOM_DATE = "CUSTOM DATE",
+}
+
+export interface SocialMediaLink {
+  _id: number;
+  icon: string;
+  logo: ReactNode;
+  link: string;
 }

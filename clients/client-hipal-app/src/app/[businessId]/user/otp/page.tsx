@@ -17,8 +17,10 @@ import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import SignUpBonus from "@/components/organisms/explore/signupbonus";
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
 function OtpPage() {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
@@ -59,6 +61,20 @@ function OtpPage() {
     }
 
     setOtp(newOtp);
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    if (e.key === "Backspace" && otp[index] === "") {
+      if (index > 0) {
+        const newOtp = [...otp];
+        newOtp[index - 1] = "";
+        setOtp(newOtp);
+        inputRefs[index - 1].current?.focus();
+      }
+    }
   };
 
   function randomInRange(min: number, max: number) {
@@ -246,6 +262,7 @@ function OtpPage() {
                 key={index.toString()}
                 value={otp[index]}
                 onChange={(e) => handleOtpChange(e, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
                 max={1}
                 min={0}
                 ref={inputRefs[index]}

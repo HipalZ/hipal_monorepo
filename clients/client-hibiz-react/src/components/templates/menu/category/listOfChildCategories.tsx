@@ -56,7 +56,7 @@ const MemoListOfChildCategory = () => {
 
   const fuse = new Fuse(subCategories, {
     keys: ["name"],
-    threshold: 0.3,
+    threshold: 0.1,
   });
   const filteredCategories = useMemo(() => {
     let filtered = search
@@ -74,7 +74,7 @@ const MemoListOfChildCategory = () => {
   }, [search, subCategories, fuse, visibilityFilter, sortOrder]);
 
   const editCategory = useCallback((category: CategoryType) => {
-    if(category.parentCategoryIds.length > 0) {
+    if (category.parentCategoryIds.length > 0) {
       setSelectSingleParentCat(category.parentCategoryIds[0]);
     }
     setCategoryStep("EDIT_SUB_CATEGORY");
@@ -101,13 +101,13 @@ const MemoListOfChildCategory = () => {
   return (
     <section className="flex relative flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
       <h3 className="absolute left-0 text-xl font-semibold text-black lg:top-[2rem] top-[4rem]">
-       sub category ({filteredCategories?.length})
+        sub category ({filteredCategories?.length})
       </h3>{" "}
       {filteredCategories?.map((category) => (
         <button
           type="button"
           key={category.name}
-          className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+          className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
         >
           {isMenuManager ? (
             <figure className="flex items-center gap-4">

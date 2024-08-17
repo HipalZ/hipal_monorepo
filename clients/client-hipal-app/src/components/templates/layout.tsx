@@ -9,11 +9,8 @@ interface LayoutProps extends AppProps {
 }
 
 const Layout = ({ Component, pageProps }: LayoutProps) => {
-  console.log("hello world", pageProps?.data);
-
   useEffect(() => {
     if (pageProps?.data?.settings) {
-      console.log("sakasl", pageProps.data.settings);
       updateTheme(pageProps.data.setting);
     }
   }, [pageProps]);

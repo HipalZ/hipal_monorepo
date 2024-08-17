@@ -131,7 +131,7 @@ const StaffPage = () => {
 
   return (
     <>
-      <main className="bg-white">
+      <main>
         <div className="sticky top-0 z-50 w-full linear_gradient_background">
           <Header
             title="Staff"

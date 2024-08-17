@@ -1,8 +1,8 @@
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import {  getPrice } from "@/components/utils/helpers";
+import { getPrice } from "@/components/utils/helpers";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai";
 import FoodType from "../foodType";
 import DishData from "../dishDescription";
@@ -26,11 +26,16 @@ const HorizontalCard = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDish, setSelectedDish] = useState({} as DishType);
   const { cart } = useCartStore();
-  const outletInfo = _useAllBusiness(s=>s.data.outletInfo)
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const openModal = useCallback((dishData: DishType) => {
     setSelectedDish(dishData);
     setIsModalOpen(true);
   }, []);
+
+  const price = useMemo(
+    () => getPrice(dishData?.price || 0),
+    [dishData?.price],
+  );
 
   const closeModal = useCallback(() => {
     setSelectedDish({} as DishType);
@@ -40,19 +45,16 @@ const HorizontalCard = ({
   const isDishInCart = cart.some((item) => item.dish._id === dishData._id);
   const recommendations = isDishInCart ? dishData.recommendationIds : [];
 
-
-
   return (
     <section
       id={`${dishData?._id}`}
       className={`
-  ${dishData.availability ? "mx-4" : "opacity-80 px-4"}
+  ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
       <div className="flex flex-row items-end py-4 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
-
             {dishData?.dishTypes && outletInfo.outLetType !== "OTHER" && (
               <div className="my-auto">
                 <FoodType types={dishData?.dishTypes} />
@@ -66,15 +68,14 @@ const HorizontalCard = ({
                 <span className="ml-2 text-sm text-primary">Not available</span>
               </>
             )}
-            {/* <DishTag tags={dishData.tags} /> */}
           </div>
 
           <div className="py-1 overflow-hidden text-lg font-medium leading-6 capitalize text-primary">
             {dishData?.name || ""}
           </div>
-          <div className="mt-1 ml-1 text-xs ">
+          <div className="mt-1 text-sm">
             <span className="text-base-content">
-              {getPrice(dishData?.price || 0)}
+              <span className="text-sm">₹</span> {price}
             </span>
           </div>
 
@@ -106,9 +107,9 @@ const HorizontalCard = ({
                   quality={95}
                   width={125}
                   height={125}
-                  objectFit="cover"
-                  className={`on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
-                    }`}
+                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
+                    dishData.availability ? "" : "grayscale"
+                  }`}
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(300, 110)}
                 />
@@ -135,18 +136,22 @@ const HorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={`z-20 flex flex-col items-center w-full mx-auto ${dishData?.images?.length >0 || noDescription ? " -mt-6" : " -mt-4 -ml-6"
-                }`}
+              className={` flex flex-col items-center w-full mx-auto ${
+                dishData?.images?.length > 0 || noDescription
+                  ? " -mt-6"
+                  : " -mt-4 -ml-6"
+              }`}
             >
               {dishData.availability && (
                 <div
-                  className={`flex flex-col items-center w-full ${dishData?.images?.length>0 ? "" : "-ml-6"
-                    }`}
+                  className={`flex flex-col items-center w-full ${
+                    dishData?.images?.length > 0 ? "" : "-ml-6"
+                  }`}
                 >
-                  <DishQuantityButton
-                    dishData={dishData}
-                  />
-                  <span className="text-sm opacity-50">{dishData?.addOnIds?.length > 0  ? 'customizable': null}</span>
+                  <DishQuantityButton dishData={dishData} />
+                  <span className="text-sm opacity-50 text-base-content">
+                    {dishData?.addOnIds?.length > 0 ? "customizable" : null}
+                  </span>
                 </div>
               )}
             </div>
@@ -161,11 +166,14 @@ const HorizontalCard = ({
         </div>
       </div>
       <div>
-      {isDishInCart && (
-        <div>
-          <MemoRecommendedDishes recommendations={recommendations} openModal={openModal} />
-        </div>
-      )}
+        {isDishInCart && (
+          <div>
+            <MemoRecommendedDishes
+              recommendations={recommendations}
+              openModal={openModal}
+            />
+          </div>
+        )}
       </div>
     </section>
   );

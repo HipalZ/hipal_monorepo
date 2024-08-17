@@ -91,7 +91,7 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   return (
     <>
       {cartItem ? (
-        <div className="flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
+        <div className="relative z-10 flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
           <button
             type="button"
             onClick={() => handleDecreaseQuantity(cartItem)}
@@ -112,7 +112,7 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         <button
           onClick={() => handleClick(dishData)}
           type="button"
-          className="bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
+          className="relative z-10 bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
         >
           Add
         </button>
@@ -122,7 +122,7 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         <MemoBottomPopUp show={openBottomPanel} onClose={closeModal}>
           {cartPopup === "BOTTOM_PANEL" && (
             <div className="relative flex flex-col pb-12 mt-4 overflow-auto z-[103]">
-              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200">
+              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200 text-base-content">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
               </div>
@@ -144,20 +144,3 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
 const MemoDishQuantityButton = memo(DishQuantityButton);
 export default MemoDishQuantityButton;
 
-// {cartPopup === "ADD_NEW" && (
-//   <div className="p-4 bg-white rounded-lg shadow-lg">
-//     <p className="mb-4 text-lg font-semibold">Add Dish</p>
-//     <button
-//       type="button"
-//       className="w-full px-4 py-2 mb-2 text-white rounded-full bg-primary"
-//     >
-//       Repeat Last
-//     </button>
-//     <button
-//       type="button"
-//       className="w-full px-4 py-2 text-white rounded-full bg-primary"
-//     >
-//       Add New
-//     </button>
-//   </div>
-// )}

@@ -2,27 +2,64 @@ import Paragraph from "@/components/atom/paragraph";
 import PlusButton from "@/components/atom/plusButton";
 import SubHeader from "@/components/atom/subHeader";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { cn, handleClick } from "@/components/utils/helper";
-import { type ChangeEvent, memo, useRef } from "react";
+import { cn, handleClick, handleImageChange } from "@/components/utils/helper";
+import { type ChangeEvent, memo, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { CiEdit } from "react-icons/ci";
 
-interface IFooterBanner {
-  img: { logo: string; banner: string; footer: string };
-  handleImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  handleFssaiNumber: (e: ChangeEvent<HTMLInputElement>) => void;
-  handlegst: (e: ChangeEvent<HTMLInputElement>) => void;
-  handleFooterComment: (e: ChangeEvent<HTMLTextAreaElement>) => void;
-}
-const MemoFooterBanner = (props: IFooterBanner) => {
-  const bizInfo = useExploreStore((s) => s.bizInfo);
-  const footerInputRef = useRef<HTMLInputElement | null>(null);
+const MemoFooterBanner = () => {
   const {
+    bizInfo,
+    setBizInfo,
     img,
-    handleImageChange,
-    handleFssaiNumber,
-    handlegst,
-    handleFooterComment,
-  } = props;
+    setCropping,
+    setShowCropper,
+    setImageFiles,
+  } = useExploreStore((s) => ({
+    bizInfo: s.bizInfo,
+    setBizInfo: s.setBizInfo,
+    img: s.img,
+    setCropping: s.setCropping,
+    setShowCropper: s.setShowCropper,
+    setImageFiles: s.setImageFiles,
+  }));
+  const handleImage = async (event) => {
+    const result = await handleImageChange(event);
+    if (result) {
+      const { image, type, compressedFile } = result;
+      setCropping({ image, type });
+      setShowCropper(true);
+      setImageFiles({ [type]: compressedFile });
+    }
+  };
+
+  const footerInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFssaiNumber = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      if (e.target.value.length >= 50)
+        return toast.error("FSSAI number should be less than 50 characters");
+      setBizInfo({ ...bizInfo, fssai: e.target.value });
+    },
+    [bizInfo],
+  );
+
+  const handlegst = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      if (e.target.value.length >= 26)
+        return toast.error("GST number should be less than 26 characters");
+      setBizInfo({ ...bizInfo, gst: e.target.value });
+    },
+    [bizInfo],
+  );
+
+  const handleFooterComment = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      setBizInfo({ ...bizInfo, footerDescription: e.target.value });
+    },
+    [bizInfo],
+  );
+
   return (
     <section className="md:flex md:space-x-10">
       <section>
@@ -41,8 +78,9 @@ const MemoFooterBanner = (props: IFooterBanner) => {
             type="file"
             id="footerInput"
             style={{ display: "none" }}
-            onChange={handleImageChange}
+            onChange={handleImage}
             data-type="footer"
+            accept="*"
           />
           <figure className="w-[320px] h-[320px]">
             <label
@@ -82,7 +120,7 @@ const MemoFooterBanner = (props: IFooterBanner) => {
               placeholder="Add Footer comment"
             />
             <small className="absolute bottom-3 right-4">
-              {bizInfo?.footerDescription?.length}/{200}
+              {bizInfo?.footerDescription?.length || 0}/{200}
             </small>
           </div>
           <Paragraph text="Optional Sections" />
@@ -98,7 +136,7 @@ const MemoFooterBanner = (props: IFooterBanner) => {
                 onChange={handleFssaiNumber}
               />
               <small className="absolute bottom-3 right-4">
-                {bizInfo?.fssai?.length}/{14}
+                {bizInfo?.fssai?.length || 0}/{14}
               </small>
             </div>
             <div className="relative">
@@ -112,7 +150,7 @@ const MemoFooterBanner = (props: IFooterBanner) => {
                 onChange={handlegst}
               />
               <small className="absolute bottom-3 right-4">
-                {bizInfo?.gst?.length}/{15}
+                {bizInfo?.gst?.length || 0}/{15}
               </small>
             </div>
           </article>

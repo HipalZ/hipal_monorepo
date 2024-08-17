@@ -85,7 +85,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   });
 
   return (
-    <main className="relative flex flex-col w-full pb-16 mt-6 syne-font">
+    <main className="relative flex flex-col w-full pt-6 pb-16 syne-font bg-base-100 text-primary">
       <div className="mx-6 mb-[5rem]">
         <div className="flex items-center justify-between">
           <span className="flex items-center space-x-2">

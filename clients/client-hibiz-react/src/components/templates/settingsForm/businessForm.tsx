@@ -126,7 +126,7 @@ const MemoBusinessForm: React.FC = () => {
             ref={setRef("registerName")}
             id="registeredBusinessName"
             label="Registered Business Name"
-            maxLength={21}
+            maxLength={30}
           />
           <SelectInput
             ref={setRef("registerType")}

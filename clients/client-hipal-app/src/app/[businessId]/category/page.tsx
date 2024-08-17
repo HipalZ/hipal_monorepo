@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
 const CategoryHeader = dynamics(
-  () => import("@/components/organisms/category/categoryHeader.client"),
+  () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
     loading: () => <SkeletonLoader height={250} />,
@@ -59,7 +59,6 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await fetchData(params.businessId);
-  console.log("this sios my child  cate", data.childCategories);
   return (
     <main>
       <div className="relative flex flex-col w-full pb-14">
@@ -70,9 +69,7 @@ export default async function Page({
         />
         <div>
           <div className="!mt-0 !scroll-smooth">
-            <DishesList
-              childCategory={data?.childCategories}
-            />
+            <DishesList childCategory={data?.childCategories} />
           </div>
           <section className="pt-6 bg-base-100">
             <Footer

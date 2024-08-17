@@ -39,6 +39,10 @@ export const useBusinessData = create(
         expiryDate: "",
         rewardLimit: 0,
         signUpBonus: 0,
+        _id: "",
+        createdAt: "",
+        updatedAt: "",
+        __v: 0,
       },
       setExistingLoyalty: (existingLoyalty: ILoyaltyData) =>
         set({ existingLoyalty: existingLoyalty }),

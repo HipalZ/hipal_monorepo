@@ -5,7 +5,10 @@ import Autoplay from "embla-carousel-autoplay";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 function MemoEmblaCarousel({ children }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false }, [Autoplay()]);
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, dragFree: false },
+    [Autoplay()],
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState([]);
 
@@ -40,6 +43,7 @@ function MemoEmblaCarousel({ children }) {
         slide.classList.add("embla__slide--scale-up");
         slide.classList.remove("embla__slide--scale-down");
       } else {
+        slide.style.transition = "none";
         slide.classList.add("embla__slide--scale-down");
         slide.classList.remove("embla__slide--scale-up");
       }
@@ -57,7 +61,7 @@ function MemoEmblaCarousel({ children }) {
   return (
     <div className="embla">
       <div className="embla__viewport" ref={emblaRef}>
-        <div className="-space-x-8 embla__container">{children}</div>
+        <div className="embla__container">{children}</div>
       </div>
       <div className="px-4 py-4 mt-3 embla__button-container">
         <button

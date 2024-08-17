@@ -88,18 +88,21 @@ const MemoDishFormTwo = () => {
       firstImage = await storeImageAfterSave(
         imageFiles?.first as File,
         imagePreviews?.first as string,
+        setIsLoading,
       );
     }
     if (imagePreviews?.second !== "") {
       secondImage = await storeImageAfterSave(
         imageFiles?.second as File,
         imagePreviews?.second as string,
+        setIsLoading,
       );
     }
     if (imagePreviews?.third !== "") {
       thirdImage = await storeImageAfterSave(
         imageFiles?.third as File,
         imagePreviews?.third as string,
+        setIsLoading,
       );
     }
 

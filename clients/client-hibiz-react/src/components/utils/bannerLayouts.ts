@@ -18,6 +18,7 @@ export enum BannerType {
   BANNER_TYPE_11 = "BANNER_TYPE_11",
   BANNER_TYPE_12 = "BANNER_TYPE_12",
   BANNER_TYPE_13 = "BANNER_TYPE_13",
+  BANNER_TYPE_14 = "BANNER_TYPE_14",
 }
 
 export enum BannerPage {
@@ -207,6 +208,21 @@ export const bannerLayouts6 = [
     isPattern: true,
     image: "",
     pattern: DotsPattern,
+    description: "Works best with 680x680 -1:1 Images with desc & link",
+  },
+];
+
+export const bannerLayouts7 = [
+  {
+    _id: BannerType.BANNER_TYPE_14,
+    heading: "",
+    paragraph: "",
+    isButton: false,
+    buttonText: "",
+    title: "Plain Image",
+    isPattern: false,
+    onlyImage: true,
+    image: pastaDummy,
     description: "Works best with 680x680 -1:1 Images with desc & link",
   },
 ];

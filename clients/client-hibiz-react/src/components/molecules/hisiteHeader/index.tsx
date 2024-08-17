@@ -1,8 +1,9 @@
-import { memo, startTransition, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { memo, startTransition } from "react";
+import { useNavigate } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@/components/utils/helper";
+import { useIsExplorePage } from "@/hooks/useExplore";
 interface HeaderProps {
   leftIcon?: JSX.Element;
   centerImage?: string;
@@ -25,10 +26,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
     onBack,
   }) => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const isExplorePage = useMemo(() => {
-      return location?.pathname.includes("explorePage");
-    }, [location.pathname]);
+    const isExplorePage = useIsExplorePage();
 
     const handleBackClick = () => {
       if (onBack) {
@@ -64,7 +62,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
           <button
             type="button"
             onClick={handleBackClick}
-            className="px-4 py-2 bg-[#FFFFFF] border border-[#00000050] rounded-3xl on_active_bounce"
+            className="px-4 py-2 transition-transform transform active:shadow-sm active:translate-y-1 bg-[#FFFFFF] border border-[#00000050] rounded-3xl on_active_bounce shadow-2xl"
           >
             {leftIcon || <FaArrowLeft />}
           </button>
@@ -106,5 +104,4 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
 );
 
 const HisiteHeader = memo(MemoizedHeader);
-
 export default HisiteHeader;

@@ -185,12 +185,12 @@ const MemoPaymentSales = () => {
               </MenuItems>
             </Menu>
           </section>
-          <section className="grid pb-[5rem] md:grid-cols-2 lg:grid-cols-3">
+          <section className="grid pb-[5rem] md:grid-cols-2 gap-4 lg:grid-cols-3 mx-4 mt-4">
             {filteredHistoryData && filteredHistoryData.length > 0 ? (
               filteredHistoryData.map((data) => (
                 <section
                   key={data?._id}
-                  className="payment_card_ui"
+                  className="payment_card_ui w-[100%]"
                   onClick={() => openModel(data)}
                 >
                   <section className="flex justify-between">

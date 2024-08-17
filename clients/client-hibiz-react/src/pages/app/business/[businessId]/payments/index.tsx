@@ -16,7 +16,7 @@ const Payments = () => {
 
   return (
     <main>
-      <article className="pb-4 linear_gradient_background">
+      <article className="linear_gradient_background">
         <MemoizedHeader
           title="Payments"
           leftIcon={<FaArrowLeft />}

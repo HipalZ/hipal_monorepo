@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import './globals.css';
 import Loading from './loading';
+import './globals.css';
 
 const DynamicToast = dynamic(() => import('@/components/atoms/toastContainer'), { ssr: false });
 const DynamicQueryComponent = dynamic(() => import('@/components/atoms/queryComponent'));

@@ -255,7 +255,7 @@ const MemoCreateDynamicGroup = () => {
                   type="checkbox"
                   checked={untilNow}
                   onChange={handleUntilNowChange}
-                  className="mr-2 checkbox checkbox-[#8C63FF]"
+                  className="mr-2 text-[#8C63FF] w-5 h-5 rounded-md"
                 />
                 Until Now
               </label>
@@ -270,7 +270,7 @@ const MemoCreateDynamicGroup = () => {
             </div>
 
             {showDuration && (
-              <section className="mt-4">
+              <section className="mt-4 bg-[#8C63FF30] -mx-4 p-4">
                 <label
                   htmlFor="duration"
                   className="block mb-2 text-sm text-gray-700"

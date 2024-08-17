@@ -111,7 +111,7 @@ const Business = () => {
                 onClick={() => handleClick(item?.navigateTo || "")}
                 key={item.text}
                 className={cn(
-                  "relative mt-4 overflow-hidden rounded-2xl text-left",
+                  "relative overflow-hidden rounded-2xl text-left min-h-[10rem]",
                   {
                     "bg-gray-400 cursor-not-allowed":
                       item.navigateTo !== "businessControl" &&
@@ -126,7 +126,7 @@ const Business = () => {
                 <figure>
                   <img
                     width={200}
-                    height={146}
+                    height={200}
                     src={item.image}
                     alt={item.text}
                     className={cn({
@@ -136,7 +136,7 @@ const Business = () => {
                     })}
                   />
                 </figure>
-                <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[55%]">
+                <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[45%]">
                   <section className="flex items-center justify-between">
                     <h4
                       className={cn("font-semibold leading-6", {

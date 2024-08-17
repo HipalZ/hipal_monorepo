@@ -413,4 +413,5 @@ export interface BusinessDetails {
   phone: string;
   address: string;
   avgRating: number;
+  logo: string;
 }

@@ -78,7 +78,8 @@ export const useGetAllPeoples = () => {
       return [];
     }
     if (res.status === 200 || res.status === 201) {
-      return data;
+      const filteredData = data.filter(item => item.userId !== null);
+      return filteredData;
     }
   }, [businessData?._id]);
 
@@ -102,7 +103,7 @@ export const useGetGroupData = (enabled: boolean) => {
       },
     });
 
-    const data = (await res.json()).data as IUserGroup[];
+    const data = await res.json();
     if (res.status === 400) {
       toast.error("No group data found");
       return [];
@@ -112,7 +113,7 @@ export const useGetGroupData = (enabled: boolean) => {
       return [];
     }
     if (res.status === 200 || res.status === 201) {
-      return data;
+      return data.data as IUserGroup[];
     }
   }, [businessData?._id]);
 

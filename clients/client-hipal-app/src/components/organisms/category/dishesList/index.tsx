@@ -11,29 +11,23 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const {
-    isActiveDishType,
-    isActiveCategory,
-  } = useActiveClass((state) => ({
+  const { isActiveDishType, isActiveCategory } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
     isActiveParentCategory: state.isActiveParentCategory,
   }));
 
-
   const subTypes = useMemo(() => {
     return childCategory.filter(
       (category) =>
-        category.hierarchy === "CHILD" &&
-        category.dishIds.length > 0,
+        category.hierarchy === "CHILD" && category.dishIds.length > 0,
     );
   }, [childCategory]);
 
   // Filter dishes within categories based on the active dish type
   const filterDishes = (dishes, dishType) => {
     return dishes.filter(
-      (dish) =>
-        dish.visibility && dish.dishTypes.includes(dishType),
+      (dish) => dish.visibility && dish.dishTypes.includes(dishType),
     );
   };
 
@@ -61,7 +55,7 @@ const DishesList: FC<IDishesProps> = (props) => {
           <div
             className={cn(
               { "border-t-2 border-primary": category.dishIds.length !== 0 },
-              "z-40 flex flex-row justify-between px-4 font-bold prose bg-base-200",
+              "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
             )}
           >
             <h3 className="my-4 text-xl font-medium capitalize text-primary">

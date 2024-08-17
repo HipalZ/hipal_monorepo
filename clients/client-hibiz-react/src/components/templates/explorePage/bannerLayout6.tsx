@@ -4,10 +4,18 @@ import { memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
 import SelectingCardLayout from "./selectingCardLayout";
 import { useBannerStore } from "@/components/store/useBannerStore";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 
 const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
   const { handleBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
+  }));
+
+  const { setToggleExplorePages } = useExploreStore((s) => ({
+    setToggleExplorePages: s.setToggleExplorePages,
   }));
 
   const color =
@@ -16,12 +24,14 @@ const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
 
   return (
     <section
-      onKeyDown={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
-      onClick={() =>
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern)
-      }
+      onKeyDown={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
+      onClick={() => {
+        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        setToggleExplorePages(ExplorePages.NEWBANNER);
+      }}
       key={layout?._id}
     >
       <article
