@@ -15,10 +15,18 @@ function CategoryHeader(props: ICategoryProps) {
   const { isSearchActive, showHeader, setShowHeader } = useSearch();
   const [lastScrollY, setLastScrollY] = useState(0);
   const headerRef = useRef(null);
-
   const handleScroll = () => {
     const currentScrollY = document.body.scrollTop;
-    if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 1000) {
+
+    if (isSearchActive) {
+      setShowHeader(true);
+      return;
+    }
+
+    if (
+      currentScrollY > lastScrollY &&
+      Math.abs(currentScrollY - lastScrollY) > 50
+    ) {
       setShowHeader(false);
     } else if (currentScrollY < lastScrollY) {
       setShowHeader(true);
@@ -28,10 +36,17 @@ function CategoryHeader(props: ICategoryProps) {
   };
 
   useEffect(() => {
-    document.body.addEventListener("scroll", handleScroll);
+    const resetScrollPosition = () => {
+      setLastScrollY(document.body.scrollTop);
+    };
 
+    if (isSearchActive) {
+      resetScrollPosition();
+    }
+
+    document.body.addEventListener("scroll", handleScroll);
     return () => document.body.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, isSearchActive]);
 
   return (
     <>

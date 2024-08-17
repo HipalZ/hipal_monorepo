@@ -1,11 +1,17 @@
-import React, { useMemo } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import MemoHorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useSearch } from "@/components/store/useSearch";
 import { BiArrowBack } from "react-icons/bi";
 
-const SearchPanelCom = ({ allDishes }) => {
-  const { searchText, setSearchText, setIsSearchActive, setShowHeader } =
-    useSearch();
+const MemoSearchPanelCom = ({ allDishes }) => {
+  const {
+    searchText,
+    isSearchActive,
+    showHeader,
+    setSearchText,
+    setIsSearchActive,
+    setShowHeader,
+  } = useSearch();
 
   const filteredDishes = useMemo(() => {
     if (!searchText) return allDishes;
@@ -14,10 +20,15 @@ const SearchPanelCom = ({ allDishes }) => {
     );
   }, [searchText, allDishes]);
 
+  const handleBack = useCallback(() => {
+    setIsSearchActive(false);
+    setShowHeader(false);
+  }, [isSearchActive, showHeader]);
+
   return (
     <>
       <div className="flex items-center mt-4 ml-4 text-base">
-        <BiArrowBack onClick={() => setIsSearchActive(false)} size={24} />
+        <BiArrowBack onClick={handleBack} size={24} />
         <input
           type="search"
           className="w-[92%] px-4 py-2 text-sm mx-4 border border-gray-300 rounded-md"
@@ -45,4 +56,5 @@ const SearchPanelCom = ({ allDishes }) => {
   );
 };
 
+const SearchPanelCom = memo(MemoSearchPanelCom);
 export default SearchPanelCom;
