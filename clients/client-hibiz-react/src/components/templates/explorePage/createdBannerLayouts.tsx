@@ -12,7 +12,7 @@ import {
   BannerType,
   truncateDescription,
 } from "@/components/utils/bannerLayouts";
-import { cn } from "@/components/utils/helper";
+import { cn, hexToRGBA } from "@/components/utils/helper";
 import { useIsExplorePage } from "@/hooks/useExplore";
 
 interface Props {
@@ -149,6 +149,12 @@ const MemoCreatedBannersLayout = (props: Props) => {
       })}
       {bannerLayouts2.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
+        const backgroundColor =
+          selectedColor?.bgColor === "transparent"
+            ? "transparent"
+            : selectedColor?.bgColor
+              ? hexToRGBA(selectedColor.bgColor, 0.4)
+              : "transparent";
         return (
           <section key={layout?._id} className="shrink-0 ">
             <article
@@ -169,7 +175,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
               </figure>
               <article
                 style={{
-                  backgroundColor: selectedColor?.bgColor || "transparent",
+                  backgroundColor: backgroundColor,
                 }}
                 className={cn(
                   "absolute bottom-2 p-2 rounded-xl mx-2 backdrop-blur-sm",

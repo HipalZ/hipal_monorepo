@@ -86,7 +86,6 @@ const MemoBannerDynamicLayout = (props: Props) => {
       paragraphStyle?.color === "transparent" ? "white" : paragraphStyle?.color,
   };
 
-  console.log("BannerDynamicLayout", selectedColor);
   return (
     <>
       {bannerLayouts.map((layout) => {
@@ -493,8 +492,8 @@ const MemoBannerDynamicLayout = (props: Props) => {
       {bannerLayouts7.map((layout) => {
         if (layout?._id !== selectedBannerType) return null;
         const sizeClasses = openPreview
-          ? "w-[20rem] h-[25rem]"
-          : "md:w-[25rem] md:h-[25rem] w-[14rem] h-[14rem]";
+          ? "w-[20rem] h-[20rem]"
+          : "md:w-[20rem] md:h-[20rem] xl:w-[20rem] xl:h-[20rem] w-[14rem] h-[14rem]";
         return (
           <section
             key={layout?._id}

@@ -5,21 +5,17 @@ import type { IBizPayload } from "@/components/types/businessData";
 import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import {
+  type ChangeEvent,
   type FormEvent,
   lazy,
   memo,
   useCallback,
   useRef,
-  useState,
 } from "react";
 import toast from "react-hot-toast";
 import { IoMdArrowUp } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
-import { BsInstagram } from "react-icons/bs";
-import { CiFacebook } from "react-icons/ci";
-import { FaXTwitter } from "react-icons/fa6";
-import { TbBrandTelegram } from "react-icons/tb";
-import { RiDiscordLine } from "react-icons/ri";
+import type { SocialMediaLink } from "@/components/types/businessData";
 
 //lazy loads
 const SocialMediaLinks = lazy(
@@ -47,7 +43,12 @@ const UniquelyYoursSection = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursSection"),
 );
 
-const MemoMainForm = () => {
+type Props = {
+  socialMediaLinks: SocialMediaLink[];
+  setSocialMediaLinks: (data: SocialMediaLink[]) => void;
+};
+const MemoMainForm = (props: Props) => {
+  const { setSocialMediaLinks, socialMediaLinks } = props;
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
@@ -81,25 +82,13 @@ const MemoMainForm = () => {
   const { selectedSocialMedia } = useExploreStore((s) => ({
     selectedSocialMedia: s.selectedSocialMedia,
   }));
-  const [socialMediaLinks, setSocialMediaLinks] = useState([
-    { _id: 1, icon: "instagram", logo: <BsInstagram size={30} />, link: "" },
-    { _id: 2, icon: "facebook", logo: <CiFacebook size={36} />, link: "" },
-    { _id: 3, icon: "twitter", logo: <FaXTwitter size={30} />, link: "" },
-    { _id: 4, icon: "telegram", logo: <TbBrandTelegram size={30} />, link: "" },
-    { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
-  ]);
 
   const handleSaveSocialMediaLink = useCallback(
-    (event) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       const newLink = event.target.value;
-      console.log("New Link:", newLink);
-
-      setSocialMediaLinks((prevLinks) =>
+      setSocialMediaLinks((prevLinks: SocialMediaLink[]) =>
         prevLinks.map((link) => {
-          console.log("Current Link:", link);
           if (link.icon === selectedSocialMedia) {
-            console.log("Selected Social Media:", selectedSocialMedia);
-            console.log("Updating Link:", { ...link, link: newLink });
             return { ...link, link: newLink };
           }
           return link;
@@ -116,7 +105,6 @@ const MemoMainForm = () => {
     let logoExplore: string | undefined;
     let footerExplore: string | undefined;
     if (imageFiles?.banner !== undefined && /base64/.test(img?.banner)) {
-      console.log("imageFiles banner", imageFiles?.banner, img?.banner);
       bannerExplore = await storeImageAfterSave(
         imageFiles?.banner,
         img?.banner,
@@ -125,7 +113,6 @@ const MemoMainForm = () => {
     }
 
     if (imageFiles?.logo !== undefined && /base64/.test(img?.logo)) {
-      console.log("imageFiles logo", imageFiles?.logo);
       logoExplore = await storeImageAfterSave(
         imageFiles?.logo,
         img?.logo,
@@ -134,7 +121,6 @@ const MemoMainForm = () => {
     }
 
     if (imageFiles?.footer !== undefined && /base64/.test(img?.footer)) {
-      console.log("imageFiles footer", imageFiles?.footer);
       footerExplore = await storeImageAfterSave(
         imageFiles?.footer,
         img?.footer,
@@ -144,23 +130,23 @@ const MemoMainForm = () => {
 
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
 
-    // Then, check each non-empty link for the "https://" prefix
-    const filteredSocialMedia = validSocialMediaLinks.reduce<
-      { icon: string; link: string }[]
-    >((acc, item) => {
+    for (const item of validSocialMediaLinks) {
       if (!item.link.startsWith("https://")) {
         toast.error(
           `Invalid social media link for ${item.icon}. Link should start with 'https://'`,
         );
-      } else {
-        acc.push({ icon: item.icon, link: item.link });
+        return; // Exit the function early if an invalid link is found
       }
-      return acc;
-    }, []);
+    }
+
+    const filteredSocialMedia = validSocialMediaLinks.map((item) => ({
+      icon: item.icon,
+      link: item.link,
+    }));
 
     const payload: IBizPayload = {
       businessId,
-      logoUrl: await logoExplore,
+      logoUrl: logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
       socialMediaLinks: filteredSocialMedia,

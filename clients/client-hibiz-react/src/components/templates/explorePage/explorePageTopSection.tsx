@@ -1,16 +1,11 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import {
   ExplorePages,
-  ImageFiles,
+  type ImageFiles,
   useExploreStore,
 } from "@/components/store/useExploreStore";
 import { basicInfos } from "@/components/templates/explorePage/explorePageStore";
-import {
-  cn,
-  compressImage,
-  handleClick,
-  handleImageChange,
-} from "@/components/utils/helper";
+import { cn, compressImage, handleClick } from "@/components/utils/helper";
 import {
   lazy,
   memo,
@@ -200,7 +195,7 @@ const MemoExplorePageSection = () => {
               type="text"
               minLength={4}
               maxLength={30}
-              value={bizInfo?.name}
+              value={bizInfo?.name || businessData?.name}
               className="w-full p-2 pr-14 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
               onChange={handleBizName}
             />

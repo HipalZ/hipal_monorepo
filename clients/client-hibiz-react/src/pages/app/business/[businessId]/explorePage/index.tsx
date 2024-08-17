@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, Suspense, lazy } from "react";
+import { memo, useCallback, useRef, Suspense, lazy, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { combineAllDishes } from "@/components/templates/explorePage/explorePageStore";
 import { apiRpc } from "@hi/common";
@@ -15,6 +15,11 @@ import { FaArrowLeft } from "react-icons/fa";
 import MemoizedHeader from "@/components/molecules/header";
 import { BannerPage } from "@/components/utils/bannerLayouts";
 import { useBannerStore } from "@/components/store/useBannerStore";
+import { BsInstagram } from "react-icons/bs";
+import { CiFacebook } from "react-icons/ci";
+import { FaXTwitter } from "react-icons/fa6";
+import { TbBrandTelegram } from "react-icons/tb";
+import { RiDiscordLine } from "react-icons/ri";
 
 // Lazy loading components
 const Banners = lazy(() => import("@/components/templates/banners"));
@@ -32,7 +37,6 @@ const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 const MemoExplorePage = () => {
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
-  const { updateSocialMediaLinks } = useSocialMediaLinks();
   const {
     setBizInfo,
     originalDishes,
@@ -70,6 +74,14 @@ const MemoExplorePage = () => {
 
   const bannersRef = useRef(false);
   const uniquelyYoursRef = useRef(false);
+
+  const [socialMediaLinks, setSocialMediaLinks] = useState([
+    { _id: 1, icon: "instagram", logo: <BsInstagram size={30} />, link: "" },
+    { _id: 2, icon: "facebook", logo: <CiFacebook size={36} />, link: "" },
+    { _id: 3, icon: "twitter", logo: <FaXTwitter size={30} />, link: "" },
+    { _id: 4, icon: "telegram", logo: <TbBrandTelegram size={30} />, link: "" },
+    { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
+  ]);
 
   const handleNavigate = useCallback(() => {
     if (toggleExplorePages === ExplorePages.BIZINFO) {
@@ -145,7 +157,17 @@ const MemoExplorePage = () => {
       });
       setBizInfo(response?.data as IBizInfo);
       setToggleExplorePages(ExplorePages.MAINFORM);
-      updateSocialMediaLinks(response?.data);
+      const updatedSocialMediaLinks = socialMediaLinks.map((link) => {
+        const matchedLink = response?.data?.socialMediaLinks?.find(
+          (item) => item.icon === link.icon,
+        );
+        return {
+          ...link,
+          link: matchedLink ? matchedLink.link : link.link,
+        };
+      });
+
+      setSocialMediaLinks(updatedSocialMediaLinks);
       return response;
     },
     enabled: !!businessId,
@@ -189,7 +211,12 @@ const MemoExplorePage = () => {
             isIconBusinessShow={false}
           />
         ) : null}
-        {toggleExplorePages === ExplorePages.MAINFORM && <MainForm />}
+        {toggleExplorePages === ExplorePages.MAINFORM && (
+          <MainForm
+            setSocialMediaLinks={setSocialMediaLinks}
+            socialMediaLinks={socialMediaLinks}
+          />
+        )}
         {toggleExplorePages === ExplorePages.BIZINFO && (
           <BizInformation refetch={refetch} />
         )}

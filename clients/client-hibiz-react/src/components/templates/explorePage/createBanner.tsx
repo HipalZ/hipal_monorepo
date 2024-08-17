@@ -259,8 +259,11 @@ const MemoCreateBanner = () => {
     if (!businessId) return;
     if ((heading.length < 4 || paragraph.length < 4) && !onlyImage) {
       return toast.error(
-        "Heading and Description should be more than 4 characters",
+        "Heading, Description should be more than 4 characters",
       );
+    }
+    if (callToAction.length < 3 && isButtonExists && !onlyImage) {
+      return toast.error("Button name should be more than 3 characters");
     }
     if (img && !img.logo && !isPatternExists) {
       return toast.error("Please upload an image");

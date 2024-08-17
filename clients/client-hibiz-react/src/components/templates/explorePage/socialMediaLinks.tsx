@@ -1,7 +1,7 @@
 import SubHeader from "@/components/atom/subHeader";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { SocialMediaLink } from "@/components/types/businessData";
-import { memo, useCallback, type ChangeEvent } from "react";
+import { memo, useCallback, useMemo, type ChangeEvent } from "react";
 
 interface Props {
   handleSaveSocialMediaLink: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -16,9 +16,9 @@ const MemoSocialMediaLinks = (props: Props) => {
     }),
   );
 
-  const selectedLink = socialMediaLinks.find(
-    (link) => link.icon === selectedSocialMedia,
-  );
+  const selectedLink = useMemo(() => {
+    return socialMediaLinks.find((link) => link.icon === selectedSocialMedia);
+  }, [socialMediaLinks, selectedSocialMedia]);
 
   const handleIconClick = useCallback(
     (icon: string) => {
@@ -26,7 +26,6 @@ const MemoSocialMediaLinks = (props: Props) => {
     },
     [selectedSocialMedia],
   );
-
   return (
     <>
       <SubHeader text="Social Media Links" />

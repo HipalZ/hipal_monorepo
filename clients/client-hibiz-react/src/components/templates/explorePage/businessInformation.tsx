@@ -287,7 +287,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
           </div>
           &nbsp;
           <div className="lg:flex lg:flex-col lg:justify-end lg:items-end">
-            <Paragraph text="Describe Your business with 3 words" />
+            <Paragraph text="Describe Your business with 4 words" />
             {tempTags.map((tag, index) => (
               <section
                 key={index.toString()}
@@ -296,7 +296,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
                 <h1>{index + 1}</h1>
                 <div className="relative">
                   <input
-                    minLength={4}
+                    minLength={3}
                     maxLength={30}
                     placeholder={`Tag ${index + 1}`}
                     type="text"

@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import type {
   businessType,
   exploreLayout,
@@ -648,6 +649,6 @@ export enum DatePickerEnum {
 export interface SocialMediaLink {
   _id: number;
   icon: string;
-  logo: JSX.Element;
+  logo: ReactNode;
   link: string;
 }
