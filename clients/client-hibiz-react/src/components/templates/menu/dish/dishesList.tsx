@@ -36,15 +36,12 @@ const MemoListOfDishes = () => {
 
   const { isLoading } = useDishStore();
 
-  const fuse = useMemo(() => {
-    console.log("dishes", dishes);
-    return new Fuse(dishes, {
-      keys: ["name", "description"],
-      threshold: 0.1,
-      includeScore: true,
-      useExtendedSearch: true,
-    });
-  }, [dishes]);
+  const fuse = new Fuse(dishes, {
+    keys: ["name", "description"],
+    threshold: 0.1,
+    includeScore: true,
+    useExtendedSearch: true,
+  });
 
   const filteredDishes = useMemo(() => {
     let filtered = search
@@ -62,7 +59,7 @@ const MemoListOfDishes = () => {
     return sortOrder === "asc"
       ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
-  }, [search, fuse, visibilityFilter, sortOrder]);
+  }, [search, fuse, visibilityFilter, sortOrder, dishes]);
 
   console.log("search", search);
   console.log("fuse", fuse.search(search));
