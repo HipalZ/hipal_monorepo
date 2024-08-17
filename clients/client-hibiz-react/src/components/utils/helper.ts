@@ -248,9 +248,10 @@ export const updateImage = async (
   file: File,
   preview: string | undefined,
   currentImage: string | undefined,
+  setIsLoading?: (loading: boolean) => void,
 ) => {
   if (preview !== "" && file) {
-    return await storeImageAfterSave(file, preview as string);
+    return await storeImageAfterSave(file, preview as string, setIsLoading);
   }
   return currentImage;
 };
