@@ -15,19 +15,19 @@ const cardArr = [
     color: "#6549F3",
     selectLayout: "LAYOUT_ONE" as LoyaltyCardLayout,
     cardType: "CARD_ONE" as SelectedCardType,
-    backgroundColor:"#6549F3"
+    backgroundColor: "#6549F3",
   },
   {
     color: "#183D2E",
     selectLayout: "LAYOUT_TWO" as LoyaltyCardLayout,
     cardType: "CARD_ONE" as SelectedCardType,
-    backgroundColor:"#183D2E"
+    backgroundColor: "#183D2E",
   },
   {
     color: "#111111",
     selectLayout: "LAYOUT_THREE" as LoyaltyCardLayout,
     cardType: "CARD_ONE" as SelectedCardType,
-    backgroundColor:"#111111"
+    backgroundColor: "#111111",
   },
 ];
 
@@ -43,13 +43,17 @@ const MemoCardOneLayout = ({
     selectedCardType,
     setSelectedCardLayout,
     setSelectedCardType,
-    setCardColor
+    setCardColor,
   } = useLoyalty();
 
-  const handleClick = (layout: LoyaltyCardLayout, type: SelectedCardType,color:string) => {
+  const handleClick = (
+    layout: LoyaltyCardLayout,
+    type: SelectedCardType,
+    color: string,
+  ) => {
     setSelectedCardLayout(layout);
     setSelectedCardType(type);
-    setCardColor(color)
+    setCardColor(color);
   };
 
   const selectedCard = cardArr.find(
@@ -78,7 +82,7 @@ const MemoCardOneLayout = ({
           <img
             width={64}
             height={64}
-            src={logo ??  hipalLogo}
+            src={logo ?? hipalLogo}
             alt="logo"
             className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
             style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
@@ -94,12 +98,18 @@ const MemoCardOneLayout = ({
           <button
             key={card.color}
             type="button"
-            onClick={() => handleClick(card.selectLayout, card.cardType,card.backgroundColor)}
+            onClick={() =>
+              handleClick(
+                card.selectLayout,
+                card.cardType,
+                card.backgroundColor,
+              )
+            }
             className={cn(
               "h-[1.5rem] rounded-l-full transition-all duration-500 ease-in-out -mr-10",
               selectedCardLayout === card.selectLayout
                 ? "w-[4.5rem]"
-                : "w-[1.5rem]",
+                : "w-[2.5rem]",
             )}
             style={{ backgroundColor: card.color }}
           />

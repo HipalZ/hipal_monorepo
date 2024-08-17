@@ -43,13 +43,17 @@ const MemoCardThreeLayout = ({
     selectedCardType,
     setSelectedCardLayout,
     setSelectedCardType,
-    setCardColor
+    setCardColor,
   } = useLoyalty();
 
-  const handleClick = (layout: LoyaltyCardLayout, type: SelectedCardType,color:string) => {
+  const handleClick = (
+    layout: LoyaltyCardLayout,
+    type: SelectedCardType,
+    color: string,
+  ) => {
     setSelectedCardLayout(layout);
     setSelectedCardType(type);
-    setCardColor(color)
+    setCardColor(color);
   };
 
   const selectedCard = cardArr.find(
@@ -94,12 +98,18 @@ const MemoCardThreeLayout = ({
           <button
             key={card.color}
             type="button"
-            onClick={() => handleClick(card.selectLayout, card.cardType,card.backgroundColor)}
+            onClick={() =>
+              handleClick(
+                card.selectLayout,
+                card.cardType,
+                card.backgroundColor,
+              )
+            }
             className={cn(
               "h-[1.5rem] rounded-l-full transition-all duration-500 ease-in-out -mr-10",
               selectedCardLayout === card.selectLayout
                 ? "w-[4.5rem]"
-                : "w-[1.5rem]",
+                : "w-[2.5rem]",
             )}
             style={{ backgroundColor: card.color }}
           />
