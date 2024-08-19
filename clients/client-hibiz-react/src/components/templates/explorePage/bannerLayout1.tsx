@@ -30,7 +30,7 @@ const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
       className="relative flex flex-col"
       key={layout?._id}
     >
-      <article className="max-h-[11.5rem] max-w-[12rem] shadow-xl">
+      <article className="max-h-[11.5rem] max-w-[12rem] shadow-lg">
         <figure className="w-full max-w-[12rem] rounded-2xl">
           <img
             src={layout?.image}

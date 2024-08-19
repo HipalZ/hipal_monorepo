@@ -41,7 +41,7 @@ const MemoBannerLayout7 = ({ layout }: { layout: BannerLayout }) => {
       <img
         src={layout?.image}
         alt={layout?.title}
-        className="bg-cover rounded-2xl w-full max-w-[11.5rem] h-[11.5rem] aspect-square"
+        className="bg-cover rounded-2xl w-full max-w-[11.5rem] h-[11.5rem] aspect-square shadow-lg"
       />
       <SelectingCardLayout layout={layout} />
     </section>

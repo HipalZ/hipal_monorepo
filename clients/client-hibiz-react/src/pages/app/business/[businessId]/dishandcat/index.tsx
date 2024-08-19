@@ -153,7 +153,6 @@ const MemoizeDishAndCat = () => {
             title={`${selectedPage.split("_").join(" ")}`}
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
           />
@@ -238,7 +237,7 @@ const MemoizeDishAndCat = () => {
               className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
               type="button"
             >
-              <BiPlus size={32} /> BULK UPLOAD DISHES
+              <BiPlus size={20} /> Bulk Upload Dishes
             </button>
             <input
               type="file"
@@ -255,10 +254,10 @@ const MemoizeDishAndCat = () => {
         )}
         <button
           onClick={openMenuModel}
-          className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
+          className="z-50 flex items-center h-10 px-4 py-2 text-white capitalize bg-black rounded-full"
           type="button"
         >
-          <BiPlus size={32} /> {selectedPage}
+          <BiPlus size={20} /> {selectedPage?.toLowerCase()}
         </button>
       </div>
     </main>

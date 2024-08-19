@@ -76,7 +76,7 @@ const Business = () => {
           <button
             type="button"
             onClick={goToBusinessControl}
-            className="business_Control"
+            className="shadow-xl business_Control"
           >
             <article className="text-left business_Control_article">
               <h3 className="text-lg font-semibold">Business Control</h3>

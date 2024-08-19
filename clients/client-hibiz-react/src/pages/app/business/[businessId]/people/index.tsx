@@ -51,7 +51,7 @@ const HiPeople = () => {
             onBack={handleBack}
           />
         </article>
-        <section className="absolute w-full px-4 space-x-4 overflow-x-auto text-sm whitespace-nowrap mobile-only">
+        <section className="absolute w-full px-4 space-x-4 overflow-x-auto text-sm shadow-lg whitespace-nowrap mobile-only">
           {sidebarItems.map((item) => (
             <button
               className={cn(

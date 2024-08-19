@@ -28,8 +28,8 @@ const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
       }}
       key={layout?._id}
     >
-      <article className="relative flex justify-center shrink-0 max-w-[12rem]">
-        <figure className="w-full max-w-[12rem] rounded-2xl">
+      <article className="relative flex justify-center shadow-lg rounded-2xl shrink-0 max-w-[12rem]">
+        <figure className="w-full max-w-[12rem]">
           <img
             src={layout?.image}
             alt={layout?.title}

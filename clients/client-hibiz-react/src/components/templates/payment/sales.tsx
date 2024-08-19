@@ -4,7 +4,6 @@ import useTimings from "@/components/store/useTimings";
 import { cn, hideMiddleNumbers } from "@/components/utils/helper";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useMemo, useState } from "react";
-import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import PaymentModal from "./paymentModal";
 import { CiFilter } from "react-icons/ci";
@@ -16,11 +15,12 @@ import type {
   IExistingPayments,
 } from "@/components/types/businessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import Pagination from "@/components/atom/pagination";
+import usePaginationStore from "@/components/store/usePaginationStore";
 
 const MemoPaymentSales = () => {
   const [open, setOpen] = useState(false);
   const [salesData, setSalesData] = useState<IExistingPayments>();
-  const [pageNumber, setPageNumber] = useState(1);
   const [totalSales, setTotalSales] = useState(0);
   const [historyData, setHistoryData] = useState<IExistingPayments[]>([]);
   const { timeStampStart, timeStampEnd, selectedRange } = useTimings();
@@ -29,6 +29,9 @@ const MemoPaymentSales = () => {
   const [filterMode, setFilterMode] = useState<"all" | "online" | "offline">(
     "all",
   );
+  const { pageNumber } = usePaginationStore((s) => ({
+    pageNumber: s.pageNumber,
+  }));
 
   const handleMode = useCallback((mode: "all" | "online" | "offline") => {
     setFilterMode(mode);
@@ -40,11 +43,6 @@ const MemoPaymentSales = () => {
     }
     return historyData.filter((data) => data.paymentMode === filterMode);
   }, [historyData, filterMode]);
-
-  const handleClick = useCallback((newPage: number) => {
-    if (newPage < 1) return;
-    setPageNumber(newPage);
-  }, []);
 
   const closeModel = useCallback(() => {
     setOpen(false);
@@ -134,7 +132,7 @@ const MemoPaymentSales = () => {
                   filterMode !== "all"
                     ? "bg-black text-white"
                     : "text-black bg-white",
-                  "z-1 space-x-2 flex items-center py-2 px-4 rounded-full",
+                  "z-1 space-x-2 flex items-center py-2 px-4 rounded-full shadow-lg on_active_bounce",
                 )}
               >
                 <span>Filters</span>
@@ -192,6 +190,7 @@ const MemoPaymentSales = () => {
                   key={data?._id}
                   className="payment_card_ui w-[100%]"
                   onClick={() => openModel(data)}
+                  onKeyDown={() => openModel(data)}
                 >
                   <section className="flex justify-between">
                     <section>
@@ -245,30 +244,7 @@ const MemoPaymentSales = () => {
           </section>
         </>
       )}
-
-      <div className="fixed bottom-[3rem] left-1/2 z-20 flex -translate-x-1/2 transform items-center justify-center space-x-4">
-        {historyData && historyData.length >= 0 && (
-          <button
-            type="button"
-            onClick={() => handleClick(pageNumber - 1)}
-            className={defaultClass}
-          >
-            <BiChevronsLeft />
-          </button>
-        )}
-        <p className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2B354D] bg-white text-black">
-          {pageNumber}
-        </p>
-        {historyData && historyData.length > 0 && (
-          <button
-            type="button"
-            onClick={() => handleClick(pageNumber + 1)}
-            className={defaultClass}
-          >
-            <BiChevronsRight />
-          </button>
-        )}
-      </div>
+      <Pagination />
       {open && (
         <PopUp onClose={closeModel} show={true}>
           <PaymentModal salesData={salesData} />

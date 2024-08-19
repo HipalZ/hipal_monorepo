@@ -222,7 +222,7 @@ const MemoExplorePage = () => {
         )}
         {toggleExplorePages === ExplorePages.BANNERLAYOUTS && (
           <section className="max-w-[69rem] m-auto">
-            <header className="sticky top-0 z-10 bg-white rounded-t-2xl h-[5rem] w-full">
+            <header className="sticky top-0 z-10 bg-white rounded-t-2xl h-[5rem] w-full shadow-lg">
               <MemoizedHeader
                 title="Choose Layout"
                 onBack={handleBack}

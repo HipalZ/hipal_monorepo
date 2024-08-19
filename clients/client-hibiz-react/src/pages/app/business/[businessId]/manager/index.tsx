@@ -100,7 +100,6 @@ const MemoiseManager = () => {
             title={`${selectedPage.split("_").join(" ")}`}
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
           />

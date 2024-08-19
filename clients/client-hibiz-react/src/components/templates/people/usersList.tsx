@@ -56,7 +56,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
         {peopleData?.map((user: ICustomerRecord) => (
           <article
             key={user._id}
-            className="relative flex items-center justify-between w-full p-4 bg-white rounded-2xl max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
+            className="shadow-lg relative flex items-center justify-between w-full p-4 bg-white rounded-2xl max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
           >
             <section className="flex items-center">
               <input

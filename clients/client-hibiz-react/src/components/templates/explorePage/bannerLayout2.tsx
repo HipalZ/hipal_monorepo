@@ -27,8 +27,8 @@ const MemoBannerLayout2 = ({ layout }: { layout: BannerLayout }) => {
       }}
       key={layout?._id}
     >
-      <article className="relative flex justify-start shrink-0">
-        <figure className="w-full max-w-[12rem] rounded-2xl">
+      <article className="relative flex justify-start shadow-lg rounded-2xl shrink-0">
+        <figure className="w-full max-w-[12rem]">
           <img
             src={layout?.image}
             alt={layout?.title}
