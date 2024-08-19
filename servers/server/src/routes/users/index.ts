@@ -27,7 +27,7 @@ import { z } from "zod";
 import { respond } from "../../utils/response";
 
 // Hash a password
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   try {
     const hash = await argon2.hash(password);
     return hash;
@@ -37,7 +37,7 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // Verify a password
-async function verifyPassword(
+export async function verifyPassword(
   password: string,
   hash: string,
 ): Promise<boolean> {
@@ -98,7 +98,7 @@ export const addSignUpBonus = async (
   return 1;
 };
 
-const createAccessToken = (id: string, role: string) => {
+export const createAccessToken = (id: string, role: string) => {
   return jwt.sign(
     {
       id: id,
@@ -109,7 +109,7 @@ const createAccessToken = (id: string, role: string) => {
   );
 };
 
-const createRefreshToken = (id: string, role: string) => {
+export const createRefreshToken = (id: string, role: string) => {
   return jwt.sign(
     {
       id: id,

@@ -25,6 +25,7 @@ export * from "./rewardsValidator";
 export * from "./role";
 export * from "./staffValidator";
 
+export * from "./admin";
 export * from "./analytic";
 export * from "./businessSubscriber";
 export * from "./group";

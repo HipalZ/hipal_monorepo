@@ -7,6 +7,7 @@ export * from "./category";
 export * from "./dish";
 export * from "./kitchen";
 
+export * from "./admin";
 export * from "./businessSubscriber";
 export * from "./group";
 export * from "./groupAnalytics";
