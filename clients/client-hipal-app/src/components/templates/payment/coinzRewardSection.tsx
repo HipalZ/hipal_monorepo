@@ -11,7 +11,7 @@ interface IUseCoinzPopup {
   billValue: number;
 }
 
-const UseCoinzPopup = (props: IUseCoinzPopup) => {
+const CoinzRewardsPayment = (props: IUseCoinzPopup) => {
   const { openModal, billValue } = props;
   const [editBillModal, setEditBillModal] = useState(false);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
@@ -29,7 +29,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
         <button
           type="button"
           onClick={openBillModal}
-          className="px-2 py-1 text-sm border rounded-full border-primary"
+          className="px-2 py-1 text-sm border rounded-full shadow-lg border-primary"
         >
           <CiEdit className="inline-block" />
           <span className="px-2 py-2">Edit Bill Value</span>
@@ -38,7 +38,8 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
       <h1 className="mx-4 text-xl font-semibold">Rewardz</h1>
       <article
         onClick={openModal}
-        className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary"
+        onKeyDown={openModal}
+        className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary shadow-lg"
       >
         <div className="flex items-center">
           <IoMdCard size={30} className="-rotate-45 " />
@@ -53,7 +54,7 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
         </div>
         <div className="flex items-center space-x-4">Apply</div>
       </article>
-      <article className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary">
+      <article className="animation-shake flex justify-between items-center h-[90px] mx-4 rounded-3xl p-6 mt-4 bg-base-200 text-primary shadow-lg">
         <div className="flex items-center">
           <RiCouponFill size={30} className="-rotate-45 " />
           &nbsp; &nbsp;
@@ -75,5 +76,5 @@ const UseCoinzPopup = (props: IUseCoinzPopup) => {
   );
 };
 
-const MemoUseCoinzPopup = memo(UseCoinzPopup);
-export default MemoUseCoinzPopup;
+const MemoCoinzRewardsPayment = memo(CoinzRewardsPayment);
+export default MemoCoinzRewardsPayment;

@@ -26,6 +26,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import poweredBy from "@/assets/img/powered_hipalz.png";
 import { apiRpc } from "@hi/common";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MiddlePopUp = dynamic(() => import("@/components/atoms/middlePopUp"));
 
@@ -59,33 +60,44 @@ function Review({ data }: { data: IBusinessData }) {
   const [description, setDescription] = useState<string | "">("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+  const [tempSelectedStaff, setTempSelectedStaff] = useState<string[]>([]);
   const [staffs, setStaffs] = useState<User[]>([]);
   const [foodTaste, setFoodTaste] = useState(null);
   const [ambience, setAmbience] = useState(null);
   const [hygiene, setHygiene] = useState(null);
   const [service, setService] = useState(null);
   const [openComment, setOpenComment] = useState(false);
+  const { isLoading, setIsLoading } = usePaymentStore((s) => ({
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
+  }));
 
   const improvementAreas = [
     { name: "Food Taste", state: foodTaste, setState: setFoodTaste },
     { name: "Waiter & Behavior", state: service, setState: setService },
     { name: "Ambience", state: ambience, setState: setAmbience },
-    { name: "Hygiene & Celanese", state: hygiene, setState: setHygiene },
+    { name: "Hygiene & Cleanliness", state: hygiene, setState: setHygiene },
   ];
 
   const handleFeedback = useCallback((area, value) => {
     area.setState(value);
   }, []);
 
-  const handleSelectStaff = (staff) => {
-    if (!selectedStaff.includes(staff)) {
-      setSelectedStaff([...selectedStaff, staff]);
-    }
-  };
+  const handleSelectStaff = useCallback((staff) => {
+    setTempSelectedStaff((prev) => {
+      if (!prev.includes(staff)) {
+        return [...prev, staff];
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleRemoveStaff = (staffToRemove) => {
-    setSelectedStaff(selectedStaff.filter((staff) => staff !== staffToRemove));
-  };
+  const handleRemoveStaff = useCallback((staffToRemove) => {
+    setSelectedStaff((prev) => prev.filter((staff) => staff !== staffToRemove));
+    setTempSelectedStaff((prev) =>
+      prev.filter((staff) => staff !== staffToRemove),
+    );
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -145,7 +157,6 @@ function Review({ data }: { data: IBusinessData }) {
     if (service === 1 || service === 0) {
       payload.service = service;
     }
-    // const res = await axios(config)
     const res = await apiRpc.payments.reviews.$post({
       json: payload,
     });
@@ -165,14 +176,24 @@ function Review({ data }: { data: IBusinessData }) {
   );
 
   const handleSaveStaff = useCallback(() => {
-    setShowSuggestions(!showSuggestions);
-  }, [showSuggestions]);
+    setSelectedStaff(tempSelectedStaff);
+    setShowSuggestions(false);
+  }, [tempSelectedStaff]);
+
+  const handleCloseSuggestions = useCallback(() => {
+    setTempSelectedStaff(selectedStaff);
+    setShowSuggestions(false);
+  }, [selectedStaff]);
 
   useEffect(() => {
     if (data?.settings) {
       updateTheme(data?.settings);
     }
   }, [data?.settings]);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [isLoading]);
 
   return (
     <div className="p-4 animate-fade-up animate-once bg-base-100 text-primary">
@@ -191,25 +212,23 @@ function Review({ data }: { data: IBusinessData }) {
         }}
         className="flex flex-col items-center justify-center"
       >
-        {
-          <article className="text-center">
-            {mode !== "online" && (
-              <Image
-                src={mode === "online" ? success : pendingStatus}
-                alt="success"
-                priority={true}
-                width={125}
-                height={125}
-                className="m-auto animate-pulse"
-              />
-            )}
-            {mode === "online" ? (
-              <h1 className="text-xl">Payment Success!</h1>
-            ) : (
-              <h1 className="text-xl">Waiting for confirmation</h1>
-            )}
-          </article>
-        }
+        <article className="text-center">
+          {mode !== "online" && (
+            <Image
+              src={mode === "online" ? success : pendingStatus}
+              alt="success"
+              priority={true}
+              width={125}
+              height={125}
+              className="m-auto animate-pulse"
+            />
+          )}
+          {mode === "online" ? (
+            <h1 className="text-xl">Payment Success!</h1>
+          ) : (
+            <h1 className="text-xl">Waiting for confirmation</h1>
+          )}
+        </article>
         <br />
         <div className="text-center">
           <h1 className="text-4xl font-bold">₹ {amount}</h1>
@@ -217,7 +236,7 @@ function Review({ data }: { data: IBusinessData }) {
         </div>
         {mode === "offline" ? (
           <center className="text-[0.825rem] bg-base-200 p-2 rounded-full my-2 text-primary">
-            ⚠ You <span className="text-base font-bold"> choose offline</span> ,
+            ⚠ You <span className="text-base font-bold"> choose offline</span>,
             your pay will be confirmed by captain
           </center>
         ) : null}
@@ -391,39 +410,49 @@ function Review({ data }: { data: IBusinessData }) {
           <MiddlePopUp
             onSave={handleSaveStaff}
             show={showSuggestions}
-            onClose={() => setShowSuggestions(!showSuggestions)}
+            onClose={handleCloseSuggestions}
           >
             <ul
               className="w-full h-[60vh] mt-0 overflow-auto"
               style={{ zIndex: 2 }}
             >
-              <center className="my-4 text-xl font-semibold">
-                Staff members
+              <center className="my-4 text-2xl font-semibold text-primary">
+                Staff Members
               </center>
+              {isPending && (
+                <center className="my-2 text-lg">Loading staff...</center>
+              )}
+              {error && (
+                <center className="my-2 text-lg text-red-500">
+                  Error loading staff!
+                </center>
+              )}
               {staffs.length > 0 ? (
                 staffs?.map((staff, index) => (
-                  <div key={staff?.name + index.toString()}>
-                    {isPending && <center>Loading staff...</center>}
-                    {error && <center>Error loading staff!</center>}
+                  <div key={staff?.name + index.toString()} className="w-full">
                     <li
                       key={staff?.name}
                       onKeyDown={handleKeyDown}
                       onClick={() => handleSelectStaff(staff?.name)}
                       className={cn(
-                        "h-16 p-4 text-xl text-primary",
-                        selectedStaff.includes(staff?.name) &&
+                        "h-16 flex items-center m-2 p-4 text-lg text-primary cursor-pointer active:bg-primary active:text-white transition-colors duration-200 rounded-md",
+                        tempSelectedStaff.includes(staff?.name) &&
                           "bg-primary text-white",
                       )}
                     >
-                      👤
-                      {staff?.name.length > 10
-                        ? `${staff?.name.slice(0, 10)}...`
-                        : staff?.name}
+                      <span className="mr-3 text-2xl">👤</span>
+                      <span className="flex-grow">
+                        {staff?.name.length > 14
+                          ? `${staff?.name.slice(0, 14)}...`
+                          : staff?.name}
+                      </span>
                     </li>
                   </div>
                 ))
               ) : (
-                <center>No Captain Found</center>
+                <center className="my-4 text-lg text-gray-500">
+                  No Captain Found
+                </center>
               )}
             </ul>
           </MiddlePopUp>

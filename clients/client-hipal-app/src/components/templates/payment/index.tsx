@@ -1,5 +1,4 @@
 "use client";
-import { MdOutlineChevronLeft } from "react-icons/md";
 import { type ChangeEvent, memo, useEffect, useState } from "react";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -16,9 +15,6 @@ import { calculateReward } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import PlaceholderImg from "@/components/atoms/placeholder";
-import Image from "next/image";
-import { getRandomBlurImg } from "@/components/utils/images";
 import PayLoader from "./payLoader";
 import ErrorPayment from "./errorPay";
 import { apiRpc } from "@hi/common";
@@ -52,7 +48,7 @@ const PaymentCard = dynamic(() => import("./paymentCard"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
-const UseCoinzPopup = dynamic(() => import("./useCoinzPopup"), {
+const CoinzRewardPayment = dynamic(() => import("./coinzRewardSection"), {
   ssr: false,
   loading: () => <SkeletonLoader height={50} />,
 });
@@ -72,8 +68,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
   const [customTip, setCustomTip] = useState("");
   const [selectedMode, setSelectedMode] = useState<PageStates>("INVOICE");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { userDetails } = useLogin();
+  const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
   const {
     billValue,
     setBillValue,
@@ -83,7 +78,20 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     setClaimedCoinz,
     setTips,
     tips,
-  } = usePaymentStore();
+    isLoading,
+    setIsLoading,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    setBillValue: s.setBillValue,
+    claimedCoinz: s.claimedCoinz,
+    setClaimedCoinz: s.setClaimedCoinz,
+    tips: s.tips,
+    setTips: s.setTips,
+    userCoinz: s.userCoinz,
+    setUserCoinz: s.setUserCoinz,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
+  }));
   const { businessDetails } = useBusinessDetails();
   const { tableName, setTableName } = useTableData();
   const router = useRouter();
@@ -123,7 +131,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     });
     const response = await res.json();
     if (res.status === 200) {
-      console.log("response", response);
       setMerchantDetails({
         businessId: businessId || "",
         razorpayMerchantId: response?.data?.razorpayMerchantId,
@@ -266,7 +273,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     });
     const data = await res.json();
     const orderId = data?.data as string;
-    console.log("orderId", orderId);
     const total = billValue - claimedCoinz + tips;
     const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
     const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
@@ -348,7 +354,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
           finalReward?.finalReward,
         )}&orderId=${response?.data?.order_id}`,
       );
-      setIsLoading(false);
     }
   };
 
@@ -397,7 +402,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
 
     try {
       const orderId = await createRazorPayOrder(total);
-      await creatingRazorPayOptions(orderId); // Keep isLoading true until Razorpay options are opened
+      await creatingRazorPayOptions(orderId);
     } catch (error) {
       toast.error("Something went wrong! Please try again later.");
       setRazorPayPaymentId("");
@@ -523,7 +528,10 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
                 logo={data?.business?.logoUrl}
               />
               {userCoinz > 0 && (
-                <UseCoinzPopup openModal={openModal} billValue={billValue} />
+                <CoinzRewardPayment
+                  openModal={openModal}
+                  billValue={billValue}
+                />
               )}
               <BillSummary
                 billValue={billValue}
@@ -542,6 +550,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
               <BottomButton>
                 <div
                   onClick={() => handleMode("MODE")}
+                  onKeyDown={() => handleMode("MODE")}
                   className={`${
                     billValue > 0 ? "" : "opacity-20 pointer-events-none"
                   } bg-primary text-base-100 py-3 px-3 rounded-full`}
