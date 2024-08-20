@@ -47,7 +47,6 @@ const MemoAddonForm = () => {
           title={addOnId !== "" ? "Edit Addon" : "Create Addon"}
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={false}
         />

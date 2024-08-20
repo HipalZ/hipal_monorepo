@@ -205,7 +205,6 @@ const MemoCreateDynamicGroup = () => {
                 className="resize-none h-24 block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600 peer"
                 maxLength={50}
                 minLength={3}
-                required
               />
               <small className="absolute bottom-2 right-2">
                 {groupData.description?.length}/{50}
@@ -310,9 +309,11 @@ const MemoCreateDynamicGroup = () => {
 
             <div className="mt-4">
               {groupData.filters.map((filter) => (
-                <section key={filter.key}>
-                  <label className="block mb-2 text-sm text-gray-700">
-                    {filter.label}:
+                <section key={filter.key} className="relative">
+                  <header>{filter.heading}</header>
+
+                  <label className="absolute top-0 text-sm text-gray-700">
+                    {filter.label}
                   </label>
                   <div className="flex gap-4 mb-4 md:flex-row">
                     <div className="w-[70%]">

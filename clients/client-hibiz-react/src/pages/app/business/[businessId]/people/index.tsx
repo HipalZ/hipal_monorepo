@@ -45,7 +45,6 @@ const HiPeople = () => {
           <MemoizedHeader
             title="Hi PplZ"
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
             onBack={handleBack}

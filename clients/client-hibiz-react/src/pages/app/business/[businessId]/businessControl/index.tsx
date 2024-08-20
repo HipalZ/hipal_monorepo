@@ -66,7 +66,6 @@ const MainBusinessPage: React.FC = () => {
           title={handleTitle()}
           onBack={handleBack}
           leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={true}
         />

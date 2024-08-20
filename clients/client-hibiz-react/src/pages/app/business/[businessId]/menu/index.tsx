@@ -42,7 +42,6 @@ const MemoMenu = () => {
           title="Menu"
           onBack={handleBack}
           leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={false}
         />

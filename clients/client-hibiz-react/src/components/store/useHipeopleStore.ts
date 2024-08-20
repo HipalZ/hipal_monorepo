@@ -51,6 +51,7 @@ export interface FilterValue {
 export interface Filter {
   label: string;
   key: keyof FilterValues;
+  heading: string;
 }
 
 export interface FilterValues {
@@ -534,11 +535,31 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
     groupType: "MANUAL",
     groupColor: "#E43065",
     filters: [
-      { label: "Every bill is considered as a visit", key: "visit" },
-      { label: "Avg bill value", key: "spend" },
-      { label: "Card Balance", key: "cardBalance" },
-      { label: "Coinz rewarded", key: "coinzIssued" },
-      { label: "Coinz used", key: "coinzUsed" },
+      {
+        label: "By visits",
+        key: "visit",
+        heading: "Every bill is considered as a visit",
+      },
+      {
+        label: "Avg bill value",
+        key: "spend",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Card Balance",
+        key: "cardBalance",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Coinz rewarded",
+        key: "coinzIssued",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Coinz used",
+        key: "coinzUsed",
+        heading: "Avg bill spend in the selected period",
+      },
     ],
     filterValues: {
       visit: { value: "", type: "" },

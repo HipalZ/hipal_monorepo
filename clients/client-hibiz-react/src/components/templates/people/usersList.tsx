@@ -8,6 +8,7 @@ import { FaMoneyBills } from "react-icons/fa6";
 import { MdArrowOutward } from "react-icons/md";
 import { SlLocationPin } from "react-icons/sl";
 import { Link } from "react-router-dom";
+import NoData from "@/assets/nodata.jpg";
 
 const MemoUsersList = ({ hide }: { hide?: boolean }) => {
   const {
@@ -40,9 +41,17 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
         <LoadingSpinner />
       </div>
     );
+
+  if (!peopleData || peopleData.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center h-[70dvh]">
+        <img src={NoData} alt="No Data Found" className="w-1/2 h-auto" />
+        <h3 className="text-[#6F649B] mt-4">No Data Found</h3>
+      </div>
+    );
+
   return (
     <>
-      {" "}
       <div className="flex items-center mb-4 ml-8">
         <input
           type="checkbox"
@@ -53,7 +62,7 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
         <span className="text-[#6F649B]">Select {selectedUserIds.length}</span>
       </div>
       <section className="flex flex-wrap justify-start pb-[7rem] gap-4 mx-4 lg:pb-[5rem]">
-        {peopleData?.map((user: ICustomerRecord) => (
+        {peopleData.map((user: ICustomerRecord) => (
           <article
             key={user._id}
             className="shadow-lg relative flex items-center justify-between w-full p-4 bg-white rounded-2xl max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
@@ -68,7 +77,6 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
               <div>
                 <h3>{user?.userId?.name}</h3>
                 <p>
-                  {" "}
                   {user?.userId?.phone?.slice(0, 2)}******
                   {user?.userId?.phone?.slice(-2)}
                 </p>

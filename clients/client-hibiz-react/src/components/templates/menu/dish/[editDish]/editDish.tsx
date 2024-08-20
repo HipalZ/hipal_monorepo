@@ -155,7 +155,6 @@ const MemoEditDish = () => {
             title={handleHeader()}
             onBack={goBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
           />

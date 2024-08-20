@@ -37,13 +37,12 @@ const MemoiseSidebarUser: React.FC<SidebarProps> = ({ items }) => {
           className={cn(
             "sidebar-item flex flex-col items-center",
             selectedNavItem.toLowerCase() === item.text.toLowerCase()
-              ? " !transition-all !bg-[#C3B3F850]"
+              ? " !transition-all !bg-[#C3B3F850]" 
               : "",
           )}
           key={item.text}
           onClick={item.onClick}
         >
-          <img src={item.icon} alt={item.text} />
           <span>{item.text}</span>
         </button>
       ))}

@@ -21,8 +21,16 @@ const CardFiveLayout = lazy(() => import("./cardFive"));
 const CardSixLayout = lazy(() => import("./cardSix"));
 const SignupBonus = lazy(() => import("./signupBonus"));
 const CoinzBack = lazy(() => import("./coinzBack"));
-const MaxRedemption = lazy(() => import("./maximumRedeem")); // Assuming you've created this component
+const MaxRedemption = lazy(() => import("./maximumRedeem"));
 const ResetExpiry = lazy(() => import("./reset&Expiry"));
+
+const calculateDaysRemaining = (timestamp: number) => {
+  const today = new Date();
+  const expiryDate = new Date(timestamp);
+  const timeDiff = expiryDate.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+  return daysRemaining;
+};
 
 const MemoCardSelection = () => {
   const {
@@ -67,7 +75,7 @@ const MemoCardSelection = () => {
   const goBack = useCallback(() => {
     startTransition(() => {
       navigate(`/app/business/${businessId}`);
-    })
+    });
   }, [setSelectedPage]);
 
   const LoyaltyToggleArray = [
@@ -76,23 +84,27 @@ const MemoCardSelection = () => {
       subHeading:
         "How much coinz do your customers get at the very first time How much coinz do your ",
       navigate: () => setChangeModalLayout("SIGNUP_BONUS"),
+      key: `${signupBonus} %`,
     },
     {
       heading: "Coinz back after payments ",
       subHeading: "How much will your customers get back after ",
       navigate: () => setChangeModalLayout("COINZ_BACK"),
+      key: `${coinzBack} %`,
     },
     {
       heading: "Maximum Redemption",
       subHeading:
         "User can redeem maximum of this percentage of coinz in a single transaction",
       navigate: () => setChangeModalLayout("MAXIMUM_REDEMPTION"),
+      key: `${maxRedemption} %`,
     },
     {
       heading: "Reset & Expiry ",
       subHeading:
         "The card would reset all its coinz for all users within this time frame",
       navigate: () => setChangeModalLayout("RESET_EXPIRY"),
+      key: `${calculateDaysRemaining(resetExpiry)} days`,
     },
     // {
     //   heading: "Terms & Conditions",
@@ -192,6 +204,9 @@ const MemoCardSelection = () => {
   }, [changeModalLayout]);
 
   const saveLoyalty = useCallback(async () => {
+    if (!selectedCardType) {
+      return toast.error("Please select a card type");
+    }
     const payload = {
       businessId: businessId ?? "",
       loyaltyId: businessId ?? "",
@@ -290,7 +305,6 @@ const MemoCardSelection = () => {
         <MemoizedHeader
           title="Loyalty CardZ"
           onBack={goBack}
-          centerImage={Hi}
           leftIcon={<FaArrowLeft />}
           isIconBusinessShow={false}
         />
@@ -338,7 +352,10 @@ const MemoCardSelection = () => {
                 }}
                 className="relative w-full bg-[#ffffff] rounded-xl text-left p-4 mt-4"
               >
-                <h3 className="font-[600]">{item.heading}</h3>
+                <h3 className="font-[600]">
+                  {item.heading}{" "}
+                  <span className="text-[#8C63FF]">{item.key}</span>
+                </h3>
                 <h6 className="mt-2 text-xs leading-4 opacity-50">
                   {item.subHeading}
                 </h6>
@@ -362,7 +379,6 @@ const MemoCardSelection = () => {
             <MemoizedHeader
               title={dynamicHeadingForModal()}
               onBack={goToPreviousPage}
-              centerImage={Hi}
               leftIcon={<FaArrowLeft />}
               isIconBusinessShow={false}
               rightButton={<div className="font-semibold">{step()}</div>}
