@@ -19,6 +19,7 @@ const MemoUniquelyYoursPopUp = () => {
     setSearchQuery,
     setDishes,
     setUniquelyDishes,
+    showUniquePopUp,
     setShowUniquePopUp,
   } = useExploreStore((s) => ({
     originalDishes: s.originalDishes,
@@ -30,6 +31,7 @@ const MemoUniquelyYoursPopUp = () => {
     setSearchQuery: s.setSearchQuery,
     setDishes: s.setDishes,
     setUniquelyDishes: s.setUniquelyDishes,
+    showUniquePopUp: s.showUniquePopUp,
     setShowUniquePopUp: s.setShowUniquePopUp,
   }));
 
@@ -68,11 +70,11 @@ const MemoUniquelyYoursPopUp = () => {
     [selectedDishes],
   );
 
-  const handleSaveDish = async () => {
+  const handleSaveDish = useCallback(async () => {
     setUniquelyDishes(selectedDishes);
     await handleUniquelyYours(selectedDishes);
     setShowUniquePopUp(false);
-  };
+  }, [selectedDishes, showUniquePopUp]);
 
   const handleUniquelyYours = async (selectedDishes: IDish[]) => {
     apiRpc.dishes.uniquelyYours.$post({
@@ -91,7 +93,7 @@ const MemoUniquelyYoursPopUp = () => {
   };
 
   // Function to filter unique dishes with images
-  const getUniqueDishesWithImages = (dishesList: IDish[]) => {
+  const getUniqueDishesWithImages = useCallback((dishesList: IDish[]) => {
     const uniqueDishesMap = new Map();
     for (const dish of dishesList) {
       if (
@@ -103,7 +105,7 @@ const MemoUniquelyYoursPopUp = () => {
       }
     }
     return Array.from(uniqueDishesMap.values());
-  };
+  }, []);
 
   const filteredOriginalDishes = useMemo(() => {
     return getUniqueDishesWithImages(originalDishes);
@@ -113,24 +115,26 @@ const MemoUniquelyYoursPopUp = () => {
     return getUniqueDishesWithImages(dishes);
   }, [dishes]);
 
-  const fuse = useMemo(() => {
-    return new Fuse([...selectedDishes, ...filteredDishes], {
-      keys: ["name"],
-      includeScore: true,
-      threshold: 0.3,
-    });
-  }, [selectedDishes, filteredDishes]);
+  const fuse = new Fuse(dishes, {
+    keys: ["name"],
+    threshold: 0.3,
+  });
 
   const displayedDishes = useMemo(() => {
-    let combinedDishes = [
-      ...selectedDishes,
-      ...filteredDishes.filter(
-        (dish) => !selectedDishes.some((d) => d.name === dish.name),
-      ),
-    ];
+    let combinedDishes;
+
     if (searchQuery) {
       combinedDishes = fuse.search(searchQuery).map((result) => result.item);
+    } else {
+      // Show both selected dishes and all available dishes when the search query is empty
+      combinedDishes = [
+        ...selectedDishes,
+        ...filteredDishes.filter(
+          (dish) => !selectedDishes.some((d) => d.name === dish.name),
+        ),
+      ];
     }
+
     return combinedDishes;
   }, [filteredDishes, selectedDishes, searchQuery, fuse]);
 
