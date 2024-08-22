@@ -219,7 +219,7 @@ const MemoMainForm = (props: Props) => {
   };
 
   return (
-    <form onSubmit={handleSaveExplorePage} className="px-4">
+    <form onSubmit={handleSaveExplorePage} className="px-4 pb-[5rem]">
       <ExplorePageTopSection />
       <br />
       <BannerSection />

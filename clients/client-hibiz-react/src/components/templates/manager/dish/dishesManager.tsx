@@ -135,7 +135,7 @@ const MemoDishesManager = () => {
             <h2 className="w-full text-lg font-semibold opacity-50">
               Unlinked Dishes
             </h2>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 ">
+            <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
               {unlinkedDishes.map((dish) => (
                 <DishButton
                   key={dish._id?.toString()}
