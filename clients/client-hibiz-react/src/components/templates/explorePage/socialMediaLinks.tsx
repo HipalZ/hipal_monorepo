@@ -7,8 +7,11 @@ interface Props {
   handleSaveSocialMediaLink: (e: ChangeEvent<HTMLInputElement>) => void;
   socialMediaLinks: SocialMediaLink[];
 }
-const MemoSocialMediaLinks = (props: Props) => {
-  const { handleSaveSocialMediaLink, socialMediaLinks } = props;
+
+const MemoSocialMediaLinks = ({
+  handleSaveSocialMediaLink,
+  socialMediaLinks,
+}: Props) => {
   const { selectedSocialMedia, setSelectedSocialMedia } = useExploreStore(
     (s) => ({
       selectedSocialMedia: s.selectedSocialMedia,
@@ -16,21 +19,19 @@ const MemoSocialMediaLinks = (props: Props) => {
     }),
   );
 
+  const handleIconClick = useCallback((icon: string) => {
+    setSelectedSocialMedia(icon);
+  }, []);
+
   const selectedLink = useMemo(() => {
     return socialMediaLinks.find((link) => link.icon === selectedSocialMedia);
   }, [socialMediaLinks, selectedSocialMedia]);
 
-  const handleIconClick = useCallback(
-    (icon: string) => {
-      setSelectedSocialMedia(icon);
-    },
-    [selectedSocialMedia],
-  );
   return (
     <>
       <SubHeader text="Social Media Links" />
       <section className="bg-white rounded-2xl">
-        <article className="flex items-center justify-between p-6 ">
+        <article className="flex items-center justify-between p-6">
           {socialMediaLinks.map((link) => (
             <div
               key={link._id}
@@ -46,19 +47,19 @@ const MemoSocialMediaLinks = (props: Props) => {
             </div>
           ))}
         </article>
-        {selectedSocialMedia.length === 0 ? null : (
+        {selectedSocialMedia && (
           <article className="pb-4 mx-6 space-y-4 rounded-2xl">
             <div className="relative">
               <input
                 maxLength={100}
-                value={selectedLink ? selectedLink.link : ""}
+                value={selectedLink?.link || ""}
                 onChange={handleSaveSocialMediaLink}
                 placeholder={`Enter ${selectedSocialMedia} link`}
                 type="text"
                 className="w-full pr-16 rounded-2xl"
               />
               <small className="absolute bottom-3 right-4">
-                {selectedSocialMedia?.length}/{100}
+                {selectedLink?.link.length}/{100}
               </small>
             </div>
           </article>

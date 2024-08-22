@@ -8,7 +8,6 @@ import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
-import { useSocialMediaLinks } from "@/components/utils/commonFunc";
 import CreateBanner from "@/components/templates/explorePage/createBanner";
 import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 import { FaArrowLeft } from "react-icons/fa";
