@@ -144,14 +144,14 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           </figure>
           <div>
             {name && (
-              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--ac)]">
+              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">
                 {name}
               </h4>
             )}
             {address && (
               <>
                 <div style={{ overflow: "hidden" }}>
-                  <h6 className="h-6 text-xs font-semibold capitalize text-[var(--ac)] scrolling-text">
+                  <h6 className="h-6 text-xs font-semibold capitalize text-[var(--sf)] scrolling-text">
                     {address}
                   </h6>
                 </div>
