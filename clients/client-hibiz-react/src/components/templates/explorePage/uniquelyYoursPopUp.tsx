@@ -4,6 +4,7 @@ import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import Fuse from "fuse.js";
+import dummyImage from "@/assets/hisite/placeholder.png";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
 
@@ -93,19 +94,22 @@ const MemoUniquelyYoursPopUp = () => {
   };
 
   // Function to filter unique dishes with images
-  const getUniqueDishesWithImages = useCallback((dishesList: IDish[]) => {
-    const uniqueDishesMap = new Map();
-    for (const dish of dishesList) {
-      if (
-        dish.images &&
-        dish.images.length > 0 &&
-        !uniqueDishesMap.has(dish.name)
-      ) {
-        uniqueDishesMap.set(dish.name, dish);
+  const getUniqueDishesWithImages = useCallback(
+    (dishesList: IDish[]) => {
+      const uniqueDishesMap = new Map();
+      for (const dish of dishesList) {
+        if (
+          dish.images &&
+          dish.images.length > 0 &&
+          !uniqueDishesMap.has(dish.name)
+        ) {
+          uniqueDishesMap.set(dish.name, dish);
+        }
       }
-    }
-    return Array.from(uniqueDishesMap.values());
-  }, []);
+      return Array.from(uniqueDishesMap.values());
+    },
+    [searchQuery],
+  );
 
   const filteredOriginalDishes = useMemo(() => {
     return getUniqueDishesWithImages(originalDishes);
@@ -115,7 +119,7 @@ const MemoUniquelyYoursPopUp = () => {
     return getUniqueDishesWithImages(dishes);
   }, [dishes]);
 
-  const fuse = new Fuse(dishes, {
+  const fuse = new Fuse(filteredOriginalDishes, {
     keys: ["name"],
     threshold: 0.3,
   });
@@ -179,7 +183,7 @@ const MemoUniquelyYoursPopUp = () => {
                   />
                   <img
                     loading="lazy"
-                    src={dish.images[0]}
+                    src={dish.images[0] || dummyImage}
                     alt={`Dish ${dish._id}`}
                     className="h-[4rem] w-[4rem] border-2 rounded-md"
                   />
@@ -210,7 +214,7 @@ const MemoUniquelyYoursPopUp = () => {
                   />
                   <img
                     loading="lazy"
-                    src={dish.images[0]}
+                    src={dish.images[0] || dummyImage}
                     alt={`Dish ${dish._id}`}
                     className="h-[4rem] w-[4rem] border-2 rounded-md"
                   />
