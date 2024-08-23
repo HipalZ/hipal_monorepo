@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { cn } from "@hi/common";
 import useHiPeopleStore, {
   type FilterValue,
@@ -10,6 +10,7 @@ import { SlCalender } from "react-icons/sl";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useCreateGroup } from "@/hooks/usePeopleData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { HiX } from "react-icons/hi";
 
 const predefinedColors = [
   "#E43065",
@@ -30,30 +31,49 @@ const MemoCreateDynamicGroup = () => {
     untilNow,
     setShowDuration,
     setUntilNow,
-  } = useHiPeopleStore();
+    setSelectedGroupPage,
+    selectedGroupPage,
+    addTags,
+    saveSelectedTags
+  } = useHiPeopleStore((state) => ({
+    groupData: state.groupData,
+    setGroupData: state.setGroupData,
+    showDuration: state.showDuration,
+    untilNow: state.untilNow,
+    setShowDuration: state.setShowDuration,
+    setUntilNow: state.setUntilNow,
+    setSelectedGroupPage: state.setSelectedGroupPage,
+    selectedGroupPage: state.selectedGroupPage,
+    addTags: state.addTags,
+    saveSelectedTags: state.saveSelectedTags
+  }));
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const businessData = useBusinessData((state) => state.businessData);
 
+
   const { mutateCreateGroup, isCreatingGroupPending } = useCreateGroup();
 
-  const handleUntilNowChange = () => {
+  const handleUntilNowChange = useCallback(() => {
     setUntilNow(!untilNow);
     setShowDuration(false);
     setGroupData({ durationValue: "0" });
-  };
+  }, [untilNow, setUntilNow, setShowDuration, setGroupData]);
 
-  const handleAddDurationClick = () => {
+  const handleAddDurationClick = useCallback(() => {
     setShowDuration(true);
     setUntilNow(false);
     setGroupData({ durationValue: "" });
-  };
+  }, [setShowDuration, setUntilNow, setGroupData]);
 
-  const handleInputChange = (
-    field: keyof GroupData,
-    value: string | "MANUAL" | "DYNAMIC" | "days" | "months" | "years",
-  ) => {
-    setGroupData({ [field]: value });
-  };
+  const handleInputChange = useCallback(
+    (
+      field: keyof GroupData,
+      value: string | "MANUAL" | "DYNAMIC" | "days" | "months" | "years",
+    ) => {
+      setGroupData({ [field]: value });
+    },
+    [setGroupData],
+  );
 
   const handleFilterChange = (
     key: keyof FilterValues,
@@ -81,6 +101,10 @@ const MemoCreateDynamicGroup = () => {
     setGroupData({ durationValue: e.target.value });
   };
 
+  const addTagsFunc = useCallback(() => {
+    setSelectedGroupPage("ADD TAGS");
+  }, [selectedGroupPage]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -106,6 +130,11 @@ const MemoCreateDynamicGroup = () => {
 
       const filterPayload: Record<string, any> = {
         duration: durationInDays,
+        tags: addTags.map(tag => ({
+          tagId: tag.tagId,
+          count: tag.count ?? 0,
+          countType: tag.countType ?? "ABOVE",
+        })),
       };
 
       for (const key of Object.keys(groupData.filterValues)) {
@@ -147,13 +176,16 @@ const MemoCreateDynamicGroup = () => {
       return;
     }
 
-    console.log("Generated Payload:", payload);
-
     try {
       await mutateCreateGroup(payload);
     } catch (error) {
       console.error("Failed to create group:", error);
     }
+  };
+
+  const handleRemoveTag = (tagId: string) => {
+    const updatedTags = addTags.filter((tag) => tag.tagId !== tagId);
+    saveSelectedTags(updatedTags);
   };
 
   if (isCreatingGroupPending) {
@@ -221,6 +253,29 @@ const MemoCreateDynamicGroup = () => {
 
         <div className="mt-4">
           <label
+            htmlFor="groupColor"
+            className="block mb-2 text-sm text-gray-700"
+          >
+            Select Group Color:
+          </label>
+          <div className="flex gap-2">
+            {predefinedColors.map((color) => (
+              <button
+                type="button"
+                key={color}
+                className={cn(
+                  "w-10 h-10 rounded-full cursor-pointer",
+                  groupData.groupColor === color && "ring-2 ring-[#8c63ff]",
+                )}
+                style={{ backgroundColor: color }}
+                onClick={() => handleInputChange("groupColor", color)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label
             htmlFor="groupType"
             className="block mb-2 text-sm text-gray-700"
           >
@@ -247,7 +302,6 @@ const MemoCreateDynamicGroup = () => {
             <h3 className="pt-4 my-4 text-xl font-semibold">
               Dynamic group condition
             </h3>
-
             <div className="flex justify-between gap-4 ">
               <label className="flex items-center">
                 <input
@@ -292,7 +346,7 @@ const MemoCreateDynamicGroup = () => {
                     type="number"
                     value={groupData.durationValue}
                     onChange={handleDurationChange}
-                    className="block w-[70%] pt-2 pb-2 pl-4 pr-4 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600"
+                    className="block w-[70%] pt-2 pb-2 pl-4 pr-4 text-base border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600"
                     placeholder={`Enter ${groupData.durationType}`}
                     max={
                       groupData.durationType === "days"
@@ -309,10 +363,13 @@ const MemoCreateDynamicGroup = () => {
 
             <div className="mt-4">
               {groupData.filters.map((filter) => (
-                <section key={filter.key} className="relative">
-                  <header>{filter.heading}</header>
+                <section
+                  key={filter.key}
+                  className="relative bg-[#f4f4f4] py-4 px-2 -mx-4 mt-1"
+                >
+                  <header className="mb-8">{filter.heading}</header>
 
-                  <label className="absolute top-0 text-sm text-gray-700">
+                  <label className="absolute px-2 text-sm text-gray-700 left-4 top-16 bg-[#f4f4f4]">
                     {filter.label}
                   </label>
                   <div className="flex gap-4 mb-4 md:flex-row">
@@ -323,17 +380,19 @@ const MemoCreateDynamicGroup = () => {
                           handleFilterChange(filter.key, "type", e.target.value)
                         }
                         className={cn(
-                          "block w-full pt-2 pb-2 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600",
+                          "block w-full p-3 mb-0 ml-0 mr-0 text-base bg-[#f4f4f4] border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600",
                           errors[filter.key] && "border-red-500",
                         )}
                       >
-                        <option value="">Above/below/equals</option>
+                        <option value="" disabled hidden>
+                          Above/below/equals
+                        </option>
                         <option value="ABOVE">Above</option>
                         <option value="BELOW">Below</option>
                         <option value="EQUALS">Equal</option>
                       </select>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 mb-5">
                       <input
                         type="tel"
                         value={groupData.filterValues[filter.key].value}
@@ -347,7 +406,7 @@ const MemoCreateDynamicGroup = () => {
                         max={5}
                         maxLength={5}
                         className={cn(
-                          "block w-full pt-2 pb-2 pl-4 pr-4 mb-0 ml-0 mr-0 text-base bg-white border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600",
+                          "block w-full p-3 mb-0 ml-0 mr-0 text-base bg-[#f4f4f4] border border-gray-800 rounded-2xl text-base-content dark:text-base-100 focus:outline-none focus:border-[#8c63ff] dark:border-gray-600",
                           errors[filter.key] && "border-red-500",
                         )}
                         placeholder="Value"
@@ -357,31 +416,42 @@ const MemoCreateDynamicGroup = () => {
                 </section>
               ))}
             </div>
+
+            <section
+              className={cn(
+                "relative ",
+                addTags.length > 0 ? "pt-10 mt-4" : "pt-2 mt-4",
+              )}
+            >
+              <article className="flex flex-wrap gap-4 mt-2">
+                {addTags.map((tag) => (
+                  <button
+                    type="button"
+                    key={tag.tagId}
+                    className="relative flex items-center gap-x-4 px-4 py-2
+                     bg-[#8C63FF30] text-[#8C63FF] rounded-md"
+                  >
+                    {tag.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag.tagId)}
+                      className="absolute -bottom-1 -right-1 bg-[#8C63FF] text-white rounded-full p-[0.225rem] text-[0.75rem]"
+                    >
+                      <HiX />
+                    </button>
+                  </button>
+                ))}
+              </article>
+              <button
+                onClick={addTagsFunc}
+                type="button"
+                className="absolute top-0 right-0 px-4 py-1 text-white bg-black rounded-full"
+              >
+                {addTags.length > 0 ? "Add more Tags" : "Add Tags"}
+              </button>
+            </section>
           </>
         )}
-
-        <div className="mt-4">
-          <label
-            htmlFor="groupColor"
-            className="block mb-2 text-sm text-gray-700"
-          >
-            Select Group Color:
-          </label>
-          <div className="flex gap-2">
-            {predefinedColors.map((color) => (
-              <button
-                type="button"
-                key={color}
-                className={cn(
-                  "w-10 h-10 rounded-full cursor-pointer",
-                  groupData.groupColor === color && "ring-2 ring-[#8c63ff]",
-                )}
-                style={{ backgroundColor: color }}
-                onClick={() => handleInputChange("groupColor", color)}
-              />
-            ))}
-          </div>
-        </div>
 
         <div className="mt-6">
           <button type="submit" className="bottom_btn">

@@ -90,7 +90,7 @@ const MemoPaymentSales = () => {
   });
 
   return (
-    <main className="relative h-[100vh]">
+    <main className="relative h-[100dvh]">
       {isLoading ? (
         <LoadingSpinner />
       ) : (

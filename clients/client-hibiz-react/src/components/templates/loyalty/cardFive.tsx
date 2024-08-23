@@ -13,22 +13,22 @@ import { cn } from "@/components/utils/helper";
 
 const cardArr = [
   {
-    color: "#1366FF",
+    color: "#1551BD",
     selectLayout: "LAYOUT_ONE" as LoyaltyCardLayout,
     cardType: "CARD_FIVE" as SelectedCardType,
-    backgroundColor: "#8465FF",
+    backgroundColor: "#1551BD",
   },
   {
     color: "#FF1313",
     selectLayout: "LAYOUT_TWO" as LoyaltyCardLayout,
     cardType: "CARD_FIVE" as SelectedCardType,
-    backgroundColor: "#1154D1",
+    backgroundColor: "#CF3520",
   },
   {
-    color: "#13FF81",
+    color: "#1D7A54",
     selectLayout: "LAYOUT_THREE" as LoyaltyCardLayout,
     cardType: "CARD_FIVE" as SelectedCardType,
-    backgroundColor: "#664AF4",
+    backgroundColor: "#1D7A54",
   },
 ];
 

@@ -15,6 +15,7 @@ import GroupClients from "./groupClients";
 import CreateDynamicGroup from "./createDynamicGroup";
 import { cn } from "@hi/common";
 import NoData from "@/assets/nodata.jpg";
+import AddTagToGroup from "./addTagToGroup";
 
 const MemoTargetGroups = () => {
   const { groupData, groupLoading } = useGetGroupData(true);
@@ -50,6 +51,23 @@ const MemoTargetGroups = () => {
     setSelectedGroupPage("CREATE GROUP");
     reset();
   }, [selectedGroupPage, groupDetailsModal, reset]);
+
+  const goBack = useCallback(() => {
+    switch (selectedGroupPage) {
+      case "CREATE GROUP":
+        setGroupDetailsModal(false);
+        break;
+      case "ADD TAGS":
+        setSelectedGroupPage("CREATE GROUP");
+        break;
+      case "USERS":
+        setGroupDetailsModal(false);
+        break;
+      default:
+        setGroupDetailsModal(false);
+        break;
+    }
+  }, [selectedGroupPage]);
 
   if (groupLoading || groupUserLoading)
     return (
@@ -103,10 +121,10 @@ const MemoTargetGroups = () => {
             onClose={() => setGroupDetailsModal(false)}
             hide
           >
-            <section className="h-[100dvh] lg:h-[85dvh] overflow-auto">
+            <section className="h-[100dvh] lg:h-[85dvh] overflow-auto lg:rounded-[1rem] hide-scrollbar">
               <article className="sticky top-0 z-50 bg-white">
                 <MemoizedHeader
-                  onBack={() => setGroupDetailsModal(false)}
+                  onBack={goBack}
                   leftIcon={<FaArrowLeft />}
                   isIconBusinessShow={false}
                 />
@@ -123,6 +141,7 @@ const MemoTargetGroups = () => {
                 <GroupClients groupUserData={groupUserData} />
               )}
               {selectedGroupPage === "CREATE GROUP" && <CreateDynamicGroup />}
+              {selectedGroupPage === "ADD TAGS" && <AddTagToGroup />}
             </section>
           </PopUp>
         )}

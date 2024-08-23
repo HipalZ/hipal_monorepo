@@ -15,13 +15,13 @@ const cardArr = [
     color: "#962828",
     selectLayout: "LAYOUT_ONE" as LoyaltyCardLayout,
     cardType: "CARD_TWO" as SelectedCardType,
-    backgroundColor: "#135656",
+    backgroundColor: "#962828",
   },
   {
     color: "#183D2E",
     selectLayout: "LAYOUT_TWO" as LoyaltyCardLayout,
     cardType: "CARD_TWO" as SelectedCardType,
-    backgroundColor: "#1C7953",
+    backgroundColor: "#183D2E",
   },
   {
     color: "#111111",

@@ -19,6 +19,14 @@ import type {
   SetImagePreviewsFunction,
 } from "./useExploreStore";
 
+export interface ITag {
+  tagId: string;
+  name: string;
+  count: number | null;
+  countType: "ABOVE" | "BELOW" | "EQUALS" | "";
+}
+
+
 export type HiPeoplePages =
   | "SUMMARY"
   | "CLIENTS"
@@ -41,7 +49,7 @@ export type AddToGroup =
   | "ADD MORE USERS";
 
 export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
-export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "";
+export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "" | "EDIT GROUP" | "ADD TAGS";
 
 export interface FilterValue {
   value: string;
@@ -92,6 +100,8 @@ const endOfToday = new Date(
   59,
   999,
 ).getTime();
+
+
 
 interface IHiPeople {
   selectedPage: HiPeoplePages;
@@ -293,6 +303,13 @@ interface IHiPeople {
 
   untilNow: boolean;
   setUntilNow: (untilNow: boolean) => void;
+
+  addTags: ITag[];
+  saveSelectedTags: (tags: ITag[]) => void;
+
+  selectedTags: ITag[];
+  clearSelectedTags: () => void;
+  
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -385,6 +402,7 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       addGroupModal: false,
       selectedGroupId: "",
       selectedGroupName: "",
+      addTags: [], 
       formData: {
         name: "",
         description: "",
@@ -568,7 +586,7 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       coinzIssued: { value: "", type: "" },
       coinzUsed: { value: "", type: "" },
     },
-    durationType: "",
+    durationType: "days",
     durationValue: "",
   },
   setGroupData: (data) =>
@@ -581,6 +599,12 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   untilNow: false,
   setUntilNow: (untilNow) => set({ untilNow }),
+
+  addTags: [],
+  saveSelectedTags: (tags) => set({ addTags: tags }),
+
+  selectedTags: [],
+  clearSelectedTags: () => set({ selectedTags: [] }),
 }));
 
 export default useHiPeopleStore;
