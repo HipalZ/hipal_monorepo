@@ -5,12 +5,16 @@ import type { DishType, AddOnType } from "@hi/db-models/src/validators";
 import { memo } from "react";
 
 function AddOnsWithDish({ dishData }: { dishData: DishType }) {
-  const addOns = dishData?.addOnIds || [] as AddOnType[];
-  const { selectedChoices, setSelectedChoice, removeSelectedChoice } = useCartStore();
+  const addOns = dishData?.addOnIds || ([] as AddOnType[]);
+  const { selectedChoices, setSelectedChoice, removeSelectedChoice } =
+    useCartStore();
 
   console.log("addOns", selectedChoices);
 
-  const handleQuantityChange = (newQuantity: number, choice: AddOnType['choices'][number]) => {
+  const handleQuantityChange = (
+    newQuantity: number,
+    choice: AddOnType["choices"][number],
+  ) => {
     if (newQuantity > 0) {
       setSelectedChoice({
         id: choice._id || choice.uuid,
@@ -46,17 +50,21 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                 }`}
               >
                 Select up to {addOn?.addOnMaxQuantity} (
-                {addOn?.compulsory > 0 ? ` ${addOn?.compulsory} Required` : " Optional"})
+                {addOn?.compulsory > 0
+                  ? ` ${addOn?.compulsory} Required`
+                  : " Optional"}
+                )
               </span>
             </div>
           </div>
           <div className="pb-4">
             <div className="max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out border opacity-100 rounded-xl border-primary">
-              <table className="table w-full table-compact table-zebra">
+              <table className="table w-full my-0 table-compact table-zebra">
                 <tbody>
                   {addOn?.choices?.map((choice) => {
-                    if (!choice?.visibility || !choice?.availability) return null;
-                    let choiceId = choice._id || choice.uuid; 
+                    if (!choice?.visibility || !choice?.availability)
+                      return null;
+                    let choiceId = choice._id || choice.uuid;
                     return (
                       <tr
                         className="flex flex-row transition-all"
@@ -76,10 +84,15 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                         <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
                           <span className="pr-2 my-auto ml-auto">
                             <QuantityPickerNonOutline
-                              setQuantity={(q) => handleQuantityChange(q, choice)}
+                              setQuantity={(q) =>
+                                handleQuantityChange(q, choice)
+                              }
                               minQuantity={0}
                               maxQuantity={choice?.choiceMaxQuantity || 10}
-                              quantity={selectedChoices.find(c => c.id === choiceId)?.quantity || 0}
+                              quantity={
+                                selectedChoices.find((c) => c.id === choiceId)
+                                  ?.quantity || 0
+                              }
                               extra={addOn}
                               item={choice}
                             />
