@@ -283,7 +283,13 @@ const MemoDishForm = () => {
                       `${isSelected ? "bg-blue-200" : ""}`,
                     )}
                   >
-                    <img src={type?.icon} loading="lazy" alt={type?.name} />
+                    <img
+                      src={type?.icon}
+                      loading="lazy"
+                      alt={type?.name}
+                      width="20"
+                      height="20"
+                    />
                     <p>{type?.name.replace(/_/g, " ").toLowerCase()}</p>
                   </article>
                 );

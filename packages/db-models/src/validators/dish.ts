@@ -12,9 +12,12 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const DishTypeEnum = [
   "VEG",
   "NON_VEG",
-  "NON VEG",
   "EGG",
   "VEGAN",
+  "ALCOHOL",
+  "NON_ALCOHOL",
+  "alcohol",
+  "non_alcohol",
   "GLUTEN_FREE",
   "MIX",
   "veg",
@@ -28,6 +31,7 @@ export const DishTypeEnum = [
   "non-veg",
   "glutenfree",
   "non veg",
+  "NON VEG",
 ] as const;
 
 export type DishTypeEnumType = (typeof DishTypeEnum)[number];

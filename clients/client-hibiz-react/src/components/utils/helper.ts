@@ -5,6 +5,8 @@ import veg from "@/assets/dishTypes/veg.png";
 import nonVeg from "@/assets/dishTypes/non_veg.png";
 import egg from "@/assets/dishTypes/egg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
+import alcohol from "@/assets/alcohol.png";
+import nonalcohol from "@/assets/NonAlcohol.png";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
 import { DishSteps, type ImageFiles } from "../store/useMenuStorage";
 import { cropImage } from "../cropper";
@@ -130,6 +132,8 @@ export const foodTypes = [
   { name: DishTypeEnum[1], icon: nonVeg },
   { name: DishTypeEnum[2], icon: egg },
   { name: DishTypeEnum[3], icon: vegan },
+  { name: DishTypeEnum[4], icon: alcohol },
+  { name: DishTypeEnum[5], icon: nonalcohol },
 ];
 
 export const TagsEnum = [

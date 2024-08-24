@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { memo } from "react";
 import Mixed from "@/assets/svg/Mixed.svg";
+import Alcohol from "@/assets/alcohol.png";
+import NonAlcohol from "@/assets/NonAlcohol.png";
 import { useCart } from "@/components/store/useCart";
 import { cn } from "@/components/utils/helpers";
 
@@ -10,12 +12,21 @@ export type FOOD_TYPES =
   | "NON_VEG"
   | "VEGAN"
   | "OTHER"
-  | "MIXED";
+  | "MIXED"
+  | "ALCOHOL"
+  | "NON_ALCOHOL";
 
 const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
   const { showCart } = useCart();
+
+  const imageIcons: Record<FOOD_TYPES, { src: string; alt: string }> = {
+    mixed: { src: Mixed, alt: "Mixed" },
+    alcohol: { src: Alcohol, alt: "Alcohol" },
+    nonalcohol: { src: NonAlcohol, alt: "NonAlcohol" },
+  };
+
   const classes: Record<
-    FOOD_TYPES,
+    Exclude<FOOD_TYPES, "MIXED" | "ALCOHOL" | "NON_ALCOHOL">,
     { border: string; circle: string; text: string }
   > = {
     veg: {
@@ -43,55 +54,46 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
       circle: "bg-gray-500",
       text: "text-gray-500",
     },
-    mixed: {
-      border: "",
-      circle: "",
-      text: "",
-    },
   };
 
   return (
     <div className="flex flex-row my-auto space-x-2 shrink-0">
-      {types
-        ? types?.map((type, index) => {
-            const sanitizedType = type.replace(/[^a-zA-Z]/g, "").toLowerCase();
-            const currentType =
-              sanitizedType in classes
-                ? (sanitizedType as FOOD_TYPES)
-                : "other";
+      {types?.map((type, index) => {
+        const sanitizedType = type.replace(/[^a-zA-Z]/g, "").toLowerCase();
+        const currentType = sanitizedType as FOOD_TYPES;
 
-            if (currentType === "mixed") {
-              return (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex flex-row",
-                    !showCart ? "-mt-2 -mb-8" : "",
-                  )}
-                >
-                  <Image
-                    src={Mixed}
-                    width={20}
-                    height={4}
-                    alt="mixed"
-                    loading="lazy"
-                  />
-                </div>
-              );
-            }
+        // Check if the current type has an image associated with it
+        if (imageIcons[currentType]) {
+          const { src, alt } = imageIcons[currentType];
+          return (
+            <div
+              key={index}
+              className={cn("flex flex-row", !showCart ? "-mt-2 -mb-8" : "")}
+            >
+              <Image
+                src={src}
+                width={20}
+                height={20}
+                alt={alt}
+                loading="lazy"
+              />
+            </div>
+          );
+        }
 
-            return (
-              <div
-                key={index}
-                className={`flex flex-row w-5 h-5 border-2 rounded-md ${classes[currentType].border}`}
-              >
-                <div
-                  className={`m-auto rounded-full  w-[0.5rem] h-[0.5rem] ${classes[currentType].circle}`}
-                />
-              </div>
-            );
-          })
-        : null}
+        // Render default circles for other types
+        const { border, circle } = classes[currentType] || classes.other;
+        return (
+          <div
+            key={index}
+            className={`flex flex-row w-5 h-5 border-2 rounded-md ${border}`}
+          >
+            <div
+              className={`m-auto rounded-full w-[0.5rem] h-[0.5rem] ${circle}`}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };
