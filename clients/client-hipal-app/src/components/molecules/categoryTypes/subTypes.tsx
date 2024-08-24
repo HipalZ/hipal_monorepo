@@ -13,16 +13,22 @@ interface ISubTypes {
 
 function SubTypes(props: ISubTypes) {
   const { childCategory } = props;
-  const { isActiveCategory, setActiveCategory, setActiveParentCategory } =
-    useActiveClass();
+  const {
+    isActiveCategory,
+    setActiveCategory,
+    setActiveParentCategory,
+    isActiveParentCategory,
+  } = useActiveClass();
 
   const subTypes = useMemo(
     () =>
       childCategory.filter(
         (category) =>
-          category.hierarchy === "CHILD" && category.dishIds.length > 0,
+          category.hierarchy === "CHILD" &&
+          category.dishIds.length > 0 &&
+          category.parentCategoryIds[0]?.toString() === isActiveParentCategory,
       ),
-    [childCategory],
+    [childCategory, isActiveParentCategory],
   );
 
   const setActiveCategories = useCallback(
