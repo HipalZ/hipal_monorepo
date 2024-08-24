@@ -26,7 +26,8 @@ const OfflineAlerts = () => {
   };
 
   const sortedAndFilteredData = useMemo(() => {
-    let filteredData = [...offlineAlertData];
+    const data = Array.isArray(offlineAlertData) ? offlineAlertData : [];
+    let filteredData = [...data];
 
     if (searchText) {
       const searchLower = searchText.toLowerCase();

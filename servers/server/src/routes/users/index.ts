@@ -1074,7 +1074,7 @@ const usersRouter = new Hono()
     },
   )
   .post(
-    "/sendPushNotification",
+    "/send/PushNotification",
 
     zValidator(
       "json",
@@ -1100,6 +1100,7 @@ const usersRouter = new Hono()
       const requestData = await c.req.json();
       const { registrationToken, title, body } = requestData;
       const fcm = new FCM(SERVER_KEY);
+      var message;
       const pushMessage = {
         to: registrationToken,
         notification: {
@@ -1108,6 +1109,8 @@ const usersRouter = new Hono()
           icon: "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
         },
       };
+
+      console.log("pushMessage", pushMessage);
 
       fcm.send(pushMessage, (err: Error, response: unknown) => {
         if (err) {
@@ -1121,17 +1124,19 @@ const usersRouter = new Hono()
             400,
           );
         }
+        message = response;
 
         console.log("FCM message sent successfully:", response);
-        return c.json(
-          {
-            message: "FCM message sent successfully",
-            err: false,
-            data: response,
-          },
-          200,
-        );
       });
+
+      return c.json(
+        {
+          message: "FCM message sent successfully",
+          err: false,
+          data: message,
+        },
+        200,
+      );
     },
   );
 

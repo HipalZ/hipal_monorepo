@@ -5,6 +5,9 @@ import { useHiClientZ } from "./components/store/useHiClientzData";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { apiRpc } from "@hi/common";
+import { messaging, getToken } from "./hooks/clientApp";
+import { useLocation } from "react-router-dom";
+import { URL } from "./configs";
 ///
 function App() {
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
@@ -23,7 +26,7 @@ function App() {
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const businessId = selectedBiz?.businessId?._id;
-
+  const location = useLocation();
   const fetchAlerts = async (alertType: string) => {
     const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
     setLoading(true);
@@ -46,6 +49,8 @@ function App() {
     setOnlineAlertData(data);
     setOnlineCount(data.length);
     if (data.length > onlineCount) {
+      const url = `${URL}${location?.pathname}`;
+      initializeMessaging(url, "checkout the recent payment");
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -65,11 +70,13 @@ function App() {
     setOfflineAlertData(data);
     setOfflineCount(data.length);
     if (data.length > offlineCount) {
+      const url = `${URL}${location?.pathname}`;
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
         loop: true,
       });
+      initializeMessaging(url, "Confirm the offline payment");
       sound.play();
       setTimeout(() => {
         sound.pause();
@@ -78,6 +85,33 @@ function App() {
     setRefetchOfflineAlerts(refetchOfflineAlerts);
     return data;
   };
+
+  async function initializeMessaging(body: string, title: string) {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.register(
+          "/firebase-messaging-sw.js",
+        );
+        const token = await getToken(messaging, {
+          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+          serviceWorkerRegistration: registration,
+        });
+
+        if (token) {
+          await apiRpc.users.send.PushNotification.$post({
+            json: {
+              registrationToken: token,
+              title,
+              body,
+            },
+          });
+        }
+      }
+    } else if (permission === "denied") {
+      console.log("Permission denied");
+    }
+  }
 
   useEffect(() => {
     const checkOnlineStatus = () => {

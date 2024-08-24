@@ -23,6 +23,7 @@
     "babel-plugin-react-compiler": "0.0.0-experimental-938cd9a-20240601",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "firebase": "^10.13.0",
     "howler": "^2.2.4",
     "lodash": "^4.17.21",
     "react": "^18.2.0",

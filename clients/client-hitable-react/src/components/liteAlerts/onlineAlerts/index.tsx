@@ -26,7 +26,9 @@ const OnlineAlerts = () => {
   };
 
   const sortedAndFilteredData = useMemo(() => {
-    let filteredData = [...onlineAlertData];
+    const data = Array.isArray(onlineAlertData) ? onlineAlertData : [];
+
+    let filteredData = [...data];
 
     if (searchText) {
       const searchLower = searchText.toLowerCase();
