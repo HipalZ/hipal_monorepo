@@ -12,6 +12,10 @@ const DynamicQueryComponent = dynamic(
   () => import("@/components/atoms/queryComponent"),
 );
 
+const GoogleAnalytics = dynamic(
+  () => import("@/components/atoms/dynamicGoogleAnalytics"),
+);
+
 export const metadata: Metadata = {
   title: "Hipal App",
   description: "Menu Application for Restaurants",
@@ -29,6 +33,7 @@ export default function RootLayout({
           name="facebook-domain-verification"
           content="1kbkpz82zpbnb9b7vusp4insjirtu8"
         />
+        <GoogleAnalytics />
       </head>
       <body>
         <Suspense fallback={<Loading />}>

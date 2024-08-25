@@ -4,18 +4,35 @@
 const nextConfig = {
   reactStrictMode: false,
   cacheMaxMemorySize: 0,
-  swcMinify: false,
   typescript: {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: [
-      "picsum.photos",
-      "pal-tribe.s3.ap-south-1.amazonaws.com",
-      "dev.storage.hipal.life",
-      "storage.hipal.life",
-      "images.unsplash.com",
-      "example.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "pal-tribe.s3.ap-south-1.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "dev.storage.hipal.life",
+      },
+      {
+        protocol: "https",
+        hostname: "storage.hipal.life",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com",
+      },
     ],
   },
   async redirects() {
@@ -30,13 +47,12 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source:
-          "/:all*(svg|jpg|png|webp|woff|woff2|ttf|otf|eot|map|txt|xml)",
+        source: "/:all*(svg|jpg|png|webp|woff|woff2|ttf|otf|eot|map|txt|xml)",
         locale: false,
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=86400", // Cache for 1 day instead of 1 year
+            value: "public, max-age=86400",
           },
         ],
       },
@@ -46,7 +62,7 @@ const nextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate", // No cache for API responses
+            value: "no-cache, no-store, must-revalidate",
           },
         ],
       },
