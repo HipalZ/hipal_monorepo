@@ -88,6 +88,7 @@ const MemoExplorePage = () => {
     }
     if (toggleExplorePages !== ExplorePages.BIZINFO) {
       clearOriginalDishes();
+      setImg({});
       navigate(`/app/business/${businessId}/hisite`);
     }
   }, [businessId, toggleExplorePages, clearOriginalDishes, originalDishes]);
@@ -149,11 +150,21 @@ const MemoExplorePage = () => {
     queryFn: async () => {
       const res = await getAllBizInfo();
       const response = await res.json();
-      setImg({
-        banner: response?.data?.specialBannerUrl,
-        logo: response?.data?.logoUrl,
-        footer: response?.data?.endBannerUrl,
-      });
+      if (response?.data?.specialBannerUrl) {
+        setImg({
+          banner: response?.data?.specialBannerUrl,
+        });
+      }
+      if (response?.data?.logoUrl) {
+        setImg({
+          logo: response?.data?.logoUrl,
+        });
+      }
+      if (response?.data?.endBannerUrl) {
+        setImg({
+          footer: response?.data?.endBannerUrl,
+        });
+      }
       setBizInfo(response?.data as IBizInfo);
       setToggleExplorePages(ExplorePages.MAINFORM);
       const updatedSocialMediaLinks = socialMediaLinks.map((link) => {
