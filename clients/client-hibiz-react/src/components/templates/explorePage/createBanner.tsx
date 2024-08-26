@@ -354,7 +354,12 @@ const MemoCreateBanner = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main className="lg:flex">
-        <section className="fixed top-0 lg:relative bg-white lg:bg-transparent w-full h-[16rem] md:h-[30rem] lg:h-screen z-10 max-w-[69rem]">
+        <section
+          className={cn(
+            "fixed top-0 lg:relative bg-white lg:bg-transparent w-full h-[16rem] md:h-[30rem] lg:h-[90vh] z-10 max-w-[69rem]",
+            onlyImage ? "mb-16" : "",
+          )}
+        >
           <HisiteHeader
             isIconBusinessShow={false}
             onBack={handleBackClick}
@@ -369,7 +374,7 @@ const MemoCreateBanner = () => {
             }
           />
           {openPreview ? null : (
-            <section className="absolute lg:relative flex justify-center mt-[4rem] lg:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
+            <section className="absolute lg:relative flex justify-center mt-[4rem] xl:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
               <BannerDynamicLayout
                 img={img}
                 selectedColor={selectedColor}
