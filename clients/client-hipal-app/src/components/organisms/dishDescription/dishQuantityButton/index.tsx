@@ -5,6 +5,8 @@ import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extr
 import type { DishType } from "@hi/db-models/src/validators";
 import { useCartStore } from "@/components/store/useCartStore";
 import { HiMinusSm, HiPlusSm } from "react-icons/hi";
+import MemoAlertVariant from "@/components/atoms/alertVariant";
+import { useBottomPanel } from "@/components/store/useBottomPanel";
 
 const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   const {
@@ -25,12 +27,15 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
 
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
-    
   }, [setOpenBottomPanel]);
+
+  const { displayAlert } = useBottomPanel((s) => ({
+    displayAlert: s.displayAlert,
+  }));
 
   const closeModal = useCallback(() => {
     setOpenBottomPanel(false);
-    resetSelections()
+    resetSelections();
   }, [setOpenBottomPanel]);
 
   const handleClick = useCallback(
@@ -55,7 +60,6 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   );
 
   const handleAddToCart = useCallback(() => {
-    console.log("selectedDish", selectedDish);
     const item = {
       id: selectedDish._id,
       dish: selectedDish,
@@ -86,7 +90,6 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   );
 
   const cartItem = cart.find((item) => item?.id === dishData?._id);
-
 
   return (
     <>
@@ -125,9 +128,10 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200 text-base-content">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
+                {displayAlert && <MemoAlertVariant />}
               </div>
               <button
-                className="absolute on_active_bounce z-[103] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-3"
+                className="absolute on_active_bounce z-[103] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-1.5"
                 type="button"
                 onClick={handleAddToCart}
               >
@@ -143,4 +147,3 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
 
 const MemoDishQuantityButton = memo(DishQuantityButton);
 export default MemoDishQuantityButton;
-

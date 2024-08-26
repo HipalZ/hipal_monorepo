@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 import type { AddOnType } from "@hi/db-models/src/validators";
 
@@ -8,26 +8,28 @@ const QuantityPickerNonOutline = ({
   maxQuantity,
   quantity,
   extra,
-  item,
+  displayAlertPopUp,
 }: {
   setQuantity: (quantity: number) => void;
   minQuantity: number;
   maxQuantity: number;
   quantity: number;
   extra: AddOnType;
-  item: AddOnType['choices'][number]; 
+  displayAlertPopUp: () => void;
 }) => {
-  const handleDecrease = () => {
+  const handleDecrease = useCallback(() => {
     if (quantity > minQuantity) {
       setQuantity(quantity - 1);
     }
-  };
+  }, [quantity, maxQuantity]);
 
-  const handleIncrease = () => {
+  const handleIncrease = useCallback(() => {
     if (quantity < maxQuantity) {
       setQuantity(quantity + 1);
+    } else {
+      displayAlertPopUp();
     }
-  };
+  }, [quantity, maxQuantity, displayAlertPopUp]);
 
   // Determine the component type based on `choiceType`
   const isNumberType = extra.choiceType === "NUMBER";
@@ -51,11 +53,7 @@ const QuantityPickerNonOutline = ({
           </span>
 
           {/* Increase Button */}
-          <button
-            type="button"
-            onClick={handleIncrease}
-            disabled={quantity >= maxQuantity}
-          >
+          <button type="button" onClick={handleIncrease}>
             <HiPlusSm size={24} />
           </button>
         </div>

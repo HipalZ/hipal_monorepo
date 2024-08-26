@@ -3,7 +3,7 @@ import { getPrice } from "@/components/utils/helpers";
 import type { DishType } from "@hi/db-models/src/validators";
 import { useCartStore } from "@/components/store/useCartStore";
 
-function ChoosePortions({ dishData }: { dishData: DishType }) {
+function MemoChoosePortions({ dishData }: { dishData: DishType }) {
   const { selectedPortion, setSelectedPortion } = useCartStore((state) => ({
     selectedPortion: state.selectedPortion,
     setSelectedPortion: state.setSelectedPortion,
@@ -26,8 +26,6 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
     [],
   );
 
-  console.log("selectedPortion", selectedPortion);
-
   return (
     <div className="mx-6">
       <div className="prose">
@@ -35,11 +33,11 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
       </div>
 
       <div className="my-2 overflow-x-auto border rounded-lg border-primary">
-        <div className="px-3 py-3 prose">
+        <div className="px-3 pt-3 prose">
           <h4 className="text-xs font-semibold text-base-content">Portion</h4>
         </div>
 
-        <table className="table w-full overflow-hidden table-compact table-zebra">
+        <table className="table w-full my-0 overflow-hidden table-compact table-zebra">
           <tbody>
             {portions.map((portion, index) => (
               <tr
@@ -61,9 +59,10 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
                 <td className="!text-xs w-1/3 text-center flex flex-row">
                   <input
                     type="radio"
-                    className="p-1 ml-auto mr-2 radio radio-secondary radio-sm"
+                    name="portion"
+                    className="p-1 ml-auto mr-2 text-2xl text-black scale-150"
                     checked={selectedPortion?._id === portion._id}
-                    onClick={() =>
+                    onChange={() =>
                       handlePortionSelect({
                         _id: portion._id,
                         name: portion.name,
@@ -81,4 +80,5 @@ function ChoosePortions({ dishData }: { dishData: DishType }) {
   );
 }
 
-export default memo(ChoosePortions);
+const ChoosePortions = memo(MemoChoosePortions);
+export default ChoosePortions;
