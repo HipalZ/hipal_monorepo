@@ -61,6 +61,7 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
                     type="radio"
                     name="portion"
                     className="p-1 ml-auto mr-2 text-2xl text-black scale-150"
+
                     checked={selectedPortion?._id === portion._id}
                     onChange={() =>
                       handlePortionSelect({

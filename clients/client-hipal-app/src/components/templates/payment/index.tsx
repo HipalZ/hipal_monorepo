@@ -399,7 +399,6 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
     }
 
     setIsLoading(true);
-
     try {
       const orderId = await createRazorPayOrder(total);
       await creatingRazorPayOptions(orderId);

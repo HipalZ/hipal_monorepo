@@ -7,7 +7,6 @@ import Script from "next/script";
 const MemoGoogleAnalytics = () => {
   const params = useParams();
   const businessId = params?.businessId as string;
-  console.log("Google Analytics, businessId", GOOGLE_ANALYTICS, businessId);
 
   return (
     <>

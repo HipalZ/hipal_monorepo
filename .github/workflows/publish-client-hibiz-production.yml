@@ -2,7 +2,7 @@ name: Build and Push client-hibiz-production Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['production']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
@@ -10,7 +10,7 @@ on:
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: client-hibiz-test
+  DOCKER_REPOSITORY: client-hibiz-production
 
 jobs:
   build-and-push:
