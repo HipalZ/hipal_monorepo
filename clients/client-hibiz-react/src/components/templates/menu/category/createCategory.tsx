@@ -100,7 +100,6 @@ const CreateCategoryMain = () => {
           title={catId !== "" ? "Edit Category" : "Create Category"}
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={false}
         />

@@ -73,6 +73,7 @@ export const groupFilter = z.object({
       z.object({
         tagId: ObjectIdSchema,
         count: z.number(),
+        countType: z.enum(VisitEnum),
       }),
     )
     .optional(),

@@ -111,7 +111,6 @@ const MemoCreateDish = () => {
           title={handleHeader()}
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
-          centerImage={Hi}
           rightImage={Hi}
           isIconBusinessShow={false}
         />

@@ -110,6 +110,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         <section className="flex w-[92%] gap-4 mx-4">
           <article
             onClick={() => createOrder(billValue, "OFFLINE")}
+            onKeyDown={() => createOrder(billValue, "OFFLINE")}
             className="w-full max-w-[12.625rem] h-[15.65rem]  relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl"
           >
             <center
@@ -130,7 +131,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
               className="absolute px-4 py-1 w-[90%] text-white bg-black rounded-full bottom-2 left-2"
             >
               {isLoading ? (
-                <span className="loader_spinner !border-t-primary"></span>
+                <span className="loader_spinner !border-t-primary" />
               ) : (
                 "Pay Cash"
               )}
@@ -138,6 +139,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           </article>
           <article
             onClick={() => handleOnlineMode(billValue)}
+            onKeyDown={() => handleOnlineMode(billValue)}
             className="w-full max-w-[12.625rem] h-[15.65rem] relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl"
           >
             <center
@@ -157,7 +159,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
               className="absolute w-[90%] px-4 py-1 text-white bg-black rounded-full bottom-2 left-2"
             >
               {isLoading ? (
-                <span className="loader_spinner !border-t-primary"></span>
+                <span className="loader_spinner !border-t-primary" />
               ) : (
                 "Pay Online"
               )}

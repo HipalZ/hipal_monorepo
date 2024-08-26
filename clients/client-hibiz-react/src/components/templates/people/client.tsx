@@ -93,7 +93,6 @@ const MemoClient = () => {
                 title={dynamicHeader()}
                 onBack={onBack}
                 leftIcon={<FaArrowLeft />}
-                centerImage={Hi}
                 rightImage={Hi}
                 isIconBusinessShow={false}
                 hideBack={addGroupPage === "ADD MORE USERS"}

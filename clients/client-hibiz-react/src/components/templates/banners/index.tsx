@@ -169,7 +169,7 @@ const MemoBanners = () => {
     <Suspense fallback={<LoadingSpinner />}>
       <main className="relative h-screen mb-[2rem]">
         <header
-          className={`sticky top-0 z-50 w-full bg-white rounded-t-2xl ${
+          className={`sticky top-0 z-50 w-full bg-white rounded-t-2xl shadow-lg ${
             isArrangeMode ? "opacity-50 pointer-events-none" : ""
           }`}
         >

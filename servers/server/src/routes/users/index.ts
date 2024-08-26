@@ -25,9 +25,10 @@ import { Hono } from "hono";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+const FCM = require("fcm-node");
 
 // Hash a password
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   try {
     const hash = await argon2.hash(password);
     return hash;
@@ -37,7 +38,7 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // Verify a password
-async function verifyPassword(
+export async function verifyPassword(
   password: string,
   hash: string,
 ): Promise<boolean> {
@@ -47,6 +48,10 @@ async function verifyPassword(
     throw new Error("Error verifying password");
   }
 }
+
+//Server key
+const SERVER_KEY =
+  "AAAAj8kkRxk:APA91bEiutN4868JcviOMk4diZLU3MAMRHW8xmLGSYezAhNMobRGUAxWhQZrM-TzP-3qV5XQL0XIOxl_7MwOUSMh7uNH-BAfX78x0K7dt5pvBsgGkYg7BnR1OeMHYG3B9Kr8QqOFv0Bx";
 
 export const addSignUpBonus = async (
   loyaltyId: string,
@@ -98,7 +103,7 @@ export const addSignUpBonus = async (
   return 1;
 };
 
-const createAccessToken = (id: string, role: string) => {
+export const createAccessToken = (id: string, role: string) => {
   return jwt.sign(
     {
       id: id,
@@ -109,7 +114,7 @@ const createAccessToken = (id: string, role: string) => {
   );
 };
 
-const createRefreshToken = (id: string, role: string) => {
+export const createRefreshToken = (id: string, role: string) => {
   return jwt.sign(
     {
       id: id,
@@ -1066,6 +1071,72 @@ const usersRouter = new Hono()
           newObje,
         );
       }
+    },
+  )
+  .post(
+    "/send/PushNotification",
+
+    zValidator(
+      "json",
+      z.object({
+        registrationToken: z
+          .string()
+          .min(10, {
+            message:
+              "registrationToken is required and must be at least 10 characters",
+          })
+          .max(1000, {
+            message:
+              "registrationToken is required and must be at most 1000 characters",
+          }),
+        title: z.string({
+          message: "title is required",
+        }),
+        body: z.any(),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const { registrationToken, title, body } = requestData;
+      const fcm = new FCM(SERVER_KEY);
+      var message;
+      const pushMessage = {
+        to: registrationToken,
+        notification: {
+          title: title || "Title of the Notification",
+          body: body || "Need your assistance",
+          icon: "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
+        },
+      };
+
+      console.log("pushMessage", pushMessage);
+
+      fcm.send(pushMessage, (err: Error, response: unknown) => {
+        if (err) {
+          console.log("Error sending FCM message:", err);
+          return c.json(
+            {
+              message: "Error sending FCM message",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+        message = response;
+
+        console.log("FCM message sent successfully:", response);
+      });
+
+      return c.json(
+        {
+          message: "FCM message sent successfully",
+          err: false,
+          data: message,
+        },
+        200,
+      );
     },
   );
 

@@ -10,6 +10,12 @@ const tagsSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+
+  countType: {
+    type: String,
+    required: true,
+    enum: VisitEnum, // Assuming countType is an object with enum values
+  },
 });
 const filterSchema = new mongoose.Schema<FilterGroupType>({
   duration: {

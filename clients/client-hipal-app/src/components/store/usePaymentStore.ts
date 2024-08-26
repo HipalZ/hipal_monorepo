@@ -1,39 +1,43 @@
-import { create } from "zustand"
+import { create } from "zustand";
 
 interface IUsePaymentStore {
-    claimedCoinz: number
-    setClaimedCoinz: (coinz: number) => void
-    tips: number
-    setTips: (tips: number) => void
-    userCoinz: number
-    setUserCoinz: (coinz: number) => void
-    total: number
-    setTotal: (total: number) => void
-    billValue: number
-    setBillValue: (value: number) => void
-    // to show popup confirm code
-    selectedPay: boolean
-    setSelectedPay: (selected: boolean) => void
+  claimedCoinz: number;
+  setClaimedCoinz: (coinz: number) => void;
+  tips: number;
+  setTips: (tips: number) => void;
+  userCoinz: number;
+  setUserCoinz: (coinz: number) => void;
+  total: number;
+  setTotal: (total: number) => void;
+  billValue: number;
+  setBillValue: (value: number) => void;
+  // to show popup confirm code
+  selectedPay: boolean;
+  setSelectedPay: (selected: boolean) => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
+  claimedCoinz: 0,
+  setClaimedCoinz: (coinz: number) => set(() => ({ claimedCoinz: coinz })),
 
-    claimedCoinz: 0,
-    setClaimedCoinz: (coinz: number) => set(() => ({ claimedCoinz: coinz })),
+  tips: 0,
+  setTips: (tips: number) => set(() => ({ tips: tips })),
 
-    tips: 0,
-    setTips: (tips: number) => set(() => ({ tips: tips })),
+  userCoinz: 0,
+  setUserCoinz: (coinz: number) => set(() => ({ userCoinz: coinz })),
 
-    userCoinz: 0,
-    setUserCoinz: (coinz: number) => set(() => ({ userCoinz: coinz })),
+  total: 0,
+  setTotal: (total: number) => set(() => ({ total: total })),
 
-    total: 0,
-    setTotal: (total: number) => set(() => ({ total: total })),
+  billValue: 0,
+  setBillValue: (value: number) => set(() => ({ billValue: value })),
 
-    billValue: 0,
-    setBillValue: (value: number) => set(() => ({ billValue: value })),
+  selectedPay: false,
+  setSelectedPay: (selected: boolean) => set(() => ({ selectedPay: selected })),
 
-    selectedPay:false,
-    setSelectedPay: (selected: boolean) => set(() => ({ selectedPay: selected })),
-
-}))
+  isLoading: false,
+  setIsLoading: (loading: boolean) => set(() => ({ isLoading: loading })),
+}));

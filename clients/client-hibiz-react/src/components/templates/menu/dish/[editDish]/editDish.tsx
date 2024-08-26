@@ -22,7 +22,6 @@ import { useDishesStore } from "@/components/store/useDishesStore";
 import toast from "react-hot-toast";
 import useErrorToasts from "@/hooks/useError";
 import AlertClosePopup from "@/components/common/alertClosePopup";
-import BottomButton from "@/components/atom/bottomButton";
 import SectionLoader from "@/components/atom/sectionLoader";
 
 const MemoEditDish = () => {
@@ -43,7 +42,6 @@ const MemoEditDish = () => {
     resetStore,
     editDish,
     isLoading,
-    setIsLoading,
     resetDishStore,
   } = useMenuPageStore((s) => ({
     setEditOpenMenu: s.setEditOpenMenu,
@@ -60,7 +58,6 @@ const MemoEditDish = () => {
     editDish: s.editDish,
     resetDishStore: s.resetDishStore,
     isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
   }));
 
   const errorToasts = useErrorToasts();
@@ -155,7 +152,6 @@ const MemoEditDish = () => {
             title={handleHeader()}
             onBack={goBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
           />

@@ -35,7 +35,7 @@ const MemoHiSites = () => {
             <button
               onClick={handleThemes}
               type="button"
-              className="px-4 py-1 scale-75 bg-white rounded-full"
+              className="px-4 py-1 scale-75 bg-white rounded-full shadow-lg"
             >
               Themes & Layout
             </button>
@@ -49,14 +49,14 @@ const MemoHiSites = () => {
           </p>
         </HisiteHeader>
       </header>
-      <section className="flex flex-col gap-4 p-6 lg:flex-row">
+      <section className="flex flex-col gap-4 p-4 lg:flex-row">
         {hisiteServices.map((service) => {
           return (
             <button
               type="button"
               onClick={() => handleRoute(service?.navigateTo)}
               key={service?._id}
-              className="w-full max-w-[28rem] rounded-2xl bg-white p-4"
+              className="shadow-lg w-full max-w-[28rem] rounded-2xl bg-white p-4"
             >
               <header className="relative flex items-center mb-4 space-x-4">
                 <img src={service?.icon} alt={service?.icon} loading="lazy" />
@@ -65,7 +65,7 @@ const MemoHiSites = () => {
                   <FaArrowRight />
                 </div>
               </header>
-              <p className="text-base opacity-75 float-start">
+              <p className="text-base opacity-50 float-start">
                 {service?.description}
               </p>
             </button>

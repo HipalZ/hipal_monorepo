@@ -4,6 +4,7 @@ import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import Fuse from "fuse.js";
+import dummyImage from "@/assets/hisite/placeholder.png";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
 
@@ -19,6 +20,7 @@ const MemoUniquelyYoursPopUp = () => {
     setSearchQuery,
     setDishes,
     setUniquelyDishes,
+    showUniquePopUp,
     setShowUniquePopUp,
   } = useExploreStore((s) => ({
     originalDishes: s.originalDishes,
@@ -30,6 +32,7 @@ const MemoUniquelyYoursPopUp = () => {
     setSearchQuery: s.setSearchQuery,
     setDishes: s.setDishes,
     setUniquelyDishes: s.setUniquelyDishes,
+    showUniquePopUp: s.showUniquePopUp,
     setShowUniquePopUp: s.setShowUniquePopUp,
   }));
 
@@ -68,11 +71,11 @@ const MemoUniquelyYoursPopUp = () => {
     [selectedDishes],
   );
 
-  const handleSaveDish = async () => {
+  const handleSaveDish = useCallback(async () => {
     setUniquelyDishes(selectedDishes);
     await handleUniquelyYours(selectedDishes);
     setShowUniquePopUp(false);
-  };
+  }, [selectedDishes, showUniquePopUp]);
 
   const handleUniquelyYours = async (selectedDishes: IDish[]) => {
     apiRpc.dishes.uniquelyYours.$post({
@@ -91,19 +94,22 @@ const MemoUniquelyYoursPopUp = () => {
   };
 
   // Function to filter unique dishes with images
-  const getUniqueDishesWithImages = (dishesList: IDish[]) => {
-    const uniqueDishesMap = new Map();
-    for (const dish of dishesList) {
-      if (
-        dish.images &&
-        dish.images.length > 0 &&
-        !uniqueDishesMap.has(dish.name)
-      ) {
-        uniqueDishesMap.set(dish.name, dish);
+  const getUniqueDishesWithImages = useCallback(
+    (dishesList: IDish[]) => {
+      const uniqueDishesMap = new Map();
+      for (const dish of dishesList) {
+        if (
+          dish.images &&
+          dish.images.length > 0 &&
+          !uniqueDishesMap.has(dish.name)
+        ) {
+          uniqueDishesMap.set(dish.name, dish);
+        }
       }
-    }
-    return Array.from(uniqueDishesMap.values());
-  };
+      return Array.from(uniqueDishesMap.values());
+    },
+    [searchQuery],
+  );
 
   const filteredOriginalDishes = useMemo(() => {
     return getUniqueDishesWithImages(originalDishes);
@@ -113,24 +119,26 @@ const MemoUniquelyYoursPopUp = () => {
     return getUniqueDishesWithImages(dishes);
   }, [dishes]);
 
-  const fuse = useMemo(() => {
-    return new Fuse([...selectedDishes, ...filteredDishes], {
-      keys: ["name"],
-      includeScore: true,
-      threshold: 0.3,
-    });
-  }, [selectedDishes, filteredDishes]);
+  const fuse = new Fuse(filteredOriginalDishes, {
+    keys: ["name"],
+    threshold: 0.3,
+  });
 
   const displayedDishes = useMemo(() => {
-    let combinedDishes = [
-      ...selectedDishes,
-      ...filteredDishes.filter(
-        (dish) => !selectedDishes.some((d) => d.name === dish.name),
-      ),
-    ];
+    let combinedDishes;
+
     if (searchQuery) {
       combinedDishes = fuse.search(searchQuery).map((result) => result.item);
+    } else {
+      // Show both selected dishes and all available dishes when the search query is empty
+      combinedDishes = [
+        ...selectedDishes,
+        ...filteredDishes.filter(
+          (dish) => !selectedDishes.some((d) => d.name === dish.name),
+        ),
+      ];
     }
+
     return combinedDishes;
   }, [filteredDishes, selectedDishes, searchQuery, fuse]);
 
@@ -141,7 +149,10 @@ const MemoUniquelyYoursPopUp = () => {
           Uniquely Yours{" "}
           <span className="text-sm">( {selectedDishes?.length}/6 )</span>
         </center>
-        <span className="text-gray-500">Add Best dishes to explore page</span>
+        <span className="text-gray-500">Add Best dishes to explore page </span>
+        <span className="text-xs text-gray-500">
+          ( Note : Only Dishes with Images are displayed )
+        </span>
         <input
           type="search"
           onChange={handleSearch}
@@ -151,69 +162,83 @@ const MemoUniquelyYoursPopUp = () => {
         />
       </div>
       <div className="gap-4 space-y-4">
-        {displayedDishes.length > 0
-          ? displayedDishes.map((dish) => {
-              const isSelected = selectedDishes.some(
-                (d) => d.name === dish.name,
-              );
-              return (
-                <div
-                  key={dish._id}
-                  className="flex items-center space-x-4 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    className="text-black rounded-md"
-                    checked={isSelected}
-                    onChange={() => {
-                      if (isSelected || selectedDishes.length < 6) {
-                        handleDishSelect(dish);
-                      } else {
-                        toast.error("You can only select 6 dishes");
-                      }
-                    }}
-                  />
+        {displayedDishes.length > 0 ? (
+          displayedDishes.map((dish) => {
+            const isSelected = selectedDishes.some((d) => d.name === dish.name);
+            return (
+              <div
+                key={dish._id}
+                className="flex items-center space-x-4 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  className="text-black rounded-md"
+                  checked={isSelected}
+                  onChange={() => {
+                    if (isSelected || selectedDishes.length < 6) {
+                      handleDishSelect(dish);
+                    } else {
+                      toast.error("You can only select 6 dishes");
+                    }
+                  }}
+                />
+                {dish.images.length > 0 ? (
                   <img
                     loading="lazy"
-                    src={dish.images[0]}
+                    src={dish.images[0] || dummyImage}
                     alt={`Dish ${dish._id}`}
                     className="h-[4rem] w-[4rem] border-2 rounded-md"
                   />
-                  <h6>{dish?.name}</h6>
-                </div>
-              );
-            })
-          : filteredOriginalDishes.map((dish) => {
-              const isSelected = selectedDishes.some(
-                (d) => d.name === dish.name,
-              );
-              return (
-                <div
-                  key={dish._id}
-                  className={cn("flex items-center space-x-4 cursor-pointer")}
-                >
-                  <input
-                    type="checkbox"
-                    className="text-black rounded-md"
-                    checked={isSelected}
-                    onChange={() => {
-                      if (isSelected || selectedDishes.length < 6) {
-                        handleDishSelect(dish);
-                      } else {
-                        toast.error("You can only select 6 dishes");
-                      }
-                    }}
-                  />
+                ) : (
+                  <center className="text-gray-500">
+                    Add some images to view here
+                  </center>
+                )}
+                <h6>{dish?.name}</h6>
+              </div>
+            );
+          })
+        ) : filteredOriginalDishes.length > 0 ? (
+          filteredOriginalDishes.map((dish) => {
+            const isSelected = selectedDishes.some((d) => d.name === dish.name);
+            return (
+              <div
+                key={dish._id}
+                className="flex items-center space-x-4 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  className="text-black rounded-md"
+                  checked={isSelected}
+                  onChange={() => {
+                    if (isSelected || selectedDishes.length < 6) {
+                      handleDishSelect(dish);
+                    } else {
+                      toast.error("You can only select 6 dishes");
+                    }
+                  }}
+                />
+                {dish.images.length > 0 ? (
                   <img
                     loading="lazy"
-                    src={dish.images[0]}
+                    src={dish.images[0] || dummyImage}
                     alt={`Dish ${dish._id}`}
                     className="h-[4rem] w-[4rem] border-2 rounded-md"
                   />
-                  <h6>{dish?.name}</h6>
-                </div>
-              );
-            })}
+                ) : (
+                  <span className="text-gray-500">
+                    Add some images to view here
+                  </span>
+                )}
+                <h6>{dish?.name}</h6>
+              </div>
+            );
+          })
+        ) : (
+          <center className="text-gray-500 ">
+            Add some images to the dishes to view here
+          </center>
+        )}
       </div>
       <button onClick={handleSaveDish} type="button" className="bottom_btn">
         Save

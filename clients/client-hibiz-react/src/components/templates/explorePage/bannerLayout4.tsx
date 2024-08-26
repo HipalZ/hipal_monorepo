@@ -37,7 +37,7 @@ const MemoBannerLayout4 = ({ layout }: { layout: BannerLayout }) => {
             <FaCheck className="text-white" />
           </div>
         )}
-        <figure className="w-full max-w-[12rem] rounded-2xl">
+        <figure className="w-full max-w-[12rem] rounded-2xl shadow-lg">
           <img
             src={layout?.image}
             alt={layout?.title}

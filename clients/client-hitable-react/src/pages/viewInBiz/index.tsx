@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import hipalLogo from "@/assets/img/liteLoginIcon4.png";
 import logo from "@/assets/img/Hilogo.png";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
 
@@ -11,7 +11,6 @@ const ViewInBizMemo = () => {
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
-  console.log("selectedBiz", selectedBiz);
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);
@@ -24,11 +23,9 @@ const ViewInBizMemo = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const navigateToBiz = () => {
-    startTransition(() => {
-      navigate(`/${businessId}/alerts`);
-    });
-  };
+  const navigateToBiz = useCallback(() => {
+    navigate(`/${businessId}/alerts`);
+  }, []);
 
   return (
     <main className="relative flex flex-col h-screen">
@@ -57,7 +54,7 @@ const ViewInBizMemo = () => {
             height={125}
           />
           <h6 className="mt-4 mb-2 text-xl font-semibold">
-            {selectedBiz?.businessId?.businessName}
+            {selectedBiz?.businessId?.name}
           </h6>
           <p className="w-[18rem] text-center">
             {selectedBiz?.businessId?.address}

@@ -8,7 +8,6 @@ import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
-import { useSocialMediaLinks } from "@/components/utils/commonFunc";
 import CreateBanner from "@/components/templates/explorePage/createBanner";
 import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 import { FaArrowLeft } from "react-icons/fa";
@@ -89,6 +88,7 @@ const MemoExplorePage = () => {
     }
     if (toggleExplorePages !== ExplorePages.BIZINFO) {
       clearOriginalDishes();
+      setImg({});
       navigate(`/app/business/${businessId}/hisite`);
     }
   }, [businessId, toggleExplorePages, clearOriginalDishes, originalDishes]);
@@ -150,11 +150,21 @@ const MemoExplorePage = () => {
     queryFn: async () => {
       const res = await getAllBizInfo();
       const response = await res.json();
-      setImg({
-        banner: response?.data?.specialBannerUrl,
-        logo: response?.data?.logoUrl,
-        footer: response?.data?.endBannerUrl,
-      });
+      if (response?.data?.specialBannerUrl) {
+        setImg({
+          banner: response?.data?.specialBannerUrl,
+        });
+      }
+      if (response?.data?.logoUrl) {
+        setImg({
+          logo: response?.data?.logoUrl,
+        });
+      }
+      if (response?.data?.endBannerUrl) {
+        setImg({
+          footer: response?.data?.endBannerUrl,
+        });
+      }
       setBizInfo(response?.data as IBizInfo);
       setToggleExplorePages(ExplorePages.MAINFORM);
       const updatedSocialMediaLinks = socialMediaLinks.map((link) => {
@@ -222,7 +232,7 @@ const MemoExplorePage = () => {
         )}
         {toggleExplorePages === ExplorePages.BANNERLAYOUTS && (
           <section className="max-w-[69rem] m-auto">
-            <header className="sticky top-0 z-10 bg-white rounded-t-2xl h-[5rem] w-full">
+            <header className="sticky top-0 z-10 bg-white rounded-t-2xl h-[5rem] w-full shadow-lg">
               <MemoizedHeader
                 title="Choose Layout"
                 onBack={handleBack}

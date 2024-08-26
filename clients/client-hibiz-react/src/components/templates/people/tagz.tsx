@@ -10,6 +10,7 @@ import Fuse from "fuse.js";
 import EditTagz from "./editTagz";
 const CreateTag = lazy(() => import("./createTagz"));
 const PopUp = lazy(() => import("@/components/atom/popUp"));
+import NoData from "@/assets/nodata.jpg";
 
 const MemoTagz = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -156,48 +157,56 @@ const MemoTagz = () => {
             </button>
           )}
         </article>
-        <section className="relative grid grid-cols-3 gap-2 py-6 bg-gray-100 md:grid-cols-5 lg:grid-cols-6 pb-[10rem]">
+        <section className="relative py-6 bg-gray-100 pb-[10rem]">
           {filteredTags && filteredTags.length > 0 ? (
-            filteredTags.map((tag) => (
-              <article
-                key={tag?._id}
-                onClick={() => handleEditTag(tag)}
-                onKeyDown={() => handleEditTag(tag)}
-                className="border border-1 border-[#6F649B] rounded-2xl p-2 space-y-4 bg-white"
-              >
-                <section className="flex items-center justify-between ">
-                  <h1 className="text-[#6F649B] text-xl font-semibold">#</h1>
-                  <article className="flex space-x-2">
-                    <span
-                      className={cn(
-                        "p-1 rounded-full cursor-pointer",
-                        tag?.displayForCaptains
-                          ? "bg-[#52B76320]"
-                          : "bg-[#6F649B20]",
-                      )}
-                    >
-                      <TiStarburstOutline
-                        color={cn(
-                          tag?.displayForCaptains ? "#52B763" : "#6F649B",
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-5 lg:grid-cols-6">
+              {filteredTags.map((tag) => (
+                <article
+                  key={tag?._id}
+                  onClick={() => handleEditTag(tag)}
+                  onKeyDown={() => handleEditTag(tag)}
+                  className="border border-1 border-[#6F649B] rounded-2xl p-2 space-y-4 bg-white"
+                >
+                  <section className="flex items-center justify-between ">
+                    <h1 className="text-[#6F649B] text-xl font-semibold">#</h1>
+                    <article className="flex space-x-2">
+                      <span
+                        className={cn(
+                          "p-1 rounded-full cursor-pointer",
+                          tag?.displayForCaptains
+                            ? "bg-[#52B76320]"
+                            : "bg-[#6F649B20]",
                         )}
-                      />
-                    </span>
-                    <span
-                      className="p-1 bg-red-100 rounded-full cursor-pointer"
-                      onClick={(e) => handleDelete(e, tag?._id)}
-                      onKeyDown={(e) => handleDelete(e, tag?._id)}
-                    >
-                      <MdDeleteOutline color="red" />
-                    </span>
-                  </article>
-                </section>
-                <p title={tag?.name} className="text-[#6F649B] cursor-pointer">
-                  {tag?.name}
-                </p>
-              </article>
-            ))
+                      >
+                        <TiStarburstOutline
+                          color={cn(
+                            tag?.displayForCaptains ? "#52B763" : "#6F649B",
+                          )}
+                        />
+                      </span>
+                      <span
+                        className="p-1 bg-red-100 rounded-full cursor-pointer"
+                        onClick={(e) => handleDelete(e, tag?._id)}
+                        onKeyDown={(e) => handleDelete(e, tag?._id)}
+                      >
+                        <MdDeleteOutline color="red" />
+                      </span>
+                    </article>
+                  </section>
+                  <p
+                    title={tag?.name}
+                    className="text-[#6F649B] cursor-pointer"
+                  >
+                    {tag?.name}
+                  </p>
+                </article>
+              ))}
+            </div>
           ) : (
-            <p className="text-gray-500">No tags found.</p>
+            <div className="flex flex-col items-center justify-center h-[70dvh]">
+              <img src={NoData} alt="No Data Found" className="w-1/2 h-auto" />
+              <h3 className="text-[#6F649B] mt-4">No Data Found</h3>
+            </div>
           )}
         </section>
       </section>

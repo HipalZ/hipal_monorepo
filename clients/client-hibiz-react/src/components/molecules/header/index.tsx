@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = memo(
 
     return (
       <>
-        <div className="flex items-center justify-between px-6 pt-6 ">
+        <div className="flex items-center justify-between px-6 pt-6">
           {hideBack ? (
             <div />
           ) : (
@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = memo(
                   : "absolute transform -translate-x-1/2 left-1/2"
               } text-2xl font-medium capitalize text-nowrap`}
             >
-              {title}
+              {title?.toLowerCase()}
             </span>
           </div>
           <div className="absolute text-sm right-6">{rightButton}</div>

@@ -73,8 +73,9 @@ const MemoSettings = () => {
         return (
           <article
             onClick={() => goToForm(service?.navigateTo)}
+            onKeyDown={() => goToForm(service?.navigateTo)}
             key={service?._id}
-            className="bg-white h-[6.5rem] w-[100%] lg:max-w-[21.5rem] rounded-2xl p-4"
+            className="bg-white h-[6.5rem] w-[100%] lg:max-w-[21.5rem] rounded-2xl p-4 shadow-lg"
           >
             <header className="relative flex items-center mb-4 space-x-4">
               <article className="flex items-center justify-center w-8 h-8 bg-purple-700 rounded-full">
@@ -88,7 +89,7 @@ const MemoSettings = () => {
                 <FaArrowRight />
               </button>
             </header>
-            <p>{service?.description}</p>
+            <p className="opacity-50">{service?.description}</p>
           </article>
         );
       })}

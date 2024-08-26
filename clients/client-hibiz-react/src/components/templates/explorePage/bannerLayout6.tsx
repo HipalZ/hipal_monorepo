@@ -35,7 +35,7 @@ const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
       key={layout?._id}
     >
       <article
-        className="relative h-[11.5rem] max-w-[12rem] rounded-xl"
+        className="relative h-[11.5rem] max-w-[12rem] rounded-xl shadow-lg "
         style={{ backgroundColor: color }}
       >
         <figure className="absolute top-2 left-2">

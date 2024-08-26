@@ -16,7 +16,10 @@ import SubHeader from "@/components/atom/subHeader";
 import Paragraph from "@/components/atom/paragraph";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
-import { useExploreStore } from "@/components/store/useExploreStore";
+import {
+  ExplorePages,
+  useExploreStore,
+} from "@/components/store/useExploreStore";
 import toast from "react-hot-toast";
 import PopUp from "@/components/atom/popUp";
 import { convertTo12HourFormat } from "@/components/templates/settingsForm/outletForm";
@@ -36,13 +39,21 @@ const amenitiesArr = [
 ];
 
 const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
-  const { setToggleBizInfo, toggleBizInfo, isLoading, setIsLoading } =
-    useExploreStore((state) => ({
-      toggleBizInfo: state.toggleBizInfo,
-      setToggleBizInfo: state.setToggleBizInfo,
-      isLoading: state.isLoading,
-      setIsLoading: state.setIsLoading,
-    }));
+  const {
+    setToggleBizInfo,
+    toggleBizInfo,
+    isLoading,
+    setIsLoading,
+    toggleExplorePages,
+    setToggleExplorePages,
+  } = useExploreStore((state) => ({
+    toggleBizInfo: state.toggleBizInfo,
+    setToggleBizInfo: state.setToggleBizInfo,
+    isLoading: state.isLoading,
+    setIsLoading: state.setIsLoading,
+    toggleExplorePages: state.toggleExplorePages,
+    setToggleExplorePages: state.setToggleExplorePages,
+  }));
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   const [openTimings, setOpenTimings] = useState(false);
@@ -260,6 +271,9 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
         refetch();
         toast.success("Data saved successfully");
         setToggleBizInfo(!toggleBizInfo);
+        if (toggleExplorePages === ExplorePages.BIZINFO) {
+          setToggleExplorePages(ExplorePages.MAINFORM);
+        }
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
       }

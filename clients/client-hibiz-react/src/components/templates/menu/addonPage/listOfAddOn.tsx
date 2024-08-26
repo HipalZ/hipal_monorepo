@@ -48,7 +48,6 @@ const MemoListOfAddon = () => {
   const { addOns } = useCategoryStore((state) => ({
     addOns: state.addOns,
   }));
-  console.log(addOns);
   const { isLoading } = useAddOnList();
 
   const fuse = useMemo(
@@ -107,6 +106,7 @@ const MemoListOfAddon = () => {
         <button
           type="button"
           key={addon.name}
+          onClick={() => editAddOn(addon)}
           className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
         >
           <h3 className="mb-2 text-lg font-semibold">{addon.name}</h3>
@@ -117,13 +117,13 @@ const MemoListOfAddon = () => {
               ) : (
                 <FaEyeSlash className="text-red-500" />
               )}
-              <div>{addon.availability ? null : <div className="font-semibold text-red-500">N/A</div>}</div>
+              <div>
+                {addon.availability ? null : (
+                  <div className="font-semibold text-red-500">N/A</div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => editAddOn(addon)}
-              type="button"
-              className="pl-4 text-black"
-            >
+            <button type="button" className="pl-4 text-black">
               <BiSolidEditAlt />
             </button>
           </article>

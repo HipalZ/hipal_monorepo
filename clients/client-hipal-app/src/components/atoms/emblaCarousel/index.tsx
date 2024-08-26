@@ -6,7 +6,7 @@ import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 function MemoEmblaCarousel({ children }) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, dragFree: false },
+    { loop: false, dragFree: false },
     [Autoplay()],
   );
   const [selectedIndex, setSelectedIndex] = useState(0);

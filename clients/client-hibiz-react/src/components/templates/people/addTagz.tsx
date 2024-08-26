@@ -33,14 +33,11 @@ const MemoAddTagz = () => {
     );
   }, [searchQuery, tags]);
 
-  // Handle checkbox change
   const handleCheckboxChange = (tagId: string) => {
     setSelectedTags((prevSelected: string[]) => {
       if (prevSelected.includes(tagId)) {
-        // Remove tagId if it's already in the array
         return prevSelected.filter((id) => id !== tagId);
       }
-      // Add tagId to the array
       return [...prevSelected, tagId];
     });
   };

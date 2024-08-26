@@ -15,7 +15,7 @@ const cardArr = [
     color: "#962828",
     selectLayout: "LAYOUT_ONE" as LoyaltyCardLayout,
     cardType: "CARD_THREE" as SelectedCardType,
-    backgroundColor: "#6549F3",
+    backgroundColor: "#962828",
   },
   {
     color: "#183D2E",

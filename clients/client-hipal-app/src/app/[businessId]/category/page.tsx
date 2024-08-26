@@ -64,12 +64,12 @@ export default async function Page({
       <div className="relative flex flex-col w-full pb-14">
         <TopBackground specialBanner={data?.business?.specialBannerUrl} />
         <CategoryHeader
-          parentCategory={data?.parentCategories}
-          childCategory={data?.childCategories}
+          parentCategory={data?.parentCategories || []}
+          childCategory={data?.childCategories || []}
         />
         <div>
           <div className="!mt-0 !scroll-smooth">
-            <DishesList childCategory={data?.childCategories} />
+            <DishesList childCategory={data?.childCategories || []} />
           </div>
           <section className="pt-6 bg-base-100">
             <Footer
@@ -78,7 +78,7 @@ export default async function Page({
               footerDescription={data?.business?.footerDescription}
             />
           </section>
-          <PageName endBannerUrl={data?.business?.endBannerUrl} />
+          <PageName />
         </div>
       </div>
       <CategoryPageBtn />

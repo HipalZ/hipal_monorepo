@@ -41,7 +41,6 @@ const MemoiseSidebarPeople: React.FC<SidebarProps> = ({ items }) => {
           key={item.text}
           onClick={item.onClick}
         >
-          <img src={item.icon} alt={item.text} />
           <span>{item.text}</span>
         </button>
       ))}

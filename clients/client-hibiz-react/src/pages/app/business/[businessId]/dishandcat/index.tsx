@@ -130,6 +130,21 @@ const MemoizeDishAndCat = () => {
     { icon: Hi, text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
   ];
 
+  const dynamicHeading = useCallback(()=>{
+    switch(selectedPage){
+      case "DISHES":
+        return "Dishes";
+      case "MAIN_CATEGORY":
+        return "Main Category";
+      case "SUB_CATEGORY":
+        return "Sub Category";
+      case "ADD_ON":
+        return "Add On";
+      default:
+        return "";
+    }
+  },[selectedPage])
+
   const removeAllUnwanted = useCallback((page: MenuPageType, text: string) => {
     const normalize = (str: string) =>
       str.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -150,10 +165,9 @@ const MemoizeDishAndCat = () => {
       <div className="sticky top-0 z-50 w-full">
         <article className="linear_gradient_background">
           <MemoizedHeader
-            title={`${selectedPage.split("_").join(" ")}`}
+            title={dynamicHeading()}
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
             rightImage={Hi}
             isIconBusinessShow={false}
           />
@@ -238,7 +252,7 @@ const MemoizeDishAndCat = () => {
               className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
               type="button"
             >
-              <BiPlus size={32} /> BULK UPLOAD DISHES
+              <BiPlus size={20} /> Bulk Upload Dishes
             </button>
             <input
               type="file"
@@ -255,10 +269,10 @@ const MemoizeDishAndCat = () => {
         )}
         <button
           onClick={openMenuModel}
-          className="z-50 flex items-center h-10 px-4 py-2 text-white bg-black rounded-full"
+          className="z-50 flex items-center h-10 px-4 py-2 text-white capitalize bg-black rounded-full"
           type="button"
         >
-          <BiPlus size={32} /> {selectedPage}
+          <BiPlus size={20} /> {selectedPage?.toLowerCase()}
         </button>
       </div>
     </main>

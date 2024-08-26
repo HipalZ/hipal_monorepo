@@ -4,6 +4,7 @@ import { type FC, memo, useEffect, useMemo } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
+import { GiKnifeFork } from "react-icons/gi";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -66,21 +67,29 @@ const DishesList: FC<IDishesProps> = (props) => {
             </h4>
           </div>
           <div className="flex flex-col divide-y divide-base-300">
-            {isActiveDishType.toLowerCase() === "all"
-              ? category?.dishIds?.map((dishData: DishType, dishIndex) => (
+            {isActiveDishType.toLowerCase() === "all" ? (
+              category?.dishIds?.map((dishData: DishType, dishIndex) => (
+                <HorizontalCard
+                  dishData={dishData}
+                  key={`${dishData?._id?.toString()}${dishIndex}`}
+                />
+              ))
+            ) : filterDishes(category.dishIds, isActiveDishType).length ===
+              0 ? (
+              <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
+                <GiKnifeFork className="mr-4 text-2xl text-primary-100" /> No
+                Dishes Available
+              </div>
+            ) : (
+              filterDishes(category.dishIds, isActiveDishType).map(
+                (dishData: DishType, dishIndex) => (
                   <HorizontalCard
                     dishData={dishData}
                     key={`${dishData?._id?.toString()}${dishIndex}`}
                   />
-                ))
-              : filterDishes(category.dishIds, isActiveDishType).map(
-                  (dishData: DishType, dishIndex) => (
-                    <HorizontalCard
-                      dishData={dishData}
-                      key={`${dishData?._id?.toString()}${dishIndex}`}
-                    />
-                  ),
-                )}
+                ),
+              )
+            )}
           </div>
         </section>
       ))}

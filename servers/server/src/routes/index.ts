@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import addonRouter from "./addons";
+import adminRouter from "./admin";
 import businessRouter from "./businesses";
 import categoryRouter from "./categories";
 import dishesRouter from "./dishes";
@@ -25,6 +26,7 @@ export const routes = app
   .route("/addons", addonRouter)
   .route("/subscribers", subsCriberRouter)
   .route("/groups", groupRouter)
-  .route("/tags", tagRouter);
+  .route("/tags", tagRouter)
+  .route("/admin", adminRouter);
 
 export type AppType = typeof routes;

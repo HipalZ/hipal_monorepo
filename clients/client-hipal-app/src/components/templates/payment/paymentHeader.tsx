@@ -6,6 +6,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import { updateTheme } from "@/components/utils/themes";
 import Image from "next/image";
 import React, { memo, useEffect } from "react";
+import { BiArrowBack } from "react-icons/bi";
 import { MdOutlineChevronLeft } from "react-icons/md";
 
 interface Props {
@@ -17,22 +18,22 @@ const MemoPaymentHeader = ({ handleBack }: Props) => {
   const businessData = _useAllBusiness((s) => s.data) as IBusinessData;
 
   useEffect(() => {
-    if (businessData.settings) {
-      updateTheme(businessData.settings);
+    if (businessData?.settings) {
+      updateTheme(businessData?.settings);
     }
   }, []);
 
   return (
     <section className="z-20 w-full bg-base-100 text-primary">
-      <header className="bg-white h-[4.25rem] flex items-center space-x-8">
+      <header className="bg-white h-[4.25rem] flex items-center gap-16">
         {businessDetails?.logoUrl ? (
-          <figure className="h-[5rem] p-4 w-[6rem] flex space-x-4">
+          <figure className="h-[5rem] p-4 aspect-square flex space-x-4">
             <button
-              onClick={handleBack}
               type="button"
-              className="h-10 pl-1 mt-1 rounded-full aspect-square as bg-black/40 on_active_bounce"
+              onClick={handleBack}
+              className="scale-75 py-0 h-10 rounded-full px-4 z-[60] text-black bg-[#ffffff70] border border-1 border-[#CACACA]"
             >
-              <MdOutlineChevronLeft className="text-3xl text-white " />
+              <BiArrowBack />
             </button>
             <Image
               src={businessDetails?.logoUrl}

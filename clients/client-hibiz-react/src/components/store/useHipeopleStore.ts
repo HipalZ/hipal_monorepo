@@ -19,6 +19,14 @@ import type {
   SetImagePreviewsFunction,
 } from "./useExploreStore";
 
+export interface ITag {
+  tagId: string;
+  name: string;
+  count: number | null;
+  countType: "ABOVE" | "BELOW" | "EQUALS" | "";
+}
+
+
 export type HiPeoplePages =
   | "SUMMARY"
   | "CLIENTS"
@@ -41,7 +49,7 @@ export type AddToGroup =
   | "ADD MORE USERS";
 
 export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
-export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "";
+export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "" | "EDIT GROUP" | "ADD TAGS";
 
 export interface FilterValue {
   value: string;
@@ -51,6 +59,7 @@ export interface FilterValue {
 export interface Filter {
   label: string;
   key: keyof FilterValues;
+  heading: string;
 }
 
 export interface FilterValues {
@@ -91,6 +100,8 @@ const endOfToday = new Date(
   59,
   999,
 ).getTime();
+
+
 
 interface IHiPeople {
   selectedPage: HiPeoplePages;
@@ -292,6 +303,13 @@ interface IHiPeople {
 
   untilNow: boolean;
   setUntilNow: (untilNow: boolean) => void;
+
+  addTags: ITag[];
+  saveSelectedTags: (tags: ITag[]) => void;
+
+  selectedTags: ITag[];
+  clearSelectedTags: () => void;
+  
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -384,6 +402,7 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       addGroupModal: false,
       selectedGroupId: "",
       selectedGroupName: "",
+      addTags: [], 
       formData: {
         name: "",
         description: "",
@@ -534,11 +553,31 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
     groupType: "MANUAL",
     groupColor: "#E43065",
     filters: [
-      { label: "Every bill is considered as a visit", key: "visit" },
-      { label: "Avg bill value", key: "spend" },
-      { label: "Card Balance", key: "cardBalance" },
-      { label: "Coinz rewarded", key: "coinzIssued" },
-      { label: "Coinz used", key: "coinzUsed" },
+      {
+        label: "By visits",
+        key: "visit",
+        heading: "Every bill is considered as a visit",
+      },
+      {
+        label: "Avg bill value",
+        key: "spend",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Card Balance",
+        key: "cardBalance",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Coinz rewarded",
+        key: "coinzIssued",
+        heading: "Avg bill spend in the selected period",
+      },
+      {
+        label: "Coinz used",
+        key: "coinzUsed",
+        heading: "Avg bill spend in the selected period",
+      },
     ],
     filterValues: {
       visit: { value: "", type: "" },
@@ -547,7 +586,7 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       coinzIssued: { value: "", type: "" },
       coinzUsed: { value: "", type: "" },
     },
-    durationType: "",
+    durationType: "days",
     durationValue: "",
   },
   setGroupData: (data) =>
@@ -560,6 +599,12 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
 
   untilNow: false,
   setUntilNow: (untilNow) => set({ untilNow }),
+
+  addTags: [],
+  saveSelectedTags: (tags) => set({ addTags: tags }),
+
+  selectedTags: [],
+  clearSelectedTags: () => set({ selectedTags: [] }),
 }));
 
 export default useHiPeopleStore;

@@ -137,7 +137,7 @@ const StaffPage = () => {
             title="Staff"
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
-            centerImage={Hi}
+            
             rightImage={Hi}
             isIconBusinessShow={false}
           />
@@ -150,7 +150,7 @@ const StaffPage = () => {
                 key={staff._id}
                 onClick={() => handleStaffDetails(staff)}
                 type="button"
-                className="on_active_bounce p-4 mt-6 rounded-lg border border-[#cacaca] text-left bg-white font-medium capitalize text-[#000000]"
+                className="shadow-lg on_active_bounce p-4 mt-6 rounded-lg border border-[#cacaca] text-left bg-white font-medium capitalize text-[#000000]"
               >
                 <img src={Avatar} alt="Avatar" />
                 <div className="flex flex-col pt-6">

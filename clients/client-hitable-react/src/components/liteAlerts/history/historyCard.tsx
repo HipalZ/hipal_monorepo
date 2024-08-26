@@ -1,8 +1,8 @@
-import { useLiteStore } from '@/components/store/useLiteStore';
-import { Alert } from '@/components/types/hiClientzData';
-import { cn, timestampToDateTime } from '@/components/utils/helpers';
-import { memo } from 'react';
-import { PiCoinsFill } from 'react-icons/pi';
+import { useLiteStore } from "@/components/store/useLiteStore";
+import type { Alert } from "@/components/types/hiClientzData";
+import { cn, timestampToDateTime } from "@/components/utils/helpers";
+import { memo } from "react";
+import { PiCoinsFill } from "react-icons/pi";
 
 interface IOnlineProp {
   onlineAlertData: Alert[];
@@ -10,7 +10,7 @@ interface IOnlineProp {
 
 const HistoryCard = (props: IOnlineProp) => {
   const { onlineAlertData } = props;
-  const { setViewData } = useLiteStore((s)=>({
+  const { setViewData } = useLiteStore((s) => ({
     setViewData: s.setViewData,
   }));
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
@@ -25,36 +25,58 @@ const HistoryCard = (props: IOnlineProp) => {
     <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
         onlineAlertData.map((alert: Alert) => {
-          if (alert?.alertType === 'WAITER') {
+          if (alert?.alertType === "WAITER") {
             return null;
           }
           return (
             <section
               key={alert?._id}
-              className={cn('max-h-[15rem]','mx-4 my-4 rounded-xl p-4', alert?.status === 'FAIL' ? 'bg-red-100' : 'bg-gray-300')}
+              className={cn(
+                "max-h-[15rem]",
+                "mx-4 my-4 rounded-xl p-4",
+                alert?.status === "FAIL" ? "bg-red-100" : "bg-gray-300",
+              )}
             >
               <section className="flex items-center justify-between mb-2">
-                <article className={cn('flex w-[8rem] items-center rounded-full px-2', alert?.status === 'FAIL' ? '' : 'bg-green-100', alert?.alertType==='OFFLINE' ? 'bg-indigo-100' :'bg-green-100')}>
+                <article
+                  className={cn(
+                    "flex w-[8rem] items-center rounded-full px-2",
+                    alert?.status === "FAIL" ? "" : "bg-green-100",
+                    alert?.alertType === "OFFLINE"
+                      ? "bg-indigo-100"
+                      : "bg-green-100",
+                  )}
+                >
                   <span>
                     <PiCoinsFill />
                   </span>
                   &nbsp;
-                  {alert?.status === 'FAIL' ? (
+                  {alert?.status === "FAIL" ? (
                     <h1 className="text-xs">Payment Failed</h1>
                   ) : (
-                    <h1 className="text-xs">Received {alert?.alertType.toLowerCase()}</h1>
+                    <h1 className="text-xs">
+                      Received {alert?.alertType.toLowerCase()}
+                    </h1>
                   )}
                 </article>
                 <article>
-                  <h1 className="text-xs text-gray-500">{timestampToDateTime(alert?.date)}</h1>
+                  <h1 className="text-xs text-gray-500">
+                    {timestampToDateTime(alert?.date)}
+                  </h1>
                 </article>
               </section>
               <div className="flex justify-between">
                 <section>
                   <article className="ml-2 space-y-1">
-                    <h1 className="text-base">Bill value : ₹ {alert?.order_id?.billValue}</h1>
-                    <h1 className="text-base">Discount : ₹ {alert?.order_id?.claimedCoins}</h1>
-                    <h6 className="text-sm">Tips : ₹ {alert?.order_id?.tips}</h6>
+                    <h1 className="text-base">
+                      Bill value : ₹ {alert?.order_id?.billValue}
+                    </h1>
+                    <h1 className="text-base">
+                      Discount : ₹ {alert?.order_id?.claimedCoins}
+                    </h1>
+                    <h6 className="text-sm">
+                      Tips : ₹ {alert?.order_id?.tips}
+                    </h6>
                   </article>
                   {alert?.coinsApplied ? (
                     <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full w-fit">
@@ -62,33 +84,52 @@ const HistoryCard = (props: IOnlineProp) => {
                         <PiCoinsFill size={20} />
                       </span>
                       &nbsp;
-                      <h1 className="text-xs">{alert?.order_id?.claimedCoins} Used</h1>
+                      <h1 className="text-xs">
+                        {alert?.order_id?.claimedCoins} Used
+                      </h1>
                     </article>
                   ) : null}
                 </section>
                 <section className="text-right">
-                  <p>User : {alert?.userId?.name?.length > 10 ? `${alert?.userId?.name.substring(0, 10)}...` : alert?.userId?.name}</p>
-                  {alert?.alertType === 'ONLINE' ? null : <p>Waiter : {alert?.waiterName || 'Captain'}</p>}
+                  <p>
+                    User :{" "}
+                    {alert?.userId?.name?.length > 10
+                      ? `${alert?.userId?.name.substring(0, 10)}...`
+                      : alert?.userId?.name}
+                  </p>
+                  {alert?.alertType === "ONLINE" ? null : (
+                    <p>Waiter : {alert?.waiterName || "Captain"}</p>
+                  )}
                   <article className="space-y-1">
-                    <h1 className="text-base text-gray-700">Table : {alert?.tableName}</h1>
-                    <h6 className="text-2xl font-semibold">₹ {alert?.order_id?.total}</h6>
+                    <h1 className="text-base text-gray-700">
+                      Table : {alert?.tableName}
+                    </h1>
+                    <h6 className="text-2xl font-semibold">
+                      ₹ {alert?.order_id?.total}
+                    </h6>
                   </article>
-                  <button type='button' onClick={() => handleViewMore(alert)} className="px-6 py-2 mt-2 text-white bg-black rounded-full">
+                  <button
+                    type="button"
+                    onClick={() => handleViewMore(alert)}
+                    className="px-6 py-2 mt-2 text-white bg-black rounded-full"
+                  >
                     <h1 className="text-xs">View</h1>
                   </button>
                 </section>
               </div>
-              <br/>
-              <br/>
+              <br />
+              <br />
             </section>
           );
         })
       ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">No Data Found</div>
+        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">
+          No Data Found
+        </div>
       )}
     </main>
   );
-}
+};
 
 const HistoryCardMemo = memo(HistoryCard);
 export default HistoryCardMemo;
