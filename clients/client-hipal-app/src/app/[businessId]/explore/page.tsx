@@ -13,7 +13,7 @@ import EmblaCarousel from "@/components/atoms/emblaCarousel";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 // export const revalidate = 30;
-
+//
 const BannerLayouts = dynamics(
   () => import("@/components/organisms/explore/bannerNewCards"),
   {
