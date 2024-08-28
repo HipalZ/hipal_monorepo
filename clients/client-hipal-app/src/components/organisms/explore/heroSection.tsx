@@ -46,7 +46,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   const business = data.business as BusinessDetails;
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
-  const [subscribeModal, setSubscribeModal] = useState<boolean>(false);
+  const { subscribeModal, setSubscribeModal } = useLogin((s) => ({
+    subscribeModal: s.subscribeModal,
+    setSubscribeModal: s.setSubscribeModal,
+  }));
   const [isLoader, setIsLoader] = useState<boolean>(false);
   const router = useRouter();
 

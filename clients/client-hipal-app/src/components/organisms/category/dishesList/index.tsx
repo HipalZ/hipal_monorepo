@@ -1,6 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { type FC, memo, useEffect, useMemo } from "react";
+import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -12,11 +12,12 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const { isActiveDishType, isActiveCategory } = useActiveClass((state) => ({
-    isActiveDishType: state.isActiveDishType,
-    isActiveCategory: state.isActiveCategory,
-    isActiveParentCategory: state.isActiveParentCategory,
-  }));
+  const { isActiveDishType, isActiveCategory, setActiveCategory } =
+    useActiveClass((state) => ({
+      isActiveDishType: state.isActiveDishType,
+      isActiveCategory: state.isActiveCategory,
+      setActiveCategory: state.setActiveCategory,
+    }));
 
   const subTypes = useMemo(() => {
     return childCategory.filter(
@@ -25,7 +26,6 @@ const DishesList: FC<IDishesProps> = (props) => {
     );
   }, [childCategory]);
 
-  // Filter dishes within categories based on the active dish type
   const filterDishes = (dishes, dishType) => {
     return dishes.filter(
       (dish) => dish.visibility && dish.dishTypes.includes(dishType),
@@ -45,54 +45,99 @@ const DishesList: FC<IDishesProps> = (props) => {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isActiveCategory]);
 
+  const handleCategoryInView = (category) => {
+    setActiveCategory(category._id?.toString());
+  };
+
   return (
     <div>
-      {subTypes?.map((category: CategoryType, index) => (
-        <section
-          className={"min-h-60 bg-base-100 w-full pb-4"}
-          id={category._id?.toString()}
-          key={`${category._id}${index}`}
-        >
-          <div
-            className={cn(
-              { "border-t-2 border-primary": category.dishIds.length !== 0 },
-              "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
-            )}
+      {subTypes?.map((category: CategoryType, index) => {
+        const headingRef = useRef(null);
+
+        useEffect(() => {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              for (const entry of entries) {
+                // Check if the element is in the center of the viewport
+                const viewportHeight =
+                  window.innerHeight || document.documentElement.clientHeight;
+                const boundingRect = entry.target.getBoundingClientRect();
+                const isCentered =
+                  boundingRect.top >= viewportHeight / 3 &&
+                  boundingRect.bottom <= (2 * viewportHeight) / 3;
+
+                if (entry.isIntersecting && isCentered) {
+                  handleCategoryInView(category);
+                }
+              }
+            },
+            {
+              root: null,
+              threshold: 0.5,
+            },
+          );
+
+          if (headingRef.current) {
+            observer.observe(headingRef.current);
+          }
+
+          return () => {
+            if (headingRef.current) {
+              observer.unobserve(headingRef.current);
+            }
+          };
+        }, [headingRef, category]);
+
+        return (
+          <section
+            className={"min-h-60 bg-base-100 w-full pb-4"}
+            id={category._id?.toString()}
+            key={`${category._id}${index}`}
           >
-            <h3 className="my-4 text-xl font-medium capitalize text-primary">
-              {category?.name || ""}
-            </h3>
-            <h4 className="my-4 text-lg font-medium text-primary">
-              {category?.dishIds?.length}
-            </h4>
-          </div>
-          <div className="flex flex-col divide-y divide-base-300">
-            {isActiveDishType.toLowerCase() === "all" ? (
-              category?.dishIds?.map((dishData: DishType, dishIndex) => (
-                <HorizontalCard
-                  dishData={dishData}
-                  key={`${dishData?._id?.toString()}${dishIndex}`}
-                />
-              ))
-            ) : filterDishes(category.dishIds, isActiveDishType).length ===
-              0 ? (
-              <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
-                <GiKnifeFork className="mr-4 text-2xl text-primary-100" /> No
-                Dishes Available
-              </div>
-            ) : (
-              filterDishes(category.dishIds, isActiveDishType).map(
-                (dishData: DishType, dishIndex) => (
+            <div
+              className={cn(
+                { "border-t-2 border-primary": category.dishIds.length !== 0 },
+                "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
+              )}
+            >
+              <h3
+                className="my-4 text-xl font-medium capitalize text-primary"
+                ref={headingRef}
+              >
+                {category?.name || ""}
+              </h3>
+              <h4 className="my-4 text-lg font-medium text-primary">
+                {category?.dishIds?.length}
+              </h4>
+            </div>
+            <div className="flex flex-col divide-y divide-base-300">
+              {isActiveDishType.toLowerCase() === "all" ? (
+                category?.dishIds?.map((dishData: DishType, dishIndex) => (
                   <HorizontalCard
                     dishData={dishData}
                     key={`${dishData?._id?.toString()}${dishIndex}`}
                   />
-                ),
-              )
-            )}
-          </div>
-        </section>
-      ))}
+                ))
+              ) : filterDishes(category.dishIds, isActiveDishType).length ===
+                0 ? (
+                <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
+                  <GiKnifeFork className="mr-4 text-2xl text-primary-100" /> No
+                  Dishes Available
+                </div>
+              ) : (
+                filterDishes(category.dishIds, isActiveDishType).map(
+                  (dishData: DishType, dishIndex) => (
+                    <HorizontalCard
+                      dishData={dishData}
+                      key={`${dishData?._id?.toString()}${dishIndex}`}
+                    />
+                  ),
+                )
+              )}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 };

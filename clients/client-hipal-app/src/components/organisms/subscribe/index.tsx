@@ -81,7 +81,7 @@ const MemoSubScribeModal = ({
     setSubscribeModal(false);
   }, [isModalOpen]);
   return (
-    <section className="h-[100dvh] bg-[#748FFC]">
+    <section className="h-[100dvh] bg-[#748FFC] relative z-[50]">
       <section className="flex items-center justify-between">
         <button
           type="button"
@@ -105,7 +105,7 @@ const MemoSubScribeModal = ({
       <section className="flex mt-[15vh]">
         <Image src={Hifi} alt="hi-fi" />
       </section>
-      <section className="bg-white w-full h-[16rem] absolute bottom-0 rounded-t-2xl">
+      <section className="bg-white w-full h-[16rem] z-50 absolute bottom-0 rounded-t-2xl text-base">
         {businessData?.logoUrl && (
           <center className="bg-inherit text-center mx-auto w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[2.5rem] p-1 border border-[#00000050] overflow-hidden">
             <Image
@@ -133,9 +133,9 @@ const MemoSubScribeModal = ({
       <button
         type="button"
         onClick={subScribeUSer}
-        className="bottom_btn bg-[#000000] text-white !mb-8"
+        className="bottom_btn bg-[#000000] text-white text-base"
       >
-        Free Subscription
+        Continue
       </button>
       <center className="absolute bottom-0 pb-2 mx-12 text-xs text-black">
         By continuing you are agreeing to the{" "}

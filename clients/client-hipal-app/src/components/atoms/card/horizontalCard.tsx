@@ -158,7 +158,7 @@ const HorizontalCard = ({
           )}
           {isModalOpen && dishData._id === selectedDish._id && (
             <DishData show={isModalOpen} onClose={closeModal}>
-              <div className="relative py-4 mx-4 ">
+              <div className="relative">
                 <DishPopup dishData={selectedDish} />
               </div>
             </DishData>

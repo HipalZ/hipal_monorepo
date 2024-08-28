@@ -1,5 +1,5 @@
-import LoadingSpinner from '@/components/atoms/progressBar/loadingSpinner';
+import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
 
 export default function Loading() {
-  return <LoadingSpinner />;
+  return <CategorySkeleton />;
 }

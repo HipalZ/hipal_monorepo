@@ -6,9 +6,12 @@ import MemoCallTheWaiterComponent from "@/components/molecules/bottomButton/call
 import useTableData from "@/components/store/useTableData";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { useCart } from "@/components/store/useCart";
+import { BiArrowBack } from "react-icons/bi";
 
 const Cart = () => {
   const { cart } = useCartStore();
+  const { setShowCart, showCart } = useCart();
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
@@ -21,7 +24,14 @@ const Cart = () => {
   }, []);
 
   return (
-    <div className="h-[80vh] min-h-[80vh] overflow-y-auto pb-[5rem] text-primary">
+    <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary">
+      <button
+        type="button"
+        onClick={() => setShowCart(false)}
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
+      >
+        <BiArrowBack />
+      </button>
       <center className="pt-4 text-2xl text-primary">Cart</center>
       &nbsp;
       {cart.length === 0 ? (

@@ -1,7 +1,7 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { defaultThemes } from "@/components/utils/helpers";
+import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -10,36 +10,36 @@ const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={250} />,
+    loading: () => <CategorySkeleton />,
   },
 );
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <CategorySkeleton />,
 });
 const Footer = dynamics(() => import("@/components/molecules/footer"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <CategorySkeleton />,
 });
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <CategorySkeleton />,
   },
 );
 const CategoryPageBtn = dynamics(
   () => import("@/components/molecules/bottomButton/categoryPageBtn"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <CategorySkeleton />,
   },
 );
 const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <CategorySkeleton />,
   },
 );
 

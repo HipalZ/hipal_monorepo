@@ -1,5 +1,5 @@
-import LoadingSpinner from '@/components/atoms/progressBar/loadingSpinner';
+import ExploreSkelton from "@/components/atoms/progressBar/exploreLoader";
 
 export default function Loading() {
-  return <LoadingSpinner />;
+  return <ExploreSkelton />;
 }

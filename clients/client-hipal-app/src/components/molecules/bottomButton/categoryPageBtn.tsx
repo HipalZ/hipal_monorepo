@@ -42,7 +42,6 @@ const CategoryPageBtn = () => {
   const { setShowCart, showCart } = useCart();
   const cart = useCartStore((s) => s.cart);
 
-
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false);
@@ -103,7 +102,6 @@ const CategoryPageBtn = () => {
   const showingCart = useCallback(() => {
     setShowCart(!showCart);
   }, [showCart, setShowCart]);
-
 
   return (
     <>
@@ -176,7 +174,7 @@ const CategoryPageBtn = () => {
         </MemoBottomPopUp>
       )}
       {showCart && (
-        <MemoBottomPopUp show={showCart} onClose={showingCart}>
+        <MemoBottomPopUp show={showCart} onClose={showingCart} hide>
           <Cart />
         </MemoBottomPopUp>
       )}

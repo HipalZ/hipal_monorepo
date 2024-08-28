@@ -30,7 +30,6 @@ function BottomButton({
   children?: ReactNode;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
-  const pathname = usePathname(); // Get the current path
   const [inputModal, setInputModal] = useState(false);
   const searchParams = useSearchParams();
   const tableName = useTableData((s) => s.tableName);
@@ -40,6 +39,10 @@ function BottomButton({
   const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
   const [selectedButton, setSelectedButton] = useState("");
+  const {subscribeModal, setSubscribeModal} = useLogin(s=>({
+    subscribeModal: s.subscribeModal,
+    setSubscribeModal: s.setSubscribeModal
+  }))
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -62,7 +65,6 @@ function BottomButton({
     }
   }, []);
 
-  // Function to toggle the selected button
   const handleButtonClick = useCallback((buttonName: string) => {
     setSelectedButton(buttonName);
   }, []);
@@ -71,6 +73,9 @@ function BottomButton({
     () => "px-2 font-light text-base-100 active:scale-90 on_active_bounce",
     [],
   );
+  if(subscribeModal){
+    return null
+  }
 
   return (
     <>
@@ -79,7 +84,7 @@ function BottomButton({
           {children}
         </center>
       ) : (
-        <section className="fixed bottom-0 z-20 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
+        <section className="fixed z-10 bottom-0 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
               <center
