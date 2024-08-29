@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import SignUpBonus from "@/components/organisms/explore/signupbonus";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -30,6 +31,8 @@ function OtpPage() {
   const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logoUrl);
   const businessId = useBusinessDetails((s) => s.businessDetails._id);
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+
   const [logo, setLogo] = useState(businessLogo);
   const setAccessToken = useUserToken.getState().setAccessToken;
   const setRefreshToken = useUserToken.getState().setRefreshToken;
@@ -125,11 +128,11 @@ function OtpPage() {
         phone: userDetails.phone,
         userId: userDetails._id,
         otp: fullOtp,
-        role: userDetails.role,
+        role: userDetails?.role,
         loyaltyId: loyaltyId,
         signUpBonus: signUpBonus,
         name: customerName || userDetails.name,
-        businessId: businessId,
+        businessId: businessId || outletInfo?.businessId,
       },
       param: { id: customLink },
     });

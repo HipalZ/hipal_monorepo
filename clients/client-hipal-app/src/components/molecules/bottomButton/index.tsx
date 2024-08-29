@@ -23,6 +23,7 @@ import {
 } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 function BottomButton({
   children,
@@ -36,13 +37,14 @@ function BottomButton({
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const { setIsPayment } = useLogin();
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+
   const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
   const [selectedButton, setSelectedButton] = useState("");
-  const {subscribeModal, setSubscribeModal} = useLogin(s=>({
+  const { subscribeModal } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
-    setSubscribeModal: s.setSubscribeModal
-  }))
+  }));
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -73,8 +75,8 @@ function BottomButton({
     () => "px-2 font-light text-base-100 active:scale-90 on_active_bounce",
     [],
   );
-  if(subscribeModal){
-    return null
+  if (subscribeModal) {
+    return null;
   }
 
   return (
@@ -170,7 +172,7 @@ function BottomButton({
                     selectedButton === "menu" ? "bg-base-100 text-primary" : ""
                   }`}
                 />
-                Menu
+                {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
               </center>
             </Link>
           </center>
