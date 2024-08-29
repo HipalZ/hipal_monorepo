@@ -46,6 +46,7 @@ const DishesList: FC<IDishesProps> = (props) => {
   }, [isActiveCategory]);
 
   const handleCategoryInView = (category) => {
+    console.log(category._id);
     setActiveCategory(category._id?.toString());
   };
 
@@ -53,27 +54,19 @@ const DishesList: FC<IDishesProps> = (props) => {
     <div>
       {subTypes?.map((category: CategoryType, index) => {
         const headingRef = useRef(null);
-
         useEffect(() => {
           const observer = new IntersectionObserver(
             (entries) => {
-              for (const entry of entries) {
-                // Check if the element is in the center of the viewport
-                const viewportHeight =
-                  window.innerHeight || document.documentElement.clientHeight;
-                const boundingRect = entry.target.getBoundingClientRect();
-                const isCentered =
-                  boundingRect.top >= viewportHeight / 3 &&
-                  boundingRect.bottom <= (2 * viewportHeight) / 3;
-
-                if (entry.isIntersecting && isCentered) {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
                   handleCategoryInView(category);
                 }
-              }
+              });
             },
             {
               root: null,
-              threshold: 0.5,
+              rootMargin: "-200px 0px 0px 0px",
+              threshold: 0.75,
             },
           );
 
