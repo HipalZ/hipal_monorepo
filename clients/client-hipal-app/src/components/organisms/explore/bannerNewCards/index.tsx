@@ -178,7 +178,7 @@ const MemoBannersLayout = (props: Props) => {
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
-            <article className="relative flex justify-start">
+            <article className="relative flex justify-center">
               <figure className="max-h-[20rem] w-full rounded-2xl">
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
@@ -192,9 +192,9 @@ const MemoBannersLayout = (props: Props) => {
                 style={{
                   backgroundColor: backgroundColor,
                 }}
-                className="absolute px-2 py-1 mx-2 shadow-xl bottom-2 rounded-xl backdrop-blur-sm bg-opacity-60"
+                className="absolute w-[17rem] px-2 py-1 mx-2 shadow-xl bottom-2 rounded-xl backdrop-blur-sm bg-opacity-60"
               >
-                <div className="flex justify-between w-full">
+                <div className="flex justify-between">
                   <h1
                     style={paragraphPropsStyle}
                     className="text-[1rem] truncate w-2/3"
