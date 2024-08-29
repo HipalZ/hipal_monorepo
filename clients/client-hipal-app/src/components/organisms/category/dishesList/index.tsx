@@ -12,12 +12,19 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const { isActiveDishType, isActiveCategory, setActiveCategory } =
-    useActiveClass((state) => ({
-      isActiveDishType: state.isActiveDishType,
-      isActiveCategory: state.isActiveCategory,
-      setActiveCategory: state.setActiveCategory,
-    }));
+  const {
+    isActiveDishType,
+    isActiveCategory,
+    setActiveCategory,
+    setActiveParentCategory,
+    setActiveParentCategoryName,
+  } = useActiveClass((state) => ({
+    isActiveDishType: state.isActiveDishType,
+    isActiveCategory: state.isActiveCategory,
+    setActiveCategory: state.setActiveCategory,
+    setActiveParentCategory: state.setActiveParentCategory,
+    setActiveParentCategoryName: state.setActiveParentCategoryName,
+  }));
 
   const subTypes = useMemo(() => {
     return childCategory.filter(
@@ -46,8 +53,18 @@ const DishesList: FC<IDishesProps> = (props) => {
   }, [isActiveCategory]);
 
   const handleCategoryInView = (category) => {
-    console.log(category._id);
-    setActiveCategory(category._id?.toString());
+    const hashUrl = window.location.hash;
+
+    if (hashUrl) {
+      const hashValue = hashUrl.substring(1);
+      setActiveCategory(hashValue);
+    } else {
+      setActiveCategory(category._id?.toString());
+
+      // Remove the hash from the URL
+      const urlWithoutHash = window.location.href.split("#")[0];
+      window.history.replaceState(null, "", urlWithoutHash);
+    }
   };
 
   return (

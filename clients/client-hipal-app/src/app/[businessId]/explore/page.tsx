@@ -97,6 +97,7 @@ export default async function Explore({
                             color: banner?.buttonColor || "",
                             buttonColor: banner?.buttonTextColor || "",
                           }}
+                          redirectionType={banner?.redirectionType || ""}
                         />
                       </div>
                     );

@@ -55,7 +55,11 @@ function MainTypes(props: IMainTypes) {
   );
 
   useEffect(() => {
-    if (mainTypes.length > 0) {
+    const hashUrl = window.location.hash;
+    if (hashUrl) {
+      const hashValue = hashUrl.substring(1);
+      setActiveCategory(hashValue);
+    } else {
       const firstCategory = mainTypes[0];
       setActiveParentCategory(firstCategory._id?.toString() ?? "");
       setActiveParentCategoryName(firstCategory.name ?? "");

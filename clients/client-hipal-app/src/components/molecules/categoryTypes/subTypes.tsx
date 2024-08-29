@@ -35,6 +35,9 @@ function SubTypes(props: ISubTypes) {
     (category: CategoryType) => {
       setActiveParentCategory(category?.parentCategoryIds?.[0].toString());
       setActiveCategory(category._id?.toString() ?? "");
+      // Remove the hash from the URL
+      const urlWithoutHash = window.location.href.split("#")[0];
+      window.history.replaceState(null, "", urlWithoutHash);
     },
     [setActiveCategory, setActiveParentCategory],
   );
