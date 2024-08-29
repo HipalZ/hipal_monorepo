@@ -151,19 +151,22 @@ const MemoExplorePage = () => {
       const res = await getAllBizInfo();
       const response = await res.json();
       if (response?.data?.specialBannerUrl) {
-        setImg({
+        setImg((prevImg) => ({
+          ...prevImg,
           banner: response?.data?.specialBannerUrl,
-        });
+        }));
       }
       if (response?.data?.logoUrl) {
-        setImg({
+        setImg((prevImg) => ({
+          ...prevImg,
           logo: response?.data?.logoUrl,
-        });
+        }));
       }
       if (response?.data?.endBannerUrl) {
-        setImg({
+        setImg((prevImg) => ({
+          ...prevImg,
           footer: response?.data?.endBannerUrl,
-        });
+        }));
       }
       setBizInfo(response?.data as IBizInfo);
       setToggleExplorePages(ExplorePages.MAINFORM);
