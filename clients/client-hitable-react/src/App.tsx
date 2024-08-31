@@ -8,8 +8,7 @@ import { apiRpc } from "@hi/common";
 import { messaging, getToken } from "./hooks/clientApp";
 import { useLocation } from "react-router-dom";
 import { URL } from "./configs";
-import { useUserToken } from "@hi/common/src/useUserToken";
-//
+
 function App() {
   const selectedBiz = useHiClientZ((state) => state.selectedBiz);
   const triggerSound = useLiteStore((s) => s.triggerSound);
@@ -51,7 +50,7 @@ function App() {
     setOnlineCount(data.length);
     if (data.length > onlineCount) {
       const url = `${URL}${location?.pathname}`;
-      // initializeMessaging(url, "checkout the recent payment");
+      initializeMessaging(url, "checkout the recent payment");
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -77,7 +76,7 @@ function App() {
         autoplay: triggerSound,
         loop: true,
       });
-      // initializeMessaging(url, "Confirm the offline payment");
+      initializeMessaging(url, "Confirm the offline payment");
       sound.play();
       setTimeout(() => {
         sound.pause();
