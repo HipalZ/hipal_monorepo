@@ -34,10 +34,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }));
   const accessToken = useUserToken.getState().accessToken;
   const setAccessToken = useUserToken.getState().setAccessToken;
-  const { userDetails, setUserCoinZ } = useLogin((s) => ({
-    userDetails: s.userDetails,
-    setUserCoinZ: s.setUserCoinZ,
-  }));
+  const { subscribeModal, setSubscribeModal, userDetails, setUserCoinZ } =
+    useLogin((s) => ({
+      userDetails: s.userDetails,
+      setUserCoinZ: s.setUserCoinZ,
+      subscribeModal: s.subscribeModal,
+      setSubscribeModal: s.setSubscribeModal,
+    }));
   const { setCartEmpty } = useCartStore();
   const { location, phone } = data?.outletInfo;
   const customLink = useParams()?.businessId as string;
@@ -46,7 +49,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   const business = data.business as BusinessDetails;
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
-  const [subscribeModal, setSubscribeModal] = useState<boolean>(false);
+
   const [isLoader, setIsLoader] = useState<boolean>(false);
   const router = useRouter();
 
