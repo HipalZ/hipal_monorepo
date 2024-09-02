@@ -325,6 +325,13 @@ const settingsRouter = new Hono()
       }
 
       console.log("form cache", merchant);
+      if (businessId === "66a8032dd1afb0385308ba86") {
+        merchant = {
+          businessId: "66a8032dd1afb0385308ba86",
+          razorpayMerchantId: "OnqWcKffL2kgJx",
+          razorpayKeyId: "rzp_live_j4TGFR1g1Ah1kv",
+        };
+      }
 
       const razorpayObject = {
         businessId: merchant?.businessId,
