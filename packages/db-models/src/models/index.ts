@@ -9,6 +9,8 @@ export * from "./kitchen";
 
 export * from "./admin";
 export * from "./businessSubscriber";
+export * from "./couponClaim";
+export * from "./couponz";
 export * from "./group";
 export * from "./groupAnalytics";
 export * from "./loyaltyCoinsInfo";
@@ -26,6 +28,7 @@ export * from "./theme";
 export * from "./uniquelyYours";
 export * from "./user";
 export * from "./userAnalytics";
+export * from "./userCouponClaim";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userTag";

@@ -3,6 +3,7 @@ import addonRouter from "./addons";
 import adminRouter from "./admin";
 import businessRouter from "./businesses";
 import categoryRouter from "./categories";
+import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import paymentsRouter from "./payments";
@@ -27,6 +28,7 @@ export const routes = app
   .route("/subscribers", subsCriberRouter)
   .route("/groups", groupRouter)
   .route("/tags", tagRouter)
-  .route("/admin", adminRouter);
+  .route("/admin", adminRouter)
+  .route("/couponz", couponzRouter);
 
 export type AppType = typeof routes;
