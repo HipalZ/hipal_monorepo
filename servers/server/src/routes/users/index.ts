@@ -812,13 +812,13 @@ const usersRouter = new Hono()
         };
         const subscriber = await Subscriber.findOne({
           userId: existingUser._id,
-          businessId: loyaltyId,
+          businessId: businessId,
         }).select("_id");
 
         if (!subscriber) {
           await Subscriber.create({
             userId: userId,
-            businessId: loyaltyId,
+            businessId: businessId,
             userCount: 1,
             date: Date.now(),
           });
@@ -826,7 +826,7 @@ const usersRouter = new Hono()
           await Subscriber.findOneAndUpdate(
             {
               userId: userId,
-              businessId: loyaltyId,
+              businessId: businessId,
             },
             {
               $inc: {
@@ -845,13 +845,13 @@ const usersRouter = new Hono()
 
       const subscriber = await Subscriber.findOne({
         userId: existingUser._id,
-        businessId: loyaltyId || businessId,
+        businessId: businessId,
       }).select("_id");
 
       if (!subscriber) {
         await Subscriber.create({
           userId: userId,
-          businessId: loyaltyId || businessId,
+          businessId: businessId,
           userCount: 1,
           date: Date.now(),
         });
@@ -859,7 +859,7 @@ const usersRouter = new Hono()
         await Subscriber.findOneAndUpdate(
           {
             userId: userId,
-            businessId: loyaltyId,
+            businessId: businessId,
           },
           {
             $inc: {

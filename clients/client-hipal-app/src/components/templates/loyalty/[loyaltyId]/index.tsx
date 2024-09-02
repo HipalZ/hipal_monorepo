@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useState, useEffect } from "react";
 import Image from "next/image";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { timestampToDateTime } from "@/components/utils/helpers";
@@ -13,7 +13,7 @@ import line from "@/assets/svg/Line.svg";
 import ellipse from "@/assets/svg/ellipse.svg";
 import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(
@@ -28,7 +28,7 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   const { userTotalHistory } = useUserReward();
   const customLink = useParams()?.businessId as string;
   const [hasMoreData, setHasMoreData] = useState(true);
-
+  const router = useRouter();
   const getUserHistory = async (pageNumber) => {
     if (
       userDetails.phone === "NaN" ||
@@ -64,6 +64,9 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
     if (historyData.status === 404 || historyData.status === 400) {
       setHasMoreData(false);
       toast.error("No more data available");
+      if (data?.loyalty?.loyaltyId === undefined) {
+        return router.push(`/${customLink}/explore`);
+      }
     }
     return response;
   };
@@ -71,6 +74,12 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   const handleClick = useCallback((newPage: number) => {
     if (newPage < 1) return;
     setPageNumber(newPage);
+  }, []);
+
+  useEffect(() => {
+    if (data?.loyalty?.loyaltyId === undefined) {
+      return router.push(`/${customLink}/explore`);
+    }
   }, []);
 
   useQuery({
