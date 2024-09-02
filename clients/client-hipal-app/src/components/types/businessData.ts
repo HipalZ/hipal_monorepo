@@ -123,8 +123,46 @@ export interface IStyles {
   };
 }
 
+interface IOutlet {
+  _id: string;
+  businessId: string;
+  __v: number;
+  address: string;
+  amenities: string[];
+  customTiming: {
+    day: string;
+    openTime: string;
+    closeTime: string;
+  }[][];
+  description: string;
+  isCustomTime: boolean;
+  location: string;
+  socialMediaLinks: {
+    icon: string;
+    link: string;
+    _id: string;
+  }[];
+  tags: string[];
+  logoUrl: string;
+  specialBannerUrl: string;
+  name: string;
+  endBannerUrl: string;
+  fssai: string;
+  gst: string;
+  billingEndTime: string;
+  billingStartTime: string;
+  branchName: string;
+  brandName: string;
+  footerDescription: string;
+  phone: string;
+  avgPricingForTwo: number;
+  fixCloseTime: string;
+  fixOpenTime: string;
+  outLetType: string;
+}
+
 export interface IBusinessData {
-  outletInfo: { location: string; phone: string ; outLetType: string }; 
+  outletInfo: IOutlet;
   businessId: string;
   banners: IBannerPayload[];
   _id: string;

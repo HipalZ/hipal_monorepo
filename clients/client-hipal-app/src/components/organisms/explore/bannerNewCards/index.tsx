@@ -17,6 +17,7 @@ import {
 import { cn } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
 import { hexToRGBA } from "@/components/utils/helpers";
+import { useActiveClass } from "@/components/store/useActiveClass";
 
 interface Props {
   redirectionId?: string;
@@ -29,6 +30,7 @@ interface Props {
   buttonStyle?: { color: string; buttonColor?: string };
   selectedLayout?: string;
   redirectionName?: string;
+  redirectionType?: string;
 }
 const MemoBannersLayout = (props: Props) => {
   const {
@@ -42,7 +44,12 @@ const MemoBannersLayout = (props: Props) => {
     paragraphStyle,
     buttonStyle,
     selectedLayout,
+    redirectionType,
   } = props;
+
+  const { setActiveType } = useActiveClass((s) => ({
+    setActiveType: s.setActiveType,
+  }));
 
   const buttonStyleTags = {
     backgroundColor:
@@ -66,7 +73,11 @@ const MemoBannersLayout = (props: Props) => {
 
   const router = useRouter();
   const customLink = useParams()?.businessId;
-  const handleNavigation = (id: string, redirectionName: string) => {
+  const handleNavigation = (
+    id: string,
+    redirectionName: string,
+    redirectionType: string,
+  ) => {
     if (redirectionName === "EXTERNAL") {
       let url = id;
       if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -75,6 +86,7 @@ const MemoBannersLayout = (props: Props) => {
       window.open(url, "_blank");
       return;
     }
+    setActiveType(redirectionType);
     router.push(`/${customLink}/category#${id}`);
   };
 
@@ -88,7 +100,13 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <div className="flex flex-col embla__parallax" key={layout?._id}>
+          <div
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
+            className="flex flex-col embla__parallax"
+            key={layout?._id}
+          >
             <article key={layout?._id} className="shadow-lg shadow-blue-500/50">
               <figure className={"w-full rounded-2xl"}>
                 <Image
@@ -218,7 +236,9 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <article
-            onClick={() => handleNavigation(redirectionId, redirectionName)}
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
             key={layout?._id}
             className="relative flex justify-center shrink-0 max-w-[20rem] h-[20rem]"
           >
@@ -281,7 +301,9 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId, redirectionName)}
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -346,7 +368,9 @@ const MemoBannersLayout = (props: Props) => {
         if (layout?._id !== selectedLayout) return null;
         return (
           <section
-            onClick={() => handleNavigation(redirectionId, redirectionName)}
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
             key={layout?._id}
             className="shrink-0 h-[20rem]"
           >
@@ -414,7 +438,9 @@ const MemoBannersLayout = (props: Props) => {
         const patternColor = "#00000050";
         return (
           <section
-            onClick={() => handleNavigation(redirectionId, redirectionName)}
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
             key={layout?._id}
             className="w-full h-[20rem] shrink-0"
           >
@@ -473,6 +499,9 @@ const MemoBannersLayout = (props: Props) => {
           <section
             key={layout?._id}
             className="border border-1 h-[20rem] border-[#000] rounded-2xl overflow-hidden"
+            onClick={() =>
+              handleNavigation(redirectionId, redirectionName, redirectionType)
+            }
           >
             <img
               src={img?.logo || layout?.image || pastaDummy}

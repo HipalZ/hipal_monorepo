@@ -1,11 +1,10 @@
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
-import { SplideSlide } from "@splidejs/react-splide";
 import {
   type CSSProperties,
   memo,
-  type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
 } from "react";
@@ -14,8 +13,10 @@ import SplideSlideWrapper from "./spliderSlide";
 interface IMainTypes {
   parentCategory: CategoryType[];
 }
+
 function MainTypes(props: IMainTypes) {
   const { parentCategory } = props;
+
   const mainTypes = useMemo(
     () =>
       parentCategory.filter((category) => category.subCategoryIds.length > 0),
@@ -24,10 +25,17 @@ function MainTypes(props: IMainTypes) {
 
   const {
     isActiveParentCategory,
+    isActiveCategory,
     setActiveParentCategory,
     setActiveParentCategoryName,
     setActiveCategory,
-  } = useActiveClass();
+  } = useActiveClass((s) => ({
+    isActiveParentCategory: s.isActiveParentCategory,
+    isActiveCategory: s.isActiveCategory,
+    setActiveParentCategory: s.setActiveParentCategory,
+    setActiveParentCategoryName: s.setActiveParentCategoryName,
+    setActiveCategory: s.setActiveCategory,
+  }));
 
   const containerStyles: CSSProperties = {
     display: "flex",
@@ -37,18 +45,40 @@ function MainTypes(props: IMainTypes) {
     gap: "0rem",
   };
 
-  const setMainCategory = (category: CategoryType) => {
-    setActiveParentCategory(category._id?.toString() ?? "");
-    setActiveParentCategoryName(category.name ?? "");
-    setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
-  };
+  const setMainCategory = useCallback(
+    (category: CategoryType) => {
+      setActiveParentCategory(category._id?.toString() ?? "");
+      setActiveParentCategoryName(category.name ?? "");
+      setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
+    },
+    [setActiveParentCategory, setActiveParentCategoryName, setActiveCategory],
+  );
 
   useEffect(() => {
-    const firstCategory = mainTypes[0];
-    setActiveParentCategory(firstCategory._id?.toString() ?? "");
-    setActiveParentCategoryName(firstCategory.name ?? "");
-    setActiveCategory(firstCategory.subCategoryIds[0]?.toString() ?? "");
-  }, []);
+    const hashUrl = window.location.hash;
+    if (hashUrl) {
+      const hashValue = hashUrl.substring(1);
+      setActiveCategory(hashValue);
+    } else {
+      const firstCategory = mainTypes[0];
+      setActiveParentCategory(firstCategory._id?.toString() ?? "");
+      setActiveParentCategoryName(firstCategory.name ?? "");
+      setActiveCategory(firstCategory.subCategoryIds[0]?.toString() ?? "");
+    }
+  }, [mainTypes]);
+
+  useEffect(() => {
+    console.log(isActiveCategory);
+    if (isActiveCategory) {
+      const parentCategory = mainTypes.find((category) =>
+        category.subCategoryIds.includes(isActiveCategory),
+      );
+      if (parentCategory) {
+        setActiveParentCategory(parentCategory._id?.toString() ?? "");
+        setActiveParentCategoryName(parentCategory.name ?? "");
+      }
+    }
+  }, [isActiveCategory, mainTypes]);
 
   return mainTypes.length > 0 ? (
     <div className="flex items-center w-full px-2 mx-auto hide-scrollbar bg-base-300 no-scrollbar">

@@ -186,7 +186,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 
       {/* history buttons */}
 
-      <section className="p-4 mt-4">
+      <section className="p-4 mt-4 pb-[7rem]">
         <Link href={`/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
           <article className="flex items-center justify-between p-4 bg-[#eeeeee] rounded-t-2xl">
             <div>

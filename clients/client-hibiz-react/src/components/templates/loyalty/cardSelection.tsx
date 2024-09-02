@@ -84,7 +84,7 @@ const MemoCardSelection = () => {
       subHeading:
         "How much coinz do your customers get at the very first time How much coinz do your ",
       navigate: () => setChangeModalLayout("SIGNUP_BONUS"),
-      key: `${signupBonus} %`,
+      key: `₹ ${signupBonus}`,
     },
     {
       heading: "Coinz back after payments ",
@@ -215,8 +215,8 @@ const MemoCardSelection = () => {
       loyaltyExpiryDate: resetExpiry,
       signUpBonus: signupBonus,
       rewardLimit: 4999,
-      cardType: selectedCardType,
-      cardLayout: selectedCardLayout,
+      cardType: selectedCardType || "CARD_ONE",
+      cardLayout: selectedCardLayout || "LAYOUT_THREE",
       loyaltyStartDate: loyaltyStartDate,
       cardColor: cardColor,
     };

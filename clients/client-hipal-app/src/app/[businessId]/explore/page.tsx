@@ -9,11 +9,12 @@ import { defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 import EmblaCarousel from "@/components/atoms/emblaCarousel";
+import EmblaCarousel2 from "@/components/atoms/emblaCarousel/test";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 // export const revalidate = 30;
-
+//
 const BannerLayouts = dynamics(
   () => import("@/components/organisms/explore/bannerNewCards"),
   {
@@ -72,8 +73,8 @@ export default async function Explore({
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
               </h2>
-              <article className="h-[28rem] gap-4 flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
-                <EmblaCarousel>
+              <article className="h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
+                <EmblaCarousel2>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
                     return (
@@ -97,11 +98,12 @@ export default async function Explore({
                             color: banner?.buttonColor || "",
                             buttonColor: banner?.buttonTextColor || "",
                           }}
+                          redirectionType={banner?.redirectionType || ""}
                         />
                       </div>
                     );
                   })}
-                </EmblaCarousel>
+                </EmblaCarousel2>
               </article>
             </article>
           )}

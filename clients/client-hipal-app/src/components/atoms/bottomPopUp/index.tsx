@@ -29,10 +29,10 @@ const BottomPopUp = ({
             <animated.div
               style={{
                 opacity: styles.opacity,
-                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backgroundColor: "rgba(0, 0, 0, 0.2)",
                 backdropFilter: "blur(5px)",
               }}
-              className="fixed inset-0 z-[100] overflow-y-auto flex items-end justify-center"
+              className="fixed inset-0 z-[103] overflow-y-auto flex items-end justify-center"
               onClick={onClose}
             >
               <animated.div
@@ -41,10 +41,10 @@ const BottomPopUp = ({
                   "relative w-full max-w-md bg-base-100 shadow-md",
                   !hide && "rounded-t-[1rem]",
                 )}
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
+                onClick={(e) => e.stopPropagation()}
               >
                 {!hide && (
-                  <div className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-12 left-[45%]">
+                  <div className="absolute flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-12 left-[45%]">
                     <HiX
                       className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer"
                       onClick={onClose}

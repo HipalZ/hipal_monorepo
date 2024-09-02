@@ -65,7 +65,7 @@ const SignUp = memo(() => {
     if (userDetails.phone) {
       setPhone(userDetails.phone);
     }
-  }, []);
+  }, [userDetails.phone]);
 
   return (
     <main className="relative bg-[#748FFC]">
@@ -110,8 +110,8 @@ const SignUp = memo(() => {
           <b>Hurry up for a rewarding journey✨</b>
           <input
             onChange={(e) => setPhone(e.target.value)}
-            value={phone || userDetails.phone}
-            type="tel"
+            value={phone}
+            type="search"
             id="floating_outlined2"
             className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             placeholder="Enter phone number"
