@@ -26,7 +26,6 @@ function App() {
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const businessId = selectedBiz?.businessId?._id;
-  const location = useLocation();
   const fetchAlerts = async (alertType: string) => {
     const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
     setLoading(true);
@@ -48,19 +47,18 @@ function App() {
     const data = await fetchAlerts("ONLINE");
     setOnlineAlertData(data);
     setOnlineCount(data.length);
-    if (data.length > onlineCount) {
-      const url = `${URL}${location?.pathname}`;
-      initializeMessaging(url, "checkout the recent payment");
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
+    // if (data.length > onlineCount) {
+    initializeMessaging("Hi Clientz", "Checkout the Online payment");
+    const sound = new Howl({
+      src: ["/sounds/order.mp3"],
+      autoplay: triggerSound,
+      loop: true,
+    });
+    sound.play();
+    setTimeout(() => {
+      sound.pause();
+    }, 3000);
+    // }
     setRefetchOnlineAlerts(refetchOnlineAlerts);
     return data;
   };
@@ -69,47 +67,77 @@ function App() {
     const data = await fetchAlerts("ALL");
     setOfflineAlertData(data);
     setOfflineCount(data.length);
-    if (data.length > offlineCount) {
-      const url = `${URL}${location?.pathname}`;
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      initializeMessaging(url, "Confirm the offline payment");
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
+    // if (data.length > offlineCount) {
+    const sound = new Howl({
+      src: ["/sounds/order.mp3"],
+      autoplay: triggerSound,
+      loop: true,
+    });
+    initializeMessaging("Hi Clientz", "Confirm the offline payment");
+    sound.play();
+    setTimeout(() => {
+      sound.pause();
+    }, 3000);
+    // }
     setRefetchOfflineAlerts(refetchOfflineAlerts);
     return data;
   };
 
   async function initializeMessaging(body: string, title: string) {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js",
-        );
-        const token = await getToken(messaging, {
-          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-          serviceWorkerRegistration: registration,
-        });
-
-        if (token) {
-          await apiRpc.users.send.PushNotification.$post({
-            json: {
-              registrationToken: token,
-              title,
-              body,
-            },
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.register(
+            "/firebase-messaging-sw.js",
+          );
+          const token = await getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+            serviceWorkerRegistration: registration,
           });
+          if (token) {
+            await apiRpc.users.send.PushNotification.$post({
+              json: {
+                registrationToken: token,
+                title,
+                body,
+              },
+            });
+
+            // Add visibilitychange event listener
+            const handleVisibilityChange = () => {
+              if (document.hidden) {
+                apiRpc.users.send.PushNotification.$post({
+                  json: {
+                    registrationToken: token,
+                    title: "Attention Needed",
+                    body: "You have a new message",
+                  },
+                });
+              }
+            };
+
+            console.log("Visibility change event listener added");
+
+            document.addEventListener(
+              "visibilitychange",
+              handleVisibilityChange,
+            );
+
+            // Cleanup event listener when the function is called again
+            return () => {
+              document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+              );
+            };
+          }
         }
+      } else if (permission === "denied") {
+        console.log("Permission denied");
       }
-    } else if (permission === "denied") {
-      console.log("Permission denied");
+    } catch (error) {
+      console.error("Error initializing messaging:", error);
     }
   }
 

@@ -14,13 +14,12 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
-
+console.log("Firebase Messaging Service Worker initialized", messaging);
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: payload.notification.image,
   };
-
+  console.log("onBackgroundMessage", payload);
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
