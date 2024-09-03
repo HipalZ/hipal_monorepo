@@ -15,17 +15,6 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
     return null;
   }
 
-  const handlePortionSelect = useCallback(
-    (portion: {
-      _id: number;
-      name: string;
-      price: number;
-    }) => {
-      setSelectedPortion(portion);
-    },
-    [],
-  );
-
   return (
     <div className="mx-6">
       <div className="prose">
@@ -61,15 +50,8 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
                     type="radio"
                     name="portion"
                     className="p-1 ml-auto mr-2 text-2xl text-black scale-150"
-
-                    checked={selectedPortion?._id === portion._id}
-                    onChange={() =>
-                      handlePortionSelect({
-                        _id: portion._id,
-                        name: portion.name,
-                        price: portion.price,
-                      })
-                    }
+                    // checked={selectedPortion?._id === portion._id}
+                    onChange={() => setSelectedPortion(portion)}
                   />
                 </td>
               </tr>
