@@ -50,13 +50,6 @@ const businessData = [
     billValue: 1,
     serviceCost: 1,
   },
-  {
-    id: "007",
-    name: "zylk",
-    bizName: "zylk",
-    billValue: 18000,
-    serviceCost: 3000,
-  },
 ];
 
 const Invoices = () => {
@@ -83,6 +76,10 @@ const Invoices = () => {
   }, []);
 
   const handleNavigatePayment = useCallback(() => {
+    console.log(
+      "business",
+      `/${customLink}/payment?amount=${business.billValue}`,
+    );
     setTableName(business.bizName);
     router.push(`/${customLink}/payment?amount=${business.billValue}`);
   }, [customLink, business.billValue]);
@@ -92,7 +89,7 @@ const Invoices = () => {
       <article className="linear_gradient_background">
         <MemoizedHeader
           onBack={handleNavigate}
-          title="Invoice"
+          title="Invoices"
           isIconBusinessShow={true}
           rightImage={Hi}
         />

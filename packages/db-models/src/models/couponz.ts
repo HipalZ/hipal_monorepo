@@ -82,6 +82,11 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     enum: COUPONZ_TYPES,
     required: true,
   },
+  businessId: {
+    type: ObjectId,
+    required: true,
+    ref: "Business",
+  },
   config: couponConfigSchema,
   conditions: new Schema({
     individualUserLimit: limitSchema,
@@ -153,6 +158,10 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     isActive: {
       type: Boolean,
       default: false,
+    },
+    image: {
+      type: String,
+      required: false,
     },
     isDeleted: {
       type: Boolean,

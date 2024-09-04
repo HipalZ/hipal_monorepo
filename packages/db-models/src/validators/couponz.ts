@@ -102,6 +102,7 @@ export const couponSchema = z.object({
   type: z.enum(COUPONZ_TYPES, {
     message: "Coupon type should be one of FIX, RANDOM, LIMITED",
   }),
+  businessId: ObjectIdSchema,
   config: couponConfigSchema,
   conditions: z.object({
     individualUserLimit: limitSchema.optional(),
@@ -142,6 +143,16 @@ export const couponSchema = z.object({
     couponEndDate: positiveNumber("couponEndDate"),
     tc: z.string().optional(),
     isActive: z.boolean().default(false),
+    image: z
+      .string()
+      .url()
+      .min(10, {
+        message: "Image url should be at least 10 characters",
+      })
+      .max(200, {
+        message: "Image url should be at most 200 characters",
+      })
+      .optional(),
   }),
 });
 

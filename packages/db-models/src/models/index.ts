@@ -10,6 +10,7 @@ export * from "./kitchen";
 export * from "./admin";
 export * from "./businessSubscriber";
 export * from "./couponClaim";
+export * from "./couponHistory";
 export * from "./couponz";
 export * from "./group";
 export * from "./groupAnalytics";
