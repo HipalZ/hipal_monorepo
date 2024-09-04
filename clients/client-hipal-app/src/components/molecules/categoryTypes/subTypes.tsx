@@ -14,10 +14,12 @@ interface ISubTypes {
 function SubTypes(props: ISubTypes) {
   const { childCategory } = props;
   const {
+    isActiveChildCategory,
     isActiveCategory,
     setActiveCategory,
     setActiveParentCategory,
     isActiveParentCategory,
+    setActiveChildCategory,
   } = useActiveClass();
 
   const subTypes = useMemo(
@@ -35,11 +37,12 @@ function SubTypes(props: ISubTypes) {
     (category: CategoryType) => {
       setActiveParentCategory(category?.parentCategoryIds?.[0].toString());
       setActiveCategory(category._id?.toString() ?? "");
+      setActiveChildCategory(category._id?.toString() ?? "");
       // Remove the hash from the URL
       const urlWithoutHash = window.location.href.split("#")[0];
       window.history.replaceState(null, "", urlWithoutHash);
     },
-    [setActiveCategory, setActiveParentCategory],
+    [setActiveCategory, setActiveParentCategory, isActiveChildCategory],
   );
 
   const splideRef = useRef<Splide>(null);
@@ -70,44 +73,50 @@ function SubTypes(props: ISubTypes) {
           }}
           className="w-full no-scrollbar"
         >
-          {subTypes.map((item: CategoryType, index: number) => (
-            <SplideSlide key={item._id?.toString()}>
-              <button
-                type="button"
-                id={item?._id?.toString() + index.toString()}
-                className="relative px-2 py-3 snap-center"
-                onClick={() => setActiveCategories(item)}
-              >
-                <article
-                  className={cn(
-                    isActiveCategory === item._id?.toString()
-                      ? "bg-primary text-base-100 shadow-[inset_0_0_8px_rgba(0,0,0,0.2),_0_4px_6px_rgba(0,0,0,0.1)]"
-                      : "text-primary shadow-[inset_0_0_4px_rgba(0,0,0,0.1),_0_2px_4px_rgba(0,0,0,0.1)]",
-                    "flex border border-primary rounded-full items-center justify-between px-2 py-1 transition-all duration-200 ease-in-out",
-                  )}
+          {subTypes.map((item: CategoryType, index: number) => {
+            return (
+              <SplideSlide key={item._id?.toString()}>
+                <button
+                  type="button"
+                  id={item?._id?.toString() + index.toString()}
+                  className="relative px-2 py-3 snap-center"
+                  onClick={() => setActiveCategories(item)}
                 >
-                  {item.coverImage ? (
-                    <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
-                      <Image
-                        src={item.coverImage || ""}
-                        alt="dish"
-                        quality={95}
-                        width={35}
-                        height={35}
-                        blurDataURL={getRandomBlurImg(50, 50)}
-                        className="object-cover max-h-[1.5rem] max-w-[2rem]"
-                      />
-                    </figure>
-                  ) : (
-                    <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
-                      <PlaceholderImg className="rounded-full" />
-                    </figure>
-                  )}
-                  <h6 className="w-full text-sm">{item?.name}</h6>
-                </article>
-              </button>
-            </SplideSlide>
-          ))}
+                  <article
+                    className={cn(
+                      window.location.hash
+                        ? isActiveChildCategory === item._id?.toString()
+                          ? "bg-primary text-base-100 shadow-[inset_0_0_8px_rgba(0,0,0,0.2),_0_4px_6px_rgba(0,0,0,0.1)]"
+                          : "text-primary shadow-[inset_0_0_4px_rgba(0,0,0,0.1),_0_2px_4px_rgba(0,0,0,0.1)]"
+                        : isActiveCategory === item._id?.toString()
+                          ? "bg-primary text-base-100 shadow-[inset_0_0_8px_rgba(0,0,0,0.2),_0_4px_6px_rgba(0,0,0,0.1)]"
+                          : "text-primary shadow-[inset_0_0_4px_rgba(0,0,0,0.1),_0_2px_4px_rgba(0,0,0,0.1)]",
+                      "flex border border-primary rounded-full items-center justify-between px-2 py-1 transition-all duration-200 ease-in-out",
+                    )}
+                  >
+                    {item.coverImage ? (
+                      <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
+                        <Image
+                          src={item.coverImage || ""}
+                          alt="dish"
+                          quality={95}
+                          width={35}
+                          height={35}
+                          blurDataURL={getRandomBlurImg(50, 50)}
+                          className="object-cover max-h-[1.5rem] max-w-[2rem]"
+                        />
+                      </figure>
+                    ) : (
+                      <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
+                        <PlaceholderImg className="rounded-full" />
+                      </figure>
+                    )}
+                    <h6 className="w-full text-sm">{item?.name}</h6>
+                  </article>
+                </button>
+              </SplideSlide>
+            );
+          })}
         </Splide>
       )}
     </section>
