@@ -9,13 +9,20 @@ const Logout = () => {
   const { businessId } = useParams<{ businessId: string }>();
   async function redirect() {
     toast.success("Logout Successful...");
-    startTransition(()=>{
-      navigate(singleRoute[PAGE_TYPES.LOGIN_LITE](businessId || ''));
-    })
+    startTransition(() => {
+      navigate(singleRoute[PAGE_TYPES.LOGIN_LITE](businessId || ""));
+    });
   }
   async function logOutWaiter() {
     await redirect();
     localStorage.clear();
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log("Service worker unregistered:", registration);
+      }
+    }
   }
   return (
     <div onClick={logOutWaiter}>

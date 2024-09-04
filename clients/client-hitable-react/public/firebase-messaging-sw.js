@@ -12,14 +12,14 @@ const firebaseConfig = {
   appId: "1:617554921241:web:bdfb3cd06014c1d1d42788",
   measurementId: "G-02YMLLKJVT",
 };
+
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
-console.log("Firebase Messaging Service Worker initialized", messaging);
+
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
   };
-  console.log("onBackgroundMessage", payload);
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
