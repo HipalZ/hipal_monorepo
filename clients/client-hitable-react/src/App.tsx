@@ -6,7 +6,7 @@ import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { apiRpc } from "@hi/common";
 import { messaging, getToken } from "./hooks/clientApp";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { URL } from "./configs";
 
 function App() {
@@ -25,10 +25,15 @@ function App() {
   } = useLiteStore();
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
-  const businessId = selectedBiz?.businessId?._id;
+  const pathName = useLocation().pathname;
+
+  // Define a regular expression to extract the businessId
+  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
+  const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const fetchAlerts = async (alertType: string) => {
     const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
     setLoading(true);
+    if (!businessId) return [];
     const res = await apiRpc.payments[":id"][endpoint].$get({
       query: {
         businessId,
@@ -49,15 +54,15 @@ function App() {
     setOnlineCount(data.length);
     // if (data.length > onlineCount) {
     initializeMessaging("Hi Clientz", "Checkout the Online payment");
-    const sound = new Howl({
-      src: ["/sounds/order.mp3"],
-      autoplay: triggerSound,
-      loop: true,
-    });
-    sound.play();
-    setTimeout(() => {
-      sound.pause();
-    }, 3000);
+    // const sound = new Howl({
+    //   src: ["/sounds/order.mp3"],
+    //   autoplay: triggerSound,
+    //   loop: true,
+    // });
+    // sound.play();
+    // setTimeout(() => {
+    //   sound.pause();
+    // }, 3000);
     // }
     setRefetchOnlineAlerts(refetchOnlineAlerts);
     return data;
@@ -68,16 +73,16 @@ function App() {
     setOfflineAlertData(data);
     setOfflineCount(data.length);
     // if (data.length > offlineCount) {
-    const sound = new Howl({
-      src: ["/sounds/order.mp3"],
-      autoplay: triggerSound,
-      loop: true,
-    });
+    // const sound = new Howl({
+    //   src: ["/sounds/order.mp3"],
+    //   autoplay: triggerSound,
+    //   loop: true,
+    // });
     initializeMessaging("Hi Clientz", "Confirm the offline payment");
-    sound.play();
-    setTimeout(() => {
-      sound.pause();
-    }, 3000);
+    // sound.play();
+    // setTimeout(() => {
+    //   sound.pause();
+    // }, 3000);
     // }
     setRefetchOfflineAlerts(refetchOfflineAlerts);
     return data;
