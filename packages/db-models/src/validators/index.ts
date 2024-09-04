@@ -40,6 +40,7 @@ export * from "./uniquelyYours";
 export * from "./user";
 export * from "./userAnalytics";
 export * from "./UserCouponClaimed";
+export * from "./userGrabbCoupnz";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userRoles";
