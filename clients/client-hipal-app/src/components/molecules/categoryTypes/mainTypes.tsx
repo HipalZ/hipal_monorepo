@@ -12,29 +12,41 @@ import SplideSlideWrapper from "./spliderSlide";
 
 interface IMainTypes {
   parentCategory: CategoryType[];
+  childCategory: CategoryType[];
 }
 
 function MainTypes(props: IMainTypes) {
-  const { parentCategory } = props;
+  const { parentCategory, childCategory } = props;
 
   const mainTypes = useMemo(
     () =>
-      parentCategory.filter((category) => category.subCategoryIds.length > 0),
+      parentCategory?.filter((category) => category.subCategoryIds.length > 0),
     [parentCategory],
+  );
+
+  const subTypes = useMemo(
+    () => childCategory?.filter((category) => category.dishIds.length > 0),
+    [childCategory],
   );
 
   const {
     isActiveParentCategory,
     isActiveCategory,
+    isActiveChildCategory,
     setActiveParentCategory,
     setActiveParentCategoryName,
     setActiveCategory,
+    setActiveChildCategory,
+    setActiveChildCategoryName,
   } = useActiveClass((s) => ({
     isActiveParentCategory: s.isActiveParentCategory,
     isActiveCategory: s.isActiveCategory,
     setActiveParentCategory: s.setActiveParentCategory,
     setActiveParentCategoryName: s.setActiveParentCategoryName,
     setActiveCategory: s.setActiveCategory,
+    isActiveChildCategory: s.isActiveChildCategory,
+    setActiveChildCategory: s.setActiveChildCategory,
+    setActiveChildCategoryName: s.setActiveChildCategoryName,
   }));
 
   const containerStyles: CSSProperties = {
@@ -56,29 +68,39 @@ function MainTypes(props: IMainTypes) {
 
   useEffect(() => {
     const hashUrl = window.location.hash;
-    if (hashUrl) {
-      const hashValue = hashUrl.substring(1);
+    const hashValue = hashUrl.substring(1);
+    if (hashValue) {
       setActiveCategory(hashValue);
-    } else {
-      const firstCategory = mainTypes[0];
-      setActiveParentCategory(firstCategory._id?.toString() ?? "");
-      setActiveParentCategoryName(firstCategory.name ?? "");
-      setActiveCategory(firstCategory.subCategoryIds[0]?.toString() ?? "");
-    }
-  }, [mainTypes]);
+      const subCategory = subTypes?.find((category) =>
+        category.dishIds?.some((dish) => dish._id === hashValue),
+      );
+      if (subCategory) {
+        setActiveChildCategory(subCategory._id?.toString() ?? "");
+        setActiveChildCategoryName(subCategory.name ?? "");
+        const parentCategoryId =
+          subCategory.parentCategoryIds[0]?.toString() ?? "";
+        const parentCategoryName = mainTypes.find(
+          (category) => category._id?.toString() === parentCategoryId,
+        )?.name;
 
-  useEffect(() => {
-    console.log(isActiveCategory);
-    if (isActiveCategory) {
+        setActiveParentCategory(parentCategoryId);
+        setActiveParentCategoryName(parentCategoryName ?? "");
+      } else {
+        setActiveChildCategory(hashValue);
+      }
+    } else {
       const parentCategory = mainTypes.find((category) =>
         category.subCategoryIds.includes(isActiveCategory),
       );
       if (parentCategory) {
         setActiveParentCategory(parentCategory._id?.toString() ?? "");
         setActiveParentCategoryName(parentCategory.name ?? "");
+        setActiveChildCategory(
+          parentCategory.subCategoryIds[0]?.toString() ?? "",
+        );
       }
     }
-  }, [isActiveCategory, mainTypes]);
+  }, [isActiveCategory, mainTypes, subTypes, isActiveChildCategory]);
 
   return mainTypes.length > 0 ? (
     <div className="flex items-center w-full px-2 mx-auto hide-scrollbar bg-base-300 no-scrollbar">

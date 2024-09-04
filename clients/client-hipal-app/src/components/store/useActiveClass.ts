@@ -10,6 +10,10 @@ interface IUseSettings {
   setActiveParentCategory: (category: string) => void;
   isActiveParentCategoryName: string;
   setActiveParentCategoryName: (category: string) => void;
+  isActiveChildCategory: string;
+  setActiveChildCategory: (category: string) => void;
+  isActiveChildCategoryName: string;
+  setActiveChildCategoryName: (category: string) => void;
 
   // banner redirections
   activeType: string;
@@ -31,6 +35,12 @@ export const useActiveClass = create(
         set(() => ({ isActiveCategory: categoryId })),
       setActiveDishType: (dishTypeId) =>
         set(() => ({ isActiveDishType: dishTypeId })),
+      isActiveChildCategory: "",
+      isActiveChildCategoryName: "",
+      setActiveChildCategory: (category) =>
+        set(() => ({ isActiveChildCategory: category })),
+      setActiveChildCategoryName: (category) =>
+        set(() => ({ isActiveChildCategoryName: category })),
 
       activeType: "",
       setActiveType: (type) => set(() => ({ activeType: type })),

@@ -18,7 +18,10 @@ function DishesTypes({
         showHeader ? "top-[3.125rem]" : "top-0"
       }`}
     >
-      <MainTypes parentCategory={parentCategory} />
+      <MainTypes
+        parentCategory={parentCategory}
+        childCategory={childCategory}
+      />
       <SubTypes childCategory={childCategory} />
     </section>
   );
