@@ -1,12 +1,16 @@
 "use client";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import Hi from "@/assets/svg/hand.svg";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
 import MemoBottomButton from "@/components/molecules/bottomButton";
 import useTableData from "@/components/store/useTableData";
+import { useLogin } from "@/components/store/useLogin";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { updateTheme } from "@/components/utils/themes";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
-const QrInvoices = () => {
+const QrInvoices = ({ data }) => {
   const businessData = [
     {
       id: "001",
@@ -44,11 +48,24 @@ const QrInvoices = () => {
 
   const router = useRouter();
   const params = useParams();
-
+  const pathname = usePathname();
   const setTableName = useTableData((state) => state.setTableName);
+  const { setBusinessDetails } = useBusinessDetails((s) => ({
+    setBusinessDetails: s.setBusinessDetails,
+  }));
   const businessClient = params?.business as string;
   const customLink = params?.businessId as string;
-
+  const { direction, setDirection, setInvoiceUrl, invoiceUrl, isLogin } =
+    useLogin((s) => ({
+      isLogin: s.isLogin,
+      direction: s.direction,
+      setDirection: s.setDirection,
+      setInvoiceUrl: s.setInvoiceUrl,
+      invoiceUrl: s.invoiceUrl,
+    }));
+  const { accessToken } = useUserToken((s) => ({
+    accessToken: s.accessToken,
+  }));
   const business = useMemo(() => {
     return (
       businessData.find((b) => b.name === businessClient) || {
@@ -66,13 +83,23 @@ const QrInvoices = () => {
   }, []);
 
   const handleNavigatePayment = useCallback(() => {
-    console.log(
-      "business",
-      `/${customLink}/payment?amount=${business.billValue}`,
-    );
     setTableName(business.bizName);
     router.push(`/${customLink}/payment?amount=${business.billValue}`);
   }, [customLink, business.billValue]);
+
+  useEffect(() => {
+    setDirection("invoice");
+    setInvoiceUrl(pathname);
+    setBusinessDetails(data?.data?.business);
+    updateTheme(data?.data?.settings);
+    if (isLogin) {
+      setDirection("");
+      setInvoiceUrl("");
+    }
+    if (!accessToken) {
+      router.push(`/${customLink}/user/signup`);
+    }
+  }, [direction, accessToken, invoiceUrl]);
 
   return (
     <>

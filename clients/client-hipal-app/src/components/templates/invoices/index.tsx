@@ -1,19 +1,23 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import Hi from "@/assets/svg/hand.svg";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
 import MemoBottomButton from "@/components/molecules/bottomButton";
 import useTableData from "@/components/store/useTableData";
-
+import { useLogin } from "@/components/store/useLogin";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { updateTheme } from "@/components/utils/themes";
 const businessData = [
   {
     id: "001",
     name: "soukun",
     bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
-    billValue: 21000,
+    billValue: 42000,
     serviceCost: 3500,
+    months: 12,
     address: "",
     gst: "",
   },
@@ -21,8 +25,9 @@ const businessData = [
     id: "002",
     name: "stonewater",
     bizName: "S&D HOSPITALITY - Stone waters",
-    billValue: 21000,
+    billValue: 42000,
     serviceCost: 3500,
+    months: 12,
     address: "",
     gst: "",
   },
@@ -30,8 +35,9 @@ const businessData = [
     id: "003",
     name: "hoist",
     bizName: "SONNET HOSPITALITY LLP - Hoist",
-    billValue: 21000,
+    billValue: 42000,
     serviceCost: 3500,
+    months: 12,
     address: "",
     gst: "",
   },
@@ -41,6 +47,7 @@ const businessData = [
     bizName: "TALES OF TELUGU",
     billValue: 18000,
     serviceCost: 3000,
+    months: 6,
     address: "",
     gst: "",
   },
@@ -50,6 +57,7 @@ const businessData = [
     bizName: "Kebabwala",
     billValue: 12000,
     serviceCost: 2000,
+    months: 6,
     address: "",
     gst: "",
   },
@@ -59,6 +67,7 @@ const businessData = [
     bizName: "Vamsi",
     billValue: 1,
     serviceCost: 1,
+    months: 1,
     address: "",
     gst: "",
   },
@@ -68,17 +77,32 @@ const businessData = [
     bizName: "zylk",
     billValue: 18000,
     serviceCost: 3000,
+    months: 6,
     address:
       "8-2-293/174/1/10 & 11, 101, 1st floor (above Ratnadeep) , S.V’s. NITYANTA ICON, road no.14, Banjara Hills, Hyderabad - 500034",
     gst: "36AADFZ4071H1Z0",
   },
 ];
 
-const Invoices = () => {
+const Invoices = ({ data }) => {
+  const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
-
+  const { direction, setDirection, setInvoiceUrl, invoiceUrl, isLogin } =
+    useLogin((s) => ({
+      direction: s.direction,
+      setDirection: s.setDirection,
+      setInvoiceUrl: s.setInvoiceUrl,
+      invoiceUrl: s.invoiceUrl,
+      isLogin: s.isLogin,
+    }));
   const setTableName = useTableData((state) => state.setTableName);
+  const { setBusinessDetails } = useBusinessDetails((s) => ({
+    setBusinessDetails: s.setBusinessDetails,
+  }));
+  const { accessToken } = useUserToken((s) => ({
+    accessToken: s.accessToken,
+  }));
   const businessClient = params?.business as string;
   const customLink = params?.businessId as string;
 
@@ -89,6 +113,7 @@ const Invoices = () => {
         bizName: "",
         billValue: 0,
         serviceCost: 0,
+        months: 0,
         address: "",
         gst: "",
       }
@@ -103,6 +128,20 @@ const Invoices = () => {
     setTableName(business.bizName);
     router.push(`/${customLink}/payment?amount=${business.billValue}`);
   }, [customLink, business.billValue]);
+
+  useEffect(() => {
+    setDirection("invoice");
+    setInvoiceUrl(pathname);
+    setBusinessDetails(data?.data?.business);
+    updateTheme(data?.data?.settings);
+    if (isLogin) {
+      setDirection("");
+      setInvoiceUrl("");
+    }
+    if (!accessToken) {
+      router.push(`/${customLink}/user/signup`);
+    }
+  }, [direction, accessToken, invoiceUrl]);
 
   return (
     <>
@@ -151,8 +190,8 @@ const Invoices = () => {
         <article className="p-6">
           <h1>&#9679; Service: POPCORN MODEL</h1>
           <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-            Rs {business.serviceCost} for 6 months{" "}
-            <span className="float-right">₹ {business.billValue}</span>
+            Rs {business?.serviceCost} for {business?.months} months{" "}
+            <span className="float-right">₹ {business?.billValue}</span>
           </p>
         </article>
         <article className="px-6">
