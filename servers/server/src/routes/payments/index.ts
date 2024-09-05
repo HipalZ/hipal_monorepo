@@ -16,7 +16,10 @@ import {
   UserRewardHistory,
   UserTags,
 } from "@hi/db-models";
-import type { PaymentType } from "@hi/db-models/src/validators";
+import type {
+  PaymentType,
+  RazorpayWebhookHeaders,
+} from "@hi/db-models/src/validators";
 import {
   RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
@@ -670,7 +673,7 @@ const paymentsRouter = new Hono()
       const {
         "x-razorpay-signature": razorpaySignature,
         "x-razorpay-event-id": razorpayEventId,
-      } = headersResult.data;
+      } = headersResult.data as RazorpayWebhookHeaders;
 
       const isSignatureValid = validateWebhookSignature(
         JSON.stringify(body),
@@ -685,6 +688,7 @@ const paymentsRouter = new Hono()
       if (!bodyResult.success) {
         console.log("Invalid body");
       }
+      //@ts-ignore
       const { event, payload } = bodyResult.data;
 
       const getOrder = await Order.findOne({

@@ -1,8 +1,8 @@
-import { number, z } from 'zod';
+import { number, z } from "zod";
 
 export const RazorpayWebhookHeadersSchema = z.object({
-  'x-razorpay-signature': z.string(),
-  'x-razorpay-event-id': z.string(),
+  "x-razorpay-signature": z.string(),
+  "x-razorpay-event-id": z.string(),
 });
 
 // name: 'datta landage',
@@ -50,3 +50,8 @@ export const RazorpayWebhookBodySchema = z.object({
     }),
   }),
 });
+
+export type RazorpayWebhookHeaders = z.infer<
+  typeof RazorpayWebhookHeadersSchema
+>;
+export type RazorpayWebhookBody = z.infer<typeof RazorpayWebhookBodySchema>;
