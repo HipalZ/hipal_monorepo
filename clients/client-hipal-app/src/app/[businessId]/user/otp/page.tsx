@@ -46,7 +46,7 @@ function OtpPage() {
   const router = useRouter();
   const sendOtp = useLogin((s) => s.sendOtp);
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-  const { direction, isPayment, setUserCoinZ } = useLogin();
+  const { direction, isPayment, setUserCoinZ, invoiceUrl } = useLogin();
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleOtpChange = (
@@ -103,6 +103,8 @@ function OtpPage() {
       newUrl = `/${customLink}/category?pay=${isPayment}`;
     } else if (direction === "explore") {
       newUrl = `/${customLink}/explore?pay=${isPayment}`;
+    } else if (direction === "invoice") {
+      newUrl = invoiceUrl;
     }
 
     window.location.href = newUrl;
@@ -129,7 +131,7 @@ function OtpPage() {
         userId: userDetails._id,
         otp: fullOtp,
         role: userDetails?.role,
-        loyaltyId: loyaltyId,
+        loyaltyId: loyaltyId || businessId,
         signUpBonus: signUpBonus,
         name: customerName || userDetails.name,
         businessId: businessId || outletInfo?.businessId,

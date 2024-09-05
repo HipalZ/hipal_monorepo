@@ -10,6 +10,33 @@
 body {
 	font-family: 'Darker Grotesque Variable', sans-serif;
   }
+
+.bungee-inline {
+	font-family: 'Bungee Inline', sans-serif;
+	font-weight: 400;
+	font-style: normal;
+}
+
+.space-grotesk-700 {
+	font-family: "Space Grotesk", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 700;
+	font-style: normal;
+  }
+  /* Add this inside your global CSS file, e.g., styles/globals.css */
+.notch::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	background: #ECD667; /* Match the background color */
+	transform: translate(-50%, -50%) rotate(45deg);
+	border-left: 2px dashed #fff;
+	border-top: 2px dashed #fff;
+  }
+  
 /* Or create a specific class to use the font */
 
 :root {

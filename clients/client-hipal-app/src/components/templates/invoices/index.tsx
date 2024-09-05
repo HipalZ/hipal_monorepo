@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import Hi from "@/assets/svg/hand.svg";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
 import MemoBottomButton from "@/components/molecules/bottomButton";
 import useTableData from "@/components/store/useTableData";
-
+import { useLogin } from "@/components/store/useLogin";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { updateTheme } from "@/components/utils/themes";
 const businessData = [
   {
     id: "001",
@@ -14,6 +17,8 @@ const businessData = [
     bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
     billValue: 21000,
     serviceCost: 3500,
+    address: "",
+    gst: "",
   },
   {
     id: "002",
@@ -21,6 +26,8 @@ const businessData = [
     bizName: "S&D HOSPITALITY - Stone waters",
     billValue: 21000,
     serviceCost: 3500,
+    address: "",
+    gst: "",
   },
   {
     id: "003",
@@ -28,6 +35,8 @@ const businessData = [
     bizName: "SONNET HOSPITALITY LLP - Hoist",
     billValue: 21000,
     serviceCost: 3500,
+    address: "",
+    gst: "",
   },
   {
     id: "004",
@@ -35,6 +44,8 @@ const businessData = [
     bizName: "TALES OF TELUGU",
     billValue: 18000,
     serviceCost: 3000,
+    address: "",
+    gst: "",
   },
   {
     id: "005",
@@ -42,6 +53,8 @@ const businessData = [
     bizName: "Kebabwala",
     billValue: 12000,
     serviceCost: 2000,
+    address: "",
+    gst: "",
   },
   {
     id: "006",
@@ -49,14 +62,40 @@ const businessData = [
     bizName: "Vamsi",
     billValue: 1,
     serviceCost: 1,
+    address: "",
+    gst: "",
+  },
+  {
+    id: "007",
+    name: "zylk",
+    bizName: "zylk",
+    billValue: 18000,
+    serviceCost: 3000,
+    address:
+      "8-2-293/174/1/10 & 11, 101, 1st floor (above Ratnadeep) , S.V’s. NITYANTA ICON, road no.14, Banjara Hills, Hyderabad - 500034",
+    gst: "36AADFZ4071H1Z0",
   },
 ];
 
-const Invoices = () => {
+const Invoices = ({ data }) => {
+  const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
-
+  const { direction, setDirection, setInvoiceUrl, invoiceUrl, isLogin } =
+    useLogin((s) => ({
+      direction: s.direction,
+      setDirection: s.setDirection,
+      setInvoiceUrl: s.setInvoiceUrl,
+      invoiceUrl: s.invoiceUrl,
+      isLogin: s.isLogin,
+    }));
   const setTableName = useTableData((state) => state.setTableName);
+  const { setBusinessDetails } = useBusinessDetails((s) => ({
+    setBusinessDetails: s.setBusinessDetails,
+  }));
+  const { accessToken } = useUserToken((s) => ({
+    accessToken: s.accessToken,
+  }));
   const businessClient = params?.business as string;
   const customLink = params?.businessId as string;
 
@@ -67,6 +106,8 @@ const Invoices = () => {
         bizName: "",
         billValue: 0,
         serviceCost: 0,
+        address: "",
+        gst: "",
       }
     );
   }, [businessClient]);
@@ -76,20 +117,30 @@ const Invoices = () => {
   }, []);
 
   const handleNavigatePayment = useCallback(() => {
-    console.log(
-      "business",
-      `/${customLink}/payment?amount=${business.billValue}`,
-    );
     setTableName(business.bizName);
     router.push(`/${customLink}/payment?amount=${business.billValue}`);
   }, [customLink, business.billValue]);
+
+  useEffect(() => {
+    setDirection("invoice");
+    setInvoiceUrl(pathname);
+    setBusinessDetails(data?.data?.business);
+    updateTheme(data?.data?.settings);
+    if (isLogin) {
+      setDirection("");
+      setInvoiceUrl("");
+    }
+    if (!accessToken) {
+      router.push(`/${customLink}/user/signup`);
+    }
+  }, [direction, accessToken, invoiceUrl]);
 
   return (
     <>
       <article className="linear_gradient_background">
         <MemoizedHeader
           onBack={handleNavigate}
-          title="Invoices"
+          title="Invoice"
           isIconBusinessShow={true}
           rightImage={Hi}
         />
@@ -109,6 +160,18 @@ const Invoices = () => {
           <b className="mr-4">Status: </b>{" "}
           <span className="text-red-500">Not Paid</span>
         </h1>
+        {business?.address?.length > 0 ? (
+          <h1>
+            <b>Address: </b>{" "}
+            <span className="text-sm">{business?.address}</span>
+          </h1>
+        ) : null}
+        {business?.gst?.length > 0 ? (
+          <h1>
+            <b className="mr-2">GST No: </b>{" "}
+            <span className="text-sm">{business?.gst}</span>
+          </h1>
+        ) : null}
       </article>
       <section
         style={{
@@ -153,7 +216,7 @@ const Invoices = () => {
           <b>CIN : </b> U72200TG2021PTC156074
         </h1>
       </article>
-      <center className="mx-4 mt-16 text-xs opacity-50">
+      <center className="pb-24 mx-4 mt-24 text-xs opacity-50">
         This is a computer generated invoice. All disputes subjected to
         exclusive jurisdiction of courts in Hyderabad{" "}
       </center>
