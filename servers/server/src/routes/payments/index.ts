@@ -664,7 +664,7 @@ const paymentsRouter = new Hono()
         c.req.header(),
       );
       if (!headersResult.success) {
-        throw new Error("Invalid headers");
+        console.log("Invalid headers");
       }
 
       const {
@@ -679,12 +679,11 @@ const paymentsRouter = new Hono()
       );
       if (!isSignatureValid) {
         console.log("Invalid signature");
-        throw new Error("Invalid signature");
       }
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
       if (!bodyResult.success) {
-        throw new Error("Invalid body");
+        console.log("Invalid body");
       }
       const { event, payload } = bodyResult.data;
 
