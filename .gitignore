@@ -1,7 +1,7 @@
 node_modules
 clients/client-hibiz-react-copy/dist
 infra/*
-servers/server/.env
+servers/server/.envs
 Dockerfile
 .github/*
 
