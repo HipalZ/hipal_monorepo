@@ -29,6 +29,7 @@ interface IUseLogin {
   fromPage: string;
   isPayment: boolean;
   userCoinZ: number;
+  invoiceUrl: string;
   setUserDetails: (d: IUserData) => void;
   setRole: (d: IRole) => void;
   setIsLogin: (d: boolean) => void;
@@ -42,6 +43,7 @@ interface IUseLogin {
   setUserCoinZ: (d: number) => void;
   subscribeModal: boolean;
   setSubscribeModal: (d: boolean) => void;
+  setInvoiceUrl: (d: string) => void;
 }
 
 export const useLogin = create(
@@ -72,6 +74,7 @@ export const useLogin = create(
       isPayment: false,
       userCoinZ: 0,
       subscribeModal: false,
+      invoiceUrl: "",
       setSubscribeModal: (d: boolean) => set({ subscribeModal: d }),
 
       setUserDetails: (d: IUserData) => set({ userDetails: d }),
@@ -93,6 +96,7 @@ export const useLogin = create(
         });
         return await res.json();
       },
+      setInvoiceUrl: (d: string) => set({ invoiceUrl: d }),
     }),
     {
       name: "useLogin",
