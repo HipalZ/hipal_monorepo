@@ -1107,6 +1107,7 @@ const usersRouter = new Hono()
           title: title || "Title of the Notification",
           body: body || "Need your assistance",
           icon: "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
+          // icon:"https://t-static.blr1.digitaloceanspaces.com/HipalZ_logo_title.webp"
         },
       };
 

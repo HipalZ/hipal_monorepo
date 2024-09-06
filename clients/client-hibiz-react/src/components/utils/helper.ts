@@ -1,18 +1,18 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import axios from "@/axios";
-import veg from "@/assets/dishTypes/veg.png";
-import nonVeg from "@/assets/dishTypes/non_veg.png";
-import egg from "@/assets/dishTypes/egg.png";
-import vegan from "@/assets/dishTypes/vegan.png";
-import alcohol from "@/assets/alcohol.png";
 import nonalcohol from "@/assets/NonAlcohol.png";
+import alcohol from "@/assets/alcohol.png";
+import egg from "@/assets/dishTypes/egg.png";
+import nonVeg from "@/assets/dishTypes/non_veg.png";
+import veg from "@/assets/dishTypes/veg.png";
+import vegan from "@/assets/dishTypes/vegan.png";
+import axios from "@/axios";
 import { DishTypeEnum } from "@hi/db-models/src/validators";
-import { DishSteps, type ImageFiles } from "../store/useMenuStorage";
-import { cropImage } from "../cropper";
-import toast from "react-hot-toast";
+import { type ClassValue, clsx } from "clsx";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
 import type { ChangeEvent } from "react";
+import toast from "react-hot-toast";
+import { twMerge } from "tailwind-merge";
+import { cropImage } from "../cropper";
+import { DishSteps, type ImageFiles } from "../store/useMenuStorage";
 
 export async function storeImageAfterSave(
   image: File,
@@ -44,13 +44,13 @@ export async function storeImageAfterSave(
     formData.append("bucketName", "assets");
 
     const response = await axios.post(
-      "https://api.hipal.life/v1/storage",
+      "https://storage.test.hipalz.com/upload",
       formData,
     );
 
     if (response.status === 201 || response.status === 200) {
       setIsLoading?.(false);
-      return `https://storage.hipal.life/minio/assets/${imageId}`;
+      return response.data.url;
     }
   } catch (error) {
     console.error("Failed to store image:", error);
