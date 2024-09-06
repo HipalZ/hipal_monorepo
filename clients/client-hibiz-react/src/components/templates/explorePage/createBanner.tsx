@@ -271,7 +271,8 @@ const MemoCreateBanner = () => {
     let bannerImage: string | undefined;
     if (
       imageFiles?.logo &&
-      !img?.logo?.includes("https://storage.hipal.life")
+      (!img?.logo?.includes("https://storage.hipal.life") ||
+        !img?.logo?.includes("t-static.blr1.digitaloceanspaces.com"))
     ) {
       bannerImage = await storeImageAfterSave(
         imageFiles?.logo,
