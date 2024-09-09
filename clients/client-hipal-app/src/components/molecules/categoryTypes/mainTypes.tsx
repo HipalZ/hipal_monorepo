@@ -38,6 +38,7 @@ function MainTypes(props: IMainTypes) {
     setActiveCategory,
     setActiveChildCategory,
     setActiveChildCategoryName,
+    setObserverActive,
   } = useActiveClass((s) => ({
     isActiveParentCategory: s.isActiveParentCategory,
     isActiveCategory: s.isActiveCategory,
@@ -47,6 +48,7 @@ function MainTypes(props: IMainTypes) {
     isActiveChildCategory: s.isActiveChildCategory,
     setActiveChildCategory: s.setActiveChildCategory,
     setActiveChildCategoryName: s.setActiveChildCategoryName,
+    setObserverActive: s.setObserverActive,
   }));
 
   const containerStyles: CSSProperties = {
@@ -59,11 +61,20 @@ function MainTypes(props: IMainTypes) {
 
   const setMainCategory = useCallback(
     (category: CategoryType) => {
+      setObserverActive(false);
       setActiveParentCategory(category._id?.toString() ?? "");
       setActiveParentCategoryName(category.name ?? "");
       setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
+      setTimeout(() => {
+        setObserverActive(true);
+      }, 1000);
     },
-    [setActiveParentCategory, setActiveParentCategoryName, setActiveCategory],
+    [
+      setActiveParentCategory,
+      setActiveParentCategoryName,
+      setActiveCategory,
+      setObserverActive,
+    ],
   );
 
   useEffect(() => {
