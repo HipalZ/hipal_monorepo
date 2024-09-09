@@ -31,6 +31,10 @@ export const DAYS = [
   "sunday",
 ] as const;
 
+export type CouponzDays = (typeof DAYS)[number];
+export type CouponzAvailability = (typeof AVAILABILITY)[number];
+export type CouponzDiscountType = (typeof DISCOUNT_TYPES)[number];
+
 export const positiveNumber = (field: string) =>
   z.coerce
     .number({
@@ -70,6 +74,25 @@ export const couponConfigSchema = z.union([
   }),
 ]);
 
+export const availabilitySchema = z.object({
+  when: z
+    .enum(AVAILABILITY, {
+      message:
+        "availability should be one of allthetime, weekdays, weekends, birthday, birthdayweek, birthdaymonth, custom",
+    })
+    .optional(),
+  customDays: z
+    .array(
+      z.enum(DAYS, {
+        message:
+          "customDays should be one of monday, tuesday, wednesday, thursday, friday, saturday, sunday",
+      }),
+    )
+    .optional(),
+  startTime: positiveNumber("startTime"),
+  endTime: positiveNumber("endTime"),
+});
+
 export const limitSchema = z.union([
   z
     .object({
@@ -88,6 +111,46 @@ export const limitSchema = z.union([
     .optional(),
 ]);
 
+export const condtionSchema = z.object({
+  individualUserLimit: limitSchema.optional(),
+  billValue: positiveNumber("billValue").optional(),
+  expiryClaimLimit: limitSchema.optional(),
+  availability: z.object({
+    when: z
+      .enum(AVAILABILITY, {
+        message:
+          "availability should be one of allthetime, weekdays, weekends, birthday, birthdayweek, birthdaymonth, custom",
+      })
+      .optional(),
+    customDays: z
+      .array(
+        z.enum(DAYS, {
+          message:
+            "customDays should be one of monday, tuesday, wednesday, thursday, friday, saturday, sunday",
+        }),
+      )
+      .optional(),
+    startTime: positiveNumber("startTime"),
+    endTime: positiveNumber("endTime"),
+  }),
+  eligibleUser: z.object({
+    allUsers: z.boolean().default(false),
+    userIds: z.array(ObjectIdSchema).default([]),
+    groupIds: z.array(ObjectIdSchema).default([]),
+  }),
+  expiryAfterGrabbed: positiveNumber("expiryAfterGrabbed").optional(),
+  requiredFields: z
+    .array(
+      z.string({
+        message: "requiredFields should be an array of strings",
+      }),
+    )
+    .optional(),
+  couponStartDate: positiveNumber("couponStartDate"),
+  couponEndDate: positiveNumber("couponEndDate"),
+  tc: z.string().optional(),
+});
+
 export const couponSchema = z.object({
   name: z
     .string({
@@ -102,6 +165,8 @@ export const couponSchema = z.object({
   type: z.enum(COUPONZ_TYPES, {
     message: "Coupon type should be one of FIX, RANDOM, LIMITED",
   }),
+  promot: z.boolean().default(false),
+  promotInExplore: z.boolean().default(false),
   businessId: ObjectIdSchema,
   config: couponConfigSchema,
   isActive: z.boolean().default(false),
@@ -162,3 +227,5 @@ export const couponSchema = z.object({
 export type CouponzType = z.infer<typeof couponSchema>;
 export type CouponzConfigType = z.infer<typeof couponConfigSchema>;
 export type CouponzLimitType = z.infer<typeof limitSchema>;
+export type CouponzConditionType = z.infer<typeof condtionSchema>;
+export type CouponzAvailabilityType = z.infer<typeof availabilitySchema>;

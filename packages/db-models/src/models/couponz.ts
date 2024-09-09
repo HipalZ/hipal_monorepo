@@ -108,6 +108,14 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     type: Boolean,
     default: false,
   },
+  promot: {
+    type: Boolean,
+    default: false,
+  },
+  promotInExplore: {
+    type: Boolean,
+    default: false,
+  },
   conditions: new Schema({
     individualUserLimit: limitSchema,
     billValue: {
@@ -120,6 +128,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
         type: String,
         enum: AVAILABILITY,
         required: false,
+        default: "custom",
       },
       customDays: {
         type: [String],
@@ -138,7 +147,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     eligibleUser: new Schema({
       allUsers: {
         type: Boolean,
-        default: false,
+        default: true,
       },
       userIds: {
         type: [ObjectId],
@@ -163,14 +172,15 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     },
     couponStartDate: {
       type: Number,
-      index: true,
+
       required: true,
     },
     couponEndDate: {
       type: Number,
-      index: true,
+
       required: true,
     },
+
     tc: {
       type: String,
       required: false,

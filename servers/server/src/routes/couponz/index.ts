@@ -1,9 +1,47 @@
 import { Couponz } from "@hi/db-models";
-import { couponSchema } from "@hi/db-models/src/validators";
+import {
+  type CouponzAvailabilityType,
+  type CouponzDays,
+  couponSchema,
+} from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+
+const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+const weekends = ["saturday", "sunday"];
+// Helper function to determine day eligibility
+function switchDayEligibility(
+  availability: CouponzAvailabilityType,
+  currentDay: string,
+) {
+  switch (availability.when) {
+    case "allthetime":
+      return true;
+    case "weekdays":
+      return weekdays.includes(currentDay);
+    case "weekends":
+      return weekends.includes(currentDay);
+    case "custom":
+      return availability.customDays?.includes(currentDay as CouponzDays);
+    default:
+      return false;
+  }
+}
+
+// Helper function to determine time eligibility
+function switchTimeEligibility(
+  availability: CouponzAvailabilityType,
+  currentTime: number,
+) {
+  return (
+    availability.startTime == null ||
+    (currentTime >= availability.startTime &&
+      currentTime <= availability.endTime)
+  );
+}
+
 const couponzRouter = new Hono()
   .get(
     "/all/:businessId",
@@ -97,20 +135,6 @@ const couponzRouter = new Hono()
       );
     }
 
-    // Validation 2: Ensure only one of availability.when or availability.customDays is chosen
-    if (
-      requestData.conditions.availability.when &&
-      requestData.conditions.availability.customDays
-    ) {
-      return respond(
-        c,
-        "Only one of availability.when or availability.customDays should be chosen",
-        true,
-        400,
-        {},
-      );
-    }
-
     // Validation 3: Set couponStartDate and couponEndDate to 0 for specific availability.when values
     const noExpiryWhenValues = [
       "allthetime",
@@ -171,20 +195,6 @@ const couponzRouter = new Hono()
         );
       }
 
-      // Validation 2: Ensure only one of availability.when or availability.customDays is chosen
-      if (
-        requestData?.conditions?.availability?.when &&
-        requestData?.conditions?.availability?.customDays
-      ) {
-        return respond(
-          c,
-          "Only one of availability.when or availability.customDays should be chosen",
-          true,
-          400,
-          {},
-        );
-      }
-
       // Validation 3: Set couponStartDate and couponEndDate to 0 for specific availability.when values
       const noExpiryWhenValues = [
         "allthetime",
@@ -233,102 +243,129 @@ const couponzRouter = new Hono()
     },
   )
   .get(
-    "/eligible-coupons/:userId",
+    "/eligible-coupons/:businessId/:userId",
     zValidator(
       "param",
       z.object({
         userId: z.string({ message: "userId should be a string" }),
+        businessId: z.string({ message: "businessId should be a string" }),
       }),
     ),
     async (c) => {
-      const { userId } = c.req.param();
+      const { userId, businessId } = c.req.param();
       const currentDate = Date.now();
+      const currentDay = new Date()
+        .toLocaleString("en-us", { weekday: "long" })
+        .toLowerCase();
+      const currentTime = new Date().getHours();
 
       // Fetch all active coupons
       const coupons = await Couponz.find({
-        "conditions.couponStartDate": { $lte: currentDate },
-        "conditions.couponEndDate": { $gte: currentDate },
-        isDeleted: false,
+        $or: [
+          {
+            "conditions.couponStartDate": 0,
+            "conditions.couponEndDate": 0,
+            businessId: businessId,
+          },
+          {
+            "conditions.couponStartDate": { $lte: currentDate },
+            "conditions.couponEndDate": { $gte: currentDate },
+            businessId: businessId,
+          },
+        ],
       });
 
-      const eligibleCoupons = [];
-
-      for (const coupon of coupons) {
+      const eligibleCoupons = coupons.filter((coupon) => {
         const { conditions } = coupon;
+        const isDayEligible = switchDayEligibility(
+          conditions.availability,
+          currentDay,
+        );
 
-        // Check availability
-        const currentDay = new Date()
-          .toLocaleString("en-us", { weekday: "long" })
-          .toLowerCase();
-        const currentTime = new Date().getHours();
-        if (conditions.availability.when === "custom") {
-          if (!conditions.availability.customDays.includes(currentDay)) {
-            continue; // Not eligible based on customDays
-          }
+        const isTimeEligible = switchTimeEligibility(
+          conditions.availability,
+          currentTime,
+        );
+
+        // Check overall day and time eligibility
+        if (!isDayEligible || !isTimeEligible) return false;
+
+        // Check user eligibility
+        if (conditions.eligibleUser.allUsers) {
+          return true; // Coupon is available to all users
         }
-        if (
-          conditions.availability.startTime &&
-          conditions.availability.endTime
-        ) {
-          if (
-            currentTime < conditions.availability.startTime ||
-            currentTime > conditions.availability.endTime
-          ) {
-            continue; // Not eligible based on time
-          }
+        if (conditions.eligibleUser.userIds?.includes(userId)) {
+          return true; // Coupon is available to this specific user
         }
 
-        // Check eligibility
-        if (!conditions.eligibleUser.allUsers) {
-          if (!conditions.eligibleUser.userIds.includes(userId)) {
-            // If userId is not in eligible user list, skip
-            continue;
-          }
-        }
+        return false; // If none of the conditions match, the user is not eligible
+      });
 
-        // Check user claim limits
-        const userClaim = await UserCouponClaim.findOne({
-          userId,
-          couponId: coupon._id,
-        });
+      return c.json({
+        message: "Eligible coupons found",
+        err: false,
+        data: eligibleCoupons,
+      });
+    },
+  )
+  .get(
+    "/promot-couponz/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId should be a string" }),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const currentDate = Date.now();
+      const currentDay = new Date()
+        .toLocaleString("en-us", { weekday: "long" })
+        .toLowerCase();
+      const currentTime = new Date().getHours();
 
-        if (userClaim) {
-          if (
-            userClaim.overAllLimit >=
-            conditions.individualUserLimit.overAllLimit
-          ) {
-            continue; // Exceeded individual user's overall limit
-          }
+      // Fetch all active coupons
+      const coupons = await Couponz.find({
+        $or: [
+          {
+            "conditions.couponStartDate": 0,
+            "conditions.couponEndDate": 0,
+            businessId: businessId,
+            promot: true,
+          },
+          {
+            "conditions.couponStartDate": { $lte: currentDate },
+            "conditions.couponEndDate": { $gte: currentDate },
+            businessId: businessId,
+            promot: true,
+          },
+        ],
+      });
 
-          // Optionally check weekly/monthly limits as well
-        }
+      const promotCoupons = coupons.filter((coupon) => {
+        const { conditions } = coupon;
+        const isDayEligible = switchDayEligibility(
+          conditions.availability,
+          currentDay,
+        );
 
-        // Check global claim limits
-        const globalClaim = await CouponClaim.findOne({ couponId: coupon._id });
-        if (globalClaim) {
-          if (
-            globalClaim.overAllLimit >=
-            conditions.individualUserLimit.overAllLimit
-          ) {
-            continue; // Exceeded global overall limit
-          }
+        const isTimeEligible = switchTimeEligibility(
+          conditions.availability,
+          currentTime,
+        );
 
-          // Optionally check weekly/monthly limits
-        }
+        console.log("isDayEligiblefff", isDayEligible);
+        console.log("isTimeEligibleffff", isTimeEligible);
 
-        // Check required fields (example: email, phone, etc.)
-        const requiredFields = conditions.requiredFields || [];
-        const user = await User.findById(userId); // Assuming you have a User model
+        // Check overall day and time eligibility
+        return isDayEligible && isTimeEligible;
+      });
 
-        const missingFields = requiredFields.filter((field) => !user[field]);
-        if (missingFields.length > 0) {
-          continue; // User is missing required fields
-        }
-
-        eligibleCoupons.push(coupon);
-      }
-
-      return c.json({ eligibleCoupons });
+      return c.json({
+        message: "Eligible coupons found",
+        err: false,
+        data: promotCoupons,
+      });
     },
   );
 
