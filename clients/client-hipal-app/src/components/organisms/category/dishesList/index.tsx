@@ -1,6 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { type FC, memo, useEffect, useMemo, useRef } from "react";
+import { type FC, memo, useEffect, useMemo, useRef, useState } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -15,15 +15,19 @@ const DishesList: FC<IDishesProps> = (props) => {
   const {
     isActiveDishType,
     isActiveCategory,
+    observerActive,
     setActiveCategory,
     setActiveParentCategory,
     setActiveParentCategoryName,
+    setObserverActive,
   } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
     setActiveCategory: state.setActiveCategory,
     setActiveParentCategory: state.setActiveParentCategory,
     setActiveParentCategoryName: state.setActiveParentCategoryName,
+    observerActive: state.observerActive,
+    setObserverActive: state.setObserverActive,
   }));
 
   const subTypes = useMemo(() => {
@@ -75,7 +79,7 @@ const DishesList: FC<IDishesProps> = (props) => {
           const observer = new IntersectionObserver(
             (entries) => {
               entries.forEach((entry) => {
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting && observerActive) {
                   handleCategoryInView(category);
                 }
               });
@@ -96,7 +100,7 @@ const DishesList: FC<IDishesProps> = (props) => {
               observer.unobserve(headingRef.current);
             }
           };
-        }, [headingRef, category]);
+        }, [headingRef, category, observerActive]);
 
         return (
           <section

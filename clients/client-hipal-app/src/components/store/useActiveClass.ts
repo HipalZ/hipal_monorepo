@@ -18,6 +18,9 @@ interface IUseSettings {
   // banner redirections
   activeType: string;
   setActiveType: (type: string) => void;
+
+  observerActive: boolean;
+  setObserverActive: (value: boolean) => void;
 }
 
 export const useActiveClass = create(
@@ -44,6 +47,9 @@ export const useActiveClass = create(
 
       activeType: "",
       setActiveType: (type) => set(() => ({ activeType: type })),
+
+      observerActive: false,
+      setObserverActive: (value) => set(() => ({ observerActive: value })),
     }),
     {
       name: "activecategory",
