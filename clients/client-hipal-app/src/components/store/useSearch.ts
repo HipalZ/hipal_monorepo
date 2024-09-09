@@ -18,6 +18,6 @@ export const useSearch = create<IUseSearch>((set) => ({
   isSearchActive: false,
   setIsSearchActive: (d: boolean) => set(() => ({ isSearchActive: d })),
 
-  showHeader: false,
+  showHeader: true,
   setShowHeader: (d: boolean) => set(() => ({ showHeader: d })),
 }));
