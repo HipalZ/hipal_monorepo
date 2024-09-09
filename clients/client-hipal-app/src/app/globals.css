@@ -946,6 +946,9 @@ input[type='password'] {
   .embla__dot--active {
 	background-color: #333;
 	transform: scale(1);
+	width: 20px;
+	height:8px;
+	border-radius: 8px;
   }
   
   .embla__dot--inactive {

@@ -14,6 +14,7 @@ const UserRewardDoc = z.object({
   loyaltyId: ObjectIdSchema,
   rewards: z.coerce.number(),
   password: z.coerce.number(),
+  googleReviewCount: z.coerce.number().default(0).optional(),
   scanCount: z.coerce.number(),
   date: z.number().optional(),
 });

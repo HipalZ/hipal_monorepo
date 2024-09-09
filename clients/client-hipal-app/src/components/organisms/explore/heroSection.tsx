@@ -153,7 +153,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             {address && (
               <>
                 <div style={{ overflow: "hidden" }}>
-                  <h6 className="h-6 text-xs font-semibold capitalize text-[var(--sf)] scrolling-text">
+                  <h6 className="text-xs font-semibold capitalize text-[var(--sf)]">
                     {address}
                   </h6>
                 </div>

@@ -34,3 +34,5 @@ export * from "./userGrabbCouponz";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userTag";
+export * from "./googleReviews";
+export * from "./googleAuthUsers";

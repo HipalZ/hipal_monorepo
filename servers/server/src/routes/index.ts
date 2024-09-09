@@ -11,6 +11,7 @@ import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import tagRouter from "./tags";
 import usersRouter from "./users";
+import googleReview from "./reviews";
 
 ///
 const app = new Hono();
@@ -29,6 +30,7 @@ export const routes = app
   .route("/groups", groupRouter)
   .route("/tags", tagRouter)
   .route("/admin", adminRouter)
-  .route("/couponz", couponzRouter);
+  .route("/couponz", couponzRouter)
+  .route("/reviews", googleReview);
 
 export type AppType = typeof routes;

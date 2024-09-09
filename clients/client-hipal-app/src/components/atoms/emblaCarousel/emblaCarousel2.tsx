@@ -1,18 +1,23 @@
 "use client";
 import type React from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import type { EmblaCarouselType, EmblaEventType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import { useDotButton } from "./emblaCarouselDotButtons";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 import Autoplay from "embla-carousel-autoplay";
+import { cn } from "@/components/utils/helpers";
 
 const TWEEN_FACTOR_BASE = 0.52;
 
 const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
+interface IProps {
+  children: React.ReactNode;
+  reviewCarousel?: boolean;
+}
 
-const EmblaCarousel2 = ({ children }) => {
+const MemoEmblaCarouel2 = ({ children, reviewCarousel }: IProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "center" }, [
     Autoplay(),
   ]);
@@ -121,18 +126,28 @@ const EmblaCarousel2 = ({ children }) => {
   }, [emblaApi, tweenScale]);
 
   return (
-    <div className="embla">
-      <div className="embla__viewport" ref={emblaRef}>
+    <div className={cn("embla", reviewCarousel ? "m-0" : "")}>
+      <div
+        className={cn(reviewCarousel ? "" : "embla__viewport")}
+        ref={emblaRef}
+      >
         <div className="embla__container">{children}</div>
       </div>
-      <div className="flex px-4 py-4 mt-3 embla__button-container">
-        <button
-          type="button"
-          className="border rounded-full border-primary embla__button embla__button--prev border-1"
-          onClick={onPrevClick}
-        >
-          <FaAngleLeft className="text-primary" size={24} />
-        </button>
+      <div
+        className={cn(
+          "px-4 py-4 mt-3 embla__button-container flex items-center",
+          reviewCarousel ? "!justify-center" : "justify-between",
+        )}
+      >
+        {!reviewCarousel && (
+          <button
+            type="button"
+            className="border rounded-full border-primary embla__button embla__button--prev border-1"
+            onClick={onPrevClick}
+          >
+            <FaAngleLeft className="text-primary" size={24} />
+          </button>
+        )}
         <div className="embla__dots">
           {scrollSnaps.map((_, index) => (
             <button
@@ -147,16 +162,19 @@ const EmblaCarousel2 = ({ children }) => {
             />
           ))}
         </div>
-        <button
-          type="button"
-          className="border rounded-full border-primary embla__button embla__button--next border-1"
-          onClick={onNextClick}
-        >
-          <FaAngleRight className="text-primary" size={24} />
-        </button>
+        {!reviewCarousel && (
+          <button
+            type="button"
+            className="border rounded-full border-primary embla__button embla__button--next border-1"
+            onClick={onNextClick}
+          >
+            <FaAngleRight className="text-primary" size={24} />
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
+const EmblaCarousel2 = memo(MemoEmblaCarouel2);
 export default EmblaCarousel2;

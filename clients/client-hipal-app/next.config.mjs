@@ -37,6 +37,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "t-static.blr1.digitaloceanspaces.com",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
   async redirects() {

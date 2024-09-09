@@ -3,6 +3,7 @@ import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 
 export interface IBiz {
+  googleReviewLink: string;
   logoUrl: string;
   email: string;
   businessId: string;
@@ -452,4 +453,14 @@ export interface BusinessDetails {
   address: string;
   avgRating: number;
   logo: string;
+}
+
+export interface GoogleReview {
+  _id: string;
+  businessId: string;
+  authorName: string;
+  userId: string;
+  comment: string;
+  profilePhotoUrl: string;
+  rating: number;
 }

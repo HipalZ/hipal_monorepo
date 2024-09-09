@@ -8,8 +8,7 @@ import type {
 import { defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
-import EmblaCarousel from "@/components/atoms/emblaCarousel";
-import EmblaCarousel2 from "@/components/atoms/emblaCarousel/test";
+import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -45,6 +44,11 @@ const BottomButton = dynamics(
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
+
+const GoogleReviews = dynamics(
+  () => import("@/components/organisms/explore/googleReviews"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
 
 export async function generateMetadata() {
   return {
@@ -109,10 +113,11 @@ export default async function Explore({
           )}
           <SubLoyalty loyalty={data?.loyalty} />
           {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
-            <div className="mt-12 overflow-auto">
+            <div className="mt-8 overflow-auto">
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
           ) : null}
+          <GoogleReviews />
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}

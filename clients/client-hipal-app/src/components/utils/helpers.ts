@@ -17,6 +17,8 @@ import type { IDish, IExtraItem } from "../types/businessData";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdOutlineCall } from "react-icons/md";
+import { initializeApp } from "firebase/app";
+import { GoogleAuthProvider, getAuth } from "firebase/auth";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -459,3 +461,18 @@ export function hexToRGBA(hex, opacity) {
 
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC_Gx_LwNxkBTHw1ewq5Vx3IRP78fvzRvE",
+  authDomain: "reviewz-ecd55.firebaseapp.com",
+  projectId: "reviewz-ecd55",
+  storageBucket: "reviewz-ecd55.appspot.com",
+  messagingSenderId: "521843864608",
+  appId: "1:521843864608:web:8487879b0144a9257b7845",
+  measurementId: "G-9SW8ES10NE",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export { auth, provider };

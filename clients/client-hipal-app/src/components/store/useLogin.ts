@@ -44,6 +44,10 @@ interface IUseLogin {
   subscribeModal: boolean;
   setSubscribeModal: (d: boolean) => void;
   setInvoiceUrl: (d: string) => void;
+
+  // review popup
+  reviewPopup: boolean;
+  setReviewPopup: (d: boolean) => void;
 }
 
 export const useLogin = create(
@@ -97,6 +101,8 @@ export const useLogin = create(
         return await res.json();
       },
       setInvoiceUrl: (d: string) => set({ invoiceUrl: d }),
+      reviewPopup: false,
+      setReviewPopup: (d: boolean) => set({ reviewPopup: d }),
     }),
     {
       name: "useLogin",
