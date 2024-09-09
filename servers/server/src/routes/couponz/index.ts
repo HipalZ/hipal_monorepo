@@ -248,8 +248,7 @@ const couponzRouter = new Hono()
       const coupons = await Couponz.find({
         "conditions.couponStartDate": { $lte: currentDate },
         "conditions.couponEndDate": { $gte: currentDate },
-        "conditions.isActive": true,
-        "conditions.isDeleted": false,
+        isDeleted: false,
       });
 
       const eligibleCoupons = [];

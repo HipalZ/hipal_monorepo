@@ -88,6 +88,26 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     ref: "Business",
   },
   config: couponConfigSchema,
+  isActive: {
+    type: Boolean,
+    default: false,
+  },
+  image: {
+    type: String,
+    required: false,
+  },
+  bgColour: {
+    type: String,
+    required: false,
+  },
+  visiable: {
+    type: Boolean,
+    default: true,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
   conditions: new Schema({
     individualUserLimit: limitSchema,
     billValue: {
@@ -154,18 +174,6 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     tc: {
       type: String,
       required: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
-    image: {
-      type: String,
-      required: false,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
     },
   }),
 });

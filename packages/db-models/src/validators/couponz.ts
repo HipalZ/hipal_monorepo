@@ -104,6 +104,20 @@ export const couponSchema = z.object({
   }),
   businessId: ObjectIdSchema,
   config: couponConfigSchema,
+  isActive: z.boolean().default(false),
+  bgColour: z.string().optional(),
+  visiable: z.boolean().default(true),
+  image: z
+    .string()
+    .url()
+    .min(10, {
+      message: "Image url should be at least 10 characters",
+    })
+    .max(200, {
+      message: "Image url should be at most 200 characters",
+    })
+    .optional(),
+  isDeleted: z.boolean().default(false),
   conditions: z.object({
     individualUserLimit: limitSchema.optional(),
     billValue: positiveNumber("billValue").optional(),
@@ -142,17 +156,6 @@ export const couponSchema = z.object({
     couponStartDate: positiveNumber("couponStartDate"),
     couponEndDate: positiveNumber("couponEndDate"),
     tc: z.string().optional(),
-    isActive: z.boolean().default(false),
-    image: z
-      .string()
-      .url()
-      .min(10, {
-        message: "Image url should be at least 10 characters",
-      })
-      .max(200, {
-        message: "Image url should be at most 200 characters",
-      })
-      .optional(),
   }),
 });
 
