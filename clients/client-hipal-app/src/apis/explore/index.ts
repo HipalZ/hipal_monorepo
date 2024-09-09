@@ -32,6 +32,9 @@ async function fetchBusinessData(customLink: string) {
     param: {
       businessId: bizId,
     },
+    query: {
+      isPublished: "true",
+    },
   });
 
   const outletInfo = await outletInfoData.json();

@@ -7,7 +7,6 @@ import { updateTheme } from "@/components/utils/themes";
 import Image from "next/image";
 import React, { memo, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
-import { MdOutlineChevronLeft } from "react-icons/md";
 
 interface Props {
   handleBack: () => void;
@@ -17,11 +16,11 @@ const MemoPaymentHeader = ({ handleBack }: Props) => {
   const { businessDetails } = useBusinessDetails();
   const businessData = _useAllBusiness((s) => s.data) as IBusinessData;
 
-  useEffect(() => {
-    if (businessData?.settings) {
-      updateTheme(businessData?.settings);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (businessData?.settings) {
+  //     updateTheme(businessData?.settings);
+  //   }
+  // }, []);
 
   return (
     <section className="z-20 w-full bg-base-100 text-primary">

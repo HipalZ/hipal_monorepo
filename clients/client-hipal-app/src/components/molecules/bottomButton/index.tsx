@@ -41,7 +41,6 @@ function BottomButton({
 
   const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
-  const [selectedButton, setSelectedButton] = useState("");
   const { subscribeModal } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
   }));
@@ -67,10 +66,6 @@ function BottomButton({
     }
   }, []);
 
-  const handleButtonClick = useCallback((buttonName: string) => {
-    setSelectedButton(buttonName);
-  }, []);
-
   const defaultStyle = useMemo(
     () => "px-2 font-light text-base-100 active:scale-90 on_active_bounce",
     [],
@@ -89,36 +84,16 @@ function BottomButton({
         <section className="fixed z-10 bottom-0 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
-              <center
-                onClick={() => handleButtonClick("home")}
-                className={defaultStyle}
-              >
-                <RiHome4Fill
-                  size={20}
-                  className={`mb-2 ${
-                    selectedButton === "home"
-                      ? "bg-base-100 text-primary rounded-2xl"
-                      : ""
-                  }`}
-                />
+              <center className={defaultStyle}>
+                <RiHome4Fill size={20} className="mb-2" />
                 Home
               </center>
             </Link>
             <Link
               href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             >
-              <center
-                onClick={() => handleButtonClick("rewards")}
-                className={defaultStyle}
-              >
-                <RiCouponFill
-                  size={20}
-                  className={`mb-2 ${
-                    selectedButton === "rewards"
-                      ? "bg-base-100 text-primary"
-                      : ""
-                  }`}
-                />
+              <center className={defaultStyle}>
+                <RiCouponFill size={20} className="mb-2" />
                 Rewards
               </center>
             </Link>
@@ -126,18 +101,13 @@ function BottomButton({
               <center
                 onClick={() => {
                   openModal();
-                  handleButtonClick("payBill");
+                }}
+                onKeyDown={() => {
+                  openModal();
                 }}
                 className={defaultStyle}
               >
-                <MdAccountBalanceWallet
-                  size={20}
-                  className={`mb-2 ${
-                    selectedButton === "payBill"
-                      ? "bg-base-100 text-primary"
-                      : ""
-                  }`}
-                />
+                <MdAccountBalanceWallet size={20} className="mb-2" />
                 <span className="w-full font-light text-base-100">
                   {!tableName ? "Scan" : "Pay Bill"}
                 </span>
@@ -145,33 +115,15 @@ function BottomButton({
             )}
             {!tableName && (
               <Link href={`/${customLink}/scan`}>
-                <center
-                  onClick={() => handleButtonClick("scan")}
-                  className={defaultStyle}
-                >
-                  <LuScanLine
-                    size={20}
-                    className={`mb-2 ${
-                      selectedButton === "scan"
-                        ? "bg-base-100 text-primary"
-                        : ""
-                    }`}
-                  />
+                <center className={defaultStyle}>
+                  <LuScanLine size={20} className="mb-2" />
                   {!tableName ? "Scan" : "Pay Bill"}
                 </center>
               </Link>
             )}
             <Link href={`/${customLink}/category`}>
-              <center
-                onClick={() => handleButtonClick("menu")}
-                className={defaultStyle}
-              >
-                <MdOutlineMenuBook
-                  size={20}
-                  className={`mb-2 ${
-                    selectedButton === "menu" ? "bg-base-100 text-primary" : ""
-                  }`}
-                />
+              <center className={defaultStyle}>
+                <MdOutlineMenuBook size={20} className="mb-2" />
                 {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
               </center>
             </Link>

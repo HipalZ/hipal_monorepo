@@ -5,13 +5,14 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React from "react";
+import React, { memo, useEffect, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import { GoArrowUpRight } from "react-icons/go";
 import { cn } from "@hi/common";
+import { colors } from "@/components/utils/helpers";
 
 const payload = {
   billValue: 1000,
@@ -22,45 +23,25 @@ const payload = {
   couponEndDate: 1725259809706,
 };
 
-const colors = [
-  {
-    bgColor: "bg-[#ECD667]",
-    textColor: "text-[#000000]",
-    linearGradient: "linear-gradient(92.87deg, #F2FF9D 0.47%, #DDE79E 99.53%)",
-  },
-  {
-    bgColor: "bg-[#67A5EC]",
-    textColor: "text-[#ffffff]",
-    linearGradient: "linear-gradient(92.87deg, #9DFFFD 0.47%, #A5E79E 99.53%)",
-  },
-  {
-    bgColor: "bg-[#9267EC]",
-    textColor: "text-[#ffffff]",
-    linearGradient: "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)",
-  },
-  {
-    bgColor: "bg-[#EC678D]",
-    textColor: "text-[#ffffff]",
-    linearGradient: "linear-gradient(92.87deg, #FF9DB7 0.47%, #E79E9F 99.53%)",
-  },
-  {
-    bgColor: "bg-[#67EC8D]",
-    textColor: "text-[#ffffff]",
-    linearGradient: "linear-gradient(92.87deg, #D6FF9D 0.47%, #9EE7A8 99.53%)",
-  },
-];
-
-const Couponz = () => {
+const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const { logoUrl, name } = useBusinessDetails((s) => ({
     logoUrl: s.businessDetails?.logoUrl,
     name: s.businessDetails?.name,
   }));
+  const [colorIndex, setColorIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIndex((prevIndex) => (prevIndex + 1) % colors.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
   return (
     <main
       className={cn(
-        colors[0]?.bgColor,
-        colors[0]?.textColor,
+        colors[colorIndex]?.bgColor,
+        colors[colorIndex]?.textColor,
         "h-[100vh] overflow-y-auto pb-[10rem] relative",
       )}
     >
@@ -124,12 +105,14 @@ const Couponz = () => {
             <p>04:00-20:00</p>
           </div>
           <hr
-            className="w-full col-span-2 mt-6 -mx-2"
+            className="w-full col-span-2 mt-6"
             style={{
-              backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='%23ECD667' stroke-width='4' stroke-dasharray='21%2c 15' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+              backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                colors[colorIndex]?.color,
+              )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
-              height: "3px",
+              height: "2px",
               border: "none",
             }}
           />
@@ -139,13 +122,13 @@ const Couponz = () => {
           <div className="absolute flex items-center justify-between w-full h-full px-2">
             <div
               className={cn(
-                colors[0]?.bgColor,
+                colors[colorIndex]?.bgColor,
                 "absolute w-8 h-8 rounded-full -left-4 bottom-14",
               )}
             />
             <div
               className={cn(
-                colors[0]?.bgColor,
+                colors[colorIndex]?.bgColor,
                 "absolute w-8 h-8 rounded-full -right-4 bottom-14",
               )}
             />
@@ -159,12 +142,12 @@ const Couponz = () => {
       <picture className="absolute scale-80 -left-2 bottom-24">
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
-      <center className="fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4">
+      <center className="fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]">
         View Terms and conditions
       </center>
       <section
-        className="z-10 w-full max-w-[calc(100%-2rem)] h-[5.5rem] p-4 rounded-xl flex gap-4 items-center fixed left-1/2 transform -translate-x-1/2 bottom-4"
-        style={{ background: colors[0]?.linearGradient }}
+        className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[5.5rem] p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
+        style={{ background: colors[colorIndex]?.linearGradient }}
       >
         <article className="bg-black h-[3.5rem] rounded-lg aspect-square flex items-center justify-center">
           <GoArrowUpRight color="white" size={36} />
@@ -178,4 +161,5 @@ const Couponz = () => {
   );
 };
 
+const Couponz = memo(MemoCouponz);
 export default Couponz;

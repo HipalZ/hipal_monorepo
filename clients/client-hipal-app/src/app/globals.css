@@ -36,7 +36,23 @@ body {
 	border-left: 2px dashed #fff;
 	border-top: 2px dashed #fff;
   }
-  
+
+  .picker-item-selected {
+	font-weight: bold;              /* Makes the text bold */
+	background-color: #ffffff; 
+	border-radius: 8px;            /* Rounds the corners */
+	margin-left:5px;                /* Adds padding for better visibility */
+	margin-right: 5px;
+	min-width: 70px; 
+	max-width: 200px;
+	overflow: visible;
+  }
+
+  .picker-container .picker-highlight:after,
+.picker-container .picker-highlight:before {
+  background-color: transparent !important; 
+}
+
 /* Or create a specific class to use the font */
 
 :root {
@@ -816,7 +832,7 @@ input[type='password'] {
 	height: 50%;
 	width: 50%;
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
-	animation: shine-effect 2s;
+	animation: shine-effect 2s infinite;
 	transform: rotate(45deg);
   }
 
@@ -946,9 +962,9 @@ input[type='password'] {
   .embla__dot--active {
 	background-color: #333;
 	transform: scale(1);
-	width: 20px;
-	height:8px;
-	border-radius: 8px;
+	width: 17px;
+	height:6px;
+	border-radius: 50px;
   }
   
   .embla__dot--inactive {
@@ -1894,4 +1910,136 @@ input[type='password'] {
 	max-width: 69rem;
 	margin: 0 auto;
 	box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.1);
+  }
+
+@media (max-width: 375px) {
+	.custom-top-congratulationz {
+	  top: 7%;
+	}
+  }
+  
+  @media (min-width: 376px) { 
+	.custom-top-congratulationz {
+	  top: 12%;
+	}
+  }
+  
+  @media (max-width: 375px) {
+	.custom-bottom-congratulationz {
+	  bottom: 15%;
+	}
+  }
+  
+  @media (min-width: 376px) { 
+	.custom-bottom-congratulationz {
+	  bottom: 20%;
+	}
+  }
+
+  .inter{
+	font-family: "Inter", sans-serif;
+	font-optical-sizing: auto;
+	font-style: normal;
+  }
+  .poppins-regular {
+	font-family: "Poppins", sans-serif;
+	font-weight: 400;
+	font-style: normal;
+  }
+
+  @media (max-width: 375px) {
+	.custom-size {
+	  width:208px;
+	}
+  }
+  
+  @media (min-width: 376px) { 
+	.custom-size {
+	  width: 256px;
+	}
+  }
+
+  #star-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none; /* Ensure stars don't interfere with other elements */
+  }
+  
+  .star {
+	position: absolute;
+	width: 4px;
+	height: 4px;
+	background: #855FD6;
+	border-radius: 50%;
+	animation: blink 5s infinite;
+  }
+  
+  @keyframes blink {
+	0%, 100% {
+	  opacity: 0.5;
+	}
+	50% {
+	  opacity: 0;
+	}
+  }
+
+  .scaled-card-container-rotate {
+	position: absolute; /* Allows positioning within the parent */
+	top: 60px; /* Adjust as needed */
+	left: 95px; /* Adjust as needed */
+	transform-origin: top left; /* Ensure scaling is from the top-left corner */
+	transform: scale(0.35) translateX(-50%) rotate(10deg) skew(-5deg);
+	/* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+  }
+
+  .scaled-card-container-rotate-2 {
+	position: absolute; /* Allows positioning within the parent */
+	top: 30px; /* Adjust as needed */
+	left: 70px; /* Adjust as needed */
+	transform-origin: top left; /* Ensure scaling is from the top-left corner */
+	transform: scale(0.7) translateX(-50%) rotate(-10deg);
+	height:100px;
+	width:100px;
+  }
+
+  .scaled-card-container {
+	position: absolute; 
+	top: 0px;
+	left: 0px;
+	transform-origin: top left;
+  }
+
+  .scaled-card-container-2 {
+	position: absolute; 
+	top: 0px;
+	right: 0px;
+  }
+
+  @keyframes blink-light {
+	0%, 100% {
+	  opacity: 0;  /* Image fully transparent */
+	}
+	50% {
+	  opacity: 1;  /* Image fully visible */
+	}
+  }
+  
+  .blink-effect {
+	animation: blink-light 2s infinite;  /* Adjust the duration to control speed */
+  }
+
+  @keyframes slideUpAndDown {
+	0%, 100% {
+	  transform: translateY(0);
+	}
+	50% {
+	  transform: translateY(-100%); /* Adjust the value based on your needs */
+	}
+  }
+  
+  .text-animate {
+	animation: slideUpAndDown 4s ease-in-out forwards;
   }

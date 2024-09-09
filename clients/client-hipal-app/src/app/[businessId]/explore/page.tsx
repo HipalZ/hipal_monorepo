@@ -5,7 +5,7 @@ import type {
   IBannerPayload,
   IBusinessData,
 } from "@/components/types/businessData";
-import { defaultThemes } from "@/components/utils/helpers";
+import { cn, defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2";
@@ -70,6 +70,7 @@ export default async function Explore({
           <div className="bg-base-300">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>
+          <div></div>
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
           ) && (
@@ -77,12 +78,26 @@ export default async function Explore({
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
               </h2>
-              <article className="h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
+              <article
+                className={cn(
+                  data?.banners?.length === 1 ? "justify-center" : "",
+                  "h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap",
+                )}
+              >
                 <EmblaCarousel2>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
+                    console.log("banner", data?.banners?.length);
                     return (
-                      <div key={index.toString()} className="embla__slide">
+                      <div
+                        key={index.toString()}
+                        className={cn(
+                          "embla__slide",
+                          data?.banners?.length === 1
+                            ? "justify-start embla__container"
+                            : "",
+                        )}
+                      >
                         <BannerLayouts
                           redirectionId={banner?.redirectionId || ""}
                           redirectionName={banner?.redirectionName || ""}

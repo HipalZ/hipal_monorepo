@@ -239,9 +239,23 @@ const settingsRouter = new Hono()
     // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("param", z.object({ businessId: z.string() })),
-
+    zValidator("query", z.object({ isPublished: z.string().optional() })),
     async (c) => {
       const { businessId } = c.req.param();
+      const { isPublished } = c.req.query();
+      if (isPublished) {
+        const existingBanners = await Banner.find({
+          businessId,
+          isPublished: true,
+        }).sort({ sequence: 1, createdAt: -1 });
+        return respond(
+          c,
+          "Banners fetched successfully",
+          false,
+          200,
+          existingBanners,
+        );
+      }
       const existingBanners = await Banner.find({
         businessId,
       }).sort({ sequence: 1, createdAt: -1 });

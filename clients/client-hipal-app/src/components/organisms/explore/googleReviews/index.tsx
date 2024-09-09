@@ -69,7 +69,7 @@ const MemoGoogleReviews = () => {
             {reviews.map((review: GoogleReview, index) => (
               <div
                 key={index.toString()}
-                className="w-full h-full p-4 border border-1 border-primary rounded-2xl"
+                className="w-full h-full p-4 mx-4 border border-1 border-primary rounded-2xl"
               >
                 <div className="flex items-center">
                   {review.profilePhotoUrl ? (

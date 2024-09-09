@@ -40,6 +40,14 @@ export const getTimeIn12HrFormat = (time: string) => {
   return `${hour12}:${minutes} ${amPm}`;
 };
 
+export const formatTime = (hours, minutes) => {
+  const period = hours >= 12 ? "PM" : "AM";
+  const formattedHour = hours % 12 || 12; // Convert hour for 12-hour clock format.
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes.toString(); // Ensures two-digit minute format.
+
+  return `${formattedHour}:${formattedMinutes} ${period}`;
+};
+
 export type PatternKeys =
   | "wave"
   | "triangle"
@@ -111,6 +119,28 @@ export function timestampToDateTime(timestamp: number): string {
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
+
+export const formatDate = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const month = monthNames[date.getMonth()]; // Get the month abbreviation
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
 
 export const calculateReward = (
   exist: number,
@@ -476,3 +506,80 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 export { auth, provider };
+export const colors = [
+  {
+    bgColor: "bg-[#FFC93C]",
+    color: "#FFC93C",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #F2FF9D 0.47%, #DDE79E 99.53%)",
+    hueRotate: 116,
+  },
+  {
+    bgColor: "bg-[#67A5EC]",
+    color: "#67A5EC",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #9DFFFD 0.47%, #A5E79E 99.53%)",
+    hueRotate: 259,
+  },
+  {
+    bgColor: "bg-[#9267EC]",
+    color: "#9267EC",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)",
+    hueRotate: 343,
+  },
+  {
+    bgColor: "bg-[#EC678D]",
+    color: "#EC678D",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #FF9DB7 0.47%, #E79E9F 99.53%)",
+    hueRotate: 43,
+  },
+  {
+    bgColor: "bg-[#67EC8D]",
+    color: "#67EC8D",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #D6FF9D 0.47%, #9EE7A8 99.53%)",
+    hueRotate: 212,
+  },
+];
+
+export const adjustLightness = (color, amount) => {
+  let hsl = hexToHSL(color);
+  hsl.l = Math.max(0, Math.min(100, hsl.l - amount)); // Ensure within [0, 100]
+  return `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+};
+
+const hexToHSL = (H) => {
+  // Convert hex to RGB first
+  let r = 0,
+    g = 0,
+    b = 0;
+  if (H.length === 4) {
+    r = parseInt(H[1] + H[1], 16);
+    g = parseInt(H[2] + H[2], 16);
+    b = parseInt(H[3] + H[3], 16);
+  } else if (H.length === 7) {
+    r = parseInt(H[1] + H[2], 16);
+    g = parseInt(H[3] + H[4], 16);
+    b = parseInt(H[5] + H[6], 16);
+  }
+  // Then to HSL
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const l = Math.max(r, g, b);
+  const s = l - Math.min(r, g, b);
+  const h = s
+    ? l === r
+      ? (g - b) / s
+      : l === g
+        ? 2 + (b - r) / s
+        : 4 + (r - g) / s
+    : 0;
+  return {
+    h: 60 * h < 0 ? 60 * h + 360 : 60 * h,
+    s: 100 * (s ? s / (l + Math.min(r, g, b)) : 0),
+    l: (100 * (l + Math.min(r, g, b))) / 2,
+  };
+};
