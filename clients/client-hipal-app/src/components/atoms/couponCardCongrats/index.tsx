@@ -2,10 +2,13 @@ import React, { memo, useState } from "react";
 import Image from "next/image";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
-import { cn, colors } from "@/components/utils/helpers";
+import { cn, colors, formatDiscount } from "@/components/utils/helpers";
+import { useCouponz } from "@/components/store/useCouponz";
 
 const MemoCouponCardCongrats = () => {
-  const [colorIndex, setColorIndex] = useState(0);
+  const { selectedCoupon } = useCouponz((s) => ({
+    selectedCoupon: s.selectedCoupon,
+  }));
   return (
     <section className="absolute inset-0 flex items-center justify-center shadow-2xl">
       <center className="absolute w-[800px] z-0">
@@ -30,7 +33,7 @@ const MemoCouponCardCongrats = () => {
           className="bg-white"
           style={{
             backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-              colors[colorIndex]?.color,
+              selectedCoupon?.bgColour || "#9267EC",
             )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
@@ -42,7 +45,7 @@ const MemoCouponCardCongrats = () => {
           <div className="absolute flex items-center justify-between w-full px-2">
             <div
               className={cn(
-                colors[colorIndex]?.bgColor,
+                `bg-${selectedCoupon?.bgColour}`,
                 "absolute w-8 h-8 rounded-full -left-4",
               )}
               style={{
@@ -51,7 +54,7 @@ const MemoCouponCardCongrats = () => {
             />
             <div
               className={cn(
-                colors[colorIndex]?.bgColor,
+                `bg-${selectedCoupon?.bgColour}`,
                 "absolute w-8 h-8 rounded-full -right-4",
               )}
               style={{
@@ -60,10 +63,14 @@ const MemoCouponCardCongrats = () => {
             />
           </div>
           <h1 className="w-full px-4 pt-4 text-xl bungee-inline">
-            THE TASTY COFFEECUP BIRTHDAY BASH
+            {selectedCoupon?.name}
           </h1>
           <p className="col-span-2 p-4 text-4xl text-center text-black space-grotesk-700">
-            25% OFF
+            {formatDiscount(
+              selectedCoupon?.config?.value,
+              selectedCoupon?.config?.discountType,
+            )}
+            OFF
           </p>
         </div>
       </center>

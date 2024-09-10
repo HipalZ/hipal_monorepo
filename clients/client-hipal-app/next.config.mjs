@@ -41,6 +41,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "20palnesto-storage24.s3.ap-south-1.amazonaws.com",
+      },
     ],
   },
   async redirects() {

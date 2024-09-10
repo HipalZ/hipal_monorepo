@@ -523,7 +523,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
           {selectedMode === "INVOICE" ? (
             <>
               <PaymentCard
-                claimedCoinz={claimedCoinz}
+                offer={claimedCoinz}
                 billValue={billValue}
                 logo={data?.business?.logoUrl}
               />

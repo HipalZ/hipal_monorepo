@@ -1,10 +1,15 @@
 import { create } from "zustand";
+import type { PageStates } from "../utils/helpers";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
   setClaimedCoinz: (coinz: number) => void;
+  claimCouponz: number;
+  setClaimCouponz: (coinz: number) => void;
   tips: number;
   setTips: (tips: number) => void;
+  customTip: string;
+  setCustomTip: (tip: string) => void;
   userCoinz: number;
   setUserCoinz: (coinz: number) => void;
   total: number;
@@ -17,14 +22,26 @@ interface IUsePaymentStore {
 
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+
+  selectedMode: PageStates;
+  setSelectedMode: (mode: PageStates) => void;
+
+  selectedTip: string;
+  setSelectedTip: (tip: string) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
   claimedCoinz: 0,
   setClaimedCoinz: (coinz: number) => set(() => ({ claimedCoinz: coinz })),
 
+  claimCouponz: 0,
+  setClaimCouponz: (coinz: number) => set(() => ({ claimCouponz: coinz })),
+
   tips: 0,
   setTips: (tips: number) => set(() => ({ tips: tips })),
+
+  customTip: "",
+  setCustomTip: (tip: string) => set(() => ({ customTip: tip })),
 
   userCoinz: 0,
   setUserCoinz: (coinz: number) => set(() => ({ userCoinz: coinz })),
@@ -40,4 +57,10 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   isLoading: false,
   setIsLoading: (loading: boolean) => set(() => ({ isLoading: loading })),
+
+  selectedMode: "INVOICE",
+  setSelectedMode: (mode: PageStates) => set(() => ({ selectedMode: mode })),
+
+  selectedTip: "",
+  setSelectedTip: (tip: string) => set(() => ({ selectedTip: tip })),
 }));

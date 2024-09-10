@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import QRcodeImg from "@/assets/payment/mobileqr.png";
 import HandPay from "@/assets/payment/handcash.png";
@@ -7,6 +7,7 @@ import background from "@/assets/payment/background-rainbow.png";
 import Grid from "@/assets/payment/grid.png";
 import type { PageStates } from ".";
 import { toast } from "react-toastify";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 interface Business {
   isPaymentIntegrated: boolean;
@@ -17,24 +18,22 @@ interface Data {
 }
 
 interface PaymentComponentProps {
-  billValue: number;
-  tips: number;
   handleCreateOrder: (amount: number, mode: string) => void;
-  selectedMode: PageStates;
   setSelectedMode: (mode: PageStates) => void;
   isLoading: boolean;
   total: number;
 }
 
 const PaymentComponent: React.FC<PaymentComponentProps> = ({
-  billValue,
   total,
   handleCreateOrder,
   setSelectedMode,
   isLoading,
 }) => {
   const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
-
+  const { billValue } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+  }));
   useEffect(() => {
     const images = [QRcodeImg.src, HandPay.src, online.src];
     let currentIndex = 0;
@@ -47,20 +46,25 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const createOrder = (amount: number, mode: PageStates) => {
+  const createOrder = useCallback((amount: number, mode: PageStates) => {
     setSelectedMode(mode);
     handleCreateOrder(amount, mode);
-  };
-  const handleOnlineMode = (billValue: number) => {
-    if (total <= 0) {
-      return toast.error(
-        "You cannot pay 0 amount through online Please pay by cash mode",
-      );
-    }
-    createOrder(billValue, "ONLINE");
-  };
+  }, []);
+
+  const handleOnlineMode = useCallback(
+    (billValue: number) => {
+      if (total <= 0) {
+        return toast.error(
+          "You cannot pay 0 amount through online Please pay by cash mode",
+        );
+      }
+      createOrder(billValue, "ONLINE");
+    },
+    [total],
+  );
+
   return (
-    <section className="h-[90vh]">
+    <section className="h-[90vh] bg-white">
       <div
         style={{
           backgroundImage: `url(${background.src})`,

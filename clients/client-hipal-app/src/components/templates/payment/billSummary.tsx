@@ -1,12 +1,9 @@
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { memo } from "react";
-import { BsPatchPlusFill } from "react-icons/bs";
 import { CiCirclePlus } from "react-icons/ci";
 import { RiEdit2Fill } from "react-icons/ri";
 
 interface IBillSummary {
-  billValue: number;
-  claimedCoinz: number;
-  tips: number;
   isTipActive: boolean;
   setIsTipActive: (value: boolean) => void;
   clearTheTip: () => void;
@@ -19,10 +16,15 @@ interface IBillSummary {
 }
 
 const BillSummary = (props: IBillSummary) => {
+  const { billValue, claimCouponz, claimedCoinz, tips } = usePaymentStore(
+    (s) => ({
+      billValue: s.billValue,
+      claimCouponz: s.claimCouponz,
+      claimedCoinz: s.claimedCoinz,
+      tips: s.tips,
+    }),
+  );
   const {
-    billValue,
-    claimedCoinz,
-    tips,
     isTipActive,
     setIsTipActive,
     clearTheTip,
@@ -46,50 +48,60 @@ const BillSummary = (props: IBillSummary) => {
           <h1 className="text-sm">Total bill amount</h1>
           <h1>₹ {billValue}</h1>
         </div>
-        <hr className="mx-4 border border-dashed border-[#10101875] border-0.5" />
-        {claimedCoinz > 0 && (
-          <div className="flex justify-between mx-4 mt-1 text-sm capitalize text-[#101018] ">
-            <h1 className="text-[1rem]">Hi-Coinz</h1>
-            <div className="flex">
-              <span className="text-base">₹ {claimedCoinz || 0}</span>
-            </div>
-          </div>
-        )}
+        <hr
+          className="mx-2 bg-white"
+          style={{
+            backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+              "#10101875",
+            )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            height: "1px",
+            border: "none",
+          }}
+        />
         <div className="mx-2 mt-2">
-          <article className="flex items-center justify-between mx-2 text-xs">
-            <h1>
-              200 off <br />
-              with coinz or couponz
-            </h1>
-            <article className="self-end text-[#4CAF50] flex justify-between gap-2">
-              <h1>₹ 200 </h1>
-              <span>
-                <RiEdit2Fill color="black" />
-              </span>
+          {claimCouponz > 0 || claimedCoinz > 0 ? (
+            <article className="flex items-center justify-between mx-2 text-xs">
+              <h1 className="text-[#4CAF50]">
+                {claimedCoinz > 0 ? (
+                  <>Hi-Coinz applied</>
+                ) : (
+                  <>Couponz applied</>
+                )}
+              </h1>
+              <article className="self-end text-[#4CAF50] flex justify-between items-center gap-2 text-sm">
+                <h1>₹ {claimedCoinz || claimCouponz} </h1>
+                <span>
+                  <RiEdit2Fill color="black" />
+                </span>
+              </article>
             </article>
-          </article>
+          ) : null}
           <div className="flex justify-between m-2 text-sm capitalize text-[#101018]">
             <div className="flex items-center">
               <div
-                className="flex items-center"
+                className="flex items-center text-red-500"
                 onClick={() => setIsTipActive(true)}
               >
                 <span>
-                  <CiCirclePlus size={16} />
+                  <CiCirclePlus size={20} />
                 </span>
-                <h1 className="ml-1 text-xs">Add Tip</h1>
+                <h1 className="ml-1 text-xs">Add Tip </h1>
               </div>
               {isTipActive ? (
-                <span onClick={clearTheTip} className="underline">
-                  (Clear Tip)
+                <span
+                  onClick={clearTheTip}
+                  className="mx-2 text-xs underline underline-offset-2"
+                >
+                  Clear Tip
                 </span>
               ) : null}
             </div>
             <div className="flex">
-              <span className="text-xs">₹ {tips || 0}</span>
+              <span className="text-sm">₹ {tips || 0}</span>
             </div>
           </div>
-          <hr className="mx-2 border border-dashed border-[#10101875] border-0.5" />
           {isTipActive ? (
             <div className="flex mx-2 space-x-2">
               {["100", "200", "500", "Other"].map((tip, index) => (
@@ -109,31 +121,43 @@ const BillSummary = (props: IBillSummary) => {
             </div>
           ) : null}
           {selectedTip === "Other" && showInput && (
-            <div className="flex mt-4 space-x-6">
+            <div className="flex mx-2 my-4 space-x-6">
               <input
                 type="text"
                 onChange={handleCustomTip}
                 value={customTip}
                 maxLength={5}
                 placeholder="Enter tip amount"
-                className="w-[70%] border border-[#000] pl-4 font-semibold text-[1rem] rounded-[1rem]"
+                className="w-[70%] border border-[#000] pl-2 font-semibold text-[0.75rem] rounded-lg h-8"
               />
               <button
                 type="button"
                 onClick={handleSaveTip}
-                className="px-4 py-2 text-base text-white rounded-lg bg-primary"
+                className="h-8 px-2 text-xs text-white rounded-lg bg-primary"
               >
                 Save
               </button>
             </div>
           )}
+          <hr
+            className="mt-3 bg-white"
+            style={{
+              backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                "#10101875",
+              )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              height: "1px",
+              border: "none",
+            }}
+          />
           <div className="flex justify-between mx-2 mt-4">
             <h1 className="text-sm font-bold">
               To Pay <span className="text-xs">(rounded off)</span>
             </h1>
             <span className="text-base font-bold">
               {" "}
-              ₹ {billValue - claimedCoinz + tips}
+              ₹ {billValue - claimedCoinz - claimCouponz + tips}
             </span>
           </div>
         </div>

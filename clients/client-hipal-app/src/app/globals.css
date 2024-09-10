@@ -2009,8 +2009,8 @@ input[type='password'] {
 
   .scaled-card-container-rotate-2 {
 	position: absolute; /* Allows positioning within the parent */
-	top: 0px; /* Adjust as needed */
-	left: 70px; /* Adjust as needed */
+	top: 25px; /* Adjust as needed */
+	left: 75px; /* Adjust as needed */
 	transform-origin: top left; /* Ensure scaling is from the top-left corner */
 	transform: scale(0.7) translateX(-50%) rotate(-10deg);
 	height:100px;
@@ -2076,3 +2076,4 @@ input[type='password'] {
 	right: -3px;
 	background-color: 'bg-base-100' /* Adjust to match the background color */
   }
+  

@@ -203,7 +203,7 @@ export const couponSchema = z.object({
           }),
         )
         .optional(),
-      startTime: positiveNumber("startTime"),
+      startTime: z.number().default(0),
       endTime: positiveNumber("endTime"),
     }),
     eligibleUser: z.object({

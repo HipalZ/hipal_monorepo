@@ -106,7 +106,6 @@ const AddAmountModal = memo(() => {
         </figure>
         <TfiPlus className={`${style.plus_pay_right}`} size={48} />
         <TfiPlus className={`${style.plus_pay_left}`} size={24} />
-
         <section className="absolute mx-6 space-y-4 -bottom-[16rem] w-[88%]">
           <p className="text-primary">Add bill amount</p>
           <input
@@ -114,7 +113,6 @@ const AddAmountModal = memo(() => {
             value={amount || ""}
             onChange={saveAmount}
             className="w-full px-4 py-3 border bg-base-100 text-primary rounded-2xl border-primary focus:outline-none"
-
             type="tel"
             maxLength={6}
             minLength={1}
@@ -128,7 +126,7 @@ const AddAmountModal = memo(() => {
               className="w-full px-8 py-3 text-sm border rounded-full border-primary !text-primary"
             >
               {loading ? (
-                <span className="loader_spinner !border-t-primary "></span>
+                <span className="loader_spinner !border-t-primary " />
               ) : (
                 "Call Captain"
               )}
@@ -145,7 +143,7 @@ const AddAmountModal = memo(() => {
               )}
             >
               {loading ? (
-                <span className="loader_spinner !border-t-primary"></span>
+                <span className="loader_spinner !border-t-primary" />
               ) : (
                 "Next"
               )}

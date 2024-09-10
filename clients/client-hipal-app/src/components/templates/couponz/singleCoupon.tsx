@@ -4,14 +4,14 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { memo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import { GoArrowUpRight } from "react-icons/go";
-import { cn } from "@hi/common";
+import { apiRpc, cn } from "@hi/common";
 import {
   formatDate,
   formatDiscount,
@@ -22,12 +22,19 @@ import {
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
+import { useLogin } from "@/components/store/useLogin";
+import { toast } from "react-toastify";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
+  const router = useRouter();
   const { logoUrl, name } = useBusinessDetails((s) => ({
     logoUrl: s.businessDetails?.logoUrl,
     name: s.businessDetails?.name,
+  }));
+
+  const { userDetails } = useLogin((s) => ({
+    userDetails: s.userDetails,
   }));
 
   const { selectedCoupon, setCurrentPage } = useCouponz((s) => ({
@@ -35,11 +42,25 @@ const MemoCouponz = () => {
     setCurrentPage: s.setCurrentPage,
   }));
 
-  const grabCouponz = () => {
-    if (selectedCoupon?.conditions?.requiredFields?.includes("dob")) {
-      setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-    } else {
-      setCurrentPage(ICouponPage.CONGRATULATIONZ);
+  const grabCouponz = async () => {
+    const response = await apiRpc.couponz["grabbed-couponz"].$post({
+      json: {
+        couponId: selectedCoupon?._id,
+        userId: userDetails?._id,
+      },
+    });
+    const data = await response.json();
+    if (response.status === 201) {
+      toast.success(data?.message || "Coupon grabbed successfully");
+      if (selectedCoupon?.conditions?.requiredFields?.includes("dob")) {
+        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+      } else {
+        setCurrentPage(ICouponPage.CONGRATULATIONZ);
+      }
+    } else if (response.status === 400) {
+      toast.error(data?.message || "Coupon already grabbed");
+      setCurrentPage(ICouponPage.SINGLECOUPON);
+      router.push(`/${customLink}/explore`);
     }
   };
 
@@ -111,11 +132,11 @@ const MemoCouponz = () => {
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Applicable On</h3>
-            <p>
+            <p className="text-left">
               {getAvailabilityText(
                 selectedCoupon?.conditions?.availability?.when,
                 selectedCoupon?.conditions?.availability?.customDays || [],
-              )}
+              )}{" "}
             </p>
           </div>
           <div className="flex flex-col items-start space-y-1">

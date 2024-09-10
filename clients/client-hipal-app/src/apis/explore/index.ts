@@ -54,6 +54,7 @@ async function fetchBusinessData(customLink: string) {
   const loyalty = await loyaltyResponse.json();
   const banners = await bannersResponse.json();
   const couponz = await couponzResponse.json();
+  console.log("couponz", couponz);
   data["outletInfo"] = outletInfo?.data;
   data["banners"] = banners?.data as unknown as IBanner[];
   data["uniquelyDishes"] = uniquelyDishes?.data as unknown as IUniquelyDishes[];

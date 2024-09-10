@@ -756,7 +756,7 @@ export const getCustomDays = (days: string[]) => {
           return "All";
       }
     })
-    .join(", ");
+    .join(",");
 };
 
 export const getAvailabilityText = (when: string, customDays: string[]) => {
@@ -773,3 +773,5 @@ export const getAvailabilityText = (when: string, customDays: string[]) => {
       return "All Days";
   }
 };
+
+export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";

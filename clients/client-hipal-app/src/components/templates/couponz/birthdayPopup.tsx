@@ -122,20 +122,20 @@ const MemoBirthdayPopup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // const response = await apiRpc.users.updateUserInfo[":userId"].$put({
-    //   param: {
-    //     userId: userDetails?._id,
-    //   },
-    //   json: {
-    //     dob: convertToTimestamp(valueGroups),
-    //   },
-    // });
-    // await response.json();
-    // if (response.status === 200 || response.status === 201) {
-    //   console.log("respon", response);
-    //   toast.success("Birthday updated successfully");
-    // }
-    setCurrentPage(ICouponPage.CONGRATULATIONZ);
+    const response = await apiRpc.users.updateUserInfo[":userId"].$put({
+      param: {
+        userId: userDetails?._id,
+      },
+      json: {
+        dob: convertToTimestamp(valueGroups),
+      },
+    });
+    await response.json();
+    if (response.status === 200 || response.status === 201) {
+      console.log("respon", response);
+      toast.success("Birthday updated successfully");
+      setCurrentPage(ICouponPage.CONGRATULATIONZ);
+    }
   };
 
   return (

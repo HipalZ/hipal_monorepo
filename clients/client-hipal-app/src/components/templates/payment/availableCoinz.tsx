@@ -1,30 +1,26 @@
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import BottomButton from "@/components/molecules/bottomButton";
-import { type ChangeEvent, memo, useState } from "react";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { type ChangeEvent, memo, useCallback, useState } from "react";
+import { toast } from "react-toastify";
 
 interface IAvailableCoinz {
   isModalOpen: boolean;
   closeModal: () => void;
-  userCoinz: number;
-  claimedCoinz: number;
   handleApplyCoinz: (value: number) => void;
-  maxCoinz: number;
-  setMaxCoinz: (value: number) => void;
-  billValue: number;
   setClaimAmount: number;
 }
 
 const AvailableCoinz = (props: IAvailableCoinz) => {
-  const {
-    isModalOpen,
-    closeModal,
-    userCoinz,
-    claimedCoinz,
-    handleApplyCoinz,
-    billValue,
-    setMaxCoinz,
-    setClaimAmount,
-  } = props;
+  const { isModalOpen, closeModal, handleApplyCoinz, setClaimAmount } = props;
+  const { billValue, userCoinz, claimedCoinz, claimCouponz, setClaimCouponz } =
+    usePaymentStore((s) => ({
+      billValue: s.billValue,
+      claimedCoinz: s.claimedCoinz,
+      claimCouponz: s.claimCouponz,
+      setClaimCouponz: s.setClaimCouponz,
+      userCoinz: s.userCoinz,
+    }));
   const [tempClaimedCoinz, setTempClaimedCoinz] = useState(claimedCoinz);
 
   const handleChange = (
@@ -35,18 +31,24 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     const canClaimCoinz = Math.round(billValue * (setClaimAmount / 100) || 0);
     const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
     if (userEnteredValue > coinsToSet) {
-      setMaxCoinz(coinsToSet);
       setTempClaimedCoinz(coinsToSet);
+      if (claimCouponz > 0) {
+        setClaimCouponz(0);
+        toast("Coupon is removed as you have added the coinz");
+      }
     } else {
-      setMaxCoinz(userEnteredValue);
       setTempClaimedCoinz(userEnteredValue);
+      if (claimCouponz > 0) {
+        setClaimCouponz(0);
+        toast("Coupon is removed as you have added the coinz");
+      }
     }
   };
 
   // Update global state on button click
-  const handleNextClick = () => {
+  const handleNextClick = useCallback((tempClaimedCoinz) => {
     handleApplyCoinz(tempClaimedCoinz);
-  };
+  }, []);
   return (
     <BottomPopUp show={isModalOpen} onClose={closeModal}>
       <div className="h-[15rem] p-6 text-black bg-white overflow-hidden rounded-t-2xl">
@@ -74,7 +76,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
         <button
           type="button"
           className="w-full px-4 py-3 text-white bg-black rounded-full"
-          onClick={handleNextClick}
+          onClick={() => handleNextClick(tempClaimedCoinz)}
         >
           Next
         </button>

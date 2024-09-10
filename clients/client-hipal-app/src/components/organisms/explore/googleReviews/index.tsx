@@ -65,7 +65,7 @@ const MemoGoogleReviews = () => {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <EmblaCarousel2 reviewCarousel={true}>
+          <EmblaCarousel2 customCarousel={true}>
             {reviews.map((review: GoogleReview, index) => (
               <div
                 key={index.toString()}

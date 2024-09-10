@@ -10,6 +10,7 @@ import {
 } from "@/components/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 import { useCouponz } from "@/components/store/useCouponz";
+import { useLogin } from "@/components/store/useLogin";
 
 interface Iprops {
   couponz: Coupon[];
@@ -18,7 +19,9 @@ interface Iprops {
 const MemoAllCouponz = ({ couponz }: Iprops) => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
-
+  const { isLogin } = useLogin((s) => ({
+    isLogin: s.isLogin,
+  }));
   const { setSelectedCoupon, currentPage, setCouponz, setCurrentPage } =
     useCouponz((s) => ({
       setSelectedCoupon: s.setSelectedCoupon,
@@ -40,6 +43,9 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
     setCouponz(couponz);
   }, [couponz, currentPage]);
 
+  // if no login don't show couponz
+  if (!isLogin) return null;
+
   return (
     <section className="flex my-4 overflow-x-auto flex-nowrap">
       {couponz.map((coupon) => {
@@ -48,7 +54,9 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
             onClick={() => handleRoute(coupon)}
             onKeyDown={() => handleRoute(coupon)}
             key={coupon?._id}
-            className="on_active_bounce relative flex flex-col justify-center items-center m-4 text-primary border border-1 border-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0"
+            className={
+              "on_active_bounce relative flex flex-col justify-center items-center ml-4 text-primary border border-1 border-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0"
+            }
           >
             {[...Array(5)].map((_, i) => (
               <div
@@ -78,7 +86,7 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
                 height={31}
                 className="object-cover w-10 h-10 mr-4 bg-center rounded-full"
               />
-              <h4 className="text-sm font-bold leading-4 text-primary">
+              <h4 className="text-base font-bold leading-4 text-primary">
                 {coupon?.name}
               </h4>
             </article>

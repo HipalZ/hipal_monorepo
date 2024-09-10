@@ -14,10 +14,10 @@ const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
 interface IProps {
   children: React.ReactNode;
-  reviewCarousel?: boolean;
+  customCarousel?: boolean;
 }
 
-const MemoEmblaCarouel2 = ({ children, reviewCarousel }: IProps) => {
+const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "center" }, [
     Autoplay(),
   ]);
@@ -126,9 +126,9 @@ const MemoEmblaCarouel2 = ({ children, reviewCarousel }: IProps) => {
   }, [emblaApi, tweenScale]);
 
   return (
-    <div className={cn("embla", reviewCarousel ? "m-0" : "")}>
+    <div className={cn("embla", customCarousel ? "m-0" : "")}>
       <div
-        className={cn(reviewCarousel ? "" : "embla__viewport")}
+        className={cn(customCarousel ? "" : "embla__viewport")}
         ref={emblaRef}
       >
         <div className="embla__container">{children}</div>
@@ -136,10 +136,10 @@ const MemoEmblaCarouel2 = ({ children, reviewCarousel }: IProps) => {
       <div
         className={cn(
           "px-4 py-4 mt-3 embla__button-container flex items-center",
-          reviewCarousel ? "!justify-center" : "justify-between",
+          customCarousel ? "!justify-center" : "justify-between",
         )}
       >
-        {!reviewCarousel && (
+        {!customCarousel && (
           <button
             type="button"
             className="border rounded-full border-primary embla__button embla__button--prev border-1"
@@ -162,7 +162,7 @@ const MemoEmblaCarouel2 = ({ children, reviewCarousel }: IProps) => {
             />
           ))}
         </div>
-        {!reviewCarousel && (
+        {!customCarousel && (
           <button
             type="button"
             className="border rounded-full border-primary embla__button embla__button--next border-1"
