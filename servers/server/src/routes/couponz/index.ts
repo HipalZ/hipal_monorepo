@@ -83,7 +83,7 @@ const couponzRouter = new Hono()
     ),
     async (c) => {
       const { couponId } = c.req.param();
-      const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
+      const coupon = await Couponz.findOne({ _id: couponId });
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
@@ -288,7 +288,7 @@ const couponzRouter = new Hono()
         );
 
         // Check overall day and time eligibility
-        if (!isDayEligible || !isTimeEligible) return false;
+        if (!isDayEligible) return false;
 
         // Check user eligibility
         if (conditions.eligibleUser.allUsers) {
@@ -342,6 +342,8 @@ const couponzRouter = new Hono()
         ],
       });
 
+      console.log("couponstttttt", coupons);
+
       const promotCoupons = coupons.filter((coupon) => {
         const { conditions } = coupon;
         const isDayEligible = switchDayEligibility(
@@ -358,7 +360,7 @@ const couponzRouter = new Hono()
         console.log("isTimeEligibleffff", isTimeEligible);
 
         // Check overall day and time eligibility
-        return isDayEligible && isTimeEligible;
+        return isDayEligible;
       });
 
       return c.json({

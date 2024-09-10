@@ -163,6 +163,7 @@ interface IOutlet {
 }
 
 export interface IBusinessData {
+  couponz: Coupon[];
   outletInfo: IOutlet;
   businessId: string;
   banners: IBannerPayload[];
@@ -463,4 +464,69 @@ export interface GoogleReview {
   comment: string;
   profilePhotoUrl: string;
   rating: number;
+}
+
+export interface CouponConfig {
+  value: number;
+  discountType: string;
+  upto: number;
+  _id: string;
+  steps: any[];
+}
+
+export interface UserLimit {
+  overAllLimit: number;
+  weeklyLimit: number;
+  monthlyLimit: number;
+  _id: string;
+}
+
+export interface Availability {
+  when: string;
+  customDays: string[];
+  startTime: number;
+  endTime: number;
+  _id: string;
+}
+
+export interface EligibleUser {
+  allUsers: boolean;
+  userIds: any[];
+  groupIds: any[];
+  _id: string;
+}
+
+export interface CouponConditions {
+  individualUserLimit: UserLimit;
+  billValue: number;
+  expiryClaimLimit: UserLimit;
+  availability: Availability;
+  eligibleUser: EligibleUser;
+  expiryAfterGrabbed: number;
+  requiredFields: string[];
+  couponStartDate: number;
+  couponEndDate: number;
+  tc: string;
+  _id: string;
+}
+
+export interface Coupon {
+  promotInExplore: boolean;
+  _id: string;
+  name: string;
+  type: string;
+  businessId: string;
+  config: CouponConfig;
+  isActive: boolean;
+  visiable: boolean;
+  isDeleted: boolean;
+  conditions: CouponConditions;
+  __v: number;
+  promot: boolean;
+}
+
+export interface CouponResponse {
+  message: string;
+  err: boolean;
+  data: Coupon[];
 }

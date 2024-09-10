@@ -8,12 +8,19 @@ import type {
 import { cn, defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
-import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 // export const revalidate = 30;
 //
+const AllCouponz = dynamics(
+  () => import("@/components/templates/couponz/allCouponz"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
+const EmblaCarousel2 = dynamics(
+  () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
 const BannerLayouts = dynamics(
   () => import("@/components/organisms/explore/bannerNewCards"),
   {
@@ -67,10 +74,10 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
+          <AllCouponz couponz={data?.couponz} />
           <div className="bg-base-300">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>
-          <div></div>
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
           ) && (

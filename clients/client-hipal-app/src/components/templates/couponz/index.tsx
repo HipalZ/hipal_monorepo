@@ -12,7 +12,8 @@ import baloonsLeft from "@/assets/img/baloon_left.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import { GoArrowUpRight } from "react-icons/go";
 import { cn } from "@hi/common";
-import { colors } from "@/components/utils/helpers";
+import { colors, formatDate } from "@/components/utils/helpers";
+import { useCouponz } from "@/components/store/useCouponz";
 
 const payload = {
   billValue: 1000,
@@ -29,6 +30,12 @@ const MemoCouponz = () => {
     logoUrl: s.businessDetails?.logoUrl,
     name: s.businessDetails?.name,
   }));
+
+  const { selectedCoupon, setSelectedCoupon } = useCouponz((s) => ({
+    selectedCoupon: s.selectedCoupon,
+    setSelectedCoupon: s.setSelectedCoupon,
+  }));
+
   const [colorIndex, setColorIndex] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,6 +44,30 @@ const MemoCouponz = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  const getCustomDays = (days: string[]) => {
+    return days.map((day) => {
+      switch (day.toLowerCase()) {
+        case "monday":
+          return "Mon ";
+        case "tuesday":
+          return "Tue ";
+        case "wednesday":
+          return "Wed ";
+        case "thursday":
+          return "Th ";
+        case "friday":
+          return "Fri ";
+        case "saturday":
+          return "Sat ";
+        case "sunday":
+          return "Sun ";
+        default:
+          return "Monday";
+      }
+    });
+  };
+
   return (
     <main
       className={cn(
@@ -76,7 +107,7 @@ const MemoCouponz = () => {
         )}
         <h1 className="my-2">{name}</h1>
         <h1 className="mx-12 my-4 text-xl bungee-inline">
-          THE TASTY COFFEECUP BIRTHDAY BASH
+          {selectedCoupon?.name || "Birthday Coupon"}
         </h1>
       </center>
       <center className="relative">
@@ -90,15 +121,19 @@ const MemoCouponz = () => {
         <div className="relative z-10 grid w-64 grid-cols-2 gap-4 p-4 -mt-px text-black bg-white rounded-b-xl">
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Min. Bill Amount</h3>
-            <p>₹{payload?.billValue}</p>
+            <p>₹{selectedCoupon?.conditions?.billValue}</p>
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Valid Till</h3>
-            <p>18 Aug 2024</p>
+            <p>{formatDate(selectedCoupon?.conditions?.couponEndDate)}</p>
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Applicable On</h3>
-            <p>M, Tue, Wed</p>
+            <p>
+              {getCustomDays(
+                selectedCoupon?.conditions?.availability?.customDays,
+              )}
+            </p>
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Available On</h3>

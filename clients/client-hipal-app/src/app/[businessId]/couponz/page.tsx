@@ -18,5 +18,5 @@ export async function generateMetadata() {
 export default async function Page({
   params,
 }: { params: { businessId: string } }) {
-  return <Congratulationz />;
+  return <Couponz />;
 }
