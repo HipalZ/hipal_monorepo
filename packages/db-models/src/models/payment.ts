@@ -103,6 +103,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       ref: "Tag",
     },
+    couponId: {
+      type: ObjectId,
+      required: false,
+      ref: "COUPONZ",
+    },
 
     reviewId: {
       type: ObjectId,

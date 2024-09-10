@@ -108,11 +108,15 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     type: Boolean,
     default: false,
   },
-  promot: {
+  cashbackAvailable: {
+    type: Boolean,
+    default: true,
+  },
+  promote: {
     type: Boolean,
     default: false,
   },
-  promotInExplore: {
+  promoteInExplore: {
     type: Boolean,
     default: false,
   },

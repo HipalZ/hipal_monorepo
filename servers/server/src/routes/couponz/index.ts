@@ -6,7 +6,9 @@ import {
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { schedule } from "node-cron";
 import { z } from "zod";
+
 import { respond } from "../../utils/response";
 
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
@@ -35,11 +37,21 @@ function switchTimeEligibility(
   availability: CouponzAvailabilityType,
   currentTime: number,
 ) {
+  console.log("availability.startTime", availability.startTime);
+  console.log("availability.endTime", availability.endTime);
+  console.log("currentTime", currentTime);
   return (
     availability.startTime == null ||
     (currentTime >= availability.startTime &&
       currentTime <= availability.endTime)
   );
+}
+
+function getCurrentTimeDecimal() {
+  const currentDate = new Date();
+  const hours = currentDate.getHours();
+  const minutes = currentDate.getMinutes();
+  return Number(`${hours}.${minutes < 10 ? "0" : ""}${minutes}`);
 }
 
 const couponzRouter = new Hono()
@@ -83,7 +95,7 @@ const couponzRouter = new Hono()
     ),
     async (c) => {
       const { couponId } = c.req.param();
-      const coupon = await Couponz.findOne({ _id: couponId });
+      const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
@@ -164,6 +176,19 @@ const couponzRouter = new Hono()
     }
 
     const createdCoupon = await Couponz.create(requestData);
+
+    const reminderDateObj = new Date(createdCoupon.conditions.couponEndDate);
+    const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+      reminderDateObj.getMonth() + 1
+    } *`;
+
+    schedule(cronExpression, async () => {
+      await Couponz.findByIdAndUpdate(createdCoupon._id, {
+        isActive: false,
+        isDeleted: true,
+      });
+    });
+
     return respond(c, "Coupon created successfully", false, 201, createdCoupon);
   })
   .put(
@@ -233,9 +258,20 @@ const couponzRouter = new Hono()
       if (!updateCoupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+      const reminderDateObj = new Date(updateCoupon.conditions.couponEndDate);
+      const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+        reminderDateObj.getMonth() + 1
+      } *`;
+
+      schedule(cronExpression, async () => {
+        await Couponz.findByIdAndUpdate(updateCoupon._id, {
+          isActive: false,
+          isDeleted: true,
+        });
+      });
       return respond(
         c,
-        "Coupon created successfully",
+        "Coupon updated successfully",
         false,
         200,
         updateCoupon,
@@ -257,7 +293,7 @@ const couponzRouter = new Hono()
       const currentDay = new Date()
         .toLocaleString("en-us", { weekday: "long" })
         .toLowerCase();
-      const currentTime = new Date().getHours();
+      const currentTime = getCurrentTimeDecimal();
 
       // Fetch all active coupons
       const coupons = await Couponz.find({
@@ -266,11 +302,13 @@ const couponzRouter = new Hono()
             "conditions.couponStartDate": 0,
             "conditions.couponEndDate": 0,
             businessId: businessId,
+            isDeleted: false,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
             "conditions.couponEndDate": { $gte: currentDate },
             businessId: businessId,
+            isDeleted: false,
           },
         ],
       });
@@ -288,7 +326,7 @@ const couponzRouter = new Hono()
         );
 
         // Check overall day and time eligibility
-        if (!isDayEligible) return false;
+        if (!isDayEligible && isTimeEligible) return false;
 
         // Check user eligibility
         if (conditions.eligibleUser.allUsers) {
@@ -322,7 +360,7 @@ const couponzRouter = new Hono()
       const currentDay = new Date()
         .toLocaleString("en-us", { weekday: "long" })
         .toLowerCase();
-      const currentTime = new Date().getHours();
+      const currentTime = getCurrentTimeDecimal();
 
       // Fetch all active coupons
       const coupons = await Couponz.find({
@@ -331,18 +369,18 @@ const couponzRouter = new Hono()
             "conditions.couponStartDate": 0,
             "conditions.couponEndDate": 0,
             businessId: businessId,
-            promot: true,
+            promote: true,
+            isDeleted: false,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
             "conditions.couponEndDate": { $gte: currentDate },
             businessId: businessId,
-            promot: true,
+            promote: true,
+            isDeleted: false,
           },
         ],
       });
-
-      console.log("couponstttttt", coupons);
 
       const promotCoupons = coupons.filter((coupon) => {
         const { conditions } = coupon;
@@ -356,11 +394,8 @@ const couponzRouter = new Hono()
           currentTime,
         );
 
-        console.log("isDayEligiblefff", isDayEligible);
-        console.log("isTimeEligibleffff", isTimeEligible);
-
         // Check overall day and time eligibility
-        return isDayEligible;
+        return isDayEligible && isTimeEligible;
       });
 
       return c.json({
