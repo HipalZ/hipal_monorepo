@@ -1,9 +1,9 @@
 "use client";
-import React, { memo } from "react";
+import React, { memo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import type { Coupon } from "@/components/types/businessData";
-import { formatDate } from "@/components/utils/helpers";
+import { formatDate, formatDiscount } from "@/components/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 import { useCouponz } from "@/components/store/useCouponz";
 
@@ -15,17 +15,26 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
 
-  const { setSelectedCoupon } = useCouponz((s) => ({
+  const { setSelectedCoupon, currentPage, setCouponz } = useCouponz((s) => ({
     setSelectedCoupon: s.setSelectedCoupon,
+    currentPage: s.currentPage,
+    setCouponz: s.setCouponz,
   }));
 
-  const handleRoute = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    router.push(`/${customLink}/couponz/${coupon?._id}`);
-  };
+  const handleRoute = useCallback(
+    (coupon: Coupon) => {
+      setSelectedCoupon(coupon);
+      router.push(`/${customLink}/couponz/`);
+    },
+    [currentPage],
+  );
+
+  useEffect(() => {
+    setCouponz(couponz);
+  }, [couponz]);
 
   return (
-    <section className="flex overflow-x-auto flex-nowrap">
+    <section className="flex my-4 overflow-x-auto flex-nowrap">
       {couponz.map((coupon) => {
         return (
           <article
@@ -37,22 +46,20 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
             {[...Array(5)].map((_, i) => (
               <div
                 key={`left-${i.toString()}`}
-                className="absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-left"
+                className="border border-primary absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-left"
                 style={{
                   left: "-10px",
                   top: `${(i + 0.2) * 20}%`,
-                  border: "1px solid #000",
                 }}
               />
             ))}
             {[...Array(5)].map((_, i) => (
               <div
                 key={`right-${i.toString()}`}
-                className="absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-right"
+                className="border border-primary absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-right"
                 style={{
                   right: "-10px",
                   top: `${(i + 0.2) * 20}%`,
-                  border: "1px solid #000",
                 }}
               />
             ))}
@@ -68,7 +75,17 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
                 {coupon?.name}
               </h4>
             </article>
-            <div className="w-full my-3 border border-dashed border-primary" />
+            <hr
+              className="w-full col-span-2 my-3"
+              style={{
+                backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                  "#000",
+                )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                height: "2px",
+              }}
+            />
             <section className="grid w-full grid-cols-2 text-xs">
               <article className="justify-self-start">
                 <h1>Expires on</h1>
@@ -77,8 +94,10 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
               </article>
               <article className="text-right justify-self-end">
                 <h1 className="text-base font-semibold">
-                  {coupon?.config?.value}
-                  {coupon?.config?.discountType === "PERCENTAGE" ? "%" : "₹"}{" "}
+                  {formatDiscount(
+                    coupon?.config?.value,
+                    coupon?.config?.discountType,
+                  )}
                   off
                 </h1>
                 <button

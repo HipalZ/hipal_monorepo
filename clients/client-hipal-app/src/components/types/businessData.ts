@@ -511,6 +511,10 @@ export interface CouponConditions {
 }
 
 export interface Coupon {
+  image: any;
+  bgColour: ClassValue;
+  availability: any;
+  requiredFields: any;
   promotInExplore: boolean;
   _id: string;
   name: string;

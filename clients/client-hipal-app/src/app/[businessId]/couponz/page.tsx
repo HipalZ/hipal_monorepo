@@ -1,9 +1,10 @@
-import Couponz from "@/components/templates/couponz";
+import Couponz from "@/components/templates/couponz/singleCoupon";
 import ApplyCouponz from "@/components/templates/couponz/applyCouponz";
 import BirthdayPopup from "@/components/templates/couponz/birthdayPopup";
 import Congratulationz from "@/components/templates/couponz/congratulationz";
 import SeeMyCouponz from "@/components/templates/couponz/seeMyCouponz";
 import PaymentWithCouponz from "@/components/templates/newPayment";
+import MainCoupon from "@/components/templates/couponz/mainCoupon";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -18,5 +19,5 @@ export async function generateMetadata() {
 export default async function Page({
   params,
 }: { params: { businessId: string } }) {
-  return <Couponz />;
+  return <MainCoupon />;
 }
