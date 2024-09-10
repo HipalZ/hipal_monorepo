@@ -19,6 +19,7 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdOutlineCall } from "react-icons/md";
 import { initializeApp } from "firebase/app";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
+import confetti from "canvas-confetti";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -40,13 +41,13 @@ export const getTimeIn12HrFormat = (time: string) => {
   return `${hour12}:${minutes} ${amPm}`;
 };
 
-export const formatTime = (hours, minutes) => {
-  const period = hours >= 12 ? "PM" : "AM";
-  const formattedHour = hours % 12 || 12; // Convert hour for 12-hour clock format.
-  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes.toString(); // Ensures two-digit minute format.
-
-  return `${formattedHour}:${formattedMinutes} ${period}`;
-};
+export function formatTime(time: number): string {
+  const hours = Math.floor(time);
+  const minutes = Math.round((time - hours) * 60);
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
 
 export type PatternKeys =
   | "wave"
@@ -524,8 +525,8 @@ export const colors = [
   {
     bgColor: "bg-[#9267EC]",
     color: "#9267EC",
-    textColor: "text-[#000000]",
     linearGradient: "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)",
+    textColor: "text-[#000000]",
     hueRotate: 343,
   },
   {
@@ -543,7 +544,23 @@ export const colors = [
     hueRotate: 212,
   },
 ];
+export function getLinearGradient(hexColor: string): string | null {
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+  );
+  return colorObject
+    ? colorObject?.linearGradient
+    : "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)";
+}
 
+export function getHueColor(hexColor: string): number | null {
+  const colorObject = colors.find(
+    (color) => color.color.toLowerCase() === hexColor.toLowerCase(),
+  );
+  return colorObject ? colorObject.hueRotate : null;
+}
+
+// convert hex code to linear gradient other color
 export const adjustLightness = (color, amount) => {
   let hsl = hexToHSL(color);
   hsl.l = Math.max(0, Math.min(100, hsl.l - amount)); // Ensure within [0, 100]
@@ -582,4 +599,177 @@ const hexToHSL = (H) => {
     s: 100 * (s ? s / (l + Math.min(r, g, b)) : 0),
     l: (100 * (l + Math.min(r, g, b))) / 2,
   };
+};
+
+// finding percentage or value in coupon
+export const formatDiscount = (value: number, discountType: string): string => {
+  return discountType === "PERCENTAGE" ? `${value}% ` : `₹${value} `;
+};
+
+// getting todays date in day, month, year
+export const getTodayDate = () => {
+  const today = new Date();
+  const day = today.getDate().toString();
+  const month = today.toLocaleString("default", { month: "long" });
+  const year = today.getFullYear().toString();
+  return { day, month, year };
+};
+
+// couponz enum
+export enum ICouponPage {
+  SINGLECOUPON = "singleCoupon",
+  BIRTHDAYCOUPON = "birthdayCoupon",
+  CONGRATULATIONZ = "congratulationz",
+  ALLCOUPONZ = "allCouponz",
+  TERMSANDCONDITIONS = "termsAndConditions",
+  SEEMYCOUPONZ = "seeMyCouponz",
+}
+
+// random generating the blasts
+export function randomInRange(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+export function triggerConfettiBlast() {
+  confetti({
+    angle: randomInRange(55, 125),
+    spread: randomInRange(50, 70),
+    particleCount: randomInRange(50, 100),
+    origin: { y: 0.6 },
+  });
+}
+
+// calculation of timestamp
+const monthMapping: { [key: string]: number } = {
+  January: 0,
+  February: 1,
+  March: 2,
+  April: 3,
+  May: 4,
+  June: 5,
+  July: 6,
+  August: 7,
+  September: 8,
+  October: 9,
+  November: 10,
+  December: 11,
+};
+
+export const convertToTimestamp = (dateObj: {
+  day: string;
+  month: string;
+  year: string;
+}): number => {
+  const day = parseInt(dateObj.day, 10);
+  const month = monthMapping[dateObj.month];
+  const year = parseInt(dateObj.year, 10);
+
+  const date = new Date(year, month, day);
+  return date.getTime();
+};
+
+// hexcode to gradient
+export function hexToGradient(hex: string): {
+  h: number;
+  s: number;
+  l: number;
+} {
+  // Remove the # if it exists
+  hex = hex.replace(/^\s*#|\s*$/g, "");
+
+  // Convert hex to RGB
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0,
+    s,
+    l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0; // achromatic
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function HSLToHex(h: number, s: number, l: number): string {
+  s /= 100;
+  l /= 100;
+  const k = (n: number) => (n + h / 15) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return (
+    "#" +
+    [255 * f(0), 255 * f(8), 255 * f(4)]
+      .map((x) => Math.round(x).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+export function generateComplementaryColor(hex: string): string {
+  let { h, s, l } = hexToHSL(hex);
+
+  // Shift hue by 15 degrees and increase lightness
+  h = (h + 10) % 360;
+  l = Math.min(l + 10, 100);
+
+  return HSLToHex(h, s, l);
+}
+
+export const getCustomDays = (days: string[]) => {
+  return days
+    .map((day) => {
+      switch (day.toLowerCase()) {
+        case "monday":
+          return "Mon";
+        case "tuesday":
+          return "Tue";
+        case "wednesday":
+          return "Wed";
+        case "thursday":
+          return "Thu";
+        case "friday":
+          return "Fri";
+        case "saturday":
+          return "Sat";
+        case "sunday":
+          return "Sun";
+        default:
+          return "All";
+      }
+    })
+    .join(", ");
+};
+
+export const getAvailabilityText = (when: string, customDays: string[]) => {
+  switch (when.toLowerCase()) {
+    case "custom":
+      return getCustomDays(customDays);
+    case "allthetime":
+      return "All Days";
+    case "weekdays":
+      return "Week Days";
+    case "weekends":
+      return "Week Ends";
+    default:
+      return "All Days";
+  }
 };

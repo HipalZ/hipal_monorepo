@@ -1,61 +1,51 @@
 "use client";
-import React, { memo, useEffect, useState } from "react";
-import Image from "next/image";
-import confetti from "canvas-confetti";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import React, { memo, useCallback, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
-import Sunrays from "@/assets/img/sunrays_white.png";
-import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
-import { cn, colors } from "@/components/utils/helpers";
+import {
+  cn,
+  ICouponPage,
+  triggerConfettiBlast,
+} from "@/components/utils/helpers";
 import CouponCardCongrats from "@/components/atoms/couponCardCongrats";
+import { useCouponz } from "@/components/store/useCouponz";
 
 const MemoCongratulationz = () => {
-  const customLink = useParams()?.businessId as string;
-  function randomInRange(min: number, max: number) {
-    return Math.random() * (max - min) + min;
-  }
-  const [colorIndex, setColorIndex] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setColorIndex((prevIndex) => (prevIndex + 1) % colors.length);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  function triggerConfettiBlast() {
-    confetti({
-      angle: randomInRange(55, 125),
-      spread: randomInRange(50, 70),
-      particleCount: randomInRange(50, 100),
-      origin: { y: 0.6 },
-    });
-  }
+  const { setCurrentPage, currentPage, selectedCoupon } = useCouponz((s) => ({
+    currentPage: s.currentPage,
+    setCurrentPage: s.setCurrentPage,
+    selectedCoupon: s.selectedCoupon,
+  }));
 
   useEffect(() => {
     triggerConfettiBlast();
-  }, []);
+  }, [currentPage]);
+
+  const handleBack = useCallback(() => {
+    setCurrentPage(ICouponPage.SINGLECOUPON);
+  }, [currentPage]);
+
+  const handleSeeAllCouponz = useCallback(() => {
+    setCurrentPage(ICouponPage.SEEMYCOUPONZ);
+  }, [currentPage]);
 
   return (
     <main
       className={cn(
-        colors[colorIndex]?.bgColor,
-        colors[colorIndex]?.textColor,
+        `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
+        `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
         "h-[100vh] relative z-50 max-w-[30rem] overflow-hidden",
       )}
     >
-      <Link href={`/${customLink}/explore`}>
-        <button
-          type="button"
-          className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
-        >
-          <BiArrowBack />
-        </button>
-      </Link>
+      <button
+        onClick={handleBack}
+        type="button"
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
+      >
+        <BiArrowBack />
+      </button>
       <section
         className={cn(
-          colors[colorIndex]?.textColor,
+          `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
           "absolute inset-0 custom-top-congratulationz space-grotesk-700",
         )}
       >
@@ -95,14 +85,15 @@ const MemoCongratulationz = () => {
       </section>
       <center
         className={cn(
-          colors[colorIndex]?.textColor,
-          "absolute text-2xl transform -translate-x-1/2 custom-bottom-congratulationz left-1/2 w-full",
+          `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
+          "absolute text-black text-2xl transform -translate-x-1/2 custom-bottom-congratulationz left-1/2 w-full",
         )}
       >
         You have won !!!
       </center>
       <button
         type="button"
+        onClick={handleSeeAllCouponz}
         className="absolute w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
       >
         See my couponz

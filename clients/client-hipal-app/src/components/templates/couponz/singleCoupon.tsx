@@ -5,24 +5,23 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import { GoArrowUpRight } from "react-icons/go";
 import { cn } from "@hi/common";
-import { colors, formatDate } from "@/components/utils/helpers";
+import {
+  formatDate,
+  formatDiscount,
+  formatTime,
+  getAvailabilityText,
+  getLinearGradient,
+  ICouponPage,
+} from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
-
-const payload = {
-  billValue: 1000,
-  startTime: 15,
-  endTime: 24,
-  customDays: ["monday", "tuesday"],
-  couponStartDate: 1725090918272,
-  couponEndDate: 1725259809706,
-};
+import curvedLine from "@/assets/svg/curvedline.svg";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
@@ -31,48 +30,31 @@ const MemoCouponz = () => {
     name: s.businessDetails?.name,
   }));
 
-  const { selectedCoupon, setSelectedCoupon } = useCouponz((s) => ({
+  const { selectedCoupon, setCurrentPage } = useCouponz((s) => ({
     selectedCoupon: s.selectedCoupon,
-    setSelectedCoupon: s.setSelectedCoupon,
+    setCurrentPage: s.setCurrentPage,
   }));
 
-  const [colorIndex, setColorIndex] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setColorIndex((prevIndex) => (prevIndex + 1) % colors.length);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const getCustomDays = (days: string[]) => {
-    return days.map((day) => {
-      switch (day.toLowerCase()) {
-        case "monday":
-          return "Mon ";
-        case "tuesday":
-          return "Tue ";
-        case "wednesday":
-          return "Wed ";
-        case "thursday":
-          return "Th ";
-        case "friday":
-          return "Fri ";
-        case "saturday":
-          return "Sat ";
-        case "sunday":
-          return "Sun ";
-        default:
-          return "Monday";
-      }
-    });
+  const grabCouponz = () => {
+    if (selectedCoupon?.conditions?.requiredFields?.includes("dob")) {
+      setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+    } else {
+      setCurrentPage(ICouponPage.CONGRATULATIONZ);
+    }
   };
+
+  const startTime = formatTime(
+    selectedCoupon?.conditions?.availability?.startTime || 1,
+  );
+  const endTime = formatTime(
+    selectedCoupon?.conditions?.availability?.endTime || 23.5,
+  );
 
   return (
     <main
       className={cn(
-        colors[colorIndex]?.bgColor,
-        colors[colorIndex]?.textColor,
+        `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
+        `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
         "h-[100vh] overflow-y-auto pb-[10rem] relative",
       )}
     >
@@ -87,7 +69,7 @@ const MemoCouponz = () => {
       <picture className="absolute right-0 -top-14">
         <Image src={baloonsRight} alt="baloonsRight" width={155} height={300} />
       </picture>
-      <center className="pt-4">
+      <center className="z-10 pt-4">
         {logoUrl ? (
           <div className="w-[80px] h-[80px] flex justify-center items-center">
             <Image
@@ -96,7 +78,7 @@ const MemoCouponz = () => {
               width={86}
               quality={95}
               alt="logo-business"
-              className="object-center rounded-full aspect-square"
+              className="z-10 object-center bg-white rounded-full aspect-square"
               placeholder="blur"
               blurDataURL={getRandomBlurImg(65, 65)}
               style={{ objectFit: "cover" }}
@@ -110,7 +92,7 @@ const MemoCouponz = () => {
           {selectedCoupon?.name || "Birthday Coupon"}
         </h1>
       </center>
-      <center className="relative">
+      <center className="relative z-10">
         <Image
           src={birthdayPlaceholder}
           alt="Birthday Placeholder"
@@ -130,20 +112,23 @@ const MemoCouponz = () => {
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Applicable On</h3>
             <p>
-              {getCustomDays(
-                selectedCoupon?.conditions?.availability?.customDays,
+              {getAvailabilityText(
+                selectedCoupon?.conditions?.availability?.when,
+                selectedCoupon?.conditions?.availability?.customDays || [],
               )}
             </p>
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Available On</h3>
-            <p>04:00-20:00</p>
+            <p>
+              {startTime}-{endTime}
+            </p>
           </div>
           <hr
             className="w-full col-span-2 mt-6"
             style={{
               backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                colors[colorIndex]?.color,
+                `${selectedCoupon?.bgColour || "#9267EC"}`,
               )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
@@ -152,18 +137,22 @@ const MemoCouponz = () => {
             }}
           />
           <p className="col-span-2 text-3xl text-center text-black space-grotesk-700">
-            25% OFF
+            {formatDiscount(
+              selectedCoupon?.config?.value,
+              selectedCoupon?.config?.discountType,
+            )}{" "}
+            OFF
           </p>
           <div className="absolute flex items-center justify-between w-full h-full px-2">
             <div
               className={cn(
-                colors[colorIndex]?.bgColor,
+                `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
                 "absolute w-8 h-8 rounded-full -left-4 bottom-14",
               )}
             />
             <div
               className={cn(
-                colors[colorIndex]?.bgColor,
+                `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
                 "absolute w-8 h-8 rounded-full -right-4 bottom-14",
               )}
             />
@@ -174,22 +163,36 @@ const MemoCouponz = () => {
           style={{ filter: "blur(30px)" }}
         />
       </center>
+      <picture className="absolute w-full h-[50%] custom-curved-line">
+        <Image src={curvedLine} alt="curvedLine" className="w-full" />
+      </picture>
       <picture className="absolute scale-80 -left-2 bottom-24">
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
-      <center className="fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]">
+      <center className="text-black fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]">
         View Terms and conditions
       </center>
       <section
+        onClick={grabCouponz}
+        onKeyDown={grabCouponz}
         className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[5.5rem] p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
-        style={{ background: colors[colorIndex]?.linearGradient }}
+        style={{
+          background: getLinearGradient(selectedCoupon?.bgColour) || "",
+        }}
       >
         <article className="bg-black h-[3.5rem] rounded-lg aspect-square flex items-center justify-center">
           <GoArrowUpRight color="white" size={36} />
         </article>
-        <article>
+        <article className="text-black on_active_bounce">
           <h1 className="text-lg">Grab the coupon now !</h1>
-          <p className="text-sm opacity-50">Get 25% Off</p>
+          <p className="text-sm opacity-90">
+            Get{" "}
+            {formatDiscount(
+              selectedCoupon?.config?.value,
+              selectedCoupon?.config?.discountType,
+            )}
+            Off
+          </p>
         </article>
       </section>
     </main>

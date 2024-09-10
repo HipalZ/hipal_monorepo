@@ -1923,6 +1923,18 @@ input[type='password'] {
 	  top: 12%;
 	}
   }
+
+  @media (max-width: 375px) {
+	.custom-curved-line {
+	  top: 55%;
+	}
+  }
+  
+  @media (min-width: 376px) { 
+	.custom-curved-line {
+	  top: 42%;
+	}
+  }
   
   @media (max-width: 375px) {
 	.custom-bottom-congratulationz {

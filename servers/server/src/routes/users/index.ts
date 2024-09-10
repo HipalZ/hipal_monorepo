@@ -1139,6 +1139,24 @@ const usersRouter = new Hono()
         200,
       );
     },
+  )
+  .put(
+    "/updateUserInfo/:userId",
+    zValidator("param", z.object({ userId: z.string() })),
+    zValidator("json", z.object({ dob: z.number() })),
+
+    async (c) => {
+      const { dob } = await c.req.json();
+      const { userId } = c.req.param();
+
+      const user = await User.findByIdAndUpdate(userId, { dob }, { new: true });
+
+      if (!user) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      return respond(c, "User updated successfully", false, 200, user);
+    },
   );
 
 export default usersRouter;

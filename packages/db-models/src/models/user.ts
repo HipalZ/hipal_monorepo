@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema<UserType>(
       type: String,
       required: false,
     },
-
+    dob: {
+      type: Number,
+      required: false,
+    },
     role: {
       type: [String],
       default: [],
