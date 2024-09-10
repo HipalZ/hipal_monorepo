@@ -1,4 +1,4 @@
-import { Couponz } from "@hi/db-models";
+import { Couponz, UserCouponGrabb } from "@hi/db-models";
 import {
   type CouponzAvailabilityType,
   type CouponzDays,
@@ -403,6 +403,47 @@ const couponzRouter = new Hono()
         err: false,
         data: promotCoupons,
       });
+    },
+  )
+  .post(
+    "/grabbed-couponz/:userId/:couponId",
+    zValidator(
+      "param",
+      z.object({
+        userId: z.string({ message: "userId should be a string" }),
+        couponId: z.string({ message: "couponId should be a string" }),
+      }),
+    ),
+    async (c) => {
+      const { userId, couponId } = c.req.param();
+      const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
+      if (!coupon) {
+        return respond(c, "Coupon not found", true, 404, {});
+      }
+
+      const alreadyGrabbed = await UserCouponGrabb.findOne({
+        userId: userId,
+        couponId: couponId,
+      });
+
+      if (alreadyGrabbed) {
+        return respond(c, "Coupon already grabbed", true, 400, {});
+      }
+
+      const saveGrabbedCoupon = await UserCouponGrabb.create({
+        userId: userId,
+        couponId: couponId,
+        date: Date.now(),
+        expiryDate: coupon.conditions.expiryAfterGrabbed || 0,
+      });
+
+      return respond(
+        c,
+        "Coupon grabbed successfully",
+        false,
+        201,
+        saveGrabbedCoupon,
+      );
     },
   );
 

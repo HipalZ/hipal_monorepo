@@ -23,6 +23,14 @@ const CouponClaimSchema = new Schema<CouponClaimType>({
     type: Number,
     default: 0,
   },
+  weekelyLastResetDate: {
+    type: Number,
+    default: 0,
+  },
+  monthlyLastResetDate: {
+    type: Number,
+    default: 0,
+  },
   date: {
     type: Number,
   },

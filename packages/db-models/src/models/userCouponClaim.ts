@@ -31,6 +31,14 @@ const userCouponClaimSchema = new Schema<UserCouponClaimType>({
   date: {
     type: Number,
   },
+  weekelyLastResetDate: {
+    type: Number,
+    default: 0,
+  },
+  monthlyLastResetDate: {
+    type: Number,
+    default: 0,
+  },
 });
 
 userCouponClaimSchema.index({ userId: 1, couponId: 1 }, { unique: true });
