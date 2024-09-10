@@ -31,8 +31,8 @@ const MemoCongratulationz = () => {
   return (
     <main
       className={cn(
-        `bg-[${selectedCoupon?.bgColour}]`,
-        `text-[${selectedCoupon?.bgColour}]`,
+        `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
+        `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
         "h-[100vh] relative z-50 max-w-[30rem] overflow-hidden",
       )}
     >
@@ -45,7 +45,7 @@ const MemoCongratulationz = () => {
       </button>
       <section
         className={cn(
-          `text-[${selectedCoupon?.bgColour}]`,
+          `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
           "absolute inset-0 custom-top-congratulationz space-grotesk-700",
         )}
       >
@@ -85,7 +85,7 @@ const MemoCongratulationz = () => {
       </section>
       <center
         className={cn(
-          `text-[${selectedCoupon?.bgColour}]`,
+          `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
           "absolute text-black text-2xl transform -translate-x-1/2 custom-bottom-congratulationz left-1/2 w-full",
         )}
       >

@@ -53,8 +53,8 @@ const MemoCouponz = () => {
   return (
     <main
       className={cn(
-        `bg-[${selectedCoupon?.bgColour}]`,
-        `text-[${selectedCoupon?.bgColour}]`,
+        `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
+        `text-[${selectedCoupon?.bgColour || "#9267EC"}]`,
         "h-[100vh] overflow-y-auto pb-[10rem] relative",
       )}
     >
@@ -78,7 +78,7 @@ const MemoCouponz = () => {
               width={86}
               quality={95}
               alt="logo-business"
-              className="z-10 object-center rounded-full aspect-square"
+              className="z-10 object-center bg-white rounded-full aspect-square"
               placeholder="blur"
               blurDataURL={getRandomBlurImg(65, 65)}
               style={{ objectFit: "cover" }}
@@ -128,7 +128,7 @@ const MemoCouponz = () => {
             className="w-full col-span-2 mt-6"
             style={{
               backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                `${selectedCoupon?.bgColour}`,
+                `${selectedCoupon?.bgColour || "#9267EC"}`,
               )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
@@ -146,13 +146,13 @@ const MemoCouponz = () => {
           <div className="absolute flex items-center justify-between w-full h-full px-2">
             <div
               className={cn(
-                selectedCoupon?.bgColour,
+                `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
                 "absolute w-8 h-8 rounded-full -left-4 bottom-14",
               )}
             />
             <div
               className={cn(
-                selectedCoupon?.bgColour,
+                `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
                 "absolute w-8 h-8 rounded-full -right-4 bottom-14",
               )}
             />
@@ -177,7 +177,7 @@ const MemoCouponz = () => {
         onKeyDown={grabCouponz}
         className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[5.5rem] p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
         style={{
-          background: getLinearGradient(selectedCoupon?.bgColour) || "#fff",
+          background: getLinearGradient(selectedCoupon?.bgColour) || "",
         }}
       >
         <article className="bg-black h-[3.5rem] rounded-lg aspect-square flex items-center justify-center">

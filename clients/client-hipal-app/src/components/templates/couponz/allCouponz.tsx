@@ -3,7 +3,11 @@ import React, { memo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import type { Coupon } from "@/components/types/businessData";
-import { formatDate, formatDiscount } from "@/components/utils/helpers";
+import {
+  formatDate,
+  formatDiscount,
+  ICouponPage,
+} from "@/components/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 import { useCouponz } from "@/components/store/useCouponz";
 
@@ -15,11 +19,13 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
 
-  const { setSelectedCoupon, currentPage, setCouponz } = useCouponz((s) => ({
-    setSelectedCoupon: s.setSelectedCoupon,
-    currentPage: s.currentPage,
-    setCouponz: s.setCouponz,
-  }));
+  const { setSelectedCoupon, currentPage, setCouponz, setCurrentPage } =
+    useCouponz((s) => ({
+      setSelectedCoupon: s.setSelectedCoupon,
+      currentPage: s.currentPage,
+      setCouponz: s.setCouponz,
+      setCurrentPage: s.setCurrentPage,
+    }));
 
   const handleRoute = useCallback(
     (coupon: Coupon) => {
@@ -30,8 +36,9 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
   );
 
   useEffect(() => {
+    setCurrentPage(ICouponPage.SINGLECOUPON);
     setCouponz(couponz);
-  }, [couponz]);
+  }, [couponz, currentPage]);
 
   return (
     <section className="flex my-4 overflow-x-auto flex-nowrap">

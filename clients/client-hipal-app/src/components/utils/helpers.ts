@@ -545,10 +545,12 @@ export const colors = [
   },
 ];
 export function getLinearGradient(hexColor: string): string | null {
-  const colorObject = colors.find(
-    (color) => color.color.toLowerCase() === hexColor.toLowerCase(),
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
   );
-  return colorObject ? colorObject.linearGradient : null;
+  return colorObject
+    ? colorObject?.linearGradient
+    : "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)";
 }
 
 export function getHueColor(hexColor: string): number | null {

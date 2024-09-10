@@ -1,5 +1,5 @@
 "use client";
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BiArrowBack } from "react-icons/bi";
@@ -8,9 +8,9 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import {
   formatDate,
-  formatDiscount,
   formatTime,
   getAvailabilityText,
+  ICouponPage,
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 
@@ -19,7 +19,15 @@ const MemoSeeMyCouponz = () => {
   const logoUrl = useBusinessDetails(
     (state) => state?.businessDetails?.logoUrl,
   );
-  const couponz = useCouponz((s) => s.couponz);
+  const { couponz, currentPage, setCurrentPage } = useCouponz((s) => ({
+    couponz: s.couponz,
+    currentPage: s.currentPage,
+    setCurrentPage: s.setCurrentPage,
+  }));
+
+  const handleBack = useCallback(() => {
+    setCurrentPage(ICouponPage?.ALLCOUPONZ);
+  }, [currentPage]);
 
   return (
     <main className="bg-[#F1F0F5] min-h-[100vh] h-full py-4 relative">
@@ -28,6 +36,7 @@ const MemoSeeMyCouponz = () => {
           <Link href={`/${customLink}/explore`}>
             <button
               type="button"
+              onClick={handleBack}
               className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
             >
               <BiArrowBack />
