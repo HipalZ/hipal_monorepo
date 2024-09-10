@@ -57,7 +57,7 @@ const MemoSeeMyCouponz = () => {
               <Image
                 src={coupon?.image || birthdayPlaceholder}
                 alt="bp"
-                className="w-full h-[100%] shadow-2xl rounded-l-2xl"
+                className="object-center w-full h-full shadow-2xl aspect-square rounded-l-2xl"
               />
             </picture>
             <article className="px-3 py-2 text-black bg-white shadow-2xl custom-size rounded-r-2xl">
