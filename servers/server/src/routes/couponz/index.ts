@@ -406,16 +406,16 @@ const couponzRouter = new Hono()
     },
   )
   .post(
-    "/grabbed-couponz/:userId/:couponId",
+    "/grabbed-couponz",
     zValidator(
-      "param",
+      "json",
       z.object({
         userId: z.string({ message: "userId should be a string" }),
         couponId: z.string({ message: "couponId should be a string" }),
       }),
     ),
     async (c) => {
-      const { userId, couponId } = c.req.param();
+      const { userId, couponId } = await c.req.json();
       const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
