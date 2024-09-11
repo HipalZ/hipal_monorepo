@@ -114,6 +114,7 @@ export const PaymentSchema = z.object({
 
   earnCoins: z.coerce.number({}).optional(),
   couponId: ObjectIdSchema.optional(),
+  channelId: ObjectIdSchema.optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

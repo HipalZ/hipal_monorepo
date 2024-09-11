@@ -9,6 +9,11 @@ const userCouponGrabbSchema = new mongoose.Schema<UserCouponGrabbType>(
       required: true,
       ref: "User",
     },
+    businessId: {
+      type: ObjectId,
+      required: true,
+      ref: "Business",
+    },
     couponId: {
       type: ObjectId,
       required: true,
@@ -21,6 +26,20 @@ const userCouponGrabbSchema = new mongoose.Schema<UserCouponGrabbType>(
     },
 
     date: {
+      type: Number,
+    },
+    count: {
+      type: Number,
+      default: 1,
+    },
+    channelId: {
+      type: ObjectId,
+      ref: "CouponChannel",
+    },
+    dob: {
+      type: Number,
+    },
+    specialday: {
       type: Number,
     },
   },

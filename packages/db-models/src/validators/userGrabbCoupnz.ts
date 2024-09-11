@@ -12,8 +12,13 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const userCouponGrabbchema = z.object({
   userId: ObjectIdSchema,
   couponId: ObjectIdSchema,
+  businessId: ObjectIdSchema,
+  count: z.number().default(1),
   date: z.number(),
   expiryDate: z.number(),
+  channelId: ObjectIdSchema.optional(),
+  dob: z.number().optional(),
+  specialday: z.number().optional(),
 });
 
 export type UserCouponGrabbType = z.infer<typeof userCouponGrabbchema>;

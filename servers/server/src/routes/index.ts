@@ -3,15 +3,16 @@ import addonRouter from "./addons";
 import adminRouter from "./admin";
 import businessRouter from "./businesses";
 import categoryRouter from "./categories";
+import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import paymentsRouter from "./payments";
+import googleReview from "./reviews";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import tagRouter from "./tags";
 import usersRouter from "./users";
-import googleReview from "./reviews";
 
 ///
 const app = new Hono();
@@ -31,6 +32,7 @@ export const routes = app
   .route("/tags", tagRouter)
   .route("/admin", adminRouter)
   .route("/couponz", couponzRouter)
-  .route("/reviews", googleReview);
+  .route("/reviews", googleReview)
+  .route("/coupon-analytics", couponAnalytics);
 
 export type AppType = typeof routes;

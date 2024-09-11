@@ -114,6 +114,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       ref: "customerReviews",
     },
+    channelId: {
+      type: ObjectId,
+      required: false,
+      ref: "CouponChannel",
+    },
   },
 
   { timestamps: true },
