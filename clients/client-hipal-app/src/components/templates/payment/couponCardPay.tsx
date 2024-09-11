@@ -23,13 +23,13 @@ const MemoCouponCardPay = () => {
           transform: "rotate(-18deg)",
           transformOrigin: "bottom center",
         }}
-        className="absolute h-[7.5rem] w-full"
+        className="absolute h-[10rem] w-full scale-110"
       >
-        <picture className="h-[5rem] w-full">
+        <picture className="h-[7rem] w-full">
           <Image
             src={couponz[1]?.image || birthdayPlaceholder}
             width={100}
-            height={80}
+            height={96}
             alt="Birthday Placeholder"
             className="z-20 object-fill rounded-t"
           />
@@ -105,12 +105,12 @@ const MemoCouponCardPay = () => {
           style={{ filter: "blur(30px)" }}
         />
       </center>
-      <center className="absolute h-[10rem] w-full">
+      <center className="absolute h-[10rem] w-full scale-110">
         <picture className="h-[5rem] w-full">
           <Image
             src={couponz[0]?.image || birthdayPlaceholder}
             width={100}
-            height={80}
+            height={96}
             alt="Birthday Placeholder"
             className="object-fill rounded-t"
           />

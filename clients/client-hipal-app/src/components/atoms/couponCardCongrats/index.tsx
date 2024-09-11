@@ -1,8 +1,8 @@
-import React, { memo, useState } from "react";
+import React, { memo } from "react";
 import Image from "next/image";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
-import { cn, colors, formatDiscount } from "@/components/utils/helpers";
+import { cn, formatDiscount } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 
 const MemoCouponCardCongrats = () => {
@@ -13,7 +13,7 @@ const MemoCouponCardCongrats = () => {
     <section className="absolute inset-0 flex items-center justify-center shadow-2xl">
       <center className="absolute w-[800px] z-0">
         <Image
-          className="animate-spin"
+          className="opacity-50 animate-spin"
           width={1080}
           height={1080}
           src={Sunrays}
@@ -29,7 +29,6 @@ const MemoCouponCardCongrats = () => {
           className="rounded-t-xl"
         />
         <hr
-          // className="absolute w-full col-span-2 mt-6 top-1/2"
           className="bg-white"
           style={{
             backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
@@ -45,7 +44,7 @@ const MemoCouponCardCongrats = () => {
           <div className="absolute flex items-center justify-between w-full px-2">
             <div
               className={cn(
-                `bg-${selectedCoupon?.bgColour}`,
+                `bg-[${selectedCoupon?.bgColour}]`,
                 "absolute w-8 h-8 rounded-full -left-4",
               )}
               style={{
@@ -54,7 +53,7 @@ const MemoCouponCardCongrats = () => {
             />
             <div
               className={cn(
-                `bg-${selectedCoupon?.bgColour}`,
+                `bg-[${selectedCoupon?.bgColour}]`,
                 "absolute w-8 h-8 rounded-full -right-4",
               )}
               style={{

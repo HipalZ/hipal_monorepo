@@ -572,11 +572,11 @@ const hexToHSL = (H) => {
   let r = 0,
     g = 0,
     b = 0;
-  if (H.length === 4) {
+  if (H?.length === 4) {
     r = parseInt(H[1] + H[1], 16);
     g = parseInt(H[2] + H[2], 16);
     b = parseInt(H[3] + H[3], 16);
-  } else if (H.length === 7) {
+  } else if (H?.length === 7) {
     r = parseInt(H[1] + H[2], 16);
     g = parseInt(H[3] + H[4], 16);
     b = parseInt(H[5] + H[6], 16);

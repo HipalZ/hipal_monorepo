@@ -18,6 +18,7 @@ import { useCouponz } from "@/components/store/useCouponz";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
 import toast from "react-hot-toast";
+import useCouponTemp from "@/components/store/useCouponTemp";
 
 const MemoBirthdayPopup = () => {
   const { businessDetails } = useBusinessDetails((s) => ({
@@ -26,15 +27,16 @@ const MemoBirthdayPopup = () => {
   const { userDetails } = useLogin((s) => ({
     userDetails: s.userDetails,
   }));
-  const [hasTransparentBg, setHasTransparentBg] = useState(true);
-  const { selectedCoupon } = useCouponz((s) => ({
+  const { selectedCoupon, setCurrentPage } = useCouponz((s) => ({
     selectedCoupon: s.selectedCoupon,
+    setCurrentPage: s.setCurrentPage,
+  }));
+
+  const { couponOccasion } = useCouponTemp((s) => ({
+    couponOccasion: s.couponOccasion,
   }));
 
   const todayDate = getTodayDate();
-  const { setCurrentPage } = useCouponz((s) => ({
-    setCurrentPage: s.setCurrentPage,
-  }));
 
   const [valueGroups, setValueGroups] = useState({
     day: todayDate.day,
@@ -98,7 +100,7 @@ const MemoBirthdayPopup = () => {
 
     const filteredMonths =
       newValueGroups.year === `${currentYear}`
-        ? optionGroups.month.filter((month, index) => index <= currentMonth)
+        ? optionGroups.month.filter((index) => index <= currentMonth)
         : optionGroups.month;
 
     const filteredDays =
@@ -122,19 +124,36 @@ const MemoBirthdayPopup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await apiRpc.users.updateUserInfo[":userId"].$put({
-      param: {
-        userId: userDetails?._id,
-      },
-      json: {
-        dob: convertToTimestamp(valueGroups),
-      },
-    });
-    await response.json();
-    if (response.status === 200 || response.status === 201) {
-      console.log("respon", response);
-      toast.success("Birthday updated successfully");
-      setCurrentPage(ICouponPage.CONGRATULATIONZ);
+    if (couponOccasion === "dob") {
+      const response = await apiRpc.users.updateUserInfo[":userId"].$put({
+        param: {
+          userId: userDetails?._id,
+        },
+        json: {
+          dob: convertToTimestamp(valueGroups),
+        },
+      });
+      await response.json();
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Birthday updated successfully");
+        setCurrentPage(ICouponPage.CONGRATULATIONZ);
+      }
+    } else if (couponOccasion === "specialday") {
+      const response = await apiRpc.businesses?.outletInfo?.update[
+        ":businessId"
+      ].$put({
+        param: {
+          businessId: businessDetails?.businessId,
+        },
+        json: {
+          specialDay: convertToTimestamp(valueGroups),
+        },
+      });
+      await response.json();
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Special day updated successfully");
+        setCurrentPage(ICouponPage.CONGRATULATIONZ);
+      }
     }
   };
 
@@ -175,11 +194,13 @@ const MemoBirthdayPopup = () => {
               width={90}
               height={90}
               className={cn(
-                hasTransparentBg ? "bg-white" : "",
+                "bg-white",
                 "object-cover w-20 h-20 bg-center rounded-full",
               )}
             />
-            <h1 className="mt-2 font-bold">Share your Birthday</h1>
+            <h1 className="mt-2 font-bold">
+              Share Your {couponOccasion === "dob" ? "Birthday" : "Speical Day"}
+            </h1>
             <Picker
               optionGroups={optionGroups}
               valueGroups={valueGroups}
@@ -193,9 +214,11 @@ const MemoBirthdayPopup = () => {
               }}
               required
             />
-            <center className="text-[#CACACA] mx-6 text-sm">
-              Note: DOB once set cannot be changed
-            </center>
+            {couponOccasion === "dob" ? (
+              <center className="text-[#CACACA] mx-6 text-sm">
+                Note: DOB once set cannot be changed
+              </center>
+            ) : null}
             <button
               type="submit"
               className={`on_active_bounce bg-[${selectedCoupon?.bgColour}] w-full py-2 rounded-full mt-2 fixed bottom-4 font-semibold`}

@@ -1,8 +1,8 @@
-import { memo, useCallback, useState } from "react";
-import Globe from "@/assets/payment/globe.png";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import Hipay from "@/assets/payment/hipay.png";
+import hipayBg from "@/assets/payment/hipay_background.png";
 import style from "./addAmount.module.css";
 import Image from "next/image";
-import { TfiPlus } from "react-icons/tfi";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import useTableData from "@/components/store/useTableData";
@@ -21,6 +21,7 @@ const AddAmountModal = memo(() => {
   const router = useRouter();
   const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
+
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const name = useLogin((s) => s.userDetails?.name);
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,22 +98,20 @@ const AddAmountModal = memo(() => {
           <span className="font-bold text-primary">{business.name}</span>
         </div>
       </header>
-      <section className="relative mt-[30vh]">
-        <div className={`${style.top_ring}`} />
-        <div className={`${style.mid_ring}`} />
-        <div className={`${style.bottom_ring}`} />
-        <figure className={style.globe_payment}>
-          <Image width={193} height={193} src={Globe} alt="globe" />
-        </figure>
-        <TfiPlus className={`${style.plus_pay_right}`} size={48} />
-        <TfiPlus className={`${style.plus_pay_left}`} size={24} />
-        <section className="absolute mx-6 space-y-4 -bottom-[16rem] w-[88%]">
-          <p className="text-primary">Add bill amount</p>
+      <section className="relative">
+        <center>
+          <Image width={1080} height={1080} src={hipayBg} alt="hipayBg" />
+          <figure className={`${style.globe_payment} mt-24`}>
+            <Image width={193} height={193} src={Hipay} alt="Hipay" />
+          </figure>
+        </center>
+        <section className="absolute mx-6 space-y-4 w-[88%]">
           <input
-            placeholder="Enter Amount"
+            autoFocus
             value={amount || ""}
             onChange={saveAmount}
-            className="w-full px-4 py-3 border bg-base-100 text-primary rounded-2xl border-primary focus:outline-none"
+            placeholder="Enter Final Bill Amount"
+            className="w-full px-4 py-3 text-black bg-white border border-black rounded-2xl focus:outline-none"
             type="tel"
             maxLength={6}
             minLength={1}
@@ -123,10 +122,10 @@ const AddAmountModal = memo(() => {
               type="button"
               disabled={loading}
               onClick={callTheWaiter}
-              className="w-full px-8 py-3 text-sm border rounded-full border-primary !text-primary"
+              className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
             >
               {loading ? (
-                <span className="loader_spinner !border-t-primary " />
+                <span className="loader_spinner !border-t-black" />
               ) : (
                 "Call Captain"
               )}
@@ -136,10 +135,10 @@ const AddAmountModal = memo(() => {
               disabled={loading}
               onClick={proceedToPayment}
               className={cn(
-                "w-full px-4 py-3 rounded-full text-base-100",
+                "w-full px-4 py-3 rounded-full text-white",
                 loading
                   ? "opacity-50 pointer-events-none bg-gray-400"
-                  : "bg-primary",
+                  : "bg-black",
               )}
             >
               {loading ? (

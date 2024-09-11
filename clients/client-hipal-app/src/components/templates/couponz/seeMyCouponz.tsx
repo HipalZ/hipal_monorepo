@@ -90,7 +90,7 @@ const MemoSeeMyCouponz = () => {
                   <h3 className="text-[0.6rem]  text-gray-500">
                     Applicable on
                   </h3>
-                  <p className="text-xs capitalize">
+                  <p className="text-xs text-left capitalize">
                     {getAvailabilityText(
                       coupon?.conditions?.availability?.when,
                       coupon?.conditions?.availability?.customDays || [],

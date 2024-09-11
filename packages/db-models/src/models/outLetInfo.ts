@@ -138,6 +138,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
     required: false,
   },
+  specialDay: {
+    type: Number,
+    required: false,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

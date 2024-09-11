@@ -51,7 +51,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
   }, []);
   return (
     <BottomPopUp show={isModalOpen} onClose={closeModal}>
-      <div className="h-[15rem] p-6 text-black bg-white overflow-hidden rounded-t-2xl">
+      <div className="h-[15rem] p-6 bg-white text-black overflow-hidden rounded-t-2xl">
         <h1 className="text-xl font-semibold">
           Available Coins :{" "}
           {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
@@ -78,7 +78,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
           className="w-full px-4 py-3 text-white bg-black rounded-full"
           onClick={() => handleNextClick(tempClaimedCoinz)}
         >
-          Next
+          Apply
         </button>
       </BottomButton>
     </BottomPopUp>
