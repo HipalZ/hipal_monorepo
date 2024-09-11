@@ -42,10 +42,19 @@ const userCouponGrabbSchema = new mongoose.Schema<UserCouponGrabbType>(
     specialday: {
       type: Number,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   },
+);
+
+userCouponGrabbSchema.index(
+  { userId: 1, couponId: 1, businessId: 1 },
+  { unique: true },
 );
 
 const UserCouponGrabb: Model<UserCouponGrabbType> =

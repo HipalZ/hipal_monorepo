@@ -18,6 +18,7 @@ export const userCouponGrabbchema = z.object({
   expiryDate: z.number(),
   channelId: ObjectIdSchema.optional(),
   dob: z.number().optional(),
+  isDeleted: z.boolean().default(false),
   specialday: z.number().optional(),
 });
 
