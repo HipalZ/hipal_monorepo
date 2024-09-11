@@ -449,20 +449,28 @@ const couponzRouter = new Hono()
         return respond(c, "Coupon not found", true, 404, {});
       }
       if (dob) {
+        const user = await User.findOne({
+          _id: userId,
+          dob: { $exists: true },
+        });
         const alreadyGrabbed = await UserCouponGrabb.findOne({
           couponId: couponId,
           userId: userId,
           businessId: businessId,
-          dob: dob,
+          dob: user?.dob ?? dob,
         });
 
         if (alreadyGrabbed) {
-          return respond(c, "Coupon already grabbed", true, 400, {});
+          return respond(c, "Coupon already grabbed", true, 409, {});
         }
 
-        await User.findByIdAndUpdate(userId, {
-          dob,
-        });
+        await User.findByIdAndUpdate(
+          userId,
+          {
+            $setOnInsert: { dob },
+          },
+          { upsert: true, new: true },
+        );
 
         const saveGrabbedCoupon = await UserCouponGrabb.create({
           businessId: businessId,
@@ -540,6 +548,65 @@ const couponzRouter = new Hono()
       }
 
       return respond(c, "Invalid request", true, 400, {});
+    },
+  )
+  .post(
+    "/check-grabbed-couponz",
+    zValidator(
+      "json",
+      z.object({
+        userId: z.string({ message: "userId should be a string" }),
+        couponId: z.string({ message: "couponId should be a string" }),
+        dob: z.number().optional(),
+        specialday: z.number().optional(),
+        businessId: z.string({ message: "businessId should be a string" }),
+      }),
+    ),
+    async (c) => {
+      const { userId, couponId, dob, specialday, businessId } =
+        await c.req.json();
+      const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
+      if (!coupon) {
+        return respond(c, "Coupon not found", true, 404, {});
+      }
+      if (dob) {
+        const user = await User.findOne({
+          _id: userId,
+          dob: { $exists: true },
+        });
+        const alreadyGrabbed = await UserCouponGrabb.findOne({
+          couponId: couponId,
+          userId: userId,
+          businessId: businessId,
+          dob: user?.dob ?? dob,
+        });
+
+        if (alreadyGrabbed) {
+          return respond(c, "Coupon already grabbed", true, 409, {});
+        }
+
+        if (!alreadyGrabbed) {
+          return respond(c, "Coupon not grabbed", true, 400, {});
+        }
+      }
+      if (specialday) {
+        const alreadyGrabbed = await UserCouponGrabb.findOne({
+          couponId: couponId,
+          userId: userId,
+          businessId: businessId,
+          specialday: specialday,
+        });
+
+        if (alreadyGrabbed) {
+          return respond(c, "Coupon already grabbed", true, 409, {});
+        }
+
+        if (!alreadyGrabbed) {
+          return respond(c, "Coupon not grabbed", true, 400, {});
+        }
+      }
+
+      return respond(c, "Invalid request", true, 500, {});
     },
   );
 
