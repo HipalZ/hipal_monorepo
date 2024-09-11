@@ -26,6 +26,12 @@ const couponChannelSchema = new mongoose.Schema<CouponChannelType>(
       type: Boolean,
       default: true,
     },
+    couponIds: [
+      {
+        type: ObjectId,
+        ref: "COUPONZ",
+      },
+    ],
   },
   {
     timestamps: true,

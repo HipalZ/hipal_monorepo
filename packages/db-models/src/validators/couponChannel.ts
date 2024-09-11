@@ -24,6 +24,8 @@ export const CouponChannelSchema = z.object({
   isActive: z.boolean().default(true),
   date: z.number(),
   count: z.number().default(1),
+  //TODO: REMOVE THIS FIELD
+  couponIds: z.array(ObjectIdSchema).default([]),
 });
 
 export type CouponChannelType = z.infer<typeof CouponChannelSchema>;

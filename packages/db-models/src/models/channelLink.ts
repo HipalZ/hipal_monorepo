@@ -14,9 +14,17 @@ const couponLinkSchema = new mongoose.Schema<CouponLinkType>(
       type: ObjectId,
       ref: "Business",
     },
-    active: {
+    isActive: {
       type: Boolean,
       default: true,
+    },
+    channelId: {
+      type: ObjectId,
+      ref: "CouponChannel",
+    },
+    couponId: {
+      type: ObjectId,
+      ref: "Coupon",
     },
 
     date: {
