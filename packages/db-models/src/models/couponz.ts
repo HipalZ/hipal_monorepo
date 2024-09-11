@@ -100,7 +100,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     type: String,
     required: false,
   },
-  visiable: {
+  isPublish: {
     type: Boolean,
     default: true,
   },
@@ -116,7 +116,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     type: Boolean,
     default: false,
   },
-  promoteInExplore: {
+  promoteOnBill: {
     type: Boolean,
     default: false,
   },

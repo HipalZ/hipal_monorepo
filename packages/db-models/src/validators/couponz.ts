@@ -166,12 +166,12 @@ export const couponSchema = z.object({
     message: "Coupon type should be one of FIX, RANDOM, LIMITED",
   }),
   promote: z.boolean().default(false),
-  promoteInExplore: z.boolean().default(false),
+  promoteOnBill: z.boolean().default(false),
   businessId: ObjectIdSchema,
   config: couponConfigSchema,
   isActive: z.boolean().default(false),
   bgColour: z.string().optional(),
-  visiable: z.boolean().default(true),
+  isPublish: z.boolean().default(true),
   cashbackAvailable: z.boolean().default(true),
   image: z
     .string()
