@@ -13,7 +13,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useTableData from "@/components/store/useTableData";
 import { useQuery } from "@tanstack/react-query";
-import { calculateReward } from "@/components/utils/helpers";
+import { calculateReward, cn } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
@@ -22,6 +22,8 @@ import { BiArrowBack } from "react-icons/bi";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
+import useCouponTemp from "@/components/store/useCouponTemp";
+import ApplyCouponz from "../couponz/applyCouponz";
 
 const CouponzBlink = dynamic(() => import("./couponzBlink"), {
   ssr: false,
@@ -103,6 +105,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const [isTipActive, setIsTipActive] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { applyCouponz } = useCouponTemp((s) => ({
+    applyCouponz: s.applyCouponz,
+  }));
   const {
     billValue,
     setBillValue,
@@ -193,7 +198,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   };
 
   const handlePaymentSuccess = async (response: any) => {
-    // setIsLoading(true);
+    setIsLoading(true);
     await sendPaymentResponse(response);
     setRazorPaySignature(response.razorpay_signature);
     setRazorPayOrderId(response.razorpay_order_id);
@@ -260,7 +265,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         notes: {
           address: "Paltribe solutions",
           businessId: businessId,
-          total: billValue - claimedCoinz + tips,
+          total: billValue - claimedCoinz - claimCouponz + tips,
           claimedCoins: claimedCoinz,
           billValue: billValue,
           tips: tips,
@@ -311,7 +316,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   };
 
   const sendPaymentResponse = async (response: any) => {
-    // setIsLoading(true);
+    setIsLoading(true);
     const res = await apiRpc.payments.validPayment[":merchantId"].$post({
       param: {
         merchantId: merchantDetails.razorpayMerchantId,
@@ -322,7 +327,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     });
     const data = await res.json();
     const orderId = data?.data as string;
-    const total = billValue - claimedCoinz + tips;
+    const total = billValue - claimedCoinz - claimCouponz + tips;
     const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
     const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
     const finalReward = calculateReward(
@@ -336,7 +341,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       setRazorPayOrderId("");
       setRazorPayPaymentId("");
       setTableName("");
-      setIsLoading(false);
+      // setIsLoading(false);
       return router.push(
         `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
           finalReward?.finalReward,
@@ -368,7 +373,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     const res = await apiRpc.payments.createOfflineOrder.$post({
       json: {
         businessId: businessId || "",
-        total: billValue - claimedCoinz + tips,
+        total: billValue - claimedCoinz - claimCouponz + tips,
         claimedCoins: claimedCoinz,
         billValue: billValue,
         userId: userDetails?._id,
@@ -386,7 +391,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       return toast.error(response?.message || "Something went wrong");
     }
     if (response?.data?.order_id) {
-      const total = billValue - claimedCoinz + tips;
+      const total = billValue - claimedCoinz - claimCouponz + tips;
       const coinsObtained =
         total * (loyaltySetting?.setCashBackPercentage / 100);
       const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
@@ -414,7 +419,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       },
       json: {
         businessId: businessId || "",
-        total: billValue - claimedCoinz + tips,
+        total: billValue - claimedCoinz - claimCouponz + tips,
         currency: "INR",
         claimedCoins: claimedCoinz,
         billValue: billValue,
@@ -534,12 +539,19 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     [claimedCoinz],
   );
 
-  const handleBack = () => {
-    if (selectedMode === "MODE") {
-      return setSelectedMode("INVOICE");
+  const handleBack = useCallback(() => {
+    switch (selectedMode) {
+      case "MODE":
+      case "ONLINE":
+      case "OFFLINE":
+        return setSelectedMode("INVOICE");
+      case "INVOICE":
+        router.push(`${routePaths[PAGE_TYPES.CATEGORY](customLink || "")}`);
+        break;
+      default:
+        break;
     }
-    router.push(`${routePaths[PAGE_TYPES.CATEGORY](customLink || "")}`);
-  };
+  }, [selectedMode]);
 
   const handleCoins = async (claimedCoinz: number) => {
     // if has claim coinz then celebrate
@@ -579,46 +591,55 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         <MemoPayLoader selectedMode={selectedMode} />
       ) : showError ? (
         <MemoErrorPayment />
+      ) : applyCouponz ? (
+        <ApplyCouponz />
       ) : (
         <div>
           <section>
             <article onClick={handleBack}>
               <button
                 type="button"
-                className="absolute top-0 left-4 py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70]"
+                className={cn(
+                  selectedMode === "INVOICE"
+                    ? "bg-[#ffffff70]"
+                    : "border border-black mt-4",
+                  "absolute top-0 left-4 py-2 rounded-full z-[60] px-4 text-black",
+                )}
               >
                 <BiArrowBack />
               </button>
             </article>
-            <center>
-              <p className="mt-4 mb-2 text-sm font-semibold">Paying:</p>
-              <section className="absolute inset-0 flex items-center justify-center">
-                <center className="absolute w-[300px] z-0 -top-20">
-                  <Image
-                    className="opacity-25"
-                    width={1080}
-                    height={1080}
-                    src={Sunrays}
-                    alt="SunlightReview"
-                  />
-                </center>
-              </section>
-              <Image
-                src={businessDetails?.logoUrl}
-                height={50}
-                width={50}
-                quality={95}
-                objectFit="cover"
-                alt="logo-businessDetails"
-                className="object-center bg-white border rounded-full shadow-sm aspect-square"
-                placeholder="blur"
-                blurDataURL={getRandomBlurImg(100, 100)}
-              />
-              <p className="mt-2 text-base font-semibold">
-                {businessDetails?.name}
-              </p>
-              <span className="text-sm">{businessDetails?.branchName}</span>
-            </center>
+            {selectedMode === "INVOICE" ? (
+              <center>
+                <p className="mt-4 mb-2 text-sm font-semibold">Paying:</p>
+                <section className="absolute inset-0 flex items-center justify-center">
+                  <center className="absolute w-[300px] z-0 -top-20">
+                    <Image
+                      className="opacity-25"
+                      width={1080}
+                      height={1080}
+                      src={Sunrays}
+                      alt="SunlightReview"
+                    />
+                  </center>
+                </section>
+                <Image
+                  src={businessDetails?.logoUrl}
+                  height={50}
+                  width={50}
+                  quality={95}
+                  objectFit="cover"
+                  alt="logo-businessDetails"
+                  className="object-center bg-white border rounded-full shadow-sm aspect-square"
+                  placeholder="blur"
+                  blurDataURL={getRandomBlurImg(100, 100)}
+                />
+                <p className="mt-2 text-base font-semibold">
+                  {businessDetails?.name}
+                </p>
+                <span className="text-sm">{businessDetails?.branchName}</span>
+              </center>
+            ) : null}
           </section>
           {selectedMode === "INVOICE" ? (
             <>
@@ -644,7 +665,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   handleCustomTip={handleCustomTip}
                   handleSaveTip={handleSaveTip}
                 />
-                <BottomButton>
+                <BottomButton noTheme={true}>
                   <div
                     onClick={() => handleMode("MODE")}
                     onKeyDown={() => handleMode("MODE")}
@@ -663,7 +684,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           ) : (
             <PaymentComponent
               handleCreateOrder={handleCreateOrder}
-              setSelectedMode={setSelectedMode}
               isLoading={isLoading}
               total={billValue - claimedCoinz - claimCouponz + tips}
             />

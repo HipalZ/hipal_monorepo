@@ -1,35 +1,46 @@
-import { memo, useCallback, useState } from "react";
-import AddAmountModal from "@/components/molecules/bottomButton/addAmountModal";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
+import { memo, useCallback, useMemo, useState } from "react";
 import { RiEdit2Fill } from "react-icons/ri";
 import Image from "next/image";
-import CardSection from "@/components/atoms/cardSection";
-import GameButton from "@/components/atoms/gameButton";
 import CoinzPattern from "@/assets/img/coinzpattern.png";
 import CouponzPattern from "@/assets/img/couponzPattern.png";
-import CouponCardPay from "./couponCardPay";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useLogin } from "@/components/store/useLogin";
-import ApplyCouponz from "../couponz/applyCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import dynamic from "next/dynamic";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { cn } from "@/components/utils/helpers";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 
-const MemoBottomPopUp = dynamic(
-  () => import("@/components/atoms/bottomPopUp"),
-  {
-    ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
-  },
+const CouponCardPay = dynamic(() => import("./couponCardPay"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
+const GameButton = dynamic(() => import("@/components/atoms/gameButton"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
+
+const CardSection = dynamic(() => import("@/components/atoms/cardSection"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
+
+const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
+
+const AddAmountModal = dynamic(
+  () => import("@/components/molecules/bottomButton/addAmountModal"),
+  { loading: () => <SkeletonLoader height={200} />, ssr: false },
 );
+
 interface IUseCoinzPopup {
   openModal: () => void;
 }
 
-const CoinzRewardsSection = (props: IUseCoinzPopup) => {
+const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
@@ -46,7 +57,8 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
     couponz: s.couponz,
   }));
 
-  const { claimedCoinz, claimCouponz } = usePaymentStore((s) => ({
+  const { billValue, claimedCoinz, claimCouponz } = usePaymentStore((s) => ({
+    billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     claimCouponz: s.claimCouponz,
   }));
@@ -59,9 +71,17 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
     setEditBillModal(false);
   }, [editBillModal]);
 
-  const toggleCouponz = useCallback(() => {
-    setApplyCouponz(!applyCouponz);
+  const openCouponz = useCallback(() => {
+    setTimeout(() => {
+      setApplyCouponz(true);
+    }, 200);
   }, [applyCouponz]);
+
+  const validCouponCount = useMemo(() => {
+    return couponz.filter(
+      (coupon) => coupon && coupon?.conditions?.billValue <= billValue,
+    ).length;
+  }, [billValue, couponz]);
 
   return (
     <>
@@ -81,7 +101,7 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
         <center className="text-xs text-[#A5A2A2] my-4">Explore couponz</center>
         <section className="relative flex justify-around h-[250px]">
           <div
-            className="absolute inset-0 -z-12"
+            className="-z-12"
             style={{
               background:
                 "radial-gradient(50% 50% at 50% 50%, #9167EA 0%, rgba(26, 26, 26, 0) 100%)",
@@ -104,9 +124,8 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
             <article className="z-20 scaled-card-container-rotate">
               <CardSection />
             </article>
-            <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[90px] bottom-0 flex flex-col justify-end items-center rounded-b-xl">
+            <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
               <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
-              <p className="pb-4 mt-1 text-xs font-semibold">Use Coins</p>
             </article>
           </article>
           <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
@@ -116,16 +135,15 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
             <Image
               src={CouponzPattern}
               alt="Couponz"
-              className="rounded-t-2xl"
+              className="h-2/3 rounded-t-2xl"
             />
             <article className="z-20 scaled-card-container-rotate-2">
               <CouponCardPay />
             </article>
-            <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[6.25rem] bottom-0 flex flex-col justify-end items-center rounded-b-xl">
+            <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
               <center className="mx-1 mb-1 text-sm">
-                You have {couponz ? couponz?.length : "no"} valid couponz
+                You have {couponz ? validCouponCount : "no"} valid couponz
               </center>
-              <p className="pb-4 text-xs font-semibold">Use Couponz</p>
             </article>
           </article>
         </section>
@@ -141,8 +159,8 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
             />
           </article>
           <article
-            onClick={toggleCouponz}
-            onKeyDown={toggleCouponz}
+            onClick={openCouponz}
+            onKeyDown={openCouponz}
             className="relative flex items-center mr-4"
           >
             <GameButton
@@ -151,20 +169,15 @@ const CoinzRewardsSection = (props: IUseCoinzPopup) => {
             />
           </article>
         </section>
+        {editBillModal && (
+          <BottomPopUp show={editBillModal} onClose={closeBillModal}>
+            <AddAmountModal />
+          </BottomPopUp>
+        )}
       </section>
-      {editBillModal && (
-        <BottomPopUp show={editBillModal} onClose={closeBillModal}>
-          <AddAmountModal />
-        </BottomPopUp>
-      )}
-      {applyCouponz && (
-        <MemoBottomPopUp show={applyCouponz} onClose={toggleCouponz} hide>
-          <ApplyCouponz />
-        </MemoBottomPopUp>
-      )}
     </>
   );
 };
 
-const MemoCoinzRewardsPayment = memo(CoinzRewardsSection);
-export default MemoCoinzRewardsPayment;
+const CoinzRewardSection = memo(MemoCoinzRewardSection);
+export default CoinzRewardSection;

@@ -19,7 +19,6 @@ interface Data {
 
 interface PaymentComponentProps {
   handleCreateOrder: (amount: number, mode: string) => void;
-  setSelectedMode: (mode: PageStates) => void;
   isLoading: boolean;
   total: number;
 }
@@ -27,12 +26,13 @@ interface PaymentComponentProps {
 const PaymentComponent: React.FC<PaymentComponentProps> = ({
   total,
   handleCreateOrder,
-  setSelectedMode,
   isLoading,
 }) => {
   const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
-  const { billValue } = usePaymentStore((s) => ({
+  const { billValue, selectedMode, setSelectedMode } = usePaymentStore((s) => ({
     billValue: s.billValue,
+    selectedMode: s.selectedMode,
+    setSelectedMode: s.setSelectedMode,
   }));
   useEffect(() => {
     const images = [QRcodeImg.src, HandPay.src, online.src];
@@ -46,10 +46,13 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const createOrder = useCallback((amount: number, mode: PageStates) => {
-    setSelectedMode(mode);
-    handleCreateOrder(amount, mode);
-  }, []);
+  const createOrder = useCallback(
+    (amount: number, mode: PageStates) => {
+      setSelectedMode(mode);
+      handleCreateOrder(amount, mode);
+    },
+    [selectedMode, handleCreateOrder],
+  );
 
   const handleOnlineMode = useCallback(
     (billValue: number) => {
@@ -64,7 +67,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   );
 
   return (
-    <section className="h-[90vh] bg-white">
+    <section className="h-[100vh] pt-4 bg-white">
       <div
         style={{
           backgroundImage: `url(${background.src})`,
@@ -111,7 +114,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         <center className=" text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
           How do you want to settle ?
         </center>
-        <section className="flex w-[92%] gap-4 mx-4">
+        <section className="flex w-[92%] gap-4 mx-4 mb-6">
           <article
             onClick={() => createOrder(billValue, "OFFLINE")}
             onKeyDown={() => createOrder(billValue, "OFFLINE")}

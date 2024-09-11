@@ -74,9 +74,7 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-          <EmblaCarousel2 customCarousel={true}>
-            <AllCouponz couponz={data?.couponz} />
-          </EmblaCarousel2>
+          <AllCouponz couponz={data?.couponz} />
           <div className="bg-base-300">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>

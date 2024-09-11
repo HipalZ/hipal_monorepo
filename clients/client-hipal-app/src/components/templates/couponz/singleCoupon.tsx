@@ -5,7 +5,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
@@ -24,6 +24,7 @@ import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
+import useCouponTemp from "@/components/store/useCouponTemp";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
@@ -35,6 +36,10 @@ const MemoCouponz = () => {
 
   const { userDetails } = useLogin((s) => ({
     userDetails: s.userDetails,
+  }));
+
+  const { setCouponOccasion } = useCouponTemp((s) => ({
+    setCouponOccasion: s.setCouponOccasion,
   }));
 
   const { selectedCoupon, setCurrentPage } = useCouponz((s) => ({
@@ -51,8 +56,18 @@ const MemoCouponz = () => {
     });
     const data = await response.json();
     if (response.status === 201) {
+      console.log(
+        'selectedCoupon?.conditions?.requiredFields?.includes("specialday")',
+        selectedCoupon?.conditions?.requiredFields?.includes("specialday"),
+      );
       toast.success(data?.message || "Coupon grabbed successfully");
       if (selectedCoupon?.conditions?.requiredFields?.includes("dob")) {
+        setCouponOccasion("dob");
+        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+      } else if (
+        selectedCoupon?.conditions?.requiredFields?.includes("specialday")
+      ) {
+        setCouponOccasion("specialday");
         setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
       } else {
         setCurrentPage(ICouponPage.CONGRATULATIONZ);
@@ -64,12 +79,15 @@ const MemoCouponz = () => {
     }
   };
 
-  const startTime = formatTime(
-    selectedCoupon?.conditions?.availability?.startTime || 1,
-  );
-  const endTime = formatTime(
-    selectedCoupon?.conditions?.availability?.endTime || 23.5,
-  );
+  const startTime = useMemo(() => {
+    return formatTime(selectedCoupon?.conditions?.availability?.startTime || 1);
+  }, [selectedCoupon]);
+
+  const endTime = useMemo(() => {
+    return formatTime(
+      selectedCoupon?.conditions?.availability?.endTime || 23.5,
+    );
+  }, [selectedCoupon]);
 
   return (
     <main
@@ -163,6 +181,11 @@ const MemoCouponz = () => {
               selectedCoupon?.config?.discountType,
             )}{" "}
             OFF
+            <p className="text-xs">
+              {selectedCoupon?.config?.upto > 0
+                ? `up to ₹${selectedCoupon?.config?.upto}`
+                : ""}
+            </p>
           </p>
           <div className="absolute flex items-center justify-between w-full h-full px-2">
             <div
@@ -212,7 +235,10 @@ const MemoCouponz = () => {
               selectedCoupon?.config?.value,
               selectedCoupon?.config?.discountType,
             )}
-            Off
+            Off{" "}
+            {selectedCoupon?.config?.upto > 0
+              ? `upto ₹${selectedCoupon?.config?.upto}`
+              : ""}
           </p>
         </article>
       </section>

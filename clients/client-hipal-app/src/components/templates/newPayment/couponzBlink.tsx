@@ -28,16 +28,16 @@ const MemoCouponzBlink = () => {
         <Image
           src={CouponzLight}
           alt="Couponz"
-          className="absolute mt-4 top-12"
+          className="absolute w-[95%] mt-4 top-12"
         />
         <Image
           src={CouponzLight}
           alt="Couponz"
-          className="absolute mt-4 top-12 mix-blend-screen blink-effect"
+          className="absolute w-[95%] mt-4 top-12 mix-blend-screen blink-effect"
         />
         <section
           className={cn(
-            "flex overflow-x-auto flex-nowrap",
+            "flex overflow-x-auto flex-nowrap mt-2",
             couponz?.length === 1 ? "justify-center" : "",
           )}
         >

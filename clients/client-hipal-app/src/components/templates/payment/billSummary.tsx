@@ -1,3 +1,4 @@
+import useCouponTemp from "@/components/store/useCouponTemp";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { memo } from "react";
 import { CiCirclePlus } from "react-icons/ci";
@@ -16,6 +17,9 @@ interface IBillSummary {
 }
 
 const BillSummary = (props: IBillSummary) => {
+  const { setApplyCouponz } = useCouponTemp((s) => ({
+    setApplyCouponz: s.setApplyCouponz,
+  }));
   const { billValue, claimCouponz, claimedCoinz, tips } = usePaymentStore(
     (s) => ({
       billValue: s.billValue,
@@ -72,7 +76,7 @@ const BillSummary = (props: IBillSummary) => {
               </h1>
               <article className="self-end text-[#4CAF50] flex justify-between items-center gap-2 text-sm">
                 <h1>₹ {claimedCoinz || claimCouponz} </h1>
-                <span>
+                <span onClick={() => setApplyCouponz(true)}>
                   <RiEdit2Fill color="black" />
                 </span>
               </article>

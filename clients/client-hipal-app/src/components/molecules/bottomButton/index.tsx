@@ -15,20 +15,18 @@ import { LuScanLine } from "react-icons/lu";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import useTableData from "@/components/store/useTableData";
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { cn } from "@/components/utils/helpers";
 
 function BottomButton({
   children,
+  noTheme,
 }: {
   children?: ReactNode;
+  noTheme?: boolean;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const router = useRouter();
   const [inputModal, setInputModal] = useState(false);
@@ -77,11 +75,21 @@ function BottomButton({
   return (
     <>
       {children ? (
-        <center className="fixed bottom-0 z-20 py-3 w-full max-w-[30rem] bg-primary">
+        <center
+          className={cn(
+            noTheme ? "bg-white" : "bg-primary",
+            "fixed bottom-0 z-20 py-3 w-full max-w-[30rem]",
+          )}
+        >
           {children}
         </center>
       ) : (
-        <section className="fixed z-10 bottom-0 p-3 w-full max-w-[30rem] bg-primary shadow-lg">
+        <section
+          className={cn(
+            noTheme ? "bg-white" : "bg-primary",
+            "fixed z-10 bottom-0 p-3 w-full max-w-[30rem] shadow-lg",
+          )}
+        >
           <center className="relative flex items-center justify-between text-xs">
             <Link href={`/${customLink}/explore`}>
               <center className={defaultStyle}>
