@@ -587,44 +587,20 @@ const couponzRouter = new Hono()
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
-      if (dob) {
-        const user = await User.findOne({
-          _id: userId,
-          dob: { $exists: true },
-        });
-        const alreadyGrabbed = await UserCouponGrabb.findOne({
-          couponId: couponId,
-          userId: userId,
-          businessId: businessId,
-          dob: user?.dob ?? dob,
-        });
 
-        if (alreadyGrabbed) {
-          return respond(c, "Coupon already grabbed", true, 409, {});
-        }
+      const alreadyGrabbed = await UserCouponGrabb.findOne({
+        couponId: couponId,
+        userId: userId,
+        businessId: businessId,
+      });
 
-        if (!alreadyGrabbed) {
-          return respond(c, "Coupon not grabbed", true, 400, {});
-        }
-      }
-      if (specialday) {
-        const alreadyGrabbed = await UserCouponGrabb.findOne({
-          couponId: couponId,
-          userId: userId,
-          businessId: businessId,
-          specialday: specialday,
-        });
-
-        if (alreadyGrabbed) {
-          return respond(c, "Coupon already grabbed", true, 409, {});
-        }
-
-        if (!alreadyGrabbed) {
-          return respond(c, "Coupon not grabbed", true, 400, {});
-        }
+      if (alreadyGrabbed) {
+        return respond(c, "Coupon already grabbed", true, 409, {});
       }
 
-      return respond(c, "Invalid request", true, 500, {});
+      if (!alreadyGrabbed) {
+        return respond(c, "Coupon not grabbed", true, 400, {});
+      }
     },
   );
 

@@ -1,6 +1,6 @@
 import Couponz from "@/components/templates/couponz/singleCoupon";
 import ApplyCouponz from "@/components/templates/couponz/applyCouponz";
-import BirthdayPopup from "@/components/templates/couponz/birthdayPopup";
+import BirthdayPopup from "@/components/templates/couponz/occasionPopup";
 import Congratulationz from "@/components/templates/couponz/congratulationz";
 import SeeMyCouponz from "@/components/templates/couponz/seeMyCouponz";
 import PaymentWithCouponz from "@/components/templates/newPayment";

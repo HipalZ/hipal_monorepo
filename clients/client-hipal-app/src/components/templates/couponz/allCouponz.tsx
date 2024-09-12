@@ -11,8 +11,15 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useLogin } from "@/components/store/useLogin";
-import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import dynamic from "next/dynamic";
 
+const EmblaCarousel2 = dynamic(
+  () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
 interface Iprops {
   couponz: Coupon[];
 }
@@ -60,7 +67,7 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
               onKeyDown={() => handleRoute(coupon)}
               key={coupon?._id}
               className={
-                "on_active_bounce relative flex flex-col justify-center items-center ml-4 text-primary border border-1 border-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0"
+                "on_active_bounce relative flex flex-col justify-center ml-4 items-center text-primary border border-1 border-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0"
               }
             >
               {[...Array(5)].map((_, i) => (
@@ -85,7 +92,7 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
               ))}
               <article className="flex w-full">
                 <Image
-                  src={birthdayPlaceholder}
+                  src={coupon?.image || birthdayPlaceholder}
                   alt="birthdayPlaceholder"
                   width={31}
                   height={31}

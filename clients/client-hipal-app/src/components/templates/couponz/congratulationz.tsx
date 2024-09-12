@@ -8,13 +8,23 @@ import {
 } from "@/components/utils/helpers";
 import CouponCardCongrats from "@/components/atoms/couponCardCongrats";
 import { useCouponz } from "@/components/store/useCouponz";
+import { useParams, useRouter } from "next/navigation";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoCongratulationz = () => {
-  const { setCurrentPage, currentPage, selectedCoupon } = useCouponz((s) => ({
-    currentPage: s.currentPage,
-    setCurrentPage: s.setCurrentPage,
-    selectedCoupon: s.selectedCoupon,
+  const router = useRouter();
+  const customLink = useParams()?.businessId;
+  const { billValue } = usePaymentStore((s) => ({
+    billValue: s.billValue,
   }));
+  const { setCurrentPage, currentPage, selectedCoupon, direction } = useCouponz(
+    (s) => ({
+      currentPage: s.currentPage,
+      setCurrentPage: s.setCurrentPage,
+      selectedCoupon: s.selectedCoupon,
+      direction: s.direction,
+    }),
+  );
 
   useEffect(() => {
     triggerConfettiBlast();
@@ -25,8 +35,11 @@ const MemoCongratulationz = () => {
   }, [currentPage]);
 
   const handleSeeAllCouponz = useCallback(() => {
+    if (direction === "payment") {
+      router.push(`/${customLink}/payment?amount=${billValue}`);
+    }
     setCurrentPage(ICouponPage.SEEMYCOUPONZ);
-  }, [currentPage]);
+  }, [currentPage, direction]);
 
   return (
     <main
@@ -96,7 +109,7 @@ const MemoCongratulationz = () => {
         onClick={handleSeeAllCouponz}
         className="absolute w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
       >
-        See my couponz
+        See All Couponz
       </button>
     </main>
   );

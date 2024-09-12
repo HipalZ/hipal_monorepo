@@ -5,7 +5,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
@@ -24,60 +24,86 @@ import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
-import useCouponTemp from "@/components/store/useCouponTemp";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+
+const TermsAndConditions = dynamic(
+  () => import("@/components/atoms/termsAndConditions"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const { logoUrl, name } = useBusinessDetails((s) => ({
+  const { selectedCoupon, setCurrentPage, setCouponOccasion, setDirection } =
+    useCouponz((s) => ({
+      selectedCoupon: s.selectedCoupon,
+      setCurrentPage: s.setCurrentPage,
+      setCouponOccasion: s.setCouponOccasion,
+      setDirection: s.setDirection,
+    }));
+
+  const [openTc, setOpenTc] = useState(false);
+
+  const { logoUrl, name, businessId } = useBusinessDetails((s) => ({
     logoUrl: s.businessDetails?.logoUrl,
     name: s.businessDetails?.name,
+    businessId: s.businessDetails?.businessId,
   }));
 
   const { userDetails } = useLogin((s) => ({
     userDetails: s.userDetails,
   }));
 
-  const { setCouponOccasion } = useCouponTemp((s) => ({
-    setCouponOccasion: s.setCouponOccasion,
-  }));
+  // check the coupon grabbed or not for the dob and special day
+  const grabCouponz = useCallback(async () => {
+    const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
+    const requiresDobOrSpecialDay =
+      requiredFields.includes("dob") || requiredFields.includes("specialday");
 
-  const { selectedCoupon, setCurrentPage } = useCouponz((s) => ({
-    selectedCoupon: s.selectedCoupon,
-    setCurrentPage: s.setCurrentPage,
-  }));
-
-  const grabCouponz = async () => {
-    const response = await apiRpc.couponz["grabbed-couponz"].$post({
-      json: {
-        couponId: selectedCoupon?._id,
-        userId: userDetails?._id,
-      },
-    });
-    const data = await response.json();
-    if (response.status === 201) {
-      console.log(
-        'selectedCoupon?.conditions?.requiredFields?.includes("specialday")',
-        selectedCoupon?.conditions?.requiredFields?.includes("specialday"),
-      );
-      toast.success(data?.message || "Coupon grabbed successfully");
-      if (selectedCoupon?.conditions?.requiredFields?.includes("dob")) {
-        setCouponOccasion("dob");
-        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-      } else if (
-        selectedCoupon?.conditions?.requiredFields?.includes("specialday")
-      ) {
-        setCouponOccasion("specialday");
-        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-      } else {
-        setCurrentPage(ICouponPage.CONGRATULATIONZ);
+    if (requiresDobOrSpecialDay) {
+      const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
+        json: {
+          couponId: selectedCoupon?._id,
+          userId: userDetails?._id,
+          businessId: businessId,
+        },
+      });
+      if (response.status === 400) {
+        if (requiredFields.includes("dob")) {
+          setCouponOccasion("dob");
+          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+          setDirection("couponz");
+        } else if (requiredFields.includes("specialday")) {
+          setCouponOccasion("specialday");
+          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+          setDirection("couponz");
+        } else {
+          setCurrentPage(ICouponPage.CONGRATULATIONZ);
+        }
+      } else if (response.status === 409) {
+        toast.error("Coupon already grabbed");
+        setCurrentPage(ICouponPage.SINGLECOUPON);
+        router.push(`/${customLink}/explore`);
       }
-    } else if (response.status === 400) {
-      toast.error(data?.message || "Coupon already grabbed");
-      setCurrentPage(ICouponPage.SINGLECOUPON);
-      router.push(`/${customLink}/explore`);
+    } else {
+      setCurrentPage(ICouponPage.CONGRATULATIONZ);
     }
-  };
+  }, [
+    selectedCoupon,
+    userDetails,
+    businessId,
+    setDirection,
+    setCouponOccasion,
+    setCurrentPage,
+    router,
+    customLink,
+  ]);
 
   const startTime = useMemo(() => {
     return formatTime(selectedCoupon?.conditions?.availability?.startTime || 1);
@@ -88,6 +114,10 @@ const MemoCouponz = () => {
       selectedCoupon?.conditions?.availability?.endTime || 23.5,
     );
   }, [selectedCoupon]);
+
+  const displayTermsAndConditions = useCallback(() => {
+    setOpenTc(!openTc);
+  }, [openTc]);
 
   return (
     <main
@@ -133,7 +163,7 @@ const MemoCouponz = () => {
       </center>
       <center className="relative z-10">
         <Image
-          src={birthdayPlaceholder}
+          src={selectedCoupon?.image || birthdayPlaceholder}
           alt="Birthday Placeholder"
           width={256}
           height={200}
@@ -154,7 +184,15 @@ const MemoCouponz = () => {
               {getAvailabilityText(
                 selectedCoupon?.conditions?.availability?.when,
                 selectedCoupon?.conditions?.availability?.customDays || [],
-              )}{" "}
+              ).map((text, index, array) => (
+                <React.Fragment key={text}>
+                  {text}
+                  {index + 1 !== array.length && ","}
+                  {(index + 1) % 3 === 0 && index + 1 !== array.length && (
+                    <br />
+                  )}
+                </React.Fragment>
+              ))}
             </p>
           </div>
           <div className="flex flex-col items-start space-y-1">
@@ -213,7 +251,11 @@ const MemoCouponz = () => {
       <picture className="absolute scale-80 -left-2 bottom-24">
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
-      <center className="text-black fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]">
+      <center
+        onClick={displayTermsAndConditions}
+        onKeyDown={displayTermsAndConditions}
+        className="text-black fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]"
+      >
         View Terms and conditions
       </center>
       <section
@@ -242,6 +284,11 @@ const MemoCouponz = () => {
           </p>
         </article>
       </section>
+      {openTc && (
+        <BottomPopUp show={openTc} onClose={displayTermsAndConditions}>
+          <TermsAndConditions />
+        </BottomPopUp>
+      )}
     </main>
   );
 };

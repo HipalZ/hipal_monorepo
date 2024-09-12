@@ -24,11 +24,16 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import ApplyCouponz from "../couponz/applyCouponz";
+import { useCouponz } from "@/components/store/useCouponz";
+import type { PageStates } from "../payment";
 
-const CouponzBlink = dynamic(() => import("./couponzBlink"), {
-  ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
-});
+const CoinzRewardSection = dynamic(
+  () => import("@/components/templates/payment/coinzRewardSection"),
+  {
+    ssr: false,
+    loading: () => <SkeletonLoader height={50} />,
+  },
+);
 
 const RefferalCouponz = dynamic(() => import("./refferalCouponz"), {
   ssr: false,
@@ -41,6 +46,11 @@ const MemoErrorPayment = dynamic(() => import("../payment/errorPay"), {
 });
 
 const MemoPayLoader = dynamic(() => import("../payment/payLoader"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
+
+const CouponzBlink = dynamic(() => import("./couponzBlink"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
@@ -85,14 +95,6 @@ const PaymentCard = dynamic(
   },
 );
 
-const CoinzRewardSection = dynamic(
-  () => import("@/components/templates/payment/coinzRewardSection"),
-  {
-    ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
-  },
-);
-
 export interface IMerchantDetails {
   businessId: string;
   razorpayMerchantId: string;
@@ -105,6 +107,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const [isTipActive, setIsTipActive] = useState(false);
   const [showInput, setShowInput] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setAvailedCoupon, availedCoupon } = useCouponz((s) => ({
+    setAvailedCoupon: s.setAvailedCoupon,
+    availedCoupon: s.availedCoupon,
+  }));
   const { applyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
   }));
@@ -147,6 +153,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     selectedTip: s.selectedTip,
     setSelectedTip: s.setSelectedTip,
   }));
+
   const { businessDetails } = useBusinessDetails();
   const { tableName, setTableName } = useTableData();
   const router = useRouter();
@@ -175,6 +182,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setTips(0);
     setSelectedTip("");
     setCustomTip("");
+    setAvailedCoupon({});
   }, []);
 
   const getMerchantKeySecret = async () => {
@@ -330,21 +338,23 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     const total = billValue - claimedCoinz - claimCouponz + tips;
     const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
     const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
-    const finalReward = calculateReward(
-      existingCoins,
-      coinsObtained,
-      loyaltySetting?.rewardLimit,
-    );
+    let finalReward = 0;
+    if (availedCoupon?.cashbackAvailable) {
+      finalReward = calculateReward(
+        existingCoins,
+        coinsObtained,
+        loyaltySetting?.rewardLimit,
+      )?.finalReward;
+    }
     if (res.status === 200) {
       toast.success("Payment successful");
       setRazorPaySignature("");
       setRazorPayOrderId("");
       setRazorPayPaymentId("");
       setTableName("");
-      // setIsLoading(false);
       return router.push(
         `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
-          finalReward?.finalReward,
+          finalReward,
         )}&orderId=${orderId}`,
       );
     }
@@ -392,21 +402,26 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     }
     if (response?.data?.order_id) {
       const total = billValue - claimedCoinz - claimCouponz + tips;
-      const coinsObtained =
-        total * (loyaltySetting?.setCashBackPercentage / 100);
-      const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
-      const finalReward = calculateReward(
-        existingCoins,
-        coinsObtained,
-        loyaltySetting?.rewardLimit,
-      );
+      let finalReward = 0;
+      if (availedCoupon?.cashbackAvailable) {
+        const coinsObtained =
+          total * (loyaltySetting?.setCashBackPercentage / 100);
+        const existingCoins = claimedCoinz
+          ? userCoinz - claimedCoinz
+          : userCoinz;
+        finalReward = calculateReward(
+          existingCoins,
+          coinsObtained,
+          loyaltySetting?.rewardLimit,
+        ).finalReward;
+      }
       toast.success(
         "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
       );
       setTableName("");
       router.push(
         `/${customLink}/review?amount=${total}&mode=offline&claim=${Math.round(
-          finalReward?.finalReward,
+          finalReward,
         )}&orderId=${response?.data?.order_id}`,
       );
     }
@@ -634,10 +649,15 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(100, 100)}
                 />
-                <p className="mt-2 text-base font-semibold">
-                  {businessDetails?.name}
-                </p>
-                <span className="text-sm">{businessDetails?.branchName}</span>
+                <div className="relative">
+                  <div className="absolute inset-0 z-10 bg-black opacity-90" />
+                  <p className="relative z-20 mt-2 text-base font-semibold">
+                    {businessDetails?.name}
+                  </p>
+                  <span className="relative z-20 text-sm">
+                    {businessDetails?.branchName}
+                  </span>
+                </div>
               </center>
             ) : null}
           </section>
@@ -647,7 +667,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                 offer={claimedCoinz || claimCouponz}
                 logo={data?.business?.logoUrl}
               />
-              {userCoinz > 0 && <CoinzRewardSection openModal={openModal} />}
+              <CoinzRewardSection openModal={openModal} />
               <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
                 <center className="my-2 text-xl text-black poppins-regular">
                   Rewardz

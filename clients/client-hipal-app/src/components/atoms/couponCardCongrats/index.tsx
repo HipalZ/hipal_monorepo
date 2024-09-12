@@ -22,7 +22,7 @@ const MemoCouponCardCongrats = () => {
       </center>
       <center className="relative z-50 w-64">
         <Image
-          src={birthdayPlaceholder}
+          src={selectedCoupon?.image || birthdayPlaceholder}
           alt="Birthday Placeholder"
           width={256}
           height={180}

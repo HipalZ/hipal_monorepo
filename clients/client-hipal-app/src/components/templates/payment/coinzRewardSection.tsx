@@ -45,6 +45,9 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
+  const { availedCoupon } = useCouponz((s) => ({
+    availedCoupon: s.availedCoupon,
+  }));
   const { openModal } = props;
   const { userCoinZ } = useLogin((s) => ({
     userCoinZ: s.userCoinZ,
@@ -110,9 +113,12 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             }}
           />
           <article
-            className="z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
+            className={
+              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
+            }
             style={{
               backgroundImage: `url(${CoinzPattern.src})`,
+              opacity: claimCouponz > 0 ? 0.5 : 1,
               backgroundSize: "cover",
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
@@ -131,7 +137,12 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
           <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
             or
           </span>
-          <article className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative">
+          <article
+            style={{
+              opacity: claimedCoinz > 0 ? 0.5 : 1,
+            }}
+            className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative"
+          >
             <Image
               src={CouponzPattern}
               alt="Couponz"
@@ -142,7 +153,11 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             </article>
             <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
               <center className="mx-1 mb-1 text-sm">
-                You have {couponz ? validCouponCount : "no"} valid couponz
+                {claimCouponz > 0
+                  ? `${availedCoupon?.name}Applied`
+                  : `You have ${
+                      couponz ? validCouponCount : "no"
+                    } valid couponz`}
               </center>
             </article>
           </article>

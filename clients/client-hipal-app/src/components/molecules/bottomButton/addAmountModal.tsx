@@ -98,7 +98,7 @@ const AddAmountModal = memo(() => {
           <span className="font-bold text-primary">{business.name}</span>
         </div>
       </header>
-      <section className="relative">
+      <section className="relative scale-90">
         <center>
           <Image width={1080} height={1080} src={hipayBg} alt="hipayBg" />
           <figure className={`${style.globe_payment} mt-24`}>

@@ -7,8 +7,11 @@ interface IApplyCoupon {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 
-  couponOccasion: string;
-  setCouponOccasion: (occasion: string) => void;
+  showPopup: boolean;
+  setShowPopup: (show: boolean) => void;
+
+  showAlert: boolean;
+  setShowAlert: (show: boolean) => void;
 }
 
 // if we remove circle bracket from arrow function then it will become the function now we returning the object coz we added circle bracket
@@ -19,8 +22,11 @@ const useCouponTemp = create<IApplyCoupon>((set) => ({
   isLoading: false,
   setIsLoading: (loading: boolean) => set({ isLoading: loading }),
 
-  couponOccasion: "",
-  setCouponOccasion: (occasion: string) => set({ couponOccasion: occasion }),
+  showPopup: false,
+  setShowPopup: (show: boolean) => set({ showPopup: show }),
+
+  showAlert: false,
+  setShowAlert: (show: boolean) => set({ showAlert: show }),
 }));
 
 export default useCouponTemp;

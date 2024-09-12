@@ -20,6 +20,7 @@ import { MdOutlineCall } from "react-icons/md";
 import { initializeApp } from "firebase/app";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 import confetti from "canvas-confetti";
+import { toast } from "react-toastify";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -554,10 +555,10 @@ export function getLinearGradient(hexColor: string): string | null {
 }
 
 export function getHueColor(hexColor: string): number | null {
-  const colorObject = colors.find(
-    (color) => color.color.toLowerCase() === hexColor.toLowerCase(),
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
   );
-  return colorObject ? colorObject.hueRotate : null;
+  return colorObject ? colorObject?.hueRotate : null;
 }
 
 // convert hex code to linear gradient other color
@@ -654,17 +655,11 @@ const monthMapping: { [key: string]: number } = {
   December: 11,
 };
 
-export const convertToTimestamp = (dateObj: {
-  day: string;
-  month: string;
-  year: string;
-}): number => {
-  const day = parseInt(dateObj.day, 10);
-  const month = monthMapping[dateObj.month];
-  const year = parseInt(dateObj.year, 10);
-
-  const date = new Date(year, month, day);
-  return date.getTime();
+export const convertToTimestamp = (date) => {
+  const { day, month, year } = date;
+  // JavaScript months are 0-indexed, so subtract 1 to align with your month values (where January = 1)
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  return dateObj.getTime(); // getTime() returns milliseconds since the Unix Epoch
 };
 
 // hexcode to gradient
@@ -735,43 +730,61 @@ export function generateComplementaryColor(hex: string): string {
 }
 
 export const getCustomDays = (days: string[]) => {
-  return days
-    .map((day) => {
-      switch (day.toLowerCase()) {
-        case "monday":
-          return "Mon";
-        case "tuesday":
-          return "Tue";
-        case "wednesday":
-          return "Wed";
-        case "thursday":
-          return "Thu";
-        case "friday":
-          return "Fri";
-        case "saturday":
-          return "Sat";
-        case "sunday":
-          return "Sun";
-        default:
-          return "All";
-      }
-    })
-    .join(",");
+  return days.map((day) => {
+    switch (day.toLowerCase()) {
+      case "monday":
+        return "Mon";
+      case "tuesday":
+        return "Tue";
+      case "wednesday":
+        return "Wed";
+      case "thursday":
+        return "Thu";
+      case "friday":
+        return "Fri";
+      case "saturday":
+        return "Sat";
+      case "sunday":
+        return "Sun";
+      default:
+        return "All";
+    }
+  });
 };
 
 export const getAvailabilityText = (when: string, customDays: string[]) => {
-  switch (when.toLowerCase()) {
+  switch (when?.toLowerCase()) {
     case "custom":
       return getCustomDays(customDays);
     case "allthetime":
-      return "All Days";
+      return ["All Days"];
     case "weekdays":
-      return "Week Days";
+      return ["Week Days"];
     case "weekends":
-      return "Week Ends";
+      return ["Week Ends"];
     default:
-      return "All Days";
+      return ["All Days"];
   }
 };
 
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
+
+export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
+  let discountValue = 0;
+
+  if (
+    coupon?.config?.discountType?.toLowerCase() === "percentage" &&
+    coupon?.config?.upto
+  ) {
+    discountValue = Math.round((coupon?.config?.value / 100) * billValue);
+    if (discountValue > coupon?.config?.upto) {
+      discountValue = coupon?.config?.upto;
+    }
+  } else if (coupon?.config?.discountType?.toLowerCase() === "percentage") {
+    discountValue = Math.round((coupon?.config?.value / 100) * billValue);
+  } else {
+    discountValue = coupon?.config?.value;
+  }
+
+  return { discountValue, resetClaimedCoinz: claimedCoinz > 0 };
+};

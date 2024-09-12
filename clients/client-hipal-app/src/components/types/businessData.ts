@@ -511,6 +511,7 @@ export interface CouponConditions {
 }
 
 export interface Coupon {
+  cashbackAvailable: any;
   image: any;
   bgColour: ClassValue;
   availability: any;
