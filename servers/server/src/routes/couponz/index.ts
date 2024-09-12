@@ -1,4 +1,4 @@
-import { Couponz, User, UserCouponGrabb } from "@hi/db-models";
+import { CouponView, Couponz, User, UserCouponGrabb } from "@hi/db-models";
 import {
   type CouponzAvailabilityType,
   type CouponzDays,
@@ -318,7 +318,7 @@ const couponzRouter = new Hono()
         .toLocaleString("en-us", { weekday: "long" })
         .toLowerCase();
       const currentTime = getCurrentTimeDecimal();
-
+      const couponzArray: string[] = [];
       // Fetch all active coupons
       const coupons = await Couponz.find({
         $or: [
@@ -338,6 +338,7 @@ const couponzRouter = new Hono()
       });
 
       const eligibleCoupons = coupons.filter((coupon) => {
+        couponzArray.push(coupon?._id);
         const { conditions } = coupon;
         const isDayEligible = switchDayEligibility(
           conditions.availability,
@@ -362,6 +363,23 @@ const couponzRouter = new Hono()
 
         return false; // If none of the conditions match, the user is not eligible
       });
+
+      await CouponView.updateOne(
+        {
+          businessId: businessId,
+          couponId: couponzArray,
+          userId: userId,
+        },
+        {
+          $setOnInsert: {
+            businessId: businessId,
+            couponId: couponzArray,
+            userId: userId,
+            date: Date.now(),
+          },
+        },
+        { upsert: true },
+      );
 
       return c.json({
         message: "Eligible coupons found",

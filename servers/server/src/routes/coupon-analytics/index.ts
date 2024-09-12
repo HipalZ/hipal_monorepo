@@ -1,4 +1,12 @@
-import { Business, CouponChannel, CouponLink } from "@hi/db-models";
+import {
+  Business,
+  CouponChannel,
+  CouponLink,
+  CouponView,
+  Couponz,
+  Payment,
+  UserCouponGrabb,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -155,15 +163,43 @@ const couponAnalyticsRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
+      const activeCouponz = await Couponz.find({
+        businessId,
+        isActive: true,
+        isDeleted: false,
+      }).count();
+
+      const totalCouponz = await CouponView.find({
+        businessId,
+      }).count();
+
+      const totalGrabbed = await UserCouponGrabb.find({ businessId }).count();
+
+      const totalClaimed = await Payment.aggregate([
+        {
+          $match: {
+            couponId: { $exists: true },
+            businessId: businessId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$total" }, // Assuming the field to sum is "amount"
+          },
+        },
+      ]);
+
+      const totalSale = totalClaimed.length > 0 ? totalClaimed[0].total : 0;
 
       const temp = {
         businessId: businessId,
-        totalActiveCoupons: 11,
-        totalReach: 1000,
-        totalGrabbed: 100,
-        totalClaimed: 50,
+        totalActiveCoupons: activeCouponz || 11,
+        totalReach: totalCouponz || 1000,
+        totalGrabbed: totalGrabbed || 100,
+        totalClaimed: totalClaimed.length || 50,
         newUsers: 10,
-        totalSales: 100000,
+        totalSales: totalSale || 100000,
       };
 
       return c.json({ err: false, msg: "Coupon Analytics", data: temp });
@@ -179,9 +215,27 @@ const couponAnalyticsRouter = new Hono()
         }),
       }),
     ),
+    zValidator(
+      "query",
+      z.object({
+        from: z.string({
+          message: "from should be a string",
+        }),
+        to: z.string({
+          message: "to should be a string",
+        }),
+        timeRange: z
+          .string({
+            message: "timeRange should be a string",
+          })
+          .default("thisWeek")
+          .optional(),
+      }),
+    ),
 
     async (c) => {
       const { couponId } = c.req.param();
+      const { from, to, timeRange } = c.req.query();
 
       const summary = {
         totalReach: 1000,
