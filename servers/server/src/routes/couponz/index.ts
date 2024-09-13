@@ -364,22 +364,24 @@ const couponzRouter = new Hono()
         return false; // If none of the conditions match, the user is not eligible
       });
 
-      await CouponView.updateOne(
-        {
-          businessId: businessId,
-          couponId: couponzArray,
-          userId: userId,
-        },
-        {
-          $setOnInsert: {
+      for (const couponId of couponzArray) {
+        await CouponView.updateOne(
+          {
             businessId: businessId,
-            couponId: couponzArray,
+            couponId: couponId,
             userId: userId,
-            date: Date.now(),
           },
-        },
-        { upsert: true },
-      );
+          {
+            $setOnInsert: {
+              businessId: businessId,
+              couponId: couponId,
+              userId: userId,
+              date: Date.now(),
+            },
+          },
+          { upsert: true },
+        );
+      }
 
       return c.json({
         message: "Eligible coupons found",
