@@ -81,7 +81,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
   }, [applyCouponz]);
 
   const validCouponCount = useMemo(() => {
-    return couponz.filter(
+    return couponz?.filter(
       (coupon) => coupon && coupon?.conditions?.billValue <= billValue,
     ).length;
   }, [billValue, couponz]);
