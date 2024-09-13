@@ -577,14 +577,11 @@ const couponzRouter = new Hono()
       z.object({
         userId: z.string({ message: "userId should be a string" }),
         couponId: z.string({ message: "couponId should be a string" }),
-        dob: z.number().optional(),
-        specialday: z.number().optional(),
         businessId: z.string({ message: "businessId should be a string" }),
       }),
     ),
     async (c) => {
-      const { userId, couponId, dob, specialday, businessId } =
-        await c.req.json();
+      const { userId, couponId, businessId } = await c.req.json();
       const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});

@@ -36,13 +36,9 @@ export type CouponzAvailability = (typeof AVAILABILITY)[number];
 export type CouponzDiscountType = (typeof DISCOUNT_TYPES)[number];
 
 export const positiveNumber = (field: string) =>
-  z.coerce
-    .number({
-      message: `${field} is required`,
-    })
-    .positive({
-      message: `${field} must be positive`,
-    });
+  z.coerce.number({
+    message: `${field} is required`,
+  });
 
 export const couponConfigSchema = z.union([
   z.object({
