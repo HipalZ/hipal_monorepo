@@ -1,10 +1,10 @@
 import AlertToRemove from "@/components/atoms/alertToRemove";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
-import MemoMiddlePopUp from "@/components/atoms/middlePopUp";
 import BottomButton from "@/components/molecules/bottomButton";
 import useCouponTemp from "@/components/store/useCouponTemp";
+import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { Dialog, DialogTitle } from "@headlessui/react";
+import { DialogTitle } from "@headlessui/react";
 import { type ChangeEvent, memo, useCallback, useState } from "react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
@@ -28,6 +28,10 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
       setClaimCouponz: s.setClaimCouponz,
       userCoinz: s.userCoinz,
     }));
+
+  const { setAvailedCoupon } = useCouponz((s) => ({
+    setAvailedCoupon: s.setAvailedCoupon,
+  }));
 
   const { showAlert, setShowAlert } = useCouponTemp((s) => ({
     showAlert: s.showAlert,
@@ -61,9 +65,16 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
   const replaceLoyalty = useCallback(() => {
     setClaimCouponz(0);
     setShowAlert(false);
+    setAvailedCoupon({});
     toast.success("Coupon removed successfully");
     handleApplyCoinz(tempClaimedCoinz);
-  }, [setClaimCouponz, setShowAlert, handleApplyCoinz, tempClaimedCoinz]);
+  }, [
+    setClaimCouponz,
+    setShowAlert,
+    handleApplyCoinz,
+    tempClaimedCoinz,
+    setAvailedCoupon,
+  ]);
 
   return (
     <>
