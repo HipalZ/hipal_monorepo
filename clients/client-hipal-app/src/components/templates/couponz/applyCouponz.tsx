@@ -212,7 +212,7 @@ const MemoApplyCouponz = () => {
         },
       });
       const res = await response.json();
-      setUserCouponz(res.data);
+      setUserCouponz(res.data || []);
       return res.data;
     } catch (err) {
       console.error("Error fetching user coupons:", err);
