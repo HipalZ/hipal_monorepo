@@ -338,7 +338,7 @@ const couponzRouter = new Hono()
       });
 
       const eligibleCoupons = coupons.filter((coupon) => {
-        couponzArray.push(coupon?._id);
+        couponzArray.push(coupon?._id.toString());
         const { conditions } = coupon;
         const isDayEligible = switchDayEligibility(
           conditions.availability,
