@@ -184,7 +184,7 @@ const MemoCustom = () => {
       promoteOnBill: promoteOnBill,
       promote: promote,
       cashbackAvailable: cashbackAvailable,
-      image: imageUrl, // Add the uploaded image URL to the payload
+      image: imageUrl,
       config: {
         value: couponType === "PERCENTAGE" ? couponDiscount : couponPrice,
         discountType: couponType === "PERCENTAGE" ? "PERCENTAGE" : "FIXED",

@@ -25,8 +25,6 @@ const menuArray = [
 ];
 
 const MemoCreateCoupon = () => {
-  const businessData = useBusinessData((s) => s.businessData);
-  const navigate = useNavigate();
   const { setSelectedPage } = useCouponsStore((s) => ({
     setSelectedPage: s.setSelectedPage,
   }));
