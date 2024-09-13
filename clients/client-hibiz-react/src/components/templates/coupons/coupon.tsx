@@ -63,7 +63,7 @@ const MemoCoupon = () => {
         </h3>
 
         <h3 className="absolute text-black top-11 left-4">
-          {couponType === "DISCOUNT" && couponDiscount
+          {couponType === "PERCENTAGE" && couponDiscount
             ? `${couponDiscount}% off on ${
                 couponPrice > 0 ? "₹" + couponPrice : "every bill"
               }`

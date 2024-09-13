@@ -12,6 +12,9 @@ import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { storeImageAfterSave } from "@/components/utils/helper"; // Import storeImageAfterSave
+import useMenuPageStore from "@/components/store/useMenuStorage";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const useSaveCoupon = () => {
   const resetFunction = useCouponsStore((s) => s.resetCouponState);
@@ -67,11 +70,16 @@ const MemoCustom = () => {
     setCashbackAvailable,
     requiredFields,
     extendedEndTime,
+    couponImage,
   } = useCouponsStore();
+  const { selectedFile, setSelectedFile } = useMenuPageStore((s) => ({
+    selectedFile: s.selectedFile,
+    setSelectedFile: s.setSelectedFile,
+  }));
 
   const { saveCoupon, isPending } = useSaveCoupon();
-
   const businessData = useBusinessData((s) => s.businessData);
+  const [loading, setIsLoading] = useState(false);
 
   const [selectedPreview, setSelectedPreview] = useState("beforeGrabbing");
   const previewRef = useRef<HTMLDivElement>(null);
@@ -107,7 +115,6 @@ const MemoCustom = () => {
     }
 
     const previewElement = previewRef.current as HTMLDivElement;
-
     const originalBackgroundColor = previewElement.style.backgroundColor;
 
     try {
@@ -123,9 +130,24 @@ const MemoCustom = () => {
       previewElement.style.backgroundColor = originalBackgroundColor;
     }
   };
-  const saveCouponHandler = async (isPublishStatus: boolean) => {
-    let availability;
 
+  const saveCouponHandler = async (isPublishStatus: boolean) => {
+    let imageUrl = "";
+
+    if (couponImage) {
+      try {
+        imageUrl = await storeImageAfterSave(
+          selectedFile,
+          couponImage,
+          setIsLoading,
+        );
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        return;
+      }
+    }
+
+    let availability;
     if (when === "birthdayweek" || when === "birthdaymonth") {
       availability = {
         when: "allthetime",
@@ -162,9 +184,10 @@ const MemoCustom = () => {
       promoteOnBill: promoteOnBill,
       promote: promote,
       cashbackAvailable: cashbackAvailable,
+      image: imageUrl, // Add the uploaded image URL to the payload
       config: {
-        value: couponType === "DISCOUNT" ? couponDiscount : couponPrice,
-        discountType: couponType === "DISCOUNT" ? "PERCENTAGE" : "FIXED",
+        value: couponType === "PERCENTAGE" ? couponDiscount : couponPrice,
+        discountType: couponType === "PERCENTAGE" ? "PERCENTAGE" : "FIXED",
         upto: couponPrice || 0,
       },
       conditions: {
@@ -193,6 +216,22 @@ const MemoCustom = () => {
       console.error("Failed to save coupon:", error);
     }
   };
+
+  if (loading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+  if (isPending) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <section className="flex flex-col gap-6 lg:flex-row pb-[7rem]">
       <div
@@ -287,7 +326,6 @@ const MemoCustom = () => {
       <BottomButton
         fixed
         buttons={[
-          // { text: "Save in Drafts", onClick: () => saveCoupon(false) },
           {
             text: "Publish",
             onClick: () => saveCouponHandler(true),

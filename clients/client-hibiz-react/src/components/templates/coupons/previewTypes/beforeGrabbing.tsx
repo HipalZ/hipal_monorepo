@@ -61,7 +61,7 @@ const MemoBeforeGrabbingCoupon = () => {
             {couponName || "Coupon"}
           </h3>
           <p className="text-3xl font-bold text-black">
-            {couponType === "DISCOUNT" && couponDiscount
+            {couponType === "PERCENTAGE" && couponDiscount
               ? `${couponDiscount}% off`
               : `₹${couponPrice || "0"} off`}
           </p>

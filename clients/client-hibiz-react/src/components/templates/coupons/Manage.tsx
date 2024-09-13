@@ -8,11 +8,11 @@ import Baloons from "@/assets/coupon/baloons.png";
 import Birthday from "@/assets/coupon/Birth Day.png";
 import roll from "@/assets/coupon/roll.png";
 import WineGlasses from "@/assets/coupon/Wine glass.png";
-import CouponImages from "@/assets/coupon/coupon card.png";
 import { motion } from "framer-motion";
 import { IoIosArrowForward } from "react-icons/io";
 import BottomButton from "@/components/atom/bottomButton";
 import useCouponsStore from "@/components/store/useCouponsStore";
+import ListCoupons from "./listCoupons";
 
 const couponCards = [
   {
@@ -60,9 +60,15 @@ const arrow2Variants = {
 };
 
 const MemoManage = () => {
-  const { setSelectedPage } = useCouponsStore((s) => ({
+  const { setSelectedPage, setCouponName } = useCouponsStore((s) => ({
     setSelectedPage: s.setSelectedPage,
+    setCouponName: s.setCouponName,
   }));
+
+  const createCouponFunc = (title: string) => {
+    setCouponName(title);
+    setSelectedPage("DETAILS");
+  };
   return (
     <section className="min-h-[90dvh]">
       <section className="w-full max-w-[30rem] overflow-hidden mx-auto z-0 h-[10.5rem] bg-[#6a32df] relative flex justify-center items-center">
@@ -142,8 +148,10 @@ const MemoManage = () => {
         </button>
         <section className="absolute left-0 grid w-full grid-cols-4 gap-2 px-4 bottom-5">
           {couponCards.map((card) => (
-            <article
+            <button
+              type="button"
               key={card.title}
+              onClick={() => createCouponFunc(card.title)}
               className="bg-[#6A32DF] relative rounded-xl w-full max-w-[5.5rem] h-[6.25rem]"
             >
               <h3 className="absolute leading-[1.125rem] text-white top-2 left-2 text-sm font-semibold w-[85%]">
@@ -172,38 +180,11 @@ const MemoManage = () => {
                   <IoIosArrowForward />
                 </motion.div>
               </div>
-            </article>
+            </button>
           ))}
         </section>
       </div>
-      <div className="relative w-full max-w-[30rem] mx-auto">
-        <article className="w-[92%] mx-4 mt-6 rounded-t-2xl bg-[#6A32DF30] flex h-16 overflow-hidden shadow-light">
-          <figure>
-            <img
-              src={CouponImages}
-              alt="Stairs"
-              className="w-[5rem] mt-2 ml-2"
-            />
-          </figure>
-          <section className="flex flex-col justify-center flex-1 ml-4">
-            <h3 className="text-lg font-semibold text-black">
-              Birthday Coupon
-            </h3>
-            <p className="text-sm text-black">Expires in 3 days</p>
-          </section>
-        </article>
-        <article className=" w-[92%] mx-4 p-4 flex items-center justify-between bg-white rounded-b-2xl shadow-dark">
-          <small>25% Fixed Discount</small>
-          <small>31 users</small>
-          <small>No expiry</small>
-        </article>
-        <button
-          type="button"
-          className="px-4 bg-[#24C163] text-white text-xs py-1 rounded-2xl absolute -top-3 right-8"
-        >
-          ACTIVE
-        </button>
-      </div>
+      <ListCoupons />
       <BottomButton
         buttons={[
           {

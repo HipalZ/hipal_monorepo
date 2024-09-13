@@ -6,21 +6,37 @@ import Background from "@/components/atom/feildBackground";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import BottomButton from "@/components/atom/bottomButton";
 import AfterGrabbingCoupon from "./previewTypes/afterGrabbingCard";
+import { compressImage } from "@/components/utils/helper";
+import useMenuPageStore from "@/components/store/useMenuStorage";
 
 const MemoPreview = () => {
   const { bgColor, setBgColor, couponImage, setCouponImage, setSelectedPage } =
-    useCouponsStore();
+    useCouponsStore((s) => ({
+      bgColor: s.bgColor,
+      setBgColor: s.setBgColor,
+      couponImage: s.couponImage,
+      setCouponImage: s.setCouponImage,
+      setSelectedPage: s.setSelectedPage,
+    }));
+
+  const { selectedFile, setSelectedFile } = useMenuPageStore((s) => ({
+    selectedFile: s.selectedFile,
+    setSelectedFile: s.setSelectedFile,
+  }));
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCouponImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      compressImage(file, (compressedFile: File) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCouponImage(reader.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+        setSelectedFile(compressedFile);
+      });
     }
   };
 

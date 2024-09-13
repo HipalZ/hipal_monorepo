@@ -79,7 +79,7 @@ const MemoSocialMedia = () => {
       </div>
 
       <p className="absolute text-lg font-bold text-white bottom-[3.75rem] left-2">
-        {couponType === "DISCOUNT" && couponDiscount
+        {couponType === "PERCENTAGE" && couponDiscount
           ? `${couponDiscount}% off`
           : `₹ ${couponPrice || "0"} off`}
       </p>

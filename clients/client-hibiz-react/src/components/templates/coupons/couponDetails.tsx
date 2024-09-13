@@ -34,7 +34,7 @@ const CouponDetails = () => {
       toast.error("Coupon name is required!");
       return;
     }
-    if (couponType === "DISCOUNT" && !couponDiscount) {
+    if (couponType === "PERCENTAGE" && !couponDiscount) {
       toast.error("Coupon discount is required for discount type!");
       return;
     }
@@ -81,11 +81,11 @@ const CouponDetails = () => {
                 type="button"
                 className={cn(
                   "p-6 rounded-2xl flex-1 mx-2 text-left",
-                  couponType === "DISCOUNT"
+                  couponType === "PERCENTAGE"
                     ? "bg-[#F1E9FB] text-[#8C63FF]"
                     : "bg-[#f4f4f490]",
                 )}
-                onClick={() => setCouponType("DISCOUNT")}
+                onClick={() => setCouponType("PERCENTAGE")}
               >
                 <h3 className="text-xl font-semibold">%</h3>
                 Fixed Discount
@@ -94,11 +94,11 @@ const CouponDetails = () => {
                 type="button"
                 className={cn(
                   "p-6 rounded-2xl flex-1 mx-2 text-left",
-                  couponType === "PRICE"
+                  couponType === "AMOUNT"
                     ? "bg-[#F1E9FB] text-[#8C63FF]"
                     : "bg-[#f4f4f490]",
                 )}
-                onClick={() => setCouponType("PRICE")}
+                onClick={() => setCouponType("AMOUNT")}
               >
                 <h3 className="text-xl font-semibold">₹</h3>
                 Fixed Price
@@ -108,8 +108,8 @@ const CouponDetails = () => {
         </section>
       </section>
 
-      {couponType === "PRICE" && <FixedPrice />}
-      {couponType === "DISCOUNT" && <FixedDiscount />}
+      {couponType === "AMOUNT" && <FixedPrice />}
+      {couponType === "PERCENTAGE" && <FixedDiscount />}
 
       <BottomButton
         buttons={[

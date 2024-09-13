@@ -85,7 +85,7 @@ const MemoStorySize = () => {
       </div>
 
       <p className="absolute text-2xl font-bold text-white left-1/2 top-[59%] transform -translate-x-1/2">
-        {couponType === "DISCOUNT" && couponDiscount
+        {couponType === "PERCENTAGE" && couponDiscount
           ? `${couponDiscount}% off `
           : `₹ ${couponPrice || "0"} off `}
       </p>

@@ -69,7 +69,7 @@ const MemoFixedPrice = () => {
     <section className="flex flex-col gap-2 mx-6 mt-6 lg:gap-8 lg:flex-row pb-[5rem]">
       <article className="flex-1">
         <label className="font-semibold opacity-50" htmlFor="price">
-          {couponType === "DISCOUNT" ? "Upto price" : "Select Fixed Price"}
+          {couponType === "PERCENTAGE" ? "Upto price" : "Select Fixed Price"}
         </label>
         <Background>
           <input

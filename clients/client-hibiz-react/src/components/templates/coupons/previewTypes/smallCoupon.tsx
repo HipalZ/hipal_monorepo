@@ -79,7 +79,7 @@ const MemoSmallCoupon = () => {
           <article className="text-right justify-self-end">
             <h1 className="text-base font-semibold">
               {" "}
-              {couponType === "DISCOUNT" && couponDiscount
+              {couponType === "PERCENTAGE" && couponDiscount
                 ? `${couponDiscount}% off`
                 : `₹${couponPrice || "0"} off`}
             </h1>

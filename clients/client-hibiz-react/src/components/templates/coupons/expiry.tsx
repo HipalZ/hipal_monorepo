@@ -84,6 +84,12 @@ const MemoExpiry = () => {
           setCouponStartDate(currentDate.getTime());
           setCouponEndDate(addDays(currentDate, 30).getTime());
         }
+        if (
+          text === "After Specific Use (e.g., Expires after it’s used 10 times)"
+        ) {
+          setCouponStartDate(0);
+          setCouponEndDate(0);
+        }
 
         if (
           text ===

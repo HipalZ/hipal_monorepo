@@ -15,7 +15,7 @@ export type CouponFlow =
   | "GRABBING"
   | "Terms";
 
-export type CouponType = "FIXED" | "PERCENTAGE" | "FREE" | "DISCOUNT" | "PRICE";
+export type CouponType = "PERCENTAGE" | "AMOUNT";
 
 export type availability =
   | "allthetime"
@@ -156,7 +156,7 @@ const useCouponsStore = create<ICoupon>((set) => ({
   couponName: "",
   setCouponName: (name: string) => set(() => ({ couponName: name })),
 
-  couponType: "FIXED",
+  couponType: "PERCENTAGE",
   setCouponType: (type: CouponType) => set(() => ({ couponType: type })),
 
   couponPrice: 0,
@@ -288,7 +288,7 @@ const useCouponsStore = create<ICoupon>((set) => ({
     set(() => ({
       selectedPage: "MANAGE",
       couponName: "",
-      couponType: "FIXED",
+      couponType: "PERCENTAGE",
       couponPrice: 0,
       couponPercentage: 0,
       couponDiscount: 0,

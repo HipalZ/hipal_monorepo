@@ -106,7 +106,7 @@ const MemoAfterGrabbingCoupon = () => {
         />
 
         <p className="col-span-2 text-3xl font-black text-center text-black space-grotesk-700">
-          {couponType === "DISCOUNT" && couponDiscount
+          {couponType === "PERCENTAGE" && couponDiscount
             ? `${couponDiscount}% off`
             : `₹${couponPrice || "0"} off`}
         </p>
