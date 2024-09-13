@@ -1,9 +1,17 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
+import { cn } from "@hi/common";
 
-const Background = ({children}:{children:ReactNode}) => {
-  return (
-    <div className="p-3 my-2 bg-white rounded-2xl">{children}</div>
-  )
+interface BackgroundProps {
+  children: ReactNode;
+  className?: string;
 }
 
-export default Background
+const Background = ({ children, className }: BackgroundProps) => {
+  return (
+    <div className={cn("p-3 my-2 bg-white rounded-2xl", className)}>
+      {children}
+    </div>
+  );
+};
+
+export default Background;

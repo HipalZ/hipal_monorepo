@@ -42,9 +42,10 @@ function MemoizedPopUp({
               exit={{ y: "100%", opacity: 0 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className={cn(
-                "bg-base-100 rounded-t-[1.5rem] lg:rounded-2xl shadow-md relative",
+                "bg-base-100 shadow-md relative",
                 width ? width : "w-full max-w-[48rem]",
-                height ? height : "h-auto"
+                height ? height : "h-auto",
+                !hide ? "rounded-t-[1.5rem]" : "lg:rounded-2xl", // Rounded corners for large screens, no rounded corners on small screens when `hide` is true
               )}
             >
               {!hide && (

@@ -1,29 +1,30 @@
 import { memo, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
-import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
+import { cn } from "@hi/common";
+
 interface HeaderProps {
   leftIcon?: JSX.Element;
   centerImage?: string;
   rightImage?: string;
   rightButton?: JSX.Element;
-  isIconBusinessShow: boolean;
   title?: string;
   onBack?: () => void;
   children?: React.ReactNode;
   hideBack?: boolean;
+  headingColor?: string;
 }
 
 const Header: React.FC<HeaderProps> = memo(
   ({
     leftIcon,
     centerImage,
-    isIconBusinessShow,
     title,
     rightButton,
     children,
     onBack,
     hideBack,
+    headingColor,
   }) => {
     const navigate = useNavigate();
 
@@ -35,12 +36,6 @@ const Header: React.FC<HeaderProps> = memo(
           navigate(-1);
         });
       }
-    };
-
-    const profile = () => {
-      startTransition(() => {
-        navigate("/app/business/profile");
-      });
     };
 
     const logoutUser = () => {
@@ -65,34 +60,27 @@ const Header: React.FC<HeaderProps> = memo(
             </button>
           )}
           <div
-            className={`${
-              centerImage ? "flex items-center justify-center" : ""
-            } `}
-          >
-            {centerImage && (
-              <button type="button" onClick={logoutUser}>
-                <img src={centerImage} alt="Center img" loading="lazy" />
-              </button>
+            className={cn(
+              centerImage ? "flex items-center justify-center" : "",
             )}
-            &nbsp;
+          >
             <span
-              className={`${
+              style={{
+                color: headingColor ? headingColor : "#000000",
+              }}
+              onClick={logoutUser}
+              className={cn(
                 centerImage
                   ? "mr-8"
-                  : "absolute transform -translate-x-1/2 left-1/2"
-              } text-2xl font-medium capitalize text-nowrap`}
+                  : "absolute transform -translate-x-1/2 left-1/2 top-[30%]",
+                "text-2xl font-medium capitalize text-nowrap",
+                headingColor && `text-[${headingColor}]`,
+              )}
             >
               {title?.toLowerCase()}
             </span>
           </div>
           <div className="absolute text-sm right-6">{rightButton}</div>
-          <div className="transition-transform transform shadow-2xl active:shadow-sm active:translate-y-1 ">
-            {isIconBusinessShow && (
-              <button onClick={profile} type="button">
-                <TbSettings size={24} />
-              </button>
-            )}
-          </div>
         </div>
         &nbsp;
         <center>{children}</center>

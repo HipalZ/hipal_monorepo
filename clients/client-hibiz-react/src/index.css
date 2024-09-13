@@ -941,3 +941,13 @@ button:hover .shine2 {
 .animate-fadeIn {
   animation: fadeIn 500ms ease-in-out forwards;
 }
+
+
+
+.shadow-light {
+  box-shadow: 0px 4px 4px -1px #0C0C0D0D;
+}
+
+.shadow-dark {
+  box-shadow: 0px 4px 4px -1px #0C0C0D1A;
+}
