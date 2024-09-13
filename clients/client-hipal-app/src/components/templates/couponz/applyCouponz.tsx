@@ -228,14 +228,16 @@ const MemoApplyCouponz = () => {
   // Filter and group coupons
   const greatDeals = useMemo(
     () =>
-      userCouponz.filter(
+      (userCouponz || []).filter(
         (coupon) => billValue >= coupon?.conditions?.billValue,
       ),
     [userCouponz, billValue],
   );
   const missingOut = useMemo(
     () =>
-      userCouponz.filter((coupon) => billValue < coupon?.conditions?.billValue),
+      (userCouponz || []).filter(
+        (coupon) => billValue < coupon?.conditions?.billValue,
+      ),
     [userCouponz, billValue],
   );
 
@@ -270,7 +272,7 @@ const MemoApplyCouponz = () => {
               Great deals you get on this billing
             </h1>
           ) : null}
-          {greatDeals.map((coupon) => (
+          {greatDeals?.map((coupon) => (
             <section
               key={coupon?._id}
               className="flex mx-4 my-4 rounded-2xl inter"
@@ -349,7 +351,7 @@ const MemoApplyCouponz = () => {
               Coupons you are missing out
             </h1>
           ) : null}
-          {missingOut.map((coupon) => (
+          {missingOut?.map((coupon) => (
             <section
               key={coupon?._id}
               className="flex mx-4 my-4 rounded-2xl inter"
