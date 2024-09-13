@@ -126,7 +126,7 @@ const MemoManage = () => {
         <button
           type="button"
           onClick={() => setSelectedPage("CREATE")}
-          className="absolute top-0 transform -translate-x-1/2 -translate-y-1/2 left-1/2 border border-[#6A32DF] bg-white text-[#6A32DF] py-1 px-4 rounded-2xl text-sm flex items-center justify-center"
+          className="absolute top-0 transform  -translate-x-1/2 -translate-y-1/2 left-1/2 border border-[#6A32DF] bg-white text-[#6A32DF] py-1 px-4 rounded-2xl text-sm flex items-center justify-center"
         >
           Create Coupon
           <motion.div
@@ -154,7 +154,7 @@ const MemoManage = () => {
               onClick={() => createCouponFunc(card.title)}
               className="bg-[#6A32DF] relative rounded-xl w-full max-w-[5.5rem] h-[6.25rem]"
             >
-              <h3 className="absolute leading-[1.125rem] text-white top-2 left-2 text-sm font-semibold w-[85%]">
+              <h3 className="absolute text-left leading-[1.125rem] text-white top-2 left-2 text-sm font-semibold w-[85%]">
                 {card.title}
               </h3>
               <img

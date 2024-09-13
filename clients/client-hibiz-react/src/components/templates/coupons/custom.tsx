@@ -187,7 +187,7 @@ const MemoCustom = () => {
       image: imageUrl,
       config: {
         value: couponType === "PERCENTAGE" ? couponDiscount : couponPrice,
-        discountType: couponType === "PERCENTAGE" ? "PERCENTAGE" : "FIXED",
+        discountType: couponType,
         upto: couponPrice || 0,
       },
       conditions: {

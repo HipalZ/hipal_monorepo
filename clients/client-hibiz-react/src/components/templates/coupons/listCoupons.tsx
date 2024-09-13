@@ -1,4 +1,4 @@
-import CouponImages from "@/assets/coupon/coupon card.png"; // Use a default image if no image is available for a coupon
+import CouponImages from "@/assets/coupon/coupon card.png";
 import { useGetAllCoupons } from "@/hooks/useCoupon";
 import { memo } from "react";
 
@@ -46,7 +46,7 @@ const MemoListCoupons = () => {
               <small>
                 {coupon.config.discountType === "PERCENTAGE"
                   ? `${coupon.config.value}% Discount`
-                  : `₹${coupon.config.value} Fixed Discount`}
+                  : `₹ ${coupon.config.value} Fixed Discount`}
               </small>
               <small>
                 {coupon.conditions?.expiryClaimLimit?.overAllLimit
