@@ -18,14 +18,14 @@ const Terms = () => {
     setTermsAndConditions: s.setTermsAndConditions,
     setSelectedPage: s.setSelectedPage,
   }));
-  const [verifyDOB, setVerifyDOB] = useState(requiredFields.includes("DOB"));
+  const [verifyDOB, setVerifyDOB] = useState(requiredFields.includes("dob"));
 
   const handleCheckboxToggle = () => {
     setVerifyDOB(!verifyDOB);
     if (!verifyDOB) {
-      setRequiredFields([...requiredFields, "DOB"]);
+      setRequiredFields([...requiredFields, "dob"]);
     } else {
-      setRequiredFields(requiredFields.filter((field) => field !== "DOB"));
+      setRequiredFields(requiredFields.filter((field) => field !== "dob"));
     }
   };
 
@@ -39,12 +39,12 @@ const Terms = () => {
         <article className="flex items-center gap-2">
           <input
             type="checkbox"
-            id="DOB"
+            id="dob"
             checked={verifyDOB}
             onChange={handleCheckboxToggle}
             className="text-black rounded"
           />
-          <label htmlFor="DOB" className="font-semibold text-gray-700">
+          <label htmlFor="dob" className="font-semibold text-gray-700">
             Verify Date of Birth
           </label>
         </article>

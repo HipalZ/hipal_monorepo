@@ -109,7 +109,7 @@ export const limitSchema = z.union([
 
 export const condtionSchema = z.object({
   individualUserLimit: limitSchema.optional(),
-  billValue: positiveNumber("billValue").optional(),
+  billValue: positiveNumber("billValue").default(0).optional(),
   expiryClaimLimit: limitSchema.optional(),
   availability: z.object({
     when: z
