@@ -52,10 +52,10 @@ const userCouponGrabbSchema = new mongoose.Schema<UserCouponGrabbType>(
   },
 );
 
-userCouponGrabbSchema.index(
-  { userId: 1, couponId: 1, businessId: 1 },
-  { unique: true },
-);
+// userCouponGrabbSchema.index(
+//   { userId: 1, couponId: 1, businessId: 1 },
+//   { unique: true },
+// );
 
 const UserCouponGrabb: Model<UserCouponGrabbType> =
   mongoose.model<UserCouponGrabbType>("UserCouponGrabb", userCouponGrabbSchema);

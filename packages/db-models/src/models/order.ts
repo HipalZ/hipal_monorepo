@@ -20,6 +20,9 @@ const orderSchema = new mongoose.Schema<OrderType>(
     discount: { type: Number, default: 0 },
     order_id: { type: String, required: true, unique: true },
     tableName: { type: String, default: "" },
+    couponId: { type: ObjectId, ref: "COUPONZ" },
+    channelId: { type: ObjectId, ref: "couponChannel" },
+    cashbackAvailable: { type: Boolean, default: true },
     date: { type: Number, required: true },
   },
   {

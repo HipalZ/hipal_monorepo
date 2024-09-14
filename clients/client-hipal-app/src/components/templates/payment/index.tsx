@@ -270,6 +270,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
       json: {
         response,
       },
+      query: {
+        couponId: sele,
+      },
     });
     const data = await res.json();
     const orderId = data?.data as string;

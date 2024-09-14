@@ -181,6 +181,8 @@ const couponzRouter = new Hono()
     if (noExpiryWhenValues.includes(requestData.conditions.availability.when)) {
       requestData.conditions.couponStartDate = 0;
       requestData.conditions.couponEndDate = 0;
+      requestData.conditions.availability.startTime = 0;
+      requestData.conditions.availability.endTime = 24;
     }
 
     // Validation 4: Ensure expiryAfterGrabbed is not greater than couponEndDate
@@ -258,6 +260,8 @@ const couponzRouter = new Hono()
       ) {
         requestData.conditions.couponStartDate = 0;
         requestData.conditions.couponEndDate = 0;
+        requestData.conditions.availability.startTime = 0;
+        requestData.conditions.availability.endTime = 24;
       }
 
       // Validation 4: Ensure expiryAfterGrabbed is not greater than couponEndDate
@@ -600,6 +604,65 @@ const couponzRouter = new Hono()
       if (!alreadyGrabbed) {
         return respond(c, "Coupon not grabbed", true, 400, {});
       }
+    },
+  )
+  .get(
+    "/promotAfterBill-couponz/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId should be a string" }),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const currentDate = Date.now();
+      const currentDay = new Date()
+        .toLocaleString("en-us", { weekday: "long" })
+        .toLowerCase();
+      const currentTime = getCurrentTimeDecimal();
+
+      // Fetch all active coupons
+      const coupons = await Couponz.find({
+        $or: [
+          {
+            "conditions.couponStartDate": 0,
+            "conditions.couponEndDate": 0,
+            businessId: businessId,
+            promoteOnBill: true,
+            isDeleted: false,
+          },
+          {
+            "conditions.couponStartDate": { $lte: currentDate },
+            "conditions.couponEndDate": { $gte: currentDate },
+            businessId: businessId,
+            promoteOnBill: true,
+            isDeleted: false,
+          },
+        ],
+      });
+
+      const promotCoupons = coupons.filter((coupon) => {
+        const { conditions } = coupon;
+        const isDayEligible = switchDayEligibility(
+          conditions.availability,
+          currentDay,
+        );
+
+        const isTimeEligible = switchTimeEligibility(
+          conditions.availability,
+          currentTime,
+        );
+
+        // Check overall day and time eligibility
+        return isDayEligible && isTimeEligible;
+      });
+
+      return c.json({
+        message: "Eligible coupons found",
+        err: false,
+        data: promotCoupons,
+      });
     },
   );
 

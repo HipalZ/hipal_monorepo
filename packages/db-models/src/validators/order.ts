@@ -79,6 +79,9 @@ export const OrderSchema = z.object({
       message: "Table name must be at most 150 characters",
     }),
   date: z.number(),
+  couponId: ObjectIdSchema.optional(),
+  channelId: ObjectIdSchema.optional(),
+  cashbackAvailable: z.boolean().optional(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

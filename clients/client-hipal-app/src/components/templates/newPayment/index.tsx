@@ -279,6 +279,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
             setIsLoading(false); // Set isLoading to false after dismiss
           },
         },
+
         notes: {
           address: "Paltribe solutions",
           businessId: businessId,
@@ -288,6 +289,8 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           tips: tips,
           loyaltyId: loyaltySetting.loyaltyId,
           tableName: tableName,
+          couponId: availedCoupon?._id,
+          cashbackAvailable: availedCoupon?.cashbackAvailable,
         },
         theme: {
           color: "#3399cc",
@@ -341,6 +344,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       json: {
         response,
       },
+      query: {
+        couponId: availedCoupon?._id,
+        userId: userDetails?._id,
+      },
     });
     const data = await res.json();
     const orderId = data?.data as string;
@@ -348,13 +355,18 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
     const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
     let finalReward = 0;
-    if (availedCoupon?.cashbackAvailable || claimedCoinz > 0) {
+    if (
+      (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
+      claimedCoinz > 0 ||
+      (claimedCoinz > 0 && claimCouponz === 0)
+    ) {
       finalReward = calculateReward(
         existingCoins,
         coinsObtained,
         loyaltySetting?.rewardLimit,
       )?.finalReward;
     }
+
     if (res.status === 200) {
       toast.success("Payment successful");
       setRazorPaySignature("");
@@ -399,6 +411,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         tips: tips,
         currency: "INR",
         tableName: tableName,
+
+        couponId: availedCoupon?._id,
+        channelId: availedCoupon?.channelId,
+        cashbackAvailable: availedCoupon?.cashbackAvailable,
       },
     });
     const response = (await res.json()) as unknown as {
@@ -412,7 +428,11 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     if (response?.data?.order_id) {
       const total = billValue - claimedCoinz - claimCouponz + tips;
       let finalReward = 0;
-      if (availedCoupon?.cashbackAvailable || claimedCoinz > 0) {
+      if (
+        (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
+        claimedCoinz > 0 ||
+        (claimedCoinz > 0 && claimCouponz === 0)
+      ) {
         const coinsObtained =
           total * (loyaltySetting?.setCashBackPercentage / 100);
         const existingCoins = claimedCoinz
@@ -450,6 +470,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         userId: userDetails?._id,
         tips: tips,
         tableName: tableName,
+        couponId: availedCoupon?._id,
+        channelId: availedCoupon?.channelId,
+        cashbackAvailable: availedCoupon?.cashbackAvailable,
       },
     });
     const response = (await res.json()) as unknown as { data: string };
