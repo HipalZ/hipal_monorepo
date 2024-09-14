@@ -23,25 +23,36 @@ const MemoCouponCardPay = () => {
   }));
 
   return (
-    <section className="relative">
+    <section className="relative max-h-[6rem]">
       {claimCouponz === 0 && (
         <center
           style={{
             transform: "rotate(-18deg)",
             transformOrigin: "bottom center",
           }}
-          className="absolute h-[10rem] w-full scale-110"
+          className="absolute max-h-[8rem] max-w-[8rem] scale-110"
         >
-          <picture className="h-[7rem] w-full">
+          <picture className="w-full">
             <Image
               src={claimCouponz > 0 ? couponz[1]?.image : birthdayPlaceholder}
               width={100}
               height={96}
               alt="Birthday Placeholder"
-              className="z-20 object-fill rounded-t"
+              style={{
+                objectFit: "contain",
+                height: "3.375rem",
+                width: "5rem",
+              }}
             />
           </picture>
-          <div className="relative z-20 grid w-full grid-cols-2 px-1 pt-2 -mt-px text-black bg-white rounded-b">
+          <div
+            style={{
+              height: "auto",
+              maxHeight: "6rem",
+              width: "5rem",
+            }}
+            className="relative z-20 grid w-full grid-cols-2 px-1 pt-2 -mt-px text-black bg-white rounded-b"
+          >
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
               <h3 className="text-gray-500 text-[0.25rem]">Min. Bill Amount</h3>
               <p className="text-[0.3rem]">
@@ -107,7 +118,7 @@ const MemoCouponCardPay = () => {
             <div className="absolute flex items-center justify-between w-full h-full px-2">
               <div
                 className={cn(
-                  `bg-[#fff}]`,
+                  "bg-[#fff}]",
                   "absolute w-2 h-2 rounded-full -left-1 bottom-7",
                 )}
               />
@@ -125,17 +136,25 @@ const MemoCouponCardPay = () => {
           />
         </center>
       )}
-      <center className="absolute h-[10rem] w-full scale-110">
-        <picture className="h-[5rem] w-full">
+      <center className="absolute">
+        <picture>
           <Image
             src={claimCouponz > 0 ? availedCoupon?.image : birthdayPlaceholder}
             width={100}
-            height={96}
+            height={53}
             alt="Birthday Placeholder"
-            className="object-fill rounded-t"
+            className="bg-black rounded-t"
+            style={{ objectFit: "contain", height: "54px", width: "80px" }}
           />
         </picture>
-        <div className="relative z-10 grid w-full grid-cols-2 px-1 pt-2 -mt-px text-black bg-white rounded-b">
+        <div
+          style={{
+            height: "auto",
+            maxHeight: "6rem",
+            width: "5rem",
+          }}
+          className="relative z-10 grid w-full grid-cols-2 px-1 pt-2 -mt-px text-black bg-white rounded-b"
+        >
           <div className="flex flex-col items-start space-y-0.5 my-0.5">
             <h3 className="text-gray-500 text-[0.25rem]">Min. Bill Amount</h3>
             <p className="text-[0.3rem]">

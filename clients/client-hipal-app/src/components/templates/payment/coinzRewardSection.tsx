@@ -41,25 +41,22 @@ interface IUseCoinzPopup {
 }
 
 const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
+  const { openModal } = props;
+  const [editBillModal, setEditBillModal] = useState(false);
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const { availedCoupon } = useCouponz((s) => ({
+  const { availedCoupon, userCouponz } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
+    userCouponz: s.userCouponz,
   }));
-  const { openModal } = props;
   const { userCoinZ } = useLogin((s) => ({
     userCoinZ: s.userCoinZ,
   }));
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
-  const [editBillModal, setEditBillModal] = useState(false);
-  const { couponz } = useCouponz((s) => ({
-    couponz: s.couponz,
-  }));
-
   const { billValue, claimedCoinz, claimCouponz } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
@@ -81,10 +78,14 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
   }, [applyCouponz]);
 
   const validCouponCount = useMemo(() => {
-    return couponz?.filter(
-      (coupon) => coupon && coupon?.conditions?.billValue <= billValue,
-    ).length;
-  }, [billValue, couponz]);
+    const validCoupons = userCouponz?.filter((coupon) => {
+      const couponBillValue = coupon?.conditions?.billValue ?? 0;
+      return couponBillValue === 0 || couponBillValue <= billValue;
+    });
+
+    const count = validCoupons?.length ?? 0;
+    return count;
+  }, [billValue, userCouponz]);
 
   return (
     <>
@@ -132,6 +133,9 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             </article>
             <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
               <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
+              {claimedCoinz > 0 && (
+                <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
+              )}
             </article>
           </article>
           <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
@@ -148,7 +152,12 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
               alt="Couponz"
               className="h-2/3 rounded-t-2xl"
             />
-            <article className="z-20 scaled-card-container-rotate-2">
+            <article
+              style={{
+                scale: 0.8,
+              }}
+              className="absolute z-20 top-4 left-16 rotate-12"
+            >
               <CouponCardPay />
             </article>
             <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
@@ -156,7 +165,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
                 {claimCouponz > 0
                   ? `${availedCoupon?.name}Applied`
                   : `You have ${
-                      couponz ? validCouponCount : "no"
+                      userCouponz ? validCouponCount : "no"
                     } valid couponz`}
               </center>
             </article>

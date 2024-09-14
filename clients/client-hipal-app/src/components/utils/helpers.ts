@@ -13,7 +13,7 @@ import {
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { IDish, IExtraItem } from "../types/businessData";
+import type { Coupon, IDish, IExtraItem } from "../types/businessData";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdOutlineCall } from "react-icons/md";
@@ -479,7 +479,6 @@ export function hexToRGBA(hex, opacity) {
   let r = 0,
     g = 0,
     b = 0;
-  console.log("hex", hex);
   // Check for shorthand hex code (e.g., #03F)
   if (hex.length === 4) {
     r = parseInt(hex[1] + hex[1], 16);
@@ -552,6 +551,13 @@ export function getLinearGradient(hexColor: string): string | null {
   return colorObject
     ? colorObject?.linearGradient
     : "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)";
+}
+
+export function getTextColor(hexColor: string): string {
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+  );
+  return colorObject?.textColor ?? "#000000"; // Default to black if not found
 }
 
 export function getHueColor(hexColor: string): number | null {
@@ -787,4 +793,76 @@ export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
   }
 
   return { discountValue, resetClaimedCoinz: claimedCoinz > 0 };
+};
+
+// Function to calculate discount
+const calculateDiscountValue = (
+  billValue,
+  discountValue,
+  discountType,
+  upto,
+) => {
+  let discount = 0;
+  if (discountType?.toLowerCase() === "percentage") {
+    discount = (billValue * discountValue) / 100;
+    // Handle edge case for 100% discount on a bill value of 0
+    if (billValue === 0 && discountValue === 100) {
+      discount = discountValue;
+    }
+  } else if (discountType?.toLowerCase() === "amount") {
+    discount = discountValue;
+  }
+  if (upto !== undefined) {
+    discount = Math.min(discount, upto);
+  }
+  return discount;
+};
+
+// Function to get the best coupon suggestion
+export const getBestCouponSuggestion = (
+  availedCoupon,
+  missingOutCouponz,
+  billValue,
+) => {
+  const availedDiscount = calculateDiscountValue(
+    billValue,
+    availedCoupon?.config?.value || 0,
+    availedCoupon?.config?.discountType || "percentage",
+    availedCoupon?.config?.upto,
+  );
+
+  let bestCoupon: Coupon = null;
+  let bestDiscount = availedDiscount;
+  let additionalAmount = Number.POSITIVE_INFINITY;
+
+  for (const coupon of missingOutCouponz) {
+    const couponBillValue = coupon?.conditions?.billValue || 0;
+    let currentAdditionalAmount = 0;
+    let effectiveBillValue = billValue;
+
+    if (couponBillValue > billValue) {
+      currentAdditionalAmount = couponBillValue - billValue;
+      effectiveBillValue = couponBillValue;
+    }
+
+    const couponDiscount = calculateDiscountValue(
+      effectiveBillValue,
+      coupon?.config?.value || 0,
+      coupon?.config?.discountType || "percentage",
+      coupon?.config?.upto,
+    );
+
+    // Prioritize higher discounts and handle edge cases
+    if (
+      couponDiscount > bestDiscount ||
+      (couponDiscount === bestDiscount &&
+        currentAdditionalAmount < additionalAmount)
+    ) {
+      bestCoupon = coupon;
+      bestDiscount = couponDiscount;
+      additionalAmount = currentAdditionalAmount;
+    }
+  }
+
+  return { bestCoupon, bestDiscount, additionalAmount };
 };

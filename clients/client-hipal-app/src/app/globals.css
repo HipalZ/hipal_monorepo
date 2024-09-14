@@ -1961,6 +1961,18 @@ input[type='password'] {
 	}
   }
 
+  @media (max-width:375px){
+	.custom-single-coupon-size{
+		transform: scale(.75)
+	}
+  }
+
+  @media (min-width:376px){
+	.custom-single-coupon-size{
+		transform: scale(0.9)
+	}
+  }
+
   .inter{
 	font-family: "Inter", sans-serif;
 	font-optical-sizing: auto;

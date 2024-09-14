@@ -107,7 +107,6 @@ const AddAmountModal = memo(() => {
         </center>
         <section className="absolute mx-6 space-y-4 w-[88%]">
           <input
-            autoFocus
             value={amount || ""}
             onChange={saveAmount}
             placeholder="Enter Final Bill Amount"

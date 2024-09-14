@@ -28,6 +28,10 @@ interface IUseCouponz {
   availedCoupon: Coupon;
   setAvailedCoupon: (coupon: Coupon) => void;
 
+  // missingOutCoupon
+  missingOutCoupon: Coupon[];
+  setMissingOutCoupon: (coupon: Coupon[]) => void;
+
   // user coupon for that business
   userCouponz: Coupon[];
   setUserCouponz: (couponz: Coupon[]) => void;
@@ -57,6 +61,10 @@ export const useCouponz = create(
 
       availedCoupon: {},
       setAvailedCoupon: (coupon) => set(() => ({ availedCoupon: coupon })),
+
+      missingOutCoupon: [],
+      setMissingOutCoupon: (coupon) =>
+        set(() => ({ missingOutCoupon: coupon })),
 
       userCouponz: [],
       setUserCouponz: (couponz) => set(() => ({ userCouponz: couponz })),

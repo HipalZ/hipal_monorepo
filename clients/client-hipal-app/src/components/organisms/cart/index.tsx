@@ -24,7 +24,7 @@ const Cart = () => {
   }, []);
 
   return (
-    <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary">
+    <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary bg-base-100">
       <button
         type="button"
         onClick={() => setShowCart(false)}

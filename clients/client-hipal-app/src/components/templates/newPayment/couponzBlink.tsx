@@ -44,7 +44,12 @@ const MemoCouponzBlink = () => {
                 alt="Birthday Placeholder"
                 width={195}
                 height={130}
-                className="rounded-t-xl"
+                className="bg-black rounded-t-xl"
+                style={{
+                  objectFit: "contain",
+                  height: "8.125rem",
+                  width: "12.2rem",
+                }}
               />
               <hr
                 className="bg-white"

@@ -18,7 +18,10 @@ import useTableData from "@/components/store/useTableData";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import {
+  _useAllBusiness,
+  useAllBusiness,
+} from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
 
 function BottomButton({
@@ -68,6 +71,7 @@ function BottomButton({
     () => "px-2 font-light text-base-100 active:scale-90 on_active_bounce",
     [],
   );
+
   if (subscribeModal) {
     return null;
   }
@@ -76,6 +80,9 @@ function BottomButton({
     <>
       {children ? (
         <center
+          style={{
+            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+          }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
             "fixed bottom-0 z-20 py-3 w-full max-w-[30rem]",
@@ -85,6 +92,9 @@ function BottomButton({
         </center>
       ) : (
         <section
+          style={{
+            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+          }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
             "fixed z-10 bottom-0 p-3 w-full max-w-[30rem] shadow-lg",

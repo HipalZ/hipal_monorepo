@@ -66,6 +66,7 @@ const MemoApplyCouponz = () => {
     userCouponz,
     setUserCouponz,
     setSelectedCoupon,
+    setMissingOutCoupon,
   } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
     setAvailedCoupon: s.setAvailedCoupon,
@@ -74,6 +75,7 @@ const MemoApplyCouponz = () => {
     userCouponz: s.userCouponz,
     setUserCouponz: s.setUserCouponz,
     setSelectedCoupon: s.setSelectedCoupon,
+    setMissingOutCoupon: s.setMissingOutCoupon,
   }));
 
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
@@ -241,9 +243,23 @@ const MemoApplyCouponz = () => {
     [userCouponz, billValue],
   );
 
+  useEffect(() => {
+    console.log("useEffect triggered");
+    console.log("greatDeals:", greatDeals);
+    console.log("missingOut:", missingOut);
+    console.log("availedCoupon:", availedCoupon);
+
+    const filteredGreatDeals = greatDeals.filter(
+      (coupon) => coupon?._id !== availedCoupon?._id,
+    );
+
+    console.log("filteredGreatDeals", filteredGreatDeals);
+    setMissingOutCoupon([...missingOut, ...filteredGreatDeals]);
+  }, [greatDeals, missingOut, availedCoupon]);
+
   const ApplyCouponzz = () => {
     return (
-      <section className="bg-[#F1F0F5] overflow-y-auto min-h-[50dvh] h-full py-4 relative inter">
+      <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter">
         <>
           <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
             <article className="flex items-center gap-4">
@@ -416,7 +432,7 @@ const MemoApplyCouponz = () => {
 
   return (
     <>
-      <div>{showPopup ? <ApplyCouponDatePopup /> : <ApplyCouponzz />}</div>
+      {showPopup ? <ApplyCouponDatePopup /> : <ApplyCouponzz />}
       {showAlert ? (
         <AlertToRemove onClose={() => setShowAlert(false)} show>
           <DialogTitle

@@ -40,9 +40,10 @@ const MemoApplyCouponDatePopup = () => {
     couponOccasion: s.couponOccasion,
   }));
 
-  const { setShowPopup } = useCouponTemp((s) => ({
+  const { setShowPopup, setApplyCoupon } = useCouponTemp((s) => ({
     showPopup: s.showPopup,
     setShowPopup: s.setShowPopup,
+    setApplyCoupon: s.setApplyCoupon,
   }));
 
   const todayDate = new Date();
@@ -142,6 +143,7 @@ const MemoApplyCouponDatePopup = () => {
 
   const handleSubmit = async () => {
     let response: any;
+    let result: any;
     if (couponOccasion === "dob") {
       response = await apiRpc.couponz["grabbed-couponz"].$post({
         json: {
@@ -151,6 +153,7 @@ const MemoApplyCouponDatePopup = () => {
           dob: convertToTimestamp(date),
         },
       });
+      result = await response.json();
     } else if (couponOccasion === "specialday") {
       response = await apiRpc.couponz["grabbed-couponz"].$post({
         json: {
@@ -160,6 +163,7 @@ const MemoApplyCouponDatePopup = () => {
           specialday: convertToTimestamp(date),
         },
       });
+      result = await response.json();
     }
     if (response.status === 201) {
       triggerConfettiBlast();
@@ -169,6 +173,10 @@ const MemoApplyCouponDatePopup = () => {
       triggerConfettiBlast();
       setCurrentPage(ICouponPage.SINGLECOUPON);
       setShowPopup(false);
+      if (result?.message.includes("E11000 duplicate key error collection")) {
+        toast.error("You have already availed this coupon, reapply the coupon");
+      }
+      setApplyCoupon(false);
       toast.success("Grabbed successfully apply couponz");
       router.push(`/${customLink}/payment?amount=${billValue}`);
     }

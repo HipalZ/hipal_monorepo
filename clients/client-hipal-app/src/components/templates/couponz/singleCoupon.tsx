@@ -18,6 +18,7 @@ import {
   formatTime,
   getAvailabilityText,
   getLinearGradient,
+  getTextColor,
   ICouponPage,
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
@@ -40,12 +41,12 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const { selectedCoupon, setCurrentPage, setCouponOccasion, setDirection } =
+  const { setCurrentPage, setCouponOccasion, setDirection, selectedCoupon } =
     useCouponz((s) => ({
-      selectedCoupon: s.selectedCoupon,
       setCurrentPage: s.setCurrentPage,
       setCouponOccasion: s.setCouponOccasion,
       setDirection: s.setDirection,
+      selectedCoupon: s.selectedCoupon,
     }));
 
   const [openTc, setOpenTc] = useState(false);
@@ -69,7 +70,7 @@ const MemoCouponz = () => {
     if (requiresDobOrSpecialDay) {
       const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
         json: {
-          couponId: selectedCoupon?._id,
+          couponId: selectedCoupon?._id || "",
           userId: userDetails?._id,
           businessId: businessId,
         },
@@ -156,18 +157,28 @@ const MemoCouponz = () => {
         ) : (
           <MemoPlaceholderImg />
         )}
-        <h1 className="my-2">{name}</h1>
-        <h1 className="mx-12 my-4 text-xl bungee-inline">
-          {selectedCoupon?.name || "Birthday Coupon"}
+        <h1 className={cn(getTextColor(selectedCoupon?.bgColour), "my-2")}>
+          {name}
+        </h1>
+        <h1
+          className={cn(
+            getTextColor(selectedCoupon?.bgColour),
+            "mx-12 mt-2 text-xl bungee-inline",
+          )}
+        >
+          {selectedCoupon?.name || "Coupon"}
         </h1>
       </center>
-      <center className="relative z-10">
+      <center className="relative z-10 -mt-10 custom-single-coupon-size">
         <Image
           src={selectedCoupon?.image || birthdayPlaceholder}
           alt="Birthday Placeholder"
           width={256}
           height={200}
           className="rounded-t-xl"
+          style={{
+            objectFit: "contain",
+          }}
         />
         <div className="relative z-10 grid w-64 grid-cols-2 gap-4 p-4 -mt-px text-black bg-white rounded-b-xl">
           <div className="flex flex-col items-start space-y-1">
@@ -202,7 +213,7 @@ const MemoCouponz = () => {
             </p>
           </div>
           <hr
-            className="w-full col-span-2 mt-6"
+            className="w-full col-span-2 mt-2"
             style={{
               backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
                 `${selectedCoupon?.bgColour || "#9267EC"}`,
@@ -229,13 +240,13 @@ const MemoCouponz = () => {
             <div
               className={cn(
                 `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
-                "absolute w-8 h-8 rounded-full -left-4 bottom-14",
+                "absolute w-8 h-8 rounded-full -left-4 bottom-16",
               )}
             />
             <div
               className={cn(
                 `bg-[${selectedCoupon?.bgColour || "#9267EC"}]`,
-                "absolute w-8 h-8 rounded-full -right-4 bottom-14",
+                "absolute w-8 h-8 rounded-full -right-4 bottom-16",
               )}
             />
           </div>
@@ -261,9 +272,10 @@ const MemoCouponz = () => {
       <section
         onClick={grabCouponz}
         onKeyDown={grabCouponz}
-        className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[5.5rem] p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
+        className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
         style={{
           background: getLinearGradient(selectedCoupon?.bgColour) || "",
+          position: "fixed",
         }}
       >
         <article className="bg-black h-[3.5rem] rounded-lg aspect-square flex items-center justify-center">

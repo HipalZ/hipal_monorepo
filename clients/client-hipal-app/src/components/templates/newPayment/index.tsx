@@ -23,9 +23,13 @@ import Sunrays from "@/assets/img/sunrays_white.png";
 import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import useCouponTemp from "@/components/store/useCouponTemp";
-import ApplyCouponz from "../couponz/applyCouponz";
 import { useCouponz } from "@/components/store/useCouponz";
 import type { PageStates } from "../payment";
+
+const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 const CoinzRewardSection = dynamic(
   () => import("@/components/templates/payment/coinzRewardSection"),
@@ -34,6 +38,11 @@ const CoinzRewardSection = dynamic(
     loading: () => <SkeletonLoader height={50} />,
   },
 );
+
+const SuggestCouponz = dynamic(() => import("./suggestCouponz"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 const RefferalCouponz = dynamic(() => import("./refferalCouponz"), {
   ssr: false,
@@ -274,7 +283,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           address: "Paltribe solutions",
           businessId: businessId,
           total: billValue - claimedCoinz - claimCouponz + tips,
-          claimedCoins: claimedCoinz,
+          claimedCoins: claimedCoinz || claimCouponz,
           billValue: billValue,
           tips: tips,
           loyaltyId: loyaltySetting.loyaltyId,
@@ -339,7 +348,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
     const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
     let finalReward = 0;
-    if (availedCoupon?.cashbackAvailable) {
+    if (availedCoupon?.cashbackAvailable || claimedCoinz > 0) {
       finalReward = calculateReward(
         existingCoins,
         coinsObtained,
@@ -384,7 +393,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       json: {
         businessId: businessId || "",
         total: billValue - claimedCoinz - claimCouponz + tips,
-        claimedCoins: claimedCoinz,
+        claimedCoins: claimedCoinz || claimCouponz,
         billValue: billValue,
         userId: userDetails?._id,
         tips: tips,
@@ -403,7 +412,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     if (response?.data?.order_id) {
       const total = billValue - claimedCoinz - claimCouponz + tips;
       let finalReward = 0;
-      if (availedCoupon?.cashbackAvailable) {
+      if (availedCoupon?.cashbackAvailable || claimedCoinz > 0) {
         const coinsObtained =
           total * (loyaltySetting?.setCashBackPercentage / 100);
         const existingCoins = claimedCoinz
@@ -436,7 +445,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         businessId: businessId || "",
         total: billValue - claimedCoinz - claimCouponz + tips,
         currency: "INR",
-        claimedCoins: claimedCoinz,
+        claimedCoins: claimedCoinz || claimCouponz,
         billValue: billValue,
         userId: userDetails?._id,
         tips: tips,
@@ -611,7 +620,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       ) : (
         <div>
           <section>
-            <article onClick={handleBack}>
+            <article onClick={handleBack} onKeyDown={handleBack}>
               <button
                 type="button"
                 className={cn(
@@ -686,18 +695,27 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   handleSaveTip={handleSaveTip}
                 />
                 <BottomButton noTheme={true}>
-                  <div
-                    onClick={() => handleMode("MODE")}
-                    onKeyDown={() => handleMode("MODE")}
-                    className={`${
-                      billValue > 0 ? "" : "opacity-20 pointer-events-none"
-                    } bg-black mx-4 text-white py-3 px-3 rounded-full inter`}
-                  >
-                    <span>
-                      Proceed to pay &nbsp; ₹
+                  <SuggestCouponz />
+                  <section className="flex items-center justify-between px-4 !font-bold text-black">
+                    <h1 className="text-xs text-left inter">
+                      Total Bill Amount: ₹{" "}
                       {billValue - claimedCoinz - claimCouponz + tips}
-                    </span>
-                  </div>
+                      {claimedCoinz > 0 ? (
+                        <p className="text-[#4CAF50]">
+                          {claimedCoinz} Saved, using coinz
+                        </p>
+                      ) : null}
+                    </h1>
+                    <article
+                      onClick={() => handleMode("MODE")}
+                      onKeyDown={() => handleMode("MODE")}
+                      className={`${
+                        billValue > 0 ? "" : "opacity-20 pointer-events-none"
+                      } bg-black text-white p-2 rounded-full inter text-[0.75rem]`}
+                    >
+                      <span>Payment method</span>
+                    </article>
+                  </section>
                 </BottomButton>
               </section>
             </>

@@ -123,7 +123,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   return (
     <div className="relative flex flex-col items-center px-8">
-      <section className="absolute -top-[4rem] bg-primary w-[90%] h-[11rem] rounded-squircle px-4 pt-4 text-base-100 shadow-2xl">
+      <section className="absolute -top-[4rem] bg-primary w-[90%] h-[11rem] rounded-squircle px-4 pt-4 text-base-100">
         <article className="flex pb-4 space-x-4">
           <figure>
             {logoUrl ? (

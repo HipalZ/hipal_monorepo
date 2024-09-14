@@ -18,6 +18,18 @@ import { apiRpc } from "@hi/common";
 import { RiArrowLeftLine } from "react-icons/ri";
 import CardSection from "@/components/atoms/cardSection";
 import Avtaar from "@/assets/login/cat.png";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import dynamic from "next/dynamic";
+
+const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
+
+const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const userName = useLogin((s) => s.userDetails.name);
@@ -179,11 +191,17 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
           <h3>Total wins</h3>
         </center>
         <center>
-          <b>{userTotalHistory.totalSave || 0}</b>
+          <b className="text-xl">{userTotalHistory.totalSave || 0}</b>
           <h3>Total Saved</h3>
         </center>
       </section>
-
+      <section className="relative">
+        <center className="my-2 text-xl text-black poppins-regular">
+          Rewardz
+        </center>
+        <CouponzBlink />
+        <RefferalCouponz />
+      </section>
       {/* history buttons */}
 
       <section className="p-4 mt-4 pb-[7rem]">

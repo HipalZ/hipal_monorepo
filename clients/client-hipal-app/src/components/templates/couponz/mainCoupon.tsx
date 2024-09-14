@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import { ICouponPage } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 import dynamic from "next/dynamic";
-import SeeMyCouponz from "./seeMyCouponz";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { useParams, useRouter } from "next/navigation";
+import type { Coupon } from "@/components/types/businessData";
+import { useQuery } from "@tanstack/react-query";
+import { apiRpc } from "@hi/common";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -17,18 +19,42 @@ const Congratulationz = dynamic(() => import("./congratulationz"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
+const SeeMyCouponz = dynamic(() => import("./seeMyCouponz"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
+
 const MainCoupon = () => {
   const customLink = useParams()?.businessId as string;
+  const couponId = useParams()?.couponId as string;
   const router = useRouter();
-  const { currentPage, selectedCoupon } = useCouponz((s) => ({
+  const { currentPage, setSelectedCoupon } = useCouponz((s) => ({
     currentPage: s.currentPage,
-    selectedCoupon: s.selectedCoupon,
+    setSelectedCoupon: s.setSelectedCoupon,
   }));
-  useEffect(() => {
-    if (Object.keys(selectedCoupon).length === 0) {
-      router.push(`/${customLink}/explore`);
+
+  const fetchSingleCouponz = async () => {
+    try {
+      const couponResponse = await apiRpc.couponz[":couponId"].$get({
+        param: {
+          couponId,
+        },
+      });
+      const coupon = await couponResponse.json();
+      console.log("coupon", coupon);
+      setSelectedCoupon(coupon?.data as Coupon);
+    } catch (err) {
+      console.log("error", err);
+      if (couponId === undefined) {
+        router.push(`/${customLink}/explore`);
+      }
     }
-  }, [selectedCoupon]);
+  };
+
+  useQuery({
+    queryKey: ["singleCouponz", customLink, couponId],
+    queryFn: fetchSingleCouponz,
+    enabled: !!customLink && !!couponId,
+  });
 
   return (
     <>

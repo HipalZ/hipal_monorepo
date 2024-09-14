@@ -178,6 +178,7 @@ export interface IBusinessData {
   childCategories?: CategoryType[];
   loyalty: ILoyaltySetting;
   cart?: ICart[];
+  coupon?: Coupon;
 }
 
 export interface ICategories extends ICategory {

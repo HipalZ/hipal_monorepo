@@ -30,20 +30,27 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
   const { isLogin } = useLogin((s) => ({
     isLogin: s.isLogin,
   }));
-  const { setSelectedCoupon, currentPage, setCouponz, setCurrentPage } =
-    useCouponz((s) => ({
-      setSelectedCoupon: s.setSelectedCoupon,
-      currentPage: s.currentPage,
-      setCouponz: s.setCouponz,
-      setCurrentPage: s.setCurrentPage,
-    }));
+  const {
+    setSelectedCoupon,
+    currentPage,
+    setCouponz,
+    setCurrentPage,
+    setDirection,
+  } = useCouponz((s) => ({
+    setSelectedCoupon: s.setSelectedCoupon,
+    currentPage: s.currentPage,
+    setCouponz: s.setCouponz,
+    setCurrentPage: s.setCurrentPage,
+    setDirection: s.setDirection,
+  }));
 
   const handleRoute = useCallback(
     (coupon: Coupon) => {
       setSelectedCoupon(coupon);
+      setDirection("couponz");
       router.push(`/${customLink}/couponz/`);
     },
-    [currentPage],
+    [currentPage, customLink, setDirection, setSelectedCoupon],
   );
 
   useEffect(() => {
