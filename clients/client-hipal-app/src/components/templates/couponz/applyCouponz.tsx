@@ -103,7 +103,7 @@ const MemoApplyCouponz = () => {
 
       await applyCouponLogic(coupon);
     },
-    [billValue, claimedCoinz, setShowAlert],
+    [billValue, claimedCoinz, setShowAlert, setSelectedCouponState],
   );
 
   const replaceLoyalty = useCallback(async () => {
@@ -127,7 +127,7 @@ const MemoApplyCouponz = () => {
       if (requiresDobOrSpecialDay) {
         response = await apiRpc.couponz["check-grabbed-couponz"].$post({
           json: {
-            couponId: availedCoupon?._id || coupon?._id,
+            couponId: coupon?._id,
             userId: userDetails?._id,
             businessId: businessId,
           },
@@ -243,19 +243,19 @@ const MemoApplyCouponz = () => {
     [userCouponz, billValue],
   );
 
-  useEffect(() => {
-    console.log("useEffect triggered");
-    console.log("greatDeals:", greatDeals);
-    console.log("missingOut:", missingOut);
-    console.log("availedCoupon:", availedCoupon);
+  // useEffect(() => {
+  //   console.log("useEffect triggered");
+  //   console.log("greatDeals:", greatDeals);
+  //   console.log("missingOut:", missingOut);
+  //   console.log("availedCoupon:", availedCoupon);
 
-    const filteredGreatDeals = greatDeals.filter(
-      (coupon) => coupon?._id !== availedCoupon?._id,
-    );
+  //   const filteredGreatDeals = greatDeals.filter(
+  //     (coupon) => coupon?._id !== availedCoupon?._id,
+  //   );
 
-    console.log("filteredGreatDeals", filteredGreatDeals);
-    setMissingOutCoupon([...missingOut, ...filteredGreatDeals]);
-  }, [greatDeals, missingOut, availedCoupon]);
+  //   console.log("filteredGreatDeals", filteredGreatDeals);
+  //   setMissingOutCoupon([...missingOut, ...filteredGreatDeals]);
+  // }, [greatDeals, missingOut, availedCoupon]);
 
   const ApplyCouponzz = () => {
     return (

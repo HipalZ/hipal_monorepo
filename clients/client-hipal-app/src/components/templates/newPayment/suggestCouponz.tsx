@@ -19,7 +19,7 @@ const SuggestCouponz = () => {
   }, [availedCoupon, missingOutCoupon, billValue]);
   return (
     <>
-      {availedCoupon && Object.keys(availedCoupon).length > 0 && (
+      {availedCoupon && Object.keys(availedCoupon).length > 0 && bestCoupon && (
         <article className="inter h-8 px-6 absolute flex items-center w-full bg-[#6A31DF] bottom-12 rounded-t-xl border-t-1">
           {bestCoupon && (
             <p className="inter text-left text-xs font-semibold text-[#fff]">

@@ -40,10 +40,10 @@ const MemoApplyCouponDatePopup = () => {
     couponOccasion: s.couponOccasion,
   }));
 
-  const { setShowPopup, setApplyCoupon } = useCouponTemp((s) => ({
+  const { setShowPopup, setApplyCouponz } = useCouponTemp((s) => ({
     showPopup: s.showPopup,
     setShowPopup: s.setShowPopup,
-    setApplyCoupon: s.setApplyCoupon,
+    setApplyCouponz: s.setApplyCouponz,
   }));
 
   const todayDate = new Date();
@@ -176,7 +176,7 @@ const MemoApplyCouponDatePopup = () => {
       if (result?.message.includes("E11000 duplicate key error collection")) {
         toast.error("You have already availed this coupon, reapply the coupon");
       }
-      setApplyCoupon(false);
+      setApplyCouponz(false);
       toast.success("Grabbed successfully apply couponz");
       router.push(`/${customLink}/payment?amount=${billValue}`);
     }
