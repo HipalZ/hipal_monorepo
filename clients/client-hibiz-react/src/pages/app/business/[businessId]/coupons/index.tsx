@@ -17,14 +17,17 @@ import Preview from "@/components/templates/coupons/preview";
 import { cn } from "@hi/common";
 import Custom from "@/components/templates/coupons/custom";
 import Terms from "@/components/templates/coupons/terms";
+import Info from "@/components/templates/coupons/info";
 
 const Coupons = () => {
   const businessData = useBusinessData((s) => s.businessData);
-  const { selectedPage, setSelectedPage, bgColor } = useCouponsStore((s) => ({
-    selectedPage: s.selectedPage,
-    setSelectedPage: s.setSelectedPage,
-    bgColor: s.bgColor,
-  }));
+  const { selectedPage, setSelectedPage, bgColor, resetFunction } =
+    useCouponsStore((s) => ({
+      selectedPage: s.selectedPage,
+      setSelectedPage: s.setSelectedPage,
+      bgColor: s.bgColor,
+      resetFunction: s.resetCouponState,
+    }));
 
   const navigate = useNavigate();
 
@@ -36,8 +39,6 @@ const Coupons = () => {
         return "Edit Coupon";
       case "MANAGE":
         return "Manage Coupons";
-      case "INTO":
-        return "Coupon";
       case "DETAILS":
         return "Coupon Details";
       case "AVAILABLE":
@@ -94,6 +95,10 @@ const Coupons = () => {
       case "CUSTOM":
         setSelectedPage("PREVIEW");
         break;
+      case "INFO":
+        setSelectedPage("MANAGE");
+        resetFunction();
+        break;
       default:
         startTransition(() => {
           navigate(routeToDashboard(businessData?._id as string));
@@ -149,6 +154,7 @@ const Coupons = () => {
       {selectedPage === "PREVIEW" && <Preview />}
       {selectedPage === "Terms" && <Terms />}
       {selectedPage === "CUSTOM" && <Custom />}
+      {selectedPage === "INFO" && <Info />}
     </main>
   );
 };

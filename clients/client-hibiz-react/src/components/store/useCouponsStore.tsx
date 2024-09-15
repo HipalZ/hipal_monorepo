@@ -4,7 +4,7 @@ export type CouponFlow =
   | "CREATE"
   | "EDIT"
   | "MANAGE"
-  | "INTO"
+  | "INFO"
   | ""
   | "DETAILS"
   | "AVAILABLE"
@@ -286,7 +286,6 @@ const useCouponsStore = create<ICoupon>((set) => ({
 
   resetCouponState: () =>
     set(() => ({
-      selectedPage: "MANAGE",
       couponName: "",
       couponType: "PERCENTAGE",
       couponPrice: 0,

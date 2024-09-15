@@ -1,8 +1,10 @@
 import useBusinessData from "@/components/store/useBusinessData";
+import useCouponsStore from "@/components/store/useCouponsStore";
 import { apiRpc } from "@hi/common";
 import type { CouponType } from "@hi/db-models/src/validators";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import toast from "react-hot-toast";
 
 export const useGetAllCoupons = () => {
   const businessData = useBusinessData((state) => state.businessData);
@@ -18,7 +20,6 @@ export const useGetAllCoupons = () => {
     });
 
     const data = (await res.json()).data as CouponType[];
-    console.log(data);
     return data;
   }, [businessId]);
 
@@ -37,4 +38,47 @@ export const useGetAllCoupons = () => {
     isLoading,
     error,
   };
+};
+
+export const useDeleteCoupon = () => {
+  const queryClient = useQueryClient();
+  const { resetStore, setSelectedPage } = useCouponsStore((state) => ({
+    resetStore: state.resetCouponState,
+    setSelectedPage: state.setSelectedPage,
+  }));
+
+  const handleApiResponse = useCallback(
+    (res) => {
+      if (res.err) {
+        toast.error(res.message);
+        return;
+      }
+      if (!res.err) {
+        toast.success(res.message);
+        setSelectedPage("MANAGE");
+        queryClient.invalidateQueries({ queryKey: ["getAllCoupon"] });
+        resetStore();
+      }
+    },
+    [queryClient, resetStore],
+  );
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (couponId: string) => {
+      const res = await apiRpc.couponz[":couponId"].$delete({
+        param: {
+          couponId,
+        },
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      handleApiResponse(data);
+    },
+    onError: (error) => {
+      toast.error(`Error deleting coupon: ${error.message}`);
+    },
+  });
+
+  return { mutate: mutateAsync, isPending };
 };

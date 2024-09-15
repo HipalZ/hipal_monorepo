@@ -1,12 +1,64 @@
 import CouponImages from "@/assets/coupon/coupon card.png";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import useCouponsStore from "@/components/store/useCouponsStore";
 import { useGetAllCoupons } from "@/hooks/useCoupon";
 import { memo } from "react";
 
 const MemoListCoupons = () => {
   const { coupons, isLoading } = useGetAllCoupons();
+  const {
+    setAddMinimumBillAmount,
+    setAllowLateNight,
+    setSelectedPage,
+    setBgColor,
+    setCouponId,
+    setCouponName,
+    setCouponType,
+    setCouponDiscount,
+    setMinimumBillAmount,
+    setExpiryAfterGrabbed,
+    setCashbackAvailable,
+    setTermsAndConditions,
+    setCouponPrice,
+    setCustomDays,
+    setStartTime,
+    setEndTime,
+    setCouponEndDate,
+    setCouponStartDate,
+    setExpiryClaimLimitValue,
+    setCouponForEveryOne,
+  } = useCouponsStore();
+
+  const storeCouponInfo = (coupon: any) => {
+    console.log(coupon);
+    setCouponId(coupon?._id);
+    setCouponName(coupon?.name);
+    setCouponType(coupon?.config?.discountType);
+    setCouponDiscount(coupon?.config?.value);
+    setBgColor(coupon?.bgColour);
+    setCashbackAvailable(coupon?.cashbackAvailable);
+    setMinimumBillAmount(coupon?.conditions?.billValue);
+    setExpiryAfterGrabbed(coupon?.conditions?.expiryAfterGrabbed);
+    setTermsAndConditions(coupon?.conditions?.tc);
+    setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
+    setCouponPrice(coupon?.config?.value);
+    setCouponStartDate(coupon?.conditions?.couponStartDate);
+    setCouponEndDate(coupon?.conditions?.couponEndDate);
+    setExpiryClaimLimitValue(
+      coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
+    );
+    setCouponForEveryOne(coupon?.conditions?.eligibleUser?.allUsers);
+    setCustomDays(coupon?.conditions?.availability?.customDays);
+    setStartTime(coupon?.conditions?.availability?.startTime || 0);
+    setEndTime(coupon?.conditions?.availability?.endTime || 0);
+    setAllowLateNight(
+      coupon?.conditions?.availability?.allowLateNight || false,
+    );
+    setSelectedPage("INFO");
+  };
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -16,6 +68,7 @@ const MemoListCoupons = () => {
           <div
             key={coupon._id}
             className="relative w-full md:w-full lg:max-w-[19.5rem]"
+            onClick={() => storeCouponInfo(coupon)}
           >
             <article
               className=" rounded-t-2xl bg-[#6A32DF30] flex h-16 overflow-hidden shadow-light"
@@ -57,12 +110,12 @@ const MemoListCoupons = () => {
             <button
               type="button"
               className={`px-4 py-1 rounded-2xl absolute -top-3 right-4 text-xs ${
-                coupon.isActive
+                coupon.isPublish
                   ? "bg-[#24C163] text-white"
                   : "bg-gray-400 text-black"
               }`}
             >
-              {coupon.isActive ? "ACTIVE" : "INACTIVE"}
+              {coupon.isPublish ? "ACTIVE" : "INACTIVE"}
             </button>
           </div>
         ))

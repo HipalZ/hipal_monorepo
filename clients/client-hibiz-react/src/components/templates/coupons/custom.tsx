@@ -12,12 +12,13 @@ import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { storeImageAfterSave } from "@/components/utils/helper"; // Import storeImageAfterSave
+import { storeImageAfterSave } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const useSaveCoupon = () => {
   const resetFunction = useCouponsStore((s) => s.resetCouponState);
+  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (payload: any) => {
@@ -29,6 +30,7 @@ const useSaveCoupon = () => {
     onSuccess: (data) => {
       if (!data.err) {
         toast.success("Coupon saved successfully!");
+        setSelectedPage("MANAGE");
         resetFunction();
       }
     },
@@ -72,9 +74,8 @@ const MemoCustom = () => {
     extendedEndTime,
     couponImage,
   } = useCouponsStore();
-  const { selectedFile, setSelectedFile } = useMenuPageStore((s) => ({
+  const { selectedFile } = useMenuPageStore((s) => ({
     selectedFile: s.selectedFile,
-    setSelectedFile: s.setSelectedFile,
   }));
 
   const { saveCoupon, isPending } = useSaveCoupon();
