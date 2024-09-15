@@ -12,6 +12,11 @@ interface IApplyCoupon {
 
   showAlert: boolean;
   setShowAlert: (show: boolean) => void;
+
+  openTc: boolean;
+  setOpenTc: (show: boolean) => void;
+
+  displayTermsAndConditions: (openTc: boolean) => void;
 }
 
 // if we remove circle bracket from arrow function then it will become the function now we returning the object coz we added circle bracket
@@ -27,6 +32,11 @@ const useCouponTemp = create<IApplyCoupon>((set) => ({
 
   showAlert: false,
   setShowAlert: (show: boolean) => set({ showAlert: show }),
+
+  openTc: false,
+  setOpenTc: (show: boolean) => set({ openTc: show }),
+
+  displayTermsAndConditions: (openTc: boolean) => set({ openTc: !openTc }),
 }));
 
 export default useCouponTemp;

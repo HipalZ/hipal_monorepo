@@ -22,7 +22,7 @@ const MemoRefferalCouponz = () => {
           type="button"
           className="text-xs py-1 bg-[#FFFFFFA6] absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[calc(100%-1rem)] rounded-2xl text-[#210178]"
         >
-          Grab Now
+          Coming soon
         </button>
       </article>
       <article className="w-[10.5rem] text-center bg-[#F6D13C] h-[15rem] rounded-2xl relative">

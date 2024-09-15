@@ -59,7 +59,7 @@ const MemoAllCouponz = ({ couponz }: Iprops) => {
   }, [couponz, currentPage]);
 
   // if no login don't show couponz
-  if (!isLogin) return null;
+  if (!isLogin || !couponz || couponz.length === 0) return null;
 
   return (
     <>

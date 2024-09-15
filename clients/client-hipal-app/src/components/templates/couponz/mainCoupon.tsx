@@ -8,6 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import type { Coupon } from "@/components/types/businessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
+import useCouponTemp from "@/components/store/useCouponTemp";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -23,8 +24,23 @@ const SeeMyCouponz = dynamic(() => import("./seeMyCouponz"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
+const TermsAndConditions = dynamic(
+  () => import("@/components/atoms/termsAndConditions"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+
+const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
+
 const MainCoupon = () => {
   const customLink = useParams()?.businessId as string;
+  const { openTc, displayTermsAndConditions } = useCouponTemp((s) => ({
+    openTc: s.openTc,
+    displayTermsAndConditions: s.displayTermsAndConditions,
+  }));
   const couponId = useParams()?.couponId as string;
   const router = useRouter();
   const { currentPage, setSelectedCoupon } = useCouponz((s) => ({
@@ -40,7 +56,6 @@ const MainCoupon = () => {
         },
       });
       const coupon = await couponResponse.json();
-      console.log("coupon", coupon);
       setSelectedCoupon(coupon?.data as Coupon);
     } catch (err) {
       console.log("error", err);
@@ -62,6 +77,14 @@ const MainCoupon = () => {
       {currentPage === ICouponPage.BIRTHDAYCOUPON && <BirthdayPopup />}
       {currentPage === ICouponPage.CONGRATULATIONZ && <Congratulationz />}
       {currentPage === ICouponPage.SEEMYCOUPONZ && <SeeMyCouponz />}
+      {openTc && (
+        <BottomPopUp
+          show={openTc}
+          onClose={() => displayTermsAndConditions(openTc)}
+        >
+          <TermsAndConditions />
+        </BottomPopUp>
+      )}
     </>
   );
 };

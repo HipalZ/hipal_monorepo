@@ -26,7 +26,12 @@ const MemoCouponCardCongrats = () => {
           alt="Birthday Placeholder"
           width={256}
           height={180}
-          className="rounded-t-xl"
+          className="rounded-t-xl bg-[#e0dbdb]"
+          style={{
+            objectFit: "contain",
+            maxHeight: "200px",
+            maxWidth: "287px",
+          }}
         />
         <hr
           className="bg-white"

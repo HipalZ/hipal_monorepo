@@ -18,10 +18,7 @@ import useTableData from "@/components/store/useTableData";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import {
-  _useAllBusiness,
-  useAllBusiness,
-} from "@/components/store/useAllBusiness";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
 
 function BottomButton({

@@ -2,9 +2,14 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useCouponz } from "@/components/store/useCouponz";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import React, { memo } from "react";
-import MemoPlaceholderImg from "../placeholder";
+import React, { memo, useMemo } from "react";
 import { formatDiscount } from "@/components/utils/helpers";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "../loader/skeletonLoader";
+
+const MemoPlaceholderImg = dynamic(() => import("../placeholder"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 const MemoTermsAndConditions = () => {
   const { selectedCoupon } = useCouponz((s) => ({
@@ -15,15 +20,25 @@ const MemoTermsAndConditions = () => {
     logoUrl: s.businessDetails?.logoUrl,
   }));
 
+  const sentences = useMemo(() => {
+    return selectedCoupon?.conditions?.tc
+      ?.split(".")
+      .filter((sentence) => sentence.trim().length > 0);
+  }, [selectedCoupon?.conditions?.tc]);
+
   return (
     <section className="relative bg-white h-[80dvh] rounded-t-2xl overflow-y-auto text-black pb-[3rem]">
       <picture className="relative">
         <Image
           src={selectedCoupon?.image}
           alt="tc"
-          className="w-full border"
+          className="w-full border bg-[#e0dbdb]"
           width={300}
-          height={500}
+          height={300}
+          style={{
+            maxHeight: "16rem",
+            objectFit: "contain",
+          }}
         />
         <center className="z-10 -mt-8">
           {logoUrl ? (
@@ -55,9 +70,17 @@ const MemoTermsAndConditions = () => {
       <center className="mx-12 my-4 text-xl bungee-inline">
         {selectedCoupon?.name || "Birthday Coupon"}
       </center>
-      <article className="mx-6 text-justify poppins-regular">
+      <article className="mr-4 text-justify poppins-regular">
         <center className="mb-4 font-semibold">Terms & conditions</center>
-        {selectedCoupon?.conditions?.tc}
+        {sentences && sentences?.length > 0 && (
+          <ol className="text-justify custom-list">
+            {sentences.map((sentence, index) => (
+              <li className="text-xs" key={index?.toString()}>
+                {sentence.trim()}.
+              </li>
+            ))}
+          </ol>
+        )}
       </article>
     </section>
   );

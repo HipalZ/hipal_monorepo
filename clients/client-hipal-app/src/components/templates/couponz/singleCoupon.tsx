@@ -5,7 +5,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
@@ -25,22 +25,15 @@ import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
-import dynamic from "next/dynamic";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-
-const TermsAndConditions = dynamic(
-  () => import("@/components/atoms/termsAndConditions"),
-  {
-    loading: () => <SkeletonLoader height={200} />,
-  },
-);
-const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
-  loading: () => <SkeletonLoader height={200} />,
-});
+import useCouponTemp from "@/components/store/useCouponTemp";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
+  const { displayTermsAndConditions, openTc } = useCouponTemp((s) => ({
+    displayTermsAndConditions: s.displayTermsAndConditions,
+    openTc: s.openTc,
+  }));
   const { setCurrentPage, setCouponOccasion, setDirection, selectedCoupon } =
     useCouponz((s) => ({
       setCurrentPage: s.setCurrentPage,
@@ -48,8 +41,6 @@ const MemoCouponz = () => {
       setDirection: s.setDirection,
       selectedCoupon: s.selectedCoupon,
     }));
-
-  const [openTc, setOpenTc] = useState(false);
 
   const { logoUrl, name, businessId } = useBusinessDetails((s) => ({
     logoUrl: s.businessDetails?.logoUrl,
@@ -116,10 +107,6 @@ const MemoCouponz = () => {
     );
   }, [selectedCoupon]);
 
-  const displayTermsAndConditions = useCallback(() => {
-    setOpenTc(!openTc);
-  }, [openTc]);
-
   return (
     <main
       className={cn(
@@ -169,15 +156,17 @@ const MemoCouponz = () => {
           {selectedCoupon?.name || "Coupon"}
         </h1>
       </center>
-      <center className="relative z-10 -mt-10 custom-single-coupon-size">
+      <center className="relative z-10 custom-single-coupon-size">
         <Image
           src={selectedCoupon?.image || birthdayPlaceholder}
           alt="Birthday Placeholder"
           width={256}
           height={200}
-          className="rounded-t-xl"
+          className="rounded-t-xl bg-[#e0dbdb]"
           style={{
             objectFit: "contain",
+            maxHeight: "200px",
+            maxWidth: "287px",
           }}
         />
         <div className="relative z-10 grid w-64 grid-cols-2 gap-4 p-4 -mt-px text-black bg-white rounded-b-xl">
@@ -263,44 +252,36 @@ const MemoCouponz = () => {
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
       <center
-        onClick={displayTermsAndConditions}
-        onKeyDown={displayTermsAndConditions}
-        className="text-black fixed w-full text-sm underline opacity-75 bottom-32 underline-offset-4 max-w-[30rem]"
+        onClick={() => displayTermsAndConditions(openTc)}
+        onKeyDown={() => displayTermsAndConditions(openTc)}
+        className="text-black fixed w-full text-sm underline opacity-75 bottom-28 underline-offset-4 max-w-[30rem]"
       >
         View Terms and conditions
       </center>
       <section
         onClick={grabCouponz}
         onKeyDown={grabCouponz}
-        className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-4"
+        className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-8"
         style={{
           background: getLinearGradient(selectedCoupon?.bgColour) || "",
           position: "fixed",
         }}
       >
-        <article className="bg-black h-[3.5rem] rounded-lg aspect-square flex items-center justify-center">
-          <GoArrowUpRight color="white" size={36} />
+        <article className="bg-black h-[3rem] rounded-lg aspect-square flex items-center justify-center">
+          <GoArrowUpRight color="white" size={30} />
         </article>
         <article className="text-black on_active_bounce">
           <h1 className="text-lg">Grab the coupon now !</h1>
-          <p className="text-sm opacity-90">
-            Get{" "}
-            {formatDiscount(
-              selectedCoupon?.config?.value,
-              selectedCoupon?.config?.discountType,
-            )}
-            Off{" "}
-            {selectedCoupon?.config?.upto > 0
-              ? `upto ₹${selectedCoupon?.config?.upto}`
-              : ""}
-          </p>
         </article>
       </section>
-      {openTc && (
-        <BottomPopUp show={openTc} onClose={displayTermsAndConditions}>
-          <TermsAndConditions />
-        </BottomPopUp>
-      )}
+      <center
+        className={cn(
+          getTextColor(selectedCoupon?.bgColour),
+          "fixed bottom-0 -translate-x-1/2 left-1/2",
+        )}
+      >
+        Powered by HipalZ
+      </center>
     </main>
   );
 };

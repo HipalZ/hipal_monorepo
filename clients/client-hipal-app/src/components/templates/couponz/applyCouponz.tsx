@@ -244,51 +244,45 @@ const MemoApplyCouponz = () => {
   );
 
   useEffect(() => {
-    console.log("useEffect triggered");
-    console.log("greatDeals:", greatDeals);
-    console.log("missingOut:", missingOut);
-    console.log("availedCoupon:", availedCoupon);
-
     const filteredGreatDeals = greatDeals.filter(
       (coupon) => coupon?._id !== availedCoupon?._id,
     );
 
-    console.log("filteredGreatDeals", filteredGreatDeals);
     setMissingOutCoupon([...missingOut, ...filteredGreatDeals]);
   }, [greatDeals, missingOut, availedCoupon]);
 
   const ApplyCouponzz = () => {
     return (
       <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter">
-        <>
-          <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
-            <article className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={closeCouponz}
-                className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
-              >
-                <BiArrowBack />
-              </button>
-              <article>
-                <h1 className="text-lg text-black">Apply Couponz</h1>
-                <p className="text-[10px] text-[#676769]">
-                  Bill Amount: ₹ {billValue}
-                </p>
-              </article>
+        <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
+          <article className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={closeCouponz}
+              className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
+            >
+              <BiArrowBack />
+            </button>
+            <article>
+              <h1 className="text-lg text-black">Apply Couponz</h1>
+              <p className="text-[10px] text-[#676769]">
+                Bill Amount: ₹ {billValue}
+              </p>
             </article>
-            <picture className="mr-6">
-              <Image src={logoUrl} alt="logoUrl" width={44} height={44} />
-            </picture>
-          </section>
-          <br />
-          <br />
-          {greatDeals?.length > 0 ? (
-            <h1 className="mx-4 mt-6 text-xs font-bold text-black">
-              Great deals you get on this billing
-            </h1>
-          ) : null}
-          {greatDeals?.map((coupon) => (
+          </article>
+          <picture className="mr-6">
+            <Image src={logoUrl} alt="logoUrl" width={44} height={44} />
+          </picture>
+        </section>
+        <br />
+        <br />
+        {greatDeals?.length > 0 ? (
+          <h1 className="mx-4 mt-6 text-xs font-bold text-black">
+            Great deals you get on this billing
+          </h1>
+        ) : null}
+        {greatDeals?.length > 0 ? (
+          greatDeals?.map((coupon) => (
             <section
               key={coupon?._id}
               className="flex mx-4 my-4 rounded-2xl inter"
@@ -361,71 +355,75 @@ const MemoApplyCouponz = () => {
                 </div>
               </article>
             </section>
-          ))}
-          {missingOut?.length > 0 ? (
-            <h1 className="mx-4 mt-8 text-xs font-bold text-black">
-              Coupons you are missing out
-            </h1>
-          ) : null}
-          {missingOut?.map((coupon) => (
-            <section
-              key={coupon?._id}
-              className="flex mx-4 my-4 rounded-2xl inter"
-            >
-              <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
-                <div className="h-4 bg-[#f13f8a] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
-                <article className="flex items-center justify-between">
-                  <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
-                    {coupon?.name}
-                  </h1>
-                  <button
-                    type="button"
-                    className="text-[#858585] mt-1 text-sm font-bold"
-                    disabled
-                  >
-                    APPLY
-                  </button>
+          ))
+        ) : (
+          <center className="text-black">No Couponz</center>
+        )}
+        {missingOut?.length > 0 ? (
+          <h1 className="mx-4 mt-8 text-xs font-bold text-black">
+            Coupons you are missing out
+          </h1>
+        ) : null}
+        {missingOut?.length > 0
+          ? missingOut?.map((coupon) => (
+              <section
+                key={coupon?._id}
+                className="flex mx-4 my-4 rounded-2xl inter"
+              >
+                <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
+                  <div className="h-4 bg-[#f13f8a] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
+                  <article className="flex items-center justify-between">
+                    <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
+                      {coupon?.name}
+                    </h1>
+                    <button
+                      type="button"
+                      className="text-[#858585] mt-1 text-sm font-bold"
+                      disabled
+                    >
+                      APPLY
+                    </button>
+                  </article>
+                  <div className="relative z-10 gap-2 px-1 mt-2">
+                    <div className="flex flex-col items-start space-y-1">
+                      <p className="text-xs font-semibold text-[#f13f8a]">
+                        Add ₹ {coupon?.conditions?.billValue - billValue} more
+                        to get{" "}
+                        {formatDiscount(
+                          coupon?.config?.value,
+                          coupon?.config?.discountType,
+                        )}{" "}
+                        off on this bill
+                      </p>
+                    </div>
+                    <hr
+                      className="w-full col-span-2 my-3 -mx-2"
+                      style={{
+                        backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                          "#000000",
+                        )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
+                        height: "3px",
+                        border: "none",
+                      }}
+                    />
+                    <div className="flex flex-col items-start space-y-1">
+                      <h3 className="text-xs text-[#858585]">
+                        Use this coupon & get{" "}
+                        {formatDiscount(
+                          coupon?.config?.value,
+                          coupon?.config?.discountType,
+                        )}{" "}
+                        off on bill above ₹ {coupon?.conditions?.billValue}.
+                        Maximum discount: {coupon?.config?.upto}
+                      </h3>
+                    </div>
+                  </div>
                 </article>
-                <div className="relative z-10 gap-2 px-1 mt-2">
-                  <div className="flex flex-col items-start space-y-1">
-                    <p className="text-xs font-semibold text-[#f13f8a]">
-                      Add ₹ {coupon?.conditions?.billValue - billValue} more to
-                      get{" "}
-                      {formatDiscount(
-                        coupon?.config?.value,
-                        coupon?.config?.discountType,
-                      )}{" "}
-                      off on this bill
-                    </p>
-                  </div>
-                  <hr
-                    className="w-full col-span-2 my-3 -mx-2"
-                    style={{
-                      backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                        "#000000",
-                      )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "center",
-                      height: "3px",
-                      border: "none",
-                    }}
-                  />
-                  <div className="flex flex-col items-start space-y-1">
-                    <h3 className="text-xs text-[#858585]">
-                      Use this coupon & get{" "}
-                      {formatDiscount(
-                        coupon?.config?.value,
-                        coupon?.config?.discountType,
-                      )}{" "}
-                      off on bill above ₹ {coupon?.conditions?.billValue}.
-                      Maximum discount: {coupon?.config?.upto}
-                    </h3>
-                  </div>
-                </div>
-              </article>
-            </section>
-          ))}
-        </>
+              </section>
+            ))
+          : null}
       </section>
     );
   };
