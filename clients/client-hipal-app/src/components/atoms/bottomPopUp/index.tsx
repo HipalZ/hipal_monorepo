@@ -36,9 +36,13 @@ const BottomPopUp = ({
               onClick={onClose}
             >
               <animated.div
-                style={styles}
+                style={{
+                  ...styles,
+                  background:
+                    "linear-gradient(0deg, #B79DFF 0.47%, #000000 70%)",
+                }}
                 className={cn(
-                  "relative w-full max-w-md bg-base-100 shadow-md",
+                  "relative w-full max-w-md shadow-md",
                   !hide && "rounded-t-[1rem]",
                 )}
                 onClick={(e) => e.stopPropagation()}

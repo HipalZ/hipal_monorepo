@@ -58,6 +58,9 @@ export const razorpayOrderSchema = z.object({
       message: "Date must be a number",
     })
     .optional(),
+  couponId: ObjectIdSchema.optional(),
+  channelId: ObjectIdSchema.optional(),
+  cashbackAvailable: z.boolean().optional(),
 });
 
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;

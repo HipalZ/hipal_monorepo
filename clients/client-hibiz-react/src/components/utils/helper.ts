@@ -147,7 +147,7 @@ export const TagsEnum = [
 const MAX_WIDTH = 1000;
 const MAX_HEIGHT = 1000;
 const MIME_TYPE = "image/webp";
-const QUALITY = 1;
+const QUALITY = 0.9;
 
 export const compressImage = (file, callback) => {
   const blobURL = URL.createObjectURL(file);

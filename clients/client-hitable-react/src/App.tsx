@@ -6,7 +6,7 @@ import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { apiRpc } from "@hi/common";
 import { messaging, getToken } from "./hooks/clientApp";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { URL } from "./configs";
 //
 function App() {
@@ -25,11 +25,15 @@ function App() {
   } = useLiteStore();
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
-  const businessId = selectedBiz?.businessId?._id;
-  const location = useLocation();
+  const pathName = useLocation().pathname;
+
+  // Define a regular expression to extract the businessId
+  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
+  const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const fetchAlerts = async (alertType: string) => {
     const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
     setLoading(true);
+    if (!businessId) return [];
     const res = await apiRpc.payments[":id"][endpoint].$get({
       query: {
         businessId,
@@ -87,29 +91,60 @@ function App() {
   };
 
   async function initializeMessaging(body: string, title: string) {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.register(
-          "/firebase-messaging-sw.js",
-        );
-        const token = await getToken(messaging, {
-          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-          serviceWorkerRegistration: registration,
-        });
-
-        if (token) {
-          await apiRpc.users.send.PushNotification.$post({
-            json: {
-              registrationToken: token,
-              title,
-              body,
-            },
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.register(
+            "/firebase-messaging-sw.js",
+          );
+          const token = await getToken(messaging, {
+            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+            serviceWorkerRegistration: registration,
           });
+          if (token) {
+            await apiRpc.users.send.PushNotification.$post({
+              json: {
+                registrationToken: token,
+                title,
+                body,
+              },
+            });
+
+            // Add visibilitychange event listener
+            const handleVisibilityChange = () => {
+              if (document.hidden) {
+                apiRpc.users.send.PushNotification.$post({
+                  json: {
+                    registrationToken: token,
+                    title: "Attention Needed",
+                    body: "You have a new message",
+                  },
+                });
+              }
+            };
+
+            console.log("Visibility change event listener added");
+
+            document.addEventListener(
+              "visibilitychange",
+              handleVisibilityChange,
+            );
+
+            // Cleanup event listener when the function is called again
+            return () => {
+              document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+              );
+            };
+          }
         }
+      } else if (permission === "denied") {
+        console.log("Permission denied");
       }
-    } else if (permission === "denied") {
-      console.log("Permission denied");
+    } catch (error) {
+      console.error("Error initializing messaging:", error);
     }
   }
 

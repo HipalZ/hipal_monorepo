@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
+  CouponClaim,
   GroupAnalytic,
   LoyaltySettings,
   Order,
@@ -12,6 +13,7 @@ import {
   TagModel,
   User,
   UserAnalytic,
+  UserCouponClaim,
   UserReward,
   UserRewardHistory,
   UserTags,
@@ -50,7 +52,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
-const transformData = (data: any[]) => {
+const transformData = (data: unknown[]) => {
   return data
     .filter((item) => item.groupId != null) // Filter out items with null groupId
     .map((item) => {
@@ -407,7 +409,6 @@ const paymentsRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        console.log("createOrder");
         const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
         const {
           total,
@@ -418,6 +419,9 @@ const paymentsRouter = new Hono()
           userId,
           claimedCoins,
           businessId,
+          couponId,
+          channelId,
+          cashbackAvailable,
         } = requestData;
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
@@ -440,6 +444,9 @@ const paymentsRouter = new Hono()
               tableName,
               order_id: response.id,
               tips: tips,
+              couponId,
+              channelId,
+              cashbackAvailable,
               date: Date.now(),
             },
           ],
@@ -508,6 +515,9 @@ const paymentsRouter = new Hono()
           userId,
           claimedCoins,
           businessId,
+          couponId,
+          channelId,
+          cashbackAvailable,
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
@@ -540,6 +550,9 @@ const paymentsRouter = new Hono()
               billValue,
               businessId,
               order_id: uniqueOrderId,
+              couponId,
+              channelId,
+              cashbackAvailable,
               date: Date.now(),
             },
           ],
@@ -588,11 +601,19 @@ const paymentsRouter = new Hono()
     ]),
     zValidator("json", validatePaymentSchema),
     zValidator("param", z.object({ merchantId: z.string() })),
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string().optional(),
+        couponId: z.string().optional(),
+      }),
+    ),
 
     async (c) => {
       const requestData = await c.req.json();
       const { response } = requestData;
       const { merchantId } = c.req.param();
+      const { userId, couponId } = c.req.query();
       const merchantConfig = (await getMerchantConfig(
         merchantId,
       )) as MerchantConfig;
@@ -615,6 +636,85 @@ const paymentsRouter = new Hono()
           400,
           {},
         );
+
+      console.log("userId and couponId", userId, couponId);
+
+      if (userId && couponId) {
+        let userClaim = await UserCouponClaim.findOne({ userId, couponId });
+        let couponClaim = await CouponClaim.findOne({ couponId });
+
+        const currentDate = Date.now();
+        const oneWeek = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
+        const oneMonth = 30 * 24 * 60 * 60 * 1000;
+
+        if (!userClaim) {
+          userClaim = await UserCouponClaim.create({
+            userId,
+            couponId,
+            date: currentDate,
+            weekelyLastResetDate: currentDate,
+            monthlyLastResetDate: currentDate,
+            weeklyLimit: 0,
+            monthlyLimit: 0,
+            overAllLimit: 0,
+          });
+        }
+
+        if (!couponClaim) {
+          couponClaim = await CouponClaim.create({
+            couponId,
+            date: currentDate,
+            weekelyLastResetDate: currentDate,
+            monthlyLastResetDate: currentDate,
+            weeklyLimit: 0,
+            monthlyLimit: 0,
+            overAllLimit: 0,
+          });
+        }
+
+        // Function to reset limits if necessary
+        const resetLimitsIfNecessary = (claim, type) => {
+          if (
+            type === "weekly" &&
+            currentDate - claim.weekelyLastResetDate >= oneWeek
+          ) {
+            claim.weeklyLimit = 0;
+            claim.weekelyLastResetDate = currentDate;
+          }
+          if (
+            type === "monthly" &&
+            currentDate - claim.monthlyLastResetDate >= oneMonth
+          ) {
+            claim.monthlyLimit = 0;
+            claim.monthlyLastResetDate = currentDate;
+          }
+        };
+
+        // Reset limits if necessary
+        resetLimitsIfNecessary(userClaim, "weekly");
+        resetLimitsIfNecessary(userClaim, "monthly");
+        resetLimitsIfNecessary(couponClaim, "weekly");
+        resetLimitsIfNecessary(couponClaim, "monthly");
+
+        // Function to update limits
+        const updateLimits = (claim: {
+          overAllLimit: number;
+          weeklyLimit: number;
+          monthlyLimit: number;
+        }) => {
+          claim.overAllLimit += 1;
+          claim.weeklyLimit += 1;
+          claim.monthlyLimit += 1;
+        };
+
+        // Update limits
+        updateLimits(userClaim);
+        updateLimits(couponClaim);
+
+        // Save the updated claims
+        await userClaim.save();
+        await couponClaim.save();
+      }
 
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
         response;
@@ -687,8 +787,12 @@ const paymentsRouter = new Hono()
       }
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
+
       if (!bodyResult.success) {
-        console.log("Invalid body");
+
+        console.log("Invalid body", bodyResult);
+
+      
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore
@@ -722,6 +826,7 @@ const paymentsRouter = new Hono()
                 isAccepted: false,
                 date: Date.now(),
                 message: `Fail ${payload.payment.entity.notes.total}`,
+                couponId: payload.payment.entity.notes.couponId,
               },
             ],
             { session },
@@ -768,11 +873,15 @@ const paymentsRouter = new Hono()
               );
             }
 
-            const cashBack = await calculatedCashbackCoins(
+            let cashBack = await calculatedCashbackCoins(
               getOrder?.businessId.toString() || "",
               getOrder?.billValue || 0,
               claimCoins,
             );
+
+            if (getOrder?.cashbackAvailable === false) {
+              cashBack = 0;
+            }
 
             const cashBackCoins = await addCoins(
               cashBack,
@@ -787,44 +896,6 @@ const paymentsRouter = new Hono()
             );
 
             getCashBack = cashBackCoins;
-
-            const userAnalytics = await UserAnalytic.findOne({
-              userId: getOrder?.userId,
-            }).select("totalSpend");
-            if (userAnalytics) {
-              const countAvgSpend = Math.round(
-                userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
-              );
-              await UserAnalytic.findOneAndUpdate(
-                { userId: getOrder?.userId },
-                {
-                  $inc: {
-                    totalSpend: getOrder.total,
-                    visitCount: 1,
-                    coinzIssued: cashBackCoins,
-                    coinzUsed: claimCoins,
-                  },
-                  $set: { avgSpend: countAvgSpend },
-                },
-                { session },
-              );
-            } else {
-              await UserAnalytic.create(
-                [
-                  {
-                    userId: getOrder?.userId,
-                    businessId: getOrder?.businessId,
-                    visitCount: 1,
-                    totalSpend: getOrder.total,
-                    avgSpend: getOrder.total,
-                    dateOfJoining: Date.now(),
-                    coinzIssued: cashBackCoins,
-                    coinzUsed: claimCoins,
-                  },
-                ],
-                { session },
-              );
-            }
           }
 
           const createPayment = await Payment.create(
@@ -844,6 +915,8 @@ const paymentsRouter = new Hono()
                 razorpayOrderId: payload.payment.entity.order_id,
                 razorpayAcquirerData: payload.payment.entity.acquirer_data,
                 razorpayEventId: razorpayEventId,
+                couponId: getOrder?.couponId,
+                channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
               },
@@ -1085,11 +1158,15 @@ const paymentsRouter = new Hono()
             }
 
             if (order) {
-              const cashBack = await calculatedCashbackCoins(
+              let cashBack = await calculatedCashbackCoins(
                 order.businessId.toString(),
                 Number(order.billValue),
                 Number(order.claimedCoins),
               );
+
+              if (order.cashbackAvailable === false) {
+                cashBack = 0;
+              }
 
               const finalCashBack = await addCoins(
                 cashBack,
@@ -1121,6 +1198,8 @@ const paymentsRouter = new Hono()
                     razorpayEventId: nanoid(15),
                     razorpayOrderId: nanoid(15),
                     razorpayPaymentId: nanoid(15),
+                    couponId: order?.couponId,
+                    channelId: order?.channelId,
 
                     waiterName,
                     date: Date.now(),
@@ -1128,44 +1207,6 @@ const paymentsRouter = new Hono()
                 ],
                 { session },
               );
-
-              const userAnalytics = await UserAnalytic.findOne({
-                userId: order?.userId,
-              }).select("totalSpend");
-              if (userAnalytics) {
-                const countAvgSpend = Math.round(
-                  userAnalytics.totalSpend || 0 + userAnalytics.visitCount || 0,
-                );
-                await UserAnalytic.findOneAndUpdate(
-                  { userId: order?.userId },
-                  {
-                    $inc: {
-                      totalSpend: order?.total,
-                      visitCount: 1,
-                      coinzIssued: finalCashBack || 0,
-                      coinzUsed: order?.claimedCoins || 0,
-                    },
-                    $set: { avgSpend: countAvgSpend },
-                  },
-                  { session },
-                );
-              } else {
-                await UserAnalytic.create(
-                  [
-                    {
-                      userId: order?.userId,
-                      businessId: order?.businessId,
-                      visitCount: 1,
-                      totalSpend: order?.total,
-                      avgSpend: order?.total,
-                      dateOfJoining: Date.now(),
-                      coinzIssued: finalCashBack || 0,
-                      coinzUsed: order?.claimedCoins || 0,
-                    },
-                  ],
-                  { session },
-                );
-              }
             }
           }
 

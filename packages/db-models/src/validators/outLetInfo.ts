@@ -90,6 +90,9 @@ export const outLetInfoSchema = z.object({
   isCustomTime: z.boolean().optional(),
   avgPricingForTwo: z.coerce.number().positive().optional(),
   avgRating: z.coerce.number().positive().optional(),
+  placeId: z.string().min(1).max(100).optional(),
+  placeUrl: z.string().url().min(10).max(100).optional(),
+  specialDay: z.number().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

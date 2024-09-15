@@ -5,16 +5,22 @@ import type {
   IBannerPayload,
   IBusinessData,
 } from "@/components/types/businessData";
-import { defaultThemes } from "@/components/utils/helpers";
+import { cn, defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
-import EmblaCarousel from "@/components/atoms/emblaCarousel";
-import EmblaCarousel2 from "@/components/atoms/emblaCarousel/test";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 // export const revalidate = 30;
 //
+const AllCouponz = dynamics(
+  () => import("@/components/templates/couponz/allCouponz"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
+const EmblaCarousel2 = dynamics(
+  () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
 const BannerLayouts = dynamics(
   () => import("@/components/organisms/explore/bannerNewCards"),
   {
@@ -46,6 +52,11 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
+const GoogleReviews = dynamics(
+  () => import("@/components/organisms/explore/googleReviews"),
+  { loading: () => <SkeletonLoader height={200} /> },
+);
+
 export async function generateMetadata() {
   return {
     title: "Explore",
@@ -63,6 +74,7 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
+          <AllCouponz couponz={data?.couponz} />
           <div className="bg-base-300">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>
@@ -73,12 +85,25 @@ export default async function Explore({
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
                 In Spotlight
               </h2>
-              <article className="h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap">
+              <article
+                className={cn(
+                  data?.banners?.length === 1 ? "justify-center" : "",
+                  "h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap",
+                )}
+              >
                 <EmblaCarousel2>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
                     return (
-                      <div key={index.toString()} className="embla__slide">
+                      <div
+                        key={index.toString()}
+                        className={cn(
+                          "embla__slide",
+                          data?.banners?.length === 1
+                            ? "justify-start embla__container"
+                            : "",
+                        )}
+                      >
                         <BannerLayouts
                           redirectionId={banner?.redirectionId || ""}
                           redirectionName={banner?.redirectionName || ""}
@@ -109,10 +134,11 @@ export default async function Explore({
           )}
           <SubLoyalty loyalty={data?.loyalty} />
           {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
-            <div className="mt-12 overflow-auto">
+            <div className="mt-8 overflow-auto">
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
           ) : null}
+          <GoogleReviews />
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}

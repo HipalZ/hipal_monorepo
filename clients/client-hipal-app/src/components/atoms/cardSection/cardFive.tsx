@@ -15,10 +15,9 @@ const MemoCardFiveLayout = () => {
   const business = _useAllBusiness((state) => state.data?.business);
   const userDetails = useLogin((s) => s.userDetails);
   const userCoinZ = useLogin((state) => state.userCoinZ);
-  console.log("CardFiveLayout", cardLayout, business, userCoinZ);
 
   return (
-    <section className="relative z-50 flex w-[23.5rem] max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl">
+    <section className="relative z-50 flex w-[23.5rem] max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl shadow-2xl">
       <Image
         src={
           cardLayout === "LAYOUT_ONE"

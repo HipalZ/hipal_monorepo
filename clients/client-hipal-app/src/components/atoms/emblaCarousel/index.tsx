@@ -1,10 +1,16 @@
 "use client";
-import React, { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import { cn } from "@/components/utils/helpers";
 
-function MemoEmblaCarousel({ children }) {
+interface IProps {
+  children: React.ReactNode;
+  reviewCarousel?: boolean;
+}
+
+function MemoEmblaCarousel({ children, reviewCarousel }: IProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: false, dragFree: false },
     [Autoplay()],
@@ -63,14 +69,21 @@ function MemoEmblaCarousel({ children }) {
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container">{children}</div>
       </div>
-      <div className="px-4 py-4 mt-3 embla__button-container">
-        <button
-          type="button"
-          className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"
-          onClick={onPrevClick}
-        >
-          <FaAngleLeft className="text-primary" size={24} />
-        </button>
+      <div
+        className={cn(
+          "px-4 py-4 mt-3 embla__button-container flex items-center",
+          reviewCarousel ? "justify-center" : "justify-between",
+        )}
+      >
+        {!reviewCarousel && (
+          <button
+            type="button"
+            className="px-2 border rounded-full border-primary embla__button embla__button--prev border-1"
+            onClick={onPrevClick}
+          >
+            <FaAngleLeft className="text-primary" size={24} />
+          </button>
+        )}
         <div className="embla__dots">
           {scrollSnaps.map((_, index) => (
             <button
@@ -85,13 +98,15 @@ function MemoEmblaCarousel({ children }) {
             />
           ))}
         </div>
-        <button
-          type="button"
-          className="px-2 border rounded-full border-primary embla__button embla__button--next border-1"
-          onClick={onNextClick}
-        >
-          <FaAngleRight className="text-primary" size={24} />
-        </button>
+        {!reviewCarousel && (
+          <button
+            type="button"
+            className="px-2 border rounded-full border-primary embla__button embla__button--next border-1"
+            onClick={onNextClick}
+          >
+            <FaAngleRight className="text-primary" size={24} />
+          </button>
+        )}
       </div>
     </div>
   );

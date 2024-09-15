@@ -7,15 +7,26 @@ interface ButtonConfig {
   type?: "button" | "reset" | "submit";
   isLoading?: boolean;
   delete?: boolean;
+  disable?: boolean;
+  hide?: boolean;
 }
 
-const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
-  const { buttons } = props;
+interface MemoBottomButtonProps {
+  buttons: ButtonConfig[];
+  fixed?: boolean;
+}
+
+const MemoBottomButton = (props: MemoBottomButtonProps) => {
+  const { buttons, fixed } = props;
 
   return (
     <article
       className={cn(
-        "absolute bottom-0 w-full px-4 py-2 bg-white lg:bg-transparent md:max-w-[28rem] md:left-0 md:right-0 md:mx-auto",
+        "w-full px-4 py-2 bg-white lg:bg-transparent md:max-w-[28rem] md:left-0 md:right-0 md:mx-auto",
+        {
+          "fixed bottom-0": fixed,
+          "absolute bottom-0": !fixed,
+        },
       )}
     >
       <div
@@ -24,51 +35,57 @@ const MemoBottomButton = (props: { buttons: ButtonConfig[] }) => {
           "justify-center": buttons.length !== 2,
         })}
       >
-        {buttons.map((button, index) => (
-          <button
-            key={button.text}
-            className={cn(
-              "rounded-full text-center py-3",
-              button?.isLoading ? "pointer-events-none" : "",
-              {
-                "bg-red-500 text-white": button.delete,
-                "bg-custom-gradient text-white": !button.delete && index === 1,
-                "bg-black text-white": !button.delete && index !== 1,
-              },
-              {
-                "w-[48%]": buttons.length === 2,
-                "w-[100%]": buttons.length !== 2,
-              },
-            )}
-            onClick={button.onClick}
-            type={button.type ?? "button"}
-          >
-            {button.isLoading ?? false ? (
-              <svg
-                className="w-5 h-5 mx-auto text-white animate-spin"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
+        {buttons.map(
+          (button, index) =>
+            !button.hide ? (
+              <button
+                key={button.text}
+                className={cn(
+                  "rounded-full text-center py-3",
+                  button?.isLoading ? "pointer-events-none" : "",
+                  {
+                    "bg-red-500 text-white": button.delete,
+                    "bg-custom-gradient text-white":
+                      !button.delete && index === 1,
+                    "bg-black text-white": !button.delete && index !== 1,
+                    "opacity-50 cursor-not-allowed": button.disable, // Apply styles when disabled
+                  },
+                  {
+                    "w-[48%]": buttons.length === 2,
+                    "w-[100%]": buttons.length !== 2,
+                  },
+                )}
+                onClick={!button.disable ? button.onClick : undefined} // Disable onClick if the button is disabled
+                type={button.type ?? "button"}
+                disabled={button.disable} // HTML disable attribute
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-            ) : (
-              button.text
-            )}
-          </button>
-        ))}
+                {button.isLoading ? (
+                  <svg
+                    className="w-5 h-5 mx-auto text-white animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                ) : (
+                  button.text
+                )}
+              </button>
+            ) : null, // Don't render the button if hide is true
+        )}
       </div>
     </article>
   );

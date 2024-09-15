@@ -3,4 +3,4 @@ clients/client-hibiz-react-copy/dist
 infra/*
 servers/server/.envs
 Dockerfile
-
+.github/*

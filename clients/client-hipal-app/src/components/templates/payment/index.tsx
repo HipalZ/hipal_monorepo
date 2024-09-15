@@ -270,6 +270,9 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
       json: {
         response,
       },
+      query: {
+        couponId: sele,
+      },
     });
     const data = await res.json();
     const orderId = data?.data as string;
@@ -404,6 +407,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
       await creatingRazorPayOptions(orderId);
     } catch (error) {
       toast.error("Something went wrong! Please try again later.");
+      console.log("error", error);
       setRazorPayPaymentId("");
       setRazorPaySignature("");
       setIsLoading(false);
@@ -522,7 +526,7 @@ const PaymentMemo = ({ data }: { data: IBusinessData }) => {
           {selectedMode === "INVOICE" ? (
             <>
               <PaymentCard
-                claimedCoinz={claimedCoinz}
+                offer={claimedCoinz}
                 billValue={billValue}
                 logo={data?.business?.logoUrl}
               />

@@ -37,8 +37,8 @@ export const useLoyaltyData = create(
       loyaltySetting: {
         loyaltyId: "",
         businessId: "",
-        setCashBackPercentage: 10,
-        setClaimedPercentage: 20,
+        setCashBackPercentage: 0,
+        setClaimedPercentage: 0,
         _id: "",
         cardPattern: "",
         cardColor: "",

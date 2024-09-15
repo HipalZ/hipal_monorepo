@@ -1,5 +1,9 @@
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
-import type { IBanner, IUniquelyDishes } from "@/components/types/businessData";
+import type {
+  Coupon,
+  IBanner,
+  IUniquelyDishes,
+} from "@/components/types/businessData";
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { set } from "lodash-es";
@@ -32,16 +36,30 @@ async function fetchBusinessData(customLink: string) {
     param: {
       businessId: bizId,
     },
+    query: {
+      isPublished: "true",
+    },
+  });
+
+  const couponzResponse = await apiRpc.couponz["promot-couponz"][
+    ":businessId"
+  ].$get({
+    param: {
+      businessId: bizId,
+    },
   });
 
   const outletInfo = await outletInfoData.json();
   const uniquelyDishes = await uniquelyDishesResponse.json();
   const loyalty = await loyaltyResponse.json();
   const banners = await bannersResponse.json();
+  const couponz = await couponzResponse.json();
+  console.log("couponz", couponz);
   data["outletInfo"] = outletInfo?.data;
   data["banners"] = banners?.data as unknown as IBanner[];
   data["uniquelyDishes"] = uniquelyDishes?.data as unknown as IUniquelyDishes[];
   data["loyalty"] = loyalty?.data as unknown as ILoyaltySetting;
+  data["couponz"] = couponz?.data as unknown as Coupon;
 
   set(
     data,

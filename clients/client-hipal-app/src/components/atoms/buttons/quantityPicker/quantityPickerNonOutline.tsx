@@ -21,7 +21,7 @@ const QuantityPickerNonOutline = ({
     if (quantity > minQuantity) {
       setQuantity(quantity - 1);
     }
-  }, [quantity, maxQuantity]);
+  }, [quantity, minQuantity, setQuantity]);
 
   const handleIncrease = useCallback(() => {
     if (quantity < maxQuantity) {
@@ -29,9 +29,8 @@ const QuantityPickerNonOutline = ({
     } else {
       displayAlertPopUp();
     }
-  }, [quantity, maxQuantity, displayAlertPopUp]);
+  }, [quantity, maxQuantity, setQuantity, displayAlertPopUp]);
 
-  // Determine the component type based on `choiceType`
   const isNumberType = extra.choiceType === "NUMBER";
 
   return (
@@ -43,6 +42,7 @@ const QuantityPickerNonOutline = ({
             type="button"
             onClick={handleDecrease}
             disabled={quantity <= minQuantity}
+            className="button-icon"
           >
             <HiMinusSm size={24} />
           </button>
@@ -53,16 +53,20 @@ const QuantityPickerNonOutline = ({
           </span>
 
           {/* Increase Button */}
-          <button type="button" onClick={handleIncrease}>
+          <button
+            type="button"
+            onClick={handleIncrease}
+            className="button-icon"
+          >
             <HiPlusSm size={24} />
           </button>
         </div>
       ) : (
         <div className="flex flex-row mx-1 my-auto">
-          {/* Checkbox for binary choice */}
+          {/* Checkbox for binary choice, toggles on/off based on quantity */}
           <input
             type="checkbox"
-            className="scale-125 "
+            className="scale-125"
             checked={quantity > 0}
             onChange={() => setQuantity(quantity > 0 ? 0 : 1)}
           />

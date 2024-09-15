@@ -25,6 +25,10 @@ const userRewardSchema = new mongoose.Schema<UserRewardType>(
       type: Number,
       default: 0,
     },
+    googleReviewCount: {
+      type: Number,
+      default: 0,
+    },
     date: {
       type: Number,
     },

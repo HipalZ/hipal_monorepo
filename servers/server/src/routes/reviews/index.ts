@@ -1,0 +1,131 @@
+import { GoogleAuthUser, GoogleReview, User, UserReward } from "@hi/db-models";
+import { GoogleAuthUsersAttrs } from "@hi/db-models/src/validators";
+import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
+// books.ts
+import { Hono } from "hono";
+import { z } from "zod";
+import { respond } from "../../utils/response";
+const reviewRouter = new Hono()
+  .get(
+    "/googleReviews",
+    zValidator(
+      "query",
+      z.object({
+        placeId: z
+          .string({
+            message: "placeId is required",
+          })
+          .min(1)
+          .max(100),
+        businessId: z.string().min(1).max(100),
+        userId: z.string().min(1).max(100),
+      }),
+    ),
+
+    async (c) => {
+      const { placeId, businessId, userId } = c.req.query();
+
+      const GOOGLE_API_KEY =
+        process.env.GOOGLE_API_KEY || "AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY";
+
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews&key=${GOOGLE_API_KEY}`,
+      );
+
+      const reviews = response.data.result.reviews;
+
+      for (const review of reviews) {
+        const existingUser = await GoogleAuthUser.findOne({
+          authorName: review.author_name,
+          businessId: businessId,
+          userId,
+        });
+        if (existingUser) {
+          await GoogleReview.updateOne(
+            {
+              userId: existingUser.userId,
+              businessId: existingUser.businessId,
+              authorName: existingUser.authorName,
+            },
+            {
+              $set: {
+                authorName: review.author_name,
+                rating: review.rating,
+                comment: review.text,
+                profilePhotoUrl: review.profile_photo_url,
+                userId: existingUser.userId,
+                businessId: existingUser.businessId,
+              },
+            },
+            { upsert: true },
+          );
+        }
+      }
+
+      const existingReviews = await GoogleReview.find({
+        businessId: businessId,
+      });
+
+      return respond(c, "reviews fetched successfully", false, 200, {
+        reviews: existingReviews,
+      });
+    },
+  )
+  .post(
+    "/storeGoogleAuthUser",
+    zValidator("json", GoogleAuthUsersAttrs),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { userId, loyaltyId } = requestData;
+      console.log("requestData", requestData);
+
+      const existingUser = await User.findById(userId);
+      console.log("existingUser", existingUser);
+      if (!existingUser) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      const existingAuthUser = await GoogleAuthUser.findOne({
+        userId,
+        businessId: existingUser.businessId,
+        authorName: requestData.authorName,
+      });
+
+      if (existingAuthUser) {
+        return respond(
+          c,
+          "user already submitted reviews for this business",
+          true,
+          200,
+          {},
+        );
+      }
+
+      const saveUser = await GoogleAuthUser.create(requestData);
+
+      if (!saveUser) {
+        return respond(c, "failed to save auth user", true, 400, {});
+      }
+
+      const rewards = await UserReward.findOneAndUpdate(
+        { userId, loyaltyId },
+        {
+          $inc: { rewards: 40, scanCount: 1, googleReviewCount: 1 },
+        },
+      );
+
+      if (!rewards) {
+        return respond(c, "Rewards not found", true, 404, {});
+      }
+
+      return respond(c, "review post successFully", false, 200, {
+        user: existingUser,
+        count: rewards.scanCount,
+        googleReviewCount: rewards.googleReviewCount,
+        rewards: rewards.rewards,
+      });
+    },
+  );
+
+export default reviewRouter;

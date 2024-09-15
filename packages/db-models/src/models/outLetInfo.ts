@@ -1,14 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-import type { Model } from 'mongoose';
-import type { OutLetInfoType } from '../validators';
-import { Amenities } from '../validators';
+import type { Model } from "mongoose";
+import type { OutLetInfoType } from "../validators";
+import { Amenities } from "../validators";
 const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   businessId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     index: true,
-    ref: 'Business',
+    ref: "Business",
   },
   endBannerUrl: {
     type: String,
@@ -66,12 +66,11 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   ],
   address: {
     type: String,
-    required: false
-
+    required: false,
   },
   avgRating: {
     type: Number,
-    required: false
+    required: false,
   },
 
   customTiming: [
@@ -117,10 +116,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     default: false,
   },
   fixOpenTime: {
-    type: String
+    type: String,
   },
   fixCloseTime: {
-    type: String
+    type: String,
   },
   branchName: {
     type: String,
@@ -130,9 +129,24 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   avgPricingForTwo: {
     type: Number,
     reuired: false,
-  }
+  },
+  placeId: {
+    type: String,
+    required: false,
+  },
+  placeUrl: {
+    type: String,
+    required: false,
+  },
+  specialDay: {
+    type: Number,
+    required: false,
+  },
 });
 
-const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>('outlet', outLetInfoSchema);
+const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(
+  "outlet",
+  outLetInfoSchema,
+);
 
 export { OutLetInfo };

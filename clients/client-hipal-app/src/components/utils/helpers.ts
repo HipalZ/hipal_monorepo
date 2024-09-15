@@ -13,10 +13,14 @@ import {
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { IDish, IExtraItem } from "../types/businessData";
+import type { Coupon, IDish, IExtraItem } from "../types/businessData";
 import { FaWhatsapp } from "react-icons/fa";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdOutlineCall } from "react-icons/md";
+import { initializeApp } from "firebase/app";
+import { GoogleAuthProvider, getAuth } from "firebase/auth";
+import confetti from "canvas-confetti";
+import { toast } from "react-toastify";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -37,6 +41,14 @@ export const getTimeIn12HrFormat = (time: string) => {
 
   return `${hour12}:${minutes} ${amPm}`;
 };
+
+export function formatTime(time: number): string {
+  const hours = Math.floor(time);
+  const minutes = Math.round((time - hours) * 60);
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}`;
+}
 
 export type PatternKeys =
   | "wave"
@@ -109,6 +121,28 @@ export function timestampToDateTime(timestamp: number): string {
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
+
+export const formatDate = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const month = monthNames[date.getMonth()]; // Get the month abbreviation
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
 
 export const calculateReward = (
   exist: number,
@@ -445,7 +479,6 @@ export function hexToRGBA(hex, opacity) {
   let r = 0,
     g = 0,
     b = 0;
-  console.log("hex", hex);
   // Check for shorthand hex code (e.g., #03F)
   if (hex.length === 4) {
     r = parseInt(hex[1] + hex[1], 16);
@@ -459,3 +492,377 @@ export function hexToRGBA(hex, opacity) {
 
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC_Gx_LwNxkBTHw1ewq5Vx3IRP78fvzRvE",
+  authDomain: "reviewz-ecd55.firebaseapp.com",
+  projectId: "reviewz-ecd55",
+  storageBucket: "reviewz-ecd55.appspot.com",
+  messagingSenderId: "521843864608",
+  appId: "1:521843864608:web:8487879b0144a9257b7845",
+  measurementId: "G-9SW8ES10NE",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export { auth, provider };
+export const colors = [
+  {
+    bgColor: "bg-[#FFC93C]",
+    color: "#FFC93C",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #F2FF9D 0.47%, #DDE79E 99.53%)",
+    hueRotate: 116,
+  },
+  {
+    bgColor: "bg-[#67A5EC]",
+    color: "#67A5EC",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #9DFFFD 0.47%, #A5E79E 99.53%)",
+    hueRotate: 259,
+  },
+  {
+    bgColor: "bg-[#9267EC]",
+    color: "#9267EC",
+    linearGradient: "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)",
+    textColor: "text-[#000000]",
+    hueRotate: 343,
+  },
+  {
+    bgColor: "bg-[#EC678D]",
+    color: "#EC678D",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #FF9DB7 0.47%, #E79E9F 99.53%)",
+    hueRotate: 43,
+  },
+  {
+    bgColor: "bg-[#67EC8D]",
+    color: "#67EC8D",
+    textColor: "text-[#000000]",
+    linearGradient: "linear-gradient(92.87deg, #D6FF9D 0.47%, #9EE7A8 99.53%)",
+    hueRotate: 212,
+  },
+];
+export function getLinearGradient(hexColor: string): string | null {
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+  );
+  return colorObject
+    ? colorObject?.linearGradient
+    : "linear-gradient(92.87deg, #B79DFF 0.47%, #E59EE7 99.53%)";
+}
+
+export function getTextColor(hexColor: string): string {
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+  );
+  return colorObject?.textColor ?? "#000000"; // Default to black if not found
+}
+
+export function getHueColor(hexColor: string): number | null {
+  const colorObject = colors?.find(
+    (color) => color?.color?.toLowerCase() === hexColor?.toLowerCase(),
+  );
+  return colorObject ? colorObject?.hueRotate : null;
+}
+
+// convert hex code to linear gradient other color
+export const adjustLightness = (color, amount) => {
+  let hsl = hexToHSL(color);
+  hsl.l = Math.max(0, Math.min(100, hsl.l - amount)); // Ensure within [0, 100]
+  return `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+};
+
+const hexToHSL = (H) => {
+  // Convert hex to RGB first
+  let r = 0,
+    g = 0,
+    b = 0;
+  if (H?.length === 4) {
+    r = parseInt(H[1] + H[1], 16);
+    g = parseInt(H[2] + H[2], 16);
+    b = parseInt(H[3] + H[3], 16);
+  } else if (H?.length === 7) {
+    r = parseInt(H[1] + H[2], 16);
+    g = parseInt(H[3] + H[4], 16);
+    b = parseInt(H[5] + H[6], 16);
+  }
+  // Then to HSL
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const l = Math.max(r, g, b);
+  const s = l - Math.min(r, g, b);
+  const h = s
+    ? l === r
+      ? (g - b) / s
+      : l === g
+        ? 2 + (b - r) / s
+        : 4 + (r - g) / s
+    : 0;
+  return {
+    h: 60 * h < 0 ? 60 * h + 360 : 60 * h,
+    s: 100 * (s ? s / (l + Math.min(r, g, b)) : 0),
+    l: (100 * (l + Math.min(r, g, b))) / 2,
+  };
+};
+
+// finding percentage or value in coupon
+export const formatDiscount = (value: number, discountType: string): string => {
+  return discountType === "PERCENTAGE" ? `${value}% ` : `₹${value} `;
+};
+
+// getting todays date in day, month, year
+export const getTodayDate = () => {
+  const today = new Date();
+  const day = today.getDate().toString();
+  const month = today.toLocaleString("default", { month: "long" });
+  const year = today.getFullYear().toString();
+  return { day, month, year };
+};
+
+// couponz enum
+export enum ICouponPage {
+  SINGLECOUPON = "singleCoupon",
+  BIRTHDAYCOUPON = "birthdayCoupon",
+  CONGRATULATIONZ = "congratulationz",
+  ALLCOUPONZ = "allCouponz",
+  TERMSANDCONDITIONS = "termsAndConditions",
+  SEEMYCOUPONZ = "seeMyCouponz",
+}
+
+// random generating the blasts
+export function randomInRange(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+export function triggerConfettiBlast() {
+  confetti({
+    angle: randomInRange(55, 125),
+    spread: randomInRange(50, 70),
+    particleCount: randomInRange(50, 100),
+    origin: { y: 0.6 },
+  });
+}
+
+// calculation of timestamp
+const monthMapping: { [key: string]: number } = {
+  January: 0,
+  February: 1,
+  March: 2,
+  April: 3,
+  May: 4,
+  June: 5,
+  July: 6,
+  August: 7,
+  September: 8,
+  October: 9,
+  November: 10,
+  December: 11,
+};
+
+export const convertToTimestamp = (date) => {
+  const { day, month, year } = date;
+  // JavaScript months are 0-indexed, so subtract 1 to align with your month values (where January = 1)
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  return dateObj.getTime(); // getTime() returns milliseconds since the Unix Epoch
+};
+
+// hexcode to gradient
+export function hexToGradient(hex: string): {
+  h: number;
+  s: number;
+  l: number;
+} {
+  // Remove the # if it exists
+  hex = hex.replace(/^\s*#|\s*$/g, "");
+
+  // Convert hex to RGB
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0,
+    s,
+    l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0; // achromatic
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h /= 6;
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function HSLToHex(h: number, s: number, l: number): string {
+  s /= 100;
+  l /= 100;
+  const k = (n: number) => (n + h / 15) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return (
+    "#" +
+    [255 * f(0), 255 * f(8), 255 * f(4)]
+      .map((x) => Math.round(x).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+export function generateComplementaryColor(hex: string): string {
+  let { h, s, l } = hexToHSL(hex);
+
+  // Shift hue by 15 degrees and increase lightness
+  h = (h + 10) % 360;
+  l = Math.min(l + 10, 100);
+
+  return HSLToHex(h, s, l);
+}
+
+export const getCustomDays = (days: string[]) => {
+  return days.map((day) => {
+    switch (day.toLowerCase()) {
+      case "monday":
+        return "Mon";
+      case "tuesday":
+        return "Tue";
+      case "wednesday":
+        return "Wed";
+      case "thursday":
+        return "Thu";
+      case "friday":
+        return "Fri";
+      case "saturday":
+        return "Sat";
+      case "sunday":
+        return "Sun";
+      default:
+        return "All";
+    }
+  });
+};
+
+export const getAvailabilityText = (when: string, customDays: string[]) => {
+  switch (when?.toLowerCase()) {
+    case "custom":
+      return getCustomDays(customDays);
+    case "allthetime":
+      return ["All Days"];
+    case "weekdays":
+      return ["Week Days"];
+    case "weekends":
+      return ["Week Ends"];
+    default:
+      return ["All Days"];
+  }
+};
+
+export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
+
+export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
+  let discountValue = 0;
+
+  if (
+    coupon?.config?.discountType?.toLowerCase() === "percentage" &&
+    coupon?.config?.upto
+  ) {
+    discountValue = Math.round((coupon?.config?.value / 100) * billValue);
+    if (discountValue > coupon?.config?.upto) {
+      discountValue = coupon?.config?.upto;
+    }
+  } else if (coupon?.config?.discountType?.toLowerCase() === "percentage") {
+    discountValue = Math.round((coupon?.config?.value / 100) * billValue);
+  } else {
+    discountValue = coupon?.config?.value;
+  }
+
+  return { discountValue, resetClaimedCoinz: claimedCoinz > 0 };
+};
+
+// Function to calculate discount
+const calculateDiscountValue = (
+  billValue,
+  discountValue,
+  discountType,
+  upto,
+) => {
+  let discount = 0;
+  if (discountType?.toLowerCase() === "percentage") {
+    discount = (billValue * discountValue) / 100;
+    // Handle edge case for 100% discount on a bill value of 0
+    if (billValue === 0 && discountValue === 100) {
+      discount = discountValue;
+    }
+  } else if (discountType?.toLowerCase() === "amount") {
+    discount = discountValue;
+  }
+  if (upto !== undefined) {
+    discount = Math.min(discount, upto);
+  }
+  return discount;
+};
+
+// Function to get the best coupon suggestion
+export const getBestCouponSuggestion = (
+  availedCoupon,
+  missingOutCouponz,
+  billValue,
+) => {
+  const availedDiscount = calculateDiscountValue(
+    billValue,
+    availedCoupon?.config?.value || 0,
+    availedCoupon?.config?.discountType || "percentage",
+    availedCoupon?.config?.upto,
+  );
+
+  let bestCoupon: Coupon = null;
+  let bestDiscount = availedDiscount;
+  let additionalAmount = Number.POSITIVE_INFINITY;
+
+  for (const coupon of missingOutCouponz) {
+    const couponBillValue = coupon?.conditions?.billValue || 0;
+    let currentAdditionalAmount = 0;
+    let effectiveBillValue = billValue;
+
+    if (couponBillValue > billValue) {
+      currentAdditionalAmount = couponBillValue - billValue;
+      effectiveBillValue = couponBillValue;
+    }
+
+    const couponDiscount = calculateDiscountValue(
+      effectiveBillValue,
+      coupon?.config?.value || 0,
+      coupon?.config?.discountType || "percentage",
+      coupon?.config?.upto,
+    );
+
+    // Prioritize higher discounts and handle edge cases
+    if (
+      couponDiscount > bestDiscount ||
+      (couponDiscount === bestDiscount &&
+        currentAdditionalAmount < additionalAmount)
+    ) {
+      bestCoupon = coupon;
+      bestDiscount = couponDiscount;
+      additionalAmount = currentAdditionalAmount;
+    }
+  }
+
+  return { bestCoupon, bestDiscount, additionalAmount };
+};

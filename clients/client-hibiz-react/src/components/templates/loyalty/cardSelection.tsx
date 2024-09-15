@@ -306,7 +306,6 @@ const MemoCardSelection = () => {
           title="Loyalty CardZ"
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
-          isIconBusinessShow={false}
         />
       </article>
       <section className="bg-white md:bg-transparent lg:mt-[2rem] lg:bg-transparent h-[18rem] items-center lg:justify-center flex flex-col lg:flex-row gap-4 lg:gap-[4rem] lg:mx-[6rem]">
@@ -380,7 +379,6 @@ const MemoCardSelection = () => {
               title={dynamicHeadingForModal()}
               onBack={goToPreviousPage}
               leftIcon={<FaArrowLeft />}
-              isIconBusinessShow={false}
               rightButton={<div className="font-semibold">{step()}</div>}
             />
             <Suspense fallback={<LoadingSpinner />}>

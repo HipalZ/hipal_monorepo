@@ -1,7 +1,8 @@
-"use client"
+"use client";
 import { memo } from "react";
-import { ToastContainer, Zoom } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer, Zoom } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const ToastContainers = () => {
   return (
     <ToastContainer
@@ -14,8 +15,8 @@ const ToastContainers = () => {
       closeButton={false}
       stacked
     />
-  )
+  );
 };
 
-const MemoToastContainers = memo(ToastContainers)
+const MemoToastContainers = memo(ToastContainers);
 export default MemoToastContainers;

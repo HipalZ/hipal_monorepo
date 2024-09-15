@@ -27,6 +27,7 @@
     "crypto": "^1.0.1",
     "fcm-node": "^1.6.1",
     "formidable": "^3.5.1",
+    "html-to-image": "^1.11.11",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.0.0",
     "nanoid": "^5.0.7",
