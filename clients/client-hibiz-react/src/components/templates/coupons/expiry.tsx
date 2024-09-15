@@ -7,8 +7,9 @@ import PopUp from "@/components/atom/popUp";
 import BottomButton from "@/components/atom/bottomButton";
 import { cn } from "@hi/common";
 import DatePicker from "react-datepicker";
-import { addDays, endOfMonth } from "date-fns";
+import { addDays, endOfMonth, differenceInDays } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 
 const expiryArray = [
   { id: 1, text: "No Expiration" },
@@ -39,6 +40,7 @@ const MemoExpiry = () => {
     overAllLimit,
     setOverAllLimit,
     setSelectedPage,
+    couponId,
   } = useCouponsStore((s) => ({
     expiryModal: s.expiryModal,
     setExpiryModal: s.setExpiryModal,
@@ -53,9 +55,38 @@ const MemoExpiry = () => {
     overAllLimit: s.overAllLimit,
     setOverAllLimit: s.setOverAllLimit,
     setSelectedPage: s.setSelectedPage,
+    couponId: s.couponId,
   }));
 
   const [error, setError] = useState<string | null>(null);
+
+  const getExpiryMessage = useCallback(() => {
+    const now = new Date().getTime();
+
+    if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit > 0) {
+      return `Expires after ${overAllLimit} claims`;
+    }
+
+    if (couponStartDate === 0 && couponEndDate > 0) {
+      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
+      return `Expires in ${daysLeft} days${
+        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
+      }`;
+    }
+
+    if (couponStartDate > 0 && couponEndDate > 0) {
+      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
+      return `Expires in ${daysLeft} days${
+        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
+      }`;
+    }
+
+    if (overAllLimit > 0) {
+      return `Expires after ${overAllLimit} claims`;
+    }
+
+    return "Expires: All the time";
+  }, [couponStartDate, couponEndDate, overAllLimit]);
 
   const openModal = useCallback(() => {
     setExpiryModal(true);
@@ -139,6 +170,11 @@ const MemoExpiry = () => {
       (overAllLimit <= 0 || !overAllLimit));
 
   const goNext = useCallback(() => {
+    if ((!expiryCoupon || expiryCoupon === "Select Expiration") && !couponId) {
+      toast.error("Please select an expiry option");
+      return;
+    }
+
     if (
       expiryCoupon ===
         "After Specific Use (e.g., Expires after it’s used 10 times)" &&
@@ -146,13 +182,20 @@ const MemoExpiry = () => {
     ) {
       return setError("Please enter the number of claims");
     }
+
     setSelectedPage("ELIGIBILITY");
-  }, [expiryCoupon, overAllLimit]);
+  }, [expiryCoupon, overAllLimit, couponId]);
 
   return (
     <section className="pb-[6rem] overflow-hidden flex flex-col lg:flex-row gap-6">
-      <Coupon />
-      <section className="mx-6 mt-[2rem] lg:mt-4 flex-1">
+      <section className="flex-1">
+        <Coupon />
+        <center className="mt-4 truncate md:text-lg font-bol text-[#FB585B]">
+          {getExpiryMessage() || "No expiration details available"}
+        </center>
+      </section>
+
+      <section className="flex-1 mx-6 lg:mt-4">
         <h3>Set Coupon Expiry</h3>
         <Background>
           <button
@@ -185,7 +228,6 @@ const MemoExpiry = () => {
           </>
         )}
       </section>
-
       {expiryModal && (
         <PopUp show={expiryModal} onClose={closeModal} width="w-[28rem]">
           <article className=" h-[80dvh] overflow-auto">

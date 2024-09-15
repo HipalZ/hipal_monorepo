@@ -1,5 +1,5 @@
 import useCouponsStore from "@/components/store/useCouponsStore";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import Confetti from "@/assets/Confetti.png";
 
 const MemoCoupon = () => {
@@ -27,11 +27,32 @@ const MemoCoupon = () => {
     overAllLimit: s.overAllLimit,
   }));
 
-  const currentDate = couponStartDate || new Date().getTime();
-  const remainingDays =
-    couponEndDate && couponEndDate > currentDate
-      ? Math.ceil((couponEndDate - currentDate) / (1000 * 60 * 60 * 24))
-      : 0;
+  const getExpiryMessage = useCallback(() => {
+    const now = new Date().getTime();
+    if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit === 0) {
+      return "Expires: All the time";
+    }
+
+    if (couponStartDate === 0 && couponEndDate > 0) {
+      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
+      return `Expires in ${daysLeft} days ${
+        overAllLimit > 0 ? `or after ${overAllLimit} claims` : ""
+      }`;
+    }
+
+    if (couponStartDate > 0 && couponEndDate > 0) {
+      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
+      return `Expires in ${daysLeft} days ${
+        overAllLimit > 0 ? `or after ${overAllLimit} claims` : ""
+      }`;
+    }
+
+    if (overAllLimit > 0) {
+      return ` ${overAllLimit > 0 ? `After ${overAllLimit} claims` : ""}`;
+    }
+
+    return null;
+  }, [couponStartDate, couponEndDate, overAllLimit]);
 
   return (
     <article className="w-[90%] flex-1 max-w-[25rem] lg:bg-white lg:h-[12rem] p-4 rounded-xl ml-6 flex justify-center items-center -rotate-6 mt-12">
@@ -85,27 +106,10 @@ const MemoCoupon = () => {
         )}
 
         <h3 className="absolute top-[5.5rem] left-4 text-sm">
-          {expiryCoupon === "No Expiration"
-            ? "No Expiration"
-            : expiryCoupon ===
-                "After X Days (e.g., Expires 30 days after activation)"
-              ? `Expires in ${remainingDays} days`
-              : expiryCoupon ===
-                  "After Specific Use (e.g., Expires after it’s used 10 times)"
-                ? `Expires after ${overAllLimit || 0} uses`
-                : expiryCoupon ===
-                    "End of Month (e.g., Expires at the end of the current week or month)"
-                  ? `Expires in ${remainingDays} days`
-                  : expiryCoupon ===
-                      "Custom Expiration (e.g., Start and end date)"
-                    ? couponEndDate
-                      ? `Expires in ${remainingDays} days`
-                      : "Select expiry date"
-                    : "Select Expiration"}
+          {getExpiryMessage()}
           {overAllLimit > 0 &&
             expiryCoupon !==
-              "After Specific Use (e.g., Expires after it’s used 10 times)" &&
-            ` & after ${overAllLimit} uses`}
+              "After Specific Use (e.g., Expires after it’s used 10 times)"}
         </h3>
 
         {Array(15)

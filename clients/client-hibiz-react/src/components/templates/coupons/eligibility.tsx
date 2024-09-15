@@ -97,7 +97,7 @@ const MemoEligibility = () => {
         {!couponForEveryOne && (
           <article className="mt-4">
             <h3>
-              Users
+              Users &nbsp;
               {selectedUserIds?.length > 0 ? selectedUserIds?.length : ""}
             </h3>
             <Background>
@@ -106,7 +106,7 @@ const MemoEligibility = () => {
                 onClick={() => openModal("people")}
                 className="w-full bg-[#EFEFF3] rounded-full py-1"
               >
-                Add Peoples
+                Add Peoples &nbsp;
               </button>
             </Background>
           </article>

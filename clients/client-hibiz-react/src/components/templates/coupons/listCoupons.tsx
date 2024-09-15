@@ -27,6 +27,12 @@ const MemoListCoupons = () => {
     setCouponStartDate,
     setExpiryClaimLimitValue,
     setCouponForEveryOne,
+    setPromoteOnBill,
+    setPromote,
+    setIsPublish,
+    setOverAllLimit,
+    setSelectedGroupIds,
+    setSelectedUserIds,
   } = useCouponsStore();
 
   const storeCouponInfo = (coupon: any) => {
@@ -40,8 +46,13 @@ const MemoListCoupons = () => {
     setMinimumBillAmount(coupon?.conditions?.billValue);
     setExpiryAfterGrabbed(coupon?.conditions?.expiryAfterGrabbed);
     setTermsAndConditions(coupon?.conditions?.tc);
+    setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
     setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
-    setCouponPrice(coupon?.config?.value);
+    setCouponPrice(
+      coupon.config.discountType === "PERCENTAGE"
+        ? coupon?.config?.upto
+        : coupon?.config?.value,
+    );
     setCouponStartDate(coupon?.conditions?.couponStartDate);
     setCouponEndDate(coupon?.conditions?.couponEndDate);
     setExpiryClaimLimitValue(
@@ -54,6 +65,11 @@ const MemoListCoupons = () => {
     setAllowLateNight(
       coupon?.conditions?.availability?.allowLateNight || false,
     );
+    setIsPublish(coupon?.isPublish);
+    setPromote(coupon?.promote);
+    setPromoteOnBill(coupon?.promoteOnBill);
+    setSelectedGroupIds(coupon?.conditions?.eligibleUser?.groupIds || []);
+    setSelectedUserIds(coupon?.conditions?.eligibleUser?.userIds || []);
     setSelectedPage("INFO");
   };
 
@@ -62,12 +78,12 @@ const MemoListCoupons = () => {
   }
 
   return (
-    <div className="flex flex-col flex-wrap gap-6 mx-4 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
+    <div className="flex overflow-hidden flex-col flex-wrap gap-6 mx-4 lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
       {coupons?.length ? (
         coupons.map((coupon: any) => (
           <div
             key={coupon._id}
-            className="relative w-full md:w-full lg:max-w-[19.5rem]"
+            className="relative w-full md:w-full lg:max-w-[19.25rem]"
             onClick={() => storeCouponInfo(coupon)}
           >
             <article
