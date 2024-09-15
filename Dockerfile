@@ -2,6 +2,7 @@
 # FROM oven/bun:1.1.8-alpine AS base
 # FROM --platform=$BUILDPLATFORM oven/bun:1.0.31-alpine AS base
 # FROM oven/bun:1.0.31 AS base-server
+# FROM oven/bun:1.0.31 AS base-client
 FROM --platform=$BUILDPLATFORM node:lts-slim AS base
 RUN npm i -g bun
 COPY  bun.lockb /app/bun.lockb
