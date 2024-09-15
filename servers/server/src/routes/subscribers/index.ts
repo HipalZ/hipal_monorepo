@@ -248,7 +248,7 @@ const subsCriberRouter = new Hono()
 
     return c.json(
       {
-        message: "Bulk subscribers created successfully",
+        message: "Bulk subscribers created successfullyy",
         err: false,
         data: {},
       },

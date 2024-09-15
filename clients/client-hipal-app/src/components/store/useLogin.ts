@@ -44,7 +44,6 @@ interface IUseLogin {
   subscribeModal: boolean;
   setSubscribeModal: (d: boolean) => void;
   setInvoiceUrl: (d: string) => void;
-
   // review popup
   reviewPopup: boolean;
   setReviewPopup: (d: boolean) => void;

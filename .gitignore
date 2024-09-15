@@ -4,6 +4,3 @@ infra/*
 servers/server/.envs
 Dockerfile
 .github/*
-
-
-

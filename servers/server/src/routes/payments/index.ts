@@ -789,7 +789,10 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
+
         console.log("Invalid body", bodyResult);
+
+      
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore
