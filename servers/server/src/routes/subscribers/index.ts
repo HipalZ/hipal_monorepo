@@ -146,6 +146,7 @@ const subsCriberRouter = new Hono()
             err: false,
             data: subscriber,
             rewards: userReward?.rewards || 0,
+            googleReviewCount: userReward?.googleReviewCount || 0,
           },
           200,
         );

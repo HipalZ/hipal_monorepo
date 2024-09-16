@@ -17,4 +17,9 @@ export const GoogleAuthUsersAttrs = z.object({
   authorName: z.string().min(1).max(100),
 });
 
+export const GoogleReviewsAttr = z.object({
+  loyaltyId: ObjectIdSchema,
+  userId: ObjectIdSchema,
+});
+
 export type GoogleAuthUserType = z.infer<typeof GoogleAuthUsersAttrs>;

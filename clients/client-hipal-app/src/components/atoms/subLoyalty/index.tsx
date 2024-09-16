@@ -74,6 +74,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      console.log("user", user);
       if (user !== undefined) {
         const res = await apiRpc.reviews.storeGoogleAuthUser.$post({
           json: {
