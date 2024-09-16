@@ -407,7 +407,7 @@ const couponAnalyticsRouter = new Hono()
       //logic to increase the count of the link
 
       return c.redirect(
-        `http://localhost:3001/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `http://localhost:3000/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )
