@@ -33,12 +33,16 @@ const MemoListCoupons = () => {
     setOverAllLimit,
     setSelectedGroupIds,
     setSelectedUserIds,
+    setIsActive,
+    setCouponImage,
+    setLinks,
   } = useCouponsStore();
 
   const storeCouponInfo = (coupon: any) => {
-    console.log(coupon);
     setCouponId(coupon?._id);
+    setLinks(coupon?.links);
     setCouponName(coupon?.name);
+    setCouponImage(coupon?.image);
     setCouponType(coupon?.config?.discountType);
     setCouponDiscount(coupon?.config?.value);
     setBgColor(coupon?.bgColour);
@@ -48,6 +52,7 @@ const MemoListCoupons = () => {
     setTermsAndConditions(coupon?.conditions?.tc);
     setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
     setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
+    setIsActive(coupon?.isActive);
     setCouponPrice(
       coupon.config.discountType === "PERCENTAGE"
         ? coupon?.config?.upto
@@ -78,7 +83,7 @@ const MemoListCoupons = () => {
   }
 
   return (
-    <div className="flex overflow-hidden flex-col flex-wrap gap-6 mx-4 lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
+    <div className="flex flex-col flex-wrap gap-6 mx-4 lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
       {coupons?.length ? (
         coupons.map((coupon: any) => (
           <div

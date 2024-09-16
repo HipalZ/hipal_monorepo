@@ -18,15 +18,18 @@ import { cn } from "@hi/common";
 import Custom from "@/components/templates/coupons/custom";
 import Terms from "@/components/templates/coupons/terms";
 import Info from "@/components/templates/coupons/info";
+import { useDeleteCoupon } from "@/hooks/useCoupon";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const Coupons = () => {
   const businessData = useBusinessData((s) => s.businessData);
-  const { selectedPage, setSelectedPage, bgColor, resetFunction } =
+  const { selectedPage, setSelectedPage, couponId, bgColor, resetFunction } =
     useCouponsStore((s) => ({
       selectedPage: s.selectedPage,
       setSelectedPage: s.setSelectedPage,
       bgColor: s.bgColor,
       resetFunction: s.resetCouponState,
+      couponId: s.couponId,
     }));
 
   const navigate = useNavigate();
@@ -107,6 +110,14 @@ const Coupons = () => {
     }
   }, [selectedPage, businessData?._id]);
 
+  const { mutate: deleteCoupon, isPending } = useDeleteCoupon();
+
+  const deleteCouponFunc = () => {
+    if (couponId) {
+      deleteCoupon(couponId);
+    }
+  };
+
   const rightButton = useCallback(() => {
     switch (selectedPage) {
       case "MANAGE":
@@ -123,11 +134,24 @@ const Coupons = () => {
         return <span className="text-xl font-semibold">4/5</span>;
       case "GRABBING":
         return <span className="text-xl font-semibold">5/5</span>;
+      case "INFO":
+        return (
+          <button
+            type="button"
+            onClick={deleteCouponFunc}
+            className="px-4 py-2 text-white bg-red-600 rounded-2xl"
+          >
+            Delete
+          </button>
+        );
       default:
         break;
     }
   }, [selectedPage]);
 
+  if (isPending) {
+    return <LoadingSpinner />;
+  }
   return (
     <main className="relative">
       <section

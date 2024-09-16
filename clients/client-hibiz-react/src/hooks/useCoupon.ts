@@ -82,3 +82,65 @@ export const useDeleteCoupon = () => {
 
   return { mutate: mutateAsync, isPending };
 };
+
+export const useSaveCoupon = () => {
+  const resetFunction = useCouponsStore((s) => s.resetCouponState);
+  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await apiRpc.couponz.$post({
+        json: payload,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (!data.err) {
+        toast.success("Coupon saved successfully!");
+        setSelectedPage("MANAGE");
+        resetFunction();
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to save coupon!");
+      console.error("Error in saving coupon:", error);
+    },
+  });
+
+  return { saveCoupon: mutateAsync, isPending };
+};
+
+export const useEditCoupon = () => {
+  const resetFunction = useCouponsStore((s) => s.resetCouponState); // Reset the coupon state after success
+  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage); // Redirect to another page after success
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async ({
+      payload,
+      couponId,
+    }: { payload: any; couponId: string }) => {
+      const response = await apiRpc.couponz[":couponId"].$put({
+        param: {
+          couponId,
+        },
+        json: payload,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (!data.err) {
+        toast.success("Coupon updated successfully!");
+        setSelectedPage("MANAGE");
+        resetFunction();
+      } else {
+        toast.error(data.message || "Failed to update coupon!");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to update coupon!");
+      console.error("Error in updating coupon:", error);
+    },
+  });
+
+  return { editCoupon: mutateAsync, isPending };
+};

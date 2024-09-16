@@ -2,10 +2,12 @@ import useCouponsStore from "@/components/store/useCouponsStore";
 import Coupon from "./coupon";
 import Background from "@/components/atom/feildBackground";
 import BottomButton from "@/components/atom/bottomButton";
-import { useDeleteCoupon } from "@/hooks/useCoupon";
+import { memo, useCallback } from "react";
+import toast from "react-hot-toast";
+import { useEditCoupon } from "@/hooks/useCoupon";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
-const Info = () => {
+const MemoInfo = () => {
   const {
     couponName,
     couponType,
@@ -17,15 +19,53 @@ const Info = () => {
     couponEndDate,
     expiryClaimLimitValue,
     couponForEveryOne,
+    setSelectedPage,
+    selectedPage,
+    isActive,
+    isPublish,
     couponId,
+    links,
   } = useCouponsStore();
 
-  const { mutate: deleteCoupon, isPending } = useDeleteCoupon();
+  const { editCoupon, isPending } = useEditCoupon();
 
-  const deleteCouponFunc = () => {
-    if (couponId) {
-      deleteCoupon(couponId);
+  const handlePause = useCallback(
+    async (isPublish: boolean) => {
+      if (!couponId) {
+        return toast.error("Coupon ID is missing. Cannot pause.");
+      }
+
+      try {
+        await editCoupon({
+          payload: { isPublish: isPublish },
+          couponId,
+        });
+        toast.success("Coupon paused successfully.");
+      } catch (error) {
+        toast.error("Failed to pause coupon.");
+        console.error("Error pausing coupon:", error);
+      }
+    },
+    [couponId, editCoupon],
+  );
+
+  const EditCoupon = useCallback(() => {
+    if (isActive) {
+      return toast.error("Cannot edit active coupon");
     }
+    setSelectedPage("DETAILS");
+  }, [selectedPage, isActive]);
+
+  const copyToClipboard = (link: string) => {
+    navigator.clipboard.writeText(link).then(
+      () => {
+        toast.success("Link copied to clipboard");
+      },
+      (err) => {
+        toast.error("Failed to copy the link");
+        console.error("Failed to copy the link: ", err);
+      },
+    );
   };
 
   if (isPending) {
@@ -59,6 +99,24 @@ const Info = () => {
               </button>
             </Background>
           </section>
+          {links.length > 0 && (
+            <section className="mx-4 mt-6">
+              <h2>Links</h2>
+              <Background>
+                <ul className="pl-4 list-disc">
+                  {links.map((link, index) => (
+                    <li
+                      key={index}
+                      className="mb-2 text-blue-500 underline cursor-pointer"
+                      onClick={() => copyToClipboard(link.link)} // Copy link to clipboard on click
+                    >
+                      {link.channelId.name}
+                    </li>
+                  ))}
+                </ul>
+              </Background>
+            </section>
+          )}
         </section>
         <section className="flex-1 lg:mt-6">
           <Background className="mx-4 mt-4">
@@ -188,14 +246,13 @@ const Info = () => {
       </section>
       <BottomButton
         buttons={[
-          // {
-          //   text: "Pause",
-          //   onClick: () => console.log("Pause"),
-          // },
           {
-            text: "Delete",
-            onClick: deleteCouponFunc,
-            delete: true,
+            text: isPublish ? "Pause" : "Activate",
+            onClick: () => handlePause(!isPublish),
+          },
+          {
+            text: "Edit",
+            onClick: EditCoupon,
           },
         ]}
         fixed
@@ -203,5 +260,7 @@ const Info = () => {
     </>
   );
 };
+
+const Info = memo(MemoInfo);
 
 export default Info;

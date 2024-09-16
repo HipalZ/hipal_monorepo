@@ -146,7 +146,15 @@ interface ICoupon {
   allowLateNight: boolean;
   setAllowLateNight: (value: boolean) => void;
 
+  isActive: boolean;
+  setIsActive: (value: boolean) => void;
+
   resetCouponState: () => void;
+
+  links: { channelId: { _id: string; name: string }; link: string }[]; // Add links
+  setLinks: (
+    links: { channelId: { _id: string; name: string }; link: string }[],
+  ) => void;
 }
 
 const useCouponsStore = create<ICoupon>((set) => ({
@@ -284,10 +292,19 @@ const useCouponsStore = create<ICoupon>((set) => ({
   allowLateNight: false,
   setAllowLateNight: (value: boolean) => set(() => ({ allowLateNight: value })),
 
+  isActive: false,
+  setIsActive: (value: boolean) => set(() => ({ isActive: value })),
+
+  links: [],
+  setLinks: (
+    links: { channelId: { _id: string; name: string }; link: string }[],
+  ) => set(() => ({ links: links })),
+
   resetCouponState: () =>
     set(() => ({
       couponName: "",
       couponType: "PERCENTAGE",
+      couponId: "",
       couponPrice: 0,
       couponPercentage: 0,
       couponDiscount: 0,
