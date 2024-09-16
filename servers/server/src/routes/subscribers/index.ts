@@ -138,7 +138,7 @@ const subsCriberRouter = new Hono()
         const userReward = await UserReward.findOne({
           userId,
           loyaltyId,
-        }).select("rewards");
+        }).select("rewards googleReviewCount");
 
         return c.json(
           {
