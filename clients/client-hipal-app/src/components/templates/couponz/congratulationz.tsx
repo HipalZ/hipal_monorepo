@@ -107,7 +107,7 @@ const MemoCongratulationz = () => {
       <button
         type="button"
         onClick={handleSeeAllCouponz}
-        className="absolute w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
+        className="bg-black bottom_btn"
       >
         See All Couponz
       </button>

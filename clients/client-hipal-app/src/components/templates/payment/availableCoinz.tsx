@@ -100,7 +100,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
               onClick={replaceLoyalty}
             >
               <IoCheckmark className="w-4 h-4 mr-2" />
-              Remove
+              Yes
             </button>
             <button
               type="button"

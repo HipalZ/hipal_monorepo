@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BiArrowBack } from "react-icons/bi";
@@ -12,21 +12,55 @@ import {
   getAvailabilityText,
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
+import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import MemoAddAmountModal from "@/components/molecules/bottomButton/addAmountModal";
+import useUserCouponz from "@/components/hooks/useUserCouponz";
+import { useLogin } from "@/components/store/useLogin";
 
 const MemoSeeMyCouponz = () => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
+  const { userDetails } = useLogin((s) => ({
+    userDetails: s.userDetails,
+  }));
+  const { businessDetails } = useBusinessDetails((s) => ({
+    businessDetails: s.businessDetails,
+  }));
+  const { userCouponz, error, isLoading } = useUserCouponz(
+    businessDetails?.businessId,
+    userDetails?._id,
+  );
+  const [openBillModal, setOpenBillModal] = useState(false);
   const logoUrl = useBusinessDetails(
     (state) => state?.businessDetails?.logoUrl,
   );
 
-  const { couponz } = useCouponz((s) => ({
-    couponz: s.couponz,
+  const { selectedCoupon } = useCouponz((s) => ({
+    selectedCoupon: s.selectedCoupon,
   }));
 
   const redirectExplore = useCallback(() => {
     router.push(`/${customLink}/explore`);
   }, [customLink]);
+
+  const openPaymentModal = useCallback(() => {
+    setOpenBillModal((prev) => !prev);
+  }, [openBillModal]);
+
+  const sortedCouponz = useMemo(() => {
+    if (!userCouponz) return [];
+    const selected = userCouponz.find(
+      (coupon) => coupon._id === selectedCoupon?._id,
+    );
+    const others = userCouponz.filter(
+      (coupon) => coupon._id !== selectedCoupon?._id,
+    );
+    return selected ? [selected, ...others] : userCouponz;
+  }, [userCouponz, selectedCoupon]);
+
+  if (isLoading) {
+    return <center className="bg-white">Loading...</center>;
+  }
 
   return (
     <>
@@ -49,23 +83,21 @@ const MemoSeeMyCouponz = () => {
         </section>
         <br />
         <br />
-        {couponz && couponz?.length > 0 ? (
-          couponz?.map((coupon) => {
-            const startTime = useMemo(
-              () =>
-                formatTime(coupon?.conditions?.availability?.startTime || 1),
-              [coupon?.conditions?.availability?.startTime],
+        {sortedCouponz && sortedCouponz.length > 0 ? (
+          sortedCouponz.map((coupon) => {
+            const startTime = formatTime(
+              coupon?.conditions?.availability?.startTime || 1,
             );
 
-            const endTime = useMemo(
-              () =>
-                formatTime(coupon?.conditions?.availability?.endTime || 23.5),
-              [coupon?.conditions?.availability?.endTime],
+            const endTime = formatTime(
+              coupon?.conditions?.availability?.endTime || 23.5,
             );
             return (
               <section
                 key={coupon?._id}
-                className="flex max-h-full m-4 rounded-2xl inter"
+                className={`flex max-h-full m-4 rounded-2xl inter ${
+                  coupon?._id === selectedCoupon?._id ? "shake" : ""
+                }`}
               >
                 <picture className="max-w-[8.5rem] w-full shrink-0 shadow-2xl rounded-2xl">
                   <Image
@@ -73,13 +105,27 @@ const MemoSeeMyCouponz = () => {
                     alt="bp"
                     width={200}
                     height={200}
-                    className="object-center w-full h-full shadow-2xl aspect-square rounded-l-2xl"
+                    style={{
+                      objectFit: "contain",
+                    }}
+                    className="bg-[#CACACA] w-full h-full shadow-2xl aspect-square rounded-l-2xl"
                   />
                 </picture>
                 <article className="px-3 py-2 text-black bg-white shadow-2xl custom-size rounded-r-2xl">
-                  <h1 className="px-1 text-lg leading-none">{coupon?.name}</h1>
+                  <article className="flex items-start justify-between">
+                    <h1 className="px-1 text-sm leading-none">
+                      {coupon?.name}
+                    </h1>
+                    <button
+                      type="button"
+                      onClick={openPaymentModal}
+                      className="text-sm shrink-0 text-[#f13f8a] font-semibold leading-none"
+                    >
+                      Use Now
+                    </button>
+                  </article>
                   <div className="relative z-10 grid grid-cols-2 gap-4 px-1 mt-4">
-                    <div className="flex flex-col items-start space-y-1">
+                    <div className="flex flex-col items-start w-full space-y-1">
                       <h3 className="text-[0.6rem] text-gray-500">
                         Min. Bill Amount
                       </h3>
@@ -134,6 +180,15 @@ const MemoSeeMyCouponz = () => {
         >
           Go to explore
         </button>
+        {openBillModal && (
+          <MemoBottomPopUp
+            show={openBillModal}
+            onClose={openPaymentModal}
+            linearGradTheme
+          >
+            <MemoAddAmountModal />
+          </MemoBottomPopUp>
+        )}
       </main>
     </>
   );

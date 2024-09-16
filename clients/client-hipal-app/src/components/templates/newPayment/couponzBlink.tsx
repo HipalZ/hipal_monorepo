@@ -15,6 +15,7 @@ const MemoCouponzBlink = () => {
   const { couponz } = useCouponz((s) => ({
     couponz: s.couponz,
   }));
+  if (!couponz || couponz?.length === 0) return null;
   return (
     <article
       className="h-[400px] w-full rounded-2xl overflow-hidden max-w-[95%] mx-auto"

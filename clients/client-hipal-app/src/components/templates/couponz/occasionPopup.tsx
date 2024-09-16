@@ -102,26 +102,26 @@ const MemoBirthdayPopup = () => {
 
       // Determine the number of days in the newly selected month and year
       const daysInMonth = new Date(
-        parseInt(newState.year),
-        parseInt(newState.month),
+        Number.parseInt(newState.year),
+        Number.parseInt(newState.month),
         0,
       ).getDate();
 
       // If the currently selected day is greater than the number of days in the new month, reset to the max day of that month
-      if (parseInt(prev.day) > daysInMonth) {
+      if (Number.parseInt(prev.day) > daysInMonth) {
         newState.day = `${daysInMonth}`;
       }
 
       // Handle month and year specific updates for options
       if (name === "month" || name === "year") {
         const newMonthOptions =
-          parseInt(newState.year) === currentYear
+          Number.parseInt(newState.year) === currentYear
             ? optionGroups.month.slice(0, currentMonth)
             : optionGroups.month;
 
         const newDayOptions =
-          parseInt(newState.year) === currentYear &&
-          parseInt(newState.month) === currentMonth
+          Number.parseInt(newState.year) === currentYear &&
+          Number.parseInt(newState.month) === currentMonth
             ? Array.from({ length: currentDay }, (_, i) => ({
                 value: `${i + 1}`,
                 label: `${i + 1}`,

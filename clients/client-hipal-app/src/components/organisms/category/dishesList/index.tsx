@@ -1,6 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { type FC, memo, useEffect, useMemo, useRef, useState } from "react";
+import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -12,22 +12,9 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const {
-    isActiveDishType,
-    isActiveCategory,
-    observerActive,
-    setActiveCategory,
-    setActiveParentCategory,
-    setActiveParentCategoryName,
-    setObserverActive,
-  } = useActiveClass((state) => ({
+  const { isActiveDishType, isActiveCategory } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
-    setActiveCategory: state.setActiveCategory,
-    setActiveParentCategory: state.setActiveParentCategory,
-    setActiveParentCategoryName: state.setActiveParentCategoryName,
-    observerActive: state.observerActive,
-    setObserverActive: state.setObserverActive,
   }));
 
   const subTypes = useMemo(() => {

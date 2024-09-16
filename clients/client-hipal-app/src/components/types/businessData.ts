@@ -3,6 +3,7 @@ import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 
 export interface IBiz {
+  placeUrl: string;
   googleReviewLink: string;
   logoUrl: string;
   email: string;
@@ -512,11 +513,11 @@ export interface CouponConditions {
 }
 
 export interface Coupon {
-  cashbackAvailable: any;
-  image: any;
-  bgColour: ClassValue;
-  availability: any;
-  requiredFields: any;
+  cashbackAvailable: boolean;
+  image: string;
+  bgColour: string;
+  availability: boolean;
+  requiredFields: Array<string>;
   promotInExplore: boolean;
   _id: string;
   name: string;
@@ -535,4 +536,12 @@ export interface CouponResponse {
   message: string;
   err: boolean;
   data: Coupon[];
+}
+
+export interface IResponse {
+  message: string;
+  err: boolean;
+  data: any;
+  rewards?: number;
+  googleReviewCount?: number;
 }

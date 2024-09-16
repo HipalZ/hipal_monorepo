@@ -8,11 +8,13 @@ const BottomPopUp = ({
   show,
   onClose,
   hide,
+  linearGradTheme,
 }: {
   children: React.ReactNode;
   show: boolean;
   onClose: () => void;
   hide?: boolean;
+  linearGradTheme?: boolean;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -36,14 +38,11 @@ const BottomPopUp = ({
               onClick={onClose}
             >
               <animated.div
-                style={{
-                  ...styles,
-                  background:
-                    "linear-gradient(0deg, #B79DFF 0.47%, #000000 70%)",
-                }}
+                style={styles}
                 className={cn(
                   "relative w-full max-w-md shadow-md",
                   !hide && "rounded-t-[1rem]",
+                  linearGradTheme ? "background-gradient" : "bg-base-200",
                 )}
                 onClick={(e) => e.stopPropagation()}
               >

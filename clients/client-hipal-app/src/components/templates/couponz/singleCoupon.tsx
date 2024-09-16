@@ -29,18 +29,19 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
+  const { couponId, channelId } = useParams();
   const router = useRouter();
   const { displayTermsAndConditions, openTc } = useCouponTemp((s) => ({
     displayTermsAndConditions: s.displayTermsAndConditions,
     openTc: s.openTc,
   }));
-  const { setCurrentPage, setCouponOccasion, setDirection, selectedCoupon } =
-    useCouponz((s) => ({
+  const { setCurrentPage, setCouponOccasion, selectedCoupon } = useCouponz(
+    (s) => ({
       setCurrentPage: s.setCurrentPage,
       setCouponOccasion: s.setCouponOccasion,
-      setDirection: s.setDirection,
       selectedCoupon: s.selectedCoupon,
-    }));
+    }),
+  );
 
   const { logoUrl, name, businessId } = useBusinessDetails((s) => ({
     logoUrl: s.businessDetails?.logoUrl,
@@ -48,12 +49,20 @@ const MemoCouponz = () => {
     businessId: s.businessDetails?.businessId,
   }));
 
-  const { userDetails } = useLogin((s) => ({
+  const { userDetails, isLogin, setUrlFrom, setDirection } = useLogin((s) => ({
     userDetails: s.userDetails,
+    isLogin: s.isLogin,
+    setUrlFrom: s.setUrlFrom,
+    setDirection: s.setDirection,
   }));
 
   // check the coupon grabbed or not for the dob and special day
   const grabCouponz = useCallback(async () => {
+    if (!isLogin && !!channelId && !!couponId) {
+      setDirection("couponz");
+      setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
+      return router.push(`/${customLink}/user/signup/`);
+    }
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
     const requiresDobOrSpecialDay =
       requiredFields.includes("dob") || requiredFields.includes("specialday");
@@ -79,9 +88,7 @@ const MemoCouponz = () => {
           setCurrentPage(ICouponPage.CONGRATULATIONZ);
         }
       } else if (response.status === 409) {
-        toast.error("Coupon already grabbed");
-        setCurrentPage(ICouponPage.SINGLECOUPON);
-        router.push(`/${customLink}/explore`);
+        setCurrentPage(ICouponPage.SEEMYCOUPONZ);
       }
     } else {
       setCurrentPage(ICouponPage.CONGRATULATIONZ);
@@ -240,28 +247,28 @@ const MemoCouponz = () => {
             />
           </div>
         </div>
+        <center
+          onClick={() => displayTermsAndConditions(openTc)}
+          onKeyDown={() => displayTermsAndConditions(openTc)}
+          className="text-black fixed w-full text-base font-bold underline opacity-75 mt-4 underline-offset-4 max-w-[30rem]"
+        >
+          View Terms and conditions
+        </center>
         <div
           className="absolute w-3/4 h-8 transform -translate-x-1/2 bg-black opacity-75 left-1/2 -bottom-5"
           style={{ filter: "blur(30px)" }}
         />
       </center>
-      <picture className="absolute w-full h-[50%] custom-curved-line">
+      <picture className="absolute w-full h-[40%] custom-curved-line">
         <Image src={curvedLine} alt="curvedLine" className="w-full" />
       </picture>
       <picture className="absolute scale-80 -left-2 bottom-24">
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
-      <center
-        onClick={() => displayTermsAndConditions(openTc)}
-        onKeyDown={() => displayTermsAndConditions(openTc)}
-        className="text-black fixed w-full text-sm underline opacity-75 bottom-28 underline-offset-4 max-w-[30rem]"
-      >
-        View Terms and conditions
-      </center>
       <section
         onClick={grabCouponz}
         onKeyDown={grabCouponz}
-        className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-8"
+        className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
         style={{
           background: getLinearGradient(selectedCoupon?.bgColour) || "",
           position: "fixed",
@@ -277,7 +284,7 @@ const MemoCouponz = () => {
       <center
         className={cn(
           getTextColor(selectedCoupon?.bgColour),
-          "fixed bottom-0 -translate-x-1/2 left-1/2",
+          "fixed bottom-2 -translate-x-1/2 left-1/2",
         )}
       >
         Powered by HipalZ

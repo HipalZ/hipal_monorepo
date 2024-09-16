@@ -12,6 +12,11 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 
+const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
+
 const CouponCardPay = dynamic(() => import("./couponCardPay"), {
   loading: () => <SkeletonLoader height={200} />,
   ssr: false,
@@ -102,8 +107,9 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             </span>
           </button>
         </center>
-        <center className="text-xs text-[#A5A2A2] my-4">Explore couponz</center>
-        <section className="relative flex justify-around h-[250px]">
+        <CashbackMessage />
+        <br />
+        <section className="relative flex justify-center h-[250px] ">
           <div
             className="-z-12"
             style={{
@@ -115,7 +121,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
           />
           <article
             className={
-              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
+              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10.25rem] ml-4 bg-white relative"
             }
             style={{
               backgroundImage: `url(${CoinzPattern.src})`,
@@ -138,14 +144,11 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
               )}
             </article>
           </article>
-          <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
-            or
-          </span>
           <article
             style={{
               opacity: claimedCoinz > 0 ? 0.5 : 1,
             }}
-            className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative"
+            className="z-10 scaled-card-container-2 rounded-2xl h-[235px]  w-[10.25rem] mr-4 bg-white relative"
           >
             <Image
               src={CouponzPattern}
@@ -163,7 +166,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
               <center className="mx-1 mb-1 text-sm">
                 {claimCouponz > 0
-                  ? `${availedCoupon?.name}Applied`
+                  ? `${availedCoupon?.name} Applied`
                   : `You have ${
                       userCouponz ? validCouponCount : "no"
                     } valid couponz`}
@@ -178,7 +181,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             onKeyDown={openModal}
           >
             <GameButton
-              text={cn(claimedCoinz > 0 ? "Added Coinz" : "Use Coinz")}
+              text={cn(claimedCoinz > 0 ? "Applied Coinz" : "Use Coinz")}
               hideShine={claimedCoinz > 0 || false}
             />
           </article>
@@ -188,13 +191,17 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             className="relative flex items-center mr-4"
           >
             <GameButton
-              text={cn(claimCouponz > 0 ? "Added Coupon" : "Use Couponz")}
+              text={cn(claimCouponz > 0 ? "Applied Coupon" : "Use Couponz")}
               hideShine={claimCouponz > 0 || false}
             />
           </article>
         </section>
         {editBillModal && (
-          <BottomPopUp show={editBillModal} onClose={closeBillModal}>
+          <BottomPopUp
+            show={editBillModal}
+            onClose={closeBillModal}
+            linearGradTheme
+          >
             <AddAmountModal />
           </BottomPopUp>
         )}

@@ -153,7 +153,7 @@ export const calculateReward = (
   let total = exist + reward;
 
   const sum = Math.min(total, limit);
-  const finalReward = Number(sum - exist);
+  const finalReward = Math.round(sum - exist);
   return { finalReward, curentBalance: sum };
 };
 
@@ -854,13 +854,21 @@ export const getBestCouponSuggestion = (
 
     // Prioritize higher discounts and handle edge cases
     if (
-      couponDiscount > bestDiscount ||
-      (couponDiscount === bestDiscount &&
-        currentAdditionalAmount < additionalAmount)
+      currentAdditionalAmount < additionalAmount ||
+      (currentAdditionalAmount === additionalAmount &&
+        couponDiscount > bestDiscount) ||
+      (currentAdditionalAmount > 0 &&
+        additionalAmount > 0 &&
+        couponDiscount - currentAdditionalAmount >
+          bestDiscount - additionalAmount)
     ) {
       bestCoupon = coupon;
       bestDiscount = couponDiscount;
       additionalAmount = currentAdditionalAmount;
+    } else {
+      bestCoupon = 0;
+      bestDiscount = 0;
+      additionalAmount = 0;
     }
   }
 

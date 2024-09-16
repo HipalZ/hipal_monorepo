@@ -38,11 +38,18 @@ interface IUseCouponz {
 
   showPopup: boolean;
   setShowPopup: (show: boolean) => void;
+
+  greatDeals: Coupon[];
+  setGreatDeals: (coupon: Coupon[]) => void;
+  missingOut: Coupon[];
+  setMissingOut: (coupon: Coupon[]) => void;
+
+  updateCoupons: (billValue: number) => void;
 }
 
 export const useCouponz = create(
   persist<IUseCouponz>(
-    (set) => ({
+    (set, get) => ({
       selectedCoupon: {},
       setSelectedCoupon: (coupon) => set(() => ({ selectedCoupon: coupon })),
 
@@ -71,6 +78,31 @@ export const useCouponz = create(
 
       showPopup: false,
       setShowPopup: (show) => set(() => ({ showPopup: show })),
+
+      greatDeals: [],
+      setGreatDeals: (coupon) => set(() => ({ greatDeals: coupon })),
+
+      missingOut: [],
+      setMissingOut: (coupon) => set(() => ({ missingOut: coupon })),
+
+      updateCoupons: (billValue: number) => {
+        const { userCouponz, availedCoupon } = get();
+        const greatDeals = userCouponz.filter(
+          (coupon) => billValue >= coupon.conditions.billValue,
+        );
+        const missingOut = userCouponz.filter(
+          (coupon) => billValue < coupon.conditions.billValue,
+        );
+        const filteredGreatDeals = greatDeals.filter(
+          (coupon) => coupon._id !== availedCoupon?._id,
+        );
+        const missingOutCoupon = [...missingOut, ...filteredGreatDeals];
+        set({
+          greatDeals,
+          missingOut,
+          missingOutCoupon,
+        });
+      },
     }),
     {
       name: "couponz",

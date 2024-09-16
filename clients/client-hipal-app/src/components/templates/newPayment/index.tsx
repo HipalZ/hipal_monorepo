@@ -64,14 +64,6 @@ const CouponzBlink = dynamic(() => import("./couponzBlink"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
-const BottomButton = dynamic(
-  () => import("@/components/molecules/bottomButton"),
-  {
-    ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
-  },
-);
-
 const PaymentComponent = dynamic(
   () => import("@/components/templates/payment/selectPayment"),
   {
@@ -120,8 +112,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setAvailedCoupon: s.setAvailedCoupon,
     availedCoupon: s.availedCoupon,
   }));
-  const { applyCouponz } = useCouponTemp((s) => ({
+  const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
+    setApplyCouponz: s.setApplyCouponz,
   }));
   const {
     billValue,
@@ -192,6 +185,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setSelectedTip("");
     setCustomTip("");
     setAvailedCoupon({});
+    setApplyCouponz(false);
   }, []);
 
   const getMerchantKeySecret = async () => {
@@ -548,6 +542,8 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       if (showInput) {
         return toast.error("Please save the tip amount");
       }
+      if (billValue - claimedCoinz - claimCouponz + tips === 0)
+        return toast.error("Please enter the bill amount");
       setSelectedMode(mode);
     },
     [showInput, selectedMode],
@@ -622,9 +618,14 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   };
 
   useEffect(() => {
-    getMerchantKeySecret();
     setBillValue(Number(searchParams?.get("amount")));
   }, []);
+
+  useQuery({
+    queryKey: ["getMerchantKeySecret", businessId],
+    queryFn: getMerchantKeySecret,
+    enabled: !!businessId,
+  });
 
   useQuery({
     queryKey: ["getUserReward", userDetails?._id, data?.loyalty?.loyaltyId],
@@ -682,7 +683,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   blurDataURL={getRandomBlurImg(100, 100)}
                 />
                 <div className="relative">
-                  <div className="absolute inset-0 z-10 bg-black opacity-90" />
+                  <div
+                    style={{
+                      background:
+                        "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%)",
+                    }}
+                    className="absolute inset-0 z-10 opacity-90"
+                  />
                   <p className="relative z-20 mt-2 text-base font-semibold">
                     {businessDetails?.name}
                   </p>
@@ -717,29 +724,27 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   handleCustomTip={handleCustomTip}
                   handleSaveTip={handleSaveTip}
                 />
-                <BottomButton noTheme={true}>
-                  <SuggestCouponz />
-                  <section className="flex items-center justify-between px-4 !font-bold text-black">
-                    <h1 className="text-xs text-left inter">
-                      Total Bill Amount: ₹{" "}
-                      {billValue - claimedCoinz - claimCouponz + tips}
-                      {claimedCoinz > 0 ? (
-                        <p className="text-[#4CAF50]">
-                          {claimedCoinz} Saved, using coinz
-                        </p>
-                      ) : null}
-                    </h1>
-                    <article
-                      onClick={() => handleMode("MODE")}
-                      onKeyDown={() => handleMode("MODE")}
-                      className={`${
-                        billValue > 0 ? "" : "opacity-20 pointer-events-none"
-                      } bg-black text-white p-2 rounded-full inter text-[0.75rem]`}
-                    >
-                      <span>Payment method</span>
-                    </article>
-                  </section>
-                </BottomButton>
+                <SuggestCouponz />
+                <section className="fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black">
+                  <h1 className="text-sm text-left inter">
+                    Total Bill Amount: ₹{" "}
+                    {billValue - claimedCoinz - claimCouponz + tips}
+                    {claimedCoinz > 0 ? (
+                      <p className="text-[#4CAF50]">
+                        {claimedCoinz} Saved, using coinz
+                      </p>
+                    ) : null}
+                  </h1>
+                  <article
+                    onClick={() => handleMode("MODE")}
+                    onKeyDown={() => handleMode("MODE")}
+                    className={`${
+                      billValue > 0 ? "" : "opacity-20 pointer-events-none"
+                    } bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce`}
+                  >
+                    <span>Pay Now</span>
+                  </article>
+                </section>
               </section>
             </>
           ) : (

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
@@ -41,24 +41,28 @@ const MemoApplyCouponz = () => {
     userDetails: s.userDetails,
   }));
 
-  const { setCurrentPage } = useCouponz((s) => ({
-    setCurrentPage: s.setCurrentPage,
-  }));
-
   const { showPopup, setShowPopup } = useCouponTemp((s) => ({
     showPopup: s.showPopup,
     setShowPopup: s.setShowPopup,
   }));
 
-  const { billValue, setClaimCouponz, claimedCoinz, setClaimedCoinz } =
-    usePaymentStore((s) => ({
-      billValue: s.billValue,
-      claimedCoinz: s.claimedCoinz,
-      setClaimedCoinz: s.setClaimedCoinz,
-      setClaimCouponz: s.setClaimCouponz,
-    }));
+  const {
+    billValue,
+    setClaimCouponz,
+    claimedCoinz,
+    setClaimedCoinz,
+    claimCouponz,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    claimedCoinz: s.claimedCoinz,
+    setClaimedCoinz: s.setClaimedCoinz,
+    setClaimCouponz: s.setClaimCouponz,
+    claimCouponz: s.claimCouponz,
+  }));
 
   const {
+    setCurrentPage,
+    updateCoupons,
     availedCoupon,
     setAvailedCoupon,
     setDirection,
@@ -67,7 +71,11 @@ const MemoApplyCouponz = () => {
     setUserCouponz,
     setSelectedCoupon,
     setMissingOutCoupon,
+    greatDeals,
+    missingOut,
   } = useCouponz((s) => ({
+    setCurrentPage: s.setCurrentPage,
+    updateCoupons: s.updateCoupons,
     availedCoupon: s.availedCoupon,
     setAvailedCoupon: s.setAvailedCoupon,
     setDirection: s.setDirection,
@@ -76,8 +84,11 @@ const MemoApplyCouponz = () => {
     setUserCouponz: s.setUserCouponz,
     setSelectedCoupon: s.setSelectedCoupon,
     setMissingOutCoupon: s.setMissingOutCoupon,
+    greatDeals: s.greatDeals,
+    missingOut: s.missingOut,
   }));
 
+  const [selectedCoupon, setSelectedCouponState] = useState(null);
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
@@ -86,8 +97,6 @@ const MemoApplyCouponz = () => {
   const closeCouponz = useCallback(() => {
     setApplyCouponz(false);
   }, [applyCouponz]);
-
-  const [selectedCoupon, setSelectedCouponState] = useState(null);
 
   const applyCoupon = useCallback(
     async (coupon) => {
@@ -186,6 +195,11 @@ const MemoApplyCouponz = () => {
     ],
   );
 
+  const removeCoupon = useCallback(() => {
+    setAvailedCoupon({});
+    setClaimCouponz(0);
+  }, [availedCoupon, claimCouponz]);
+
   // if availedCoupon from the apply couponz then calculate the discount
 
   useEffect(() => {
@@ -227,30 +241,6 @@ const MemoApplyCouponz = () => {
     enabled: !!businessId && !!userDetails._id,
   });
 
-  // Filter and group coupons
-  const greatDeals = useMemo(
-    () =>
-      (userCouponz || []).filter(
-        (coupon) => billValue >= coupon?.conditions?.billValue,
-      ),
-    [userCouponz, billValue],
-  );
-  const missingOut = useMemo(
-    () =>
-      (userCouponz || []).filter(
-        (coupon) => billValue < coupon?.conditions?.billValue,
-      ),
-    [userCouponz, billValue],
-  );
-
-  useEffect(() => {
-    const filteredGreatDeals = greatDeals.filter(
-      (coupon) => coupon?._id !== availedCoupon?._id,
-    );
-
-    setMissingOutCoupon([...missingOut, ...filteredGreatDeals]);
-  }, [greatDeals, missingOut, availedCoupon]);
-
   const ApplyCouponzz = () => {
     return (
       <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter">
@@ -276,11 +266,9 @@ const MemoApplyCouponz = () => {
         </section>
         <br />
         <br />
-        {greatDeals?.length > 0 ? (
-          <h1 className="mx-4 mt-6 text-xs font-bold text-black">
-            Great deals you get on this billing
-          </h1>
-        ) : null}
+        <h1 className="mx-4 mt-6 text-xs font-bold text-black">
+          Great deals you get on this billing
+        </h1>
         {greatDeals?.length > 0 ? (
           greatDeals?.map((coupon) => (
             <section
@@ -303,10 +291,10 @@ const MemoApplyCouponz = () => {
                   {availedCoupon?._id === coupon?._id ? (
                     <button
                       type="button"
-                      className="text-[#00C37E] text-sm mt-1 font-bold"
-                      disabled
+                      className="text-[#f13f8a] text-sm mt-1 font-bold"
+                      onClick={removeCoupon}
                     >
-                      APPLIED
+                      Remove
                     </button>
                   ) : (
                     <button
@@ -357,73 +345,77 @@ const MemoApplyCouponz = () => {
             </section>
           ))
         ) : (
-          <center className="text-black">No Couponz</center>
+          <center className="mt-6 text-xs text-black">
+            No Eligible Couponz
+          </center>
         )}
+        <h1 className="mx-4 mt-8 text-xs font-bold text-black">
+          Coupons you are missing out
+        </h1>
         {missingOut?.length > 0 ? (
-          <h1 className="mx-4 mt-8 text-xs font-bold text-black">
-            Coupons you are missing out
-          </h1>
-        ) : null}
-        {missingOut?.length > 0
-          ? missingOut?.map((coupon) => (
-              <section
-                key={coupon?._id}
-                className="flex mx-4 my-4 rounded-2xl inter"
-              >
-                <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
-                  <div className="h-4 bg-[#f13f8a] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
-                  <article className="flex items-center justify-between">
-                    <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
-                      {coupon?.name}
-                    </h1>
-                    <button
-                      type="button"
-                      className="text-[#858585] mt-1 text-sm font-bold"
-                      disabled
-                    >
-                      APPLY
-                    </button>
-                  </article>
-                  <div className="relative z-10 gap-2 px-1 mt-2">
-                    <div className="flex flex-col items-start space-y-1">
-                      <p className="text-xs font-semibold text-[#f13f8a]">
-                        Add ₹ {coupon?.conditions?.billValue - billValue} more
-                        to get{" "}
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}{" "}
-                        off on this bill
-                      </p>
-                    </div>
-                    <hr
-                      className="w-full col-span-2 my-3 -mx-2"
-                      style={{
-                        backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                          "#000000",
-                        )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "center",
-                        height: "3px",
-                        border: "none",
-                      }}
-                    />
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-xs text-[#858585]">
-                        Use this coupon & get{" "}
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}{" "}
-                        off on bill above ₹ {coupon?.conditions?.billValue}.
-                        Maximum discount: {coupon?.config?.upto}
-                      </h3>
-                    </div>
-                  </div>
+          missingOut?.map((coupon) => (
+            <section
+              key={coupon?._id}
+              className="flex mx-4 my-4 rounded-2xl inter"
+            >
+              <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
+                <div className="h-4 bg-[#858585] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
+                <article className="flex items-center justify-between">
+                  <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
+                    {coupon?.name}
+                  </h1>
+                  <button
+                    type="button"
+                    className="text-[#858585] mt-1 text-sm font-bold"
+                    disabled
+                  >
+                    APPLY
+                  </button>
                 </article>
-              </section>
-            ))
-          : null}
+                <div className="relative z-10 gap-2 px-1 mt-2">
+                  <div className="flex flex-col items-start space-y-1">
+                    <p className="text-xs font-semibold text-[#f13f8a]">
+                      Add ₹ {coupon?.conditions?.billValue - billValue} more to
+                      get{" "}
+                      {formatDiscount(
+                        coupon?.config?.value,
+                        coupon?.config?.discountType,
+                      )}{" "}
+                      off on this bill
+                    </p>
+                  </div>
+                  <hr
+                    className="w-full col-span-2 my-3 -mx-2"
+                    style={{
+                      backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                        "#000000",
+                      )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "center",
+                      height: "3px",
+                      border: "none",
+                    }}
+                  />
+                  <div className="flex flex-col items-start space-y-1">
+                    <h3 className="text-xs text-[#858585]">
+                      Use this coupon & get{" "}
+                      {formatDiscount(
+                        coupon?.config?.value,
+                        coupon?.config?.discountType,
+                      )}{" "}
+                      off on bill above ₹ {coupon?.conditions?.billValue}.
+                      Maximum discount: {coupon?.config?.upto}
+                    </h3>
+                  </div>
+                </div>
+              </article>
+            </section>
+          ))
+        ) : (
+          <center className="mt-6 text-xs text-black">
+            No Missing Couponz
+          </center>
+        )}
       </section>
     );
   };
@@ -453,7 +445,7 @@ const MemoApplyCouponz = () => {
               onClick={replaceLoyalty}
             >
               <IoCheckmark className="w-4 h-4 mr-2" />
-              Remove
+              Yes
             </button>
             <button
               type="button"
