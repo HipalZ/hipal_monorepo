@@ -101,7 +101,7 @@ function MainTypes(props: IMainTypes) {
       }
     } else {
       const parentCategory = mainTypes.find((category) =>
-        category.subCategoryIds.includes(isActiveCategory),
+        category?.subCategoryIds.includes(isActiveCategory),
       );
       if (parentCategory) {
         setActiveParentCategory(parentCategory._id?.toString() ?? "");

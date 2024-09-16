@@ -75,32 +75,32 @@ const DishesList: FC<IDishesProps> = (props) => {
     <div>
       {subTypes?.map((category: CategoryType, index) => {
         const headingRef = useRef(null);
-        useEffect(() => {
-          const observer = new IntersectionObserver(
-            (entries) => {
-              entries.forEach((entry) => {
-                if (entry.isIntersecting && observerActive) {
-                  handleCategoryInView(category);
-                }
-              });
-            },
-            {
-              root: null,
-              rootMargin: "-200px 0px 0px 0px",
-              threshold: 0.75,
-            },
-          );
+        // useEffect(() => {
+        //   const observer = new IntersectionObserver(
+        //     (entries) => {
+        //       entries.forEach((entry) => {
+        //         if (entry.isIntersecting && observerActive) {
+        //           handleCategoryInView(category);
+        //         }
+        //       });
+        //     },
+        //     {
+        //       root: null,
+        //       rootMargin: "-200px 0px 0px 0px",
+        //       threshold: 0.75,
+        //     },
+        //   );
 
-          if (headingRef.current) {
-            observer.observe(headingRef.current);
-          }
+        //   if (headingRef.current) {
+        //     observer.observe(headingRef.current);
+        //   }
 
-          return () => {
-            if (headingRef.current) {
-              observer.unobserve(headingRef.current);
-            }
-          };
-        }, [headingRef, category, observerActive]);
+        //   return () => {
+        //     if (headingRef.current) {
+        //       observer.unobserve(headingRef.current);
+        //     }
+        //   };
+        // }, [headingRef, category, observerActive]);
 
         return (
           <section
@@ -124,7 +124,11 @@ const DishesList: FC<IDishesProps> = (props) => {
                 {category?.dishIds?.length}
               </h4>
             </div>
-            <div className="flex flex-col divide-y divide-base-300">
+            <div
+              className="flex flex-col divide-y divide-base-300"
+              onTouchStart={() => handleCategoryInView(category)}
+              onScroll={() => handleCategoryInView(category)}
+            >
               {isActiveDishType.toLowerCase() === "all" ? (
                 category?.dishIds?.map((dishData: DishType, dishIndex) => (
                   <HorizontalCard
