@@ -194,7 +194,11 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
           </article>
         </section>
         {editBillModal && (
-          <BottomPopUp show={editBillModal} onClose={closeBillModal}>
+          <BottomPopUp
+            show={editBillModal}
+            onClose={closeBillModal}
+            linearGradTheme
+          >
             <AddAmountModal />
           </BottomPopUp>
         )}

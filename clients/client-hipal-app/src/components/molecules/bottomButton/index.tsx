@@ -146,7 +146,7 @@ function BottomButton({
         </section>
       )}
       {inputModal && (
-        <BottomPopUp show={inputModal} onClose={closeModal}>
+        <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
           <AddAmountModal />
         </BottomPopUp>
       )}

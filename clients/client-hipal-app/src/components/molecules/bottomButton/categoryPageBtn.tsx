@@ -163,7 +163,7 @@ const CategoryPageBtn = () => {
       )}
 
       {inputModal && (
-        <MemoBottomPopUp show={inputModal} onClose={closeModal}>
+        <MemoBottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
           <AddAmountModal />
         </MemoBottomPopUp>
       )}

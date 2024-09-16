@@ -2103,3 +2103,11 @@ input[type='password'] {
 	background-color: 'bg-base-100' /* Adjust to match the background color */
   }
   
+
+  .background-gradient {
+	background: linear-gradient(0deg, #B79DFF 0.47%, #000000 70%);
+  }
+  
+  .default-background {
+	background: none; /* or any default background you want */
+  }
