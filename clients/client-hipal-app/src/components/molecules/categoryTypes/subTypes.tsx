@@ -20,6 +20,7 @@ function SubTypes(props: ISubTypes) {
     setActiveParentCategory,
     isActiveParentCategory,
     setActiveChildCategory,
+    setObserverActive,
   } = useActiveClass();
 
   const subTypes = useMemo(
@@ -35,14 +36,23 @@ function SubTypes(props: ISubTypes) {
 
   const setActiveCategories = useCallback(
     (category: CategoryType) => {
+      setObserverActive(false);
       setActiveParentCategory(category?.parentCategoryIds?.[0].toString());
       setActiveCategory(category._id?.toString() ?? "");
       setActiveChildCategory(category._id?.toString() ?? "");
+      setTimeout(() => {
+        setObserverActive(true);
+      }, 1000);
       // Remove the hash from the URL
       const urlWithoutHash = window.location.href.split("#")[0];
       window.history.replaceState(null, "", urlWithoutHash);
     },
-    [setActiveCategory, setActiveParentCategory, isActiveChildCategory],
+    [
+      setActiveCategory,
+      setActiveParentCategory,
+      isActiveChildCategory,
+      setObserverActive,
+    ],
   );
 
   const splideRef = useRef<Splide>(null);
