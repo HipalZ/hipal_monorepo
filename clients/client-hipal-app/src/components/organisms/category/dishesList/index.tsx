@@ -127,6 +127,7 @@ const DishesList: FC<IDishesProps> = (props) => {
             <div
               className="flex flex-col divide-y divide-base-300"
               onTouchStart={() => handleCategoryInView(category)}
+              onScroll={() => handleCategoryInView(category)}
             >
               {isActiveDishType.toLowerCase() === "all" ? (
                 category?.dishIds?.map((dishData: DishType, dishIndex) => (
