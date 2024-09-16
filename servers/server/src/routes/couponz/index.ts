@@ -72,38 +72,25 @@ const couponzRouter = new Hono()
         }),
       }),
     ),
-    zValidator(
-      "query",
-      z.object({
-        isActive: z
-          .string({
-            message: "businessId should be a string",
-          })
-          .optional(),
-      }),
-    ),
+
     async (c) => {
       const { businessId } = c.req.param();
-      const { isActive } = c.req.query();
-      if (isActive === "false") {
-        const coupons = await Couponz.find({
-          businessId,
-          isDeleted: false,
-          isActive: false,
-        });
-        return c.json(
-          {
-            message: "Coupons found",
-            err: false,
-            data: coupons,
-          },
-          200,
-        );
-      }
+
       const coupons = await Couponz.find({
         businessId,
         isDeleted: false,
-      });
+      }).lean();
+      for (const coupon of coupons) {
+        const couponLinks = await CouponLink.find({
+          couponId: coupon._id,
+        })
+          .populate({
+            path: "channelId",
+            select: "name",
+          })
+          .select("link -_id");
+        coupon.links = couponLinks;
+      }
       return c.json(
         {
           message: "Coupons found",
