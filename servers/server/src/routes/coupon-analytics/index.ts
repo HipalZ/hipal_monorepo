@@ -138,7 +138,7 @@ const couponAnalyticsRouter = new Hono()
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `https://api.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: `http://localhost:4500/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
         });
         await link.save();
         links.push({
@@ -399,14 +399,41 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { couponId, channelId, businessId } = c.req.param();
 
+      console.log("ale", couponId, channelId, businessId);
+
       const customLink =
         await Business.findById(businessId).select("customLink");
 
       //logic to increase the count of the link
 
       return c.redirect(
-        `https://hipalz.com/couponz/${customLink?.customLink}/${couponId}/${channelId}`,
+        `http://localhost:3001/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
+    },
+  )
+  .get(
+    "/couponz-links/:businessId/:couponId",
+    zValidator(
+      "param",
+      z.object({
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
+        businessId: z.string({
+          message: "businessId should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { couponId, businessId } = c.req.param();
+
+      const links = await CouponLink.find({
+        businessId: businessId,
+        couponId: couponId,
+      });
+
+      return c.json({ err: false, msg: "fetch successfully", data: links });
     },
   );
 

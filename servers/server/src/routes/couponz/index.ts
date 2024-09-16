@@ -1,4 +1,11 @@
-import { CouponView, Couponz, User, UserCouponGrabb } from "@hi/db-models";
+import {
+  CouponChannel,
+  CouponLink,
+  CouponView,
+  Couponz,
+  User,
+  UserCouponGrabb,
+} from "@hi/db-models";
 import {
   type CouponzAvailabilityType,
   type CouponzDays,
@@ -213,6 +220,21 @@ const couponzRouter = new Hono()
         isActive: false,
         isDeleted: true,
       });
+    });
+
+    const channelId = await CouponChannel.findOne({
+      name: "defualt",
+      businessId: createdCoupon.businessId,
+    }).select("_id");
+
+    console.log("channelId", channelId);
+
+    await CouponLink.create({
+      businessId: createdCoupon.businessId,
+      couponId: createdCoupon._id,
+      channelId: channelId?._id,
+      date: Date.now(),
+      link: `http://localhost:4500/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
     });
 
     return respond(c, "Coupon created successfully", false, 201, createdCoupon);

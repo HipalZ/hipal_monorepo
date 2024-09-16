@@ -12,7 +12,6 @@ const couponChannelSchema = new mongoose.Schema<CouponChannelType>(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
 
     date: {
@@ -37,6 +36,8 @@ const couponChannelSchema = new mongoose.Schema<CouponChannelType>(
     timestamps: true,
   },
 );
+
+couponChannelSchema.index({ businessId: 1, name: 1 }, { unique: true });
 
 const CouponChannel: Model<CouponChannelType> =
   mongoose.model<CouponChannelType>("couponChannel", couponChannelSchema);
