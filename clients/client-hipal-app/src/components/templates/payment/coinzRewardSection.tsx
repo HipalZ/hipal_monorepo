@@ -121,7 +121,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
           />
           <article
             className={
-              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10.25rem] ml-4 bg-white relative"
+              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
             }
             style={{
               backgroundImage: `url(${CoinzPattern.src})`,
@@ -148,7 +148,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             style={{
               opacity: claimedCoinz > 0 ? 0.5 : 1,
             }}
-            className="z-10 scaled-card-container-2 rounded-2xl h-[235px]  w-[10.25rem] mr-4 bg-white relative"
+            className="z-10 scaled-card-container-2 rounded-2xl h-[235px]  w-[10rem] mr-4 bg-white relative"
           >
             <Image
               src={CouponzPattern}
