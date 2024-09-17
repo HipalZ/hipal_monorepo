@@ -179,6 +179,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     razorpayMerchantId: "",
     razorpayKeyId: "",
   });
+
   const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
     usePayment();
 
@@ -195,10 +196,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         razorpayMerchantId: response?.data?.razorpayMerchantId,
         razorpayKeyId: response?.data?.razorpayKeyId,
       });
-      if (!tableName) {
-        toast.error("Table Not Found Please Scan Again");
-        return router.push(`/${customLink}/scan`);
-      }
       setBillValue(Number(searchParams?.get("amount")));
       // by default setting to zero instead of previous stale data
       setClaimedCoinz(0);
@@ -731,24 +728,32 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   style={{
                     boxShadow: "0px 0px 2px 0px #0000001F",
                   }}
-                  className="rounded-t-2xl fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
+                  className="fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
                 >
-                  <h1 className="text-sm text-left inter">
-                    Total Bill Amount: ₹{" "}
-                    {billValue - claimedCoinz - claimCouponz + tips}
-                    <span className="text-xs">
-                      {claimedCoinz > 0 ? (
-                        <p className="text-[#4CAF50]">
-                          {claimedCoinz} Saved, using coinz
-                        </p>
-                      ) : null}
-                    </span>
-                  </h1>
+                  {!!tableName ? (
+                    <h1 className="text-sm text-left inter">
+                      Total Bill Amount: ₹{" "}
+                      {billValue - claimedCoinz - claimCouponz + tips}
+                      <span className="text-xs">
+                        {claimedCoinz > 0 ? (
+                          <p className="text-[#4CAF50]">
+                            {claimedCoinz} Saved, using coinz
+                          </p>
+                        ) : null}
+                      </span>
+                    </h1>
+                  ) : (
+                    <h1 className="w-2/3 text-xs text-red-500">
+                      Please scan the table to proceed with payment.
+                    </h1>
+                  )}
                   <article
                     onClick={() => handleMode("MODE")}
                     onKeyDown={() => handleMode("MODE")}
                     className={`${
-                      billValue > 0 ? "" : "opacity-20 pointer-events-none"
+                      billValue > 0 && !!tableName
+                        ? ""
+                        : "opacity-20 pointer-events-none"
                     } bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce`}
                   >
                     <span>Pay Now</span>

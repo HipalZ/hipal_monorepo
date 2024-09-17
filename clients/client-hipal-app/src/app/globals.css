@@ -2219,3 +2219,7 @@ input[type='password'] {
   .new-btn-shine::after {
 	overflow: hidden;
   }
+
+  .new-btn-shine2{
+	animation-delay: 1s;
+  }
