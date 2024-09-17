@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useState, useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import Image from "next/image";
 import baloons from "@/assets/img/baloons_birthday.png";
 import cake from "@/assets/img/cake.png";
@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useCouponTemp from "@/components/store/useCouponTemp";
+import useDatePicker from "@/components/hooks/useDatePicker";
 
 const MemoOccasionPopup = () => {
   const { businessDetails } = useBusinessDetails((s) => ({
@@ -57,91 +58,13 @@ const MemoOccasionPopup = () => {
   const currentYear = todayDate.getFullYear();
   const currentMonth = todayDate.getMonth() + 1;
   const currentDay = todayDate.getDate();
-  const [date, setDate] = useState({
-    day: currentDay.toString(),
-    month: currentMonth.toString(),
-    year: currentYear.toString(),
-  });
-
-  const [optionGroups, setOptionGroups] = useState({
-    day: Array.from({ length: 31 }, (_, i) => ({
-      value: `${i + 1}`,
-      label: `${i + 1}`,
-    })),
-    month: Array.from({ length: 12 }, (_, i) => ({
-      value: `${i + 1}`,
-      label: new Date(0, i).toLocaleString("default", { month: "long" }),
-    })),
-    year: Array.from({ length: 200 }, (_, i) => ({
-      value: `${currentYear - i}`,
-      label: `${currentYear - i}`,
-    })),
-  });
-
-  useEffect(() => {
-    const selectedYear = Number.parseInt(date.year);
-    const selectedMonth = Number.parseInt(date.month);
-    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-
-    setOptionGroups((prev) => ({
-      ...prev,
-      day: Array.from({ length: daysInMonth }, (_, i) => ({
-        value: `${i + 1}`,
-        label: `${i + 1}`,
-      })),
-      month:
-        selectedYear === currentYear
-          ? prev.month.slice(0, currentMonth)
-          : prev.month,
-    }));
-  }, [date.year, date.month]);
-
-  const handleDateChange = (name, value) => {
-    setDate((prev) => {
-      // Copy previous state
-      let newState = { ...prev, [name]: value };
-
-      // Determine the number of days in the newly selected month and year
-      const daysInMonth = new Date(
-        Number.parseInt(newState.year),
-        Number.parseInt(newState.month),
-        0,
-      ).getDate();
-
-      // If the currently selected day is greater than the number of days in the new month, reset to the max day of that month
-      if (Number.parseInt(prev.day) > daysInMonth) {
-        newState.day = `${daysInMonth}`;
-      }
-
-      // Handle month and year specific updates for options
-      if (name === "month" || name === "year") {
-        const newMonthOptions =
-          Number.parseInt(newState.year) === currentYear
-            ? optionGroups.month.slice(0, currentMonth)
-            : optionGroups.month;
-
-        const newDayOptions =
-          Number.parseInt(newState.year) === currentYear &&
-          Number.parseInt(newState.month) === currentMonth
-            ? Array.from({ length: currentDay }, (_, i) => ({
-                value: `${i + 1}`,
-                label: `${i + 1}`,
-              }))
-            : Array.from({ length: daysInMonth }, (_, i) => ({
-                value: `${i + 1}`,
-                label: `${i + 1}`,
-              }));
-
-        setOptionGroups({
-          ...optionGroups,
-          day: newDayOptions,
-          month: newMonthOptions,
-        });
-      }
-
-      return newState;
-    });
-  };
+  // Use the custom hook
+  const { date, optionGroups, handleDateChange } = useDatePicker(
+    currentYear,
+    currentMonth,
+    currentDay,
+    pickerRef,
+  );
 
   const handleBack = () => {
     if (direction === "payment") {
@@ -184,23 +107,6 @@ const MemoOccasionPopup = () => {
       setShowPopup(false);
     }
   };
-
-  useEffect(() => {
-    const preventDefault = (e: TouchEvent) => e.preventDefault();
-
-    const pickerElement = pickerRef.current;
-    if (pickerElement) {
-      pickerElement.addEventListener("touchmove", preventDefault, {
-        passive: false,
-      });
-    }
-
-    return () => {
-      if (pickerElement) {
-        pickerElement.removeEventListener("touchmove", preventDefault);
-      }
-    };
-  }, []);
 
   return (
     <main className="h-[100dvh] relative z-[50] max-w-[30rem]">
@@ -250,13 +156,9 @@ const MemoOccasionPopup = () => {
               optionGroups={optionGroups}
               valueGroups={date}
               onChange={handleDateChange}
-              itemHeight={30}
+              itemHeight={40}
+              width={100}
               height={130}
-              className="custom-picker"
-              style={{
-                width: "fit-content",
-                height: "100%",
-              }}
               required
             />
           </div>

@@ -376,6 +376,16 @@ input[type='password'] {
 	spin 5.5s linear infinite;
     transform-origin: center;
 }
+
+.animate-spin-fast {
+    animation: 
+	spin 1s linear infinite;
+    -webkit-animation: 
+	spin 1s linear infinite;
+    -moz-animation: 
+	spin 1s linear infinite;
+    transform-origin: center;
+}
   
 .animate-glow {
     animation: 

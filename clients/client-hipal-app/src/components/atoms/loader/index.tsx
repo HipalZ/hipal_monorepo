@@ -6,7 +6,7 @@ function MemoLoadingSpinner() {
       <div className="flex flex-col text-center bg-transparent">
         <svg
           aria-hidden="true"
-          className="w-12 h-12 text-black animate-spin fill-white dark:text-gray-600"
+          className="w-12 h-12 text-black animate-spin-fast fill-white dark:text-gray-600"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

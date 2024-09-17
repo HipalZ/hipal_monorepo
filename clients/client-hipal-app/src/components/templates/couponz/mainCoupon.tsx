@@ -16,7 +16,7 @@ const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 const OccasionPopup = dynamic(() => import("./occasionPopup"), {
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 const Congratulationz = dynamic(() => import("./congratulationz"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -29,12 +29,12 @@ const SeeMyCouponz = dynamic(() => import("./seeMyCouponz"), {
 const TermsAndConditions = dynamic(
   () => import("@/components/atoms/termsAndConditions"),
   {
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <LoadingSpinnerCircle />,
   },
 );
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 
 const MainCoupon = ({ data }: { data: BusinessDetails }) => {
