@@ -862,6 +862,7 @@ input[type='password'] {
 	-moz-animation:  shine-effect 2s infinite;
 	transform: rotate(45deg);
 	animation-delay: 1s;
+	overflow: hidden;
   }
 
   .container {
@@ -2184,4 +2185,37 @@ input[type='password'] {
   
   .shake {
 	animation: shake 2s alternate;
+  }
+
+  @keyframes new-btn-shine {
+	0% {
+	  left: -100%;
+	}
+	100% {
+	  left: 100%;
+	}
+  }
+
+  .new-btn-shine {
+	position: relative;
+	overflow: hidden;
+	text-decoration: none;
+  }
+  .new-btn-shine::before {
+	content: "";
+	position: absolute;
+	top: 25%;
+	left: -100%;
+	width: 50%;
+	height: 50%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
+	animation: new-btn-shine 2s infinite;
+	-webkit-animation: new-btn-shine 2s infinite;
+	-moz-animation:  new-btn-shine 2s infinite;
+	transform: rotate(45deg);
+	will-change: left;
+  }
+
+  .new-btn-shine::after {
+	overflow: hidden;
   }

@@ -13,7 +13,11 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useTableData from "@/components/store/useTableData";
 import { useQuery } from "@tanstack/react-query";
-import { calculateReward, cn, PageStates } from "@/components/utils/helpers";
+import {
+  calculateReward,
+  cn,
+  type PageStates,
+} from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
@@ -191,7 +195,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         razorpayMerchantId: response?.data?.razorpayMerchantId,
         razorpayKeyId: response?.data?.razorpayKeyId,
       });
-
+      if (!tableName) {
+        toast.error("Table Not Found Please Scan Again");
+        return router.push(`/${customLink}/scan`);
+      }
       setBillValue(Number(searchParams?.get("amount")));
       // by default setting to zero instead of previous stale data
       setClaimedCoinz(0);
