@@ -25,7 +25,6 @@ import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import useCouponTemp from "@/components/store/useCouponTemp";
-import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 
 const MemoCouponz = () => {
@@ -129,6 +128,13 @@ const MemoCouponz = () => {
     );
   }, [selectedCoupon]);
 
+  const assignedCoupon = useMemo(() => {
+    return (
+      selectedCoupon?.conditions?.eligibleUser?.groupIds?.length > 0 ||
+      selectedCoupon?.conditions?.eligibleUser?.userIds?.length > 0
+    );
+  }, [selectedCoupon]);
+
   if (selectedCoupon && Object.keys(selectedCoupon).length === 0)
     return <LoadingSpinnerCircle />;
 
@@ -187,11 +193,10 @@ const MemoCouponz = () => {
           alt="Birthday Placeholder"
           width={256}
           height={200}
-          className="rounded-t-xl bg-[#e0dbdb]"
+          className="rounded-t-xl bg-[#e0dbdb"
           style={{
-            objectFit: "contain",
-            maxHeight: "200px",
-            maxWidth: "287px",
+            height: "200px",
+            objectFit: "cover",
           }}
         />
         <div className="relative z-10 grid w-64 grid-cols-2 gap-4 p-4 -mt-px text-black bg-white rounded-b-xl">
@@ -283,22 +288,24 @@ const MemoCouponz = () => {
       <picture className="absolute scale-80 -left-2 bottom-24">
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
-      <section
-        onClick={grabCouponz}
-        onKeyDown={grabCouponz}
-        className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
-        style={{
-          background: getLinearGradient(selectedCoupon?.bgColour) || "",
-          position: "fixed",
-        }}
-      >
-        <article className="bg-black h-[3rem] rounded-lg aspect-square flex items-center justify-center">
-          <GoArrowUpRight color="white" size={30} />
-        </article>
-        <article className="text-black on_active_bounce">
-          <h1 className="text-lg">Grab the coupon now !</h1>
-        </article>
-      </section>
+      {assignedCoupon ? null : (
+        <section
+          onClick={grabCouponz}
+          onKeyDown={grabCouponz}
+          className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
+          style={{
+            background: getLinearGradient(selectedCoupon?.bgColour) || "",
+            position: "fixed",
+          }}
+        >
+          <article className="bg-black h-[3rem] rounded-lg aspect-square flex items-center justify-center">
+            <GoArrowUpRight color="white" size={30} />
+          </article>
+          <article className="text-black on_active_bounce">
+            <h1 className="text-lg">Grab the coupon now !</h1>
+          </article>
+        </section>
+      )}
       <center
         className={cn(
           getTextColor(selectedCoupon?.bgColour),

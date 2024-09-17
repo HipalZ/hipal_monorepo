@@ -16,6 +16,8 @@ import useUserCouponz from "@/components/hooks/useUserCouponz";
 import { useLogin } from "@/components/store/useLogin";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
+import useTableData from "@/components/store/useTableData";
+import { toast } from "react-toastify";
 
 const AddAmountModal = dynamic(
   () => import("@/components/molecules/bottomButton/addAmountModal"),
@@ -30,6 +32,9 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
 const MemoSeeMyCouponz = () => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
+  const { tableName } = useTableData((s) => ({
+    tableName: s.tableName,
+  }));
   const { userDetails } = useLogin((s) => ({
     userDetails: s.userDetails,
   }));
@@ -54,7 +59,12 @@ const MemoSeeMyCouponz = () => {
   }, [customLink]);
 
   const openPaymentModal = useCallback(() => {
-    setOpenBillModal((prev) => !prev);
+    if (tableName) {
+      setOpenBillModal((prev) => !prev);
+    } else {
+      toast.error("Please scan your table QR code first");
+      return router.push(`/${customLink}/scan`);
+    }
   }, [openBillModal]);
 
   const sortedCouponz = useMemo(() => {
@@ -115,10 +125,10 @@ const MemoSeeMyCouponz = () => {
                     alt="bp"
                     width={200}
                     height={200}
-                    style={{
-                      objectFit: "contain",
-                    }}
                     className="bg-[#CACACA] w-full h-full shadow-2xl aspect-square rounded-l-2xl"
+                    style={{
+                      objectFit: "cover",
+                    }}
                   />
                 </picture>
                 <article className="px-3 py-2 text-black bg-white shadow-2xl custom-size rounded-r-2xl">

@@ -5,7 +5,11 @@ import { useCouponz } from "@/components/store/useCouponz";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { useParams, useRouter } from "next/navigation";
-import type { BusinessDetails, Coupon } from "@/components/types/businessData";
+import type {
+  BusinessDetails,
+  Coupon,
+  IBiz,
+} from "@/components/types/businessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useCouponTemp from "@/components/store/useCouponTemp";
@@ -37,7 +41,7 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   loading: () => <LoadingSpinnerCircle />,
 });
 
-const MainCoupon = ({ data }: { data: BusinessDetails }) => {
+const MainCoupon = ({ business }: { business: IBiz }) => {
   const customLink = useParams()?.businessId as string;
   const { couponId, channelId } = useParams();
   const { setBusinessDetails } = useBusinessDetails((s) => ({
@@ -68,7 +72,8 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
       });
       const coupon = await couponResponse.json();
       setSelectedCoupon(coupon?.data as Coupon);
-      setBusinessDetails(data || {});
+      console.log("coupon", coupon);
+      setBusinessDetails(business);
     } catch (err) {
       console.log("error", err);
       if (couponId === undefined) {

@@ -47,7 +47,7 @@ const MemoCouponzBlink = () => {
                 height={130}
                 className="bg-black rounded-t-xl"
                 style={{
-                  objectFit: "contain",
+                  objectFit: "cover",
                   height: "8.125rem",
                   width: "12.2rem",
                 }}
