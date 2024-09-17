@@ -15,7 +15,7 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
 });
-const BirthdayPopup = dynamic(() => import("./occasionPopup"), {
+const OccasionPopup = dynamic(() => import("./occasionPopup"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 const Congratulationz = dynamic(() => import("./congratulationz"), {
@@ -88,7 +88,7 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
   return (
     <>
       {currentPage === ICouponPage.SINGLECOUPON && <Couponz />}
-      {currentPage === ICouponPage.BIRTHDAYCOUPON && <BirthdayPopup />}
+      {currentPage === ICouponPage.BIRTHDAYCOUPON && <OccasionPopup />}
       {currentPage === ICouponPage.CONGRATULATIONZ && <Congratulationz />}
       {currentPage === ICouponPage.SEEMYCOUPONZ && <SeeMyCouponz />}
       {openTc && (

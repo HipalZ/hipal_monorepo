@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useState, useEffect } from "react";
+import React, { memo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import baloons from "@/assets/img/baloons_birthday.png";
 import cake from "@/assets/img/cake.png";
@@ -21,7 +21,7 @@ import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useCouponTemp from "@/components/store/useCouponTemp";
 
-const MemoBirthdayPopup = () => {
+const MemoOccasionPopup = () => {
   const { businessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
   }));
@@ -52,6 +52,7 @@ const MemoBirthdayPopup = () => {
   }));
 
   const todayDate = new Date();
+  const pickerRef = useRef<HTMLDivElement>(null);
 
   const currentYear = todayDate.getFullYear();
   const currentMonth = todayDate.getMonth() + 1;
@@ -184,6 +185,23 @@ const MemoBirthdayPopup = () => {
     }
   };
 
+  useEffect(() => {
+    const preventDefault = (e: TouchEvent) => e.preventDefault();
+
+    const pickerElement = pickerRef.current;
+    if (pickerElement) {
+      pickerElement.addEventListener("touchmove", preventDefault, {
+        passive: false,
+      });
+    }
+
+    return () => {
+      if (pickerElement) {
+        pickerElement.removeEventListener("touchmove", preventDefault);
+      }
+    };
+  }, []);
+
   return (
     <main className="h-[100dvh] relative z-[50] max-w-[30rem]">
       <button
@@ -227,19 +245,21 @@ const MemoBirthdayPopup = () => {
           <h1 className="mt-2 font-bold">
             Share Your {couponOccasion === "dob" ? "Birthday" : "Special Day"}
           </h1>
-          <Picker
-            optionGroups={optionGroups}
-            valueGroups={date}
-            onChange={handleDateChange}
-            itemHeight={45}
-            width={100}
-            height={130}
-            className="custom-picker"
-            style={{
-              width: "fit-content",
-            }}
-            required
-          />
+          <div ref={pickerRef}>
+            <Picker
+              optionGroups={optionGroups}
+              valueGroups={date}
+              onChange={handleDateChange}
+              itemHeight={30}
+              height={130}
+              className="custom-picker"
+              style={{
+                width: "fit-content",
+                height: "100%",
+              }}
+              required
+            />
+          </div>
           {couponOccasion === "dob" ? (
             <center className="text-[#CACACA] mx-6 text-sm">
               Note: DOB once set cannot be changed
@@ -258,5 +278,5 @@ const MemoBirthdayPopup = () => {
   );
 };
 
-const BirthdayPopup = memo(MemoBirthdayPopup);
-export default BirthdayPopup;
+const OccasionPopup = memo(MemoOccasionPopup);
+export default OccasionPopup;
