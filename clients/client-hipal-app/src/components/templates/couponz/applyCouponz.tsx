@@ -17,12 +17,26 @@ import confetti from "canvas-confetti";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
 import { useQuery } from "@tanstack/react-query";
-import ApplyCouponDatePopup from "../newPayment/datePopup";
-import AlertToRemove from "@/components/atoms/alertToRemove";
 import { DialogTitle } from "@headlessui/react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+
+const AlertToRemove = dynamic(
+  () => import("@/components/atoms/alertToRemove"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+
+const ApplyCouponDatePopup = dynamic(
+  () => import("@/components/templates/newPayment/datePopup"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
 
 const MemoApplyCouponz = () => {
   const logoUrl = useBusinessDetails(
@@ -62,37 +76,34 @@ const MemoApplyCouponz = () => {
 
   const {
     setCurrentPage,
-    updateCoupons,
     availedCoupon,
     setAvailedCoupon,
     setDirection,
     setCouponOccasion,
-    userCouponz,
     setUserCouponz,
     setSelectedCoupon,
-    setMissingOutCoupon,
     greatDeals,
     missingOut,
   } = useCouponz((s) => ({
     setCurrentPage: s.setCurrentPage,
-    updateCoupons: s.updateCoupons,
     availedCoupon: s.availedCoupon,
     setAvailedCoupon: s.setAvailedCoupon,
     setDirection: s.setDirection,
     setCouponOccasion: s.setCouponOccasion,
-    userCouponz: s.userCouponz,
     setUserCouponz: s.setUserCouponz,
     setSelectedCoupon: s.setSelectedCoupon,
-    setMissingOutCoupon: s.setMissingOutCoupon,
     greatDeals: s.greatDeals,
     missingOut: s.missingOut,
   }));
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
-  const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
-    applyCouponz: s.applyCouponz,
-    setApplyCouponz: s.setApplyCouponz,
-  }));
+  const { applyCouponz, setApplyCouponz, setIsLoading } = useCouponTemp(
+    (s) => ({
+      applyCouponz: s.applyCouponz,
+      setApplyCouponz: s.setApplyCouponz,
+      setIsLoading: s.setIsLoading,
+    }),
+  );
 
   const closeCouponz = useCallback(() => {
     setApplyCouponz(false);
@@ -133,6 +144,7 @@ const MemoApplyCouponz = () => {
       const requiredFields = coupon?.conditions?.requiredFields || [];
       const requiresDobOrSpecialDay =
         requiredFields.includes("dob") || requiredFields.includes("specialday");
+      setIsLoading(true);
       if (requiresDobOrSpecialDay) {
         response = await apiRpc.couponz["check-grabbed-couponz"].$post({
           json: {
@@ -152,8 +164,10 @@ const MemoApplyCouponz = () => {
         setShowPopup(true);
         setAvailedCoupon(coupon);
         setSelectedCoupon(coupon);
+        setIsLoading(false);
         return;
       }
+      setIsLoading(false);
       // any condition apply the coupon
       const { discountValue, resetClaimedCoinz } = calculateDiscount(
         coupon,

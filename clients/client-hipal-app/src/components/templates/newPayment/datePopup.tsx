@@ -10,7 +10,6 @@ import {
   cn,
   convertToTimestamp,
   getHueColor,
-  getTodayDate,
   ICouponPage,
   triggerConfettiBlast,
 } from "@/components/utils/helpers";

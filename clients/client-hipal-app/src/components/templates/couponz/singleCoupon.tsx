@@ -25,6 +25,8 @@ import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import useCouponTemp from "@/components/store/useCouponTemp";
+import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
@@ -126,6 +128,9 @@ const MemoCouponz = () => {
       selectedCoupon?.conditions?.availability?.endTime || 23.5,
     );
   }, [selectedCoupon]);
+
+  if (selectedCoupon && Object.keys(selectedCoupon).length === 0)
+    return <LoadingSpinnerCircle />;
 
   return (
     <main

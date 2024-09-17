@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -39,7 +39,7 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
 
 const MainCoupon = ({ data }: { data: BusinessDetails }) => {
   const customLink = useParams()?.businessId as string;
-  const { couponId } = useParams();
+  const { couponId, channelId } = useParams();
   const { setBusinessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
     setBusinessDetails: s.setBusinessDetails,
@@ -80,9 +80,9 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
   };
 
   useQuery({
-    queryKey: ["singleCouponz", customLink, couponId],
+    queryKey: ["singleCouponz", customLink, couponId, channelId],
     queryFn: fetchSingleCouponz,
-    enabled: !!customLink && !!couponId,
+    enabled: !!customLink && !!couponId && !!channelId,
   });
 
   return (
@@ -99,7 +99,7 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
           <TermsAndConditions />
         </BottomPopUp>
       )}
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <LoadingSpinnerCircle />}
     </>
   );
 };

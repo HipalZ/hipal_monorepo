@@ -6,10 +6,18 @@ import {
   ICouponPage,
   triggerConfettiBlast,
 } from "@/components/utils/helpers";
-import CouponCardCongrats from "@/components/atoms/couponCardCongrats";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+
+const CouponCardCongrats = dynamic(
+  () => import("@/components/atoms/couponCardCongrats"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
 
 const MemoCongratulationz = () => {
   const router = useRouter();
