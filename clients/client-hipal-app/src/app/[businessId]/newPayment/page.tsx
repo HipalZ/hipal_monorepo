@@ -13,9 +13,5 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await businessApis.all(params.businessId);
-  return (
-    <main>
-      <PaymentWithCouponz data={data} />
-    </main>
-  );
+  return <PaymentWithCouponz data={data} />;
 }

@@ -180,7 +180,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             onKeyDown={openModal}
           >
             <GameButton
-              text={cn(claimedCoinz > 0 ? "Applied Coinz" : "Use Coinz")}
+              text={cn(claimedCoinz > 0 ? "Applied" : "Use Coinz")}
               hideShine={claimedCoinz > 0 || false}
             />
           </article>
@@ -190,7 +190,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             className="relative flex items-center mr-4"
           >
             <GameButton
-              text={cn(claimCouponz > 0 ? "Applied Coupon" : "Use Couponz")}
+              text={cn(claimCouponz > 0 ? "Applied" : "Use Couponz")}
               hideShine={claimCouponz > 0 || false}
             />
           </article>

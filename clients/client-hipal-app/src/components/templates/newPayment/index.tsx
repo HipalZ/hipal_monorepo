@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { type ChangeEvent, memo, useEffect, useState } from "react";
+import { type ChangeEvent, memo, useState } from "react";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
@@ -13,7 +13,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useTableData from "@/components/store/useTableData";
 import { useQuery } from "@tanstack/react-query";
-import { calculateReward, cn } from "@/components/utils/helpers";
+import { calculateReward, cn, PageStates } from "@/components/utils/helpers";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
@@ -24,7 +24,6 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
-import type { PageStates } from "../payment";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -105,9 +104,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
   const businessId = data?.business?.businessId;
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
-  const [isTipActive, setIsTipActive] = useState(false);
-  const [showInput, setShowInput] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { setAvailedCoupon, availedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
     availedCoupon: s.availedCoupon,
@@ -135,6 +131,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setSelectedMode,
     selectedTip,
     setSelectedTip,
+    isTipActive,
+    setIsTipActive,
+    showInput,
+    setShowInput,
+    isModalOpen,
+    setIsModalOpen,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     setBillValue: s.setBillValue,
@@ -154,6 +156,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setSelectedMode: s.setSelectedMode,
     selectedTip: s.selectedTip,
     setSelectedTip: s.setSelectedTip,
+    isTipActive: s.isTipActive,
+    setIsTipActive: s.setIsTipActive,
+    showInput: s.showInput,
+    setShowInput: s.setShowInput,
+    isModalOpen: s.isModalOpen,
+    setIsModalOpen: s.setIsModalOpen,
   }));
 
   const { businessDetails } = useBusinessDetails();
@@ -170,24 +178,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
     usePayment();
 
-  useEffect(() => {
-    if (!tableName) {
-      return router.push(`/${customLink}/explore`);
-    }
-  }, []);
-
-  // by default setting to zero instead of previous stale data
-  useEffect(() => {
-    setBillValue(0);
-    setClaimedCoinz(0);
-    setClaimCouponz(0);
-    setTips(0);
-    setSelectedTip("");
-    setCustomTip("");
-    setAvailedCoupon({});
-    setApplyCouponz(false);
-  }, []);
-
   const getMerchantKeySecret = async () => {
     const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
       param: {
@@ -202,6 +192,15 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         razorpayKeyId: response?.data?.razorpayKeyId,
       });
 
+      setBillValue(Number(searchParams?.get("amount")));
+      // by default setting to zero instead of previous stale data
+      setClaimedCoinz(0);
+      setClaimCouponz(0);
+      setTips(0);
+      setSelectedTip("");
+      setCustomTip("");
+      setAvailedCoupon({});
+      setApplyCouponz(false);
       return response?.data;
     }
 
@@ -376,13 +375,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     toast.error("Payment failed");
   };
 
-  const clearTheTip = () => {
+  const clearTheTip = useCallback(() => {
     setTips(0);
     setSelectedTip("");
     setCustomTip("");
     setShowInput(false);
     setIsTipActive(false);
-  };
+  }, [setTips, setSelectedTip, setCustomTip, setShowInput, setIsTipActive]);
 
   const handleCreateOfflineOrder = async () => {
     if (tableName === "") {
@@ -542,6 +541,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       if (showInput) {
         return toast.error("Please save the tip amount");
       }
+      if (!tableName) {
+        toast.error("Table Not Found Please Scan Again");
+        return router.push(`/${customLink}/scan`);
+      }
       if (billValue - claimedCoinz - claimCouponz + tips === 0)
         return toast.error("Please enter the bill amount");
       setSelectedMode(mode);
@@ -617,10 +620,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     }
   };
 
-  useEffect(() => {
-    setBillValue(Number(searchParams?.get("amount")));
-  }, []);
-
   useQuery({
     queryKey: ["getMerchantKeySecret", businessId],
     queryFn: getMerchantKeySecret,
@@ -634,7 +633,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   });
 
   return (
-    <section className="relative h-screen bg-black">
+    <main className="relative h-screen bg-black">
       {isLoading ? (
         <MemoPayLoader selectedMode={selectedMode} />
       ) : showError ? (
@@ -661,7 +660,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
               <center>
                 <p className="mb-2 text-sm font-semibold">Paying:</p>
                 <section className="absolute inset-0 flex items-center justify-center">
-                  <center className="absolute w-[300px] z-0 -top-20">
+                  <center className="absolute w-[300px] -top-20">
                     <Image
                       className="opacity-25"
                       width={1080}
@@ -671,17 +670,19 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                     />
                   </center>
                 </section>
-                <Image
-                  src={businessDetails?.logoUrl}
-                  height={50}
-                  width={50}
-                  quality={95}
-                  objectFit="cover"
-                  alt="logo-businessDetails"
-                  className="object-center bg-white border rounded-full shadow-sm aspect-square"
-                  placeholder="blur"
-                  blurDataURL={getRandomBlurImg(100, 100)}
-                />
+                <picture className="relative">
+                  <Image
+                    src={businessDetails?.logoUrl}
+                    height={50}
+                    width={50}
+                    quality={95}
+                    objectFit="cover"
+                    alt="logo-businessDetails"
+                    className="object-center bg-white border rounded-full shadow-sm aspect-square"
+                    placeholder="blur"
+                    blurDataURL={getRandomBlurImg(100, 100)}
+                  />
+                </picture>
                 <div
                   className="relative"
                   style={{
@@ -713,13 +714,8 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                 <CouponzBlink />
                 <RefferalCouponz />
                 <BillSummary
-                  isTipActive={isTipActive}
-                  setIsTipActive={setIsTipActive}
                   clearTheTip={clearTheTip}
                   handleTipSelect={handleTipSelect}
-                  selectedTip={selectedTip}
-                  customTip={customTip}
-                  showInput={showInput}
                   handleCustomTip={handleCustomTip}
                   handleSaveTip={handleSaveTip}
                 />
@@ -733,11 +729,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <h1 className="text-sm text-left inter">
                     Total Bill Amount: ₹{" "}
                     {billValue - claimedCoinz - claimCouponz + tips}
-                    {claimedCoinz > 0 ? (
-                      <p className="text-[#4CAF50]">
-                        {claimedCoinz} Saved, using coinz
-                      </p>
-                    ) : null}
+                    <span className="text-xs">
+                      {claimedCoinz > 0 ? (
+                        <p className="text-[#4CAF50]">
+                          {claimedCoinz} Saved, using coinz
+                        </p>
+                      ) : null}
+                    </span>
                   </h1>
                   <article
                     onClick={() => handleMode("MODE")}
@@ -759,14 +757,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
             />
           )}
           <AvailableCoinz
-            isModalOpen={isModalOpen}
             closeModal={closeModal}
             handleApplyCoinz={handleApplyCoinz}
             setClaimAmount={data?.loyalty?.setClaimedPercentage}
           />
         </div>
       )}
-    </section>
+    </main>
   );
 };
 

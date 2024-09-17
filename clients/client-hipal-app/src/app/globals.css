@@ -821,10 +821,6 @@ input[type='password'] {
 	}
 }
 
-.shine {
-	position: relative;
-  }
-
 @keyframes shine-effect {
 	from {
 	  left: -100%;
@@ -832,6 +828,11 @@ input[type='password'] {
 	to {
 	  left: 100%;
 	}
+  }
+
+  .shine {
+	position: relative;
+	overflow: hidden; 
   }
   
   .shine::before {
@@ -843,6 +844,8 @@ input[type='password'] {
 	width: 50%;
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
 	animation: shine-effect 2s infinite;
+	-webkit-animation: shine-effect 2s infinite;
+	-moz-animation:  shine-effect 2s infinite;
 	transform: rotate(45deg);
   }
 
@@ -855,6 +858,8 @@ input[type='password'] {
 	width: 50%;
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8) 50%, transparent);
 	animation: shine-effect 2s infinite;
+	-webkit-animation: shine-effect 2s infinite;
+	-moz-animation:  shine-effect 2s infinite;
 	transform: rotate(45deg);
 	animation-delay: 1s;
   }
@@ -2122,6 +2127,7 @@ input[type='password'] {
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
+	width:auto;
 	padding: 12px 48px;
 	color: #ffffff;
 	background: linear-gradient(to right, #4d4d4d 0, white 10%, #4d4d4d 20%);
@@ -2166,7 +2172,7 @@ input[type='password'] {
 	  background-position: 100%;
 	}
 	100% {
-	  background-position: 200px;
+	  background-position: 300px;
 	}
   }
   

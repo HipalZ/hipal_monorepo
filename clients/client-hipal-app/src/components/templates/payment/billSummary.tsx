@@ -5,13 +5,8 @@ import { CiCirclePlus } from "react-icons/ci";
 import { RiEdit2Fill } from "react-icons/ri";
 
 interface IBillSummary {
-  isTipActive: boolean;
-  setIsTipActive: (value: boolean) => void;
   clearTheTip: () => void;
   handleTipSelect: (tip: string) => void;
-  selectedTip: string;
-  customTip: string;
-  showInput: boolean;
   handleCustomTip: (e: any) => void;
   handleSaveTip: () => void;
 }
@@ -20,25 +15,30 @@ const BillSummary = (props: IBillSummary) => {
   const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const { billValue, claimCouponz, claimedCoinz, tips } = usePaymentStore(
-    (s) => ({
-      billValue: s.billValue,
-      claimCouponz: s.claimCouponz,
-      claimedCoinz: s.claimedCoinz,
-      tips: s.tips,
-    }),
-  );
   const {
     isTipActive,
     setIsTipActive,
-    clearTheTip,
-    handleTipSelect,
+    showInput,
     selectedTip,
     customTip,
-    showInput,
-    handleCustomTip,
-    handleSaveTip,
-  } = props;
+    billValue,
+    claimCouponz,
+    claimedCoinz,
+    tips,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    claimCouponz: s.claimCouponz,
+    claimedCoinz: s.claimedCoinz,
+    tips: s.tips,
+    isTipActive: s.isTipActive,
+    setIsTipActive: s.setIsTipActive,
+    showInput: s.showInput,
+    selectedTip: s.selectedTip,
+    customTip: s.customTip,
+  }));
+
+  const { clearTheTip, handleTipSelect, handleCustomTip, handleSaveTip } =
+    props;
   return (
     <div className="flex flex-col pb-36 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
       <h6 className="mx-4 mt-4 mb-2 text-xl">Bill Detailz</h6>

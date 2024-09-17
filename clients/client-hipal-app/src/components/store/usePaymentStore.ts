@@ -28,6 +28,15 @@ interface IUsePaymentStore {
 
   selectedTip: string;
   setSelectedTip: (tip: string) => void;
+
+  isTipActive: boolean;
+  setIsTipActive: (active: boolean) => void;
+
+  showInput: boolean;
+  setShowInput: (show: boolean) => void;
+
+  isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -63,4 +72,16 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   selectedTip: "",
   setSelectedTip: (tip: string) => set(() => ({ selectedTip: tip })),
+
+  isTipActive: false,
+  setIsTipActive: (active: boolean) =>
+    set({
+      isTipActive: active,
+    }),
+
+  showInput: false,
+  setShowInput: (show: boolean) => set(() => ({ showInput: show })),
+
+  isModalOpen: false,
+  setIsModalOpen: (open: boolean) => set(() => ({ isModalOpen: open })),
 }));
