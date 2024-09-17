@@ -24,17 +24,19 @@ import {
 import { useCouponz } from "@/components/store/useCouponz";
 import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
-import { toast } from "react-toastify";
 import useCouponTemp from "@/components/store/useCouponTemp";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const { couponId, channelId } = useParams();
   const router = useRouter();
-  const { displayTermsAndConditions, openTc } = useCouponTemp((s) => ({
-    displayTermsAndConditions: s.displayTermsAndConditions,
-    openTc: s.openTc,
-  }));
+  const { displayTermsAndConditions, openTc, setIsLoading } = useCouponTemp(
+    (s) => ({
+      displayTermsAndConditions: s.displayTermsAndConditions,
+      openTc: s.openTc,
+      setIsLoading: s.setIsLoading,
+    }),
+  );
   const { setCurrentPage, setCouponOccasion, selectedCoupon } = useCouponz(
     (s) => ({
       setCurrentPage: s.setCurrentPage,
@@ -63,34 +65,46 @@ const MemoCouponz = () => {
       setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
       return router.push(`/${customLink}/user/signup/`);
     }
+    setIsLoading(true);
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
     const requiresDobOrSpecialDay =
       requiredFields.includes("dob") || requiredFields.includes("specialday");
-
-    const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
-      json: {
-        couponId: selectedCoupon?._id || "",
-        userId: userDetails?._id,
-        businessId: businessId,
-      },
-    });
-    if (response.status === 400) {
-      if (requiredFields.includes("dob")) {
-        setCouponOccasion("dob");
-        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-        setDirection("couponz");
-      } else if (requiredFields.includes("specialday")) {
-        setCouponOccasion("specialday");
-        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-        setDirection("couponz");
-      } else {
+    if (requiresDobOrSpecialDay) {
+      const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
+        json: {
+          couponId: selectedCoupon?._id || "",
+          userId: userDetails?._id,
+          businessId: businessId,
+        },
+      });
+      if (response.status === 400) {
+        if (requiredFields.includes("dob")) {
+          setCouponOccasion("dob");
+          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+          setDirection("couponz");
+        } else if (requiredFields.includes("specialday")) {
+          setCouponOccasion("specialday");
+          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+          setDirection("couponz");
+        } else {
+          setCurrentPage(ICouponPage.CONGRATULATIONZ);
+        }
+      } else if (response.status === 409) {
+        setCurrentPage(ICouponPage.SEEMYCOUPONZ);
+      }
+    } else {
+      const response = await apiRpc.couponz["grabbed-couponz"].$post({
+        json: {
+          businessId: businessId,
+          couponId: selectedCoupon?._id,
+          userId: userDetails?._id,
+        },
+      });
+      if (response.status === 201) {
         setCurrentPage(ICouponPage.CONGRATULATIONZ);
       }
-    } else if (response.status === 409 && requiresDobOrSpecialDay) {
-      setCurrentPage(ICouponPage.SEEMYCOUPONZ);
-    } else if (response.status === 409 && !requiresDobOrSpecialDay) {
-      setCurrentPage(ICouponPage.CONGRATULATIONZ);
     }
+    setIsLoading(false);
   }, [
     selectedCoupon,
     userDetails,
@@ -100,6 +114,7 @@ const MemoCouponz = () => {
     setCurrentPage,
     router,
     customLink,
+    setIsLoading,
   ]);
 
   const startTime = useMemo(() => {
@@ -218,7 +233,7 @@ const MemoCouponz = () => {
               border: "none",
             }}
           />
-          <p className="col-span-2 text-3xl text-center text-black space-grotesk-700">
+          <h6 className="col-span-2 text-3xl text-center text-black space-grotesk-700">
             {formatDiscount(
               selectedCoupon?.config?.value,
               selectedCoupon?.config?.discountType,
@@ -229,7 +244,7 @@ const MemoCouponz = () => {
                 ? `up to ₹${selectedCoupon?.config?.upto}`
                 : ""}
             </p>
-          </p>
+          </h6>
           <div className="absolute flex items-center justify-between w-full h-full px-2">
             <div
               className={cn(
@@ -248,7 +263,7 @@ const MemoCouponz = () => {
         <center
           onClick={() => displayTermsAndConditions(openTc)}
           onKeyDown={() => displayTermsAndConditions(openTc)}
-          className="text-black fixed w-full text-base font-bold underline opacity-75 mt-4 underline-offset-4 max-w-[30rem]"
+          className="text-black fixed w-full text-base font-bold underline opacity-75 mt-6 underline-offset-4 max-w-[30rem]"
         >
           View Terms and conditions
         </center>
@@ -282,7 +297,7 @@ const MemoCouponz = () => {
       <center
         className={cn(
           getTextColor(selectedCoupon?.bgColour),
-          "fixed bottom-2 -translate-x-1/2 left-1/2",
+          "fixed bottom-2 -translate-x-1/2 left-1/2 text-sm",
         )}
       >
         Powered by HipalZ

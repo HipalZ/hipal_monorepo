@@ -12,10 +12,20 @@ import {
   getAvailabilityText,
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
-import MemoAddAmountModal from "@/components/molecules/bottomButton/addAmountModal";
 import useUserCouponz from "@/components/hooks/useUserCouponz";
 import { useLogin } from "@/components/store/useLogin";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import dynamic from "next/dynamic";
+
+const AddAmountModal = dynamic(
+  () => import("@/components/molecules/bottomButton/addAmountModal"),
+  { loading: () => <SkeletonLoader height={200} />, ssr: false },
+);
+
+const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
 
 const MemoSeeMyCouponz = () => {
   const router = useRouter();
@@ -181,13 +191,13 @@ const MemoSeeMyCouponz = () => {
           Go to explore
         </button>
         {openBillModal && (
-          <MemoBottomPopUp
+          <BottomPopUp
             show={openBillModal}
             onClose={openPaymentModal}
             linearGradTheme
           >
-            <MemoAddAmountModal />
-          </MemoBottomPopUp>
+            <AddAmountModal />
+          </BottomPopUp>
         )}
       </main>
     </>

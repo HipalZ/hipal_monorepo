@@ -9,8 +9,8 @@ import type { BusinessDetails, Coupon } from "@/components/types/businessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useCouponTemp from "@/components/store/useCouponTemp";
-import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -44,15 +44,14 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
     businessDetails: s.businessDetails,
     setBusinessDetails: s.setBusinessDetails,
   }));
-  const { isLogin, userDetails } = useLogin((s) => ({
-    userDetails: s.userDetails,
-    isLogin: s.isLogin,
-  }));
 
-  const { openTc, displayTermsAndConditions } = useCouponTemp((s) => ({
-    openTc: s.openTc,
-    displayTermsAndConditions: s.displayTermsAndConditions,
-  }));
+  const { openTc, displayTermsAndConditions, isLoading, setIsLoading } =
+    useCouponTemp((s) => ({
+      openTc: s.openTc,
+      displayTermsAndConditions: s.displayTermsAndConditions,
+      isLoading: s.isLoading,
+      setIsLoading: s.setIsLoading,
+    }));
   const router = useRouter();
   const { currentPage, setSelectedCoupon } = useCouponz((s) => ({
     currentPage: s.currentPage,
@@ -60,6 +59,7 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
   }));
 
   const fetchSingleCouponz = async () => {
+    setIsLoading(true);
     try {
       const couponResponse = await apiRpc.couponz[":couponId"].$get({
         param: {
@@ -74,6 +74,8 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
       if (couponId === undefined) {
         router.push(`/${customLink}/explore`);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,6 +99,7 @@ const MainCoupon = ({ data }: { data: BusinessDetails }) => {
           <TermsAndConditions />
         </BottomPopUp>
       )}
+      {isLoading && <LoadingSpinner />}
     </>
   );
 };

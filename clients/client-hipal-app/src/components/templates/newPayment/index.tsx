@@ -49,7 +49,7 @@ const RefferalCouponz = dynamic(() => import("./refferalCouponz"), {
   loading: () => <SkeletonLoader height={200} />,
 });
 
-const MemoErrorPayment = dynamic(() => import("../payment/errorPay"), {
+const ErrorPayment = dynamic(() => import("../payment/errorPay"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
@@ -638,12 +638,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       {isLoading ? (
         <MemoPayLoader selectedMode={selectedMode} />
       ) : showError ? (
-        <MemoErrorPayment />
+        <ErrorPayment />
       ) : applyCouponz ? (
         <ApplyCouponz />
       ) : (
         <div>
-          <section>
+          <section className="pt-2">
             <article onClick={handleBack} onKeyDown={handleBack}>
               <button
                 type="button"
@@ -651,7 +651,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   selectedMode === "INVOICE"
                     ? "bg-[#ffffff70]"
                     : "border border-black mt-4",
-                  "absolute top-0 left-4 py-2 rounded-full z-[60] px-4 text-black",
+                  "absolute top-2 left-4 py-2 rounded-full z-[60] px-4 text-black",
                 )}
               >
                 <BiArrowBack />
@@ -659,7 +659,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
             </article>
             {selectedMode === "INVOICE" ? (
               <center>
-                <p className="mt-4 mb-2 text-sm font-semibold">Paying:</p>
+                <p className="mb-2 text-sm font-semibold">Paying:</p>
                 <section className="absolute inset-0 flex items-center justify-center">
                   <center className="absolute w-[300px] z-0 -top-20">
                     <Image
@@ -682,14 +682,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   placeholder="blur"
                   blurDataURL={getRandomBlurImg(100, 100)}
                 />
-                <div className="relative">
-                  <div
-                    style={{
-                      background:
-                        "linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%)",
-                    }}
-                    className="absolute inset-0 z-10 opacity-90"
-                  />
+                <div
+                  className="relative"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 50%)",
+                  }}
+                >
                   <p className="relative z-20 mt-2 text-base font-semibold">
                     {businessDetails?.name}
                   </p>
