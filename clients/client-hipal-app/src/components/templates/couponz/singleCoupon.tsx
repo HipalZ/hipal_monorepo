@@ -67,30 +67,28 @@ const MemoCouponz = () => {
     const requiresDobOrSpecialDay =
       requiredFields.includes("dob") || requiredFields.includes("specialday");
 
-    if (requiresDobOrSpecialDay) {
-      const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
-        json: {
-          couponId: selectedCoupon?._id || "",
-          userId: userDetails?._id,
-          businessId: businessId,
-        },
-      });
-      if (response.status === 400) {
-        if (requiredFields.includes("dob")) {
-          setCouponOccasion("dob");
-          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-          setDirection("couponz");
-        } else if (requiredFields.includes("specialday")) {
-          setCouponOccasion("specialday");
-          setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
-          setDirection("couponz");
-        } else {
-          setCurrentPage(ICouponPage.CONGRATULATIONZ);
-        }
-      } else if (response.status === 409) {
-        setCurrentPage(ICouponPage.SEEMYCOUPONZ);
+    const response = await apiRpc.couponz["check-grabbed-couponz"].$post({
+      json: {
+        couponId: selectedCoupon?._id || "",
+        userId: userDetails?._id,
+        businessId: businessId,
+      },
+    });
+    if (response.status === 400) {
+      if (requiredFields.includes("dob")) {
+        setCouponOccasion("dob");
+        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+        setDirection("couponz");
+      } else if (requiredFields.includes("specialday")) {
+        setCouponOccasion("specialday");
+        setCurrentPage(ICouponPage.BIRTHDAYCOUPON);
+        setDirection("couponz");
+      } else {
+        setCurrentPage(ICouponPage.CONGRATULATIONZ);
       }
-    } else {
+    } else if (response.status === 409 && requiresDobOrSpecialDay) {
+      setCurrentPage(ICouponPage.SEEMYCOUPONZ);
+    } else if (response.status === 409 && !requiresDobOrSpecialDay) {
       setCurrentPage(ICouponPage.CONGRATULATIONZ);
     }
   }, [

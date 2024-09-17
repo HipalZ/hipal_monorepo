@@ -725,7 +725,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   handleSaveTip={handleSaveTip}
                 />
                 <SuggestCouponz />
-                <section className="fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black">
+                <section
+                  style={{
+                    boxShadow: "0px 0px 2px 0px #0000001F",
+                  }}
+                  className="rounded-t-2xl fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
+                >
                   <h1 className="text-sm text-left inter">
                     Total Bill Amount: ₹{" "}
                     {billValue - claimedCoinz - claimCouponz + tips}

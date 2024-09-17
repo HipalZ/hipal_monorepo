@@ -108,7 +108,6 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
           </button>
         </center>
         <CashbackMessage />
-        <br />
         <section className="relative flex justify-center h-[250px] ">
           <div
             className="-z-12"

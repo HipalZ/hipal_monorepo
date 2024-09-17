@@ -60,13 +60,16 @@ const MemoCashbackMessage = () => {
   ]);
 
   return (
-    <center className="relative my-4">
+    <>
       {(claimedCoinz > 0 || availedCoupon?.cashbackAvailable) && (
-        <h1 className="text-xs btn-shine">
-          You will get {Math.round(finalReward)} on this bill
-        </h1>
+        <center className="relative">
+          <h1 className="text-xs btn-shine">
+            You will get {Math.round(finalReward)} on this bill
+          </h1>
+          <br />
+        </center>
       )}
-    </center>
+    </>
   );
 };
 
