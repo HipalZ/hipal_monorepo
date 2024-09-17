@@ -166,9 +166,9 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
               <center className="mx-1 mb-1 text-sm">
                 {claimCouponz > 0
                   ? `${availedCoupon?.name} Applied`
-                  : `You have ${
-                      userCouponz ? validCouponCount : "no"
-                    } valid couponz`}
+                  : userCouponz?.length === 0
+                    ? "Check couponz"
+                    : `You have ${validCouponCount} valid couponz`}
               </center>
             </article>
           </article>

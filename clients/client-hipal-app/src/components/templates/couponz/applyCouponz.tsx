@@ -84,6 +84,8 @@ const MemoApplyCouponz = () => {
     setSelectedCoupon,
     greatDeals,
     missingOut,
+    setGreatDeals,
+    setMissingOut,
   } = useCouponz((s) => ({
     setCurrentPage: s.setCurrentPage,
     availedCoupon: s.availedCoupon,
@@ -94,6 +96,8 @@ const MemoApplyCouponz = () => {
     setSelectedCoupon: s.setSelectedCoupon,
     greatDeals: s.greatDeals,
     missingOut: s.missingOut,
+    setGreatDeals: s.setGreatDeals,
+    setMissingOut: s.setMissingOut,
   }));
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
@@ -242,6 +246,14 @@ const MemoApplyCouponz = () => {
         },
       });
       const res = await response.json();
+      const greatDeals = res?.data.filter(
+        (coupon) => billValue >= coupon.conditions.billValue,
+      );
+      const missingOut = res?.data.filter(
+        (coupon) => billValue < coupon.conditions.billValue,
+      );
+      setMissingOut(missingOut);
+      setGreatDeals(greatDeals);
       setUserCouponz(res.data || []);
       return res.data;
     } catch (err) {
