@@ -12,10 +12,12 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const { isActiveDishType, isActiveCategory } = useActiveClass((state) => ({
-    isActiveDishType: state.isActiveDishType,
-    isActiveCategory: state.isActiveCategory,
-  }));
+  const { isActiveDishType, isActiveCategory, setActiveCategory } =
+    useActiveClass((state) => ({
+      isActiveDishType: state.isActiveDishType,
+      isActiveCategory: state.isActiveCategory,
+      setActiveCategory: state.setActiveCategory,
+    }));
 
   const subTypes = useMemo(() => {
     return childCategory.filter(
@@ -61,34 +63,6 @@ const DishesList: FC<IDishesProps> = (props) => {
   return (
     <div>
       {subTypes?.map((category: CategoryType, index) => {
-        const headingRef = useRef(null);
-        // useEffect(() => {
-        //   const observer = new IntersectionObserver(
-        //     (entries) => {
-        //       entries.forEach((entry) => {
-        //         if (entry.isIntersecting && observerActive) {
-        //           handleCategoryInView(category);
-        //         }
-        //       });
-        //     },
-        //     {
-        //       root: null,
-        //       rootMargin: "-200px 0px 0px 0px",
-        //       threshold: 0.75,
-        //     },
-        //   );
-
-        //   if (headingRef.current) {
-        //     observer.observe(headingRef.current);
-        //   }
-
-        //   return () => {
-        //     if (headingRef.current) {
-        //       observer.unobserve(headingRef.current);
-        //     }
-        //   };
-        // }, [headingRef, category, observerActive]);
-
         return (
           <section
             className={"min-h-60 bg-base-100 w-full pb-4"}
@@ -101,10 +75,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                 "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
               )}
             >
-              <h3
-                className="my-4 text-xl font-medium capitalize text-primary"
-                ref={headingRef}
-              >
+              <h3 className="my-4 text-xl font-medium capitalize text-primary">
                 {category?.name || ""}
               </h3>
               <h4 className="my-4 text-lg font-medium text-primary">
