@@ -482,20 +482,20 @@ const couponzRouter = new Hono()
         return respond(c, "Coupon not found", true, 404, {});
       }
       if (dob) {
-        const user = await User.findOne({
-          _id: userId,
-          dob: { $exists: true },
-        });
-        const alreadyGrabbed = await UserCouponGrabb.findOne({
-          couponId: couponId,
-          userId: userId,
-          businessId: businessId,
-          dob: user?.dob ?? dob,
-        });
+        // const user = await User.findOne({
+        //   _id: userId,
+        //   dob: { $exists: true },
+        // });
+        // const alreadyGrabbed = await UserCouponGrabb.findOne({
+        //   couponId: couponId,
+        //   userId: userId,
+        //   businessId: businessId,
+        //   dob: user?.dob ?? dob,
+        // });
 
-        if (alreadyGrabbed) {
-          return respond(c, "Coupon already grabbed", true, 409, {});
-        }
+        // if (alreadyGrabbed) {
+        //   return respond(c, "Coupon already grabbed", true, 409, {});
+        // }
 
         await User.findByIdAndUpdate(
           userId,
@@ -537,16 +537,16 @@ const couponzRouter = new Hono()
         );
       }
       if (specialday) {
-        const alreadyGrabbed = await UserCouponGrabb.findOne({
-          couponId: couponId,
-          userId: userId,
-          businessId: businessId,
-          specialday: specialday,
-        });
+        // const alreadyGrabbed = await UserCouponGrabb.findOne({
+        //   couponId: couponId,
+        //   userId: userId,
+        //   businessId: businessId,
+        //   specialday: specialday,
+        // });
 
-        if (alreadyGrabbed) {
-          return respond(c, "Coupon already grabbed", true, 400, {});
-        }
+        // if (alreadyGrabbed) {
+        //   return respond(c, "Coupon already grabbed", true, 400, {});
+        // }
 
         const saveGrabbedCoupon = await UserCouponGrabb.create({
           businessId: businessId,
@@ -580,7 +580,35 @@ const couponzRouter = new Hono()
         );
       }
 
-      return respond(c, "Invalid request", true, 400, {});
+      const saveGrabbedCoupon = await UserCouponGrabb.create({
+        businessId: businessId,
+        count: 1,
+        userId: userId,
+        couponId: couponId,
+        date: Date.now(),
+        expiryDate: coupon.conditions.expiryAfterGrabbed ?? 0,
+      });
+
+      const reminderDateObj = new Date(
+        coupon.conditions.expiryAfterGrabbed ?? 0,
+      );
+      const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+        reminderDateObj.getMonth() + 1
+      } *`;
+
+      schedule(cronExpression, async () => {
+        await UserCouponGrabb.findByIdAndUpdate(saveGrabbedCoupon._id, {
+          isDeleted: true,
+        });
+      });
+
+      return respond(
+        c,
+        "Coupon grabbed successfully",
+        false,
+        201,
+        saveGrabbedCoupon,
+      );
     },
   )
   .post(
