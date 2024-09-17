@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import Hi from "@/assets/svg/hand.svg";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
@@ -82,9 +82,20 @@ const businessData = [
       "8-2-293/174/1/10 & 11, 101, 1st floor (above Ratnadeep) , S.V’s. NITYANTA ICON, road no.14, Banjara Hills, Hyderabad - 500034",
     gst: "36AADFZ4071H1Z0",
   },
+  {
+    id: "008",
+    name: "lifafa",
+    bizName: "lifafa",
+    billValue: 10500,
+    serviceCost: 3500,
+    months: 3,
+    address:
+      "588/1 2 1/2, Inner Ring Rd, Survey Colony, Saraswathi Colony, Uppal, Hyderabad, Telangana 500039",
+    gst: "36ALAPS3759F1ZX",
+  },
 ];
 
-const Invoices = ({ data }) => {
+const MemoInovices = ({ data }) => {
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
@@ -242,4 +253,5 @@ const Invoices = ({ data }) => {
   );
 };
 
+const Invoices = memo(MemoInovices);
 export default Invoices;
