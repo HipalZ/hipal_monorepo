@@ -13,6 +13,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useCouponz } from "@/components/store/useCouponz";
 
 const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
@@ -39,6 +40,10 @@ const AddAmountModal = memo(() => {
     setSelectedTip: s.setSelectedTip,
     setShowInput: s.setShowInput,
     setIsTipActive: s.setIsTipActive,
+  }));
+
+  const { setAvailedCoupon } = useCouponz((s) => ({
+    setAvailedCoupon: s.setAvailedCoupon,
   }));
   const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
@@ -69,6 +74,7 @@ const AddAmountModal = memo(() => {
       setShowInput(false);
       setIsTipActive(false);
       setTips(0);
+      setAvailedCoupon({});
       router.push(`/${customLink}/payment`);
     }
   }, [
@@ -85,6 +91,7 @@ const AddAmountModal = memo(() => {
     setShowInput,
     setIsTipActive,
     setTips,
+    setAvailedCoupon,
   ]);
 
   const callTheWaiter = useCallback(async () => {
