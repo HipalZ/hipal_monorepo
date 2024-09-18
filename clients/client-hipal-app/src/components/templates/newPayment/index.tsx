@@ -112,6 +112,7 @@ export interface IMerchantDetails {
 const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
   const businessId = data?.business?.businessId;
+  const { setLoyaltySetting } = useLoyaltyData();
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
   const [isTipActive, setIsTipActive] = useState(false);
   const [showInput, setShowInput] = useState(false);
@@ -123,6 +124,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const { applyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
   }));
+  useEffect(() => {
+    setLoyaltySetting(data?.loyalty);
+  }, [data]);
   const {
     billValue,
     setBillValue,
@@ -565,9 +569,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     });
     const response = (await res.json()) as unknown as { data: UserData };
     if (res.status === 200) {
-      setUserCoinz(response?.data?.rewards);
+      setUserCoinz(response?.data?.rewards || 0);
     }
-    return response?.data?.rewards;
+    return response?.data?.rewards || 0;
   };
 
   const openModal = useCallback(() => {

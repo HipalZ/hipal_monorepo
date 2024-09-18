@@ -109,8 +109,10 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
       openModal();
       setLoyaltySetting(loyalty);
       findPattern(loyalty?.cardPattern);
+    } else {
+      setLoyaltySetting({});
     }
-  }, []);
+  }, [loyalty]);
 
   if (!loyalty?._id) {
     return <></>;

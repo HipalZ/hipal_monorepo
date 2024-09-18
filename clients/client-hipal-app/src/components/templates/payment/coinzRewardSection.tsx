@@ -102,97 +102,101 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             </span>
           </button>
         </center>
-        <center className="text-xs text-[#A5A2A2] my-4">Explore couponz</center>
-        <section className="relative flex justify-around h-[250px]">
-          <div
-            className="-z-12"
-            style={{
-              background:
-                "radial-gradient(50% 50% at 50% 50%, #9167EA 0%, rgba(26, 26, 26, 0) 100%)",
-              height: "575px",
-              width: "100%",
-            }}
-          />
-          <article
-            className={
-              "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
-            }
-            style={{
-              backgroundImage: `url(${CoinzPattern.src})`,
-              opacity: claimCouponz > 0 ? 0.5 : 1,
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-            }}
-          >
-            <center className="z-20 mx-4 mt-4 text-sm text-white">
-              You get {loyaltySetting?.setCashBackPercentage}% on your bill
-            </center>
-            <article className="z-20 scaled-card-container-rotate">
-              <CardSection />
-            </article>
-            <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
-              <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
-              {claimedCoinz > 0 && (
-                <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
-              )}
-            </article>
-          </article>
-          <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
-            or
-          </span>
-          <article
-            style={{
-              opacity: claimedCoinz > 0 ? 0.5 : 1,
-            }}
-            className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative"
-          >
-            <Image
-              src={CouponzPattern}
-              alt="Couponz"
-              className="h-2/3 rounded-t-2xl"
-            />
-            <article
-              style={{
-                scale: 0.8,
-              }}
-              className="absolute z-20 top-4 left-16 rotate-12"
-            >
-              <CouponCardPay />
-            </article>
-            <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
-              <center className="mx-1 mb-1 text-sm">
-                {claimCouponz > 0
-                  ? `${availedCoupon?.name}Applied`
-                  : `You have ${
-                      userCouponz ? validCouponCount : "no"
-                    } valid couponz`}
-              </center>
-            </article>
-          </article>
-        </section>
-        <section className="flex justify-between">
-          <article
-            className="relative flex items-center mx-4"
-            onClick={openModal}
-            onKeyDown={openModal}
-          >
-            <GameButton
-              text={cn(claimedCoinz > 0 ? "Added Coinz" : "Use Coinz")}
-              hideShine={claimedCoinz > 0 || false}
-            />
-          </article>
-          <article
-            onClick={openCouponz}
-            onKeyDown={openCouponz}
-            className="relative flex items-center mr-4"
-          >
-            <GameButton
-              text={cn(claimCouponz > 0 ? "Added Coupon" : "Use Couponz")}
-              hideShine={claimCouponz > 0 || false}
-            />
-          </article>
-        </section>
+        {loyaltySetting?.loyaltyId ? (
+          <>
+            <section className="relative flex justify-around h-[250px]">
+              <div
+                className="-z-12"
+                style={{
+                  background:
+                    "radial-gradient(50% 50% at 50% 50%, #9167EA 0%, rgba(26, 26, 26, 0) 100%)",
+                  height: "575px",
+                  width: "100%",
+                }}
+              />
+              <article
+                className={
+                  "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
+                }
+                style={{
+                  backgroundImage: `url(${CoinzPattern.src})`,
+                  opacity: claimCouponz > 0 ? 0.5 : 1,
+                  backgroundSize: "cover",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                }}
+              >
+                <center className="z-20 mx-4 mt-4 text-sm text-white">
+                  You get {loyaltySetting?.setCashBackPercentage}% on your bill
+                </center>
+                <article className="z-20 scaled-card-container-rotate">
+                  <CardSection />
+                </article>
+                <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+                  <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
+                  {claimedCoinz > 0 && (
+                    <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
+                  )}
+                </article>
+              </article>
+              <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
+                or
+              </span>
+              <article
+                style={{
+                  opacity: claimedCoinz > 0 ? 0.5 : 1,
+                }}
+                className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative"
+              >
+                <Image
+                  src={CouponzPattern}
+                  alt="Couponz"
+                  className="h-2/3 rounded-t-2xl"
+                />
+                <article
+                  style={{
+                    scale: 0.8,
+                  }}
+                  className="absolute z-20 top-4 left-16 rotate-12"
+                >
+                  <CouponCardPay />
+                </article>
+                <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+                  <center className="mx-1 mb-1 text-sm">
+                    {claimCouponz > 0
+                      ? `${availedCoupon?.name}Applied`
+                      : `You have ${
+                          userCouponz ? validCouponCount : "no"
+                        } valid couponz`}
+                  </center>
+                </article>
+              </article>
+            </section>
+            <section className="flex justify-between">
+              <article
+                className="relative flex items-center mx-4"
+                onClick={openModal}
+                onKeyDown={openModal}
+              >
+                <GameButton
+                  text={cn(claimedCoinz > 0 ? "Added Coinz" : "Use Coinz")}
+                  hideShine={claimedCoinz > 0 || false}
+                />
+              </article>
+              <article
+                onClick={openCouponz}
+                onKeyDown={openCouponz}
+                className="relative flex items-center mr-4"
+              >
+                <GameButton
+                  text={cn(claimCouponz > 0 ? "Added Coupon" : "Use Couponz")}
+                  hideShine={claimCouponz > 0 || false}
+                />
+              </article>
+            </section>
+          </>
+        ) : null}
+
         {editBillModal && (
           <BottomPopUp
             show={editBillModal}
