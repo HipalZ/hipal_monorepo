@@ -83,6 +83,8 @@ const MemoAllCouponz = () => {
     ].$get({
       param: {
         businessId: businessDetails?.businessId,
+      },
+      query: {
         userId: userDetails?._id,
       },
     });
