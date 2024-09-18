@@ -2,7 +2,6 @@ import { useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import Background from "@/components/atom/feildBackground";
-import toast from "react-hot-toast";
 
 const Terms = () => {
   const {
@@ -11,14 +10,25 @@ const Terms = () => {
     termsAndConditions,
     setTermsAndConditions,
     setSelectedPage,
+    selectedGroupIds,
+    selectedUserIds,
   } = useCouponsStore((s) => ({
     requiredFields: s.requiredFields,
     setRequiredFields: s.setRequiredFields,
     termsAndConditions: s.termsAndConditions,
     setTermsAndConditions: s.setTermsAndConditions,
     setSelectedPage: s.setSelectedPage,
+    selectedGroupIds: s.selectedGroupIds,
+    selectedUserIds: s.selectedUserIds,
   }));
   const [verifyDOB, setVerifyDOB] = useState(requiredFields.includes("dob"));
+
+  console.log(
+    "Selected Group Ids:",
+    selectedGroupIds,
+    "Selected User Ids:",
+    selectedUserIds,
+  );
 
   const handleCheckboxToggle = () => {
     setVerifyDOB(!verifyDOB);
@@ -36,18 +46,20 @@ const Terms = () => {
   return (
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col pb-[7rem]">
-        <article className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="dob"
-            checked={verifyDOB}
-            onChange={handleCheckboxToggle}
-            className="text-black rounded"
-          />
-          <label htmlFor="dob" className="font-semibold text-gray-700">
-            Verify Date of Birth
-          </label>
-        </article>
+        {selectedGroupIds.length === 0 && selectedUserIds.length === 0 ? (
+          <article className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="dob"
+              checked={verifyDOB}
+              onChange={handleCheckboxToggle}
+              className="text-black rounded"
+            />
+            <label htmlFor="dob" className="font-semibold text-gray-700">
+              Verify Date of Birth
+            </label>
+          </article>
+        ) : null}
         <section className="flex flex-col mt-4">
           <label htmlFor="terms" className="font-semibold opacity-50">
             Terms and Conditions*

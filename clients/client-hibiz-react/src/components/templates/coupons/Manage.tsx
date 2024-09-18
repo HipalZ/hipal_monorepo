@@ -60,12 +60,10 @@ const arrow2Variants = {
 };
 
 const MemoManage = () => {
-  const { setSelectedPage, setCouponName, resetCouponState } = useCouponsStore(
-    (s) => ({
-      setSelectedPage: s.setSelectedPage,
-      setCouponName: s.setCouponName,
-    }),
-  );
+  const { setSelectedPage, setCouponName } = useCouponsStore((s) => ({
+    setSelectedPage: s.setSelectedPage,
+    setCouponName: s.setCouponName,
+  }));
 
   const createCouponFunc = (title: string) => {
     setCouponName(title);

@@ -109,7 +109,7 @@ const MemoCustom = () => {
 
   const saveCouponHandler = async (isPublishStatus: boolean) => {
     let imageUrl = "";
-
+    console.log("Selected File:", selectedFile, "Coupon Image:", couponImage);
     if (couponImage) {
       try {
         imageUrl = await storeImageAfterSave(

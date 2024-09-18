@@ -78,13 +78,13 @@ const Coupons = () => {
         setSelectedPage("CREATE");
         break;
       case "AVAILABLE":
-        setSelectedPage("DETAILS");
+        setSelectedPage("EXPIRED");
         break;
       case "EXPIRED":
-        setSelectedPage("AVAILABLE");
+        setSelectedPage("DETAILS");
         break;
       case "ELIGIBILITY":
-        setSelectedPage("EXPIRED");
+        setSelectedPage("AVAILABLE");
         break;
       case "GRABBING":
         setSelectedPage("ELIGIBILITY");
@@ -127,9 +127,9 @@ const Coupons = () => {
       case "DETAILS":
         return <span className="text-xl font-semibold">1/5</span>;
       case "AVAILABLE":
-        return <span className="text-xl font-semibold">2/5</span>;
-      case "EXPIRED":
         return <span className="text-xl font-semibold">3/5</span>;
+      case "EXPIRED":
+        return <span className="text-xl font-semibold">2/5</span>;
       case "ELIGIBILITY":
         return <span className="text-xl font-semibold">4/5</span>;
       case "GRABBING":

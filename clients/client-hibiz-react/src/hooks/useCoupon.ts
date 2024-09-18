@@ -6,6 +6,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
+export interface selectedUsersDetails {
+  _id: string;
+  name: string;
+  phone: string;
+}
+
 export const useGetAllCoupons = () => {
   const businessData = useBusinessData((state) => state.businessData);
   const businessId = businessData?._id;
@@ -143,4 +149,31 @@ export const useEditCoupon = () => {
   });
 
   return { editCoupon: mutateAsync, isPending };
+};
+
+export const useSingleUserInfo = (userPhone: string) => {
+  const { businessData } = useBusinessData();
+  const businessId = businessData?._id;
+
+  const getUserInfo = useCallback(async () => {
+    if (!userPhone || !businessId) return;
+
+    const res = await apiRpc.subscribers["subscriber-phone"][":businessId"][
+      ":phone"
+    ].$get({
+      param: {
+        businessId,
+        phone: userPhone,
+      },
+    });
+    return (await res.json()).data?.userId as selectedUsersDetails;
+  }, [userPhone, businessId]);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["getUserInfo", userPhone, businessId],
+    queryFn: getUserInfo,
+    enabled: !!userPhone && !!businessId,
+  });
+
+  return { userInfo: data, isLoading, error };
 };

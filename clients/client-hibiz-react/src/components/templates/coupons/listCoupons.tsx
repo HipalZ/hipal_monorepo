@@ -83,12 +83,12 @@ const MemoListCoupons = () => {
   }
 
   return (
-    <div className="flex flex-col flex-wrap gap-6 mx-4 lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
+    <center className="flex flex-col flex-wrap gap-6 mx-4 justify-center lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
       {coupons?.length ? (
         coupons.map((coupon: any) => (
           <div
             key={coupon._id}
-            className="relative w-full md:w-full lg:max-w-[19.25rem]"
+            className="relative w-full md:w-[22rem] lg:max-w-[19.25rem] text-left 2xl:max-w-[21rem] cursor-pointer"
             onClick={() => storeCouponInfo(coupon)}
           >
             <article
@@ -143,7 +143,7 @@ const MemoListCoupons = () => {
       ) : (
         <p>No coupons available</p>
       )}
-    </div>
+    </center>
   );
 };
 

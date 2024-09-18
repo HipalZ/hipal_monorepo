@@ -30,7 +30,7 @@ const MemoCoupon = () => {
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
     if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit === 0) {
-      return "Expires: All the time";
+      return "Expires : None";
     }
 
     if (couponStartDate === 0 && couponEndDate > 0) {
@@ -92,25 +92,22 @@ const MemoCoupon = () => {
                 minimumBillAmount > 0 ? `₹${minimumBillAmount}` : "up to bill"
               }`}
         </h3>
-
-        {customDays && customDays.length > 0 && (
-          <h3 className="absolute top-[4.25rem] left-4 text-sm">
-            Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
-          </h3>
-        )}
-
-        {customDays.length === 0 && (
-          <h3 className="absolute top-[4.25rem] left-4 text-sm">
-            All the time
-          </h3>
-        )}
-
-        <h3 className="absolute top-[5.5rem] left-4 text-sm">
+        <h3 className="absolute top-[4.25rem] left-4 text-sm">
           {getExpiryMessage()}
           {overAllLimit > 0 &&
             expiryCoupon !==
               "After Specific Use (e.g., Expires after it’s used 10 times)"}
         </h3>
+
+        {customDays && customDays.length > 0 && (
+          <h3 className="absolute top-[5.5rem] left-4 text-sm">
+            Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
+          </h3>
+        )}
+
+        {customDays.length === 0 && (
+          <h3 className="absolute top-[5.5rem] left-4 text-sm">All the time</h3>
+        )}
 
         {Array(15)
           .fill(null)

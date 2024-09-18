@@ -1,3 +1,4 @@
+import type { selectedUsersDetails } from "@/hooks/useCoupon";
 import { create } from "zustand";
 
 export type CouponFlow =
@@ -149,9 +150,14 @@ interface ICoupon {
   isActive: boolean;
   setIsActive: (value: boolean) => void;
 
+  selectedUsers: selectedUsersDetails[];
+  addUser: (user: selectedUsersDetails) => void;
+  removeUser: (userId: string) => void;
+  setSelectedUsers: (users: selectedUsersDetails[]) => void;
+
   resetCouponState: () => void;
 
-  links: { channelId: { _id: string; name: string }; link: string }[]; // Add links
+  links: { channelId: { _id: string; name: string }; link: string }[];
   setLinks: (
     links: { channelId: { _id: string; name: string }; link: string }[],
   ) => void;
@@ -299,6 +305,21 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setLinks: (
     links: { channelId: { _id: string; name: string }; link: string }[],
   ) => set(() => ({ links: links })),
+
+  selectedUsers: [],
+
+  setSelectedUsers: (users: selectedUsersDetails[]) =>
+    set(() => ({ selectedUsers: users })),
+
+  addUser: (user: selectedUsersDetails) =>
+    set((state) => ({
+      selectedUsers: [...state.selectedUsers, user],
+    })),
+
+  removeUser: (userId: string) =>
+    set((state) => ({
+      selectedUsers: state.selectedUsers.filter((user) => user._id !== userId),
+    })),
 
   resetCouponState: () =>
     set(() => ({

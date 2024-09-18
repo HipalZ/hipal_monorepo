@@ -29,7 +29,7 @@ const MemoSocialMedia = () => {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(to top, ${bgColor} 20%, transparent), url(${
+          backgroundImage: `linear-gradient(to top, ${bgColor}60 , transparent), url(${
             couponImage || birthdayPlaceholder
           })`,
           backgroundSize: "cover",

@@ -99,16 +99,16 @@ const MemoInfo = () => {
               </button>
             </Background>
           </section>
-          {links.length > 0 && (
+          {links && links?.length > 0 && (
             <section className="mx-4 mt-6">
               <h2>Links</h2>
               <Background>
                 <ul className="pl-4 list-disc">
-                  {links.map((link, index) => (
+                  {links?.map((link, index) => (
                     <li
                       key={index}
                       className="mb-2 text-blue-500 underline cursor-pointer"
-                      onClick={() => copyToClipboard(link.link)} // Copy link to clipboard on click
+                      onClick={() => copyToClipboard(link.link)}
                     >
                       {link.channelId.name}
                     </li>

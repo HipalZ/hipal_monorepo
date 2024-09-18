@@ -149,7 +149,7 @@ const MemoEligibility = () => {
       <BottomButton
         fixed
         buttons={[
-          { text: "Back", onClick: () => setSelectedPage("EXPIRED") },
+          { text: "Back", onClick: () => setSelectedPage("AVAILABLE") },
           { text: "Next", onClick: goNext },
         ]}
       />
