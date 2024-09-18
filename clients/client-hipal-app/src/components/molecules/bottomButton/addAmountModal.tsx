@@ -17,13 +17,19 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const business = useBusinessDetails((s) => s.businessDetails);
-  const { billValue, setBillValue, setEditBillModal } = usePaymentStore(
-    (s) => ({
-      billValue: s.billValue,
-      setBillValue: s.setBillValue,
-      setEditBillModal: s.setEditBillModal,
-    }),
-  );
+  const {
+    billValue,
+    setBillValue,
+    setEditBillModal,
+    setClaimCouponz,
+    setClaimedCoinz,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    setBillValue: s.setBillValue,
+    setEditBillModal: s.setEditBillModal,
+    setClaimCouponz: s.setClaimCouponz,
+    setClaimedCoinz: s.setClaimedCoinz,
+  }));
   const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
@@ -46,9 +52,19 @@ const AddAmountModal = memo(() => {
     if (billValue > 0) {
       setIsPayment(false);
       setEditBillModal(false);
+      setClaimCouponz(0);
+      setClaimedCoinz(0);
       router.push(`/${customLink}/payment`);
     }
-  }, [billValue, customLink, router, setEditBillModal, setIsPayment]);
+  }, [
+    billValue,
+    customLink,
+    router,
+    setEditBillModal,
+    setIsPayment,
+    setClaimCouponz,
+    setClaimedCoinz,
+  ]);
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
