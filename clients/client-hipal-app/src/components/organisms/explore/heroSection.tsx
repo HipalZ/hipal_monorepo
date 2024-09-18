@@ -69,7 +69,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   const isSubscribe = async (userDetails: IUserData) => {
     const { business } = data;
 
-    const { loyaltyId } = loyaltyInfo;
+    const loyaltyId = data?.loyalty?.loyaltyId;
 
     const payload = {
       businessId: business?.businessId?.toString() ?? "",

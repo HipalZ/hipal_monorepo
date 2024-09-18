@@ -69,7 +69,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     if (userReward.status === 200 || userReward.status === 201) {
       setHiCode(response?.password);
       setUserReward(response);
-      setUserCoinZ(response?.rewards);
+      setUserCoinZ(response?.rewards || 0);
     }
     return response;
   };
