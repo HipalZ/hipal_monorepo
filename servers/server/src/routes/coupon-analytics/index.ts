@@ -138,7 +138,7 @@ const couponAnalyticsRouter = new Hono()
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `http://localhost:4500/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
         });
         await link.save();
         links.push({
@@ -407,7 +407,7 @@ const couponAnalyticsRouter = new Hono()
       //logic to increase the count of the link
 
       return c.redirect(
-        `http://localhost:3000/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )

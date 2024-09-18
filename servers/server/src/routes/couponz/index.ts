@@ -248,7 +248,7 @@ const couponzRouter = new Hono()
       couponId: createdCoupon._id,
       channelId: channelId?._id,
       date: Date.now(),
-      link: `http://localhost:4500/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
+      link: `https://test.api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
     });
 
     if (
