@@ -25,7 +25,7 @@ function CategoryHeader(props: ICategoryProps) {
 
     if (
       currentScrollY > lastScrollY &&
-      Math.abs(currentScrollY - lastScrollY) > 50
+      Math.abs(currentScrollY - lastScrollY) > 200
     ) {
       setShowHeader(false);
     } else if (currentScrollY < lastScrollY) {

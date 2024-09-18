@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { type ChangeEvent, memo, useState } from "react";
 import type { IBusinessData, UserData } from "@/components/types/businessData";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -28,6 +28,7 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
+import useUserReward from "@/components/store/useUserReward";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -107,7 +108,9 @@ export interface IMerchantDetails {
 const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
   const businessId = data?.business?.businessId;
+  const { setLoyaltySetting } = useLoyaltyData();
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
+  const setUserLoginCoinz = useLogin((s) => s.setUserCoinZ);
   const { setAvailedCoupon, availedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
     availedCoupon: s.availedCoupon,
@@ -116,6 +119,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
+  useEffect(() => {
+    setLoyaltySetting(data?.loyalty);
+  }, [data]);
   const {
     billValue,
     setBillValue,
@@ -568,9 +574,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     });
     const response = (await res.json()) as unknown as { data: UserData };
     if (res.status === 200) {
-      setUserCoinz(response?.data?.rewards);
+      setUserCoinz(response?.data?.rewards || 0);
+      setUserLoginCoinz(response?.data?.rewards || 0);
     }
-    return response?.data?.rewards;
+    return response?.data?.rewards || 0;
   };
 
   const openModal = useCallback(() => {

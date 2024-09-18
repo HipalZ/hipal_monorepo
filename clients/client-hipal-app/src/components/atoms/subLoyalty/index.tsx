@@ -11,7 +11,7 @@ import Wallet from "@/assets/bonuscard/wallet.png";
 import googleImage from "@/assets/img/googleImg.png";
 import Coin from "@/assets/bonuscard/coin.png";
 import Star from "@/assets/svg/Star.svg";
-import { IUserData, useLogin } from "@/components/store/useLogin";
+import { type IUserData, useLogin } from "@/components/store/useLogin";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
@@ -23,7 +23,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/components/utils/helpers";
 import { LuArrowRight } from "react-icons/lu";
-import { IResponse } from "@/components/types/businessData";
+import type { IResponse } from "@/components/types/businessData";
 
 interface ILoyaltyCard {
   loyalty: ILoyaltySetting;
@@ -119,8 +119,10 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
       openModal();
       setLoyaltySetting(loyalty);
       findPattern(loyalty?.cardPattern);
+    } else {
+      setLoyaltySetting({});
     }
-  }, []);
+  }, [loyalty]);
 
   if (!loyalty?._id) {
     return <></>;
