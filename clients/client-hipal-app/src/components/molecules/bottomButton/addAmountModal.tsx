@@ -25,6 +25,9 @@ const AddAmountModal = memo(() => {
     setClaimedCoinz,
     setCustomTip,
     setTips,
+    setSelectedTip,
+    setShowInput,
+    setIsTipActive,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     setBillValue: s.setBillValue,
@@ -33,6 +36,9 @@ const AddAmountModal = memo(() => {
     setClaimedCoinz: s.setClaimedCoinz,
     setCustomTip: s.setCustomTip,
     setTips: s.setTips,
+    setSelectedTip: s.setSelectedTip,
+    setShowInput: s.setShowInput,
+    setIsTipActive: s.setIsTipActive,
   }));
   const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
@@ -58,7 +64,10 @@ const AddAmountModal = memo(() => {
       setEditBillModal(false);
       setClaimCouponz(0);
       setClaimedCoinz(0);
+      setSelectedTip("");
       setCustomTip("");
+      setShowInput(false);
+      setIsTipActive(false);
       setTips(0);
       router.push(`/${customLink}/payment`);
     }
@@ -71,6 +80,10 @@ const AddAmountModal = memo(() => {
     setClaimCouponz,
     setClaimedCoinz,
     setCustomTip,
+    setTips,
+    setSelectedTip,
+    setShowInput,
+    setIsTipActive,
     setTips,
   ]);
 
