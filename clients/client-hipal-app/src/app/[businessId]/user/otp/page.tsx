@@ -30,7 +30,7 @@ function OtpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logoUrl);
-  const businessId = useBusinessDetails((s) => s.businessDetails._id);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const [logo, setLogo] = useState(businessLogo);

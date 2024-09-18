@@ -123,6 +123,9 @@ export function timestampToDateTime(timestamp: number): string {
 }
 
 export const formatDate = (timestamp: number): string => {
+  if (timestamp === 0) {
+    return "No expiry";
+  }
   const date = new Date(timestamp);
   const day = String(date.getDate()).padStart(2, "0");
   const monthNames = [

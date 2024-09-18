@@ -63,9 +63,7 @@ const MemoCouponCardPay = () => {
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
               <h3 className="text-gray-500 text-[0.25rem]">Valid Till</h3>
               <p className="text-[0.3rem]">
-                {formatDate(
-                  couponz[1]?.conditions?.couponEndDate || new Date(),
-                )}
+                {formatDate(couponz[1]?.conditions?.couponEndDate || 0)}
               </p>
             </div>
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
@@ -177,7 +175,7 @@ const MemoCouponCardPay = () => {
           <div className="flex flex-col items-start space-y-0.5 my-0.5">
             <h3 className="text-gray-500 text-[0.25rem]">Valid Till</h3>
             <p className="text-[0.3rem]">
-              {formatDate(couponz[0]?.conditions?.couponEndDate || new Date())}
+              {formatDate(couponz[0]?.conditions?.couponEndDate || 0)}
             </p>
           </div>
           <div className="flex flex-col items-start space-y-0.5 my-0.5">

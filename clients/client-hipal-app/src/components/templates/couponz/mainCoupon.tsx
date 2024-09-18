@@ -15,6 +15,8 @@ import { apiRpc } from "@hi/common";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import useTableData from "@/components/store/useTableData";
+import { toast } from "react-toastify";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -49,6 +51,8 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
     setBusinessDetails: s.setBusinessDetails,
   }));
 
+  const setTableName = useTableData((s) => s.setTableName);
+
   const { openTc, displayTermsAndConditions, isLoading, setIsLoading } =
     useCouponTemp((s) => ({
       openTc: s.openTc,
@@ -71,11 +75,16 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
         },
       });
       const coupon = await couponResponse.json();
+      if (couponResponse?.status === 404) {
+        toast.error("Coupon Expired");
+        setIsLoading(false);
+        router.push(`/${customLink}/explore`);
+      }
       setSelectedCoupon(coupon?.data as Coupon);
-      console.log("coupon", coupon);
       setBusinessDetails(business);
+      setTableName("");
     } catch (err) {
-      console.log("error", err);
+      setIsLoading(false);
       if (couponId === undefined) {
         router.push(`/${customLink}/explore`);
       }
