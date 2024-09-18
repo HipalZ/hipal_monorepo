@@ -493,8 +493,8 @@ export interface Availability {
 
 export interface EligibleUser {
   allUsers: boolean;
-  userIds: any[];
-  groupIds: any[];
+  userIds: string[];
+  groupIds: string[];
   _id: string;
 }
 
@@ -513,6 +513,7 @@ export interface CouponConditions {
 }
 
 export interface Coupon {
+  channelId: string;
   cashbackAvailable: boolean;
   image: string;
   bgColour: string;
@@ -544,4 +545,10 @@ export interface IResponse {
   data: any;
   rewards?: number;
   googleReviewCount?: number;
+}
+
+export interface IMerchantDetails {
+  businessId: string;
+  razorpayMerchantId: string;
+  razorpayKeyId: string;
 }

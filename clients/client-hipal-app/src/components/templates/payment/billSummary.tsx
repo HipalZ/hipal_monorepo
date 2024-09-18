@@ -103,7 +103,7 @@ const BillSummary = (props: IBillSummary) => {
               ) : null}
             </div>
             <div className="flex">
-              <span className="text-sm">₹ {tips || 0}</span>
+              <span className="text-sm text-black">₹ {tips || 0}</span>
             </div>
           </div>
           {isTipActive ? (
@@ -114,9 +114,7 @@ const BillSummary = (props: IBillSummary) => {
                   key={index?.toString()}
                   onClick={() => handleTipSelect(tip)}
                   className={`px-4 py-1 rounded-lg text-xs ${
-                    selectedTip === tip
-                      ? "bg-primary text-white"
-                      : "bg-gray-200"
+                    selectedTip === tip ? "bg-black text-white" : "bg-gray-200"
                   }`}
                 >
                   {tip}
@@ -137,7 +135,7 @@ const BillSummary = (props: IBillSummary) => {
               <button
                 type="button"
                 onClick={handleSaveTip}
-                className="h-8 px-2 text-xs text-white rounded-lg bg-primary"
+                className="h-8 px-2 text-xs text-white bg-black rounded-lg"
               >
                 Save
               </button>

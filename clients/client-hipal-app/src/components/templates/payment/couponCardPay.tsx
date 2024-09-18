@@ -23,14 +23,15 @@ const MemoCouponCardPay = () => {
   }));
 
   return (
-    <section className="relative max-h-[6rem]">
+    <section className="relative max-h-[6rem] mt-6">
       {claimCouponz === 0 && (
         <center
           style={{
             transform: "rotate(-18deg)",
             transformOrigin: "bottom center",
+            scale: "1.2",
           }}
-          className="absolute max-h-[8rem] max-w-[8rem] scale-110"
+          className="absolute max-h-[8rem] max-w-[8rem]"
         >
           <picture className="w-full">
             <Image
@@ -136,10 +137,19 @@ const MemoCouponCardPay = () => {
           />
         </center>
       )}
-      <center className="absolute">
+      <center
+        className="absolute -mt-2"
+        style={{
+          scale: "1.25",
+        }}
+      >
         <picture>
           <Image
-            src={claimCouponz > 0 ? availedCoupon?.image : birthdayPlaceholder}
+            src={
+              claimCouponz > 0 && availedCoupon?.image
+                ? availedCoupon.image
+                : birthdayPlaceholder
+            }
             width={100}
             height={53}
             alt="Birthday Placeholder"

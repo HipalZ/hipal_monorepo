@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { RiEdit2Fill } from "react-icons/ri";
 import Image from "next/image";
 import CoinzPattern from "@/assets/img/coinzpattern.png";
@@ -41,13 +41,7 @@ const AddAmountModal = dynamic(
   { loading: () => <SkeletonLoader height={200} />, ssr: false },
 );
 
-interface IUseCoinzPopup {
-  openModal: () => void;
-}
-
-const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
-  const { openModal } = props;
-  const [editBillModal, setEditBillModal] = useState(false);
+const MemoCoinzRewardSection = () => {
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
@@ -62,11 +56,27 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
-  const { billValue, claimedCoinz, claimCouponz } = usePaymentStore((s) => ({
+  const {
+    billValue,
+    claimedCoinz,
+    claimCouponz,
+    isModalOpen,
+    setIsModalOpen,
+    editBillModal,
+    setEditBillModal,
+  } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     claimCouponz: s.claimCouponz,
+    isModalOpen: s.isModalOpen,
+    setIsModalOpen: s.setIsModalOpen,
+    editBillModal: s.editBillModal,
+    setEditBillModal: s.setEditBillModal,
   }));
+
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, [isModalOpen]);
 
   const openBillModal = useCallback(() => {
     setEditBillModal(true);

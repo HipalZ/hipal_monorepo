@@ -12,13 +12,12 @@ import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 
 interface IAvailableCoinz {
-  closeModal: () => void;
   handleApplyCoinz: (value: number) => void;
   setClaimAmount: number;
 }
 
 const AvailableCoinz = (props: IAvailableCoinz) => {
-  const { closeModal, handleApplyCoinz, setClaimAmount } = props;
+  const { handleApplyCoinz, setClaimAmount } = props;
   const {
     billValue,
     userCoinz,
@@ -26,6 +25,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     claimCouponz,
     setClaimCouponz,
     isModalOpen,
+    setIsModalOpen,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
@@ -33,6 +33,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     setClaimCouponz: s.setClaimCouponz,
     userCoinz: s.userCoinz,
     isModalOpen: s.isModalOpen,
+    setIsModalOpen: s.setIsModalOpen,
   }));
 
   const { setAvailedCoupon } = useCouponz((s) => ({
@@ -81,6 +82,10 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     tempClaimedCoinz,
     setAvailedCoupon,
   ]);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, [isModalOpen]);
 
   return (
     <>

@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useEffect, useCallback, useRef } from "react";
+import { memo, useCallback, useRef } from "react";
 import Image from "next/image";
 import baloons from "@/assets/img/baloons_birthday.png";
 import cake from "@/assets/img/cake.png";
@@ -91,6 +91,7 @@ const MemoApplyCouponDatePopup = () => {
       triggerConfettiBlast();
       toast.success("Grabbed successfully apply couponz");
       setShowPopup(false);
+      setApplyCouponz(false);
     } else if (response.status === 400 || response.status === 409) {
       triggerConfettiBlast();
       setCurrentPage(ICouponPage.SINGLECOUPON);

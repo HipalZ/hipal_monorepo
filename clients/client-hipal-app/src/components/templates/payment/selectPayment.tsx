@@ -8,6 +8,7 @@ import Grid from "@/assets/payment/grid.png";
 import type { PageStates } from ".";
 import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { cn } from "@/components/utils/helpers";
 
 interface Business {
   isPaymentIntegrated: boolean;
@@ -19,20 +20,26 @@ interface Data {
 
 interface PaymentComponentProps {
   handleCreateOrder: (amount: number, mode: string) => void;
-  isLoading: boolean;
   total: number;
 }
 
 const PaymentComponent: React.FC<PaymentComponentProps> = ({
   total,
   handleCreateOrder,
-  isLoading,
 }) => {
   const [currentImage, setCurrentImage] = useState<string>(QRcodeImg.src);
-  const { billValue, selectedMode, setSelectedMode } = usePaymentStore((s) => ({
+  const {
+    isLoading,
+    billValue,
+    selectedMode,
+    setSelectedMode,
+    merchantDetails,
+  } = usePaymentStore((s) => ({
+    isLoading: s.isLoading,
     billValue: s.billValue,
     selectedMode: s.selectedMode,
     setSelectedMode: s.setSelectedMode,
+    merchantDetails: s.merchantDetails,
   }));
   useEffect(() => {
     const images = [QRcodeImg.src, HandPay.src, online.src];
@@ -59,6 +66,14 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
       if (total <= 0) {
         return toast.error(
           "You cannot pay 0 amount through online Please pay by cash mode",
+        );
+      }
+      if (
+        Object.keys(merchantDetails).length === 0 ||
+        !merchantDetails?.razorpayMerchantId
+      ) {
+        return toast.error(
+          "Online Pay is not available for this business, pay through offline mode",
         );
       }
       createOrder(billValue, "ONLINE");
@@ -110,8 +125,8 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           <Image width={480} height={200} src={Grid} alt="Payment Image" />
         </div>
       </div>
-      <section className="absolute bottom-6 text-primary">
-        <center className=" text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
+      <section className="absolute text-primary">
+        <center className="text-black text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
           How do you want to settle ?
         </center>
         <section className="flex w-[92%] gap-4 mx-4 mb-6">
@@ -129,7 +144,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
               }}
               className="bg-[#EACBBF] rounded-b-[3rem] h-1/2"
             />
-            <div className="px-4 pt-2 text-sm leading-2">
+            <div className="px-4 pt-2 text-sm text-black leading-2">
               Pay Cash to Captain
             </div>
 
@@ -158,12 +173,17 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
               }}
               className="bg-[#F7C846] rounded-b-[3rem] h-1/2"
             />
-            <div className="px-4 pt-2 text-sm leading-2">
+            <div className="px-4 pt-2 text-sm text-black leading-2">
               Hassle free & easy payments
             </div>
             <button
               type="button"
-              className="absolute w-[90%] px-4 py-1 text-white bg-black rounded-full bottom-2 left-2"
+              className={cn(
+                !merchantDetails?.razorpayMerchantId
+                  ? "opacity-50 pointer-events-none"
+                  : "",
+                "absolute w-[90%] px-4 py-1 text-white bg-black rounded-full bottom-2 left-2",
+              )}
             >
               {isLoading ? (
                 <span className="loader_spinner !border-t-primary" />

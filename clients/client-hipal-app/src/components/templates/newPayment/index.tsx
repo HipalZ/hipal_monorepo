@@ -1,9 +1,8 @@
 "use client";
-
-import React, { useCallback, useEffect } from "react";
-import { type ChangeEvent, memo, useState } from "react";
-import type { IBusinessData, UserData } from "@/components/types/businessData";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect } from "react";
+import { type ChangeEvent, memo } from "react";
+import type { IBusinessData } from "@/components/types/businessData";
+import { useParams, useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { toast } from "react-toastify";
@@ -12,7 +11,6 @@ import usePayment from "@/components/store/usePayment";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useTableData from "@/components/store/useTableData";
-import { useQuery } from "@tanstack/react-query";
 import {
   calculateReward,
   cn,
@@ -28,7 +26,8 @@ import Image from "next/image";
 import { getRandomBlurImg } from "@/components/utils/images";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
-import useUserReward from "@/components/store/useUserReward";
+import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
+import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -100,37 +99,39 @@ const PaymentCard = dynamic(
   },
 );
 
-export interface IMerchantDetails {
-  businessId: string;
-  razorpayMerchantId: string;
-  razorpayKeyId: string;
-}
 const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
   const businessId = data?.business?.businessId;
   const { setLoyaltySetting } = useLoyaltyData();
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
-  const setUserLoginCoinz = useLogin((s) => s.setUserCoinZ);
-  const { setAvailedCoupon, availedCoupon } = useCouponz((s) => ({
-    setAvailedCoupon: s.setAvailedCoupon,
+  const { availedCoupon } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
   }));
-  const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
+  const { applyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
-    setApplyCouponz: s.setApplyCouponz,
   }));
+
+  const { setEditBillModal } = usePaymentStore((s) => ({
+    setEditBillModal: s.setEditBillModal,
+  }));
+
+  useMerchantDetails();
+  useUserCoinz(data?.loyalty?.loyaltyId || "");
+
   useEffect(() => {
+    if (billValue === 0) {
+      setEditBillModal(true);
+    }
+    setSelectedMode("INVOICE");
     setLoyaltySetting(data?.loyalty);
   }, [data]);
+
   const {
     billValue,
-    setBillValue,
-    setUserCoinz,
     userCoinz,
     claimedCoinz,
     setClaimedCoinz,
     claimCouponz,
-    setClaimCouponz,
     setTips,
     tips,
     customTip,
@@ -139,93 +140,135 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setIsLoading,
     selectedMode,
     setSelectedMode,
-    selectedTip,
     setSelectedTip,
-    isTipActive,
     setIsTipActive,
     showInput,
     setShowInput,
-    isModalOpen,
     setIsModalOpen,
+    merchantDetails,
+    showError,
+    setShowError,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
-    setBillValue: s.setBillValue,
     claimedCoinz: s.claimedCoinz,
     setClaimedCoinz: s.setClaimedCoinz,
     claimCouponz: s.claimCouponz,
-    setClaimCouponz: s.setClaimCouponz,
     tips: s.tips,
     customTip: s.customTip,
     setCustomTip: s.setCustomTip,
     setTips: s.setTips,
     userCoinz: s.userCoinz,
-    setUserCoinz: s.setUserCoinz,
     isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
     selectedMode: s.selectedMode,
     setSelectedMode: s.setSelectedMode,
-    selectedTip: s.selectedTip,
     setSelectedTip: s.setSelectedTip,
-    isTipActive: s.isTipActive,
     setIsTipActive: s.setIsTipActive,
     showInput: s.showInput,
     setShowInput: s.setShowInput,
-    isModalOpen: s.isModalOpen,
     setIsModalOpen: s.setIsModalOpen,
+    merchantDetails: s.merchantDetails,
+    showError: s.showError,
+    setShowError: s.setShowError,
   }));
 
   const { businessDetails } = useBusinessDetails();
   const { tableName, setTableName } = useTableData();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { loyaltySetting } = useLoyaltyData();
-  const [showError, setShowError] = useState(false);
-  const [merchantDetails, setMerchantDetails] = useState<IMerchantDetails>({
-    businessId: "",
-    razorpayMerchantId: "",
-    razorpayKeyId: "",
-  });
 
   const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
     usePayment();
 
-  const getMerchantKeySecret = async () => {
-    const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
-      param: {
-        businessId: businessId || "",
-      },
-    });
-    const response = await res.json();
-    if (res.status === 200) {
-      setMerchantDetails({
-        businessId: businessId || "",
-        razorpayMerchantId: response?.data?.razorpayMerchantId,
-        razorpayKeyId: response?.data?.razorpayKeyId,
+  // hoisting for adding dep in next callback
+  const sendPaymentResponse = useCallback(
+    async (response: any) => {
+      setIsLoading(true);
+      const res = await apiRpc.payments.validPayment[":merchantId"].$post({
+        param: {
+          merchantId: merchantDetails.razorpayMerchantId,
+        },
+        json: {
+          response,
+        },
+        query: {
+          couponId: availedCoupon?._id,
+          userId: userDetails?._id,
+        },
       });
-      setBillValue(Number(searchParams?.get("amount")));
-      // by default setting to zero instead of previous stale data
-      setClaimedCoinz(0);
-      setClaimCouponz(0);
-      setTips(0);
-      setSelectedTip("");
-      setCustomTip("");
-      setAvailedCoupon({});
-      setApplyCouponz(false);
-      return response?.data;
-    }
+      const data = await res.json();
+      const orderId = data?.data as string;
+      const total = billValue - claimedCoinz - claimCouponz + tips;
+      const coinsObtained =
+        total * (loyaltySetting?.setCashBackPercentage / 100);
+      const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
+      let finalReward = 0;
+      if (
+        (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
+        claimedCoinz > 0 ||
+        (claimedCoinz > 0 && claimCouponz === 0)
+      ) {
+        finalReward = calculateReward(
+          existingCoins,
+          coinsObtained,
+          loyaltySetting?.rewardLimit,
+        )?.finalReward;
+      }
 
-    //TODO: IF BUSINESS DOES NOT HAVE MERCHANT ID THEN SHOW ERROR AND AVOID PAYMENT
-  };
+      if (res.status === 200) {
+        toast.success("Payment successful");
+        setRazorPaySignature("");
+        setRazorPayOrderId("");
+        setRazorPayPaymentId("");
+        setTableName("");
+        return router.push(
+          `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
+            finalReward,
+          )}&orderId=${orderId}`,
+        );
+      }
+      toast.error("Payment failed");
+    },
+    [
+      setIsLoading,
+      apiRpc,
+      merchantDetails.razorpayMerchantId,
+      availedCoupon?._id,
+      userDetails?._id,
+      billValue,
+      claimedCoinz,
+      claimCouponz,
+      tips,
+      loyaltySetting?.setCashBackPercentage,
+      loyaltySetting?.rewardLimit,
+      userCoinz,
+      setRazorPaySignature,
+      setRazorPayOrderId,
+      setRazorPayPaymentId,
+      setTableName,
+      router,
+      customLink,
+    ],
+  );
 
-  const handlePaymentSuccess = async (response: any) => {
-    setIsLoading(true);
-    await sendPaymentResponse(response);
-    setRazorPaySignature(response.razorpay_signature);
-    setRazorPayOrderId(response.razorpay_order_id);
-    setRazorPayPaymentId(response.razorpay_payment_id);
-  };
+  const handlePaymentSuccess = useCallback(
+    async (response: any) => {
+      setIsLoading(true);
+      await sendPaymentResponse(response);
+      setRazorPaySignature(response.razorpay_signature);
+      setRazorPayOrderId(response.razorpay_order_id);
+      setRazorPayPaymentId(response.razorpay_payment_id);
+    },
+    [
+      setIsLoading,
+      setRazorPaySignature,
+      setRazorPayOrderId,
+      setRazorPayPaymentId,
+      sendPaymentResponse,
+    ],
+  );
 
-  const handlePaymentDismiss = () => {
+  const handlePaymentDismiss = useCallback(() => {
     setRazorPaySignature("");
     setRazorPayOrderId("");
     setRazorPayPaymentId("");
@@ -234,11 +277,16 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setTimeout(() => {
       setShowError(false);
     }, 2000);
-  };
+  }, [
+    setRazorPaySignature,
+    setRazorPayOrderId,
+    setRazorPayPaymentId,
+    setShowError,
+  ]);
 
-  const handlePaymentFailure = (response: any) => {
+  const handlePaymentFailure = useCallback((response: any) => {
     setRazorPayOrderId(response.error.metadata.order_id);
-  };
+  }, []);
 
   const creatingRazorPayOptions = async (orderId: string) => {
     if (!orderId) {
@@ -262,7 +310,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         handler: (response) => {
           handlePaymentSuccess(response);
           window.onpopstate = null;
-          setIsLoading(false); // Set isLoading to false after successful payment
+          // setIsLoading(false); // Set isLoading to false after successful payment
         },
         prefill: {
           name: userDetails.name,
@@ -321,7 +369,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       // Remove the event listener when the user starts the payment process
       document.addEventListener("rzp_payment_start", () => {
         window.onbeforeunload = null;
-        setIsLoading(false); // Set isLoading to false once payment starts
+        // setIsLoading(false); // Set isLoading to false once payment starts
       });
 
       rzp1.on("payment.failed", (response) => {
@@ -338,53 +386,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     };
   };
 
-  const sendPaymentResponse = async (response: any) => {
-    setIsLoading(true);
-    const res = await apiRpc.payments.validPayment[":merchantId"].$post({
-      param: {
-        merchantId: merchantDetails.razorpayMerchantId,
-      },
-      json: {
-        response,
-      },
-      query: {
-        couponId: availedCoupon?._id,
-        userId: userDetails?._id,
-      },
-    });
-    const data = await res.json();
-    const orderId = data?.data as string;
-    const total = billValue - claimedCoinz - claimCouponz + tips;
-    const coinsObtained = total * (loyaltySetting?.setCashBackPercentage / 100);
-    const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
-    let finalReward = 0;
-    if (
-      (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
-      claimedCoinz > 0 ||
-      (claimedCoinz > 0 && claimCouponz === 0)
-    ) {
-      finalReward = calculateReward(
-        existingCoins,
-        coinsObtained,
-        loyaltySetting?.rewardLimit,
-      )?.finalReward;
-    }
-
-    if (res.status === 200) {
-      toast.success("Payment successful");
-      setRazorPaySignature("");
-      setRazorPayOrderId("");
-      setRazorPayPaymentId("");
-      setTableName("");
-      return router.push(
-        `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
-          finalReward,
-        )}&orderId=${orderId}`,
-      );
-    }
-    toast.error("Payment failed");
-  };
-
   const clearTheTip = useCallback(() => {
     setTips(0);
     setSelectedTip("");
@@ -393,7 +394,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setIsTipActive(false);
   }, [setTips, setSelectedTip, setCustomTip, setShowInput, setIsTipActive]);
 
-  const handleCreateOfflineOrder = async () => {
+  const handleCreateOfflineOrder = useCallback(async () => {
     if (tableName === "") {
       toast.error("Please scan to start");
       return router.push(`/${customLink}/scan`);
@@ -414,7 +415,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         tips: tips,
         currency: "INR",
         tableName: tableName,
-
         couponId: availedCoupon?._id,
         channelId: availedCoupon?.channelId,
         cashbackAvailable: availedCoupon?.cashbackAvailable,
@@ -457,64 +457,112 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         )}&orderId=${response?.data?.order_id}`,
       );
     }
-  };
+  }, [
+    tableName,
+    isLoading,
+    setIsLoading,
+    apiRpc,
+    businessId,
+    billValue,
+    claimedCoinz,
+    claimCouponz,
+    tips,
+    userDetails?._id,
+    availedCoupon?._id,
+    availedCoupon?.channelId,
+    availedCoupon?.cashbackAvailable,
+    loyaltySetting?.setCashBackPercentage,
+    loyaltySetting?.rewardLimit,
+    userCoinz,
+    setTableName,
+    router,
+    customLink,
+  ]);
 
-  const createRazorPayOrder = async (total: number): Promise<string> => {
-    const res = await apiRpc.payments.createOrder[":merchantId"].$post({
-      param: {
-        merchantId: merchantDetails.razorpayMerchantId,
-      },
-      json: {
-        businessId: businessId || "",
-        total: billValue - claimedCoinz - claimCouponz + tips,
-        currency: "INR",
-        claimedCoins: claimedCoinz || claimCouponz,
-        billValue: billValue,
-        userId: userDetails?._id,
-        tips: tips,
-        tableName: tableName,
-        couponId: availedCoupon?._id,
-        channelId: availedCoupon?.channelId,
-        cashbackAvailable: availedCoupon?.cashbackAvailable,
-      },
-    });
-    const response = (await res.json()) as unknown as { data: string };
-    const orderId = response.data.order_id;
-    setRazorPayOrderId(orderId);
-    return orderId;
-  };
+  const createRazorPayOrder = useCallback(
+    async (total: number): Promise<string> => {
+      const res = await apiRpc.payments.createOrder[":merchantId"].$post({
+        param: {
+          merchantId: merchantDetails.razorpayMerchantId,
+        },
+        json: {
+          businessId: businessId || "",
+          total: billValue - claimedCoinz - claimCouponz + tips,
+          currency: "INR",
+          claimedCoins: claimedCoinz || claimCouponz,
+          billValue: billValue,
+          userId: userDetails?._id,
+          tips: tips,
+          tableName: tableName,
+          couponId: availedCoupon?._id,
+          channelId: availedCoupon?.channelId,
+          cashbackAvailable: availedCoupon?.cashbackAvailable,
+        },
+      });
+      const response = (await res.json()) as unknown as { data: string };
+      const orderId = response.data.order_id;
+      setRazorPayOrderId(orderId);
+      return orderId;
+    },
+    [
+      merchantDetails.razorpayMerchantId,
+      businessId,
+      billValue,
+      claimedCoinz,
+      claimCouponz,
+      tips,
+      userDetails?._id,
+      tableName,
+      availedCoupon?._id,
+      availedCoupon?.channelId,
+      availedCoupon?.cashbackAvailable,
+      setRazorPayOrderId,
+    ],
+  );
 
-  const handleCreateOrder = async (total: number, mode: string) => {
-    if (total <= 0) {
-      return toast.error("Invalid amount");
-    }
-    if (tableName === "") {
-      toast.error("Please scan to start");
-      return router.push(`/${customLink}/scan`);
-    }
-    if (mode.toLowerCase() === "offline") {
-      await handleCreateOfflineOrder();
-      return;
-    }
+  const handleCreateOrder = useCallback(
+    async (total: number, mode: string) => {
+      if (total <= 0) {
+        return toast.error("Invalid amount");
+      }
+      if (tableName === "") {
+        toast.error("Please scan to start");
+        return router.push(`/${customLink}/scan`);
+      }
+      if (mode.toLowerCase() === "offline") {
+        await handleCreateOfflineOrder();
+        return;
+      }
 
-    if (isLoading) {
-      return toast.error(
-        "Please wait for the previous transaction to complete",
-      );
-    }
+      if (isLoading) {
+        return toast.error(
+          "Please wait for the previous transaction to complete",
+        );
+      }
 
-    setIsLoading(true);
-    try {
-      const orderId = await createRazorPayOrder(total);
-      await creatingRazorPayOptions(orderId);
-    } catch (error) {
-      toast.error("Something went wrong! Please try again later.");
-      console.log("error", error);
-      setRazorPayPaymentId("");
-      setRazorPaySignature("");
-      setIsLoading(false);
-    }
-  };
+      setIsLoading(true);
+      try {
+        const orderId = await createRazorPayOrder(total);
+        await creatingRazorPayOptions(orderId);
+      } catch (error) {
+        toast.error("Something went wrong! Please try again later.");
+        console.log("error", error);
+        setRazorPayPaymentId("");
+        setRazorPaySignature("");
+        setIsLoading(false);
+      }
+    },
+    [
+      tableName,
+      customLink,
+      isLoading,
+      createRazorPayOrder,
+      router,
+      setIsLoading,
+      setRazorPayPaymentId,
+      setRazorPaySignature,
+    ],
+  );
 
   const handleTipSelect = useCallback(
     (tip: string) => {
@@ -559,34 +607,16 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         return toast.error("Please enter the bill amount");
       setSelectedMode(mode);
     },
-    [showInput, selectedMode],
+    [
+      showInput,
+      selectedMode,
+      tableName,
+      billValue,
+      claimedCoinz,
+      claimCouponz,
+      tips,
+    ],
   );
-
-  const handleUserCoinz = async () => {
-    const res = await apiRpc.users[":businessId"].getUserReward.$get({
-      param: {
-        businessId: businessId || "",
-      },
-      query: {
-        userId: userDetails?._id,
-        loyaltyId: data?.loyalty?.loyaltyId,
-      },
-    });
-    const response = (await res.json()) as unknown as { data: UserData };
-    if (res.status === 200) {
-      setUserCoinz(response?.data?.rewards || 0);
-      setUserLoginCoinz(response?.data?.rewards || 0);
-    }
-    return response?.data?.rewards || 0;
-  };
-
-  const openModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, [isModalOpen]);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, [isModalOpen]);
 
   const handleApplyCoinz = useCallback(
     (finalValue: number) => {
@@ -631,18 +661,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     }
   };
 
-  useQuery({
-    queryKey: ["getMerchantKeySecret", businessId],
-    queryFn: getMerchantKeySecret,
-    enabled: !!businessId,
-  });
-
-  useQuery({
-    queryKey: ["getUserReward", userDetails?._id, data?.loyalty?.loyaltyId],
-    queryFn: handleUserCoinz,
-    enabled: !!userDetails?._id && !!data?.loyalty?.loyaltyId,
-  });
-
   return (
     <main className="relative h-screen bg-black">
       {isLoading ? (
@@ -653,7 +671,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         <ApplyCouponz />
       ) : (
         <div>
-          <section className="pt-2">
+          <section>
             <article onClick={handleBack} onKeyDown={handleBack}>
               <button
                 type="button"
@@ -668,7 +686,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
               </button>
             </article>
             {selectedMode === "INVOICE" ? (
-              <center>
+              <center className="pt-2">
                 <p className="mb-2 text-sm font-semibold">Paying:</p>
                 <section className="absolute inset-0 flex items-center justify-center">
                   <center className="absolute w-[300px] -top-20">
@@ -717,7 +735,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                 offer={claimedCoinz || claimCouponz}
                 logo={data?.business?.logoUrl}
               />
-              <CoinzRewardSection openModal={openModal} />
+              <CoinzRewardSection />
               <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
                 <center className="my-2 text-xl text-black poppins-regular">
                   Rewardz
@@ -771,12 +789,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           ) : (
             <PaymentComponent
               handleCreateOrder={handleCreateOrder}
-              isLoading={isLoading}
               total={billValue - claimedCoinz - claimCouponz + tips}
             />
           )}
           <AvailableCoinz
-            closeModal={closeModal}
             handleApplyCoinz={handleApplyCoinz}
             setClaimAmount={data?.loyalty?.setClaimedPercentage}
           />

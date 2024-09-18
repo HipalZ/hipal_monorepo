@@ -2042,10 +2042,10 @@ input[type='password'] {
 
   .scaled-card-container-rotate {
 	position: absolute; /* Allows positioning within the parent */
-	top: 60px; /* Adjust as needed */
+	top: 70px; /* Adjust as needed */
 	left: 95px; /* Adjust as needed */
 	transform-origin: top left; /* Ensure scaling is from the top-left corner */
-	transform: scale(0.25) translateX(-50%) rotate(10deg) skew(-5deg);
+	transform: scale(0.35) translateX(-50%) rotate(10deg) skew(-5deg);
 	/* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
   }
 
