@@ -1,6 +1,7 @@
 import {
   CouponChannel,
   CouponLink,
+  CouponView,
   Couponz,
   GroupModel,
   User,
@@ -297,6 +298,15 @@ const couponzRouter = new Hono()
       const requestData = await c.req.json();
       const { couponId } = c.req.param();
 
+      const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
+      if (!coupon) {
+        return respond(c, "Coupon not found", true, 404, {});
+      }
+
+      if (coupon.isActive) {
+        return respond(c, "Coupon is active, cannot update", true, 400, {});
+      }
+
       // Validation 3: Set couponStartDate and couponEndDate to 0 for specific availability.when values
       const noExpiryWhenValues = [
         "allthetime",
@@ -323,7 +333,7 @@ const couponzRouter = new Hono()
       }
 
       const updateCoupon = await Couponz.findOneAndUpdate(
-        { _id: couponId, isDeleted: false, isActive: false },
+        { _id: couponId, isDeleted: false },
         requestData,
         { new: true },
       );
@@ -601,6 +611,7 @@ const couponzRouter = new Hono()
         dob: z.number().optional(),
         specialday: z.number().optional(),
         businessId: z.string({ message: "businessId should be a string" }),
+        channelId: z.string({ message: "channelId should be a string" }),
       }),
     ),
     async (c) => {
@@ -609,6 +620,12 @@ const couponzRouter = new Hono()
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+
+      await CouponView.create({
+        couponId: couponId,
+        date: Date.now(),
+        businessId: coupon.businessId,
+      });
 
       const user = await User.findOne({
         _id: userId,
@@ -642,6 +659,7 @@ const couponzRouter = new Hono()
         userId: z.string({ message: "userId should be a string" }),
         couponId: z.string({ message: "couponId should be a string" }),
         businessId: z.string({ message: "businessId should be a string" }),
+        channelId: z.string({ message: "channelId should be a string" }),
       }),
     ),
     async (c) => {
@@ -650,6 +668,11 @@ const couponzRouter = new Hono()
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+      await CouponView.create({
+        couponId: couponId,
+        date: Date.now(),
+        businessId: businessId,
+      });
 
       const alreadyGrabbed = await UserCouponGrabb.findOne({
         couponId: couponId,
@@ -723,6 +746,45 @@ const couponzRouter = new Hono()
         err: false,
         data: promotCoupons,
       });
+    },
+  )
+  .get(
+    "/all-couponz/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({
+          message: "businessId should be a string",
+        }),
+      }),
+    ),
+    zValidator(
+      "query",
+      z.object({
+        isActive: z.string({
+          message: "isActive should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { isActive } = c.req.query();
+      const isActiveValue = isActive === "true";
+      const coupons = await Couponz.find({
+        businessId,
+        isDeleted: false,
+        isActive: isActiveValue,
+      }).select("businessId name config conditions.couponEndDate");
+
+      return c.json(
+        {
+          message: "Coupons found",
+          err: false,
+          data: coupons,
+        },
+        200,
+      );
     },
   );
 

@@ -5,6 +5,7 @@ import {
   CouponView,
   Couponz,
   Payment,
+  UserCouponClaim,
   UserCouponGrabb,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
@@ -175,31 +176,20 @@ const couponAnalyticsRouter = new Hono()
 
       const totalGrabbed = await UserCouponGrabb.find({ businessId }).count();
 
-      const totalClaimed = await Payment.aggregate([
-        {
-          $match: {
-            couponId: { $exists: true },
-            businessId: businessId,
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$total" }, // Assuming the field to sum is "amount"
-          },
-        },
-      ]);
+      const payments = await Payment.find({
+        businessId,
+        couponId: { $exists: true },
+      }).select("total");
 
-      const totalSale = totalClaimed.length > 0 ? totalClaimed[0].total : 0;
+      const totalSale = payments.reduce((acc, curr) => acc + curr.total, 0);
 
       const temp = {
         businessId: businessId,
-        totalActiveCoupons: activeCouponz || 11,
-        totalReach: totalCouponz || 1000,
-        totalGrabbed: totalGrabbed || 100,
-        totalClaimed: totalClaimed.length || 50,
-        newUsers: 10,
-        totalSales: totalSale || 100000,
+        totalActiveCoupons: activeCouponz,
+        totalReach: totalCouponz,
+        totalGrabbed: totalGrabbed,
+        totalClaimed: payments.length,
+        totalSales: totalSale,
       };
 
       return c.json({ err: false, msg: "Coupon Analytics", data: temp });
@@ -236,63 +226,134 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { couponId } = c.req.param();
       const { from, to, timeRange } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      const totalViews = await CouponView.find({
+        couponId: couponId,
+        date: { $gte: fromDate, $lte: toDate },
+      }).count();
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          couponId: couponId,
+          date: { $gte: fromDate, $lte: toDate },
+        }).count()) ?? 0;
+      const totalClaims = await Payment.find({
+        couponId: couponId,
+        date: { $gte: fromDate, $lte: toDate },
+      }).select("couponId total claimedCoins");
+
+      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+      const totalDiscount = totalClaims.reduce(
+        (acc, curr) => acc + (curr.claimedCoins ?? 0),
+        0,
+      );
+
+      const repeatUsers = (await UserCouponClaim.findOne({
+        couponId: couponId,
+      }).select("overAllLimit")) ?? { overAllLimit: 0 };
+
+      let successPercentage = Math.round(
+        Math.abs(((totalViews - totalClaims.length) / totalViews) * 100) ?? 0,
+      );
+
+      if (!successPercentage) {
+        successPercentage = 0;
+      }
 
       const summary = {
-        totalReach: 1000,
-        totalGrabbed: 100,
-        totalClaimed: 50,
-        totalDiscount: 10,
-        totalSales: 100000,
-        newUsers: 10,
-        repeatUsers: 20,
-        successPercentage: 50,
+        totalReach: totalViews,
+        totalGrabbed: totalGrabs,
+        totalClaimed: totalClaims.length,
+        totalDiscount: totalDiscount,
+        totalSales: totalSales,
+        newUsers: totalGrabs,
+        repeatUsers: repeatUsers.overAllLimit,
+        successPercentage: successPercentage,
       };
 
       return c.json({ err: false, msg: "fetch successfully", data: summary });
     },
   )
   .get(
-    "/channels-analytics/:businessId",
+    "/channels-analytics/:businessId/:couponId",
     zValidator(
       "param",
       z.object({
         businessId: z.string({
           message: "businessId should be a string",
         }),
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
       }),
     ),
 
     async (c) => {
-      const { businessId } = c.req.param();
+      const { businessId, couponId } = c.req.param();
 
-      const channels = [
-        {
-          name: "Facebook",
-          totalReach: 1000,
-          totalGrabbed: 100,
-          totalSales: 100000,
-          _id: "1",
-          isActive: true,
-        },
-        {
-          name: "Instagram",
-          totalReach: 3000,
-          totalGrabbed: 500,
-          totalSales: 25000,
-          _id: "2",
-          isActive: false,
-        },
-        {
-          name: "Twitter",
-          totalReach: 356,
-          totalGrabbed: 500,
-          totalSales: 3652,
-          _id: "3",
-          isActive: true,
-        },
-      ];
+      const fetchChannels = await CouponLink.find({
+        businessId: businessId,
+        couponId: couponId,
+      }).populate("channelId");
+      const ans = [];
+      const totalViews = await CouponView.find({
+        couponId: couponId,
+      }).count();
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          couponId: couponId,
+        }).count()) ?? 0;
+      const totalClaims = await Payment.find({
+        couponId: couponId,
+      }).select("couponId total claimedCoins");
 
-      return c.json({ err: false, msg: "fetch successfully", data: channels });
+      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+      const totalDiscount = totalClaims.reduce(
+        (acc, curr) => acc + (curr.claimedCoins ?? 0),
+        0,
+      );
+
+      for (const channel of fetchChannels) {
+        const channelData = {
+          name: channel.channelId.name,
+          isActive: channel.channelId.isActive,
+          totalReach: totalViews,
+          totalGrabbed: totalGrabs,
+          totalSales: totalSales,
+          newUsers: totalGrabs,
+        };
+        ans.push(channelData);
+      }
+
+      // const channels = [
+      //   {
+      //     name: "Facebook",
+      //     totalReach: 1000,
+      //     totalGrabbed: 100,
+      //     totalSales: 100000,
+      //     _id: "1",
+      //     isActive: true,
+      //   },
+      //   {
+      //     name: "Instagram",
+      //     totalReach: 3000,
+      //     totalGrabbed: 500,
+      //     totalSales: 25000,
+      //     _id: "2",
+      //     isActive: false,
+      //   },
+      //   {
+      //     name: "Twitter",
+      //     totalReach: 356,
+      //     totalGrabbed: 500,
+      //     totalSales: 3652,
+      //     _id: "3",
+      //     isActive: true,
+      //   },
+      // ];
+
+      return c.json({ err: false, msg: "fetch successfully", data: ans });
     },
   )
   .get(
@@ -309,20 +370,9 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const channels = [
-        {
-          name: "Facebook",
-          _id: "1",
-        },
-        {
-          name: "Instagram",
-          _id: "2",
-        },
-        {
-          name: "Twitter",
-          _id: "3",
-        },
-      ];
+      const channels = await CouponChannel.find({
+        businessId: businessId,
+      }).select("name businessId");
 
       return c.json({ err: false, msg: "fetch successfully", data: channels });
     },
@@ -341,14 +391,73 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const totalViews = await CouponView.find({
+        businessId: businessId,
+      }).count();
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          businessId: businessId,
+        }).count()) ?? 0;
+      const totalClaims = await Payment.find({
+        businessId: businessId,
+        channelId: { $exists: true },
+      }).select("couponId total claimedCoins channelId");
+
+      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+
       const obj = {
-        totalReach: 1000,
-        totalGrabbed: 100,
-        totalSales: 100000,
-        newUsers: 10,
+        totalReach: totalViews,
+        totalGrabbed: totalGrabs,
+        totalSales: totalSales,
+        newUsers: totalGrabs,
       };
 
       return c.json({ err: false, msg: "fetch successfully", data: obj });
+    },
+  )
+  .get(
+    "/business-analytics/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({
+          message: "businessId should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const fetchChannels = await CouponLink.find({
+        businessId: businessId,
+      }).populate("channelId");
+      const ans = [];
+      const totalViews = await CouponView.find({
+        businessId: businessId,
+      }).count();
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          businessId: businessId,
+        }).count()) ?? 0;
+      const totalClaims = await Payment.find({
+        businessId: businessId,
+        channelId: { $exists: true },
+      }).select("couponId total claimedCoins channelId");
+
+      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+
+      for (const channel of fetchChannels) {
+        const channelData = {
+          name: channel.channelId.name,
+          isActive: channel.channelId.isActive,
+          totalReach: totalViews,
+          totalGrabbed: totalGrabs,
+          totalSales: totalSales,
+        };
+        ans.push(channelData);
+      }
+
+      return c.json({ err: false, msg: "fetch successfully", data: ans });
     },
   )
   .get(
@@ -399,12 +508,14 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { couponId, channelId, businessId } = c.req.param();
 
-      console.log("ale", couponId, channelId, businessId);
-
       const customLink =
         await Business.findById(businessId).select("customLink");
 
-      //logic to increase the count of the link
+      await CouponView.create({
+        couponId: couponId,
+        date: Date.now(),
+        businessId: businessId,
+      });
 
       return c.redirect(
         `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
