@@ -184,7 +184,6 @@ const couponAnalyticsRouter = new Hono()
       const totalSale = payments.reduce((acc, curr) => acc + curr.total, 0);
 
       const temp = {
-        businessId: businessId,
         totalActiveCoupons: activeCouponz,
         totalReach: totalCouponz,
         totalGrabbed: totalGrabbed,
@@ -309,10 +308,6 @@ const couponAnalyticsRouter = new Hono()
       }).select("couponId total claimedCoins");
 
       const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
-      const totalDiscount = totalClaims.reduce(
-        (acc, curr) => acc + (curr.claimedCoins ?? 0),
-        0,
-      );
 
       for (const channel of fetchChannels) {
         const channelData = {
