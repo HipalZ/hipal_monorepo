@@ -32,7 +32,6 @@ const MemoGoogleReviews = () => {
       });
       const response: IResponse = await res.json();
       setReviews(response.data.reviews);
-      console.log("response.data.reviews", response.data.reviews);
       return response.data.reviews;
     } finally {
       setLoading(false);
