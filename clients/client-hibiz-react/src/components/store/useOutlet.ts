@@ -2,6 +2,8 @@ import { create } from "zustand";
 
 export interface OutletFormState {
   formData: {
+    placeId: string;
+    placeUrl: string;
     billingStartTime: string;
     billingEndTime: string;
     brandName: string;
@@ -21,21 +23,24 @@ export const useOutletFormStore = create<OutletFormState>((set) => ({
     branchName: "",
     url: "",
     _id: "",
+    placeId: "",
+    placeUrl: "",
   },
-  setFormData: (key: keyof OutletFormState["formData"], value: string) => set((state) => ({
-    formData: {
-      ...state.formData,
-      [key]: value,
-    },
-  })),
-  setEntireFormData: (data: Partial<OutletFormState["formData"]>) => set((state) => ({
-    formData: {
-      ...state.formData,
-      ...data,
-    },
-  })),
+  setFormData: (key: keyof OutletFormState["formData"], value: string) =>
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        [key]: value,
+      },
+    })),
+  setEntireFormData: (data: Partial<OutletFormState["formData"]>) =>
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        ...data,
+      },
+    })),
 }));
-
 
 export interface BusinessFormState {
   businessFormData: {
@@ -58,8 +63,13 @@ export interface BusinessFormState {
     secretKey: string;
     _id?: string;
   };
-  setBusinessFormData: (key: keyof BusinessFormState["businessFormData"], value: string) => void;
-  setEntireBusinessFormData: (data: Partial<BusinessFormState["businessFormData"]>) => void;
+  setBusinessFormData: (
+    key: keyof BusinessFormState["businessFormData"],
+    value: string,
+  ) => void;
+  setEntireBusinessFormData: (
+    data: Partial<BusinessFormState["businessFormData"]>,
+  ) => void;
 }
 
 export const useBusinessFormStore = create<BusinessFormState>((set) => ({
@@ -83,16 +93,18 @@ export const useBusinessFormStore = create<BusinessFormState>((set) => ({
     secretKey: "",
     _id: undefined,
   },
-  setBusinessFormData: (key, value) => set((state) => ({
-    businessFormData: {
-      ...state.businessFormData,
-      [key]: value,
-    },
-  })),
-  setEntireBusinessFormData: (data) => set((state) => ({
-    businessFormData: {
-      ...state.businessFormData,
-      ...data,
-    },
-  })),
+  setBusinessFormData: (key, value) =>
+    set((state) => ({
+      businessFormData: {
+        ...state.businessFormData,
+        [key]: value,
+      },
+    })),
+  setEntireBusinessFormData: (data) =>
+    set((state) => ({
+      businessFormData: {
+        ...state.businessFormData,
+        ...data,
+      },
+    })),
 }));
