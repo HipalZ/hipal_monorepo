@@ -38,7 +38,7 @@ const MemoCondition = () => {
 
   const totalAvailableHours = useMemo(() => {
     if (couponStartDate === 0 && couponEndDate === 0) {
-      return 8760; // 1 year in hours
+      return 8760;
     }
     if (couponStartDate && couponEndDate) {
       const totalMilliseconds = couponEndDate - couponStartDate;
@@ -61,7 +61,7 @@ const MemoCondition = () => {
       } else {
         setDateErrorMessage("");
         setExpiryHours(value);
-        const newExpiryTimestamp = couponStartDate + value * 60 * 60 * 1000;
+        const newExpiryTimestamp = value * 60 * 60 * 1000;
         setExpiryAfterGrabbed(newExpiryTimestamp);
       }
     },

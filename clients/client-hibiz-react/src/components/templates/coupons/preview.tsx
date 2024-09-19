@@ -112,9 +112,9 @@ const MemoPreview = () => {
   const showCroppedImage = useCallback(async () => {
     try {
       const { base64, file } = await getCroppedImg(imageSrc, croppedAreaPixels);
-      setCouponImage(base64); // For displaying the image
-      setSelectedFile(file); // For uploading to the server
-      setIsCropping(false); // Hide cropper
+      setCouponImage(base64);
+      setSelectedFile(file);
+      setIsCropping(false);
     } catch (e) {
       console.error(e);
     }
@@ -171,19 +171,10 @@ const MemoPreview = () => {
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={4 / 3} // Adjust aspect ratio as needed
+                aspect={4 / 3}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
-              />
-
-              <BottomButton
-                buttons={[
-                  {
-                    text: "Save",
-                    onClick: showCroppedImage,
-                  },
-                ]}
               />
             </div>
           ) : (
@@ -231,19 +222,35 @@ const MemoPreview = () => {
           />
         </div>
       </Background>
-      <BottomButton
-        fixed
-        buttons={[
-          {
-            text: "Back",
-            onClick: () => setSelectedPage("Terms"),
-          },
-          {
-            text: "save & next",
-            onClick: () => setSelectedPage("CUSTOM"),
-          },
-        ]}
-      />
+      {isCropping ? (
+        <BottomButton
+          fixed
+          buttons={[
+            {
+              text: "Back",
+              onClick: () => setIsCropping(false),
+            },
+            {
+              text: "Save",
+              onClick: showCroppedImage,
+            },
+          ]}
+        />
+      ) : (
+        <BottomButton
+          fixed
+          buttons={[
+            {
+              text: "Back",
+              onClick: () => setSelectedPage("Terms"),
+            },
+            {
+              text: "save & next",
+              onClick: () => setSelectedPage("CUSTOM"),
+            },
+          ]}
+        />
+      )}
     </section>
   );
 };
