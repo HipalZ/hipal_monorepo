@@ -6,7 +6,7 @@ import referFriend from "@/assets/img/referFriend.png";
 const MemoRefferalCouponz = () => {
   return (
     <section className="flex items-center justify-around mt-6 poppins-regular">
-      <article className="w-[10.5rem] text-center bg-[#AF92FF] h-[15rem] rounded-2xl relative">
+      <article className="coupon-card-responsive text-center bg-[#AF92FF] h-[15rem] rounded-2xl relative">
         <Image
           src={birthdayCoupon}
           alt="birthdayCoupon"
@@ -25,7 +25,7 @@ const MemoRefferalCouponz = () => {
           Coming soon
         </button>
       </article>
-      <article className="w-[10.5rem] text-center bg-[#F6D13C] h-[15rem] rounded-2xl relative">
+      <article className="coupon-card-responsive text-center bg-[#F6D13C] h-[15rem] rounded-2xl relative">
         <center className="text-[#000000] text-lg font-semibold mt-12">
           Refer a friend
         </center>

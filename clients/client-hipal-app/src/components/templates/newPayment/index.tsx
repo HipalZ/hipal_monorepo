@@ -691,7 +691,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                 <section className="absolute inset-0 flex items-center justify-center">
                   <center className="absolute w-[300px] -top-20">
                     <Image
-                      className="opacity-25"
+                      className="opacity-15"
                       width={1080}
                       height={1080}
                       src={Sunrays}
@@ -717,9 +717,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   style={{
                     background:
                       "linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 50%)",
+                    paddingTop: "50px",
                   }}
                 >
-                  <p className="relative z-20 mt-2 text-base font-semibold">
+                  <p className="relative z-20 -mt-10 text-base font-semibold">
                     {businessDetails?.name}
                   </p>
                   <span className="relative z-20 text-sm">
