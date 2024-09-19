@@ -3,6 +3,7 @@ import { createHmac } from "node:crypto";
 import {
   BusinessSettings,
   CouponClaim,
+  Couponz,
   GroupAnalytic,
   LoyaltySettings,
   Order,
@@ -14,6 +15,7 @@ import {
   User,
   UserAnalytic,
   UserCouponClaim,
+  UserCouponGrabb,
   UserReward,
   UserRewardHistory,
   UserTags,
@@ -637,7 +639,8 @@ const paymentsRouter = new Hono()
           {},
         );
 
-      console.log("userId and couponId", userId, couponId);
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+        response;
 
       if (userId && couponId) {
         let userClaim = await UserCouponClaim.findOne({ userId, couponId });
@@ -714,10 +717,83 @@ const paymentsRouter = new Hono()
         // Save the updated claims
         await userClaim.save();
         await couponClaim.save();
-      }
+        const couponz = await Couponz.findById(couponId).select(
+          "conditions.individualUserLimit conditions.expiryClaimLimit businessId",
+        );
 
-      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-        response;
+        if (!couponz) {
+          return c.json(
+            {
+              err: true,
+              message: "Coupon not found",
+              data: razorpay_order_id,
+            },
+            200,
+          );
+        }
+
+        const individualUserLimit = couponz?.conditions?.individualUserLimit;
+        const expiryClaimLimit = couponz?.conditions?.expiryClaimLimit;
+        const userClaimLimit =
+          individualUserLimit && "overAllLimit" in individualUserLimit
+            ? individualUserLimit.overAllLimit
+            : 0;
+        const couponClaimLimit =
+          expiryClaimLimit && "overAllLimit" in expiryClaimLimit
+            ? expiryClaimLimit.overAllLimit
+            : 0;
+
+        const couponOverAllLimit = (await CouponClaim.findOne({
+          couponId,
+        }).select("overAllLimit")) ?? { overAllLimit: 0 };
+        const userOverAllLimit = (await UserCouponClaim.findOne({
+          userId,
+          couponId,
+        }).select("overAllLimit")) ?? { overAllLimit: 0 };
+
+        if (userClaimLimit > 0) {
+          if (userOverAllLimit?.overAllLimit >= userClaimLimit) {
+            const expireAfterClaiming = await UserCouponGrabb.findOneAndUpdate(
+              {
+                userId,
+                couponId,
+              },
+              { $set: { isDeleted: true } },
+            );
+            if (!expireAfterClaiming) {
+              const createGrabb = await UserCouponGrabb.create({
+                userId,
+                couponId,
+                date: Date.now(),
+                isDeleted: true,
+                businessId: couponz?.businessId,
+                expiryDate: Date.now(),
+              });
+              if (!createGrabb) {
+                return c.json(
+                  {
+                    err: true,
+                    message: "Coupon not found",
+                    data: razorpay_order_id,
+                  },
+                  200,
+                );
+              }
+            }
+          }
+        }
+
+        if (couponClaimLimit > 0) {
+          if (couponOverAllLimit?.overAllLimit >= couponClaimLimit) {
+            await Couponz.findOneAndUpdate(
+              {
+                _id: couponId,
+              },
+              { $set: { isActive: false, isDeleted: true } },
+            );
+          }
+        }
+      }
 
       const signature = createHmac("sha256", RAZORPAY_SECRET)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -789,10 +865,8 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-
         console.log("Invalid body", bodyResult);
 
-      
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore

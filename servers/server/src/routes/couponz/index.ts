@@ -52,9 +52,7 @@ const createAndScheduleCoupon = async (
   const currentDate = new Date();
   const expiryHours = expiryHour || 0;
 
-  let expiryDate = new Date(
-    currentDate.getTime() + expiryHours * 60 * 60 * 1000,
-  );
+  let expiryDate = new Date(currentDate.getTime() + expiryHours);
 
   if (expiryDate.getTime() > couponEndDate) {
     expiryDate = new Date(couponEndDate);
