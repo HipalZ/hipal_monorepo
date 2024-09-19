@@ -435,6 +435,8 @@ const couponzRouter = new Hono()
         ],
       });
 
+      console.log("coupons", eligibles);
+
       const eligibleCoupons = eligibles.filter((coupon) => {
         const { conditions } = coupon;
         const isDayEligible = switchDayEligibility(
@@ -448,14 +450,14 @@ const couponzRouter = new Hono()
         );
 
         // Check overall day and time eligibility
-        if (!isDayEligible && isTimeEligible) return false;
+        if (isDayEligible && isTimeEligible) return true;
 
         // Check user eligibility
-        if (conditions.eligibleUser.allUsers) {
+        if (conditions.eligibleUser.allUsers && isTimeEligible) {
           return true; // Coupon is available to all users
         }
 
-        return false; // If none of the conditions match, the user is not eligible
+        // If none of the conditions match, the user is not eligible
       });
 
       const eligibleGrabCoupons = coupons.filter((coupon) => {
@@ -471,9 +473,9 @@ const couponzRouter = new Hono()
         );
 
         // Check overall day and time eligibility
-        if (!isDayEligible && isTimeEligible) return false;
+        if (isDayEligible && isTimeEligible) return true;
 
-        return true; // If none of the conditions match, the user is not eligible
+        // If none of the conditions match, the user is not eligible
       });
 
       // Combine both arrays and filter unique coupons
@@ -611,7 +613,9 @@ const couponzRouter = new Hono()
         dob: z.number().optional(),
         specialday: z.number().optional(),
         businessId: z.string({ message: "businessId should be a string" }),
-        channelId: z.string({ message: "channelId should be a string" }),
+        channelId: z
+          .string({ message: "channelId should be a string" })
+          .optional(),
       }),
     ),
     async (c) => {
@@ -659,7 +663,9 @@ const couponzRouter = new Hono()
         userId: z.string({ message: "userId should be a string" }),
         couponId: z.string({ message: "couponId should be a string" }),
         businessId: z.string({ message: "businessId should be a string" }),
-        channelId: z.string({ message: "channelId should be a string" }),
+        channelId: z
+          .string({ message: "channelId should be a string" })
+          .optional(),
       }),
     ),
     async (c) => {

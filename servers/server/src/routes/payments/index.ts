@@ -427,6 +427,26 @@ const paymentsRouter = new Hono()
         } = requestData;
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
+        if (couponId) {
+          const coupon = await Couponz.findById(couponId).select(
+            "conditions.couponEndDate",
+          );
+
+          if (
+            coupon &&
+            coupon.conditions.couponEndDate > 0 &&
+            coupon.conditions.couponEndDate < Date.now()
+          ) {
+            return c.json(
+              {
+                message: "Coupon has expired",
+                err: true,
+                data: {},
+              },
+              400,
+            );
+          }
+        }
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
           amount: total * 100, // Fixed multiplication logic
@@ -1215,6 +1235,26 @@ const paymentsRouter = new Hono()
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
             const order = await Order.findById(alert.order_id);
+            if (order?.couponId) {
+              const coupon = await Couponz.findById(order.couponId).select(
+                "conditions.couponEndDate",
+              );
+
+              if (
+                coupon &&
+                coupon.conditions.couponEndDate > 0 &&
+                coupon.conditions.couponEndDate < Date.now()
+              ) {
+                return c.json(
+                  {
+                    message: "Coupon has expired",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              }
+            }
 
             if (order?.claimedCoins && order?.claimedCoins > 0) {
               const existingLoyalty = await LoyaltySettings.findOne({
