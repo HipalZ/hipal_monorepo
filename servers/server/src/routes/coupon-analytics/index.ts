@@ -367,7 +367,7 @@ const couponAnalyticsRouter = new Hono()
 
       const channels = await CouponChannel.find({
         businessId: businessId,
-      }).select("name businessId");
+      });
 
       return c.json({ err: false, msg: "fetch successfully", data: channels });
     },
