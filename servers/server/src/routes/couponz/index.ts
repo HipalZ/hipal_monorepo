@@ -123,7 +123,9 @@ const couponzRouter = new Hono()
       const coupons = await Couponz.find({
         businessId,
         isDeleted: false,
-      }).lean();
+      })
+        .sort({ _id: -1 })
+        .lean();
       for (const coupon of coupons) {
         const couponLinks = await CouponLink.find({
           couponId: coupon._id,
