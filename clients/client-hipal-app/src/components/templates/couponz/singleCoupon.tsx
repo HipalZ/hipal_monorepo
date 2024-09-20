@@ -66,7 +66,7 @@ const MemoCouponz = () => {
       setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
       return router.push(`/${customLink}/user/signup/`);
     }
-    // setIsLoading(true);
+    setIsLoading(true);
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
     const requiresDobOrSpecialDay =
       requiredFields.includes("dob") || requiredFields.includes("specialday");
@@ -76,7 +76,7 @@ const MemoCouponz = () => {
           couponId: selectedCoupon?._id || "",
           userId: userDetails?._id,
           businessId: businessId,
-          channelId: channelId.toString(),
+          ...(channelId && { channelId }),
         },
       });
       if (response.status === 400) {
@@ -100,7 +100,7 @@ const MemoCouponz = () => {
           businessId: businessId,
           couponId: selectedCoupon?._id,
           userId: userDetails?._id,
-          channelId: channelId.toString(),
+          ...(channelId && { channelId }),
         },
       });
       if (response.status === 201) {
