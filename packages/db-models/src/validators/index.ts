@@ -29,6 +29,7 @@ export * from "./admin";
 export * from "./analytic";
 export * from "./businessSubscriber";
 export * from "./channelLink";
+export * from "./channelView";
 export * from "./couponChannel";
 export * from "./couponClaim";
 export * from "./couponHistory";

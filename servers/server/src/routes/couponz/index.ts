@@ -1,4 +1,5 @@
 import {
+  ChannelView,
   CouponChannel,
   CouponLink,
   CouponView,
@@ -49,6 +50,7 @@ const createAndScheduleCoupon = async (
   couponEndDate: number,
   dob?: number,
   specialday?: number,
+  channelId?: string,
 ) => {
   const currentDate = new Date();
   const expiryHours = expiryHour || 0;
@@ -68,6 +70,7 @@ const createAndScheduleCoupon = async (
     expiryDate,
     dob,
     specialday,
+    channelId,
   });
 
   if (expiryHours > 0) {
@@ -247,7 +250,7 @@ const couponzRouter = new Hono()
       couponId: createdCoupon._id,
       channelId: channelId?._id,
       date: Date.now(),
-      link: `https://test.api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
+      link: `http://localhost:4500/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
     });
 
     if (
@@ -435,8 +438,6 @@ const couponzRouter = new Hono()
         ],
       });
 
-      console.log("coupons", eligibles);
-
       const eligibleCoupons = eligibles.filter((coupon) => {
         const { conditions } = coupon;
         const isDayEligible = switchDayEligibility(
@@ -619,7 +620,9 @@ const couponzRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { userId, couponId, dob, specialday } = await c.req.json();
+      const { userId, couponId, dob, specialday, channelId } =
+        await c.req.json();
+
       const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false });
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
@@ -630,6 +633,16 @@ const couponzRouter = new Hono()
         date: Date.now(),
         businessId: coupon.businessId,
       });
+      if (channelId) {
+        await ChannelView.findOneAndUpdate(
+          {
+            channelId: channelId,
+            businessId: coupon.businessId,
+          },
+          { $inc: { viewCount: 1 } },
+          { upsert: true, new: true },
+        );
+      }
 
       const user = await User.findOne({
         _id: userId,
@@ -643,6 +656,16 @@ const couponzRouter = new Hono()
         { upsert: true, new: true },
       );
 
+      const alreadyGrabbed = await UserCouponGrabb.findOne({
+        couponId: couponId,
+        userId: userId,
+        businessId: coupon.businessId,
+      });
+
+      if (alreadyGrabbed) {
+        return respond(c, "Coupon already grabbed", true, 409, {});
+      }
+
       await createAndScheduleCoupon(
         userId.toString(),
         coupon.businessId.toString(),
@@ -651,6 +674,7 @@ const couponzRouter = new Hono()
         coupon.conditions.couponEndDate,
         dateOfBirth,
         specialday,
+        channelId,
       );
       return respond(c, "Coupon grabbed successfully", false, 201, coupon);
     },

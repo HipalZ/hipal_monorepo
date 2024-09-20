@@ -61,13 +61,17 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
       setIsLoading: s.setIsLoading,
     }));
   const router = useRouter();
-  const { currentPage, setSelectedCoupon } = useCouponz((s) => ({
-    currentPage: s.currentPage,
-    setSelectedCoupon: s.setSelectedCoupon,
-  }));
+  const { currentPage, setSelectedCoupon, setChannelId, setCurrentPage } =
+    useCouponz((s) => ({
+      currentPage: s.currentPage,
+      setSelectedCoupon: s.setSelectedCoupon,
+      setChannelId: s.setChannelId,
+      setCurrentPage: s.setCurrentPage,
+    }));
 
   const fetchSingleCouponz = async () => {
     setIsLoading(true);
+    setCurrentPage(ICouponPage.SINGLECOUPON);
     try {
       const couponResponse = await apiRpc.couponz[":couponId"].$get({
         param: {
@@ -83,6 +87,7 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
       setSelectedCoupon(coupon?.data as Coupon);
       setBusinessDetails(business);
       setTableName("");
+      setChannelId(channelId as string);
     } catch (err) {
       setIsLoading(false);
       if (couponId === undefined) {

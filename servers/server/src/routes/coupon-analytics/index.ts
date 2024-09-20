@@ -1,5 +1,6 @@
 import {
   Business,
+  ChannelView,
   CouponChannel,
   CouponLink,
   CouponView,
@@ -48,6 +49,45 @@ const couponAnalyticsRouter = new Hono()
       await channel.save();
 
       return c.json({ err: false, msg: "channel created", data: channel }, 201);
+    },
+  )
+  .put(
+    "/channels/:couponId/:channelId",
+    zValidator(
+      "param",
+      z.object({
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
+        channelId: z.string({
+          message: "channelId should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { couponId, channelId } = await c.req.json();
+
+      const updateLink = await CouponLink.findOneAndUpdate(
+        {
+          couponId: couponId,
+          channelId: channelId,
+        },
+        {
+          $set: {
+            isActive: false,
+          },
+        },
+      );
+
+      if (!updateLink) {
+        return c.json({ err: true, msg: "Link not found", data: {} }, 400);
+      }
+
+      return c.json(
+        { err: false, msg: "channel created", data: updateLink },
+        200,
+      );
     },
   )
   .post(
@@ -139,7 +179,7 @@ const couponAnalyticsRouter = new Hono()
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: `http://localhost:4500/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
         });
         await link.save();
         links.push({
@@ -296,57 +336,33 @@ const couponAnalyticsRouter = new Hono()
         couponId: couponId,
       }).populate("channelId");
       const ans = [];
-      const totalViews = await CouponView.find({
-        couponId: couponId,
-      }).count();
-      const totalGrabs =
-        (await UserCouponGrabb.find({
-          couponId: couponId,
-        }).count()) ?? 0;
-      const totalClaims = await Payment.find({
-        couponId: couponId,
-      }).select("couponId total claimedCoins");
-
-      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
 
       for (const channel of fetchChannels) {
+        const channelView = await ChannelView.findOne({
+          channelId: channel.channelId,
+          businessId: businessId,
+        });
+        const totalChannelGrabbed = await UserCouponGrabb.find({
+          channelId: channel.channelId,
+        }).count();
+
+        const payments = await Payment.find({
+          channelId: channel.channelId,
+        }).select("total");
+
+        const totalChannelSales = payments.reduce(
+          (acc, curr) => acc + curr.total,
+          0,
+        );
         const channelData = {
           name: channel.channelId.name,
           isActive: channel.channelId.isActive,
-          totalReach: totalViews,
-          totalGrabbed: totalGrabs,
-          totalSales: totalSales,
-          newUsers: totalGrabs,
+          totalReach: channelView?.viewCount || 0,
+          totalGrabbed: totalChannelGrabbed,
+          totalSales: totalChannelSales,
         };
         ans.push(channelData);
       }
-
-      // const channels = [
-      //   {
-      //     name: "Facebook",
-      //     totalReach: 1000,
-      //     totalGrabbed: 100,
-      //     totalSales: 100000,
-      //     _id: "1",
-      //     isActive: true,
-      //   },
-      //   {
-      //     name: "Instagram",
-      //     totalReach: 3000,
-      //     totalGrabbed: 500,
-      //     totalSales: 25000,
-      //     _id: "2",
-      //     isActive: false,
-      //   },
-      //   {
-      //     name: "Twitter",
-      //     totalReach: 356,
-      //     totalGrabbed: 500,
-      //     totalSales: 3652,
-      //     _id: "3",
-      //     isActive: true,
-      //   },
-      // ];
 
       return c.json({ err: false, msg: "fetch successfully", data: ans });
     },
@@ -386,24 +402,36 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const totalViews = await CouponView.find({
-        businessId: businessId,
-      }).count();
       const totalGrabs =
         (await UserCouponGrabb.find({
           businessId: businessId,
         }).count()) ?? 0;
-      const totalClaims = await Payment.find({
+
+      const channelViews = await ChannelView.find({
+        businessId: businessId,
+      }).select("viewCount");
+      const totalChannelViews = channelViews.reduce(
+        (acc, curr) => acc + curr.viewCount,
+        0,
+      );
+
+      const totalChannelgrabbed = await UserCouponGrabb.find({
         businessId: businessId,
         channelId: { $exists: true },
-      }).select("couponId total claimedCoins channelId");
-
-      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+      }).count();
+      const payments = await Payment.find({
+        businessId: businessId,
+        channelId: { $exists: true },
+      }).select("total");
+      const totalChannelSales = payments.reduce(
+        (acc, curr) => acc + curr.total,
+        0,
+      );
 
       const obj = {
-        totalReach: totalViews,
-        totalGrabbed: totalGrabs,
-        totalSales: totalSales,
+        totalReach: totalChannelViews,
+        totalGrabbed: totalChannelgrabbed,
+        totalSales: totalChannelSales,
         newUsers: totalGrabs,
       };
 
@@ -423,31 +451,34 @@ const couponAnalyticsRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
-      const fetchChannels = await CouponLink.find({
+      const fetchChannels = await CouponChannel.find({
         businessId: businessId,
-      }).populate("channelId");
+      });
       const ans = [];
-      const totalViews = await CouponView.find({
-        businessId: businessId,
-      }).count();
-      const totalGrabs =
-        (await UserCouponGrabb.find({
-          businessId: businessId,
-        }).count()) ?? 0;
-      const totalClaims = await Payment.find({
-        businessId: businessId,
-        channelId: { $exists: true },
-      }).select("couponId total claimedCoins channelId");
-
-      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
 
       for (const channel of fetchChannels) {
+        const channelView = await ChannelView.findOne({
+          channelId: channel._id,
+          businessId: businessId,
+        });
+        const totalChannelGrabbed = await UserCouponGrabb.find({
+          channelId: channel._id,
+        }).count();
+
+        const payments = await Payment.find({
+          channelId: channel._id,
+        }).select("total");
+
+        const totalChannelSales = payments.reduce(
+          (acc, curr) => acc + curr.total,
+          0,
+        );
         const channelData = {
-          name: channel.channelId.name,
-          isActive: channel.channelId.isActive,
-          totalReach: totalViews,
-          totalGrabbed: totalGrabs,
-          totalSales: totalSales,
+          name: channel.name,
+          isActive: channel.isActive,
+          totalReach: channelView?.viewCount || 0,
+          totalGrabbed: totalChannelGrabbed || 0,
+          totalSales: totalChannelSales || 0,
         };
         ans.push(channelData);
       }
@@ -506,14 +537,30 @@ const couponAnalyticsRouter = new Hono()
       const customLink =
         await Business.findById(businessId).select("customLink");
 
+      const activeCoupon = await CouponLink.findOne({
+        couponId: couponId,
+        channelId: channelId,
+      });
+      if (activeCoupon && !activeCoupon.isActive) {
+        return c.redirect(`http://localhost:3000/${customLink?.customLink}`);
+      }
+
       await CouponView.create({
         couponId: couponId,
         date: Date.now(),
         businessId: businessId,
       });
+      await ChannelView.findOneAndUpdate(
+        {
+          channelId: channelId,
+          businessId: businessId,
+        },
+        { $inc: { viewCount: 1 } },
+        { upsert: true, new: true },
+      );
 
       return c.redirect(
-        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `http://localhost:3000/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )

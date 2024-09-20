@@ -45,6 +45,9 @@ interface IUseCouponz {
   setMissingOut: (coupon: Coupon[]) => void;
 
   updateCoupons: (billValue: number) => void;
+
+  channelId: string;
+  setChannelId: (channelId: string) => void;
 }
 
 export const useCouponz = create(
@@ -103,6 +106,9 @@ export const useCouponz = create(
           missingOutCoupon,
         });
       },
+
+      channelId: "",
+      setChannelId: (channelId) => set(() => ({ channelId })),
     }),
     {
       name: "couponz",

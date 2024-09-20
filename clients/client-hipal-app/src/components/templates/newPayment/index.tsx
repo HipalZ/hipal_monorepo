@@ -104,8 +104,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const businessId = data?.business?.businessId;
   const { setLoyaltySetting } = useLoyaltyData();
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
-  const { availedCoupon } = useCouponz((s) => ({
+  const { availedCoupon, channelId, setChannelId } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
+    channelId: s.channelId,
+    setChannelId: s.setChannelId,
   }));
   const { applyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
@@ -221,6 +223,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         setRazorPayOrderId("");
         setRazorPayPaymentId("");
         setTableName("");
+        setChannelId("");
         return router.push(
           `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
             finalReward,
@@ -416,7 +419,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         currency: "INR",
         tableName: tableName,
         couponId: availedCoupon?._id,
-        channelId: availedCoupon?.channelId,
+        ...(channelId && { channelId }),
         cashbackAvailable: availedCoupon?.cashbackAvailable,
       },
     });
@@ -469,7 +472,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     tips,
     userDetails?._id,
     availedCoupon?._id,
-    availedCoupon?.channelId,
+    channelId,
     availedCoupon?.cashbackAvailable,
     loyaltySetting?.setCashBackPercentage,
     loyaltySetting?.rewardLimit,
@@ -495,7 +498,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           tips: tips,
           tableName: tableName,
           couponId: availedCoupon?._id,
-          channelId: availedCoupon?.channelId,
+          ...(channelId && { channelId }),
           cashbackAvailable: availedCoupon?.cashbackAvailable,
         },
       });
@@ -514,7 +517,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       userDetails?._id,
       tableName,
       availedCoupon?._id,
-      availedCoupon?.channelId,
+      channelId,
       availedCoupon?.cashbackAvailable,
       setRazorPayOrderId,
     ],

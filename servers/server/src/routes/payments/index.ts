@@ -427,6 +427,7 @@ const paymentsRouter = new Hono()
         } = requestData;
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
+
         if (couponId) {
           const coupon = await Couponz.findById(couponId).select(
             "conditions.couponEndDate",

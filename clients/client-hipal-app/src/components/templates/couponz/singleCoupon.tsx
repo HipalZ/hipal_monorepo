@@ -76,6 +76,7 @@ const MemoCouponz = () => {
           couponId: selectedCoupon?._id || "",
           userId: userDetails?._id,
           businessId: businessId,
+          channelId: channelId.toString(),
         },
       });
       if (response.status === 400) {
@@ -99,10 +100,14 @@ const MemoCouponz = () => {
           businessId: businessId,
           couponId: selectedCoupon?._id,
           userId: userDetails?._id,
+          channelId: channelId.toString(),
         },
       });
       if (response.status === 201) {
         setCurrentPage(ICouponPage.CONGRATULATIONZ);
+      }
+      if (response.status === 409) {
+        setCurrentPage(ICouponPage.SEEMYCOUPONZ);
       }
     }
     setIsLoading(false);
