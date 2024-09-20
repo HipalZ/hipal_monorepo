@@ -1,96 +1,57 @@
 import useCouponsStore from "@/components/store/useCouponsStore";
 import birthdayPlaceholder from "@/assets/coupon/birthdayCouponz.png";
 import { memo } from "react";
+import HipalLogo from "@/assets/hipal.png";
 
 const MemoStorySize = () => {
   const {
-    couponEndDate,
     couponPrice,
-    customDays,
-    startTime,
-    endTime,
     couponName,
     bgColor,
     couponImage,
     couponDiscount,
     couponType,
-    minimumBillAmount,
-    extendedEndTime,
   } = useCouponsStore();
-
-  const formatDate = (timestamp: number | null) => {
-    if (!timestamp) return "No expiry";
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
-  };
 
   return (
     <div className="relative w-[236px] mx-auto h-[420px] overflow-hidden">
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 w-[236px]  h-[420px]"
         style={{
-          backgroundImage: `linear-gradient(to top, ${bgColor}30, transparent), url(${
+          backgroundImage: `linear-gradient(180deg, rgba(146, 103, 236, 0) 47%, ${bgColor} 77.68%), url(${
             couponImage || birthdayPlaceholder
           })`,
-          backgroundSize: "cover",
           backgroundPosition: "center",
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
         }}
       />
 
-      <div className="absolute bottom-0 flex items-center justify-between w-full p-2 text-white bg-black">
-        <div className="relative grid w-64 grid-cols-2 gap-2 text-center">
-          <center className="flex flex-col items-center">
-            <h3 className="text-xs text-gray-500">Min. Bill Amount</h3>
-            <p className="text-base">
-              ₹ {minimumBillAmount || couponPrice || 0}
-            </p>
-          </center>
-          <center className="flex flex-col items-center">
-            <h3 className="text-xs text-gray-500">Valid Till</h3>
-            <p className="text-base">{formatDate(couponEndDate)}</p>
-          </center>
-          <center className="flex flex-col items-center">
-            <h3 className="text-xs text-gray-500">Applicable On</h3>
-            {customDays && customDays.length > 0 && (
-              <p className="text-base">
-                {customDays.map((day) => day.slice(0, 2)).join(", ")}
-              </p>
-            )}
-            {customDays.length === 0 && (
-              <p className="text-base">All the time</p>
-            )}
-          </center>
-          {startTime && endTime ? (
-            <center className="flex flex-col items-center">
-              <h3 className="text-xs text-gray-500">Available On</h3>
-              <p className="text-base">
-                {startTime?.toString()?.split(".").join(":")}
-                {startTime?.toString().length === 1 ? ":00" : ""} -
-                {extendedEndTime > 0 ? (
-                  <span className="font-semibold ">
-                    {extendedEndTime?.toString()?.split(".").join(":")}
-                    {extendedEndTime?.toString().length === 1 ? ":00" : ""}
-                  </span>
-                ) : (
-                  <span>
-                    {" "}
-                    {endTime?.toString()?.split(".").join(":")}
-                    {endTime?.toString().length === 1 ? ":00" : ""}
-                  </span>
-                )}
-              </p>
-            </center>
-          ) : null}
-        </div>
-      </div>
+      <figure className="absolute w-[4rem]  bottom-2 right-2">
+        <img className="filter invert brightness-0" src={HipalLogo} alt="" />
+      </figure>
 
-      <p className="absolute text-2xl font-bold text-white left-1/2 top-[59%] transform -translate-x-1/2">
+      <figcaption className="absolute text-[0.5rem] text-white bottom-2 left-2">
+        Terms & Conditions
+      </figcaption>
+
+      <p
+        style={{
+          fontFamily: "darker",
+        }}
+        className="absolute text-2xl font-bold text-white left-1/2 bottom-[10%] transform -translate-x-1/2 text-center"
+      >
         {couponType === "PERCENTAGE" && couponDiscount
           ? `${couponDiscount}% off `
           : `₹ ${couponPrice || "0"} off `}
       </p>
 
-      <div className="absolute text-lg font-bold text-white left-1/2 top-[49%] transform -translate-x-1/2 text-nowrap">
+      <div
+        style={{
+          fontFamily: "Bungee",
+        }}
+        className="absolute w-full text-2xl font-bold text-white left-1/2 bottom-[17%] transform -translate-x-1/2 text-center max-w-[90%] break-words"
+      >
         {couponName || "Coupon"}
       </div>
     </div>

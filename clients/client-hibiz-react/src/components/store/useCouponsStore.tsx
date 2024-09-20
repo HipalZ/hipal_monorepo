@@ -1,34 +1,32 @@
-import type { selectedUsersDetails } from "@/hooks/useCoupon";
-import { create } from "zustand";
+import type { selectedUsersDetails } from '@/hooks/useCoupon';
+import { create } from 'zustand';
 
 export type CouponFlow =
-  | "CREATE"
-  | "EDIT"
-  | "MANAGE"
-  | "INFO"
-  | ""
-  | "DETAILS"
-  | "AVAILABLE"
-  | "EXPIRED"
-  | "ELIGIBILITY"
-  | "PREVIEW"
-  | "CUSTOM"
-  | "GRABBING"
-  | "Terms";
+  | 'CREATE'
+  | 'EDIT'
+  | 'MANAGE'
+  | 'INFO'
+  | ''
+  | 'DETAILS'
+  | 'AVAILABLE'
+  | 'EXPIRED'
+  | 'ELIGIBILITY'
+  | 'PREVIEW'
+  | 'CUSTOM'
+  | 'GRABBING'
+  | 'Terms'
+  | 'ANALYTICS'
+  | 'ANALYTICS_INFO'
+  | 'LINK_CHANNELS'
+  | 'CHANNELS';
 
-export type CouponType = "PERCENTAGE" | "AMOUNT";
+export type CouponType = 'PERCENTAGE' | 'AMOUNT';
 
-export type availability =
-  | "allthetime"
-  | "weekdays"
-  | "weekends"
-  | "birthdayweek"
-  | "birthdaymonth"
-  | "custom";
+export type availability = 'allthetime' | 'weekdays' | 'weekends' | 'birthdayweek' | 'birthdaymonth' | 'custom';
 
-export type eligibilityModal = "people" | "group" | "";
+export type eligibilityModal = 'people' | 'group' | '';
 
-export type expiryClaimLimit = "NO_LIMIT" | "SET_LIMIT";
+export type expiryClaimLimit = 'NO_LIMIT' | 'SET_LIMIT';
 
 interface ICoupon {
   selectedPage: CouponFlow;
@@ -158,47 +156,44 @@ interface ICoupon {
   resetCouponState: () => void;
 
   links: { channelId: { _id: string; name: string }; link: string }[];
-  setLinks: (
-    links: { channelId: { _id: string; name: string }; link: string }[],
-  ) => void;
+  setLinks: (links: { channelId: { _id: string; name: string }; link: string }[]) => void;
+
+  filter: 'active' | 'inactive';
+  setFilter: (value: 'active' | 'inactive') => void;
 }
 
 const useCouponsStore = create<ICoupon>((set) => ({
-  selectedPage: "MANAGE",
+  selectedPage: 'MANAGE',
   setSelectedPage: (page: CouponFlow) => set(() => ({ selectedPage: page })),
 
-  couponName: "",
+  couponName: '',
   setCouponName: (name: string) => set(() => ({ couponName: name })),
 
-  couponType: "PERCENTAGE",
+  couponType: 'PERCENTAGE',
   setCouponType: (type: CouponType) => set(() => ({ couponType: type })),
 
   couponPrice: 0,
   setCouponPrice: (price: number) => set(() => ({ couponPrice: price })),
 
   addMinimumBillAmount: false,
-  setAddMinimumBillAmount: (value: boolean) =>
-    set(() => ({ addMinimumBillAmount: value })),
+  setAddMinimumBillAmount: (value: boolean) => set(() => ({ addMinimumBillAmount: value })),
 
   couponPercentage: 0,
-  setCouponPercentage: (percentage: number) =>
-    set(() => ({ couponPercentage: percentage })),
+  setCouponPercentage: (percentage: number) => set(() => ({ couponPercentage: percentage })),
 
   couponDiscount: 0,
-  setCouponDiscount: (discount: number) =>
-    set(() => ({ couponDiscount: discount })),
+  setCouponDiscount: (discount: number) => set(() => ({ couponDiscount: discount })),
 
   openAvailableModal: false,
-  setOpenAvailableModal: (value: boolean) =>
-    set(() => ({ openAvailableModal: value })),
+  setOpenAvailableModal: (value: boolean) => set(() => ({ openAvailableModal: value })),
 
-  when: "allthetime",
+  when: 'allthetime',
   setWhen: (value: availability) => set(() => ({ when: value })),
 
   customDays: [],
   setCustomDays: (value: string[]) => set(() => ({ customDays: value })),
 
-  expiryCoupon: "",
+  expiryCoupon: '',
   setExpiryCoupon: (value: string) => set(() => ({ expiryCoupon: value })),
 
   noOfClaims: 0,
@@ -208,12 +203,10 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setExpiryModal: (value: boolean) => set(() => ({ expiryModal: value })),
 
   couponStartDate: null,
-  setCouponStartDate: (timestamp: number | null) =>
-    set(() => ({ couponStartDate: timestamp })),
+  setCouponStartDate: (timestamp: number | null) => set(() => ({ couponStartDate: timestamp })),
 
   couponEndDate: null,
-  setCouponEndDate: (timestamp: number | null) =>
-    set(() => ({ couponEndDate: timestamp })),
+  setCouponEndDate: (timestamp: number | null) => set(() => ({ couponEndDate: timestamp })),
 
   showDatePicker: false,
   setShowDatePicker: (value: boolean) => set(() => ({ showDatePicker: value })),
@@ -222,52 +215,44 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setOverAllLimit: (value: number) => set(() => ({ overAllLimit: value })),
 
   expiryAfterGrabbed: 0,
-  setExpiryAfterGrabbed: (value: number) =>
-    set(() => ({ expiryAfterGrabbed: value })),
+  setExpiryAfterGrabbed: (value: number) => set(() => ({ expiryAfterGrabbed: value })),
 
   couponForEveryOne: true,
-  setCouponForEveryOne: (value: boolean) =>
-    set(() => ({ couponForEveryOne: value })),
+  setCouponForEveryOne: (value: boolean) => set(() => ({ couponForEveryOne: value })),
 
   eligibilityModal: false,
-  setEligibilityModal: (value: boolean) =>
-    set(() => ({ eligibilityModal: value })),
+  setEligibilityModal: (value: boolean) => set(() => ({ eligibilityModal: value })),
 
-  eligibilityType: "",
-  setEligibilityType: (value: eligibilityModal) =>
-    set(() => ({ eligibilityType: value })),
+  eligibilityType: '',
+  setEligibilityType: (value: eligibilityModal) => set(() => ({ eligibilityType: value })),
 
   selectedUserIds: [],
   setSelectedUserIds: (ids: string[]) => set(() => ({ selectedUserIds: ids })),
 
   selectedGroupIds: [],
-  setSelectedGroupIds: (ids: string[]) =>
-    set(() => ({ selectedGroupIds: ids })),
+  setSelectedGroupIds: (ids: string[]) => set(() => ({ selectedGroupIds: ids })),
 
-  expiryClaimLimit: "NO_LIMIT",
-  setExpiryClaimLimit: (value: expiryClaimLimit) =>
-    set(() => ({ expiryClaimLimit: value })),
+  expiryClaimLimit: 'NO_LIMIT',
+  setExpiryClaimLimit: (value: expiryClaimLimit) => set(() => ({ expiryClaimLimit: value })),
 
   expiryClaimLimitValue: 0,
-  setExpiryClaimLimitValue: (value: number) =>
-    set(() => ({ expiryClaimLimitValue: value })),
+  setExpiryClaimLimitValue: (value: number) => set(() => ({ expiryClaimLimitValue: value })),
 
-  couponId: "",
+  couponId: '',
   setCouponId: (value: string) => set(() => ({ couponId: value })),
 
   minimumBillAmount: 0,
-  setMinimumBillAmount: (value: number) =>
-    set(() => ({ minimumBillAmount: value })),
+  setMinimumBillAmount: (value: number) => set(() => ({ minimumBillAmount: value })),
 
   startTime: 0,
   setStartTime: (value: number) => set(() => ({ startTime: value })),
   endTime: 0,
   setEndTime: (value: number) => set(() => ({ endTime: value })),
 
-  bgColor: "#9267EC",
+  bgColor: '#9267EC',
   setBgColor: (value: string) => set(() => ({ bgColor: value })),
 
-  couponImage: "",
+  couponImage: '',
   setCouponImage: (value: string) => set(() => ({ couponImage: value })),
 
   isPublish: false,
@@ -280,20 +265,16 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setPromote: (value: boolean) => set(() => ({ promote: value })),
 
   cashbackAvailable: false,
-  setCashbackAvailable: (value: boolean) =>
-    set(() => ({ cashbackAvailable: value })),
+  setCashbackAvailable: (value: boolean) => set(() => ({ cashbackAvailable: value })),
 
   requiredFields: [],
-  setRequiredFields: (value: string[]) =>
-    set(() => ({ requiredFields: value })),
+  setRequiredFields: (value: string[]) => set(() => ({ requiredFields: value })),
 
-  termsAndConditions: "",
-  setTermsAndConditions: (value: string) =>
-    set(() => ({ termsAndConditions: value })),
+  termsAndConditions: '',
+  setTermsAndConditions: (value: string) => set(() => ({ termsAndConditions: value })),
 
   extendedEndTime: 0,
-  setExtendedEndTime: (value: number) =>
-    set(() => ({ extendedEndTime: value })),
+  setExtendedEndTime: (value: number) => set(() => ({ extendedEndTime: value })),
 
   allowLateNight: false,
   setAllowLateNight: (value: boolean) => set(() => ({ allowLateNight: value })),
@@ -302,14 +283,11 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setIsActive: (value: boolean) => set(() => ({ isActive: value })),
 
   links: [],
-  setLinks: (
-    links: { channelId: { _id: string; name: string }; link: string }[],
-  ) => set(() => ({ links: links })),
+  setLinks: (links: { channelId: { _id: string; name: string }; link: string }[]) => set(() => ({ links: links })),
 
   selectedUsers: [],
 
-  setSelectedUsers: (users: selectedUsersDetails[]) =>
-    set(() => ({ selectedUsers: users })),
+  setSelectedUsers: (users: selectedUsersDetails[]) => set(() => ({ selectedUsers: users })),
 
   addUser: (user: selectedUsersDetails) =>
     set((state) => ({
@@ -321,18 +299,21 @@ const useCouponsStore = create<ICoupon>((set) => ({
       selectedUsers: state.selectedUsers.filter((user) => user._id !== userId),
     })),
 
+  filter: 'active',
+  setFilter: (value: 'active' | 'inactive') => set(() => ({ filter: value })),
+
   resetCouponState: () =>
     set(() => ({
-      couponName: "",
-      couponType: "PERCENTAGE",
-      couponId: "",
+      couponName: '',
+      couponType: 'PERCENTAGE',
+      couponId: '',
       couponPrice: 0,
       couponPercentage: 0,
       couponDiscount: 0,
       addMinimumBillAmount: false,
-      when: "allthetime",
+      when: 'allthetime',
       customDays: [],
-      expiryCoupon: "",
+      expiryCoupon: '',
       noOfClaims: 0,
       couponStartDate: null,
       couponEndDate: null,
@@ -340,23 +321,23 @@ const useCouponsStore = create<ICoupon>((set) => ({
       overAllLimit: 0,
       expiryAfterGrabbed: 0,
       couponForEveryOne: true,
-      eligibilityType: "",
+      eligibilityType: '',
       selectedUserIds: [],
       selectedGroupIds: [],
-      expiryClaimLimit: "NO_LIMIT",
+      expiryClaimLimit: 'NO_LIMIT',
       expiryClaimLimitValue: 0,
       minimumBillAmount: 0,
       startTime: 0,
       endTime: 0,
       extendedEndTime: 0,
-      bgColor: "#9267EC",
-      couponImage: "",
+      bgColor: '#9267EC',
+      couponImage: '',
       isPublish: false,
       promoteOnBill: false,
       promote: false,
       cashbackAvailable: false,
       requiredFields: [],
-      termsAndConditions: "",
+      termsAndConditions: '',
       allowLateNight: false,
     })),
 }));

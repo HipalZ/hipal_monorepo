@@ -207,34 +207,26 @@ const MemoCustom = () => {
 
   return (
     <section className="flex flex-col gap-6 lg:flex-row pb-[7rem]">
-      <div
-        className="flex-1 p-2 rounded-2xl"
-        style={{
-          backgroundColor: bgColor || "#ffffff",
-        }}
-      >
-        <div
-          className="p-4"
-          style={{
-            backgroundColor: bgColor || "#ffffff",
-          }}
-          ref={previewRef}
-        >
+      <div className="flex-1 p-2 rounded-2xl">
+        <div className="p-4 rounded-xl" ref={previewRef}>
           {renderPreview()}
         </div>
-        <div className="w-[92%] mx-auto text-center bg-[#ffffff50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="w-full px-2 py-2 text-sm text-black bg-white rounded-full"
-          >
-            Download Preview
-          </button>
-        </div>
+        {selectedPreview === "storySize" ||
+        selectedPreview === "socialMedia" ? (
+          <div className="w-[92%] mx-auto text-center bg-[#ffffff50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="flex-1 w-full px-2 py-2 text-sm text-black bg-white rounded-full"
+            >
+              Download Preview
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      <Background>
-        <div className="flex flex-wrap flex-1 gap-4 mb-6 text-sm">
+      <Background className="">
+        <div className="flex flex-wrap flex-1 gap-4 mb-6 text-sm ">
           {buttonData.map(({ id, label }) => (
             <button
               key={id}

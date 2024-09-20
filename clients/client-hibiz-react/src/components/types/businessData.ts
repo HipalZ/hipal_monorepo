@@ -652,3 +652,92 @@ export interface SocialMediaLink {
   logo: ReactNode;
   link: string;
 }
+
+// Define the Channel type
+interface Channel {
+  _id: string;
+  name: string;
+}
+
+// Define the Link type
+interface Link {
+  channelId: Channel;
+  link: string;
+}
+
+// Define the Config type
+interface Config {
+  value: number;
+  discountType: "AMOUNT" | "PERCENTAGE";
+  upto: number;
+  _id: string;
+}
+
+// Define the IndividualUserLimit type
+interface IndividualUserLimit {
+  overAllLimit: number;
+  _id: string;
+}
+
+// Define the ExpiryClaimLimit type
+interface ExpiryClaimLimit {
+  overAllLimit: number;
+  _id: string;
+}
+
+// Define the Availability type
+interface Availability {
+  when:
+    | "custom"
+    | "allthetime"
+    | "birthdayweek"
+    | "birthdaymonth"
+    | "weekdays"
+    | "weekends";
+  customDays: string[];
+  startTime: number;
+  endTime: number;
+  _id: string;
+}
+
+// Define the EligibleUser type
+interface EligibleUser {
+  allUsers: boolean;
+  userIds: string[];
+  groupIds: string[];
+  _id: string;
+}
+
+// Define the Conditions type
+interface Conditions {
+  individualUserLimit: IndividualUserLimit;
+  billValue: number;
+  expiryClaimLimit: ExpiryClaimLimit;
+  availability: Availability;
+  eligibleUser: EligibleUser;
+  expiryAfterGrabbed: number;
+  requiredFields: string[];
+  couponStartDate: number;
+  couponEndDate: number;
+  tc: string;
+  _id: string;
+}
+
+export interface ICoupon {
+  _id: string;
+  name: string;
+  type: "FIX";
+  businessId: string;
+  config: Config;
+  isActive: boolean;
+  image: string;
+  bgColour: string;
+  isPublish: boolean;
+  isDeleted: boolean;
+  cashbackAvailable: boolean;
+  promote: boolean;
+  promoteOnBill: boolean;
+  conditions: Conditions;
+  __v: number;
+  links: Link[];
+}

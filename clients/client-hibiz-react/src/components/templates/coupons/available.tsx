@@ -180,6 +180,7 @@ const MemoAvailable = () => {
       } else if (periodName !== "custom") {
         setCustomDays([]);
       }
+      closeModal();
     },
     [setStartTime, setEndTime, setExtendedEndTime],
   );
@@ -253,7 +254,7 @@ const MemoAvailable = () => {
     <section className="pb-[6rem] overflow-hidden flex flex-col lg:flex-row gap-6">
       <section className="flex-1">
         <Coupon />
-        <center className="mt-8 w-full max-w-[28rem] truncate md:text-lg font-bol text-[#FB585B] bg-[#FB585B20] py-2">
+        <center className="mt-8 w-full max-w-[28rem] truncate md:text-lg font-bold text-[#8C63FF] bg-[#8C63FF30] py-2">
           {selectedPeriodText}
         </center>
       </section>
@@ -332,7 +333,7 @@ const MemoAvailable = () => {
 
       {openAvailableModal && (
         <PopUp show={openAvailableModal} onClose={closeModal} width="w-[28rem]">
-          <div className="p-4 h-[80dvh] overflow-auto">
+          <div className="p-4 h-[60dvh] overflow-auto">
             <ul>
               {periodArray.map((period) => (
                 <li key={period.id}>
@@ -356,14 +357,7 @@ const MemoAvailable = () => {
                 </li>
               ))}
             </ul>
-            {customDays?.length > 0 && (
-              <CustomDayButtons
-                customDays={customDays}
-                handleCustomDayToggle={handleCustomDayToggle}
-              />
-            )}
           </div>
-          <BottomButton buttons={[{ text: "save", onClick: closeModal }]} />
         </PopUp>
       )}
 

@@ -1,7 +1,7 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";
+import type { ICoupon } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import type { CouponType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
@@ -25,7 +25,7 @@ export const useGetAllCoupons = () => {
       },
     });
 
-    const data = (await res.json()).data as CouponType[];
+    const data = (await res.json()).data as ICoupon[];
     return data;
   }, [businessId]);
 
@@ -176,4 +176,124 @@ export const useSingleUserInfo = (userPhone: string) => {
   });
 
   return { userInfo: data, isLoading, error };
+};
+
+export const getAnalyticsDashBoard = () => {
+  const businessData = useBusinessData((state) => state.businessData);
+  const businessId = businessData?._id;
+
+  const getAnalytics = useCallback(async () => {
+    if (!businessId) return [];
+
+    const res = await apiRpc["coupon-analytics"][":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+
+    const data = (await res.json()).data;
+    return data;
+  }, [businessId]);
+
+  const {
+    data: analytics,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["getAnalytics", businessId],
+    queryFn: getAnalytics,
+    enabled: !!businessId,
+  });
+
+  return {
+    analytics,
+    isLoading,
+    error,
+  };
+};
+
+export interface IAnalytics {
+  newUsers: number;
+  repeatUsers: number;
+  successPercentage: number;
+  totalClaimed: number;
+  totalDiscount: number;
+  totalGrabbed: number;
+  totalReach: number;
+  totalSales: number;
+}
+
+export const useIndividualCouponAnalytics = (to: number) => {
+  const couponId = useCouponsStore((state) => state.couponId);
+  const { couponStartDate } = useCouponsStore();
+
+  console.log("couponStartDate", couponStartDate, to);
+
+  const getIndividualAnalytics = useCallback(async () => {
+    const res = await apiRpc["coupon-analytics"].couponDashboard[
+      ":couponId"
+    ].$get({
+      param: {
+        couponId,
+      },
+      query: {
+        from: couponStartDate?.toString(),
+        to: to.toString(),
+      },
+    });
+    const data = (await res.json()).data as IAnalytics;
+    return data;
+  }, [couponStartDate, to, couponId]);
+
+  const { data: analytics, isLoading } = useQuery({
+    queryKey: ["getIndividualAnalytics", couponId, couponStartDate, to],
+    queryFn: getIndividualAnalytics,
+    enabled: !!couponId && !!couponStartDate && !!to,
+  });
+
+  return {
+    analytics,
+    isLoading,
+  };
+};
+
+interface IChannel {
+  name: string;
+  isActive: boolean;
+  totalReach: number;
+  totalGrabbed: number;
+  totalSales: number;
+}
+
+export const useGetCouponsChannel = () => {
+  const couponId = useCouponsStore((state) => state.couponId);
+  const businessData = useBusinessData((state) => state.businessData);
+  const businessId = businessData?._id;
+
+  const getCouponsChannel = useCallback(async () => {
+    if (!couponId || !businessId) return [];
+
+    const res = await apiRpc["coupon-analytics"]["channels-analytics"][
+      ":businessId"
+    ][":couponId"].$get({
+      param: {
+        businessId,
+        couponId,
+      },
+    });
+
+    const data = (await res.json()).data as IChannel[];
+    return data;
+  }, [businessId, couponId]);
+
+  const { data: singleCouponChannel, isLoading } = useQuery({
+    queryKey: ["getCouponsChannel", businessId, couponId],
+    queryFn: getCouponsChannel,
+    enabled: !!couponId && !!businessId,
+  });
+
+  return {
+    singleCouponChannel,
+    isLoading,
+  };
 };

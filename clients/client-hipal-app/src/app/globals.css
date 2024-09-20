@@ -20,7 +20,6 @@ body {
 .space-grotesk-700 {
 	font-family: "Space Grotesk", sans-serif;
 	font-optical-sizing: auto;
-	font-weight: 700;
 	font-style: normal;
   }
   /* Add this inside your global CSS file, e.g., styles/globals.css */
