@@ -13,7 +13,6 @@ export const CouponViewSchema = z.object({
   couponId: ObjectIdSchema,
   businessId: ObjectIdSchema,
   date: z.number(),
-  userId: ObjectIdSchema.optional(),
 });
 
 export type CouponViewType = z.infer<typeof CouponViewSchema>;

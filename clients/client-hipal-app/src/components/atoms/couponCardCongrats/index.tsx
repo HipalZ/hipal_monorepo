@@ -28,7 +28,7 @@ const MemoCouponCardCongrats = () => {
           height={180}
           className="rounded-t-xl bg-[#e0dbdb]"
           style={{
-            objectFit: "contain",
+            objectFit: "cover",
             maxHeight: "200px",
             maxWidth: "287px",
           }}

@@ -3,7 +3,7 @@ import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
-import type { GoogleReview } from "@/components/types/businessData";
+import type { GoogleReview, IResponse } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -30,12 +30,9 @@ const MemoGoogleReviews = () => {
           userId: userDetails._id,
         },
       });
-      const response = await res.json();
+      const response: IResponse = await res.json();
       setReviews(response.data.reviews);
-      console.log("response.data.reviews", response.data.reviews);
       return response.data.reviews;
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
     } finally {
       setLoading(false);
     }

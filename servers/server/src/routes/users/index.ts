@@ -961,6 +961,14 @@ const usersRouter = new Hono()
         _id: 0,
       });
 
+      if (!userRewards) {
+        return c.json({
+          message: "User reward not found",
+          data: {},
+          err: true,
+        });
+      }
+
       return c.json({
         message: "User reward fetched successfully",
         data: userRewards,

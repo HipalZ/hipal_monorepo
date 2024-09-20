@@ -11,7 +11,7 @@ import Wallet from "@/assets/bonuscard/wallet.png";
 import googleImage from "@/assets/img/googleImg.png";
 import Coin from "@/assets/bonuscard/coin.png";
 import Star from "@/assets/svg/Star.svg";
-import { useLogin } from "@/components/store/useLogin";
+import { type IUserData, useLogin } from "@/components/store/useLogin";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
@@ -23,6 +23,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/components/utils/helpers";
 import { LuArrowRight } from "react-icons/lu";
+import type { IResponse } from "@/components/types/businessData";
 
 interface ILoyaltyCard {
   loyalty: ILoyaltySetting;
@@ -44,11 +45,13 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const accessToken = useUserToken.getState().accessToken;
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
-  const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
-  const { isLogin, setReviewPopup } = useLogin((s) => ({
-    isLogin: s.isLogin,
-    setReviewPopup: s.setReviewPopup,
-  }));
+  const { userDetails, isLogin, setReviewPopup, setGoogleReviewCount } =
+    useLogin((s) => ({
+      userDetails: s.userDetails,
+      isLogin: s.isLogin,
+      setReviewPopup: s.setReviewPopup,
+      setGoogleReviewCount: s.setGoogleReviewCount,
+    }));
 
   const openModal = () => {
     setTimeout(() => setIsModalOpen(true), 5000);
@@ -69,9 +72,24 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     },
     [srcColor],
   );
+  const isReviewGiven = async (userDetails: IUserData) => {
+    let res: IResponse;
+    const response = await apiRpc.subscribers.$get({
+      query: {
+        businessId: businessId.toString(),
+        userId: userDetails._id.toString(),
+        loyaltyId: loyalty.loyaltyId.toString(),
+      },
+    });
+    res = await response.json();
+    setGoogleReviewCount(res?.googleReviewCount);
+    return res?.googleReviewCount;
+  };
 
   const signInWithGoogle = async () => {
     try {
+      const count: number = await isReviewGiven(userDetails);
+      if (!!count && count > 1) return setReviewPopup(true);
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       if (user !== undefined) {
@@ -83,21 +101,13 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
             authorName: user?.displayName || userDetails?.name,
           },
         });
-        console.log("res", res);
-        const response = await res.json();
-        if (response?.data?.googleReviewCount === 1) {
-          setReviewPopup(true);
-        } else {
-          setReviewPopup(false);
-        }
       }
 
       // Redirect to the Google review page
       const url =
         businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-      // window.open(url, "_blank");
-      window.location.href = url;
-
+      window.open(url, "_blank");
+      setReviewPopup(true);
       return user;
     } catch (error) {
       console.error("Error during sign-in:", error);

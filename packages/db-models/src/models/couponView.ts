@@ -4,21 +4,19 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const couponViewSchema = new mongoose.Schema<CouponViewType>(
   {
-    businessId: {
-      required: true,
-      type: ObjectId,
-      ref: "Business",
-    },
     couponId: {
       type: ObjectId,
       required: true,
       ref: "Coupon",
       index: true,
     },
-    userId: {
+
+    businessId: {
       type: ObjectId,
-      ref: "User",
+      required: true,
+      ref: "Business",
     },
+
     date: {
       type: Number,
     },

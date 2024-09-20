@@ -7,9 +7,10 @@ import PopUp from "@/components/atom/popUp";
 import BottomButton from "@/components/atom/bottomButton";
 import { cn } from "@hi/common";
 import DatePicker from "react-datepicker";
-import { addDays, endOfMonth, differenceInDays } from "date-fns";
-import "react-datepicker/dist/react-datepicker.css";
+import { addDays, endOfMonth } from "date-fns";
 import toast from "react-hot-toast";
+import { formatDate } from "@/components/utils/helper";
+
 
 const expiryArray = [
   { id: 1, text: "No Expiration" },
@@ -36,11 +37,12 @@ const MemoExpiry = () => {
     couponEndDate,
     setCouponEndDate,
     setShowDatePicker,
-    showDatePicker,
     overAllLimit,
     setOverAllLimit,
     setSelectedPage,
     couponId,
+    setExpiryAfterGrabbed,
+
   } = useCouponsStore((s) => ({
     expiryModal: s.expiryModal,
     setExpiryModal: s.setExpiryModal,
@@ -50,12 +52,13 @@ const MemoExpiry = () => {
     setCouponStartDate: s.setCouponStartDate,
     couponEndDate: s.couponEndDate,
     setCouponEndDate: s.setCouponEndDate,
-    setShowDatePicker: s.setShowDatePicker,
     showDatePicker: s.showDatePicker,
+    setShowDatePicker: s.setShowDatePicker,
     overAllLimit: s.overAllLimit,
     setOverAllLimit: s.setOverAllLimit,
     setSelectedPage: s.setSelectedPage,
     couponId: s.couponId,
+    setExpiryAfterGrabbed: s.setExpiryAfterGrabbed,
   }));
 
   const [error, setError] = useState<string | null>(null);
@@ -63,18 +66,25 @@ const MemoExpiry = () => {
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
 
-    if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit > 0) {
+
+    if (
+      couponStartDate === null &&
+      couponEndDate === null &&
+      overAllLimit > 0
+    ) {
       return `Expires after ${overAllLimit} claims`;
     }
 
-    if (couponStartDate === 0 && couponEndDate > 0) {
+    if (couponStartDate === null && couponEndDate !== null) {
+
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
 
-    if (couponStartDate > 0 && couponEndDate > 0) {
+
+    if (couponStartDate !== null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
@@ -84,9 +94,9 @@ const MemoExpiry = () => {
     if (overAllLimit > 0) {
       return `Expires after ${overAllLimit} claims`;
     }
+    return "Expires: None";
+  }, [couponEndDate, couponStartDate, overAllLimit]);
 
-    return "Expires: All the time";
-  }, [couponStartDate, couponEndDate, overAllLimit]);
 
   const openModal = useCallback(() => {
     setExpiryModal(true);
@@ -94,18 +104,24 @@ const MemoExpiry = () => {
 
   const closeModal = useCallback(() => {
     setExpiryModal(false);
-  }, [setExpiryModal]);
+    setShowDatePicker(false);
+    if (!couponId) {
+      setExpiryAfterGrabbed(0);
+    }
+  }, [setExpiryModal, setShowDatePicker]);
 
   const handleExpirySelection = useCallback(
     (text: string) => {
       setExpiryCoupon(text);
 
       if (text === "No Expiration") {
-        setCouponStartDate(0);
-        setCouponEndDate(0);
+        setCouponStartDate(null);
+        setCouponEndDate(null);
         setOverAllLimit(0);
         setShowDatePicker(false);
       } else if (text === "Custom Expiration (e.g., Start and end date)") {
+        setCouponStartDate(null);
+        setCouponEndDate(null);
         setShowDatePicker(true);
       } else {
         setShowDatePicker(false);
@@ -118,8 +134,8 @@ const MemoExpiry = () => {
         if (
           text === "After Specific Use (e.g., Expires after it’s used 10 times)"
         ) {
-          setCouponStartDate(0);
-          setCouponEndDate(0);
+          setCouponStartDate(null);
+          setCouponEndDate(null);
         }
 
         if (
@@ -130,10 +146,16 @@ const MemoExpiry = () => {
           setCouponEndDate(endOfMonth(currentDate).getTime());
         }
       }
+      closeModal();
     },
-    [setExpiryCoupon, setShowDatePicker, setCouponStartDate, setCouponEndDate],
+    [
+      setExpiryCoupon,
+      setShowDatePicker,
+      setCouponStartDate,
+      setCouponEndDate,
+      closeModal,
+    ],
   );
-
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
 
@@ -145,6 +167,10 @@ const MemoExpiry = () => {
 
     setCouponStartDate(start ? start.getTime() : null);
     setCouponEndDate(end ? end.getTime() : null);
+
+    if (start && end) {
+      setShowDatePicker(false);
+    }
   };
 
   const handleClaimsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,18 +182,6 @@ const MemoExpiry = () => {
       setOverAllLimit(value);
     }
   };
-
-  const isSaveDisabled =
-    !!error ||
-    (!couponStartDate &&
-      expiryCoupon !==
-        "After Specific Use (e.g., Expires after it’s used 10 times)") ||
-    (!couponEndDate &&
-      expiryCoupon !==
-        "After Specific Use (e.g., Expires after it’s used 10 times)") ||
-    (expiryCoupon ===
-      "After Specific Use (e.g., Expires after it’s used 10 times)" &&
-      (overAllLimit <= 0 || !overAllLimit));
 
   const goNext = useCallback(() => {
     if ((!expiryCoupon || expiryCoupon === "Select Expiration") && !couponId) {
@@ -182,16 +196,22 @@ const MemoExpiry = () => {
     ) {
       return setError("Please enter the number of claims");
     }
-
-    setSelectedPage("ELIGIBILITY");
+    setSelectedPage("AVAILABLE");
   }, [expiryCoupon, overAllLimit, couponId]);
 
   return (
-    <section className="pb-[6rem] overflow-hidden flex flex-col lg:flex-row gap-6">
+    <section className="pb-[20rem] overflow-hidden flex flex-col lg:flex-row gap-6">
       <section className="flex-1">
         <Coupon />
-        <center className="mt-4 truncate md:text-lg font-bol text-[#FB585B]">
-          {getExpiryMessage() || "No expiration details available"}
+        <center className="mt-8 w-full max-w-[28rem] truncate md:text-lg font-bold text-[#8C63FF] bg-[#8C63FF30] py-2">
+          <h3>{getExpiryMessage() || "No expiration details available"}</h3>
+          {couponEndDate > 0 && couponStartDate > 0 && (
+            <h3>
+              {" "}
+              Validity: {formatDate(new Date(couponStartDate))} -{" "}
+              {formatDate(new Date(couponEndDate))}
+            </h3>
+          )}
         </center>
       </section>
 
@@ -201,16 +221,31 @@ const MemoExpiry = () => {
           <button
             type="button"
             onClick={openModal}
-            className="w-full px-4 py-3 border border-black rounded-2xl"
+            className="w-[100%] px-4 py-3 border border-black rounded-2xl"
           >
             <div className="flex items-center justify-between">
-              <h4 className="text-left truncate opacity-30">
+              <h4 className="text-left truncate ">
                 {expiryCoupon || "Select Expiration"}
               </h4>
               <IoMdArrowDropdown />
             </div>
           </button>
         </Background>
+        {expiryCoupon === "Custom Expiration (e.g., Start and end date)" && (
+          <div className="w-full mx-4 mb-4">
+            <DatePicker
+              selectsRange
+              startDate={couponStartDate ? new Date(couponStartDate) : null}
+              endDate={couponEndDate ? new Date(couponEndDate) : null}
+              onChange={handleDateChange}
+              dateFormat="dd/MM/yyyy"
+              isClearable
+              minDate={new Date()}
+              className="w-full min-w-[250px] p-2 border border-gray-300 rounded-lg"
+              popperPlacement="bottom-start"
+            />
+          </div>
+        )}
 
         {expiryCoupon !== "No Expiration" && (
           <>
@@ -229,64 +264,24 @@ const MemoExpiry = () => {
         )}
       </section>
       {expiryModal && (
-        <PopUp show={expiryModal} onClose={closeModal} width="w-[28rem]">
-          <article className=" h-[80dvh] overflow-auto">
-            {!showDatePicker ? (
-              <ul className="mt-4">
-                {expiryArray.map((expiry) => (
-                  <li
-                    key={expiry.id}
-                    className={cn(
-                      "px-4 mx-4 py-2 cursor-pointer rounded-xl hover:bg-[#6A31DF50]",
-                      expiryCoupon === expiry.text
-                        ? "bg-[#6A31DF50]  text-white"
-                        : "opacity-60",
-                    )}
-                    onClick={() => handleExpirySelection(expiry.text)}
-                  >
-                    {expiry.text}
-                  </li>
-                ))}
-                <BottomButton
-                  buttons={[{ text: "Save", onClick: closeModal }]}
-                />
-              </ul>
-            ) : (
-              <>
-                <center>
-                  <DatePicker
-                    selectsRange
-                    startDate={
-                      couponStartDate ? new Date(couponStartDate) : null
-                    }
-                    endDate={couponEndDate ? new Date(couponEndDate) : null}
-                    onChange={handleDateChange}
-                    dateFormat="dd/MM/yyyy"
-                    isClearable
-                    className="w-full px-4 mt-4 text-center rounded-full"
-                    autoFocus
-                  />
-                </center>
-                {error && (
-                  <p className="mt-2 text-center text-red-500">{error}</p>
-                )}
-                <div className="mt-4">
-                  <BottomButton
-                    buttons={[
-                      {
-                        text: "Go Back",
-                        onClick: () => setShowDatePicker(false),
-                      },
-                      {
-                        text: "Save",
-                        onClick: closeModal,
-                        disable: isSaveDisabled,
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
+        <PopUp show={expiryModal} onClose={closeModal} width="w-[30rem]">
+          <article className=" max-h-[50dvh] overflow-auto pb-[7rem]">
+            <ul className="mt-4">
+              {expiryArray.map((expiry) => (
+                <li
+                  key={expiry.id}
+                  className={cn(
+                    "px-4 mx-4 py-2 cursor-pointer rounded-xl hover:bg-[#6A31DF50]",
+                    expiryCoupon === expiry.text
+                      ? "bg-[#6A31DF50]  text-white"
+                      : "opacity-80",
+                  )}
+                  onClick={() => handleExpirySelection(expiry.text)}
+                >
+                  {expiry.text}
+                </li>
+              ))}
+            </ul>
           </article>
         </PopUp>
       )}
@@ -294,7 +289,7 @@ const MemoExpiry = () => {
         buttons={[
           {
             text: "Back",
-            onClick: () => setSelectedPage("AVAILABLE"),
+            onClick: () => setSelectedPage("DETAILS"),
           },
           {
             text: "Next",

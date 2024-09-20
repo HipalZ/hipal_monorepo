@@ -7,6 +7,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import type {
   BusinessDetails,
   IBusinessData,
+  IResponse,
 } from "@/components/types/businessData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
@@ -22,6 +23,7 @@ import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import { useParams, useRouter } from "next/navigation";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import SubScribeModal from "../subscribe";
+import ReviewModal from "./googleReviews/reviewModal";
 
 interface IHeroSection {
   data: IBusinessData;
@@ -34,15 +36,25 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }));
   const accessToken = useUserToken.getState().accessToken;
   const setAccessToken = useUserToken.getState().setAccessToken;
-  const { subscribeModal, setSubscribeModal, userDetails, setUserCoinZ } =
-    useLogin((s) => ({
-      userDetails: s.userDetails,
-      setUserCoinZ: s.setUserCoinZ,
-      subscribeModal: s.subscribeModal,
-      setSubscribeModal: s.setSubscribeModal,
-    }));
+  const {
+    subscribeModal,
+    setSubscribeModal,
+    userDetails,
+    setUserCoinZ,
+    reviewPopup,
+    setReviewPopup,
+    setGoogleReviewCount,
+  } = useLogin((s) => ({
+    userDetails: s.userDetails,
+    setUserCoinZ: s.setUserCoinZ,
+    subscribeModal: s.subscribeModal,
+    setSubscribeModal: s.setSubscribeModal,
+    reviewPopup: s.reviewPopup,
+    setReviewPopup: s.setReviewPopup,
+    setGoogleReviewCount: s.setGoogleReviewCount,
+  }));
   const { setCartEmpty } = useCartStore();
-  const { location, phone } = data?.outletInfo;
+  const { location, phone } = data.outletInfo;
   const customLink = useParams()?.businessId as string;
   const { name, logoUrl, tags, address, description } =
     data.business as BusinessDetails;
@@ -51,6 +63,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
   const [isLoader, setIsLoader] = useState<boolean>(false);
   const router = useRouter();
+
+  const toggleReviewPopup = useCallback(() => {
+    setReviewPopup(!reviewPopup);
+  }, [reviewPopup]);
 
   const goToLocation = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -70,7 +86,6 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
     const { business } = data;
 
     const loyaltyId = data?.loyalty?.loyaltyId;
-
     const payload = {
       businessId: business?.businessId?.toString() ?? "",
       userId: userDetails._id,
@@ -80,12 +95,13 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
     const response = await apiRpc.subscribers.$get({
       query: payload,
     });
-    const res = await response.json();
+    const res: IResponse = await response.json();
     if (response.status === 404) {
       setSubscribeModal(true);
     }
     if (response.status === 200) {
       setUserCoinZ(res?.rewards);
+      setGoogleReviewCount(res?.googleReviewCount);
     }
   };
 
@@ -220,6 +236,11 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             business={business}
             setSubscribeModal={setSubscribeModal}
           />
+        </MemoBottomPopUp>
+      )}
+      {reviewPopup && (
+        <MemoBottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
+          <ReviewModal closeModal={toggleReviewPopup} />
         </MemoBottomPopUp>
       )}
     </div>

@@ -6,42 +6,15 @@ import SmallCoupon from "./previewTypes/smallCoupon";
 import SocialMedia from "./previewTypes/socialMedia";
 import StorySize from "./previewTypes/storySize";
 import Background from "@/components/atom/feildBackground";
-import { apiRpc, cn } from "@hi/common";
+import { cn } from "@hi/common";
 import { toPng } from "html-to-image";
 import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useMutation } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+
 import { storeImageAfterSave } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-
-const useSaveCoupon = () => {
-  const resetFunction = useCouponsStore((s) => s.resetCouponState);
-  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: async (payload: any) => {
-      const response = await apiRpc.couponz.$post({
-        json: payload,
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (!data.err) {
-        toast.success("Coupon saved successfully!");
-        setSelectedPage("MANAGE");
-        resetFunction();
-      }
-    },
-    onError: (error) => {
-      toast.error("Failed to save coupon!");
-      console.error("Error in saving coupon:", error);
-    },
-  });
-
-  return { saveCoupon: mutateAsync, isPending };
-};
+import { useEditCoupon, useSaveCoupon } from "@/hooks/useCoupon";
 
 const MemoCustom = () => {
   const {
@@ -67,6 +40,7 @@ const MemoCustom = () => {
     selectedGroupIds,
     overAllLimit,
     expiryClaimLimitValue,
+    couponId,
     setPromoteOnBill,
     setPromote,
     setCashbackAvailable,
@@ -78,7 +52,8 @@ const MemoCustom = () => {
     selectedFile: s.selectedFile,
   }));
 
-  const { saveCoupon, isPending } = useSaveCoupon();
+  const { saveCoupon, isPending: isSaving } = useSaveCoupon();
+  const { editCoupon, isPending: isUpdating } = useEditCoupon(); // Use edit coupon hook
   const businessData = useBusinessData((s) => s.businessData);
   const [loading, setIsLoading] = useState(false);
 
@@ -134,7 +109,6 @@ const MemoCustom = () => {
 
   const saveCouponHandler = async (isPublishStatus: boolean) => {
     let imageUrl = "";
-
     if (couponImage) {
       try {
         imageUrl = await storeImageAfterSave(
@@ -202,8 +176,8 @@ const MemoCustom = () => {
         availability: availability,
         eligibleUser: eligibleUser,
         expiryAfterGrabbed: expiryAfterGrabbed,
-        couponStartDate: couponStartDate,
-        couponEndDate: couponEndDate,
+        couponStartDate: couponStartDate ? couponStartDate : 0,
+        couponEndDate: couponEndDate ? couponEndDate : 0,
         requiredFields: requiredFields,
         tc:
           termsAndConditions ||
@@ -212,20 +186,17 @@ const MemoCustom = () => {
     };
 
     try {
-      await saveCoupon(payload);
+      if (couponId) {
+        await editCoupon({ payload, couponId });
+      } else {
+        await saveCoupon(payload);
+      }
     } catch (error) {
       console.error("Failed to save coupon:", error);
     }
   };
 
-  if (loading) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-  if (isPending) {
+  if (loading || isSaving || isUpdating) {
     return (
       <div>
         <LoadingSpinner />
@@ -235,34 +206,26 @@ const MemoCustom = () => {
 
   return (
     <section className="flex flex-col gap-6 lg:flex-row pb-[7rem]">
-      <div
-        className="flex-1 p-2 rounded-2xl"
-        style={{
-          backgroundColor: bgColor || "#ffffff",
-        }}
-      >
-        <div
-          className="p-4"
-          style={{
-            backgroundColor: bgColor || "#ffffff",
-          }}
-          ref={previewRef}
-        >
+      <div className="flex-1 p-2 rounded-2xl">
+        <div className="p-4 rounded-xl" ref={previewRef}>
           {renderPreview()}
         </div>
-        <div className="w-[92%] mx-auto text-center bg-[#ffffff50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="w-full px-2 py-2 text-sm text-black bg-white rounded-full"
-          >
-            Download Preview
-          </button>
-        </div>
+        {selectedPreview === "storySize" ||
+        selectedPreview === "socialMedia" ? (
+          <div className="w-[92%] mx-auto text-center bg-[#ffffff50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="flex-1 w-full px-2 py-2 text-sm text-black bg-white rounded-full"
+            >
+              Download Preview
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      <Background>
-        <div className="flex flex-wrap flex-1 gap-4 mb-6 text-sm">
+      <Background className="">
+        <div className="flex flex-wrap flex-1 gap-4 mb-6 text-sm ">
           {buttonData.map(({ id, label }) => (
             <button
               key={id}
@@ -328,9 +291,9 @@ const MemoCustom = () => {
         fixed
         buttons={[
           {
-            text: "Publish",
+            text: couponId ? "Update" : "publish",
             onClick: () => saveCouponHandler(true),
-            isLoading: isPending,
+            isLoading: isSaving || isUpdating,
           },
         ]}
       />

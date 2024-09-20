@@ -20,7 +20,7 @@ const couponLinkSchema = new mongoose.Schema<CouponLinkType>(
     },
     channelId: {
       type: ObjectId,
-      ref: "CouponChannel",
+      ref: "couponChannel",
     },
     couponId: {
       type: ObjectId,

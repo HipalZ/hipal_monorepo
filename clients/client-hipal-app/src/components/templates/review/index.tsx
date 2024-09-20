@@ -27,8 +27,12 @@ import dynamic from "next/dynamic";
 import poweredBy from "@/assets/img/powered_hipalz.png";
 import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 
-const MiddlePopUp = dynamic(() => import("@/components/atoms/middlePopUp"));
+const MiddlePopUp = dynamic(() => import("@/components/atoms/middlePopUp"), {
+  ssr: false,
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 interface Payload {
   businessId: string;
@@ -85,10 +89,10 @@ function Review({ data }: { data: IBusinessData }) {
 
   const handleSelectStaff = useCallback((staff) => {
     setTempSelectedStaff((prev) => {
-      if (!prev.includes(staff)) {
-        return [...prev, staff];
+      if (prev.includes(staff)) {
+        return prev.filter((s) => s !== staff);
       }
-      return prev;
+      return [...prev, staff];
     });
   }, []);
 
@@ -99,15 +103,9 @@ function Review({ data }: { data: IBusinessData }) {
     );
   }, []);
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSelectStaff(e.target.innerText);
-    }
-  };
-
   const userDetails = useLogin((s) => s.userDetails);
 
-  const getStaff = async () => {
+  const getStaff = useCallback(async () => {
     const res = await apiRpc.users[":businessId"].$get({
       param: {
         businessId: businessId,
@@ -116,7 +114,7 @@ function Review({ data }: { data: IBusinessData }) {
     const response = await res.json();
     setStaffs(response?.data);
     return response?.data;
-  };
+  }, [setStaffs, businessId]);
 
   const {
     isPending,
@@ -130,9 +128,12 @@ function Review({ data }: { data: IBusinessData }) {
     enabled: showSuggestions && staffs.length === 0 && !!businessId,
   });
 
-  const handleRatingChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRating(event.target.value);
-  };
+  const handleRatingChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setRating(event.target.value);
+    },
+    [setRating],
+  );
 
   const result = async () => {
     const payload: Payload = {
@@ -172,7 +173,7 @@ function Review({ data }: { data: IBusinessData }) {
       const value = event.target.value;
       setDescription(value);
     },
-    [],
+    [setDescription],
   );
 
   const handleSaveStaff = useCallback(() => {
@@ -189,11 +190,8 @@ function Review({ data }: { data: IBusinessData }) {
     if (data?.settings) {
       updateTheme(data?.settings);
     }
-  }, [data?.settings]);
-
-  useEffect(() => {
     setIsLoading(false);
-  }, [isLoading]);
+  }, [data?.settings, setIsLoading]);
 
   return (
     <div className="p-4 animate-fade-up animate-once bg-base-100 text-primary">
@@ -272,7 +270,7 @@ function Review({ data }: { data: IBusinessData }) {
           &nbsp; How was your experience
         </h1>
         <center className="m-2">
-          <div className="rate">
+          <div className="px-2 rate bg-base-100 rounded-xl">
             <input
               type="radio"
               id="star5"
@@ -432,15 +430,15 @@ function Review({ data }: { data: IBusinessData }) {
                   <div key={staff?.name + index.toString()} className="w-full">
                     <li
                       key={staff?.name}
-                      onKeyDown={handleKeyDown}
+                      onKeyDown={() => handleSelectStaff(staff?.name)}
                       onClick={() => handleSelectStaff(staff?.name)}
                       className={cn(
-                        "h-16 flex items-center m-2 p-4 text-lg text-primary cursor-pointer active:bg-primary active:text-white transition-colors duration-200 rounded-md",
+                        "h-10 border-b border-[#000] flex items-center m-2 p-4 text-lg text-primary cursor-pointer active:bg-primary active:text-white transition-colors duration-200",
                         tempSelectedStaff.includes(staff?.name) &&
                           "bg-primary text-white",
                       )}
                     >
-                      <span className="mr-3 text-2xl">👤</span>
+                      <span className="mr-3 text-xl">👤</span>
                       <span className="flex-grow">
                         {staff?.name.length > 14
                           ? `${staff?.name.slice(0, 14)}...`

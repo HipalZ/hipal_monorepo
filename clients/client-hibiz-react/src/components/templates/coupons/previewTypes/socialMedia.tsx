@@ -1,90 +1,66 @@
-import useCouponsStore from "@/components/store/useCouponsStore";
 import birthdayPlaceholder from "@/assets/coupon/birthdayCouponz.png";
+import useCouponsStore from "@/components/store/useCouponsStore";
 import { memo } from "react";
+import HipalLogo from "@/assets/hipal.png";
 
 const MemoSocialMedia = () => {
   const {
-    couponEndDate,
     couponPrice,
-    customDays,
-    startTime,
-    endTime,
     couponName,
     bgColor,
     couponImage,
     couponDiscount,
-    minimumBillAmount,
     couponType,
-    extendedEndTime,
-  } = useCouponsStore();
-
-  const formatDate = (timestamp: number | null) => {
-    if (!timestamp) return "No expiry";
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
-  };
+  } = useCouponsStore((s) => ({
+    couponPrice: s.couponPrice,
+    couponName: s.couponName,
+    bgColor: s.bgColor,
+    couponImage: s.couponImage,
+    couponDiscount: s.couponDiscount,
+    couponType: s.couponType,
+  }));
 
   return (
-    <div className="relative w-[84%] mx-auto max-w-[24rem] h-[270px] overflow-hidden">
+    <div className="relative mx-auto aspect-square max-w-[28rem] overflow-hidden">
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(to top, ${bgColor} 20%, transparent), url(${
+          backgroundImage: `linear-gradient(180deg, rgba(146, 103, 236, 0) 47%, ${bgColor} 77.68%), url(${
             couponImage || birthdayPlaceholder
           })`,
           backgroundSize: "cover",
           backgroundPosition: "center",
+          aspectRatio: "1/1",
         }}
       />
 
-      <div className="absolute bottom-0 flex items-center justify-between w-full gap-2 p-2 text-white bg-black">
-        <div className="w-full text-[0.675rem] text-nowrap">
-          <h6>Min. Bill </h6>
-          <h6>₹{minimumBillAmount || couponPrice}</h6>
-        </div>
-        <div className="w-full text-[0.675rem] text-nowrap">
-          <h6 className="">Valid Till: </h6>
-          <h6>{formatDate(couponEndDate)}</h6>
-        </div>
-        <div className="text-[0.675rem] text-nowrap">
-          <h6> Applicable On </h6>
-          <h6 className="truncate w-[90%]">
-            {" "}
-            {customDays && customDays.length > 0
-              ? customDays.map((day) => day.slice(0, 2)).join(", ")
-              : "All the time"}
-          </h6>
-        </div>
-        {startTime && endTime ? (
-          <div className="text-[0.675rem] text-nowrap">
-            <h6>Avail On: </h6>
-            <h6>
-              {startTime?.toString()?.split(".").join(":")}
-              {startTime?.toString().length === 1 ? ":00" : ""} -
-              {extendedEndTime > 0 ? (
-                <span className="font-semibold ">
-                  {extendedEndTime?.toString()?.split(".").join(":")}
-                  {extendedEndTime?.toString().length === 1 ? ":00" : ""}
-                </span>
-              ) : (
-                <span>
-                  {" "}
-                  {endTime?.toString()?.split(".").join(":")}
-                  {endTime?.toString().length === 1 ? ":00" : ""}
-                </span>
-              )}
-            </h6>
-          </div>
-        ) : null}
-      </div>
-
-      <p className="absolute text-lg font-bold text-white bottom-[3.75rem] left-2">
+      <p
+        style={{
+          fontFamily: "darker",
+        }}
+        className="absolute  bottom-[2rem] left-4 text-xl  font-bold text-white"
+      >
         {couponType === "PERCENTAGE" && couponDiscount
-          ? `${couponDiscount}% off`
-          : `₹ ${couponPrice || "0"} off`}
+          ? `${couponDiscount}% OFF`
+          : `₹ ${couponPrice || "0"} OFF`}{" "}
+        &nbsp;
+        <span className="text-base">Grab Now!</span>
       </p>
 
-      <div className="absolute text-lg font-bold text-white bottom-[5.25rem] left-2">
+      <figure className="absolute w-[4rem]  bottom-2 right-2  ">
+        <img className="filter invert brightness-0" src={HipalLogo} alt="" />
+      </figure>
+
+      <figcaption className="absolute text-[0.5rem] text-white bottom-2 left-2">
+        Terms & Conditions
+      </figcaption>
+
+      <div
+        style={{
+          fontFamily: "Bungee",
+        }}
+        className="absolute bottom-[3.75rem] left-4 text-3xl font-bold text-white"
+      >
         {couponName || "Coupon"}
       </div>
     </div>

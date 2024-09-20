@@ -5,13 +5,8 @@ import { CiCirclePlus } from "react-icons/ci";
 import { RiEdit2Fill } from "react-icons/ri";
 
 interface IBillSummary {
-  isTipActive: boolean;
-  setIsTipActive: (value: boolean) => void;
   clearTheTip: () => void;
   handleTipSelect: (tip: string) => void;
-  selectedTip: string;
-  customTip: string;
-  showInput: boolean;
   handleCustomTip: (e: any) => void;
   handleSaveTip: () => void;
 }
@@ -20,25 +15,30 @@ const BillSummary = (props: IBillSummary) => {
   const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const { billValue, claimCouponz, claimedCoinz, tips } = usePaymentStore(
-    (s) => ({
-      billValue: s.billValue,
-      claimCouponz: s.claimCouponz,
-      claimedCoinz: s.claimedCoinz,
-      tips: s.tips,
-    }),
-  );
   const {
     isTipActive,
     setIsTipActive,
-    clearTheTip,
-    handleTipSelect,
+    showInput,
     selectedTip,
     customTip,
-    showInput,
-    handleCustomTip,
-    handleSaveTip,
-  } = props;
+    billValue,
+    claimCouponz,
+    claimedCoinz,
+    tips,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    claimCouponz: s.claimCouponz,
+    claimedCoinz: s.claimedCoinz,
+    tips: s.tips,
+    isTipActive: s.isTipActive,
+    setIsTipActive: s.setIsTipActive,
+    showInput: s.showInput,
+    selectedTip: s.selectedTip,
+    customTip: s.customTip,
+  }));
+
+  const { clearTheTip, handleTipSelect, handleCustomTip, handleSaveTip } =
+    props;
   return (
     <div className="flex flex-col pb-36 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
       <h6 className="mx-4 mt-4 mb-2 text-xl">Bill Detailz</h6>
@@ -103,7 +103,7 @@ const BillSummary = (props: IBillSummary) => {
               ) : null}
             </div>
             <div className="flex">
-              <span className="text-sm">₹ {tips || 0}</span>
+              <span className="text-sm text-black">₹ {tips || 0}</span>
             </div>
           </div>
           {isTipActive ? (
@@ -114,9 +114,7 @@ const BillSummary = (props: IBillSummary) => {
                   key={index?.toString()}
                   onClick={() => handleTipSelect(tip)}
                   className={`px-4 py-1 rounded-lg text-xs ${
-                    selectedTip === tip
-                      ? "bg-primary text-white"
-                      : "bg-gray-200"
+                    selectedTip === tip ? "bg-black text-white" : "bg-gray-200"
                   }`}
                 >
                   {tip}
@@ -137,7 +135,7 @@ const BillSummary = (props: IBillSummary) => {
               <button
                 type="button"
                 onClick={handleSaveTip}
-                className="h-8 px-2 text-xs text-white rounded-lg bg-primary"
+                className="h-8 px-2 text-xs text-white bg-black rounded-lg"
               >
                 Save
               </button>

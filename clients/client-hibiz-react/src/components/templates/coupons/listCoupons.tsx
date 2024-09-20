@@ -33,12 +33,47 @@ const MemoListCoupons = () => {
     setOverAllLimit,
     setSelectedGroupIds,
     setSelectedUserIds,
-  } = useCouponsStore();
+    setIsActive,
+    setCouponImage,
+    setLinks,
+  } = useCouponsStore((s) => ({
+    setAddMinimumBillAmount: s.setAddMinimumBillAmount,
+    setAllowLateNight: s.setAllowLateNight,
+    setSelectedPage: s.setSelectedPage,
+    setBgColor: s.setBgColor,
+    setCouponId: s.setCouponId,
+    setCouponName: s.setCouponName,
+    setCouponType: s.setCouponType,
+    setCouponDiscount: s.setCouponDiscount,
+    setMinimumBillAmount: s.setMinimumBillAmount,
+    setExpiryAfterGrabbed: s.setExpiryAfterGrabbed,
+    setCashbackAvailable: s.setCashbackAvailable,
+    setTermsAndConditions: s.setTermsAndConditions,
+    setCouponPrice: s.setCouponPrice,
+    setCustomDays: s.setCustomDays,
+    setStartTime: s.setStartTime,
+    setEndTime: s.setEndTime,
+    setCouponEndDate: s.setCouponEndDate,
+    setCouponStartDate: s.setCouponStartDate,
+    setExpiryClaimLimitValue: s.setExpiryClaimLimitValue,
+    setCouponForEveryOne: s.setCouponForEveryOne,
+    setPromoteOnBill: s.setPromoteOnBill,
+    setPromote: s.setPromote,
+    setIsPublish: s.setIsPublish,
+    setOverAllLimit: s.setOverAllLimit,
+    setSelectedGroupIds: s.setSelectedGroupIds,
+    setSelectedUserIds: s.setSelectedUserIds,
+    setIsActive: s.setIsActive,
+    setCouponImage: s.setCouponImage,
+    setLinks: s.setLinks,
+  }));
+
 
   const storeCouponInfo = (coupon: any) => {
-    console.log(coupon);
     setCouponId(coupon?._id);
+    setLinks(coupon?.links);
     setCouponName(coupon?.name);
+    setCouponImage(coupon?.image);
     setCouponType(coupon?.config?.discountType);
     setCouponDiscount(coupon?.config?.value);
     setBgColor(coupon?.bgColour);
@@ -48,13 +83,22 @@ const MemoListCoupons = () => {
     setTermsAndConditions(coupon?.conditions?.tc);
     setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
     setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
+    setIsActive(coupon?.isActive);
     setCouponPrice(
       coupon.config.discountType === "PERCENTAGE"
         ? coupon?.config?.upto
         : coupon?.config?.value,
     );
-    setCouponStartDate(coupon?.conditions?.couponStartDate);
-    setCouponEndDate(coupon?.conditions?.couponEndDate);
+    setCouponStartDate(
+      coupon?.conditions?.couponStartDate
+        ? coupon?.conditions?.couponStartDate
+        : null,
+    );
+    setCouponEndDate(
+      coupon?.conditions?.couponEndDate
+        ? coupon?.conditions?.couponEndDate
+        : null,
+    );
     setExpiryClaimLimitValue(
       coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
     );
@@ -78,23 +122,23 @@ const MemoListCoupons = () => {
   }
 
   return (
-    <div className="flex overflow-hidden flex-col flex-wrap gap-6 mx-4 lg:mx-6 mt-6 md:flex-wrap md:flex-row pb-[5rem]">
+    <center className="mx-4 mt-6 flex flex-col flex-wrap justify-center gap-6 pb-[5rem] md:flex-row md:flex-wrap lg:mx-6">
       {coupons?.length ? (
         coupons.map((coupon: any) => (
           <div
             key={coupon._id}
-            className="relative w-full md:w-full lg:max-w-[19.25rem]"
+            className="relative w-full cursor-pointer text-left md:w-[22rem] lg:max-w-[19.25rem] 2xl:max-w-[21rem]"
             onClick={() => storeCouponInfo(coupon)}
           >
             <article
-              className=" rounded-t-2xl bg-[#6A32DF30] flex h-16 overflow-hidden shadow-light"
+              className="shadow-light flex h-16 overflow-hidden rounded-t-2xl bg-[#6A32DF30]"
               style={{ backgroundColor: coupon.bgColour || "#6A32DF30" }}
             >
               <figure>
                 <img
                   src={coupon.image || CouponImages}
                   alt={coupon.name}
-                  className="w-[5rem] mt-2 ml-2 rounded-xl"
+                  className="ml-2 mt-2 w-[5rem] rounded-xl"
                 />
               </figure>
               <section className="flex flex-col justify-center flex-1 ml-4">
@@ -111,7 +155,7 @@ const MemoListCoupons = () => {
                 </p>
               </section>
             </article>
-            <article className="flex items-center justify-between p-4 bg-white rounded-b-2xl shadow-dark">
+            <article className="flex items-center justify-between p-4 bg-white shadow-dark rounded-b-2xl">
               <small>
                 {coupon.config.discountType === "PERCENTAGE"
                   ? `${coupon.config.value}% Discount`
@@ -125,7 +169,7 @@ const MemoListCoupons = () => {
             </article>
             <button
               type="button"
-              className={`px-4 py-1 rounded-2xl absolute -top-3 right-4 text-xs ${
+              className={`absolute -top-3 right-4 rounded-2xl px-4 py-1 text-xs ${
                 coupon.isPublish
                   ? "bg-[#24C163] text-white"
                   : "bg-gray-400 text-black"
@@ -138,7 +182,7 @@ const MemoListCoupons = () => {
       ) : (
         <p>No coupons available</p>
       )}
-    </div>
+    </center>
   );
 };
 

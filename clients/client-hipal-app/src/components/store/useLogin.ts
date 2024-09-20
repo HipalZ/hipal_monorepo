@@ -9,6 +9,7 @@ export interface IUserData {
   phone: string;
   role: string[];
   userDescription?: string;
+  googleReviewCount?: number;
   reward?: number;
   count?: number;
   _id: string;
@@ -47,6 +48,12 @@ interface IUseLogin {
   // review popup
   reviewPopup: boolean;
   setReviewPopup: (d: boolean) => void;
+
+  googleReviewCount: number;
+  setGoogleReviewCount: (d: number) => void;
+
+  urlFrom: string;
+  setUrlFrom: (d: string) => void;
 }
 
 export const useLogin = create(
@@ -102,6 +109,10 @@ export const useLogin = create(
       setInvoiceUrl: (d: string) => set({ invoiceUrl: d }),
       reviewPopup: false,
       setReviewPopup: (d: boolean) => set({ reviewPopup: d }),
+      googleReviewCount: 0,
+      setGoogleReviewCount: (d: number) => set({ googleReviewCount: d }),
+      urlFrom: "",
+      setUrlFrom: (d: string) => set({ urlFrom: d }),
     }),
     {
       name: "useLogin",

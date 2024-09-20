@@ -4,23 +4,33 @@ import {
   formatDiscount,
   getBestCouponSuggestion,
 } from "@/components/utils/helpers";
-import React, { useMemo } from "react";
+import React, { memo, useEffect, useMemo } from "react";
 
-const SuggestCouponz = () => {
+const MemoSuggestCouponz = () => {
   const { billValue } = usePaymentStore((s) => ({
     billValue: s.billValue,
   }));
-  const { availedCoupon, missingOutCoupon } = useCouponz((s) => ({
-    availedCoupon: s.availedCoupon,
-    missingOutCoupon: s.missingOutCoupon,
-  }));
+
+  const { availedCoupon, missingOutCoupon, updateCoupons } = useCouponz(
+    (s) => ({
+      availedCoupon: s.availedCoupon,
+      missingOutCoupon: s.missingOutCoupon,
+      updateCoupons: s.updateCoupons,
+    }),
+  );
+
+  useEffect(() => {
+    updateCoupons(billValue);
+  }, [billValue, availedCoupon]);
+
   const { bestCoupon, additionalAmount } = useMemo(() => {
     return getBestCouponSuggestion(availedCoupon, missingOutCoupon, billValue);
   }, [availedCoupon, missingOutCoupon, billValue]);
+
   return (
     <>
       {availedCoupon && Object.keys(availedCoupon).length > 0 && bestCoupon && (
-        <article className="inter h-8 px-6 absolute flex items-center w-full bg-[#6A31DF] bottom-12 rounded-t-xl border-t-1">
+        <article className="fixed bottom-16 py-1 w-full inter px-6 flex items-center bg-[#6A31DF] rounded-t-2xl border-t-1">
           {bestCoupon && (
             <p className="inter text-left text-xs font-semibold text-[#fff]">
               {additionalAmount > 0 ? (
@@ -41,4 +51,5 @@ const SuggestCouponz = () => {
   );
 };
 
+const SuggestCouponz = memo(MemoSuggestCouponz);
 export default SuggestCouponz;

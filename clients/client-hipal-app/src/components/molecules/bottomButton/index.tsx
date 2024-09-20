@@ -39,8 +39,9 @@ function BottomButton({
 
   const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
-  const { subscribeModal } = useLogin((s) => ({
+  const { subscribeModal, reviewPopup } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
+    reviewPopup: s.reviewPopup,
   }));
 
   const closeModal = useCallback(() => {
@@ -69,7 +70,7 @@ function BottomButton({
     [],
   );
 
-  if (subscribeModal) {
+  if (subscribeModal || reviewPopup) {
     return null;
   }
 

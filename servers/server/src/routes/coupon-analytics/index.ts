@@ -1,10 +1,12 @@
 import {
   Business,
+  ChannelView,
   CouponChannel,
   CouponLink,
   CouponView,
   Couponz,
   Payment,
+  UserCouponClaim,
   UserCouponGrabb,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
@@ -47,6 +49,65 @@ const couponAnalyticsRouter = new Hono()
       await channel.save();
 
       return c.json({ err: false, msg: "channel created", data: channel }, 201);
+    },
+  )
+  .put(
+    "/channels/:couponId/:channelId",
+    zValidator(
+      "param",
+      z.object({
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
+        channelId: z.string({
+          message: "channelId should be a string",
+        }),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
+        isActive: z.string({
+          message: "isActive should be a boolean",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { isActive } = await c.req.json();
+      const { couponId, channelId } = c.req.param();
+
+      const updateLink = await CouponLink.findOneAndUpdate(
+        {
+          couponId: couponId,
+          channelId: channelId,
+        },
+        {
+          $set: {
+            isActive: isActive,
+          },
+        },
+      );
+
+      await CouponChannel.updateOne(
+        {
+          _id: channelId,
+        },
+        {
+          $set: {
+            isActive: isActive,
+          },
+        },
+      );
+
+      if (!updateLink) {
+        return c.json({ err: true, msg: "Link not found", data: {} }, 400);
+      }
+
+      return c.json(
+        { err: false, msg: "channel created", data: updateLink },
+        200,
+      );
     },
   )
   .post(
@@ -138,7 +199,7 @@ const couponAnalyticsRouter = new Hono()
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `https://api.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
         });
         await link.save();
         links.push({
@@ -175,31 +236,19 @@ const couponAnalyticsRouter = new Hono()
 
       const totalGrabbed = await UserCouponGrabb.find({ businessId }).count();
 
-      const totalClaimed = await Payment.aggregate([
-        {
-          $match: {
-            couponId: { $exists: true },
-            businessId: businessId,
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$total" }, // Assuming the field to sum is "amount"
-          },
-        },
-      ]);
+      const payments = await Payment.find({
+        businessId,
+        couponId: { $exists: true },
+      }).select("total");
 
-      const totalSale = totalClaimed.length > 0 ? totalClaimed[0].total : 0;
+      const totalSale = payments.reduce((acc, curr) => acc + curr.total, 0);
 
       const temp = {
-        businessId: businessId,
-        totalActiveCoupons: activeCouponz || 11,
-        totalReach: totalCouponz || 1000,
-        totalGrabbed: totalGrabbed || 100,
-        totalClaimed: totalClaimed.length || 50,
-        newUsers: 10,
-        totalSales: totalSale || 100000,
+        totalActiveCoupons: activeCouponz,
+        totalReach: totalCouponz,
+        totalGrabbed: totalGrabbed,
+        totalClaimed: payments.length,
+        totalSales: totalSale,
       };
 
       return c.json({ err: false, msg: "Coupon Analytics", data: temp });
@@ -236,63 +285,107 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { couponId } = c.req.param();
       const { from, to, timeRange } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      const totalViews = await CouponView.find({
+        couponId: couponId,
+        date: { $gte: fromDate, $lte: toDate },
+      }).count();
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          couponId: couponId,
+          date: { $gte: fromDate, $lte: toDate },
+        }).count()) ?? 0;
+      const totalClaims = await Payment.find({
+        couponId: couponId,
+        date: { $gte: fromDate, $lte: toDate },
+      }).select("couponId total claimedCoins");
+
+      const totalSales = totalClaims.reduce((acc, curr) => acc + curr.total, 0);
+      const totalDiscount = totalClaims.reduce(
+        (acc, curr) => acc + (curr.claimedCoins ?? 0),
+        0,
+      );
+
+      const repeatUsers = (await UserCouponClaim.findOne({
+        couponId: couponId,
+      }).select("overAllLimit")) ?? { overAllLimit: 0 };
+
+      let successPercentage = Math.round(
+        Math.abs(((totalViews - totalClaims.length) / totalViews) * 100) ?? 0,
+      );
+
+      if (!successPercentage) {
+        successPercentage = 0;
+      }
 
       const summary = {
-        totalReach: 1000,
-        totalGrabbed: 100,
-        totalClaimed: 50,
-        totalDiscount: 10,
-        totalSales: 100000,
-        newUsers: 10,
-        repeatUsers: 20,
-        successPercentage: 50,
+        totalReach: totalViews,
+        totalGrabbed: totalGrabs,
+        totalClaimed: totalClaims.length,
+        totalDiscount: totalDiscount,
+        totalSales: totalSales,
+        newUsers: totalGrabs,
+        repeatUsers: repeatUsers.overAllLimit,
+        successPercentage: successPercentage,
       };
 
       return c.json({ err: false, msg: "fetch successfully", data: summary });
     },
   )
   .get(
-    "/channels-analytics/:businessId",
+    "/channels-analytics/:businessId/:couponId",
     zValidator(
       "param",
       z.object({
         businessId: z.string({
           message: "businessId should be a string",
         }),
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
       }),
     ),
 
     async (c) => {
-      const { businessId } = c.req.param();
+      const { businessId, couponId } = c.req.param();
 
-      const channels = [
-        {
-          name: "Facebook",
-          totalReach: 1000,
-          totalGrabbed: 100,
-          totalSales: 100000,
-          _id: "1",
-          isActive: true,
-        },
-        {
-          name: "Instagram",
-          totalReach: 3000,
-          totalGrabbed: 500,
-          totalSales: 25000,
-          _id: "2",
-          isActive: false,
-        },
-        {
-          name: "Twitter",
-          totalReach: 356,
-          totalGrabbed: 500,
-          totalSales: 3652,
-          _id: "3",
-          isActive: true,
-        },
-      ];
+      const fetchChannels = await CouponLink.find({
+        businessId: businessId,
+        couponId: couponId,
+      }).populate("channelId");
+      const ans = [];
 
-      return c.json({ err: false, msg: "fetch successfully", data: channels });
+      for (const channel of fetchChannels) {
+        const channelView = await ChannelView.findOne({
+          channelId: channel.channelId,
+          businessId: businessId,
+        });
+        const totalChannelGrabbed = await UserCouponGrabb.find({
+          channelId: channel.channelId,
+        }).count();
+
+        const payments = await Payment.find({
+          channelId: channel.channelId,
+        }).select("total");
+
+        const totalChannelSales = payments.reduce(
+          (acc, curr) => acc + curr.total,
+          0,
+        );
+        const channelData = {
+          name: channel.channelId.name,
+          channelId: channel.channelId._id,
+          isActive: channel.channelId.isActive,
+          totalReach: channelView?.viewCount || 0,
+          totalGrabbed: totalChannelGrabbed,
+          totalSales: totalChannelSales,
+        };
+        ans.push(channelData);
+      }
+
+      return c.json({ err: false, msg: "fetch successfully", data: ans });
     },
   )
   .get(
@@ -309,20 +402,9 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const channels = [
-        {
-          name: "Facebook",
-          _id: "1",
-        },
-        {
-          name: "Instagram",
-          _id: "2",
-        },
-        {
-          name: "Twitter",
-          _id: "3",
-        },
-      ];
+      const channels = await CouponChannel.find({
+        businessId: businessId,
+      });
 
       return c.json({ err: false, msg: "fetch successfully", data: channels });
     },
@@ -341,14 +423,88 @@ const couponAnalyticsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const totalGrabs =
+        (await UserCouponGrabb.find({
+          businessId: businessId,
+        }).count()) ?? 0;
+
+      const channelViews = await ChannelView.find({
+        businessId: businessId,
+      }).select("viewCount");
+      const totalChannelViews = channelViews.reduce(
+        (acc, curr) => acc + curr.viewCount,
+        0,
+      );
+
+      const totalChannelgrabbed = await UserCouponGrabb.find({
+        businessId: businessId,
+        channelId: { $exists: true },
+      }).count();
+      const payments = await Payment.find({
+        businessId: businessId,
+        channelId: { $exists: true },
+      }).select("total");
+      const totalChannelSales = payments.reduce(
+        (acc, curr) => acc + curr.total,
+        0,
+      );
+
       const obj = {
-        totalReach: 1000,
-        totalGrabbed: 100,
-        totalSales: 100000,
-        newUsers: 10,
+        totalReach: totalChannelViews,
+        totalGrabbed: totalChannelgrabbed,
+        totalSales: totalChannelSales,
+        newUsers: totalGrabs,
       };
 
       return c.json({ err: false, msg: "fetch successfully", data: obj });
+    },
+  )
+  .get(
+    "/business-analytics/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({
+          message: "businessId should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const fetchChannels = await CouponChannel.find({
+        businessId: businessId,
+      });
+      const ans = [];
+
+      for (const channel of fetchChannels) {
+        const channelView = await ChannelView.findOne({
+          channelId: channel._id,
+          businessId: businessId,
+        });
+        const totalChannelGrabbed = await UserCouponGrabb.find({
+          channelId: channel._id,
+        }).count();
+
+        const payments = await Payment.find({
+          channelId: channel._id,
+        }).select("total");
+
+        const totalChannelSales = payments.reduce(
+          (acc, curr) => acc + curr.total,
+          0,
+        );
+        const channelData = {
+          name: channel.name,
+          isActive: channel.isActive,
+          totalReach: channelView?.viewCount || 0,
+          totalGrabbed: totalChannelGrabbed || 0,
+          totalSales: totalChannelSales || 0,
+        };
+        ans.push(channelData);
+      }
+
+      return c.json({ err: false, msg: "fetch successfully", data: ans });
     },
   )
   .get(
@@ -402,11 +558,58 @@ const couponAnalyticsRouter = new Hono()
       const customLink =
         await Business.findById(businessId).select("customLink");
 
-      //logic to increase the count of the link
+      const activeCoupon = await CouponLink.findOne({
+        couponId: couponId,
+        channelId: channelId,
+      });
+      if (activeCoupon && !activeCoupon.isActive) {
+        return c.redirect(
+          `https://hipal-test.hipalz.com/${customLink?.customLink}`,
+        );
+      }
+
+      await CouponView.create({
+        couponId: couponId,
+        date: Date.now(),
+        businessId: businessId,
+      });
+      await ChannelView.findOneAndUpdate(
+        {
+          channelId: channelId,
+          businessId: businessId,
+        },
+        { $inc: { viewCount: 1 } },
+        { upsert: true, new: true },
+      );
 
       return c.redirect(
-        `https://hipalz.com/couponz/${customLink?.customLink}/${couponId}/${channelId}`,
+        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
+    },
+  )
+  .get(
+    "/couponz-links/:businessId/:couponId",
+    zValidator(
+      "param",
+      z.object({
+        couponId: z.string({
+          message: "couponId should be a string",
+        }),
+        businessId: z.string({
+          message: "businessId should be a string",
+        }),
+      }),
+    ),
+
+    async (c) => {
+      const { couponId, businessId } = c.req.param();
+
+      const links = await CouponLink.find({
+        businessId: businessId,
+        couponId: couponId,
+      });
+
+      return c.json({ err: false, msg: "fetch successfully", data: links });
     },
   );
 

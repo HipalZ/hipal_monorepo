@@ -23,14 +23,15 @@ const MemoCouponCardPay = () => {
   }));
 
   return (
-    <section className="relative max-h-[6rem]">
+    <section className="relative max-h-[6rem] mt-6">
       {claimCouponz === 0 && (
         <center
           style={{
             transform: "rotate(-18deg)",
             transformOrigin: "bottom center",
+            scale: "1.2",
           }}
-          className="absolute max-h-[8rem] max-w-[8rem] scale-110"
+          className="absolute max-h-[8rem] max-w-[8rem]"
         >
           <picture className="w-full">
             <Image
@@ -62,9 +63,7 @@ const MemoCouponCardPay = () => {
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
               <h3 className="text-gray-500 text-[0.25rem]">Valid Till</h3>
               <p className="text-[0.3rem]">
-                {formatDate(
-                  couponz[1]?.conditions?.couponEndDate || new Date(),
-                )}
+                {formatDate(couponz[1]?.conditions?.couponEndDate || 0)}
               </p>
             </div>
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
@@ -136,10 +135,19 @@ const MemoCouponCardPay = () => {
           />
         </center>
       )}
-      <center className="absolute">
+      <center
+        className="absolute -mt-2"
+        style={{
+          scale: "1.25",
+        }}
+      >
         <picture>
           <Image
-            src={claimCouponz > 0 ? availedCoupon?.image : birthdayPlaceholder}
+            src={
+              claimCouponz > 0 && availedCoupon?.image
+                ? availedCoupon.image
+                : birthdayPlaceholder
+            }
             width={100}
             height={53}
             alt="Birthday Placeholder"
@@ -167,7 +175,7 @@ const MemoCouponCardPay = () => {
           <div className="flex flex-col items-start space-y-0.5 my-0.5">
             <h3 className="text-gray-500 text-[0.25rem]">Valid Till</h3>
             <p className="text-[0.3rem]">
-              {formatDate(couponz[0]?.conditions?.couponEndDate || new Date())}
+              {formatDate(couponz[0]?.conditions?.couponEndDate || 0)}
             </p>
           </div>
           <div className="flex flex-col items-start space-y-0.5 my-0.5">

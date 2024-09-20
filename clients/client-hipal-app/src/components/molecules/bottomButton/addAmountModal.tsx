@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import Hipay from "@/assets/payment/hipay.png";
 import hipayBg from "@/assets/payment/hipay_background.png";
 import style from "./addAmount.module.css";
@@ -12,35 +12,87 @@ import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { apiRpc } from "@hi/common";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useCouponz } from "@/components/store/useCouponz";
 
 const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const business = useBusinessDetails((s) => s.businessDetails);
-  const userDetailes = useLogin((s) => s.userDetails);
+  const {
+    billValue,
+    setBillValue,
+    setEditBillModal,
+    setClaimCouponz,
+    setClaimedCoinz,
+    setCustomTip,
+    setTips,
+    setSelectedTip,
+    setShowInput,
+    setIsTipActive,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    setBillValue: s.setBillValue,
+    setEditBillModal: s.setEditBillModal,
+    setClaimCouponz: s.setClaimCouponz,
+    setClaimedCoinz: s.setClaimedCoinz,
+    setCustomTip: s.setCustomTip,
+    setTips: s.setTips,
+    setSelectedTip: s.setSelectedTip,
+    setShowInput: s.setShowInput,
+    setIsTipActive: s.setIsTipActive,
+  }));
+
+  const { setAvailedCoupon } = useCouponz((s) => ({
+    setAvailedCoupon: s.setAvailedCoupon,
+  }));
+  const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const [amount, setAmount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
 
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const name = useLogin((s) => s.userDetails?.name);
   const saveAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setAmount(value === "" ? 0 : Number(value));
+    setBillValue(value === "" ? 0 : Number(value));
   };
   const { tableName } = useTableData();
 
   const proceedToPayment = useCallback(() => {
-    if (amount === 0) {
+    if (billValue === 0) {
       toast.error("Please enter amount");
       return;
     }
     setLoading(true);
-    if (amount > 0) {
+    if (billValue > 0) {
       setIsPayment(false);
-      router.push(`/${customLink}/payment?amount=${amount}`);
+      setEditBillModal(false);
+      setClaimCouponz(0);
+      setClaimedCoinz(0);
+      setSelectedTip("");
+      setCustomTip("");
+      setShowInput(false);
+      setIsTipActive(false);
+      setTips(0);
+      setAvailedCoupon({});
+      router.push(`/${customLink}/payment`);
     }
-  }, [amount, customLink, router]);
+  }, [
+    billValue,
+    customLink,
+    router,
+    setEditBillModal,
+    setIsPayment,
+    setClaimCouponz,
+    setClaimedCoinz,
+    setCustomTip,
+    setTips,
+    setSelectedTip,
+    setShowInput,
+    setIsTipActive,
+    setTips,
+    setAvailedCoupon,
+  ]);
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
@@ -61,7 +113,7 @@ const AddAmountModal = memo(() => {
         alertType: "WAITER",
         status: "WAITER",
         name: name,
-        userId: userDetailes._id,
+        userId: userDetails._id,
       },
     });
     if (res.status === 200) {
@@ -74,7 +126,7 @@ const AddAmountModal = memo(() => {
     }
   }, [businessId, tableName]);
   return (
-    <section className="h-[80vh] overflow-y-auto overflow-x-hidden">
+    <section className="h-[80vh] overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-white h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
@@ -98,7 +150,7 @@ const AddAmountModal = memo(() => {
           <span className="font-bold text-primary">{business.name}</span>
         </div>
       </header>
-      <section className="relative scale-90">
+      <section className="relative -mt-4 scale-90">
         <center>
           <Image width={1080} height={1080} src={hipayBg} alt="hipayBg" />
           <figure className={`${style.globe_payment} mt-24`}>
@@ -107,7 +159,7 @@ const AddAmountModal = memo(() => {
         </center>
         <section className="absolute mx-6 space-y-4 w-[88%]">
           <input
-            value={amount || ""}
+            value={billValue || ""}
             onChange={saveAmount}
             placeholder="Enter Final Bill Amount"
             className="w-full px-4 py-3 text-black bg-white border border-black rounded-2xl focus:outline-none"

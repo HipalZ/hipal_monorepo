@@ -90,7 +90,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
   config: couponConfigSchema,
   isActive: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   image: {
     type: String,
@@ -142,10 +142,12 @@ const couponSchema = new mongoose.Schema<CouponzType>({
       startTime: {
         type: Number,
         required: false,
+        default: 0,
       },
       endTime: {
         type: Number,
         required: false,
+        default: 24,
       },
     }),
     eligibleUser: new Schema({
@@ -169,6 +171,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     expiryAfterGrabbed: {
       type: Number,
       required: false,
+      default: 0,
     },
     requiredFields: {
       type: [String],
@@ -176,12 +179,13 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     },
     couponStartDate: {
       type: Number,
+      default: 0,
 
       required: true,
     },
     couponEndDate: {
       type: Number,
-
+      default: 0,
       required: true,
     },
 

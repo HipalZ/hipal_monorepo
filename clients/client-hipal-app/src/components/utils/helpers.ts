@@ -123,6 +123,9 @@ export function timestampToDateTime(timestamp: number): string {
 }
 
 export const formatDate = (timestamp: number): string => {
+  if (timestamp === 0) {
+    return "No expiry";
+  }
   const date = new Date(timestamp);
   const day = String(date.getDate()).padStart(2, "0");
   const monthNames = [
@@ -153,7 +156,7 @@ export const calculateReward = (
   let total = exist + reward;
 
   const sum = Math.min(total, limit);
-  const finalReward = Number(sum - exist);
+  const finalReward = Math.round(sum - exist);
   return { finalReward, curentBalance: sum };
 };
 
@@ -854,13 +857,21 @@ export const getBestCouponSuggestion = (
 
     // Prioritize higher discounts and handle edge cases
     if (
-      couponDiscount > bestDiscount ||
-      (couponDiscount === bestDiscount &&
-        currentAdditionalAmount < additionalAmount)
+      currentAdditionalAmount < additionalAmount ||
+      (currentAdditionalAmount === additionalAmount &&
+        couponDiscount > bestDiscount) ||
+      (currentAdditionalAmount > 0 &&
+        additionalAmount > 0 &&
+        couponDiscount - currentAdditionalAmount >
+          bestDiscount - additionalAmount)
     ) {
       bestCoupon = coupon;
       bestDiscount = couponDiscount;
       additionalAmount = currentAdditionalAmount;
+    } else {
+      bestCoupon = 0;
+      bestDiscount = 0;
+      additionalAmount = 0;
     }
   }
 

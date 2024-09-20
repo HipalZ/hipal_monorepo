@@ -1,11 +1,9 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState, useMemo } from "react";
 import Background from "@/components/atom/feildBackground";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { cn } from "@hi/common";
-import DatePicker from "react-datepicker";
 import BottomButton from "@/components/atom/bottomButton";
 import toast from "react-hot-toast";
-import "react-datepicker/dist/react-datepicker.css";
 
 const MemoCondition = () => {
   const {
@@ -31,11 +29,41 @@ const MemoCondition = () => {
   }));
 
   const [errorMessage, setErrorMessage] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    return expiryAfterGrabbed ? new Date(expiryAfterGrabbed) : new Date();
-  });
   const [dateErrorMessage, setDateErrorMessage] = useState("");
+
+  // Initialize expiryHours based on expiryAfterGrabbed (duration in milliseconds)
+  const [expiryHours, setExpiryHours] = useState<number | "">(() =>
+    expiryAfterGrabbed ? expiryAfterGrabbed / (1000 * 60 * 60) : "",
+  );
+
+  const totalAvailableHours = useMemo(() => {
+    if (!couponStartDate && !couponEndDate) {
+      return 8760; // Default to one year in hours
+    }
+    if (couponStartDate && couponEndDate) {
+      const totalMilliseconds = couponEndDate - couponStartDate;
+      return totalMilliseconds / (1000 * 60 * 60);
+    }
+    return 0;
+  }, [couponStartDate, couponEndDate]);
+
+  const handleHoursChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = Number(e.target.value);
+
+      if (value < 0) {
+        value = 0;
+      } else if (value > totalAvailableHours) {
+        value = totalAvailableHours;
+      }
+
+      setExpiryHours(value);
+      const newExpiryDuration = value * 60 * 60 * 1000;
+      setExpiryAfterGrabbed(newExpiryDuration);
+      setDateErrorMessage("");
+    },
+    [totalAvailableHours, setExpiryAfterGrabbed],
+  );
 
   const handleLimitChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,42 +79,6 @@ const MemoCondition = () => {
       }
     },
     [setExpiryClaimLimitValue],
-  );
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const handleDateChange = useCallback(
-    (date: Date) => {
-      setSelectedDate(date);
-
-      if (couponStartDate && couponEndDate) {
-        const startDate = new Date(couponStartDate);
-        const endDate = new Date(couponEndDate);
-
-        if (date < startDate || date > endDate) {
-          setDateErrorMessage(
-            `Selected date must be between ${formatDate(
-              startDate,
-            )} and ${formatDate(endDate)}.`,
-          );
-          toast.error(
-            "Invalid date selected. Please pick a date within the valid range.",
-          );
-          setExpiryAfterGrabbed(0);
-          return;
-        } else {
-          setDateErrorMessage("");
-          setExpiryAfterGrabbed(date.getTime());
-        }
-      }
-    },
-    [couponStartDate, couponEndDate, setExpiryAfterGrabbed],
   );
 
   const handleSave = useCallback(() => {
@@ -107,65 +99,35 @@ const MemoCondition = () => {
     setSelectedPage,
   ]);
 
-  const handleColor = (time: Date) => {
-    return time.getHours() > 12 ? "text-success" : "text-error";
-  };
-
-  const formatExpiryTime = (timestamp: number | null) => {
-    if (!timestamp) return null;
-
-    const date = new Date(timestamp);
-
-    const formattedDate = date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-    const formattedTime = date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    return `${formattedDate}, ${formattedTime}`;
-  };
   return (
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col md:flex-row lg:flex-row pb-[7rem]">
         <section className="flex-1">
-          <h3>After grabbing couponz it expires in</h3>
+          <h3>After grabbing coupon, it expires in</h3>
           <Background>
-            <button
-              type="button"
-              className="w-full px-4 py-3 bg-[#EEEFF4] rounded-2xl"
-              onClick={() => setShowDatePicker(true)}
-            >
-              Add Date and Time
-            </button>
+            <h3 className="mb-2 text-[#8C63FF] font-semibold">
+              Value between 0 and {Math.round(totalAvailableHours)} hours.
+            </h3>
+
+            <input
+              type="number"
+              value={expiryHours === "" ? "" : expiryHours}
+              onChange={handleHoursChange}
+              placeholder={`Enter hours (0 to ${Math.round(
+                totalAvailableHours,
+              )} hours)`}
+              className={`w-full px-4 py-3 bg-[#EEEFF4] rounded-2xl ${
+                dateErrorMessage ? "border-red-500" : ""
+              }`}
+            />
           </Background>
 
-          {showDatePicker && (
-            <div className="mt-4 text-center">
-              <DatePicker
-                selected={selectedDate}
-                onChange={handleDateChange}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                timeCaption="Time"
-                dateFormat="d MMMM , yyyy h:mm aa"
-                timeClassName={handleColor}
-                className="w-full p-2 bg-white border border-black rounded-xl"
-              />
-            </div>
-          )}
           {dateErrorMessage && (
             <p className="mt-4 text-sm text-red-500">{dateErrorMessage}</p>
           )}
           {expiryAfterGrabbed ? (
             <p className="mt-4 text-sm text-gray-700">
-              Coupon Expiry Time: {formatExpiryTime(expiryAfterGrabbed)}
+              Coupon expires after: {expiryHours} hour(s)
             </p>
           ) : null}
         </section>

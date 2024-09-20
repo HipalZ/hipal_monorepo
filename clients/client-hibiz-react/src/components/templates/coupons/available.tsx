@@ -69,8 +69,8 @@ const TimePicker = ({
   handleTimeChange,
   errorMessage,
 }: any) => (
-  <div className="flex flex-col justify-center gap-4 lg:flex-row">
-    <div className="flex justify-between">
+  <div className="flex flex-col justify-center gap-4 lg:flex-row lg:justify-evenly">
+    <div className="flex items-center justify-between gap-4">
       <label>Start Time:</label>
       <input
         type="time"
@@ -79,7 +79,7 @@ const TimePicker = ({
         className="px-2 py-1 border rounded-xl"
       />
     </div>
-    <div className="flex justify-between">
+    <div className="flex items-center justify-between gap-4">
       <label>End Time:</label>
       <input
         type="time"
@@ -118,6 +118,10 @@ const MemoAvailable = () => {
     setExtendedEndTime,
     allowLateNight,
     setAllowLateNight,
+    setCouponEndDate,
+    setCouponStartDate,
+    setExpiryCoupon,
+    setOverAllLimit,
   } = useCouponsStore((s) => ({
     setSelectedPage: s.setSelectedPage,
     openAvailableModal: s.openAvailableModal,
@@ -134,6 +138,10 @@ const MemoAvailable = () => {
     setExtendedEndTime: s.setExtendedEndTime,
     setAllowLateNight: s.setAllowLateNight,
     allowLateNight: s.allowLateNight,
+    setCouponEndDate: s.setCouponEndDate,
+    setCouponStartDate: s.setCouponStartDate,
+    setExpiryCoupon: s.setExpiryCoupon,
+    setOverAllLimit: s.setOverAllLimit,
   }));
 
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -148,6 +156,17 @@ const MemoAvailable = () => {
       setWhen(periodName);
       setSelectedPeriodText(periodText);
 
+      if (
+        periodName === "allthetime" ||
+        periodName === "birthdayweek" ||
+        periodName === "birthdaymonth"
+      ) {
+        setCouponStartDate(null);
+        setCouponEndDate(null);
+        setExpiryCoupon("No Expiration");
+        setOverAllLimit(0);
+      }
+
       setStartTime(0);
       setEndTime(0);
       setExtendedEndTime(0);
@@ -161,6 +180,7 @@ const MemoAvailable = () => {
       } else if (periodName !== "custom") {
         setCustomDays([]);
       }
+      closeModal();
     },
     [setStartTime, setEndTime, setExtendedEndTime],
   );
@@ -168,7 +188,6 @@ const MemoAvailable = () => {
   const handleTimeChange = useCallback(
     (time: string, type: "start" | "end") => {
       const [hours, minutes] = time.split(":").map(Number);
-      console.log(hours, minutes);
       const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
       const timeInDecimal = `${hours}.${formattedMinutes}`;
 
@@ -192,6 +211,7 @@ const MemoAvailable = () => {
 
   const handleCustomDayToggle = useCallback(
     (day: string) => {
+      handlePeriodSelection("custom", "Specific Days (e.g., Only on Tuesdays)");
       setCustomDays(
         customDays.includes(day)
           ? customDays.filter((d) => d !== day)
@@ -213,7 +233,7 @@ const MemoAvailable = () => {
     if (when === "custom" && customDays.length === 0) {
       return toast.error("Please select at least one day");
     }
-    setSelectedPage("EXPIRED");
+    setSelectedPage("ELIGIBILITY");
   }, [when, customDays]);
 
   const handleLateNightCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,8 +252,13 @@ const MemoAvailable = () => {
 
   return (
     <section className="pb-[6rem] overflow-hidden flex flex-col lg:flex-row gap-6">
-      <Coupon />
-      <section className="mx-6 mt-[2rem] lg:mt-4 flex-1">
+      <section className="flex-1">
+        <Coupon />
+        <center className="mt-8 w-full max-w-[28rem] truncate md:text-lg font-bold text-[#8C63FF] bg-[#8C63FF30] py-2">
+          {selectedPeriodText}
+        </center>
+      </section>
+      <section className="flex-1 mx-6 lg:mt-4">
         <h3>Set When is the Coupon Valid</h3>
         <Background>
           <button
@@ -242,9 +267,7 @@ const MemoAvailable = () => {
             className="w-full px-4 py-3 border border-black rounded-2xl"
           >
             <div className="flex items-center justify-between">
-              <h4 className="text-left truncate opacity-50">
-                {selectedPeriodText}
-              </h4>
+              <h4 className="text-left truncate">{selectedPeriodText}</h4>
               <IoMdArrowDropdown />
             </div>
           </button>
@@ -310,7 +333,7 @@ const MemoAvailable = () => {
 
       {openAvailableModal && (
         <PopUp show={openAvailableModal} onClose={closeModal} width="w-[28rem]">
-          <div className="p-4 h-[80dvh] overflow-auto">
+          <div className="p-4 h-[60dvh] overflow-auto">
             <ul>
               {periodArray.map((period) => (
                 <li key={period.id}>
@@ -334,20 +357,13 @@ const MemoAvailable = () => {
                 </li>
               ))}
             </ul>
-            {customDays?.length > 0 && (
-              <CustomDayButtons
-                customDays={customDays}
-                handleCustomDayToggle={handleCustomDayToggle}
-              />
-            )}
           </div>
-          <BottomButton buttons={[{ text: "save", onClick: closeModal }]} />
         </PopUp>
       )}
 
       <BottomButton
         buttons={[
-          { text: "Back", onClick: () => setSelectedPage("DETAILS") },
+          { text: "Back", onClick: () => setSelectedPage("EXPIRED") },
           { text: "Next", onClick: goNext },
         ]}
         fixed

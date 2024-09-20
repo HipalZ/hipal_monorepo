@@ -1,5 +1,8 @@
 import { GoogleAuthUser, GoogleReview, User, UserReward } from "@hi/db-models";
-import { GoogleAuthUsersAttrs } from "@hi/db-models/src/validators";
+import {
+  GoogleAuthUsersAttrs,
+  GoogleReviewsAttr,
+} from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 // books.ts
@@ -77,32 +80,47 @@ const reviewRouter = new Hono()
     zValidator("json", GoogleAuthUsersAttrs),
     async (c) => {
       const requestData = await c.req.json();
-      const { userId, loyaltyId } = requestData;
+      const { userId, loyaltyId, businessId } = requestData;
       console.log("requestData", requestData);
 
       const existingUser = await User.findById(userId);
-      console.log("existingUser", existingUser);
+
       if (!existingUser) {
         return respond(c, "User not found", true, 404, {});
       }
 
       const existingAuthUser = await GoogleAuthUser.findOne({
         userId,
-        businessId: existingUser.businessId,
-        authorName: requestData.authorName,
+        businessId: businessId,
       });
 
+      console.log("existingAuthUser", existingAuthUser);
+
       if (existingAuthUser) {
+        await UserReward.findOneAndUpdate(
+          { userId, loyaltyId },
+          {
+            $inc: { googleReviewCount: 1 },
+          },
+        );
+
         return respond(
           c,
           "user already submitted reviews for this business",
           true,
-          200,
+          400,
           {},
         );
       }
 
-      const saveUser = await GoogleAuthUser.create(requestData);
+      const saveUser = await GoogleAuthUser.create({
+        userId,
+        loyaltyId,
+        businessId,
+        authorName: requestData.authorName,
+      });
+
+      console.log("saveUser", saveUser);
 
       if (!saveUser) {
         return respond(c, "failed to save auth user", true, 400, {});
@@ -111,9 +129,11 @@ const reviewRouter = new Hono()
       const rewards = await UserReward.findOneAndUpdate(
         { userId, loyaltyId },
         {
-          $inc: { rewards: 40, scanCount: 1, googleReviewCount: 1 },
+          $inc: { rewards: 20, googleReviewCount: 1 },
         },
       );
+
+      console.log("rewardssave", rewards);
 
       if (!rewards) {
         return respond(c, "Rewards not found", true, 404, {});
@@ -125,6 +145,23 @@ const reviewRouter = new Hono()
         googleReviewCount: rewards.googleReviewCount,
         rewards: rewards.rewards,
       });
+    },
+  )
+  .put(
+    "/update-googlreview",
+    zValidator("json", GoogleReviewsAttr),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { userId, loyaltyId } = requestData;
+
+      await UserReward.findOneAndUpdate(
+        { userId, loyaltyId },
+        {
+          $inc: { googleReviewCount: 1 },
+        },
+      );
+
+      return respond(c, "review post successFully", false, 200, {});
     },
   );
 

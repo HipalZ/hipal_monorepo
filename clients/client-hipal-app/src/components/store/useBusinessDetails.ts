@@ -32,6 +32,8 @@ export const useBusinessDetails = create(
         gstPercentage: 0,
         hibiz: false,
         hikitchen: false,
+        placeUrl: "",
+        googleReviewLink: "",
         hipeople: false,
         hitable: false,
         isHasDishData: false,

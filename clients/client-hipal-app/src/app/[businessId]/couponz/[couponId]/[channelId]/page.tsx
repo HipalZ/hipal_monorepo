@@ -1,5 +1,6 @@
 import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import { fetchBusinessData } from "@/apis/couponz";
 
 const MainCoupon = dynamics(
   () => import("@/components/templates/couponz/mainCoupon"),
@@ -16,6 +17,12 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Page() {
-  return <MainCoupon />;
+export default async function Page({
+  params,
+}: {
+  params: { businessId: string; couponId: string; channelId: string };
+}) {
+  const data = await fetchBusinessData(params.businessId);
+  const business: IBiz = data?.data?.business || {};
+  return <MainCoupon business={business} />;
 }

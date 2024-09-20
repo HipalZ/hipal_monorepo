@@ -45,7 +45,7 @@ function MemoizedPopUp({
                 "bg-base-100 shadow-md relative",
                 width ? width : "w-full max-w-[48rem]",
                 height ? height : "h-auto",
-                !hide ? "rounded-t-[1.5rem]" : "lg:rounded-2xl", // Rounded corners for large screens, no rounded corners on small screens when `hide` is true
+                !hide ? "rounded-t-[1.5rem] lg:rounded-2xl" : "lg:rounded-2xl",
               )}
             >
               {!hide && (

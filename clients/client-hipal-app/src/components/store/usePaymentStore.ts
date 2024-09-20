@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { PageStates } from "../utils/helpers";
+import type { IMerchantDetails } from "../types/businessData";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
@@ -23,11 +24,29 @@ interface IUsePaymentStore {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 
+  showError: boolean;
+  setShowError: (error: boolean) => void;
+
   selectedMode: PageStates;
   setSelectedMode: (mode: PageStates) => void;
 
   selectedTip: string;
   setSelectedTip: (tip: string) => void;
+
+  isTipActive: boolean;
+  setIsTipActive: (active: boolean) => void;
+
+  showInput: boolean;
+  setShowInput: (show: boolean) => void;
+
+  isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
+
+  merchantDetails: IMerchantDetails;
+  setMerchantDetails: (merchant: IMerchantDetails) => void;
+
+  editBillModal: boolean;
+  setEditBillModal: (open: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -58,9 +77,36 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
   isLoading: false,
   setIsLoading: (loading: boolean) => set(() => ({ isLoading: loading })),
 
+  showError: false,
+  setShowError: (error: boolean) => set(() => ({ showError: error })),
+
   selectedMode: "INVOICE",
   setSelectedMode: (mode: PageStates) => set(() => ({ selectedMode: mode })),
 
   selectedTip: "",
   setSelectedTip: (tip: string) => set(() => ({ selectedTip: tip })),
+
+  isTipActive: false,
+  setIsTipActive: (active: boolean) =>
+    set({
+      isTipActive: active,
+    }),
+
+  showInput: false,
+  setShowInput: (show: boolean) => set(() => ({ showInput: show })),
+
+  isModalOpen: false,
+  setIsModalOpen: (open: boolean) => set(() => ({ isModalOpen: open })),
+
+  merchantDetails: {
+    businessId: "",
+    razorpayMerchantId: "",
+    razorpayKeyId: "",
+  },
+
+  setMerchantDetails: (merchant: IMerchantDetails) =>
+    set(() => ({ merchantDetails: merchant })),
+
+  editBillModal: false,
+  setEditBillModal: (open: boolean) => set(() => ({ editBillModal: open })),
 }));

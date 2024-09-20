@@ -46,7 +46,7 @@ const CouponDetails = () => {
       toast.error("Minimum bill amount is required!");
       return;
     }
-    setSelectedPage("AVAILABLE");
+    setSelectedPage("EXPIRED");
   };
 
   return (

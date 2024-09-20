@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Bungee';
+  src: url('/fonts/bungee/bungee-inline.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'darker';
+  src: url('/fonts/darker/darker.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -34,6 +47,30 @@ main {
 body {
   font-family: 'Ubuntu', sans-serif;
 }
+
+.bungee-inline {
+	font-family: 'Bungee Inline', sans-serif;
+	font-weight: 400;
+	font-style: normal;
+}
+
+.space-grotesk-700 {
+	font-family: "Space Grotesk", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 700;
+	font-style: normal;
+  }
+
+  .inter{
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    }
+    .poppins-regular {
+    font-family: "Poppins", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    }
 pre {
   font-family: 'Ubuntu', sans-serif;
 }
@@ -216,6 +253,24 @@ input[type='color' i] {
   grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   gap: 0.5rem 0.5rem;
   padding: 1rem 1rem 5rem 1rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
+.analytics_cards_groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
+.analytics_cards_groups_channel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 1rem;
   width: 100%;
   max-width: 69rem;
   margin: 0 auto;

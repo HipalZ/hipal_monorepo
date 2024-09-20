@@ -138,7 +138,7 @@ const subsCriberRouter = new Hono()
         const userReward = await UserReward.findOne({
           userId,
           loyaltyId,
-        }).select("rewards");
+        }).select("rewards googleReviewCount");
 
         return c.json(
           {
@@ -146,6 +146,7 @@ const subsCriberRouter = new Hono()
             err: false,
             data: subscriber,
             rewards: userReward?.rewards || 0,
+            googleReviewCount: userReward?.googleReviewCount || 0,
           },
           200,
         );
@@ -254,6 +255,85 @@ const subsCriberRouter = new Hono()
       },
       201,
     );
-  });
+  })
+  .get(
+    "/all-subs/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const subscribers = await Subscriber.find({
+        isDeleted: false,
+        businessId,
+      })
+        .sort({ _id: 1 })
+        .select("userId businessId -_id")
+        .limit(5)
+        .populate({
+          path: "userId",
+          select: "phone name",
+        });
+
+      return c.json(
+        {
+          message: "Subscribers fetched successfully",
+          err: false,
+          data: subscribers,
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/subscriber-phone/:businessId/:phone",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+        phone: z.string({ message: "phone is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, phone } = c.req.param();
+      const user = await User.findOne({ phone });
+      if (!user) {
+        return c.json(
+          {
+            message: "User not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+      const subscriber = await Subscriber.findOne({
+        isDeleted: false,
+        businessId,
+        userId: user._id,
+      })
+        .select("userId businessId -_id")
+        .limit(5)
+        .populate({
+          path: "userId",
+          select: "phone name",
+        });
+
+      return c.json(
+        {
+          message: "Subscribers fetched successfully",
+          err: false,
+          data: subscriber,
+        },
+        200,
+      );
+    },
+  );
 
 export default subsCriberRouter;

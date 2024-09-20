@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { RiEdit2Fill } from "react-icons/ri";
 import Image from "next/image";
 import CoinzPattern from "@/assets/img/coinzpattern.png";
@@ -11,6 +11,11 @@ import { cn } from "@/components/utils/helpers";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+
+const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
+  loading: () => <SkeletonLoader height={200} />,
+  ssr: false,
+});
 
 const CouponCardPay = dynamic(() => import("./couponCardPay"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -36,13 +41,7 @@ const AddAmountModal = dynamic(
   { loading: () => <SkeletonLoader height={200} />, ssr: false },
 );
 
-interface IUseCoinzPopup {
-  openModal: () => void;
-}
-
-const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
-  const { openModal } = props;
-  const [editBillModal, setEditBillModal] = useState(false);
+const MemoCoinzRewardSection = () => {
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
@@ -57,11 +56,27 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
-  const { billValue, claimedCoinz, claimCouponz } = usePaymentStore((s) => ({
+  const {
+    billValue,
+    claimedCoinz,
+    claimCouponz,
+    isModalOpen,
+    setIsModalOpen,
+    editBillModal,
+    setEditBillModal,
+  } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     claimCouponz: s.claimCouponz,
+    isModalOpen: s.isModalOpen,
+    setIsModalOpen: s.setIsModalOpen,
+    editBillModal: s.editBillModal,
+    setEditBillModal: s.setEditBillModal,
   }));
+
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, [isModalOpen]);
 
   const openBillModal = useCallback(() => {
     setEditBillModal(true);
@@ -102,9 +117,10 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
             </span>
           </button>
         </center>
-        {loyaltySetting?.loyaltyId ? (
+        <CashbackMessage />
+        {loyaltySetting?._id ? (
           <>
-            <section className="relative flex justify-around h-[250px]">
+            <section className="relative flex justify-center h-[250px] ">
               <div
                 className="-z-12"
                 style={{
@@ -116,7 +132,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
               />
               <article
                 className={
-                  "z-10 scaled-card-container rounded-2xl h-[235px] w-[10rem] ml-4 bg-white relative"
+                  "z-10 scaled-card-container rounded-2xl h-[235px] coupon-card-responsive ml-4 bg-white relative"
                 }
                 style={{
                   backgroundImage: `url(${CoinzPattern.src})`,
@@ -139,35 +155,32 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
                   )}
                 </article>
               </article>
-              <span className="absolute text-sm text-white transform -translate-x-1/2 left-1/2 top-20">
-                or
-              </span>
               <article
                 style={{
                   opacity: claimedCoinz > 0 ? 0.5 : 1,
                 }}
-                className="z-10 scaled-card-container-2 rounded-2xl h-[235px] w-[10rem] mr-4 bg-white relative"
+                className="z-10 scaled-card-container-2 rounded-2xl h-[235px] coupon-card-responsive mr-4 bg-white relative"
               >
                 <Image
                   src={CouponzPattern}
                   alt="Couponz"
-                  className="h-2/3 rounded-t-2xl"
+                  className="w-full h-2/3 rounded-t-2xl"
                 />
                 <article
                   style={{
                     scale: 0.8,
                   }}
-                  className="absolute z-20 top-4 left-16 rotate-12"
+                  className="absolute z-20 top-4 left-[45%] rotate-12"
                 >
                   <CouponCardPay />
                 </article>
                 <article className="bg-[#FFC93C20] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
                   <center className="mx-1 mb-1 text-sm">
                     {claimCouponz > 0
-                      ? `${availedCoupon?.name}Applied`
-                      : `You have ${
-                          userCouponz ? validCouponCount : "no"
-                        } valid couponz`}
+                      ? `${availedCoupon?.name} Applied`
+                      : userCouponz?.length === 0
+                        ? "Check couponz"
+                        : `You have ${validCouponCount} valid couponz`}
                   </center>
                 </article>
               </article>
@@ -179,7 +192,7 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
                 onKeyDown={openModal}
               >
                 <GameButton
-                  text={cn(claimedCoinz > 0 ? "Added Coinz" : "Use Coinz")}
+                  text={cn(claimedCoinz > 0 ? "Applied" : "Use Coinz")}
                   hideShine={claimedCoinz > 0 || false}
                 />
               </article>
@@ -189,14 +202,13 @@ const MemoCoinzRewardSection = (props: IUseCoinzPopup) => {
                 className="relative flex items-center mr-4"
               >
                 <GameButton
-                  text={cn(claimCouponz > 0 ? "Added Coupon" : "Use Couponz")}
+                  text={cn(claimCouponz > 0 ? "Applied" : "Use Couponz")}
                   hideShine={claimCouponz > 0 || false}
                 />
               </article>
             </section>
           </>
         ) : null}
-
         {editBillModal && (
           <BottomPopUp
             show={editBillModal}

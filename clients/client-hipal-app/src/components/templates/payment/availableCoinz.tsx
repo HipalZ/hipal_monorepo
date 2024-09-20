@@ -12,22 +12,29 @@ import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 
 interface IAvailableCoinz {
-  isModalOpen: boolean;
-  closeModal: () => void;
   handleApplyCoinz: (value: number) => void;
   setClaimAmount: number;
 }
 
 const AvailableCoinz = (props: IAvailableCoinz) => {
-  const { isModalOpen, closeModal, handleApplyCoinz, setClaimAmount } = props;
-  const { billValue, userCoinz, claimedCoinz, claimCouponz, setClaimCouponz } =
-    usePaymentStore((s) => ({
-      billValue: s.billValue,
-      claimedCoinz: s.claimedCoinz,
-      claimCouponz: s.claimCouponz,
-      setClaimCouponz: s.setClaimCouponz,
-      userCoinz: s.userCoinz,
-    }));
+  const { handleApplyCoinz, setClaimAmount } = props;
+  const {
+    billValue,
+    userCoinz,
+    claimedCoinz,
+    claimCouponz,
+    setClaimCouponz,
+    isModalOpen,
+    setIsModalOpen,
+  } = usePaymentStore((s) => ({
+    billValue: s.billValue,
+    claimedCoinz: s.claimedCoinz,
+    claimCouponz: s.claimCouponz,
+    setClaimCouponz: s.setClaimCouponz,
+    userCoinz: s.userCoinz,
+    isModalOpen: s.isModalOpen,
+    setIsModalOpen: s.setIsModalOpen,
+  }));
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
@@ -76,6 +83,10 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     setAvailedCoupon,
   ]);
 
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, [isModalOpen]);
+
   return (
     <>
       {showAlert ? (
@@ -100,7 +111,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
               onClick={replaceLoyalty}
             >
               <IoCheckmark className="w-4 h-4 mr-2" />
-              Remove
+              Yes
             </button>
             <button
               type="button"

@@ -30,7 +30,7 @@ function OtpPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessLogo = useBusinessDetails((s) => s.businessDetails.logoUrl);
-  const businessId = useBusinessDetails((s) => s.businessDetails._id);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const [logo, setLogo] = useState(businessLogo);
@@ -46,7 +46,15 @@ function OtpPage() {
   const router = useRouter();
   const sendOtp = useLogin((s) => s.sendOtp);
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-  const { direction, isPayment, setUserCoinZ, invoiceUrl } = useLogin();
+  const { direction, isPayment, setUserCoinZ, invoiceUrl, urlFrom } = useLogin(
+    (s) => ({
+      direction: s.direction,
+      isPayment: s.isPayment,
+      setUserCoinZ: s.setUserCoinZ,
+      invoiceUrl: s.invoiceUrl,
+      urlFrom: s.urlFrom,
+    }),
+  );
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleOtpChange = (
@@ -105,10 +113,12 @@ function OtpPage() {
       newUrl = `/${customLink}/explore?pay=${isPayment}`;
     } else if (direction === "invoice") {
       newUrl = invoiceUrl;
+    } else if (direction === "couponz") {
+      newUrl = urlFrom;
     }
 
     window.location.href = newUrl;
-  }, [direction, customLink, isPayment]);
+  }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
   const verifyOtp = async () => {
     const fullOtp = otp.join("");

@@ -1,6 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { type FC, memo, useEffect, useMemo, useRef, useState } from "react";
+import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -12,23 +12,12 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory } = props;
-  const {
-    isActiveDishType,
-    isActiveCategory,
-    observerActive,
-    setActiveCategory,
-    setActiveParentCategory,
-    setActiveParentCategoryName,
-    setObserverActive,
-  } = useActiveClass((state) => ({
-    isActiveDishType: state.isActiveDishType,
-    isActiveCategory: state.isActiveCategory,
-    setActiveCategory: state.setActiveCategory,
-    setActiveParentCategory: state.setActiveParentCategory,
-    setActiveParentCategoryName: state.setActiveParentCategoryName,
-    observerActive: state.observerActive,
-    setObserverActive: state.setObserverActive,
-  }));
+  const { isActiveDishType, isActiveCategory, setActiveCategory } =
+    useActiveClass((state) => ({
+      isActiveDishType: state.isActiveDishType,
+      isActiveCategory: state.isActiveCategory,
+      setActiveCategory: state.setActiveCategory,
+    }));
 
   const subTypes = useMemo(() => {
     return childCategory.filter(
@@ -101,7 +90,6 @@ const DishesList: FC<IDishesProps> = (props) => {
         //     }
         //   };
         // }, [headingRef, category, observerActive]);
-
         return (
           <section
             className={"min-h-60 bg-base-100 w-full pb-4"}
@@ -114,10 +102,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                 "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
               )}
             >
-              <h3
-                className="my-4 text-xl font-medium capitalize text-primary"
-                ref={headingRef}
-              >
+              <h3 className="my-4 text-xl font-medium capitalize text-primary">
                 {category?.name || ""}
               </h3>
               <h4 className="my-4 text-lg font-medium text-primary">
@@ -127,6 +112,7 @@ const DishesList: FC<IDishesProps> = (props) => {
             <div
               className="flex flex-col divide-y divide-base-300"
               onTouchStart={() => handleCategoryInView(category)}
+              onScroll={() => handleCategoryInView(category)}
             >
               {isActiveDishType.toLowerCase() === "all" ? (
                 category?.dishIds?.map((dishData: DishType, dishIndex) => (

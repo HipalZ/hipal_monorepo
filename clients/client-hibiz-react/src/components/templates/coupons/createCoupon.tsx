@@ -1,6 +1,4 @@
-import useBusinessData from "@/components/store/useBusinessData";
 import { memo } from "react";
-import { useNavigate } from "react-router-dom";
 import Normal from "@/assets/coupon/normal.png";
 import Advanced from "@/assets/coupon/advanced.png";
 import type { CouponFlow } from "@/components/store/useCouponsStore";

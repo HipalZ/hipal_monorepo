@@ -5,6 +5,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App";
 import Boundary from "./components/molecules/boundary";
 import { Toaster } from "react-hot-toast";
+import "react-datepicker/dist/react-datepicker.css";
 import "./index.css";
 
 const queryClient = new QueryClient({

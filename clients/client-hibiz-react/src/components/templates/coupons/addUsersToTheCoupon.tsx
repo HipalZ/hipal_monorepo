@@ -2,12 +2,16 @@ import { memo, useCallback, useState, useMemo } from "react";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import NoData from "@/assets/nodata.jpg";
-import { useGetAllPeoples, useGetGroupData } from "@/hooks/usePeopleData";
+import { useGetGroupData } from "@/hooks/usePeopleData";
 import { MdPersonOutline } from "react-icons/md";
 import { cn } from "@hi/common";
 import { hexToRgba } from "@/components/utils/helper";
-import type { IUserGroup } from "@/components/types/businessData";
 import BottomButton from "@/components/atom/bottomButton";
+import {
+  type selectedUsersDetails,
+  useSingleUserInfo,
+} from "@/hooks/useCoupon";
+import Background from "@/components/atom/feildBackground";
 
 const UserGroupList = ({ type }: { type: "people" | "group" }) => {
   const {
@@ -16,104 +20,115 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
     setSelectedUserIds,
     setSelectedGroupIds,
     setEligibilityModal,
+    selectedUsers,
+    setSelectedUsers,
   } = useCouponsStore((s) => ({
     selectedUserIds: s.selectedUserIds,
     selectedGroupIds: s.selectedGroupIds,
     setSelectedUserIds: s.setSelectedUserIds,
     setSelectedGroupIds: s.setSelectedGroupIds,
     setEligibilityModal: s.setEligibilityModal,
+    selectedUsers: s.selectedUsers,
+    addUser: s.addUser,
+    removeUser: s.removeUser,
+    setSelectedUsers: s.setSelectedUsers,
   }));
 
   const [tempSelectedUserIds, setTempSelectedUserIds] =
     useState<string[]>(selectedUserIds);
   const [tempSelectedGroupIds, setTempSelectedGroupIds] =
     useState<string[]>(selectedGroupIds);
+  const [tempSelectedUsers, setTempSelectedUsers] =
+    useState<selectedUsersDetails[]>(selectedUsers);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const { isLoading: isUserLoading, peopleData } = useGetAllPeoples();
+  const { isLoading: isUserLoading, userInfo } = useSingleUserInfo(phone);
   const { groupData, groupLoading } = useGetGroupData(type === "group");
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
+  console.log("Group Data:", userInfo);
 
-  const filteredUsers = useMemo(() => {
-    if (!peopleData) return [];
-    return peopleData.filter(
-      (user) =>
-        user?.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user?.userId?.phone?.includes(searchTerm),
-    );
-  }, [peopleData, searchTerm]);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSearchTerm(value);
+      setPhone(/^\d{10}$/.test(value) ? value : "");
+    },
+    [],
+  );
 
   const filteredGroups = useMemo(() => {
-    if (!groupData) return [];
-    return groupData.filter((group) =>
-      group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+    return (
+      groupData?.filter((group) =>
+        group.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ) || []
     );
   }, [groupData, searchTerm]);
 
   const handleUserClick = useCallback(
-    (userId: string) => {
-      if (tempSelectedGroupIds.length > 0) {
-        setTempSelectedGroupIds([]);
-      }
-      if (tempSelectedUserIds.includes(userId)) {
-        setTempSelectedUserIds(
-          tempSelectedUserIds.filter((id) => id !== userId),
+    (userDetails: selectedUsersDetails) => {
+      setTempSelectedGroupIds([]);
+
+      setTempSelectedUserIds((prevSelectedUserIds) => {
+        const isSelected = prevSelectedUserIds.includes(userDetails._id);
+        return isSelected
+          ? prevSelectedUserIds.filter((id) => id !== userDetails._id)
+          : [...prevSelectedUserIds, userDetails._id];
+      });
+
+      const isSelected = tempSelectedUsers.some(
+        (u) => u._id === userDetails._id,
+      );
+
+      if (isSelected) {
+        setTempSelectedUsers((prev) =>
+          prev.filter((u) => u._id !== userDetails._id),
         );
       } else {
-        setTempSelectedUserIds([...tempSelectedUserIds, userId]);
+        setTempSelectedUsers((prev) => {
+          if (!prev.some((u) => u._id === userDetails._id)) {
+            return [...prev, userDetails];
+          }
+          return prev;
+        });
       }
     },
-    [tempSelectedGroupIds, tempSelectedUserIds],
+    [tempSelectedUsers, setTempSelectedUserIds, setTempSelectedGroupIds],
   );
 
-  const handleGroupClick = useCallback(
-    (group: IUserGroup) => {
-      if (tempSelectedUserIds.length > 0) {
-        setTempSelectedUserIds([]);
-      }
-      if (tempSelectedGroupIds.includes(group._id)) {
-        setTempSelectedGroupIds(
-          tempSelectedGroupIds.filter((id) => id !== group._id),
-        );
-      } else {
-        setTempSelectedGroupIds([...tempSelectedGroupIds, group._id]);
-      }
-    },
-    [tempSelectedGroupIds, tempSelectedUserIds],
-  );
-
-  const handleSaveSelection = () => {
+  const handleGroupClick = useCallback((groupId: string) => {
+    setTempSelectedUserIds([]);
+    setTempSelectedGroupIds((prev) =>
+      prev.includes(groupId)
+        ? prev.filter((id) => id !== groupId)
+        : [...prev, groupId],
+    );
+  }, []);
+  const handleSaveSelection = useCallback(() => {
     setSelectedUserIds(tempSelectedUserIds);
     setSelectedGroupIds(tempSelectedGroupIds);
+    setSelectedUsers(tempSelectedUsers);
     setEligibilityModal(false);
-  };
+  }, [
+    tempSelectedUserIds,
+    tempSelectedGroupIds,
+    tempSelectedUsers,
+    setSelectedUserIds,
+    setSelectedGroupIds,
+    setSelectedUsers,
+    setEligibilityModal,
+  ]);
 
-  if (isUserLoading || groupLoading)
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
+  if (isUserLoading || groupLoading) {
+    return <LoadingSpinner />;
+  }
 
-  if (type === "people" && !peopleData?.length)
-    return (
-      <div className="flex flex-col items-center justify-center h-[70dvh]">
-        <img src={NoData} alt="No Data Found" className="w-1/2 h-auto" />
-        <h3 className="text-[#6F649B] mt-4">No People Data Found</h3>
-      </div>
-    );
-
-  if (type === "group" && !groupData?.length)
-    return (
-      <div className="flex flex-col items-center justify-center h-[70dvh]">
-        <img src={NoData} alt="No Data Found" className="w-1/2 h-auto" />
-        <h3 className="text-[#6F649B] mt-4">No Group Data Found</h3>
-      </div>
-    );
+  const renderNoData = (message: string) => (
+    <div className="flex flex-col items-center justify-center h-[70dvh]">
+      <img src={NoData} alt="No Data Found" className="w-1/2 h-auto" />
+      <h3 className="text-[#6F649B] mt-4">{message}</h3>
+    </div>
+  );
 
   return (
     <>
@@ -129,82 +144,106 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
         />
 
         {type === "people" && (
-          <div className="flex flex-wrap gap-4 pb-[7rem]">
-            {filteredUsers.map((user) => (
-              <button
-                type="button"
-                key={user._id}
-                onClick={() => handleUserClick(user?.userId?._id)}
-                className={cn(
-                  "flex items-center border-b border-[#00000050] pb-2 w-full text-left md:max-w-[14rem] lg:max-w-[14rem]",
-                  tempSelectedUserIds.includes(user?.userId?._id) ? "" : "",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={tempSelectedUserIds.includes(user?.userId?._id)}
-                  onChange={() => handleUserClick(user?.userId?._id)}
-                  className="mr-2 text-black rounded-sm"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div>
-                  <h3>{user?.userId?.name}</h3>
-                  <p>
-                    {user?.userId?.phone?.slice(0, 2)}******
-                    {user?.userId?.phone?.slice(-2)}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+          <>
+            {userInfo?._id ? (
+              <div className="flex flex-wrap gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleUserClick(userInfo)}
+                  className={cn(
+                    "flex items-center border-b border-[#00000050] pb-2 w-full text-left md:max-w-[14rem] lg:max-w-[14rem]",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={tempSelectedUserIds.includes(userInfo._id)}
+                    onChange={() => handleUserClick(userInfo)}
+                    className="mr-2 text-black rounded-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div>
+                    <h3>{userInfo.name}</h3>
+                    <p>{`${userInfo.phone.slice(
+                      0,
+                      2,
+                    )}******${userInfo.phone.slice(-2)}`}</p>
+                  </div>
+                </button>
+              </div>
+            ) : tempSelectedUsers?.length > 0 ? (
+              <Background className="flex flex-wrap gap-4">
+                {selectedUsers.map((user) => (
+                  <div
+                    key={user._id}
+                    className="relative flex items-center bg-[#6F649B] text-white rounded-2xl px-4 py-2"
+                  >
+                    <div>
+                      <h3>{user.name}</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUserClick(user)}
+                      className="absolute flex items-center justify-center border border-[#6F649B] w-6 h-6 text-[#6F649B] bg-white rounded-full -top-1.5 -right-1.5"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </Background>
+            ) : (
+              <div>No user Found ....</div>
+            )}
+          </>
         )}
 
         {type === "group" && (
-          <div className="flex flex-wrap gap-4 pb-[7rem]">
-            {filteredGroups.map((group) => (
-              <button
-                type="button"
-                onClick={() => handleGroupClick(group)}
-                style={{
-                  backgroundColor: hexToRgba(group?.groupColor),
-                }}
-                key={group._id}
-                className={cn(
-                  "relative flex items-center gap-4 px-4 py-2 text-left w-full rounded-2xl md:max-w-[14rem] lg:max-w-[14.25rem]",
-                  tempSelectedGroupIds.includes(group._id)
-                    ? "border border-green-500"
-                    : "",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={tempSelectedGroupIds.includes(group._id)}
-                  onChange={() => handleGroupClick(group)}
-                  className="mr-2 text-black rounded-sm"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div
-                  style={{
-                    backgroundColor: group?.groupColor,
-                  }}
-                  className="absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 mb-1 ml-[0.1rem] rounded-full"
-                />
-                <h3 className="leading-5 w-[80%] ml-2">{group?.name}</h3>
-                <div className="flex items-center ml-4 left-6 top-3">
-                  <MdPersonOutline size={20} />
-                  {group?.userIds?.length > 0 && (
-                    <span>{group?.userIds?.length}</span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
+          <>
+            {filteredGroups.length > 0 ? (
+              <div className="flex flex-wrap gap-4 pb-[7rem]">
+                {filteredGroups.map((group) => (
+                  <button
+                    type="button"
+                    onClick={() => handleGroupClick(group._id)}
+                    style={{ backgroundColor: hexToRgba(group.groupColor) }}
+                    key={group._id}
+                    className={cn(
+                      "relative flex items-center gap-4 px-4 py-2 text-left w-full rounded-2xl md:max-w-[14rem] lg:max-w-[14.25rem]",
+                      tempSelectedGroupIds.includes(group._id)
+                        ? "border border-green-500"
+                        : "",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={tempSelectedGroupIds.includes(group._id)}
+                      onChange={() => handleGroupClick(group._id)}
+                      className="mr-2 text-black rounded-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div
+                      className="absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 mb-1 ml-[0.1rem] rounded-full"
+                      style={{ backgroundColor: group.groupColor }}
+                    />
+                    <h3 className="leading-5 w-[80%] ml-2">{group.name}</h3>
+                    <div className="flex items-center ml-4 left-6 top-3">
+                      <MdPersonOutline size={20} />
+                      {group.userIds.length > 0 && (
+                        <span>{group.userIds.length}</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              renderNoData("No Group Data Found")
+            )}
+          </>
         )}
       </section>
       <BottomButton
         buttons={[
           {
-            text: "Add",
+            text: "Save",
             onClick: handleSaveSelection,
           },
         ]}
