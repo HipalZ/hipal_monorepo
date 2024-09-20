@@ -404,6 +404,7 @@ const couponAnalyticsRouter = new Hono()
 
       const channels = await CouponChannel.find({
         businessId: businessId,
+        name: { $ne: "default" },
       });
 
       return c.json({ err: false, msg: "fetch successfully", data: channels });
@@ -495,6 +496,7 @@ const couponAnalyticsRouter = new Hono()
           0,
         );
         const channelData = {
+          _id: channel._id,
           name: channel.name,
           isActive: channel.isActive,
           totalReach: channelView?.viewCount || 0,

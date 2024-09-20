@@ -7,9 +7,17 @@ import useCouponsStore from "@/components/store/useCouponsStore";
 import { useIndividualCouponAnalytics } from "@/hooks/useCoupon";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import CouponChannelDetails from "./couponChannelDetails";
+import BottomButton from "@/components/atom/bottomButton";
+import { useCallback } from "react";
 
 const CouponAnalyticsInfo = () => {
   const { couponEndDate } = useCouponsStore();
+  const { setSelectedPage } = useCouponsStore((s) => ({
+    setSelectedPage: s.setSelectedPage,
+  }));
+  const goToLinkChannels = useCallback(() => {
+    setSelectedPage("LINK_CHANNELS");
+  }, []);
   const { analytics, isLoading } = useIndividualCouponAnalytics(couponEndDate);
 
   return (
@@ -31,6 +39,15 @@ const CouponAnalyticsInfo = () => {
         )}
       </section>
       <CouponChannelDetails />
+      <BottomButton
+        fixed
+        buttons={[
+          {
+            text: "Link Channels",
+            onClick: goToLinkChannels,
+          },
+        ]}
+      />
     </div>
   );
 };
