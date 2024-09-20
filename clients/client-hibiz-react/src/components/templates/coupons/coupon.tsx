@@ -29,29 +29,34 @@ const MemoCoupon = () => {
 
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
-    if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit === 0) {
-      return "Expires : None";
+
+    if (
+      couponStartDate === null &&
+      couponEndDate === null &&
+      overAllLimit > 0
+    ) {
+      return `Expires after ${overAllLimit} claims`;
     }
 
-    if (couponStartDate === 0 && couponEndDate > 0) {
+    if (couponStartDate === null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days ${
-        overAllLimit > 0 ? `or after ${overAllLimit} claims` : ""
+      return `Expires in ${daysLeft} days${
+        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
 
-    if (couponStartDate > 0 && couponEndDate > 0) {
+    if (couponStartDate !== null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days ${
-        overAllLimit > 0 ? `or after ${overAllLimit} claims` : ""
+      return `Expires in ${daysLeft} days${
+        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
 
     if (overAllLimit > 0) {
-      return ` ${overAllLimit > 0 ? `After ${overAllLimit} claims` : ""}`;
+      return `Expires after ${overAllLimit} claims`;
     }
 
-    return null;
+    return "Expires: None";
   }, [couponStartDate, couponEndDate, overAllLimit]);
 
   return (

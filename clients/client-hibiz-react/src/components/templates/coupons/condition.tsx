@@ -29,16 +29,16 @@ const MemoCondition = () => {
   }));
 
   const [errorMessage, setErrorMessage] = useState("");
-  const [expiryHours, setExpiryHours] = useState<number | "">(() =>
-    expiryAfterGrabbed
-      ? (expiryAfterGrabbed - couponStartDate) / (1000 * 60 * 60)
-      : "",
-  );
   const [dateErrorMessage, setDateErrorMessage] = useState("");
 
+  // Initialize expiryHours based on expiryAfterGrabbed (duration in milliseconds)
+  const [expiryHours, setExpiryHours] = useState<number | "">(() =>
+    expiryAfterGrabbed ? expiryAfterGrabbed / (1000 * 60 * 60) : "",
+  );
+
   const totalAvailableHours = useMemo(() => {
-    if (couponStartDate === 0 && couponEndDate === 0) {
-      return 8760;
+    if (!couponStartDate && !couponEndDate) {
+      return 8760; // Default to one year in hours
     }
     if (couponStartDate && couponEndDate) {
       const totalMilliseconds = couponEndDate - couponStartDate;
@@ -49,23 +49,20 @@ const MemoCondition = () => {
 
   const handleHoursChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = Number(e.target.value);
+      let value = Number(e.target.value);
 
-      if (value < 0 || value > totalAvailableHours) {
-        setDateErrorMessage(
-          `Please enter a value between 0 and ${Math.round(
-            totalAvailableHours,
-          )} hours.`,
-        );
-        setExpiryAfterGrabbed(0);
-      } else {
-        setDateErrorMessage("");
-        setExpiryHours(value);
-        const newExpiryTimestamp = value * 60 * 60 * 1000;
-        setExpiryAfterGrabbed(newExpiryTimestamp);
+      if (value < 0) {
+        value = 0;
+      } else if (value > totalAvailableHours) {
+        value = totalAvailableHours;
       }
+
+      setExpiryHours(value);
+      const newExpiryDuration = value * 60 * 60 * 1000;
+      setExpiryAfterGrabbed(newExpiryDuration);
+      setDateErrorMessage("");
     },
-    [totalAvailableHours, couponStartDate, setExpiryAfterGrabbed],
+    [totalAvailableHours, setExpiryAfterGrabbed],
   );
 
   const handleLimitChange = useCallback(
@@ -106,7 +103,7 @@ const MemoCondition = () => {
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col md:flex-row lg:flex-row pb-[7rem]">
         <section className="flex-1">
-          <h3>After grabbing couponz it expires in</h3>
+          <h3>After grabbing coupon, it expires in</h3>
           <Background>
             <h3 className="mb-2 text-[#8C63FF] font-semibold">
               Value between 0 and {Math.round(totalAvailableHours)} hours.

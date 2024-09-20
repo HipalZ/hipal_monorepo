@@ -64,18 +64,22 @@ const MemoExpiry = () => {
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
 
-    if (couponStartDate === 0 && couponEndDate === 0 && overAllLimit > 0) {
+    if (
+      couponStartDate === null &&
+      couponEndDate === null &&
+      overAllLimit > 0
+    ) {
       return `Expires after ${overAllLimit} claims`;
     }
 
-    if (couponStartDate === 0 && couponEndDate > 0) {
+    if (couponStartDate === null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
 
-    if (couponStartDate > 0 && couponEndDate > 0) {
+    if (couponStartDate !== null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
@@ -86,8 +90,8 @@ const MemoExpiry = () => {
       return `Expires after ${overAllLimit} claims`;
     }
 
-    return "Expires : None";
-  }, [couponStartDate, couponEndDate, overAllLimit]);
+    return "Expires: None";
+  }, [couponEndDate, couponStartDate, overAllLimit]);
 
   const openModal = useCallback(() => {
     setExpiryModal(true);
@@ -106,11 +110,13 @@ const MemoExpiry = () => {
       setExpiryCoupon(text);
 
       if (text === "No Expiration") {
-        setCouponStartDate(0);
-        setCouponEndDate(0);
+        setCouponStartDate(null);
+        setCouponEndDate(null);
         setOverAllLimit(0);
         setShowDatePicker(false);
       } else if (text === "Custom Expiration (e.g., Start and end date)") {
+        setCouponStartDate(null);
+        setCouponEndDate(null);
         setShowDatePicker(true);
       } else {
         setShowDatePicker(false);
@@ -123,8 +129,8 @@ const MemoExpiry = () => {
         if (
           text === "After Specific Use (e.g., Expires after it’s used 10 times)"
         ) {
-          setCouponStartDate(0);
-          setCouponEndDate(0);
+          setCouponStartDate(null);
+          setCouponEndDate(null);
         }
 
         if (
@@ -145,7 +151,6 @@ const MemoExpiry = () => {
       closeModal,
     ],
   );
-
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
 
@@ -159,7 +164,7 @@ const MemoExpiry = () => {
     setCouponEndDate(end ? end.getTime() : null);
 
     if (start && end) {
-      setShowDatePicker(false); // Close the date picker once both dates are selected
+      setShowDatePicker(false);
     }
   };
 
@@ -212,10 +217,10 @@ const MemoExpiry = () => {
           <button
             type="button"
             onClick={openModal}
-            className="w-full px-4 py-3 border border-black rounded-2xl"
+            className="w-[100%] px-4 py-3 border border-black rounded-2xl"
           >
             <div className="flex items-center justify-between">
-              <h4 className="text-left truncate">
+              <h4 className="text-left truncate ">
                 {expiryCoupon || "Select Expiration"}
               </h4>
               <IoMdArrowDropdown />
@@ -223,7 +228,7 @@ const MemoExpiry = () => {
           </button>
         </Background>
         {expiryCoupon === "Custom Expiration (e.g., Start and end date)" && (
-          <center className="mx-4 mb-4 overflow-auto">
+          <div className="w-full mx-4 mb-4">
             <DatePicker
               selectsRange
               startDate={couponStartDate ? new Date(couponStartDate) : null}
@@ -231,10 +236,11 @@ const MemoExpiry = () => {
               onChange={handleDateChange}
               dateFormat="dd/MM/yyyy"
               isClearable
-              autoFocus
-              className="text-center rounded-full"
+              minDate={new Date()}
+              className="w-full min-w-[250px] p-2 border border-gray-300 rounded-lg"
+              popperPlacement="bottom-start"
             />
-          </center>
+          </div>
         )}
 
         {expiryCoupon !== "No Expiration" && (
