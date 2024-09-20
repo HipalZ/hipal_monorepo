@@ -14,8 +14,12 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import toast from "react-hot-toast";
 import PopUp from "@/components/atom/popUp";
 import { RiLinkUnlink } from "react-icons/ri";
+import useCouponsStore from "@/components/store/useCouponsStore";
 
-const MemoCouponChannelDetails = () => {
+const MemoCouponChannelDetails = ({ hide }: { hide?: boolean }) => {
+  const { setSelectedPage } = useCouponsStore((s) => ({
+    setSelectedPage: s.setSelectedPage,
+  }));
   const { singleCouponChannel, isLoading } = useGetCouponsChannel();
 
   const [openChannel, setOpenChannel] = useState<boolean>(false);
@@ -52,17 +56,23 @@ const MemoCouponChannelDetails = () => {
     [disableChannel],
   );
 
+  const goToChannels = useCallback(() => {
+    setSelectedPage("CHANNELS");
+  }, []);
+
   return (
     <section className="mx-6 mt-10 lg:mt-12">
       <article className="flex justify-between pb-3 w-full max-w-[32rem]">
-        <h3 className="font-semibold opacity-50">Summary</h3>
-        <button
-          type="button"
-          onClick={() => toast.success("Coming Soon")}
-          className="px-4 py-1 text-sm text-white bg-black rounded-3xl"
-        >
-          Manage Channel
-        </button>
+        <h3 className="font-semibold opacity-50">Channels</h3>
+        {!hide && (
+          <button
+            type="button"
+            onClick={goToChannels}
+            className="px-4 py-1 text-sm text-white bg-black rounded-3xl"
+          >
+            Manage Channel
+          </button>
+        )}
       </article>
       {isLoading ? (
         <LoadingSpinner />

@@ -1,0 +1,84 @@
+import { cn } from "@hi/common";
+import { BsGraphUpArrow } from "react-icons/bs";
+import { formatNumber } from "@/components/utils/helper";
+import { FaPeopleGroup } from "react-icons/fa6";
+import { TbTagStarred } from "react-icons/tb";
+import { memo, useCallback } from "react";
+import { type IChannel, useGetAllBusinessChannels } from "@/hooks/useCoupon";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import useCouponsStore from "@/components/store/useCouponsStore";
+
+const MemoAllChannelDetails = ({ hide }: { hide?: boolean }) => {
+  const { setSelectedPage } = useCouponsStore((s) => ({
+    setSelectedPage: s.setSelectedPage,
+  }));
+  const { channels: singleCouponChannel, isLoading } =
+    useGetAllBusinessChannels();
+
+  const goToChannels = useCallback(() => {
+    setSelectedPage("CHANNELS");
+  }, [setSelectedPage]);
+
+  return (
+    <section className="mx-6 mt-10 lg:mt-12">
+      <article className="flex justify-between pb-3 w-full max-w-[32rem]">
+        <h3 className="font-semibold opacity-50">Channels</h3>
+        {!hide && (
+          <button
+            type="button"
+            onClick={goToChannels}
+            className="px-4 py-1 text-sm text-white bg-black rounded-3xl"
+          >
+            Manage Channel
+          </button>
+        )}
+      </article>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <section className="analytics_cards_groups_channel">
+          {singleCouponChannel?.map((item: IChannel) => (
+            <section
+              key={item._id}
+              className={cn(
+                "bg-white rounded-2xl h-[12.5rem] relative p-2.5 shadow-xl",
+                !item.isActive && "filter grayscale",
+              )}
+            >
+              <button
+                type="button"
+                className={cn(
+                  item.isActive ? "text-green-500" : "text-red-600",
+                  "absolute top-2 right-2 text-sm",
+                )}
+              >
+                {item.isActive ? "Active" : "Inactive"}
+              </button>
+              <article className="absolute px-4 flex bg-[#fafafa] justify-center items-center text-center h-[7rem] w-[7rem] transform -translate-x-1/2 -translate-y-1/2 border border-[#9267EC40] rounded-full left-1/2 top-[40%]">
+                {item.name}
+              </article>
+              <section className="absolute text-center bottom-[0.5rem] text-xs flex justify-between items-center w-[90%] px-2">
+                <center>
+                  <TbTagStarred size={18} className="text-[#9267EC]" />
+                  <p className="text-base">{formatNumber(item.totalReach)}</p>
+                </center>
+                <center>
+                  <FaPeopleGroup size={18} className="text-[#9267EC]" />
+                  <p className="text-base">{formatNumber(item.totalGrabbed)}</p>
+                </center>
+                <center>
+                  <BsGraphUpArrow size={18} className="text-[#9267EC]" />
+                  <p className="text-base">{formatNumber(item.totalSales)}</p>
+                </center>
+              </section>
+            </section>
+          ))}
+        </section>
+      )}
+    </section>
+  );
+};
+
+const AllChannelDetails = memo(MemoAllChannelDetails);
+
+export default AllChannelDetails;

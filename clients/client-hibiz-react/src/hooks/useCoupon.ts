@@ -374,3 +374,122 @@ export const useDisableLink = () => {
 
   return { disableChannel: mutate, isPending };
 };
+
+export const useGetAllChannels = () => {
+  const businessData = useBusinessData((state) => state.businessData);
+  const businessId = businessData?._id;
+
+  const getAllChannels = useCallback(async () => {
+    if (!businessId) return [];
+
+    const res = await apiRpc["coupon-analytics"].channels[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+
+    const data = (await res.json()).data as IChannel[];
+    return data;
+  }, [businessId]);
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["getAllChannels", businessId],
+    queryFn: getAllChannels,
+    enabled: !!businessId,
+  });
+
+  return {
+    channels,
+    isLoading,
+  };
+};
+
+export const useGenerateLinks = () => {
+  const { setSelectedPage } = useCouponsStore((s) => ({
+    setSelectedPage: s.setSelectedPage,
+  }));
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await apiRpc["coupon-analytics"]["generate-links"].$post({
+        json: payload,
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (!data.err) {
+        toast.success("Links generated successfully!");
+        setSelectedPage("ANALYTICS_INFO");
+      } else {
+        toast.error(data.message || "Failed to generate links!");
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to generate links!");
+      console.error("Error in generating links:", error);
+    },
+  });
+
+  return { generateLinks: mutate, isPending };
+};
+
+export const useGetAllChannelDashboard = () => {
+  const businessData = useBusinessData((state) => state.businessData);
+  const businessId = businessData?._id;
+
+  const getAllChannelDashboard = useCallback(async () => {
+    if (!businessId) return [];
+
+    const res = await apiRpc["coupon-analytics"]["channels-dashboard"][
+      ":businessId"
+    ].$get({
+      param: {
+        businessId,
+      },
+    });
+
+    const data = (await res.json()).data;
+    return data;
+  }, [businessId]);
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["getAllChannelDashboard", businessId],
+    queryFn: getAllChannelDashboard,
+    enabled: !!businessId,
+  });
+
+  return {
+    channels,
+    isLoading,
+  };
+};
+
+export const useGetAllBusinessChannels = () => {
+  const businessData = useBusinessData((state) => state.businessData);
+  const businessId = businessData?._id;
+
+  const getAllBusinessChannels = useCallback(async () => {
+    if (!businessId) return [];
+
+    const res = await apiRpc["coupon-analytics"]["business-analytics"][
+      ":businessId"
+    ].$get({
+      param: {
+        businessId,
+      },
+    });
+
+    const data = (await res.json()).data;
+    return data;
+  }, [businessId]);
+
+  const { data: channels, isLoading } = useQuery({
+    queryKey: ["getAllBusinessChannels", businessId],
+    queryFn: getAllBusinessChannels,
+    enabled: !!businessId,
+  });
+
+  return {
+    channels,
+    isLoading,
+  };
+};
