@@ -66,7 +66,7 @@ const MemoCouponz = () => {
       setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
       return router.push(`/${customLink}/user/signup/`);
     }
-    setIsLoading(true);
+    // setIsLoading(true);
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
     const requiresDobOrSpecialDay =
       requiredFields.includes("dob") || requiredFields.includes("specialday");
