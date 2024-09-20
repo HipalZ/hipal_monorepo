@@ -64,9 +64,18 @@ const couponAnalyticsRouter = new Hono()
         }),
       }),
     ),
+    zValidator(
+      "json",
+      z.object({
+        isActive: z.string({
+          message: "isActive should be a boolean",
+        }),
+      }),
+    ),
 
     async (c) => {
-      const { couponId, channelId } = await c.req.json();
+      const { isActive } = await c.req.json();
+      const { couponId, channelId } = c.req.param();
 
       const updateLink = await CouponLink.findOneAndUpdate(
         {
@@ -75,7 +84,18 @@ const couponAnalyticsRouter = new Hono()
         },
         {
           $set: {
-            isActive: false,
+            isActive: isActive,
+          },
+        },
+      );
+
+      await CouponChannel.updateOne(
+        {
+          _id: channelId,
+        },
+        {
+          $set: {
+            isActive: isActive,
           },
         },
       );
