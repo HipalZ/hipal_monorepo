@@ -257,7 +257,8 @@ export const useIndividualCouponAnalytics = (to: number) => {
   };
 };
 
-interface IChannel {
+export interface IChannel {
+  channelId: string;
   name: string;
   isActive: boolean;
   totalReach: number;
@@ -296,4 +297,80 @@ export const useGetCouponsChannel = () => {
     singleCouponChannel,
     isLoading,
   };
+};
+
+export interface IChannelDetails {
+  _id: string;
+  businessId: string;
+  isActive: boolean;
+  channelId: string;
+  date: string;
+  link: string;
+}
+
+export const useGetChannel = (channelId: string, callTheApi: boolean) => {
+  const couponId = useCouponsStore((state) => state.couponId);
+
+  const getChannel = useCallback(async () => {
+    if (!channelId) return toast.error("Channel is required");
+
+    const res = await apiRpc["coupon-analytics"]["view-coupon"][":couponId"][
+      ":channelId"
+    ].$get({
+      param: {
+        couponId,
+        channelId,
+      },
+    });
+
+    const data = (await res.json()).data as IChannelDetails;
+    return data;
+  }, [channelId, couponId]);
+
+  const { data: channel, isLoading } = useQuery({
+    queryKey: ["getChannel", channelId, couponId],
+    queryFn: getChannel,
+    enabled: !!channelId && !!couponId && callTheApi,
+  });
+
+  return {
+    channel,
+    isLoading,
+  };
+};
+
+export const useDisableLink = () => {
+  const couponId = useCouponsStore((state) => state.couponId);
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async ({
+      channelId,
+      isDisable,
+    }: { channelId: string; isDisable: boolean }) => {
+      const res = await apiRpc["coupon-analytics"].channels[":couponId"][
+        ":channelId"
+      ].$put({
+        param: {
+          couponId,
+          channelId,
+        },
+        json: {
+          isActive: isDisable.toString(),
+        },
+      });
+
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getCouponsChannel"] });
+      toast.success("Channel disabled successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to disable channel");
+      console.error("Error in disabling channel:", error);
+    },
+  });
+
+  return { disableChannel: mutate, isPending };
 };

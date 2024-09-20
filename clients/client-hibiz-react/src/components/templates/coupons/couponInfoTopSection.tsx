@@ -46,7 +46,7 @@ const MemoCouponInfoTopSection = () => {
         style={{
           backgroundColor: bgColor,
         }}
-        className="flex h-[9.5rem] w-full gap-6 p-4 md:rounded-2xl mt-2"
+        className="flex h-auto w-full max-w-[32rem] gap-6 p-4 md:rounded-2xl mt-2"
       >
         <figure className="w-full max-w-[10.75rem] h-[7.5rem] rounded-2xl flex-1 overflow-hidden object-cover">
           <img

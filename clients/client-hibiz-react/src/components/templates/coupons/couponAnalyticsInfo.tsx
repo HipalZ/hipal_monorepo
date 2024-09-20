@@ -10,8 +10,6 @@ import CouponChannelDetails from "./couponChannelDetails";
 
 const CouponAnalyticsInfo = () => {
   const { couponEndDate } = useCouponsStore();
-  console.log(couponEndDate);
-
   const { analytics, isLoading } = useIndividualCouponAnalytics(couponEndDate);
 
   return (

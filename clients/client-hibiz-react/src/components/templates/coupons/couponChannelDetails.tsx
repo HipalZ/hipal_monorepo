@@ -3,13 +3,55 @@ import { BsGraphUpArrow } from "react-icons/bs";
 import { formatNumber } from "@/components/utils/helper";
 import { FaPeopleGroup } from "react-icons/fa6";
 import { TbTagStarred } from "react-icons/tb";
-import { memo } from "react";
-import { useGetCouponsChannel } from "@/hooks/useCoupon";
+import { memo, useCallback, useState } from "react";
+import {
+  type IChannel,
+  useDisableLink,
+  useGetChannel,
+  useGetCouponsChannel,
+} from "@/hooks/useCoupon";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import toast from "react-hot-toast";
+import PopUp from "@/components/atom/popUp";
+import { RiLinkUnlink } from "react-icons/ri";
 
 const MemoCouponChannelDetails = () => {
   const { singleCouponChannel, isLoading } = useGetCouponsChannel();
+
+  const [openChannel, setOpenChannel] = useState<boolean>(false);
+  const [channelId, setChannelId] = useState<string>("");
+  const [channelName, setChannelName] = useState<string>("");
+
+  const { channel, isLoading: channelLoading } = useGetChannel(
+    channelId,
+    openChannel,
+  );
+
+  const { disableChannel, isPending } = useDisableLink();
+
+  const openModal = useCallback((channel: IChannel) => {
+    setOpenChannel(true);
+    setChannelId(channel.channelId);
+    setChannelName(channel.name);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setOpenChannel(false);
+  }, []);
+
+  const copyLink = useCallback((link: string) => {
+    navigator.clipboard.writeText(link);
+    toast.success("Link Copied");
+  }, []);
+
+  const disableChannelFunc = useCallback(
+    (isActive: boolean, channelId: string) => {
+      disableChannel({ channelId, isDisable: !isActive });
+      setOpenChannel(false);
+    },
+    [disableChannel],
+  );
+
   return (
     <section className="mx-6 mt-10 lg:mt-12">
       <article className="flex justify-between pb-3 w-full max-w-[32rem]">
@@ -62,14 +104,62 @@ const MemoCouponChannelDetails = () => {
               </section>
               <button
                 type="button"
-                onClick={() => toast.success("Coming Soon")}
+                onClick={() => openModal(item)}
                 className="absolute w-[90%] bottom-2 text-xs py-1 text-white bg-[#9267EC] rounded-3xl"
               >
-                Coming Soon
+                View Option
               </button>
             </section>
           ))}
         </section>
+      )}
+      {openChannel && (
+        <PopUp show={openChannel} onClose={closeModal} width="w-[30rem]">
+          {channelLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <article className="px-4 py-4 space-y-4 bg-white rounded-t-2xl">
+              <center
+                style={{
+                  fontFamily: "bungee",
+                }}
+                className="text-2xl font-bold"
+              >
+                {channelName}
+              </center>
+
+              {channel?.isActive && (
+                <button
+                  className="w-full px-4 py-1 text-sm flex items-center justify-center bg-white border-[0.75rem] border-[#F4F4F4] rounded-full"
+                  type="button"
+                  onClick={() => copyLink(channel?.link)}
+                >
+                  <RiLinkUnlink /> &nbsp; Copy Channel Link
+                </button>
+              )}
+              <button
+                className={cn(
+                  "w-full px-4 py-1 text-sm border-[0.75px] text-white rounded-full",
+                  {
+                    "bg-[#FF3B30]  border-[1rem] border-[#FFB1AD]":
+                      channel?.isActive,
+                    "bg-[#24C163] border-[1rem] border-[#d9f7e5]":
+                      !channel?.isActive,
+                  },
+                )}
+                type="button"
+                onClick={() => disableChannelFunc(channel?.isActive, channelId)}
+                disabled={isPending}
+              >
+                {isPending
+                  ? "Disabling..."
+                  : channel?.isActive
+                    ? "Disable Channel Link"
+                    : "Active Channel Link"}
+              </button>
+            </article>
+          )}
+        </PopUp>
       )}
     </section>
   );

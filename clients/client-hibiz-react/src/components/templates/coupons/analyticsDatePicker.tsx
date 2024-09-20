@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import { cn } from "@hi/common";
 import { formatDate } from "@/components/utils/helper";
@@ -13,7 +13,7 @@ enum DatePickerEnum {
 
 type DateRange = [Date | null, Date | null];
 
-const AnalyticsDatePicker = () => {
+const MemoAnalyticsDatePicker = () => {
   const now = new Date();
   const oneWeekAgo = new Date(now);
   oneWeekAgo.setDate(now.getDate() - 7);
@@ -54,11 +54,10 @@ const AnalyticsDatePicker = () => {
         );
         end = currentDate;
       } else if (option === DatePickerEnum.CUSTOM_DATE) {
-        start = null;
-        end = null;
+        start = couponStartDate ? new Date(couponStartDate) : oneWeekAgo;
+        end = couponEndDate ? new Date(couponEndDate) : currentDate;
       }
 
-      // Update the dates in the store
       setCouponStartDate(start ? start.getTime() : null);
       setCouponEndDate(end ? end.getTime() : null);
     },
@@ -67,14 +66,23 @@ const AnalyticsDatePicker = () => {
       setShowDatePicker,
       setCouponStartDate,
       setCouponEndDate,
+      couponStartDate,
+      couponEndDate,
     ],
   );
 
   const handleDateChange = useCallback(
     (dates: DateRange) => {
       const [start, end] = dates;
-      setCouponStartDate(start ? start.getTime() : null);
-      setCouponEndDate(end ? end.getTime() : null);
+
+      // Fallback to the last week if both dates are null
+      const fallbackStart = new Date();
+      fallbackStart.setDate(fallbackStart.getDate() - 7);
+
+      const fallbackEnd = new Date();
+
+      setCouponStartDate(start ? start.getTime() : fallbackStart.getTime());
+      setCouponEndDate(end ? end.getTime() : fallbackEnd.getTime());
 
       if (start && end) {
         setShowDatePicker(false);
@@ -99,6 +107,20 @@ const AnalyticsDatePicker = () => {
       );
     }
   }, [couponStartDate, couponEndDate]);
+
+  useEffect(() => {
+    if (!couponStartDate && !couponEndDate) {
+      const currentDate = new Date();
+      let start: Date | null = null;
+      let end: Date | null = null;
+      start = new Date(currentDate);
+      start.setDate(currentDate.getDate() - 7);
+      end = currentDate;
+
+      setCouponStartDate(start ? start.getTime() : null);
+      setCouponEndDate(end ? end.getTime() : null);
+    }
+  }, []);
 
   return (
     <section>
@@ -181,4 +203,5 @@ const AnalyticsDatePicker = () => {
   );
 };
 
+const AnalyticsDatePicker = memo(MemoAnalyticsDatePicker);
 export default AnalyticsDatePicker;
