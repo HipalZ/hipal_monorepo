@@ -179,7 +179,7 @@ const couponAnalyticsRouter = new Hono()
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `http://localhost:4500/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
         });
         await link.save();
         links.push({
@@ -542,7 +542,9 @@ const couponAnalyticsRouter = new Hono()
         channelId: channelId,
       });
       if (activeCoupon && !activeCoupon.isActive) {
-        return c.redirect(`http://localhost:3000/${customLink?.customLink}`);
+        return c.redirect(
+          `https://hipal-test.hipalz.com/${customLink?.customLink}`,
+        );
       }
 
       await CouponView.create({
@@ -560,7 +562,7 @@ const couponAnalyticsRouter = new Hono()
       );
 
       return c.redirect(
-        `http://localhost:3000/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )
