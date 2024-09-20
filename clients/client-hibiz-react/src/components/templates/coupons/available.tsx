@@ -161,8 +161,8 @@ const MemoAvailable = () => {
         periodName === "birthdayweek" ||
         periodName === "birthdaymonth"
       ) {
-        setCouponStartDate(0);
-        setCouponEndDate(0);
+        setCouponStartDate(null);
+        setCouponEndDate(null);
         setExpiryCoupon("No Expiration");
         setOverAllLimit(0);
       }
