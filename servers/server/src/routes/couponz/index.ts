@@ -243,14 +243,14 @@ const couponzRouter = new Hono()
     }
 
     let channelId = await CouponChannel.findOne({
-      name: "defualt",
+      name: "default",
       businessId: createdCoupon.businessId,
     }).select("_id");
 
     if (!channelId) {
       channelId = await CouponChannel.create({
         businessId: createdCoupon.businessId,
-        name: "defualt",
+        name: "default",
         date: Date.now(),
 
         isActive: true,
