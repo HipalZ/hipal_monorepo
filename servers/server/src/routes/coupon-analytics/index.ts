@@ -356,6 +356,7 @@ const couponAnalyticsRouter = new Hono()
         );
         const channelData = {
           name: channel.channelId.name,
+          channelId: channel.channelId._id,
           isActive: channel.channelId.isActive,
           totalReach: channelView?.viewCount || 0,
           totalGrabbed: totalChannelGrabbed,
