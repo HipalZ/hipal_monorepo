@@ -29,7 +29,6 @@ const MemoCoupon = () => {
 
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
-
     if (
       couponStartDate === null &&
       couponEndDate === null &&
@@ -49,14 +48,17 @@ const MemoCoupon = () => {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
+
       }`;
     }
 
     if (overAllLimit > 0) {
+
       return `Expires after ${overAllLimit} claims`;
     }
 
     return "Expires: None";
+
   }, [couponStartDate, couponEndDate, overAllLimit]);
 
   return (

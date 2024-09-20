@@ -11,6 +11,7 @@ import { addDays, endOfMonth } from "date-fns";
 import toast from "react-hot-toast";
 import { formatDate } from "@/components/utils/helper";
 
+
 const expiryArray = [
   { id: 1, text: "No Expiration" },
   { id: 3, text: "After X Days (e.g., Expires 30 days after activation)" },
@@ -41,6 +42,7 @@ const MemoExpiry = () => {
     setSelectedPage,
     couponId,
     setExpiryAfterGrabbed,
+
   } = useCouponsStore((s) => ({
     expiryModal: s.expiryModal,
     setExpiryModal: s.setExpiryModal,
@@ -64,6 +66,7 @@ const MemoExpiry = () => {
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
 
+
     if (
       couponStartDate === null &&
       couponEndDate === null &&
@@ -73,11 +76,13 @@ const MemoExpiry = () => {
     }
 
     if (couponStartDate === null && couponEndDate !== null) {
+
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
+
 
     if (couponStartDate !== null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
@@ -89,9 +94,9 @@ const MemoExpiry = () => {
     if (overAllLimit > 0) {
       return `Expires after ${overAllLimit} claims`;
     }
-
     return "Expires: None";
   }, [couponEndDate, couponStartDate, overAllLimit]);
+
 
   const openModal = useCallback(() => {
     setExpiryModal(true);
@@ -191,7 +196,6 @@ const MemoExpiry = () => {
     ) {
       return setError("Please enter the number of claims");
     }
-
     setSelectedPage("AVAILABLE");
   }, [expiryCoupon, overAllLimit, couponId]);
 

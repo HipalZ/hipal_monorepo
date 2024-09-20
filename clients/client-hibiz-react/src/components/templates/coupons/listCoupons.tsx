@@ -68,6 +68,7 @@ const MemoListCoupons = () => {
     setLinks: s.setLinks,
   }));
 
+
   const storeCouponInfo = (coupon: any) => {
     setCouponId(coupon?._id);
     setLinks(coupon?.links);

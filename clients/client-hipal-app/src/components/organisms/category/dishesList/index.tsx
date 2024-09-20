@@ -63,6 +63,33 @@ const DishesList: FC<IDishesProps> = (props) => {
   return (
     <div>
       {subTypes?.map((category: CategoryType, index) => {
+        const headingRef = useRef(null);
+        // useEffect(() => {
+        //   const observer = new IntersectionObserver(
+        //     (entries) => {
+        //       entries.forEach((entry) => {
+        //         if (entry.isIntersecting && observerActive) {
+        //           handleCategoryInView(category);
+        //         }
+        //       });
+        //     },
+        //     {
+        //       root: null,
+        //       rootMargin: "-200px 0px 0px 0px",
+        //       threshold: 0.75,
+        //     },
+        //   );
+
+        //   if (headingRef.current) {
+        //     observer.observe(headingRef.current);
+        //   }
+
+        //   return () => {
+        //     if (headingRef.current) {
+        //       observer.unobserve(headingRef.current);
+        //     }
+        //   };
+        // }, [headingRef, category, observerActive]);
         return (
           <section
             className={"min-h-60 bg-base-100 w-full pb-4"}
