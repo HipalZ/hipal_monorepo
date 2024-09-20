@@ -68,7 +68,6 @@ const MemoListCoupons = () => {
     setLinks: s.setLinks,
   }));
 
-
   const storeCouponInfo = (coupon: any) => {
     setCouponId(coupon?._id);
     setLinks(coupon?.links);
@@ -126,29 +125,29 @@ const MemoListCoupons = () => {
       {coupons?.length ? (
         coupons.map((coupon: any) => (
           <div
-            key={coupon._id}
+            key={coupon?._id}
             className="relative w-full cursor-pointer text-left md:w-[22rem] lg:max-w-[19.25rem] 2xl:max-w-[21rem]"
             onClick={() => storeCouponInfo(coupon)}
           >
             <article
               className="shadow-light flex h-16 overflow-hidden rounded-t-2xl bg-[#6A32DF30]"
-              style={{ backgroundColor: coupon.bgColour || "#6A32DF30" }}
+              style={{ backgroundColor: coupon?.bgColour || "#6A32DF30" }}
             >
               <figure>
                 <img
-                  src={coupon.image || CouponImages}
-                  alt={coupon.name}
+                  src={coupon?.image || CouponImages}
+                  alt={coupon?.name}
                   className="ml-2 mt-2 w-[5rem] rounded-xl"
                 />
               </figure>
               <section className="flex flex-col justify-center flex-1 ml-4">
                 <h3 className="text-lg font-semibold text-black">
-                  {coupon.name}
+                  {coupon?.name}
                 </h3>
                 <p className="text-sm text-black">
-                  {coupon.conditions?.couponEndDate
+                  {coupon?.conditions?.couponEndDate
                     ? `Expires in ${Math.ceil(
-                        (coupon.conditions.couponEndDate - Date.now()) /
+                        (coupon?.conditions.couponEndDate - Date.now()) /
                           (1000 * 60 * 60 * 24),
                       )} days`
                     : "No expiry"}
@@ -157,12 +156,12 @@ const MemoListCoupons = () => {
             </article>
             <article className="flex items-center justify-between p-4 bg-white shadow-dark rounded-b-2xl">
               <small>
-                {coupon.config.discountType === "PERCENTAGE"
-                  ? `${coupon.config.value}% Discount`
-                  : `₹ ${coupon.config.value} Fixed Discount`}
+                {coupon?.config?.discountType === "PERCENTAGE"
+                  ? `${coupon?.config?.value}% Discount`
+                  : `₹ ${coupon?.config?.value} Fixed Discount`}
               </small>
               <small>
-                {coupon.conditions?.expiryClaimLimit?.overAllLimit
+                {coupon?.conditions?.expiryClaimLimit?.overAllLimit
                   ? "Limited expiry"
                   : "No expiry"}
               </small>
@@ -170,12 +169,12 @@ const MemoListCoupons = () => {
             <button
               type="button"
               className={`absolute -top-3 right-4 rounded-2xl px-4 py-1 text-xs ${
-                coupon.isPublish
+                coupon?.isPublish
                   ? "bg-[#24C163] text-white"
                   : "bg-gray-400 text-black"
               }`}
             >
-              {coupon.isPublish ? "ACTIVE" : "INACTIVE"}
+              {coupon?.isPublish ? "ACTIVE" : "INACTIVE"}
             </button>
           </div>
         ))

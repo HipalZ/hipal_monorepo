@@ -108,9 +108,9 @@ const MemoInfo = () => {
                     <li
                       key={index}
                       className="mb-2 text-blue-500 underline cursor-pointer"
-                      onClick={() => copyToClipboard(link.link)}
+                      onClick={() => copyToClipboard(link?.link)}
                     >
-                      {link.channelId.name}
+                      {link?.channelId?.name || "Link"}
                     </li>
                   ))}
                 </ul>

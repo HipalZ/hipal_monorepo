@@ -64,6 +64,9 @@ const MemoSubScribeModal = ({
     if (res.status === 400 || res.status === 403 || res.status === 404) {
       return router.push(`/${customLink}/user/signup`);
     }
+    if (res.status === 409) {
+      setSubscribeModal(false);
+    }
     if (res.status === 201 || res.status === 200) {
       if (response?.reward > 0 && response?.count === 1) {
         setIsModalOpen(true);
