@@ -7,7 +7,7 @@ import App from "./App.tsx";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
 
-//
+///
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

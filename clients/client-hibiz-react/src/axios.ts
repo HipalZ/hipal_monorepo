@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/configs";
 import axiosConstructor from "axios";
-//
+///
 const axios = axiosConstructor.create({
   baseURL: BASE_URL,
 });
