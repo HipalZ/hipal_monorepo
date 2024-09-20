@@ -242,10 +242,20 @@ const couponzRouter = new Hono()
       });
     }
 
-    const channelId = await CouponChannel.findOne({
+    let channelId = await CouponChannel.findOne({
       name: "defualt",
       businessId: createdCoupon.businessId,
     }).select("_id");
+
+    if (!channelId) {
+      channelId = await CouponChannel.create({
+        businessId: createdCoupon.businessId,
+        name: "defualt",
+        date: Date.now(),
+
+        isActive: true,
+      });
+    }
 
     await CouponLink.create({
       businessId: createdCoupon.businessId,
