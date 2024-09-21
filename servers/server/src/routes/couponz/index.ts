@@ -218,6 +218,14 @@ const couponzRouter = new Hono()
       requestData.conditions.requiredFields = [];
     }
 
+    if (
+      requestData.conditions.availability.startTime === 0 &&
+      requestData.conditions.availability.endTime === 0
+    ) {
+      requestData.conditions.availability.startTime = 0;
+      requestData.conditions.availability.endTime = 24;
+    }
+
     const createdCoupon = await Couponz.create(requestData);
 
     if (!createdCoupon) {
