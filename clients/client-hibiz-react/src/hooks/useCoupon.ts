@@ -493,3 +493,26 @@ export const useGetAllBusinessChannels = () => {
     isLoading,
   };
 };
+
+export const useCreateChannel = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (payload: { businessId: string; name: string }) => {
+      const res = await apiRpc["coupon-analytics"].channels.$post({
+        json: payload,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["getAllBusinessChannels"] });
+      toast.success("Channel created successfully!");
+    },
+    onError: (error) => {
+      toast.error("Failed to create channel");
+      console.error("Error creating channel:", error);
+    },
+  });
+
+  return { createChannel: mutate, isPending };
+};
