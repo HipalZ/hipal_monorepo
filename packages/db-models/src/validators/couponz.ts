@@ -217,7 +217,7 @@ export const couponSchema = z.object({
       .optional(),
     couponStartDate: positiveNumber("couponStartDate"),
     couponEndDate: positiveNumber("couponEndDate"),
-    tc: z.string().optional(),
+    tc: z.array(z.string()).optional(),
   }),
 });
 
