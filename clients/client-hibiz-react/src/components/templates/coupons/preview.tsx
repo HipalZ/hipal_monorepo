@@ -27,14 +27,12 @@ const MemoPreview = () => {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // State variables for cropping
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
 
-  // Handle image upload and compression
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -49,12 +47,10 @@ const MemoPreview = () => {
     }
   };
 
-  // Handle crop completion
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // Create image for cropping
   const createImage = (url) =>
     new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
@@ -64,7 +60,6 @@ const MemoPreview = () => {
       image.src = url;
     });
 
-  // Get cropped image
   const getCroppedImg = async (imageSrc, pixelCrop) => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement("canvas");
@@ -108,7 +103,6 @@ const MemoPreview = () => {
     });
   };
 
-  // Show cropped image and update state
   const showCroppedImage = useCallback(async () => {
     try {
       const { base64, file } = await getCroppedImg(imageSrc, croppedAreaPixels);
@@ -171,7 +165,7 @@ const MemoPreview = () => {
                 image={imageSrc}
                 crop={crop}
                 zoom={zoom}
-                aspect={9 / 16}
+                aspect={1}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}

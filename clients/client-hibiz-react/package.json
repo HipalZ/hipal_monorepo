@@ -16,6 +16,7 @@
     "bundle:production": "dotenv -e ./env/.env.production bun run bundle"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
     "@fontsource/inter": "^5.0.18",
     "@headlessui/react": "^2.0.4",
     "@hi/common": "workspace:*",

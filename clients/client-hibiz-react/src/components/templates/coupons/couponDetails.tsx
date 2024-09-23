@@ -5,8 +5,9 @@ import FixedPrice from "./fixedPrice";
 import FixedDiscount from "./fixedDiscount";
 import BottomButton from "@/components/atom/bottomButton";
 import toast from "react-hot-toast";
+import { memo, useCallback } from "react";
 
-const CouponDetails = () => {
+const MemoCouponDetails = () => {
   const {
     couponName,
     setCouponName,
@@ -17,6 +18,7 @@ const CouponDetails = () => {
     addMinimumBillAmount,
     minimumBillAmount,
     setSelectedPage,
+    isUptoPriceActive,
   } = useCouponsStore((s) => ({
     couponName: s.couponName,
     setCouponName: s.setCouponName,
@@ -27,9 +29,10 @@ const CouponDetails = () => {
     addMinimumBillAmount: s.addMinimumBillAmount,
     minimumBillAmount: s.minimumBillAmount,
     setSelectedPage: s.setSelectedPage,
+    isUptoPriceActive: s.isUptoPriceActive,
   }));
 
-  const handleNextClick = () => {
+  const handleNextClick = useCallback(() => {
     if (!couponName || couponName.trim() === "") {
       toast.error("Coupon name is required!");
       return;
@@ -38,8 +41,12 @@ const CouponDetails = () => {
       toast.error("Coupon discount is required for discount type!");
       return;
     }
-    if (couponType === "PRICE" && !couponPrice) {
+    if (couponType === "AMOUNT" && !couponPrice) {
       toast.error("Coupon price is required for price type!");
+      return;
+    }
+    if (isUptoPriceActive && !couponPrice) {
+      toast.error("Coupon price is required!");
       return;
     }
     if (addMinimumBillAmount && !minimumBillAmount) {
@@ -47,7 +54,15 @@ const CouponDetails = () => {
       return;
     }
     setSelectedPage("EXPIRED");
-  };
+  }, [
+    couponName,
+    couponType,
+    couponDiscount,
+    couponPrice,
+    isUptoPriceActive,
+    addMinimumBillAmount,
+    minimumBillAmount,
+  ]);
 
   return (
     <>
@@ -108,7 +123,11 @@ const CouponDetails = () => {
         </section>
       </section>
 
-      {couponType === "AMOUNT" && <FixedPrice />}
+      {couponType === "AMOUNT" && (
+        <article className="flex-1 mx-6">
+          <FixedPrice />{" "}
+        </article>
+      )}
       {couponType === "PERCENTAGE" && <FixedDiscount />}
 
       <BottomButton
@@ -127,5 +146,7 @@ const CouponDetails = () => {
     </>
   );
 };
+
+const CouponDetails = memo(MemoCouponDetails);
 
 export default CouponDetails;

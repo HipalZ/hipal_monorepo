@@ -36,6 +36,8 @@ const MemoListCoupons = () => {
     setIsActive,
     setCouponImage,
     setLinks,
+    setIsUptoPriceActive,
+    setAfterClaim,
   } = useCouponsStore((s) => ({
     setAddMinimumBillAmount: s.setAddMinimumBillAmount,
     setAllowLateNight: s.setAllowLateNight,
@@ -66,6 +68,8 @@ const MemoListCoupons = () => {
     setIsActive: s.setIsActive,
     setCouponImage: s.setCouponImage,
     setLinks: s.setLinks,
+    setIsUptoPriceActive: s.setIsUptoPriceActive,
+    setAfterClaim: s.setAfterClaim,
   }));
 
   const storeCouponInfo = (coupon: any) => {
@@ -75,11 +79,16 @@ const MemoListCoupons = () => {
     setCouponImage(coupon?.image);
     setCouponType(coupon?.config?.discountType);
     setCouponDiscount(coupon?.config?.value);
+    setIsUptoPriceActive(
+      coupon?.config?.discountType === "PERCENTAGE"
+        ? !!coupon?.config?.value
+        : !!coupon?.config?.upto,
+    );
     setBgColor(coupon?.bgColour);
     setCashbackAvailable(coupon?.cashbackAvailable);
     setMinimumBillAmount(coupon?.conditions?.billValue);
     setExpiryAfterGrabbed(coupon?.conditions?.expiryAfterGrabbed);
-    setTermsAndConditions(coupon?.conditions?.tc);
+    setTermsAndConditions([coupon?.conditions?.tc]);
     setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
     setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
     setIsActive(coupon?.isActive);
@@ -101,6 +110,7 @@ const MemoListCoupons = () => {
     setExpiryClaimLimitValue(
       coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
     );
+    setAfterClaim(!!coupon?.conditions?.individualUserLimit?.overAllLimit);
     setCouponForEveryOne(coupon?.conditions?.eligibleUser?.allUsers);
     setCustomDays(coupon?.conditions?.availability?.customDays);
     setStartTime(coupon?.conditions?.availability?.startTime || 0);

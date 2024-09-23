@@ -10,7 +10,7 @@ import DatePicker from "react-datepicker";
 import { addDays, endOfMonth } from "date-fns";
 import toast from "react-hot-toast";
 import { formatDate } from "@/components/utils/helper";
-
+import { Switch } from "@headlessui/react";
 
 const expiryArray = [
   { id: 1, text: "No Expiration" },
@@ -42,7 +42,8 @@ const MemoExpiry = () => {
     setSelectedPage,
     couponId,
     setExpiryAfterGrabbed,
-
+    afterClaim,
+    setAfterClaim,
   } = useCouponsStore((s) => ({
     expiryModal: s.expiryModal,
     setExpiryModal: s.setExpiryModal,
@@ -59,13 +60,14 @@ const MemoExpiry = () => {
     setSelectedPage: s.setSelectedPage,
     couponId: s.couponId,
     setExpiryAfterGrabbed: s.setExpiryAfterGrabbed,
+    afterClaim: s.afterClaim,
+    setAfterClaim: s.setAfterClaim,
   }));
 
   const [error, setError] = useState<string | null>(null);
 
   const getExpiryMessage = useCallback(() => {
     const now = new Date().getTime();
-
 
     if (
       couponStartDate === null &&
@@ -76,13 +78,11 @@ const MemoExpiry = () => {
     }
 
     if (couponStartDate === null && couponEndDate !== null) {
-
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
       return `Expires in ${daysLeft} days${
         overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
       }`;
     }
-
 
     if (couponStartDate !== null && couponEndDate !== null) {
       const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
@@ -97,6 +97,10 @@ const MemoExpiry = () => {
     return "Expires: None";
   }, [couponEndDate, couponStartDate, overAllLimit]);
 
+  const afterClaimToggle = useCallback(() => {
+    setAfterClaim(!afterClaim);
+    setOverAllLimit(0);
+  }, [afterClaim]);
 
   const openModal = useCallback(() => {
     setExpiryModal(true);
@@ -249,15 +253,26 @@ const MemoExpiry = () => {
 
         {expiryCoupon !== "No Expiration" && (
           <>
-            <h3>After No. of claims</h3>
-            <Background>
-              <input
-                type="number"
-                value={overAllLimit}
-                placeholder="Enter Number of Claims"
-                className="w-full px-4 py-3 border border-black rounded-2xl"
-                onChange={handleClaimsChange}
-              />
+            <Background className="flex-1 lg:mt-8">
+              <section className="flex items-center justify-between text-nowrap">
+                <h3>After No. of claims</h3>
+                <Switch
+                  checked={afterClaim}
+                  onChange={afterClaimToggle}
+                  className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-green-400"
+                >
+                  <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
+                </Switch>
+              </section>
+              {afterClaim && (
+                <input
+                  type="number"
+                  value={overAllLimit}
+                  placeholder="Enter Number of Claims"
+                  className="w-full px-4 py-3 mt-4 border border-black rounded-2xl"
+                  onChange={handleClaimsChange}
+                />
+              )}
             </Background>
             {error && <p className="mt-2 text-red-500">{error}</p>}
           </>
