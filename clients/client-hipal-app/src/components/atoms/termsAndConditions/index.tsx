@@ -21,9 +21,19 @@ const MemoTermsAndConditions = () => {
   }));
 
   const sentences = useMemo(() => {
-    return selectedCoupon?.conditions?.tc
-      ?.split(".")
-      .filter((sentence) => sentence.trim().length > 0);
+    const tc = selectedCoupon?.conditions?.tc;
+
+    if (tc == null) {
+      return [];
+    }
+
+    if (Array.isArray(tc)) {
+      return tc.filter((sentence) => sentence.trim().length > 0);
+    }
+    if (typeof tc === "string") {
+      return tc.split(".").filter((sentence) => sentence.trim().length > 0);
+    }
+    return [];
   }, [selectedCoupon?.conditions?.tc]);
 
   return (
