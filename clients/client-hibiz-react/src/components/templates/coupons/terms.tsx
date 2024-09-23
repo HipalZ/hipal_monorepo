@@ -65,33 +65,37 @@ const CouponConditionsBox = ({
 
   return (
     <div className="relative p-4 bg-white border border-gray-300 rounded-lg shadow-md w-[100%] max-w-[28rem]">
-      <h3 className="text-lg font-semibold text-black">
-        {couponType === "PERCENTAGE" && couponDiscount
-          ? `${couponDiscount}% off on ${
-              couponPrice > 0 ? `₹${couponPrice}` : "every bill"
-            }`
-          : `₹${couponPrice || "0"} off on ${
-              minimumBillAmount > 0 ? `₹${minimumBillAmount}` : "up to bill"
-            }`}
-      </h3>
-      <h3 className="mt-2 text-sm">
-        {getExpiryMessage()}
-        {overAllLimit > 0 &&
-          expiryCoupon !==
-            "After Specific Use (e.g., Expires after it’s used 10 times)"}
-      </h3>
-      {customDays && customDays.length > 0 ? (
-        <h3 className="mt-2 text-sm">
-          Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
-        </h3>
-      ) : (
-        <h3 className="mt-2 text-sm">Valid all the time</h3>
-      )}
+      <ul className="ml-4 list-disc ">
+        <li>
+          <h3 className="text-lg font-semibold text-black">
+            {couponType === "PERCENTAGE" && couponDiscount
+              ? `${couponDiscount}% off on ${
+                  couponPrice > 0 ? `₹${couponPrice}` : "every bill"
+                }`
+              : `₹${couponPrice || "0"} off on ${
+                  minimumBillAmount > 0 ? `₹${minimumBillAmount}` : "up to bill"
+                }`}
+          </h3>
+        </li>
+        <li className="mt-2 text-sm">
+          {getExpiryMessage()}
+          {overAllLimit > 0 &&
+            expiryCoupon !==
+              "After Specific Use (e.g., Expires after it’s used 10 times)"}
+        </li>
+        {customDays && customDays.length > 0 ? (
+          <li className="mt-2 text-sm">
+            Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
+          </li>
+        ) : (
+          <li className="mt-2 text-sm">Valid all the time</li>
+        )}
+      </ul>
       {termsAndConditions && termsAndConditions.length > 0 && (
-        <ul className="mt-4 ml-4 list-disc">
+        <ul className="ml-4 list-disc ">
           {termsAndConditions.map((term, index) => (
-            <li key={index} className="relative flex justify-between">
-              <div className="absolute w-2 h-2 bg-black rounded-full -left-4 top-2" />
+            <li key={index} className="relative flex justify-between space-y-3">
+              <div className="absolute w-1 h-1 bg-black rounded-full -left-4 top-[1.35rem]" />
               <span className="w-[96%]">{term}</span>
               <button
                 type="button"
