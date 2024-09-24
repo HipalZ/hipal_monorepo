@@ -1,5 +1,6 @@
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { calculateFinalBill } from "@/components/utils/helpers";
 import { memo } from "react";
 import { CiCirclePlus } from "react-icons/ci";
 import { RiEdit2Fill } from "react-icons/ri";
@@ -9,6 +10,20 @@ interface IBillSummary {
   handleTipSelect: (tip: string) => void;
   handleCustomTip: (e: any) => void;
   handleSaveTip: () => void;
+}
+
+function getDisplayValue(
+  billValue: number,
+  claimedCoinz: number,
+  claimCouponz: number,
+): number {
+  if (claimedCoinz > 0) {
+    return claimedCoinz;
+  }
+  if (claimCouponz > billValue) {
+    return billValue;
+  }
+  return claimCouponz;
 }
 
 const BillSummary = (props: IBillSummary) => {
@@ -75,7 +90,13 @@ const BillSummary = (props: IBillSummary) => {
                 )}
               </h1>
               <article className="self-end text-[#4CAF50] flex justify-between items-center gap-2 text-sm">
-                <h1>₹ {claimedCoinz || claimCouponz} </h1>
+                <h1>
+                  ₹ {getDisplayValue(
+                    billValue,
+                    claimedCoinz,
+                    claimCouponz,
+                  )}{" "}
+                </h1>
                 <span onClick={() => setApplyCouponz(true)}>
                   <RiEdit2Fill color="black" />
                 </span>
@@ -159,7 +180,8 @@ const BillSummary = (props: IBillSummary) => {
             </h1>
             <span className="text-base font-bold">
               {" "}
-              ₹ {billValue - claimedCoinz - claimCouponz + tips}
+              ₹{" "}
+              {calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips)}
             </span>
           </div>
         </div>

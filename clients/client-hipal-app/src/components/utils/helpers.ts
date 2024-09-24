@@ -21,6 +21,7 @@ import { initializeApp } from "firebase/app";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 import confetti from "canvas-confetti";
 import { toast } from "react-toastify";
+import { useCallback } from "react";
 
 export const getPrice = (price: number | string) => {
   if (!price || price === 0) {
@@ -798,7 +799,6 @@ export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
   return { discountValue, resetClaimedCoinz: claimedCoinz > 0 };
 };
 
-// Function to calculate discount
 const calculateDiscountValue = (
   billValue,
   discountValue,
@@ -806,22 +806,39 @@ const calculateDiscountValue = (
   upto,
 ) => {
   let discount = 0;
+
   if (discountType?.toLowerCase() === "percentage") {
     discount = (billValue * discountValue) / 100;
-    // Handle edge case for 100% discount on a bill value of 0
     if (billValue === 0 && discountValue === 100) {
-      discount = discountValue;
+      // Ensuring that the discount cannot exceed the bill amount
+      discount = Math.min(discountValue, billValue);
     }
   } else if (discountType?.toLowerCase() === "amount") {
-    discount = discountValue;
+    // Ensuring that the discount does not exceed the bill amount
+    discount = Math.min(discountValue, billValue);
   }
-  if (upto !== undefined) {
+
+  // Apply the 'upto' limit if it exists and it's a percentage discount
+  if (upto !== undefined && discountType?.toLowerCase() === "percentage") {
     discount = Math.min(discount, upto);
   }
   return discount;
 };
 
+export const calculateFinalBill = (
+  billValue: number,
+  claimedCoinz: number,
+  claimCouponz: number,
+  tips: number,
+): number => {
+  const adjustedClaimCouponz =
+    claimCouponz >= billValue ? billValue : claimCouponz;
+  const finalBillValue = billValue - claimedCoinz - adjustedClaimCouponz + tips;
+  return finalBillValue;
+};
+
 // Function to get the best coupon suggestion
+
 export const getBestCouponSuggestion = (
   availedCoupon,
   missingOutCouponz,
@@ -833,7 +850,6 @@ export const getBestCouponSuggestion = (
     availedCoupon?.config?.discountType || "percentage",
     availedCoupon?.config?.upto,
   );
-
   let bestCoupon: Coupon = null;
   let bestDiscount = availedDiscount;
   let additionalAmount = Number.POSITIVE_INFINITY;
