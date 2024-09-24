@@ -33,26 +33,34 @@ const MemoCouponDetails = () => {
   }));
 
   const handleNextClick = useCallback(() => {
-    if (!couponName || couponName.trim() === "") {
-      toast.error("Coupon name is required!");
-      return;
+    const showToast = (message: string) => toast.error(message);
+
+    if (!couponName?.trim()) {
+      return showToast("Coupon name is required!");
     }
-    if (couponType === "PERCENTAGE" && !couponDiscount) {
-      toast.error("Coupon discount is required for discount type!");
-      return;
+
+    if (
+      (couponType === "PERCENTAGE" && !couponDiscount) ||
+      (couponType === "AMOUNT" && !couponPrice) ||
+      (isUptoPriceActive && !couponPrice)
+    ) {
+      return showToast(
+        couponType === "PERCENTAGE"
+          ? "Coupon discount is required for discount type!"
+          : "Coupon price is required!",
+      );
     }
-    if (couponType === "AMOUNT" && !couponPrice) {
-      toast.error("Coupon price is required for price type!");
-      return;
-    }
-    if (isUptoPriceActive && !couponPrice) {
-      toast.error("Coupon price is required!");
-      return;
-    }
+
     if (addMinimumBillAmount && !minimumBillAmount) {
-      toast.error("Minimum bill amount is required!");
-      return;
+      return showToast("Minimum bill amount is required!");
     }
+
+    if (couponPrice > minimumBillAmount) {
+      return showToast(
+        "Coupon price should be greater than minimum bill amount!",
+      );
+    }
+
     setSelectedPage("EXPIRED");
   }, [
     couponName,

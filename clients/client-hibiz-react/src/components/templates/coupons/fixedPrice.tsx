@@ -54,24 +54,21 @@ const MemoFixedPrice = () => {
     [],
   );
 
-  const handleMinimumBillChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = Number(e.target.value);
-      if (value > 300000) {
-        setErrorMessage("Max you can claim is ₹3,00,000");
+  const handleMinimumBillChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value > 300000) {
+      setErrorMessage("Max you can claim is ₹3,00,000");
+    } else {
+      setMinimumBillAmount(value);
+      if (value <= couponPrice) {
+        setErrorMessage(
+          "Minimum bill amount should be greater than coupon price.",
+        );
       } else {
-        setMinimumBillAmount(value);
-        if (value <= couponPrice) {
-          setErrorMessage(
-            "Minimum bill amount should be greater than coupon price.",
-          );
-        } else {
-          setErrorMessage("");
-        }
+        setErrorMessage("");
       }
-    },
-    [],
-  );
+    }
+  };
 
   const handleMinimumBillToggle = useCallback(() => {
     setAddMinimumBillAmount(!addMinimumBillAmount);

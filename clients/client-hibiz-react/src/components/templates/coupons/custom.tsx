@@ -121,46 +121,33 @@ const MemoCustom = () => {
 
   const saveCouponHandler = async (isPublishStatus: boolean) => {
     let imageUrl = "";
-    if (couponImage) {
-      try {
-        imageUrl = await storeImageAfterSave(
-          selectedFile,
-          couponImage,
-          setIsLoading,
-        );
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        return;
-      }
+
+    try {
+      imageUrl = couponImage
+        ? await storeImageAfterSave(selectedFile, couponImage, setIsLoading)
+        : "";
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return;
     }
 
-    let availability;
-    if (when === "birthdayweek" || when === "birthdaymonth") {
-      availability = {
-        when: "allthetime",
-        customDays: [],
-        startTime: 0,
-        endTime: 0,
-      };
-    } else {
-      availability = {
-        when: when,
-        customDays: customDays,
-        startTime: startTime,
-        endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
-      };
-    }
+    const availability =
+      when === "birthdayweek" || when === "birthdaymonth"
+        ? { when: "allthetime", customDays: [], startTime: 0, endTime: 0 }
+        : {
+            when: when,
+            customDays: customDays,
+            startTime: startTime,
+            endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
+          };
 
-    let eligibleUser;
-    if (couponForEveryOne) {
-      eligibleUser = { allUsers: true };
-    } else {
-      eligibleUser = {
-        allUsers: false,
-        userIds: selectedUserIds.length ? selectedUserIds : undefined,
-        groupIds: selectedGroupIds.length ? selectedGroupIds : undefined,
-      };
-    }
+    const eligibleUser = couponForEveryOne
+      ? { allUsers: true }
+      : {
+          allUsers: false,
+          userIds: selectedUserIds.length ? selectedUserIds : undefined,
+          groupIds: selectedGroupIds.length ? selectedGroupIds : undefined,
+        };
 
     const payload = {
       businessId: businessData?._id || "",
@@ -188,8 +175,8 @@ const MemoCustom = () => {
         availability: availability,
         eligibleUser: eligibleUser,
         expiryAfterGrabbed: expiryAfterGrabbed,
-        couponStartDate: couponStartDate ? couponStartDate : 0,
-        couponEndDate: couponEndDate ? couponEndDate : 0,
+        couponStartDate: couponStartDate || 0,
+        couponEndDate: couponEndDate || 0,
         requiredFields: requiredFields,
         tc:
           termsAndConditions ||
@@ -197,11 +184,9 @@ const MemoCustom = () => {
       },
     };
 
-    if (couponId) {
-      await editCoupon({ payload, couponId });
-    } else {
-      await saveCoupon(payload);
-    }
+    couponId
+      ? await editCoupon({ payload, couponId })
+      : await saveCoupon(payload);
   };
 
   if (loading || isSaving || isUpdating) {
