@@ -12,7 +12,6 @@ import {
 import {
   type CouponzAvailabilityType,
   type CouponzDays,
-  type UrlModelType,
   type UserCouponGrabbType,
   couponSchema,
 } from "@hi/db-models/src/validators";
@@ -194,39 +193,49 @@ const couponzRouter = new Hono()
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+      const updateAllUserGrabb = await UserCouponGrabb.updateMany(
+        {
+          couponId: couponId,
+        },
+        {
+          isDeleted: true,
+        },
+      );
+      if (!updateAllUserGrabb) {
+        return respond(c, "Coupon not found", true, 404, {});
+      }
       return respond(c, "Coupon deleted successfully", false, 200, {});
     },
   )
   .post("/", zValidator("json", couponSchema), async (c) => {
+    const { conditions } = await c.req.json();
     const requestData = await c.req.json();
+    const { availability, eligibleUser } = conditions;
 
-    // Validation 3: Set couponStartDate and couponEndDate to 0 for specific availability.when values
     const noExpiryWhenValues = [
       "allthetime",
       "birthday",
       "birthdayweek",
       "birthdaymonth",
     ];
-    if (noExpiryWhenValues.includes(requestData.conditions.availability.when)) {
-      requestData.conditions.couponStartDate = 0;
-      requestData.conditions.couponEndDate = 0;
-      requestData.conditions.availability.startTime = 0;
-      requestData.conditions.availability.endTime = 24;
+
+    if (noExpiryWhenValues.includes(availability.when)) {
+      conditions.couponStartDate = 0;
+      conditions.couponEndDate = 0;
+      availability.startTime = 0;
+      availability.endTime = 24;
     }
 
+    // Clear requiredFields if eligibleUser has userIds or groupIds
     if (
-      requestData.conditions?.eligibleUser?.userIds?.length > 0 ||
-      requestData.conditions?.eligibleUser?.groupIds?.length > 0
+      eligibleUser?.userIds?.length > 0 ||
+      eligibleUser?.groupIds?.length > 0
     ) {
-      requestData.conditions.requiredFields = [];
+      conditions.requiredFields = [];
     }
-
-    if (
-      requestData.conditions.availability.startTime === 0 &&
-      requestData.conditions.availability.endTime === 0
-    ) {
-      requestData.conditions.availability.startTime = 0;
-      requestData.conditions.availability.endTime = 24;
+    if (availability.startTime === 0 && availability.endTime === 0) {
+      availability.startTime = 0;
+      availability.endTime = 24;
     }
 
     const createdCoupon = await Couponz.create(requestData);
@@ -239,13 +248,14 @@ const couponzRouter = new Hono()
       });
     }
 
+    // Schedule deactivation if couponEndDate is set
     if (createdCoupon.conditions.couponEndDate > 0) {
       const reminderDateObj = new Date(createdCoupon.conditions.couponEndDate);
       const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
         reminderDateObj.getMonth() + 1
       } *`;
 
-      const schedular = schedule(cronExpression, async () => {
+      schedule(cronExpression, async () => {
         await Couponz.findByIdAndUpdate(createdCoupon._id, {
           isActive: false,
           isDeleted: true,
@@ -253,6 +263,7 @@ const couponzRouter = new Hono()
       });
     }
 
+    // Find or create default channel
     let channelId = await CouponChannel.findOne({
       name: "default",
       businessId: createdCoupon.businessId,
@@ -263,23 +274,16 @@ const couponzRouter = new Hono()
         businessId: createdCoupon.businessId,
         name: "default",
         date: Date.now(),
-
         isActive: true,
       });
     }
 
+    // Generate short URL
     const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`;
-    let createShortUrl: UrlModelType = {
-      longUrl: "",
-      shortUrl: "",
-      urlCode: "",
-    };
-
     const uniqueOrderId = nanoid(10);
+    let createShortUrl = await UrlModel.findOne({ longUrl });
 
-    const exit = await UrlModel.findOne({ longUrl });
-
-    if (!exit) {
+    if (!createShortUrl) {
       createShortUrl = await UrlModel.create({
         longUrl: longUrl,
         shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
@@ -287,42 +291,35 @@ const couponzRouter = new Hono()
       });
     }
 
+    // Create coupon link
     await CouponLink.create({
       businessId: createdCoupon.businessId,
       couponId: createdCoupon._id,
       channelId: channelId?._id,
       date: Date.now(),
-      link: createShortUrl?.shortUrl || exit?.shortUrl,
+      link: createShortUrl.shortUrl,
     });
+    const { userIds = [], groupIds = [] } =
+      createdCoupon?.conditions?.eligibleUser || {};
 
-    if (
-      createdCoupon?.conditions?.eligibleUser?.userIds?.length > 0 ||
-      createdCoupon?.conditions?.eligibleUser?.groupIds?.length > 0
-    ) {
-      const groupIds = createdCoupon?.conditions?.eligibleUser?.groupIds || [];
-      const userIds = createdCoupon?.conditions?.eligibleUser?.userIds || [];
+    const scheduleCouponForUser = async (userId: string) => {
+      await createAndScheduleCoupon(
+        userId.toString(),
+        createdCoupon.businessId.toString(),
+        createdCoupon.conditions.expiryAfterGrabbed ?? 0,
+        createdCoupon._id.toString(),
+        createdCoupon.conditions.couponEndDate,
+      );
+    };
 
-      for (const userId of userIds) {
-        await createAndScheduleCoupon(
-          userId.toString(),
-          createdCoupon.businessId.toString(),
-          createdCoupon.conditions.expiryAfterGrabbed ?? 0,
-          createdCoupon._id.toString(),
-          createdCoupon.conditions.couponEndDate,
-        );
-      }
+    for (const userId of userIds) {
+      await scheduleCouponForUser(userId.toString());
+    }
 
-      for (const groupId of groupIds) {
-        const group = await GroupModel.findById(groupId);
-        for (const userId of group?.userIds || []) {
-          await createAndScheduleCoupon(
-            userId.toString(),
-            createdCoupon.businessId.toString(),
-            createdCoupon.conditions.expiryAfterGrabbed || 0,
-            createdCoupon._id.toString(),
-            createdCoupon.conditions.couponEndDate,
-          );
-        }
+    for (const groupId of groupIds) {
+      const group = await GroupModel.findById(groupId);
+      for (const userId of group?.userIds || []) {
+        await scheduleCouponForUser(userId.toString());
       }
     }
 
@@ -348,56 +345,18 @@ const couponzRouter = new Hono()
         return respond(c, "Coupon not found", true, 404, {});
       }
 
-      if (coupon.isActive) {
-        return respond(c, "Coupon is active, cannot update", true, 400, {});
-      }
-
-      // Validation 3: Set couponStartDate and couponEndDate to 0 for specific availability.when values
-      const noExpiryWhenValues = [
-        "allthetime",
-        "birthday",
-        "birthdayweek",
-        "birthdaymonth",
-      ];
-      if (
-        noExpiryWhenValues?.includes(
-          requestData?.conditions?.availability?.when,
-        )
-      ) {
-        requestData.conditions.couponStartDate = 0;
-        requestData.conditions.couponEndDate = 0;
-        requestData.conditions.availability.startTime = 0;
-        requestData.conditions.availability.endTime = 24;
-      }
-
-      if (
-        requestData.conditions?.eligibleUser?.userIds?.length > 0 ||
-        requestData.conditions?.eligibleUser?.groupIds?.length > 0
-      ) {
-        requestData.conditions.requiredFields = [];
-      }
-
-      const updateCoupon = await Couponz.findOneAndUpdate(
-        { _id: couponId, isDeleted: false },
-        requestData,
-        { new: true },
+      const updateCoupon = await Couponz.findByIdAndUpdate(
+        couponId,
+        { isActive: requestData.isActive },
+        {
+          new: true,
+        },
       );
+
       if (!updateCoupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
-      if (updateCoupon.conditions.couponEndDate > 0) {
-        const reminderDateObj = new Date(updateCoupon.conditions.couponEndDate);
-        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
-          reminderDateObj.getMonth() + 1
-        } *`;
 
-        const schedular = schedule(cronExpression, async () => {
-          await Couponz.findByIdAndUpdate(updateCoupon._id, {
-            isActive: false,
-            isDeleted: true,
-          });
-        });
-      }
       return respond(
         c,
         "Coupon updated successfully",
@@ -434,13 +393,6 @@ const couponzRouter = new Hono()
         coupon.couponId.toString(),
       );
 
-      const fetchAllExpireGrabbedCoupons =
-        (await UserCouponGrabb.find({
-          userId,
-          businessId,
-          isDeleted: true,
-        }).select("couponId")) || [];
-
       // Fetch all active coupons
       const coupons = await Couponz.find({
         $or: [
@@ -450,6 +402,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
+            isPublished: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -457,6 +410,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
+            isPublished: true,
           },
         ],
       });
@@ -469,6 +423,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             "conditions.eligibleUser.allUsers": true,
+            isPublished: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -476,6 +431,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             "conditions.eligibleUser.allUsers": true,
+            isPublished: true,
           },
         ],
       });
@@ -530,18 +486,11 @@ const couponzRouter = new Hono()
       }
 
       const uniqueCoupons = Array.from(uniqueCouponsMap.values());
-      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons.map(
-        (coupon) => coupon.couponId.toString(),
-      );
-
-      const filterCouponz = uniqueCoupons.filter(
-        (coupon) => !expireGrabbedCouponIds.includes(coupon._id.toString()),
-      );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: filterCouponz,
+        data: uniqueCoupons,
       });
     },
   )
@@ -569,7 +518,6 @@ const couponzRouter = new Hono()
       const currentTime = getCurrentTimeDecimal();
 
       let fetchAllGrabbedCoupons: UserCouponGrabbType[] = [];
-      let fetchAllExpireGrabbedCoupons: UserCouponGrabbType[] = [];
 
       if (userId) {
         fetchAllGrabbedCoupons =
@@ -577,13 +525,6 @@ const couponzRouter = new Hono()
             userId,
             businessId,
             isDeleted: false,
-          }).select("couponId")) || [];
-
-        fetchAllExpireGrabbedCoupons =
-          (await UserCouponGrabb.find({
-            userId,
-            businessId,
-            isDeleted: true,
           }).select("couponId")) || [];
       }
 
@@ -596,6 +537,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promote: true,
             isDeleted: false,
+            isPublished: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -603,6 +545,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promote: true,
             isDeleted: false,
+            isPublished: true,
           },
         ],
       });
@@ -627,22 +570,14 @@ const couponzRouter = new Hono()
         coupon?.couponId?.toString(),
       );
 
-      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons?.map(
-        (coupon) => coupon.couponId.toString(),
-      );
-
       const filteredAssignCouponz = promotCoupons?.filter(
         (coupon) => !grabbedCouponIds?.includes(coupon._id.toString()),
-      );
-
-      const filteredGrabbedCoupons = filteredAssignCouponz.filter(
-        (coupon) => !expireGrabbedCouponIds?.includes(coupon._id.toString()),
       );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: filteredGrabbedCoupons,
+        data: filteredAssignCouponz,
       });
     },
   )
@@ -786,6 +721,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promoteOnBill: true,
             isDeleted: false,
+            isPublished: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -793,6 +729,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promoteOnBill: true,
             isDeleted: false,
+            isPublished: true,
           },
         ],
       });
