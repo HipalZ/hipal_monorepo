@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from "react";
+import { useState, useRef, memo, useCallback } from "react";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import AfterGrabbingCoupon from "./previewTypes/afterGrabbingCard";
 import BeforeGrabbingCoupon from "./previewTypes/beforeGrabbing";
@@ -10,12 +10,18 @@ import { cn } from "@hi/common";
 import { toPng } from "html-to-image";
 import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
-
 import { storeImageAfterSave } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useEditCoupon, useSaveCoupon } from "@/hooks/useCoupon";
 
+const buttonData = [
+  { id: "beforeGrabbing", label: "Before Grabbing" },
+  { id: "afterGrabbing", label: "After Grabbing" },
+  { id: "smallCoupon", label: "Home Page" },
+  { id: "socialMedia", label: "Social Media" },
+  { id: "storySize", label: "Story Size" },
+];
 const MemoCustom = () => {
   const {
     bgColor,
@@ -47,43 +53,49 @@ const MemoCustom = () => {
     requiredFields,
     extendedEndTime,
     couponImage,
-  } = useCouponsStore();
+  } = useCouponsStore((s) => ({
+    bgColor: s.bgColor,
+    promoteOnBill: s.promoteOnBill,
+    promote: s.promote,
+    cashbackAvailable: s.cashbackAvailable,
+    couponName: s.couponName,
+    couponType: s.couponType,
+    couponDiscount: s.couponDiscount,
+    couponPrice: s.couponPrice,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    when: s.when,
+    minimumBillAmount: s.minimumBillAmount,
+    couponForEveryOne: s.couponForEveryOne,
+    customDays: s.customDays,
+    couponStartDate: s.couponStartDate,
+    couponEndDate: s.couponEndDate,
+    expiryAfterGrabbed: s.expiryAfterGrabbed,
+    termsAndConditions: s.termsAndConditions,
+    selectedUserIds: s.selectedUserIds,
+    selectedGroupIds: s.selectedGroupIds,
+    overAllLimit: s.overAllLimit,
+    expiryClaimLimitValue: s.expiryClaimLimitValue,
+    couponId: s.couponId,
+    setPromoteOnBill: s.setPromoteOnBill,
+    setPromote: s.setPromote,
+    setCashbackAvailable: s.setCashbackAvailable,
+    requiredFields: s.requiredFields,
+    extendedEndTime: s.extendedEndTime,
+    couponImage: s.couponImage,
+  }));
+
   const { selectedFile } = useMenuPageStore((s) => ({
     selectedFile: s.selectedFile,
   }));
 
   const { saveCoupon, isPending: isSaving } = useSaveCoupon();
-  const { editCoupon, isPending: isUpdating } = useEditCoupon(); // Use edit coupon hook
+  const { editCoupon, isPending: isUpdating } = useEditCoupon();
   const businessData = useBusinessData((s) => s.businessData);
   const [loading, setIsLoading] = useState(false);
 
   const [selectedPreview, setSelectedPreview] = useState("beforeGrabbing");
   const previewRef = useRef<HTMLDivElement>(null);
-
-  const renderPreview = () => {
-    switch (selectedPreview) {
-      case "beforeGrabbing":
-        return <BeforeGrabbingCoupon />;
-      case "afterGrabbing":
-        return <AfterGrabbingCoupon />;
-      case "smallCoupon":
-        return <SmallCoupon />;
-      case "socialMedia":
-        return <SocialMedia />;
-      case "storySize":
-        return <StorySize />;
-      default:
-        return null;
-    }
-  };
-
-  const buttonData = [
-    { id: "beforeGrabbing", label: "Before Grabbing" },
-    { id: "afterGrabbing", label: "After Grabbing" },
-    { id: "smallCoupon", label: "Home Page" },
-    { id: "socialMedia", label: "Social Media" },
-    { id: "storySize", label: "Story Size" },
-  ];
 
   const handleDownload = async () => {
     if (previewRef.current === null) {
@@ -97,7 +109,7 @@ const MemoCustom = () => {
       const dataUrl = await toPng(previewElement);
 
       const link = document.createElement("a");
-      link.download = `${selectedPreview}-preview.png`;
+      link.download = `${selectedPreview}.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {
@@ -185,14 +197,10 @@ const MemoCustom = () => {
       },
     };
 
-    try {
-      if (couponId) {
-        await editCoupon({ payload, couponId });
-      } else {
-        await saveCoupon(payload);
-      }
-    } catch (error) {
-      console.error("Failed to save coupon:", error);
+    if (couponId) {
+      await editCoupon({ payload, couponId });
+    } else {
+      await saveCoupon(payload);
     }
   };
 
@@ -208,7 +216,11 @@ const MemoCustom = () => {
     <section className="flex flex-col gap-6 lg:flex-row pb-[7rem]">
       <div className="flex-1 p-2 rounded-2xl">
         <div className="p-4 rounded-xl" ref={previewRef}>
-          {renderPreview()}
+          {selectedPreview === "beforeGrabbing" && <BeforeGrabbingCoupon />}
+          {selectedPreview === "afterGrabbing" && <AfterGrabbingCoupon />}
+          {selectedPreview === "smallCoupon" && <SmallCoupon />}
+          {selectedPreview === "socialMedia" && <SocialMedia />}
+          {selectedPreview === "storySize" && <StorySize />}
         </div>
         {selectedPreview === "storySize" ||
         selectedPreview === "socialMedia" ? (

@@ -1,5 +1,4 @@
 import Hi from "@/assets/svg/hi.svg";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";
@@ -19,7 +18,6 @@ import Info from "@/components/templates/coupons/info";
 import Preview from "@/components/templates/coupons/preview";
 import Terms from "@/components/templates/coupons/terms";
 import { routeToDashboard } from "@/components/utils/routes";
-import { useDeleteCoupon } from "@/hooks/useCoupon";
 import { cn } from "@hi/common";
 import { startTransition, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
@@ -59,9 +57,9 @@ const Coupons = () => {
       case "Terms":
         return "Couponz terms";
       case "PREVIEW":
-        return "Preview";
+        return "Customize Coupon";
       case "CUSTOM":
-        return "Before Grabbing";
+        return "Previews";
       case "INFO":
         return "Coupon Info";
       case "ANALYTICS":
@@ -139,14 +137,6 @@ const Coupons = () => {
     }
   }, [selectedPage, businessData?._id]);
 
-  const { mutate: deleteCoupon, isPending } = useDeleteCoupon();
-
-  const deleteCouponFunc = () => {
-    if (couponId) {
-      deleteCoupon(couponId);
-    }
-  };
-
   const rightButton = useCallback(() => {
     switch (selectedPage) {
       case "MANAGE":
@@ -163,24 +153,12 @@ const Coupons = () => {
         return <span className="text-xl font-semibold">4/5</span>;
       case "GRABBING":
         return <span className="text-xl font-semibold">5/5</span>;
-      case "INFO":
-        return (
-          <button
-            type="button"
-            onClick={deleteCouponFunc}
-            className="px-4 py-2 text-white bg-red-600 rounded-2xl"
-          >
-            Delete
-          </button>
-        );
+
       default:
         break;
     }
   }, [selectedPage]);
 
-  if (isPending) {
-    return <LoadingSpinner />;
-  }
   return (
     <main className="relative">
       <section

@@ -10,6 +10,7 @@ const MemoSmallCoupon = () => {
     bgColor,
     couponType,
     couponName,
+    couponImage,
   } = useCouponsStore();
 
   const formatDate = (timestamp: number | null) => {
@@ -19,78 +20,51 @@ const MemoSmallCoupon = () => {
   };
 
   return (
-    <section className="p-6">
-      <article className="on_active_bounce bg-white overflow-hidden relative flex flex-col justify-center items-center m-4 text-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0">
-        {[...Array(5)].map((_, i) => (
+    <section className="flex items-center justify-center p-4">
+      <article className="on_active_bounce bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[12.5rem] w-[20rem] px-2 shrink-0">
+        {/* Dots on the left side */}
+        {[...Array(3)].map((_, i) => (
           <div
             key={`left-${i.toString()}`}
-            className=" absolute w-[1.5rem] h-[1.5rem] rounded-full "
+            className="absolute w-[1.5rem] h-[1.5rem] rounded-full mt-8"
             style={{
-              left: "-12px",
+              left: "-14px",
               top: `${(i + 0.2) * 20}%`,
               backgroundColor: bgColor,
             }}
           />
         ))}
 
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={`right-${i.toString()}`}
-            className=" absolute w-[1.5rem] h-[1.5rem] rounded-full "
-            style={{
-              right: "-12px",
-              top: `${(i + 0.2) * 20}%`,
-              backgroundColor: bgColor,
-            }}
-          />
-        ))}
-
-        <article className="flex w-full">
-          <img
-            src={birthdayPlaceholder}
-            alt="birthdayPlaceholder"
-            width={31}
-            height={31}
-            className="object-cover w-10 h-10 mr-4 bg-center rounded-full"
-          />
-          <h4 className="text-sm font-bold leading-4 text-primary">
+        {/* Left side: Content */}
+        <article className="flex flex-col items-start w-[70%] pl-4 -mt-6 pb-[1rem]">
+          <h4 className="mb-2 text-lg font-bold text-primary">
             {couponName || "Coupon Name"}
           </h4>
+          <p className="text-sm text-primary">
+            Expires : {formatDate(couponEndDate)}
+          </p>
+          <p className="text-[0.6rem] mt-1">Terms & conditions</p>
+          <h1 className="mt-2 text-xl font-extrabold text-primary">
+            {couponType === "PERCENTAGE" && couponDiscount
+              ? `${couponDiscount}% OFF`
+              : `₹${couponPrice || "0"} OFF`}
+          </h1>
         </article>
 
-        <hr
-          className="w-full col-span-2 my-3"
-          style={{
-            backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-              "#000",
-            )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            height: "2px",
-          }}
-        />
-
-        <section className="grid w-full grid-cols-2 text-xs">
-          <article className="justify-self-start">
-            <h1>Expires on</h1>
-            <p>{formatDate(couponEndDate)}</p>
-            <p className="text-[0.6rem] mt-4">Terms & conditions</p>
-          </article>
-          <article className="text-right justify-self-end">
-            <h1 className="text-base font-semibold">
-              {" "}
-              {couponType === "PERCENTAGE" && couponDiscount
-                ? `${couponDiscount}% off`
-                : `₹${couponPrice || "0"} off`}
-            </h1>
-            <button
-              type="button"
-              className="px-2 py-1 mt-5 text-xs rounded-full on_active_bounce text-base-200 bg-primary"
-            >
-              Redeem Now
-            </button>
-          </article>
-        </section>
+        {/* Right side: Image */}
+        <article className="w-[30%] flex justify-end items-center -mt-9">
+          <img
+            src={couponImage || birthdayPlaceholder}
+            alt="coupon"
+            className="object-cover w-[6rem] h-[9rem] rounded-xl"
+          />
+        </article>
+        <button
+          type="button"
+          className="absolute bottom-0 w-full py-1 -ml-2 text-white bg-black"
+        >
+          Redeem Now
+        </button>
       </article>
     </section>
   );

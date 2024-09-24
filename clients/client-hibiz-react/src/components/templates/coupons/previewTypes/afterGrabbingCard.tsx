@@ -37,7 +37,7 @@ const MemoAfterGrabbingCoupon = () => {
         }}
         className="rounded-t-xl"
       />
-      <div className="relative grid w-64 grid-cols-2 gap-6 p-4 -mt-px text-black bg-white rounded-b-xl">
+      <div className="relative grid w-64 grid-cols-2 gap-6 p-4 -mt-px overflow-hidden text-black bg-white rounded-b-xl">
         <div className="flex flex-col items-start space-y-1">
           <h3 className="text-xs text-gray-500">Min. Bill Amount</h3>
           <p className="text-xl font-semibold">

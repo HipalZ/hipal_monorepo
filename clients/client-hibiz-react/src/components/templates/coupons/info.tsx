@@ -4,7 +4,7 @@ import Background from "@/components/atom/feildBackground";
 import BottomButton from "@/components/atom/bottomButton";
 import { memo, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useEditCoupon } from "@/hooks/useCoupon";
+import { useDeleteCoupon, useEditCoupon } from "@/hooks/useCoupon";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoInfo = () => {
@@ -25,15 +25,40 @@ const MemoInfo = () => {
     isPublish,
     couponId,
     links,
-  } = useCouponsStore();
+  } = useCouponsStore((s) => ({
+    couponName: s.couponName,
+    couponType: s.couponType,
+    couponDiscount: s.couponDiscount,
+    couponPrice: s.couponPrice,
+    customDays: s.customDays,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    couponEndDate: s.couponEndDate,
+    expiryClaimLimitValue: s.expiryClaimLimitValue,
+    couponForEveryOne: s.couponForEveryOne,
+    setSelectedPage: s.setSelectedPage,
+    selectedPage: s.selectedPage,
+    isActive: s.isActive,
+    isPublish: s.isPublish,
+    couponId: s.couponId,
+    links: s.links,
+  }));
 
   const { editCoupon, isPending } = useEditCoupon();
 
+  const { mutate: deleteCoupon, isPending: deletePending } = useDeleteCoupon();
+
+  const deleteCouponFunc = useCallback(() => {
+    if (couponId) {
+      deleteCoupon(couponId);
+    }
+  }, [couponId]);
+
   const handlePause = useCallback(
     async (isPublish: boolean) => {
-      if (isActive) {
-        return toast.error("Cannot pause active coupon");
-      }
+      // if (isActive) {
+      //   return toast.error("Cannot pause active coupon");
+      // }
       if (!couponId) {
         return toast.error("Coupon ID is missing. Cannot pause.");
       }
@@ -51,12 +76,12 @@ const MemoInfo = () => {
     [couponId],
   );
 
-  const EditCoupon = useCallback(() => {
-    if (isActive) {
-      return toast.error("Cannot edit active coupon");
-    }
-    setSelectedPage("DETAILS");
-  }, [selectedPage, isActive]);
+  // const EditCoupon = useCallback(() => {
+  //   if (isActive) {
+  //     return toast.error("Cannot edit active coupon");
+  //   }
+  //   setSelectedPage("DETAILS");
+  // }, [selectedPage, isActive]);
 
   const copyToClipboard = (link: string) => {
     navigator.clipboard.writeText(link).then(
@@ -70,7 +95,7 @@ const MemoInfo = () => {
     );
   };
 
-  if (isPending) {
+  if (isPending || deletePending) {
     return <LoadingSpinner />;
   }
 
@@ -253,8 +278,9 @@ const MemoInfo = () => {
             onClick: () => handlePause(!isPublish),
           },
           {
-            text: "Edit",
-            onClick: EditCoupon,
+            text: "delete",
+            onClick: deleteCouponFunc,
+            delete: true,
           },
         ]}
         fixed

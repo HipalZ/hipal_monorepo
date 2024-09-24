@@ -81,14 +81,14 @@ const MemoListCoupons = () => {
     setCouponDiscount(coupon?.config?.value);
     setIsUptoPriceActive(
       coupon?.config?.discountType === "PERCENTAGE"
-        ? !!coupon?.config?.value
-        : !!coupon?.config?.upto,
+        ? !!coupon?.config?.upto
+        : !!coupon?.config?.value,
     );
     setBgColor(coupon?.bgColour);
     setCashbackAvailable(coupon?.cashbackAvailable);
     setMinimumBillAmount(coupon?.conditions?.billValue);
     setExpiryAfterGrabbed(coupon?.conditions?.expiryAfterGrabbed);
-    setTermsAndConditions([coupon?.conditions?.tc]);
+    setTermsAndConditions(coupon?.conditions?.tc);
     setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
     setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
     setIsActive(coupon?.isActive);
