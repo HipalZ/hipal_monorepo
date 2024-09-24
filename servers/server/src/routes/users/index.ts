@@ -27,7 +27,7 @@ import { z } from "zod";
 import { respond } from "../../utils/response";
 const FCM = require("fcm-node");
 
-// Hash a password
+// Hash a passwordss
 export async function hashPassword(password: string): Promise<string> {
   try {
     const hash = await argon2.hash(password);

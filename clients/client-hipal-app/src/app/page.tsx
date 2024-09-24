@@ -9,32 +9,32 @@ import UserExp from "@/components/landingPage/userExp";
 import Logo from "@/assets/topsection/logo.svg";
 import Image from "next/image";
 
-//
+///
 export default function Home() {
   return (
     <section className="bg-black">
-    <center className="mb-4">
+      <center className="mb-4">
+        <Image
+          className="nav_bar_logo_mobile show_mobile"
+          width={30}
+          height={30}
+          src={Logo}
+          alt="Logo"
+        />
+      </center>
       <Image
-        className="nav_bar_logo_mobile show_mobile"
-        width={30}
-        height={30}
+        className="nav_bar hide_mobile"
+        width={60}
+        height={60}
         src={Logo}
         alt="Logo"
       />
-    </center>
-    <Image
-      className="nav_bar hide_mobile"
-      width={60}
-      height={60}
-      src={Logo}
-      alt="Logo"
-    />
-    <button type="button" className="nav_btn hide_mobile">
-      Contact us
-    </button>
-    <section style={{ position: "relative" }}>
+      <button type="button" className="nav_btn hide_mobile">
+        Contact us
+      </button>
+      <section style={{ position: "relative" }}>
         <HeroSection />
-    </section>
+      </section>
       <div className="hide_mobile">
         <Restaurant />
       </div>
@@ -107,13 +107,12 @@ export default function Home() {
         </center>
       </section>
       <section className="mx-6">
-        
-      <EcoSystems />
-      <Auto />
-      <UserExp />
-      <Services />
-      <Footer />
+        <EcoSystems />
+        <Auto />
+        <UserExp />
+        <Services />
+        <Footer />
       </section>
-  </section>
+    </section>
   );
 }
