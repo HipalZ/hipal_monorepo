@@ -268,7 +268,7 @@ const couponzRouter = new Hono()
       });
     }
 
-    const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`;
+    const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`;
     let createShortUrl: UrlModelType = {
       longUrl: "",
       shortUrl: "",
@@ -282,7 +282,7 @@ const couponzRouter = new Hono()
     if (!exit) {
       createShortUrl = await UrlModel.create({
         longUrl: longUrl,
-        shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+        shortUrl: `https://api.hipalz.com/hipalz/${uniqueOrderId}`,
         urlCode: uniqueOrderId,
       });
     }
