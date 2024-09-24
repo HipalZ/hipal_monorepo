@@ -7,6 +7,7 @@ import {
   GroupAnalytic,
   LoyaltySettings,
   Order,
+  OutLetInfo,
   Payment,
   PaymentAlert,
   Reviews,
@@ -86,18 +87,33 @@ startOfToday.setHours(0, 0, 0, 0);
 const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
-//calculateDiscount
-const calculateDiscount = (
-  total_bill: number,
+const calculateDiscount = async (
+  businessId: string,
+  totalBill: number,
   appliedCoins: number,
-  paid_Money: number,
 ) => {
-  const valueAfterCoins = Math.abs(total_bill - appliedCoins || 0);
-  const subTotal = (total_bill * 100) / 105;
-  const discount = (valueAfterCoins - 1.05 * subTotal) / 1.05;
-  const finalDiscount = Math.round(Math.abs(discount));
+  const outLetInfo = await OutLetInfo.findOne({ businessId }).select(
+    "serviceChargePercentage gstPercentage",
+  );
 
-  return finalDiscount;
+  const billValue = totalBill; // bill value
+  const serviceChargePercentage =
+    (outLetInfo.serviceChargePercentage || 0) / 100; // service charge
+  const gstPercentage = (outLetInfo.gstPercentage || 5) / 100; // tax charge
+  const coins = appliedCoins; // coins
+  const finalBillValue = billValue - coins;
+
+  const estimatedSubTotal =
+    billValue / (1 + gstPercentage + serviceChargePercentage);
+
+  const discount = Math.round(
+    Math.abs(
+      finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
+        estimatedSubTotal,
+    ),
+  );
+
+  return discount;
 };
 
 //filter groups
@@ -584,10 +600,10 @@ const paymentsRouter = new Hono()
         if (!saveOrder) return respond(c, "Order not created", true, 400, {});
         let posDiscount = 0;
         if (Number(claimedCoins) > 0) {
-          posDiscount = calculateDiscount(
+          posDiscount = await calculateDiscount(
+            businessId,
             Number(billValue),
             Number(claimedCoins),
-            Number(total),
           );
         }
         await PaymentAlert.create(
@@ -947,10 +963,10 @@ const paymentsRouter = new Hono()
           );
           let posDiscount = 0;
           if (claimCoins > 0) {
-            posDiscount = calculateDiscount(
+            posDiscount = await calculateDiscount(
+              payload.payment.entity.notes.businessId,
               Number(getOrder?.billValue),
               claimCoins,
-              Number(getOrder?.total),
             );
           }
 

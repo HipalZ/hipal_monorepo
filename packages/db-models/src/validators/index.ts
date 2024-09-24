@@ -44,6 +44,7 @@ export * from "./tags";
 export * from "./tagType";
 export * from "./token";
 export * from "./uniquelyYours";
+export * from "./urlModel";
 export * from "./user";
 export * from "./userAnalytics";
 export * from "./UserCouponClaimed";

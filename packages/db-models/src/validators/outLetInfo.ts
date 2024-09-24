@@ -93,6 +93,8 @@ export const outLetInfoSchema = z.object({
   placeId: z.string().min(1).max(100).optional(),
   placeUrl: z.string().url().min(10).max(100).optional(),
   specialDay: z.number().optional(),
+  serviceChargePercentage: z.coerce.number().default(0).optional(),
+  gstPercentage: z.coerce.number().default(5).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
