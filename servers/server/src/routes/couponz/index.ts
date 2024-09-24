@@ -5,12 +5,14 @@ import {
   CouponView,
   Couponz,
   GroupModel,
+  UrlModel,
   User,
   UserCouponGrabb,
 } from "@hi/db-models";
 import {
   type CouponzAvailabilityType,
   type CouponzDays,
+  type UrlModelType,
   type UserCouponGrabbType,
   couponSchema,
 } from "@hi/db-models/src/validators";
@@ -19,6 +21,7 @@ import { Hono } from "hono";
 import { schedule } from "node-cron";
 import { z } from "zod";
 
+import { nanoid } from "nanoid";
 import { respond } from "../../utils/response";
 
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
@@ -265,12 +268,31 @@ const couponzRouter = new Hono()
       });
     }
 
+    const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`;
+    let createShortUrl: UrlModelType = {
+      longUrl: "",
+      shortUrl: "",
+      urlCode: "",
+    };
+
+    const uniqueOrderId = nanoid(10);
+
+    const exit = await UrlModel.findOne({ longUrl });
+
+    if (!exit) {
+      createShortUrl = await UrlModel.create({
+        longUrl: longUrl,
+        shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+        urlCode: uniqueOrderId,
+      });
+    }
+
     await CouponLink.create({
       businessId: createdCoupon.businessId,
       couponId: createdCoupon._id,
       channelId: channelId?._id,
       date: Date.now(),
-      link: `https://api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`,
+      link: createShortUrl?.shortUrl || exit?.shortUrl,
     });
 
     if (
@@ -284,7 +306,7 @@ const couponzRouter = new Hono()
         await createAndScheduleCoupon(
           userId.toString(),
           createdCoupon.businessId.toString(),
-          createdCoupon.conditions.expiryAfterGrabbed || 0,
+          createdCoupon.conditions.expiryAfterGrabbed ?? 0,
           createdCoupon._id.toString(),
           createdCoupon.conditions.couponEndDate,
         );

@@ -692,6 +692,7 @@ const MemoCreateBanner = () => {
             </article>
           </section>
           <BottomButton
+            fixed
             buttons={[
               {
                 text: isLoading ? (
@@ -729,18 +730,24 @@ const MemoCreateBanner = () => {
           />
         </section>
       </main>
-      <CropperPopup
-        show={showCropper}
-        onSave={handleCrop}
-        onClose={() => setShowCropper(false)}
-      >
-        <ReactCropper
-          image={cropping.image}
-          ref={cropperRef}
-          width={400}
-          height={400}
+      <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
+        <section className="my-[10rem]">
+          <ReactCropper
+            image={cropping.image}
+            ref={cropperRef}
+            width={400}
+            height={400}
+          />
+        </section>
+        <BottomButton
+          buttons={[
+            {
+              text: "Crop",
+              onClick: handleCrop,
+            },
+          ]}
         />
-      </CropperPopup>
+      </PopUp>
       {colorWheelBackground && (
         <PopUp
           show={colorWheelBackground}

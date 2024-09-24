@@ -190,8 +190,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     },
 
     tc: {
-      type: String,
-      required: false,
+      type: [String],
     },
   }),
 });

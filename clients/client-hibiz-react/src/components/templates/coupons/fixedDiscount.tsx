@@ -1,5 +1,5 @@
 import useCouponsStore from "@/components/store/useCouponsStore";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import FixedPrice from "./fixedPrice";
 import Background from "@/components/atom/feildBackground";
 import { cn } from "@hi/common";
@@ -33,24 +33,27 @@ const MemoFixedDiscount = () => {
     setCouponDiscount: s.setCouponDiscount,
   }));
 
-  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = Number(e.target.value);
-    if (Number.isNaN(value)) {
-      return;
-    }
-    if (value > 100) {
-      value = 100;
-    }
-    setCouponDiscount(value);
-  };
+  const handleDiscountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = Number(e.target.value);
+      if (Number.isNaN(value)) {
+        return;
+      }
+      if (value > 100) {
+        value = 100;
+      }
+      setCouponDiscount(value);
+    },
+    [],
+  );
 
-  const handlePredefinedDiscount = (discount: number) => {
+  const handlePredefinedDiscount = useCallback((discount: number) => {
     setCouponDiscount(discount);
-  };
+  }, []);
 
   return (
-    <>
-      <article className="mx-6 mt-6">
+    <section className="flex flex-col lg:flex-row">
+      <article className="flex-1 mx-6 mt-6">
         <label className="font-semibold opacity-50" htmlFor="discount">
           Select Discount
         </label>
@@ -86,8 +89,10 @@ const MemoFixedDiscount = () => {
           ))}
         </div>
       </article>
-      <FixedPrice />
-    </>
+      <article className="flex-1 mx-6 lg:mr-6 lg:mx-0">
+        <FixedPrice />
+      </article>
+    </section>
   );
 };
 

@@ -9,6 +9,7 @@ import { IoMdArrowDropdown } from "react-icons/io";
 import PopUp from "@/components/atom/popUp";
 import { cn } from "@hi/common";
 import toast from "react-hot-toast";
+import TimePicker from "./timePicker";
 
 const periodArray = [
   { id: 1, name: "allthetime", text: "All the time Till it doesn’t expire" },
@@ -50,54 +51,6 @@ const CustomDayButtons = ({ customDays = [], handleCustomDayToggle }: any) => (
         {day.name}
       </button>
     ))}
-  </div>
-);
-
-const convertDecimalToTime = (decimalTime: number) => {
-  const hours = Math.floor(decimalTime);
-  const minutes = Math.round((decimalTime - hours) * 100);
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0",
-  )}`;
-};
-
-const TimePicker = ({
-  startTime,
-  endTime,
-  extendedEndTime,
-  handleTimeChange,
-  errorMessage,
-}: any) => (
-  <div className="flex flex-col justify-center gap-4 lg:flex-row lg:justify-evenly">
-    <div className="flex items-center justify-between gap-4">
-      <label>Start Time:</label>
-      <input
-        type="time"
-        value={convertDecimalToTime(startTime)}
-        onChange={(e) => handleTimeChange(e.target.value, "start")}
-        className="px-2 py-1 border rounded-xl"
-      />
-    </div>
-    <div className="flex items-center justify-between gap-4">
-      <label>End Time:</label>
-      <input
-        type="time"
-        value={convertDecimalToTime(endTime)}
-        onChange={(e) => handleTimeChange(e.target.value, "end")}
-        className="px-2 py-1 border rounded-xl"
-      />
-    </div>
-    {extendedEndTime > 0 && (
-      <div className="mt-2">
-        <p className="text-sm text-green-600">
-          Extended End Time: {convertDecimalToTime(extendedEndTime)}
-        </p>
-      </div>
-    )}
-    {errorMessage && (
-      <p className="mt-2 text-sm text-red-500">{errorMessage}</p>
-    )}
   </div>
 );
 

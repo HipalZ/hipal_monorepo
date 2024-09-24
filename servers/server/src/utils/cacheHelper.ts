@@ -5,6 +5,10 @@ interface MerchantConfig {
   razorpayKeySecret: string;
   razorpayWebhookSecret: string;
 }
+
+interface ShortUrl {
+  longUrl: string;
+}
 const options = {
   max: 50000,
   // for use with tracking overall storage size
@@ -27,4 +31,12 @@ export const setMerchantConfig = async (
   config: unknown,
 ) => {
   cache.set(merchantId, config as MerchantConfig);
+};
+
+export const setShortUrl = async (urlCode: string, longUrl: string) => {
+  cache.set(urlCode, longUrl);
+};
+
+export const getShortUrl = async (urlCode: string) => {
+  return cache.get(urlCode);
 };

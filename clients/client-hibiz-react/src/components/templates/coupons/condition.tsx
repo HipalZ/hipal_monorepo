@@ -4,6 +4,7 @@ import useCouponsStore from "@/components/store/useCouponsStore";
 import { cn } from "@hi/common";
 import BottomButton from "@/components/atom/bottomButton";
 import toast from "react-hot-toast";
+import { Switch } from "@headlessui/react";
 
 const MemoCondition = () => {
   const {
@@ -16,6 +17,8 @@ const MemoCondition = () => {
     setSelectedPage,
     couponEndDate,
     couponStartDate,
+    afterExpiry,
+    setAfterExpiry,
   } = useCouponsStore((s) => ({
     expiryClaimLimit: s.expiryClaimLimit,
     setExpiryClaimLimit: s.setExpiryClaimLimit,
@@ -26,6 +29,8 @@ const MemoCondition = () => {
     setSelectedPage: s.setSelectedPage,
     couponEndDate: s.couponEndDate,
     couponStartDate: s.couponStartDate,
+    afterExpiry: s.afterExpiry,
+    setAfterExpiry: s.setAfterExpiry,
   }));
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -99,28 +104,44 @@ const MemoCondition = () => {
     setSelectedPage,
   ]);
 
+  const expiryGrabToggle = useCallback(() => {
+    setAfterExpiry(!afterExpiry);
+    setExpiryHours(0);
+  }, [afterExpiry]);
+
   return (
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col md:flex-row lg:flex-row pb-[7rem]">
-        <section className="flex-1">
-          <h3>After grabbing coupon, it expires in</h3>
-          <Background>
-            <h3 className="mb-2 text-[#8C63FF] font-semibold">
-              Value between 0 and {Math.round(totalAvailableHours)} hours.
-            </h3>
+        <Background className="flex-1">
+          <section className="flex items-center justify-between text-nowrap">
+            <h3>After grabbing coupon, it expires in</h3>
+            <Switch
+              checked={afterExpiry}
+              onChange={expiryGrabToggle}
+              className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 transition data-[checked]:bg-green-400"
+            >
+              <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
+            </Switch>
+          </section>
+          {afterExpiry && (
+            <>
+              <center className="mb-2 text-[#8C63FF] -mx-3 font-semibold mt-4 bg-[#8C63FF30]">
+                Value between 0 and {Math.round(totalAvailableHours)} hours.
+              </center>
 
-            <input
-              type="number"
-              value={expiryHours === "" ? "" : expiryHours}
-              onChange={handleHoursChange}
-              placeholder={`Enter hours (0 to ${Math.round(
-                totalAvailableHours,
-              )} hours)`}
-              className={`w-full px-4 py-3 bg-[#EEEFF4] rounded-2xl ${
-                dateErrorMessage ? "border-red-500" : ""
-              }`}
-            />
-          </Background>
+              <input
+                type="number"
+                value={expiryHours === "" ? "" : expiryHours}
+                onChange={handleHoursChange}
+                placeholder={`Enter hours (0 to ${Math.round(
+                  totalAvailableHours,
+                )} hours)`}
+                className={`w-full px-4 py-3 bg-[#EEEFF4] rounded-2xl ${
+                  dateErrorMessage ? "border-red-500" : ""
+                }`}
+              />
+            </>
+          )}
 
           {dateErrorMessage && (
             <p className="mt-4 text-sm text-red-500">{dateErrorMessage}</p>
@@ -130,7 +151,7 @@ const MemoCondition = () => {
               Coupon expires after: {expiryHours} hour(s)
             </p>
           ) : null}
-        </section>
+        </Background>
         <section className="flex-1">
           <h3>How many times can a user claim this</h3>
           <article className="p-4 mt-2 bg-white rounded-xl">

@@ -1,4 +1,5 @@
-import { useState, memo, ChangeEvent, useCallback } from "react";
+
+import { useState, memo, type ChangeEvent, useCallback } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";

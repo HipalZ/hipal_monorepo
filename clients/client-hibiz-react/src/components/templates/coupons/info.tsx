@@ -31,6 +31,9 @@ const MemoInfo = () => {
 
   const handlePause = useCallback(
     async (isPublish: boolean) => {
+      if (isActive) {
+        return toast.error("Cannot pause active coupon");
+      }
       if (!couponId) {
         return toast.error("Coupon ID is missing. Cannot pause.");
       }
@@ -40,13 +43,12 @@ const MemoInfo = () => {
           payload: { isPublish: isPublish },
           couponId,
         });
-        toast.success("Coupon paused successfully.");
       } catch (error) {
         toast.error("Failed to pause coupon.");
         console.error("Error pausing coupon:", error);
       }
     },
-    [couponId, editCoupon],
+    [couponId],
   );
 
   const EditCoupon = useCallback(() => {

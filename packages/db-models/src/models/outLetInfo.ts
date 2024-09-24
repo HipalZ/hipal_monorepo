@@ -142,6 +142,14 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Number,
     required: false,
   },
+  serviceChargePercentage: {
+    type: Number,
+    default: 0,
+  },
+  gstPercentage: {
+    type: Number,
+    default: 5,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(
