@@ -2,7 +2,6 @@
 # FROM oven/bun:1.1.8-alpine AS base
 # FROM --platform=$BUILDPLATFORM oven/bun:1.0.31-alpine AS base
 # FROM oven/bun:1.0.31 AS base-server
-# FROM oven/bun:1.0.31 AS base-client
 FROM --platform=$BUILDPLATFORM node:lts-slim AS base
 RUN npm i -g bun
 COPY  bun.lockb /app/bun.lockb
@@ -19,7 +18,7 @@ CMD ["bun", "run", "start:prod"]
 
 FROM base AS client-hibiz-react-build
 WORKDIR /app/clients/client-hibiz-react
-RUN bun run bundle:test
+RUN bun run bundle:production
 
 FROM nginx:alpine AS client-hibiz-react
 COPY --from=client-hibiz-react-build /app/clients/client-hibiz-react/dist /usr/share/nginx/html
@@ -31,7 +30,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 FROM base AS client-hitable-react-build
 WORKDIR /app/clients/client-hitable-react
-RUN bun run bundle:test
+RUN bun run bundle:production
 
 FROM nginx:alpine AS client-hitable-react
 COPY --from=client-hitable-react-build /app/clients/client-hitable-react/dist /usr/share/nginx/html
