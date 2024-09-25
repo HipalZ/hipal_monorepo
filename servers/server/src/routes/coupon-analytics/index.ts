@@ -313,7 +313,7 @@ const couponAnalyticsRouter = new Hono()
         .select("userId -_id")
         .populate({
           path: "userId",
-          select: "name",
+          select: "name phone",
         });
       const totalClaims = await Payment.find({
         couponId: couponId,
