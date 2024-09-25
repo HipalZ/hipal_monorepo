@@ -21,7 +21,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
   );
 
   return (
-    <div className="flex flex-col !mt-0 space-y-4 no-scrollbar">
+    <div className="flex flex-col -mt-9 space-y-4 no-scrollbar pb-[2rem]">
       <div className="flex flex-col">
         <div className="flex flex-row flex-wrap flex-1 w-full">
           {dishData?.dishTypes?.length > 0 && outLetType !== "OTHER" && (

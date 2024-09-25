@@ -19,14 +19,14 @@ export type FOOD_TYPES =
 const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
   const { showCart } = useCart();
 
-  const imageIcons: Record<FOOD_TYPES, { src: string; alt: string }> = {
+  const imageIcons: Record<string, { src: string; alt: string }> = {
     mixed: { src: Mixed, alt: "Mixed" },
     alcohol: { src: Alcohol, alt: "Alcohol" },
     nonalcohol: { src: NonAlcohol, alt: "NonAlcohol" },
   };
 
   const classes: Record<
-    Exclude<FOOD_TYPES, "MIXED" | "ALCOHOL" | "NON_ALCOHOL">,
+    string,
     { border: string; circle: string; text: string }
   > = {
     veg: {
@@ -57,25 +57,22 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
   };
 
   return (
-    <div className="flex flex-row my-auto space-x-2 shrink-0">
+    <div className="flex items-center space-x-2">
       {types?.map((type, index) => {
         const sanitizedType = type.replace(/[^a-zA-Z]/g, "").toLowerCase();
-        const currentType = sanitizedType as FOOD_TYPES;
+        const currentType = sanitizedType as string;
 
-        // Check if the current type has an image associated with it
         if (imageIcons[currentType]) {
           const { src, alt } = imageIcons[currentType];
           return (
-            <div
-              key={index}
-              className={cn("flex flex-row", !showCart ? "-mt-2 -mb-8" : "")}
-            >
+            <div key={index} className={cn(!showCart ? "" : "")}>
               <Image
                 src={src}
                 width={20}
                 height={20}
                 alt={alt}
                 loading="lazy"
+                className="my-0"
               />
             </div>
           );
@@ -86,11 +83,9 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
         return (
           <div
             key={index}
-            className={`flex flex-row w-5 h-5 border-2 rounded-md ${border}`}
+            className={`w-5 h-5 border-2 rounded-md ${border} flex items-center justify-center`}
           >
-            <div
-              className={`m-auto rounded-full w-[0.5rem] h-[0.5rem] ${circle}`}
-            />
+            <div className={`rounded-full w-2 h-2 ${circle}`} />
           </div>
         );
       })}

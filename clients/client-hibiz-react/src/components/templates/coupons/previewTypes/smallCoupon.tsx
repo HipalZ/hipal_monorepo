@@ -21,22 +21,8 @@ const MemoSmallCoupon = () => {
 
   return (
     <section className="flex items-center justify-center p-4">
-      <article className="on_active_bounce bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[12.5rem] w-[20rem] px-2 shrink-0">
-        {/* Dots on the left side */}
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={`left-${i.toString()}`}
-            className="absolute w-[1.5rem] h-[1.5rem] rounded-full mt-8"
-            style={{
-              left: "-14px",
-              top: `${(i + 0.2) * 20}%`,
-              backgroundColor: bgColor,
-            }}
-          />
-        ))}
-
-        {/* Left side: Content */}
-        <article className="flex flex-col items-start w-[70%] pl-4 -mt-6 pb-[1rem]">
+      <article className="on_active_bounce bg-white rounded-2xl shadow-2xl overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[11.5rem] w-[20rem] px-2 shrink-0">
+        <article className="flex flex-col items-start w-[60%] pl-2 -mt-6 pb-[1rem]">
           <h4 className="mb-2 text-lg font-bold text-primary">
             {couponName || "Coupon Name"}
           </h4>
@@ -51,12 +37,11 @@ const MemoSmallCoupon = () => {
           </h1>
         </article>
 
-        {/* Right side: Image */}
-        <article className="w-[30%] flex justify-end items-center -mt-9">
+        <article className="w-[50%] flex justify-end items-center -mt-7">
           <img
             src={couponImage || birthdayPlaceholder}
             alt="coupon"
-            className="object-cover w-[6rem] h-[9rem] rounded-xl"
+            className="object-cover w-[8rem] h-[8rem] rounded-xl aspect-square mr-1"
           />
         </article>
         <button

@@ -5,9 +5,12 @@ import NotAvailable from "../notAvailable";
 import PlaceholderImg from "../placeholder";
 import type { IDish } from "@/components/types/businessData";
 import { memo } from "react";
+import { cn } from "@hi/common";
+import { useCart } from "@/components/store/useCart";
 
 function DishPopup({ dishData }: { dishData: IDish }) {
   const isAvailable = dishData?.availability;
+  const { showCart } = useCart();
   const handleInsideClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
@@ -35,7 +38,7 @@ function DishPopup({ dishData }: { dishData: IDish }) {
           <PlaceholderImg className="w-full h-[10rem]" />
         </div>
       )}
-      <section className="mx-4">
+      <section className={cn("mx-4", !showCart ? "" : "mt-8")}>
         <FoodDescription dishData={dishData} />
       </section>
     </div>

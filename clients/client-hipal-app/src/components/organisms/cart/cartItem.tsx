@@ -14,14 +14,22 @@ interface CartItemProp {
     id: string;
     dish: DishType;
     portion: { _id: number; name: string; price: number } | null;
-    extras: Array<{ id: string; name: string; quantity: number; price: number }>;
+    extras: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
     quantity: number;
   };
 }
 
 const CartItem = ({ cartItem }: CartItemProp) => {
   const { updateCartItem, removeFromCart } = useCartStore();
-  const imageUrl = cartItem.dish.images[0] || cartItem.dish.images[1] || cartItem.dish.images[2];
+  const imageUrl =
+    cartItem.dish.images[0] ||
+    cartItem.dish.images[1] ||
+    cartItem.dish.images[2];
   const [showDescription, setShowDescription] = useState(false);
   const [selectedDish, setSelectedDish] = useState<DishType>({} as DishType);
 
@@ -104,7 +112,7 @@ const CartItem = ({ cartItem }: CartItemProp) => {
         </div>
         {showDescription && (
           <DishData show={showDescription} onClose={closeModal}>
-            <div className="relative py-4 mx-4">
+            <div className="relative">
               <DishPopup dishData={selectedDish} />
             </div>
           </DishData>

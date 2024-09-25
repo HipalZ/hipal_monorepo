@@ -8,6 +8,7 @@ import DishQuantityButton from "../dishQuantityButton";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import type { DishType } from "@hi/db-models/src/validators";
+import "@splidejs/react-splide/css";
 
 function RecommendedDishes({
   recommendations,
@@ -30,7 +31,7 @@ function RecommendedDishes({
   return (
     <div className="-mt-4">
       <Section title="" tag="h3">
-        <div className="">
+        <div>
           <div className="flex flex-row gap-4 mb-4 text-primary">
             <ImSpoonKnife className="my-auto text-lg" />
             <h4 className="my-auto">Best Pair With</h4>
@@ -40,18 +41,28 @@ function RecommendedDishes({
             options={{
               rewind: false,
               width: "100%",
-              gap: "0.25rem",
+              gap: "0.5rem",
               autoWidth: true,
-              type: 'slide',
+              type: "slide",
               pagination: false,
-              drag: 'free',
+              drag: "free",
               snap: true,
               arrows: false,
             }}
           >
             <div className="hidden splide__arrows">
-              <button type="button" className="splide__arrow splide__arrow--prev">Prev</button>
-              <button type="button" className="splide__arrow splide__arrow--next">Next</button>
+              <button
+                type="button"
+                className="splide__arrow splide__arrow--prev"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                className="splide__arrow splide__arrow--next"
+              >
+                Next
+              </button>
             </div>
             {processedDishes?.map((dish) => (
               <SplideSlide key={dish._id?.toString()}>
@@ -60,36 +71,31 @@ function RecommendedDishes({
                     <div className="absolute bg-white left-2 top-2 rounded-xl">
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>
-                    <div className="z-10 flex flex-col overflow-hidden bg-base-content border w-[8.5rem] rounded-xl h-44 border-base-200 text-base-100">
-
-                      <div
+                    <div className="z-10 px-2 pt-2 flex flex-col overflow-hidden bg-base-300 border w-[8.5rem] rounded-lg border-base-200 text-base-content">
+                      <button
+                        type="button"
                         onClick={() => openModal(dish)}
-                        className="w-full h-32 overflow-hidden"
+                        className="w-full -mb-4 overflow-hidden"
                       >
                         {dish?.image ? (
-                          <div className="px-2 pt-2 rounded-t-xl">
-                            <Image
-                              src={dish?.image}
-                              layout="object-fit"
-                              quality={95}
-                              objectFit="cover"
-                              alt={dish?.name}
-                              placeholder="blur"
-                              blurDataURL={dish?.blurDataURL}
-                              width={150}
-                              height={150}
-                            />
-                          </div>
+                          <Image
+                            src={dish?.image}
+                            quality={95}
+                            alt={dish?.name}
+                            placeholder="blur"
+                            blurDataURL={dish?.blurDataURL}
+                            width={120}
+                            height={120}
+                            className="object-cover rounded-md aspect-[4/3]"
+                          />
                         ) : (
-                          <PlaceholderImg className="w-full h-full" />
+                          <PlaceholderImg className="w-30 h-30 rounded-2xl" />
                         )}
+                      </button>
+                      <div className="mt-6 overflow-hidden text-xs font-medium text-left capitalize whitespace-nowrap overflow-ellipsis">
+                        {dish?.name}
                       </div>
-                      <div className="flex-grow p-1 text-start">
-                        <div className="overflow-hidden text-xs font-medium capitalize whitespace-nowrap overflow-ellipsis">
-                          {dish?.name}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between px-2 pb-2 mt-2">
+                      <div className="flex items-center justify-between w-full px-2">
                         <div className="text-xs">₹{dish?.price}</div>
                         <div className="mt-1 scale-75">
                           <DishQuantityButton dishData={dish} />

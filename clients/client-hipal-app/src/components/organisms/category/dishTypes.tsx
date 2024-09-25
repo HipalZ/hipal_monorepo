@@ -3,21 +3,15 @@ import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo } from "react";
 
-function DishesTypes({
-  showHeader,
+const MemoDishesTypes = ({
   parentCategory,
   childCategory,
 }: {
-  showHeader: boolean;
   parentCategory: CategoryType[];
   childCategory: CategoryType[];
-}) {
+}) => {
   return (
-    <section
-      className={`text-primary sticky z-50 ${
-        showHeader ? "top-[3.125rem]" : "top-0"
-      }`}
-    >
+    <section className="sticky z-50 text-primary top-[3.125rem]">
       <MainTypes
         parentCategory={parentCategory}
         childCategory={childCategory}
@@ -25,7 +19,7 @@ function DishesTypes({
       <SubTypes childCategory={childCategory} />
     </section>
   );
-}
+};
 
-const MemoDishesTypes = memo(DishesTypes);
-export default MemoDishesTypes;
+const DishesTypes = memo(MemoDishesTypes);
+export default DishesTypes;
