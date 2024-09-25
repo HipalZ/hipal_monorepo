@@ -12,6 +12,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useTableData from "@/components/store/useTableData";
 import {
+  calculateFinalBill,
   calculateReward,
   cn,
   type PageStates,
@@ -200,7 +201,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       });
       const data = await res.json();
       const orderId = data?.data as string;
-      const total = billValue - claimedCoinz - claimCouponz + tips;
+      const total = calculateFinalBill(
+        billValue,
+        claimedCoinz,
+        claimCouponz,
+        tips,
+      );
       const coinsObtained =
         total * (loyaltySetting?.setCashBackPercentage / 100);
       const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
@@ -304,7 +310,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     script.onload = () => {
       const options = {
         key: merchantDetails.razorpayKeyId,
-        amount: billValue - claimedCoinz - claimCouponz + tips,
+        amount: calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips),
         currency: "INR",
         name: businessDetails?.name,
         description: "Test Transaction",
@@ -337,7 +343,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         notes: {
           address: "Paltribe solutions",
           businessId: businessId,
-          total: billValue - claimedCoinz - claimCouponz + tips,
+          total: calculateFinalBill(
+            billValue,
+            claimedCoinz,
+            claimCouponz,
+            tips,
+          ),
           claimedCoins: claimedCoinz || claimCouponz,
           billValue: billValue,
           tips: tips,
@@ -411,7 +422,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     const res = await apiRpc.payments.createOfflineOrder.$post({
       json: {
         businessId: businessId || "",
-        total: billValue - claimedCoinz - claimCouponz + tips,
+        total: calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips),
         claimedCoins: claimedCoinz || claimCouponz,
         billValue: billValue,
         userId: userDetails?._id,
@@ -432,7 +443,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       return toast.error(response?.message || "Something went wrong");
     }
     if (response?.data?.order_id) {
-      const total = billValue - claimedCoinz - claimCouponz + tips;
+      const total = calculateFinalBill(
+        billValue,
+        claimedCoinz,
+        claimCouponz,
+        tips,
+      );
       let finalReward = 0;
       if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
@@ -490,7 +506,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         },
         json: {
           businessId: businessId || "",
-          total: billValue - claimedCoinz - claimCouponz + tips,
+          total: calculateFinalBill(
+            billValue,
+            claimedCoinz,
+            claimCouponz,
+            tips,
+          ),
           currency: "INR",
           claimedCoins: claimedCoinz || claimCouponz,
           billValue: billValue,
@@ -762,7 +783,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   {!!tableName ? (
                     <h1 className="text-sm text-left inter">
                       Total Bill Amount: ₹{" "}
-                      {billValue - claimedCoinz - claimCouponz + tips}
+                      {calculateFinalBill(
+                        billValue,
+                        claimedCoinz,
+                        claimCouponz,
+                        tips,
+                      )}
                       <span className="text-xs">
                         {claimedCoinz > 0 ? (
                           <p className="text-[#4CAF50]">
@@ -793,7 +819,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           ) : (
             <PaymentComponent
               handleCreateOrder={handleCreateOrder}
-              total={billValue - claimedCoinz - claimCouponz + tips}
+              total={calculateFinalBill(
+                billValue,
+                claimedCoinz,
+                claimCouponz,
+                tips,
+              )}
             />
           )}
           <AvailableCoinz

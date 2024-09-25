@@ -1,16 +1,16 @@
-name: Build and Push client-hibiz-production Server Image
+name: Build and Push client-hitable-test Server Image
 
 on:
   push:
-    branches: ['production']
+    branches: ['test']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
-      - 'clients/client-hibiz-react/**'
+      - 'clients/client-hitable-react/**'
 
 env:
   DIGITALOCEAN_REGISTRY: registry.digitalocean.com/hipalz-repo
-  DOCKER_REPOSITORY: client-hibiz-production
+  DOCKER_REPOSITORY: client-hitable-test
 
 jobs:
   build-and-push:
@@ -27,5 +27,5 @@ jobs:
       - name: Build, tag, and push image to DigitalOcean Container Registry
         run: |
           IMAGE_TAG=latest
-          docker build --target client-hibiz-react -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
+          docker build --target client-hitable-react -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG

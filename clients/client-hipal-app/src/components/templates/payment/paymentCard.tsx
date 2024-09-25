@@ -1,5 +1,5 @@
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useMemo } from "react";
 
 interface IPaymentCard {
   offer: number;
@@ -11,6 +11,11 @@ const MemoPaymentCard = (props: IPaymentCard) => {
   const { billValue } = usePaymentStore((s) => ({
     billValue: s.billValue,
   }));
+
+  const finalBillValue = useMemo(() => {
+    return offer >= billValue ? 0 : billValue - offer;
+  }, [offer, billValue]);
+
   useEffect(() => {
     const starContainer = document.getElementById("star-container");
     if (starContainer) {
@@ -23,12 +28,13 @@ const MemoPaymentCard = (props: IPaymentCard) => {
       }
     }
   }, []);
+
   return (
     <center className="relative h-full mx-4 text-xl text-black bg-white rounded-xl">
       <div id="star-container" className="absolute inset-0 overflow-hidden" />
       <h4 className="pt-2 text-sm font-semibold">You Pay</h4>
       {offer > 0 ? (
-        <h4 className="mt-1 text-4xl font-bold">₹ {billValue - offer}</h4>
+        <h4 className="mt-1 text-4xl font-bold">₹ {finalBillValue}</h4>
       ) : null}
       <h4
         className={`${offer > 0 ? "line-through" : "text-4xl font-bold"} pb-2`}

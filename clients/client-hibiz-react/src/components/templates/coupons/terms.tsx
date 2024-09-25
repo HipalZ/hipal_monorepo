@@ -93,7 +93,7 @@ const CouponConditionsBox = ({
       </ul>
       {termsAndConditions && termsAndConditions.length > 0 && (
         <ul className="ml-4 list-disc ">
-          {termsAndConditions.map((term, index) => (
+          {termsAndConditions?.map((term, index) => (
             <li key={index} className="relative flex justify-between space-y-3">
               <div className="absolute w-1 h-1 bg-black rounded-full -left-4 top-[1.35rem]" />
               <span className="w-[96%]">{term}</span>

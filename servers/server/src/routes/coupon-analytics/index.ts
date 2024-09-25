@@ -6,11 +6,13 @@ import {
   CouponView,
   Couponz,
   Payment,
+  UrlModel,
   UserCouponClaim,
   UserCouponGrabb,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 
 const couponAnalyticsRouter = new Hono()
@@ -195,11 +197,23 @@ const couponAnalyticsRouter = new Hono()
             400,
           );
         }
+        // Generate short URL
+        const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`;
+        const uniqueOrderId = nanoid(10);
+        let createShortUrl = await UrlModel.findOne({ longUrl });
+
+        if (!createShortUrl) {
+          createShortUrl = await UrlModel.create({
+            longUrl: longUrl,
+            shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+            urlCode: uniqueOrderId,
+          });
+        }
         const link = new CouponLink({
           businessId: businessId,
           channelId: channelId,
           couponId: couponId,
-          link: `https://api.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`,
+          link: createShortUrl.shortUrl,
         });
         await link.save();
         links.push({
@@ -565,7 +579,9 @@ const couponAnalyticsRouter = new Hono()
         channelId: channelId,
       });
       if (activeCoupon && !activeCoupon.isActive) {
-        return c.redirect(`https://hipalz.com/${customLink?.customLink}`);
+        return c.redirect(
+          `https://hipal-test.hipalz.com/${customLink?.customLink}`,
+        );
       }
 
       await CouponView.create({
@@ -583,7 +599,7 @@ const couponAnalyticsRouter = new Hono()
       );
 
       return c.redirect(
-        `https://hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )

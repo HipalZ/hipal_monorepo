@@ -6,7 +6,7 @@ import Background from "@/components/atom/feildBackground";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import BottomButton from "@/components/atom/bottomButton";
 import AfterGrabbingCoupon from "./previewTypes/afterGrabbingCard";
-import { compressImage } from "@/components/utils/helper";
+import { compressImage, getCroppedImg } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import Cropper from "react-easy-crop";
 
@@ -51,58 +51,6 @@ const MemoPreview = () => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  const createImage = (url) =>
-    new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.setAttribute("crossOrigin", "anonymous");
-      image.onload = () => resolve(image);
-      image.onerror = (error) => reject(error);
-      image.src = url;
-    });
-
-  const getCroppedImg = async (imageSrc, pixelCrop) => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement("canvas");
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-    const ctx = canvas.getContext("2d");
-
-    ctx.drawImage(
-      image,
-      pixelCrop.x,
-      pixelCrop.y,
-      pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      pixelCrop.width,
-      pixelCrop.height,
-    );
-
-    // Return both the base64 string and the file
-    return new Promise<{ base64: string; file: File }>((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const file = new File([blob], "croppedImage.jpeg", {
-              type: "image/jpeg",
-            });
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64data = reader.result as string;
-              resolve({ base64: base64data, file });
-            };
-            reader.readAsDataURL(file);
-          } else {
-            reject(new Error("Canvas is empty"));
-          }
-        },
-        "image/jpeg",
-        1,
-      );
-    });
-  };
-
   const showCroppedImage = useCallback(async () => {
     try {
       const { base64, file } = await getCroppedImg(imageSrc, croppedAreaPixels);
@@ -114,18 +62,16 @@ const MemoPreview = () => {
     }
   }, [imageSrc, croppedAreaPixels]);
 
-  // Remove image
-  const removeImage = () => {
+  const removeImage = useCallback(() => {
     setCouponImage("");
     setSelectedFile(null);
-  };
+  }, [couponImage]);
 
-  // Trigger file input
-  const triggerFileInput = () => {
+  const triggerFileInput = useCallback(() => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  };
+  }, []);
 
   return (
     <section

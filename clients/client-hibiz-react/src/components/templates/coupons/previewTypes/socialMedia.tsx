@@ -2,6 +2,7 @@ import birthdayPlaceholder from "@/assets/coupon/birthdayCouponz.png";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { memo } from "react";
 import HipalLogo from "@/assets/hipal.png";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoSocialMedia = () => {
   const {
@@ -19,6 +20,8 @@ const MemoSocialMedia = () => {
     couponDiscount: s.couponDiscount,
     couponType: s.couponType,
   }));
+
+  const logo = useBusinessData((s) => s.businessData?.logo);
 
   return (
     <div className="relative mx-auto aspect-square max-w-[28rem] overflow-hidden">
@@ -61,6 +64,9 @@ const MemoSocialMedia = () => {
         }}
         className="absolute bottom-[3.75rem] left-4 text-3xl font-bold text-white"
       >
+        <figure className=" w-[4rem] rounded-full overflow-hidden">
+          <img src={logo} alt="business logo" className="rounded-full" />
+        </figure>
         {couponName || "Coupon"}
       </div>
     </div>

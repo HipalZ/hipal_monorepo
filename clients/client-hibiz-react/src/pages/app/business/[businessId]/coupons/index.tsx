@@ -1,8 +1,9 @@
 import Hi from "@/assets/svg/hi.svg";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
-import useCouponsStore from "@/components/store/useCouponsStore";
+import useCouponsStore, {
+  type CouponFlow,
+} from "@/components/store/useCouponsStore";
 import Manage from "@/components/templates/coupons/Manage";
 import AllLinkChannels from "@/components/templates/coupons/allLinkChannels";
 import CouponAnalytics from "@/components/templates/coupons/analytics";
@@ -19,13 +20,33 @@ import Info from "@/components/templates/coupons/info";
 import Preview from "@/components/templates/coupons/preview";
 import Terms from "@/components/templates/coupons/terms";
 import { routeToDashboard } from "@/components/utils/routes";
-import { useDeleteCoupon } from "@/hooks/useCoupon";
 import { cn } from "@hi/common";
-import { startTransition, useCallback } from "react";
+import { memo, startTransition, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const Coupons = () => {
+const getPageHeading = (selectedPage: CouponFlow): string => {
+  const headings: { [key in CouponFlow]?: string } = {
+    CREATE: "Create Coupon",
+    EDIT: "Edit Coupon",
+    MANAGE: "Manage Coupons",
+    DETAILS: "Coupon Details",
+    AVAILABLE: "Coupon Availability",
+    EXPIRED: "Coupon Expiration",
+    ELIGIBILITY: "Coupon Eligibility",
+    GRABBING: "Coupon Grabbing",
+    Terms: "Couponz terms",
+    PREVIEW: "Customize Coupon",
+    CUSTOM: "Previews",
+    INFO: "Coupon Info",
+    ANALYTICS: "Analytics",
+    ANALYTICS_INFO: "Coupon Info",
+    LINK_CHANNELS: "Link Channels",
+    CHANNELS: "Channels",
+  };
+  return headings[selectedPage] || "Coupon";
+};
+const MemoCoupons = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const { selectedPage, setSelectedPage, couponId, bgColor, resetFunction } =
     useCouponsStore((s) => ({
@@ -37,46 +58,6 @@ const Coupons = () => {
     }));
 
   const navigate = useNavigate();
-
-  const dynamicHeading = useCallback(() => {
-    switch (selectedPage) {
-      case "CREATE":
-        return "Create Coupon";
-      case "EDIT":
-        return "Edit Coupon";
-      case "MANAGE":
-        return "Manage Coupons";
-      case "DETAILS":
-        return "Coupon Details";
-      case "AVAILABLE":
-        return "Coupon Availability";
-      case "EXPIRED":
-        return "Coupon Expiration";
-      case "ELIGIBILITY":
-        return "Coupon Eligibility";
-      case "GRABBING":
-        return "Coupon Grabbing";
-      case "Terms":
-        return "Couponz terms";
-      case "PREVIEW":
-        return "Preview";
-      case "CUSTOM":
-        return "Before Grabbing";
-      case "INFO":
-        return "Coupon Info";
-      case "ANALYTICS":
-        return "Analytics";
-      case "ANALYTICS_INFO":
-        return "Coupon Info";
-      case "LINK_CHANNELS":
-        return "Link Channels";
-      case "CHANNELS":
-        return "Channels";
-
-      default:
-        return "Coupon";
-    }
-  }, [selectedPage]);
 
   const handleBack = useCallback(() => {
     switch (selectedPage) {
@@ -139,14 +120,6 @@ const Coupons = () => {
     }
   }, [selectedPage, businessData?._id]);
 
-  const { mutate: deleteCoupon, isPending } = useDeleteCoupon();
-
-  const deleteCouponFunc = () => {
-    if (couponId) {
-      deleteCoupon(couponId);
-    }
-  };
-
   const rightButton = useCallback(() => {
     switch (selectedPage) {
       case "MANAGE":
@@ -163,24 +136,12 @@ const Coupons = () => {
         return <span className="text-xl font-semibold">4/5</span>;
       case "GRABBING":
         return <span className="text-xl font-semibold">5/5</span>;
-      case "INFO":
-        return (
-          <button
-            type="button"
-            onClick={deleteCouponFunc}
-            className="px-4 py-2 text-white bg-red-600 rounded-2xl"
-          >
-            Delete
-          </button>
-        );
+
       default:
         break;
     }
   }, [selectedPage]);
 
-  if (isPending) {
-    return <LoadingSpinner />;
-  }
   return (
     <main className="relative">
       <section
@@ -190,7 +151,7 @@ const Coupons = () => {
         className={cn("sticky top-0 z-50 w-full bg-[#f4f4f4]")}
       >
         <MemoizedHeader
-          title={dynamicHeading()}
+          title={getPageHeading(selectedPage as CouponFlow)}
           onBack={handleBack}
           leftIcon={<FaArrowLeft />}
           rightButton={rightButton()}
@@ -215,5 +176,7 @@ const Coupons = () => {
     </main>
   );
 };
+
+const Coupons = memo(MemoCoupons);
 
 export default Coupons;
