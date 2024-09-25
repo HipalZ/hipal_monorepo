@@ -1,10 +1,10 @@
-import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo, useCallback } from "react";
 import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import BottomButton from "@/components/atom/bottomButton";
+import type { CategoryType } from "@hi/db-models/src/validators";
 
 const MemoSelectSubCategory = () => {
   const {
@@ -27,14 +27,19 @@ const MemoSelectSubCategory = () => {
     subCategories: s.subCategories,
   }));
 
-  const fuse = new Fuse(subCategories, {
-    keys: ["name"],
-    threshold: 0.3,
-  });
+  // Initialize Fuse with subcategories that have dishes
+  const fuse = new Fuse(
+    subCategories.filter((category) => category.dishIds.length > 0),
+    {
+      keys: ["name"],
+      threshold: 0.3,
+    },
+  );
 
+  // Apply search and filter out subcategories without dishes
   const filteredsubCategories = search
     ? fuse.search(search).map((result) => result.item)
-    : subCategories;
+    : subCategories.filter((category) => category.dishIds.length > 0);
 
   const handleSave = useCallback(() => {
     if (catId !== "") {
@@ -42,25 +47,22 @@ const MemoSelectSubCategory = () => {
       return;
     }
     setCategoryStep("CATEGORY_STEP_1");
-  }, [catId]);
-  // if(isLoading){
-  //     return <div><LoadingSpinner /></div>
-  // }
+  }, [catId, setCategoryStep]);
 
   return (
     <>
       <input
         type="search"
-        placeholder="Search subCategories..."
+        placeholder="Search subcategories..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className=" w-[92%] p-2 border rounded-2xl mx-6"
+        className="w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-start gap-4 mx-4 mt-4 lg:grid lg:grid-cols-2 lg:mx-6">
+      <div className="flex flex-wrap justify-start gap-3 mx-4 mt-4 lg:grid md:grid-cols-3 lg:mx-6">
         {filteredsubCategories?.map((category: CategoryType) => (
           <div
             key={category._id?.toString()}
-            className="flex relative items-center justify-between w-full p-4 bg-white rounded-2xl shadow md:max-w-[20rem] lg:max-w-[20rem]"
+            className="relative flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow md:max-w-[14.75rem] lg:max-w-[15rem]"
           >
             <label className="flex items-center">
               <input
