@@ -347,7 +347,7 @@ const couponzRouter = new Hono()
 
       const updateCoupon = await Couponz.findByIdAndUpdate(
         couponId,
-        { isActive: requestData.isActive },
+        { isPublish: requestData.isPublish },
         {
           new: true,
         },
