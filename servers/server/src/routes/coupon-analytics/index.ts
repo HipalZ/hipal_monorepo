@@ -198,14 +198,14 @@ const couponAnalyticsRouter = new Hono()
           );
         }
         // Generate short URL
-        const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`;
+        const longUrl = `https://api.hipalz.com/coupon-analytics/social/${businessId}/${couponId}/${channelId}`;
         const uniqueOrderId = nanoid(10);
         let createShortUrl = await UrlModel.findOne({ longUrl });
 
         if (!createShortUrl) {
           createShortUrl = await UrlModel.create({
             longUrl: longUrl,
-            shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+            shortUrl: `https://api.hipalz.com/hipalz/${uniqueOrderId}`,
             urlCode: uniqueOrderId,
           });
         }
@@ -579,9 +579,7 @@ const couponAnalyticsRouter = new Hono()
         channelId: channelId,
       });
       if (activeCoupon && !activeCoupon.isActive) {
-        return c.redirect(
-          `https://hipal-test.hipalz.com/${customLink?.customLink}`,
-        );
+        return c.redirect(`https://hipalz.com/${customLink?.customLink}`);
       }
 
       await CouponView.create({
@@ -599,7 +597,7 @@ const couponAnalyticsRouter = new Hono()
       );
 
       return c.redirect(
-        `https://hipal-test.hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
+        `https://hipalz.com/${customLink?.customLink}/couponz/${couponId}/${channelId}`,
       );
     },
   )
