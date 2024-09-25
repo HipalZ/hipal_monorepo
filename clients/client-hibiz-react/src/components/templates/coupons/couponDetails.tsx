@@ -55,10 +55,12 @@ const MemoCouponDetails = () => {
       return showToast("Minimum bill amount is required!");
     }
 
-    if (couponPrice > minimumBillAmount) {
-      return showToast(
-        "Coupon price should be greater than minimum bill amount!",
-      );
+    if (addMinimumBillAmount) {
+      if (couponPrice > minimumBillAmount) {
+        return showToast(
+          "Coupon price should be greater than minimum bill amount!",
+        );
+      }
     }
 
     setSelectedPage("EXPIRED");

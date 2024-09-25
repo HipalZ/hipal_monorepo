@@ -61,7 +61,7 @@ const MemoSmallCoupon = () => {
         </article>
         <button
           type="button"
-          className="absolute bottom-0 w-full py-1 -ml-2 text-white bg-black"
+          className="absolute bottom-0 w-full py-1 -ml-2 text-white bg-[#8c63ff]"
         >
           Redeem Now
         </button>

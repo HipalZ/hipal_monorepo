@@ -158,7 +158,7 @@ export interface OrderDetails {
   __v: number;
 }
 
-interface IUserId {
+export interface IUserId {
   _id: string;
   name: string;
   phone: string;

@@ -85,6 +85,12 @@ export type SetImagePreviewsFunction = (
   update: (prev: ImagePreviews) => ImagePreviews,
 ) => void;
 
+import type Area from 'react-easy-crop';
+interface CropperRef {
+  getCroppedAreaPixels: () => Area | null;
+}
+
+
 interface MenuPageStore {
   selectedPage: MenuPageType;
   setSelectedPage: (page: MenuPageType) => void;

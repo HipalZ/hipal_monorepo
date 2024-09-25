@@ -1,6 +1,10 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";
-import type { ICoupon } from "@/components/types/businessData";
+import type {
+  ICoupon,
+  IUserGroup,
+  IUserId,
+} from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -221,6 +225,9 @@ export interface IAnalytics {
   totalGrabbed: number;
   totalReach: number;
   totalSales: number;
+  grabUsers: {
+    userId: IUserId;
+  }[];
 }
 
 export const useIndividualCouponAnalytics = (to: number) => {

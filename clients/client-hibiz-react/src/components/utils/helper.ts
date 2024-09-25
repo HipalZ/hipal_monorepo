@@ -218,12 +218,13 @@ export const handleCrop = async (
   const { image, type } = cropping;
   const cropper = cropperRef.current;
   if (cropper && image && type) {
-    const coordinates = cropper?.getCoordinates();
-    if (coordinates) {
+    const croppedAreaPixels = cropper.getCroppedAreaPixels();
+    if (croppedAreaPixels) {
       try {
-        const croppedDataUrl = await cropImage(image, coordinates);
-        if (typeof croppedDataUrl === "string") {
-          const blob = await (await fetch(croppedDataUrl)).blob();
+        const croppedData = await getCroppedImg(image, croppedAreaPixels);
+        console.log("croppedData", croppedData);
+        if (croppedData && croppedData.base64) {
+          const blob = await (await fetch(croppedData.base64)).blob();
           const croppedFile = new File([blob], imageFiles[type]?.name, {
             type: "image/png",
           });
@@ -240,11 +241,17 @@ export const handleCrop = async (
             }
           };
           reader.readAsDataURL(croppedFile);
+        } else {
+          console.error("Cropped data is not available.");
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error during cropping:", err);
       }
+    } else {
+      console.error("No cropped area pixels available.");
     }
+  } else {
+    console.error("Cropper, image, or type is missing.");
   }
 };
 

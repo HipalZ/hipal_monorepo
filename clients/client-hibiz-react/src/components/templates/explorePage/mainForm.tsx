@@ -16,6 +16,13 @@ import toast from "react-hot-toast";
 import { IoMdArrowUp } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import type { SocialMediaLink } from "@/components/types/businessData";
+import type Area from "react-easy-crop";
+import EasyReactCropper from "@/components/cropper/cropper";
+import BottomButton from "@/components/atom/bottomButton";
+
+interface CropperRef {
+  getCroppedAreaPixels: () => Area | null;
+}
 
 //lazy loads
 const SocialMediaLinks = lazy(
@@ -52,7 +59,7 @@ const MemoMainForm = (props: Props) => {
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
-  const cropperRef = useRef(null);
+  const cropperRef = useRef<CropperRef>(null);
   const {
     cropping,
     bizInfo,
@@ -158,7 +165,6 @@ const MemoMainForm = (props: Props) => {
 
     const filteredPayload = filterPayload(payload);
 
-    // Conditionally add keys if they have a length greater than 0
     setIsLoading(true);
     let res: {
       status: number;
@@ -189,15 +195,54 @@ const MemoMainForm = (props: Props) => {
     setIsLoading(false);
   };
 
+  const getCroppedImg = (
+    imageSrc,
+    pixelCrop,
+    mimeType = "image/webp",
+    quality = 1,
+  ) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.src = imageSrc;
+      image.crossOrigin = "anonymous";
+
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = pixelCrop.width;
+        canvas.height = pixelCrop.height;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          ctx.drawImage(
+            image,
+            pixelCrop.x,
+            pixelCrop.y,
+            pixelCrop.width,
+            pixelCrop.height,
+            0,
+            0,
+            pixelCrop.width,
+            pixelCrop.height,
+          );
+          resolve(canvas.toDataURL(mimeType, quality));
+        } else {
+          reject(new Error("Failed to get canvas context"));
+        }
+      };
+
+      image.onerror = (err) => {
+        reject(err);
+      };
+    });
+  };
+
   const handleCrop = async () => {
     const { image, type } = cropping;
-    const cropper = cropperRef.current;
-
-    if (cropper && image && type) {
-      const coordinates = cropper?.getCoordinates();
-      if (coordinates) {
+    if (image && type) {
+      const croppedAreaPixels = cropperRef.current?.getCroppedAreaPixels();
+      if (croppedAreaPixels) {
         try {
-          const croppedDataUrl = await cropImage(image, coordinates);
+          const croppedDataUrl = await getCroppedImg(image, croppedAreaPixels);
           if (typeof croppedDataUrl === "string") {
             const blob = await (await fetch(croppedDataUrl)).blob();
             const croppedFile = new File([blob], imageFiles[type]?.name, {
@@ -239,13 +284,24 @@ const MemoMainForm = (props: Props) => {
       <button type="submit" className="cursor-pointer bottom_btn">
         Save
       </button>
-      <CropperPopup
-        show={showCropper}
-        onSave={handleCrop}
-        onClose={() => setShowCropper(false)}
-      >
-        <ReactCropper image={cropping.image} ref={cropperRef} />
-      </CropperPopup>
+      <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
+        <section className="my-[10rem]">
+          <EasyReactCropper
+            image={cropping.image}
+            ref={cropperRef}
+            height={300}
+            width={400}
+          />
+        </section>
+        <BottomButton
+          buttons={[
+            {
+              text: "Crop",
+              onClick: handleCrop,
+            },
+          ]}
+        />
+      </PopUp>
       {showUniquePopUp && (
         <PopUp show={showUniquePopUp} onClose={() => setShowUniquePopUp(false)}>
           <UniquelyYoursPopUp />

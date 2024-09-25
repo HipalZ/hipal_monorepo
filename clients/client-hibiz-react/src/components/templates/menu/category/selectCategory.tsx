@@ -36,7 +36,7 @@ const MemoSelectCategory = () => {
 
   const filteredCategories = search
     ? fuse.search(search).map((result) => result.item)
-    : categories.filter((category) => category?.subCategoryIds?.length === 0);
+    : categories;
 
   const handleSave = useCallback(() => {
     if (catId !== "") {

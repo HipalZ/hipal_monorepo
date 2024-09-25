@@ -14,6 +14,7 @@ import LinkAddons from "./[editDish]/linkAddons";
 import PortionStep from "./[editDish]/portionStep";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import SectionLoader from "@/components/atom/sectionLoader";
+import EasyReactCropper from "@/components/cropper/cropper";
 
 const MemoCreateDish = () => {
   const {
@@ -124,7 +125,7 @@ const MemoCreateDish = () => {
       {dishStep === "LINK_ADDON_STEP" && <LinkAddons data={addons || []} />}
       {dishStep === "SHOW_CROPPER" && (
         <>
-          <ReactCropper
+          <EasyReactCropper
             image={cropping.image}
             ref={cropperRef}
             width={400}
