@@ -310,7 +310,7 @@ const couponAnalyticsRouter = new Hono()
         couponId: couponId,
         date: { $gte: fromDate, $lte: toDate },
       })
-        .select("userId")
+        .select("userId -_id")
         .populate({
           path: "userId",
           select: "name",
