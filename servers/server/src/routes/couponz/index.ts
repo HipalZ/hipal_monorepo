@@ -25,7 +25,7 @@ import { respond } from "../../utils/response";
 
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
 const weekends = ["saturday", "sunday"];
-// Helper function to determine day eligibility
+// Helper function to determine day eligibilityy
 function switchDayEligibility(
   availability: CouponzAvailabilityType,
   currentDay: string,
