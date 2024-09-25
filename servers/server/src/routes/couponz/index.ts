@@ -393,6 +393,13 @@ const couponzRouter = new Hono()
         coupon.couponId.toString(),
       );
 
+      const fetchAllExpireGrabbedCoupons =
+        (await UserCouponGrabb.find({
+          userId,
+          businessId,
+          isDeleted: true,
+        }).select("couponId")) || [];
+
       // Fetch all active coupons
       const coupons = await Couponz.find({
         $or: [
@@ -402,7 +409,6 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
-            isPublished: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -410,7 +416,6 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
-            isPublished: true,
           },
         ],
       });
@@ -486,11 +491,18 @@ const couponzRouter = new Hono()
       }
 
       const uniqueCoupons = Array.from(uniqueCouponsMap.values());
+      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons.map(
+        (coupon) => coupon.couponId.toString(),
+      );
+
+      const filterCouponz = uniqueCoupons.filter(
+        (coupon) => !expireGrabbedCouponIds.includes(coupon._id.toString()),
+      );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: uniqueCoupons,
+        data: filterCouponz,
       });
     },
   )
@@ -518,6 +530,7 @@ const couponzRouter = new Hono()
       const currentTime = getCurrentTimeDecimal();
 
       let fetchAllGrabbedCoupons: UserCouponGrabbType[] = [];
+      let fetchAllExpireGrabbedCoupons: UserCouponGrabbType[] = [];
 
       if (userId) {
         fetchAllGrabbedCoupons =
@@ -525,6 +538,13 @@ const couponzRouter = new Hono()
             userId,
             businessId,
             isDeleted: false,
+          }).select("couponId")) || [];
+
+        fetchAllExpireGrabbedCoupons =
+          (await UserCouponGrabb.find({
+            userId,
+            businessId,
+            isDeleted: true,
           }).select("couponId")) || [];
       }
 
@@ -570,14 +590,22 @@ const couponzRouter = new Hono()
         coupon?.couponId?.toString(),
       );
 
+      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons?.map(
+        (coupon) => coupon.couponId.toString(),
+      );
+
       const filteredAssignCouponz = promotCoupons?.filter(
         (coupon) => !grabbedCouponIds?.includes(coupon._id.toString()),
+      );
+
+      const filteredGrabbedCoupons = filteredAssignCouponz.filter(
+        (coupon) => !expireGrabbedCouponIds?.includes(coupon._id.toString()),
       );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: filteredAssignCouponz,
+        data: filteredGrabbedCoupons,
       });
     },
   )
