@@ -62,11 +62,11 @@ const MemoFooterBanner = () => {
 
   return (
     <section className="md:flex md:space-x-10">
-      <section>
+      <section className="flex-1 mt-4">
         <SubHeader text="Footer Banner" />
         <article
           className={cn(
-            "relative rounded-xl w-full",
+            "relative rounded-xl w-full ",
             img?.footer?.length > 0
               ? ""
               : "border-dashed border-2 border-[#8C63FF]",
@@ -82,14 +82,14 @@ const MemoFooterBanner = () => {
             data-type="footer"
             accept="*"
           />
-          <figure className="w-[320px] h-[320px]">
+          <figure className="w-full max-w-[28rem] h-[320px] mx-auto lg:mx-0 ">
             <label
               htmlFor="footerInput"
               className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
             >
-              <figure className="w-[320px] h-[320px]">
+              <figure className="w-full max-w-[28rem] h-[320px]">
                 {img.footer ? (
-                  <div className="relative w-[320px] h-[320px]">
+                  <div className="relative w-full max-w-[28rem] h-[320px]">
                     <figure className="w-full h-full">
                       <img
                         src={img.footer}
@@ -107,7 +107,7 @@ const MemoFooterBanner = () => {
           </figure>
         </article>
       </section>
-      <section className="w-full mt-10 md:mt-4">
+      <section className="flex-1 w-full mt-10 md:mt-4">
         <SubHeader text="Footer Section" />
         <article className="p-4 bg-white rounded-2xl">
           <div className="relative">

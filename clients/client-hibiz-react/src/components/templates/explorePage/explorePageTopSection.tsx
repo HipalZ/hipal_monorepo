@@ -105,12 +105,12 @@ const MemoExplorePageSection = () => {
   }, [bizInfo]);
 
   return (
-    <section className="mt-16 md:flex">
+    <section className="gap-4 mt-16 md:flex">
       <section className="flex-1 mb-4">
         <SubHeader text="Banner" />
         <article
           className={cn(
-            "relative rounded-xl h-[18rem] md:aspect-square",
+            "relative rounded-xl h-[18rem]",
             img?.banner?.length > 0
               ? ""
               : " border-dashed border-2 inline-block border-[#8C63FF]",
@@ -125,13 +125,13 @@ const MemoExplorePageSection = () => {
             onChange={handleImageChange}
             data-type="banner"
           />
-          <figure className="w-[320px] h-[320px]">
+          <figure className="w-full max-w-[28rem] h-[320px] mx-auto lg:mx-0">
             <label
               htmlFor="bannerInput"
               className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
             >
               {img.banner ? (
-                <div className="relative w-[320px] h-[320px]">
+                <div className="relative w-full max-w-[28rem] h-[320px]">
                   <figure className="w-full h-full">
                     <img
                       src={img.banner}

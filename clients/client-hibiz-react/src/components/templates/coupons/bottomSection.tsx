@@ -37,7 +37,7 @@ const MemoBottomSection = ({ analytics }: { analytics?: IAnalytics }) => {
       </section>
       <section className="flex flex-wrap gap-2">
         {Object.keys(analytics)
-          .slice(5)
+          .slice(5, -1)
           .map((key, index) => {
             return (
               <center

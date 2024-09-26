@@ -75,20 +75,20 @@ export default async function Explore({
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
           <AllCouponz couponz={data?.couponz} />
-          <div className="bg-base-300">
+          <div className="bg-base-200">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
           ) && (
-            <article className="bg-base-300">
-              <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-300">
+            <article className="bg-base-200">
+              <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-200">
                 In Spotlight
               </h2>
               <article
                 className={cn(
                   data?.banners?.length === 1 ? "justify-center" : "",
-                  "h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-300 rounded-lg flex-nowrap",
+                  "h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap",
                 )}
               >
                 <EmblaCarousel2>

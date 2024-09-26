@@ -139,7 +139,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
 
   return (
     <div className="relative flex flex-col items-center px-8">
-      <section className="absolute -top-[4rem] bg-primary w-[90%] h-[11rem] rounded-squircle px-4 pt-4 text-base-100">
+      <section className="absolute -top-[4rem] bg-primary w-[90%] pb-4 rounded-squircle px-4 pt-4 text-base-100">
         <article className="flex pb-4 space-x-4">
           <figure>
             {logoUrl ? (
@@ -162,14 +162,14 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
           </figure>
           <div>
             {name && (
-              <h4 className="-mt-1 text-lg font-semibold capitalize text-[var(--sf)]">
+              <h4 className="-mt-1 text-lg font-semibold capitalize text-base-100">
                 {name}
               </h4>
             )}
             {address && (
               <>
                 <div style={{ overflow: "hidden" }}>
-                  <h6 className="text-xs font-semibold capitalize text-[var(--sf)]">
+                  <h6 className="text-xs !font-thin capitalize text-base-100">
                     {address}
                   </h6>
                 </div>
@@ -202,10 +202,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
                     onBoardBusiness();
                   }
                 }}
-                className="h-[2rem] text-xs bg-secondary-content rounded-full flex justify-center items-center px-2 space-x-2"
+                className="h-[2rem] text-xs bg-base-100 rounded-full flex justify-center items-center px-2 space-x-2"
               >
-                <button.icon size={16} className="text-[var(--sf)] " />
-                <span className="pr-1 text-[var(--sf)] ">{button?.label}</span>
+                <button.icon size={16} className="text-[var(--p)] " />
+                <span className="pr-1 text-[var(--p)] ">{button?.label}</span>
               </button>
             );
           })}

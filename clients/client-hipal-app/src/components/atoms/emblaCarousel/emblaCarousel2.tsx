@@ -153,10 +153,10 @@ const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
             <button
               key={index.toString()}
               type="button"
-              className={`embla__dot ${
+              className={`embla__dot  ${
                 index === selectedIndex
-                  ? "embla__dot--active"
-                  : "embla__dot--inactive"
+                  ? "embla__dot--active !bg-primary"
+                  : "embla__dot--inactive !opacity-50"
               }`}
               onClick={() => emblaApi?.scrollTo(index)}
             />

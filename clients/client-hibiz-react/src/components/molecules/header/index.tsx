@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = memo(
               className={cn(
                 centerImage
                   ? "mr-8"
-                  : "absolute transform -translate-x-1/2 left-1/2 top-[30%]",
+                  : "absolute transform -translate-x-1/2 left-1/2 top-6",
                 "text-2xl font-medium capitalize text-nowrap",
                 headingColor && `text-[${headingColor}]`,
               )}

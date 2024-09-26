@@ -2,7 +2,7 @@ import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
 import Hi from "@/assets/svg/hi.svg";
 import DishStepOne from "./dishStepOne";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useRef } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import DishStepTwo from "./dishStepTwo";
 import PortionStep from "./portionStep";
@@ -23,16 +23,23 @@ import toast from "react-hot-toast";
 import useErrorToasts from "@/hooks/useError";
 import AlertClosePopup from "@/components/common/alertClosePopup";
 import SectionLoader from "@/components/atom/sectionLoader";
+import EasyReactCropper from "@/components/cropper/cropper";
+
+import type { Area } from "react-easy-crop";
+interface CropperRef {
+  getCroppedAreaPixels: () => Area | null;
+}
 
 const MemoEditDish = () => {
   const { resetDishesStore } = useDishesStore((s) => ({
     resetDishesStore: s.resetDishesStore,
   }));
 
+  const cropperRef = useRef<CropperRef>(null);
+
   const {
     setEditOpenMenu,
     setDishStep,
-    cropperRef,
     cropping,
     dishStep,
     setImageFiles,
@@ -49,7 +56,6 @@ const MemoEditDish = () => {
     dishStep: s.dishStep,
     showCropper: s.showCropper,
     cropping: s.cropping,
-    cropperRef: s.cropperRef,
     setImageFiles: s.setImageFiles,
     imageFiles: s.imageFiles,
     setImagePreviews: s.setImagePreviews,
@@ -130,6 +136,7 @@ const MemoEditDish = () => {
   };
 
   const handleSaveCropper = () => {
+    console.log("handleSaveCropper");
     handleCrop(
       cropping,
       cropperRef,
@@ -170,7 +177,7 @@ const MemoEditDish = () => {
       </div>
       {dishStep === "SHOW_CROPPER" && (
         <>
-          <ReactCropper
+          <EasyReactCropper
             image={cropping.image}
             ref={cropperRef}
             width={400}

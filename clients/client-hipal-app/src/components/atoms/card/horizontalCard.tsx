@@ -14,7 +14,7 @@ import MemoRecommendedDishes from "@/components/organisms/dishDescription/recomm
 import { useCartStore } from "@/components/store/useCartStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
-const HorizontalCard = ({
+const MemoHorizontalCard = ({
   dishData,
   noAddBtn,
   noDescription,
@@ -27,10 +27,14 @@ const HorizontalCard = ({
   const [selectedDish, setSelectedDish] = useState({} as DishType);
   const { cart } = useCartStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const openModal = useCallback((dishData: DishType) => {
-    setSelectedDish(dishData);
-    setIsModalOpen(true);
-  }, []);
+  const openModal = useCallback(
+    (dishData: DishType) => {
+      console.log("openModal");
+      setSelectedDish(dishData);
+      setIsModalOpen(true);
+    },
+    [isModalOpen],
+  );
 
   const price = useMemo(
     () => getPrice(dishData?.price || 0),
@@ -156,7 +160,7 @@ const HorizontalCard = ({
               )}
             </div>
           )}
-          {isModalOpen && dishData._id === selectedDish._id && (
+          {isModalOpen && (
             <DishData show={isModalOpen} onClose={closeModal}>
               <div className="relative">
                 <DishPopup dishData={selectedDish} />
@@ -179,5 +183,5 @@ const HorizontalCard = ({
   );
 };
 
-const MemoHorizontalCard = memo(HorizontalCard);
-export default MemoHorizontalCard;
+const HorizontalCard = memo(MemoHorizontalCard);
+export default HorizontalCard;

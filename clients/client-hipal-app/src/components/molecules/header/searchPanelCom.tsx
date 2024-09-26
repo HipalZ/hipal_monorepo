@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useMemo } from "react";
-import MemoHorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useSearch } from "@/components/store/useSearch";
 import { BiArrowBack } from "react-icons/bi";
+import HorizontalCard from "@/components/atoms/card/horizontalCard";
 
 const MemoSearchPanelCom = ({ allDishes }) => {
   const {
@@ -44,10 +44,7 @@ const MemoSearchPanelCom = ({ allDishes }) => {
               key={`${dish._id} + ${index}`}
               className="py-2 border-b cursor-pointer"
             >
-              <MemoHorizontalCard
-                dishData={dish}
-                key={`${dish._id} + ${index}`}
-              />
+              <HorizontalCard dishData={dish} key={`${dish._id} + ${index}`} />
             </div>
           ),
         )}

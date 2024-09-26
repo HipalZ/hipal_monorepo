@@ -306,11 +306,15 @@ const couponAnalyticsRouter = new Hono()
         couponId: couponId,
         date: { $gte: fromDate, $lte: toDate },
       }).count();
-      const totalGrabs =
-        (await UserCouponGrabb.find({
-          couponId: couponId,
-          date: { $gte: fromDate, $lte: toDate },
-        }).count()) ?? 0;
+      const totalGrabs = await UserCouponGrabb.find({
+        couponId: couponId,
+        date: { $gte: fromDate, $lte: toDate },
+      })
+        .select("userId -_id")
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
       const totalClaims = await Payment.find({
         couponId: couponId,
         date: { $gte: fromDate, $lte: toDate },
@@ -336,13 +340,14 @@ const couponAnalyticsRouter = new Hono()
 
       const summary = {
         totalReach: totalViews,
-        totalGrabbed: totalGrabs,
+        totalGrabbed: totalGrabs?.length || 0,
         totalClaimed: totalClaims.length,
         totalDiscount: totalDiscount,
         totalSales: totalSales,
-        newUsers: totalGrabs,
+        newUsers: totalGrabs.length || 0,
         repeatUsers: repeatUsers.overAllLimit,
         successPercentage: successPercentage,
+        grabUsers: totalGrabs,
       };
 
       return c.json({ err: false, msg: "fetch successfully", data: summary });

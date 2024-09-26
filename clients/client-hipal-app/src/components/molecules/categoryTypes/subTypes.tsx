@@ -89,23 +89,24 @@ function SubTypes(props: ISubTypes) {
                 <button
                   type="button"
                   id={item?._id?.toString() + index.toString()}
-                  className="relative px-2 py-3 snap-center"
+                  className="relative h-[4rem] px-2 py-3 snap-center"
                   onClick={() => setActiveCategories(item)}
                 >
                   <article
                     className={cn(
                       window.location.hash
                         ? isActiveChildCategory === item._id?.toString()
-                          ? "bg-primary text-base-100 shadow-[inset_0_0_8px_rgba(0,0,0,0.2),_0_4px_6px_rgba(0,0,0,0.1)]"
-                          : "text-primary shadow-[inset_0_0_4px_rgba(0,0,0,0.1),_0_2px_4px_rgba(0,0,0,0.1)]"
+                          ? "bg-primary text-base-100"
+                          : "text-primary "
                         : isActiveCategory === item._id?.toString()
-                          ? "bg-primary text-base-100 shadow-[inset_0_0_8px_rgba(0,0,0,0.2),_0_4px_6px_rgba(0,0,0,0.1)]"
-                          : "text-primary shadow-[inset_0_0_4px_rgba(0,0,0,0.1),_0_2px_4px_rgba(0,0,0,0.1)]",
-                      "flex border border-primary rounded-full items-center justify-between px-2 py-1 transition-all duration-200 ease-in-out",
+                          ? "bg-primary text-base-100 "
+                          : "text-primary ",
+                      "flex border border-primary rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
+                      "h-[2rem]",
                     )}
                   >
                     {item.coverImage ? (
-                      <figure className="w-[1.75rem] max-h-[1.5rem] mr-1 rounded-full overflow-hidden">
+                      <figure className="flex-shrink-0 w-6 h-6 mr-2 overflow-hidden rounded-full aspect-square">
                         <Image
                           src={item.coverImage || ""}
                           alt="dish"
@@ -113,15 +114,15 @@ function SubTypes(props: ISubTypes) {
                           width={35}
                           height={35}
                           blurDataURL={getRandomBlurImg(50, 50)}
-                          className="object-cover max-h-[1.5rem] max-w-[2rem]"
+                          className="object-cover rounded-full aspect-square"
                         />
                       </figure>
                     ) : (
-                      <figure className="w-[2rem] h-[1.5rem] rounded-full overflow-hidden">
+                      <figure className="flex-shrink-0 w-6 h-6 overflow-hidden rounded-full aspect-square">
                         <PlaceholderImg className="rounded-full" />
                       </figure>
                     )}
-                    <h6 className="w-full text-sm">{item?.name}</h6>
+                    <h6 className="w-full text-sm text-center">{item?.name}</h6>
                   </article>
                 </button>
               </SplideSlide>

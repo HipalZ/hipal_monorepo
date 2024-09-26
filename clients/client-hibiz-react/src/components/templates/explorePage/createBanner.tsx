@@ -28,7 +28,6 @@ import { cropImage } from "@/components/cropper";
 import { BsGrid } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
 import { BannerPage, BannerType } from "@/components/utils/bannerLayouts";
-import CropperPopup from "@/components/common/cropperPopup";
 import { CiNoWaitingSign } from "react-icons/ci";
 import BottomButton from "@/components/atom/bottomButton";
 import MiddlePopUp from "@/components/atom/middlePopUp";
@@ -36,6 +35,11 @@ import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
+import ReactCropperEasy from "@/components/cropper/cropper";
+import { FixedCropper } from "react-advanced-cropper";
+import EasyReactCropper from "@/components/cropper/cropper";
+
+import type Area from "react-easy-crop";
 
 // Lazy load components
 const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
@@ -67,8 +71,12 @@ const preDefinedColors = [
   "transparent",
 ];
 
+interface CropperRef {
+  getCroppedAreaPixels: () => Area | null;
+}
+
 const MemoCreateBanner = () => {
-  const cropperRef = useRef(null);
+  const cropperRef = useRef<CropperRef>(null);
   const [isPublished, setIsPublished] = useState(false);
   const { businessId } = useParams();
   const bannerRef = useRef<HTMLInputElement | null>(null);
@@ -177,14 +185,53 @@ const MemoCreateBanner = () => {
     }
   };
 
+  const getCroppedImg = (
+    imageSrc,
+    pixelCrop,
+    mimeType = "image/webp",
+    quality = 0.9,
+  ) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.src = imageSrc;
+      image.crossOrigin = "anonymous";
+
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = pixelCrop.width;
+        canvas.height = pixelCrop.height;
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          ctx.drawImage(
+            image,
+            pixelCrop.x,
+            pixelCrop.y,
+            pixelCrop.width,
+            pixelCrop.height,
+            0,
+            0,
+            pixelCrop.width,
+            pixelCrop.height,
+          );
+          resolve(canvas.toDataURL(mimeType, quality));
+        } else {
+          reject(new Error("Failed to get canvas context"));
+        }
+      };
+
+      image.onerror = (err) => {
+        reject(err);
+      };
+    });
+  };
   const handleCrop = async () => {
     const { image, type } = cropping;
-    const cropper = cropperRef.current;
-    if (cropper && image && type) {
-      const coordinates = cropper?.getCoordinates();
-      if (coordinates) {
+    if (image && type) {
+      const croppedAreaPixels = cropperRef.current?.getCroppedAreaPixels();
+      if (croppedAreaPixels) {
         try {
-          const croppedDataUrl = await cropImage(image, coordinates);
+          const croppedDataUrl = await getCroppedImg(image, croppedAreaPixels);
           if (typeof croppedDataUrl === "string") {
             const blob = await (await fetch(croppedDataUrl)).blob();
             const croppedFile = new File([blob], imageFiles[type]?.name, {
@@ -732,7 +779,7 @@ const MemoCreateBanner = () => {
       </main>
       <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
-          <ReactCropper
+          <EasyReactCropper
             image={cropping.image}
             ref={cropperRef}
             width={400}

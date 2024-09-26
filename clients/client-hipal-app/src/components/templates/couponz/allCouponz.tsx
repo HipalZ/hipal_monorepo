@@ -99,7 +99,6 @@ const MemoAllCouponz = () => {
     enabled: !!businessDetails?.businessId,
   });
 
-  // no couponz dont show
   if (!!couponz && couponz.length === 0) return null;
 
   return (
@@ -115,75 +114,48 @@ const MemoAllCouponz = () => {
                   onClick={() => handleRoute(coupon)}
                   onKeyDown={() => handleRoute(coupon)}
                   key={coupon?._id}
-                  className={
-                    "on_active_bounce relative flex flex-col justify-center ml-4 items-center text-primary border border-1 border-primary h-[10.5rem] w-[16rem] px-6 py-3 shrink-0"
-                  }
+                  className="on_active_bounce bg-base-200 rounded-2xl  overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[11.5rem] w-[20rem] px-2 shrink-0"
                 >
-                  {[...Array(5)].map((_, i) => (
+                  <article className="flex flex-col items-start w-[60%] pl-2 -mt-6 pb-[1rem]">
+                    <h4 className="text-base font-bold leading-5 text-primary">
+                      {coupon?.name || "Coupon Name"} sankalesh ashok harak
+                    </h4>
+                    <p className="pt-2 text-xs text-primary">
+                      Expires: {formatDate(coupon?.conditions?.couponEndDate)}
+                    </p>
+                    <h1 className="pt-2 text-xl font-extrabold text-primary">
+                      {coupon?.config?.discountType === "PERCENTAGE" &&
+                      coupon?.config?.value
+                        ? `${coupon?.config?.value}% OFF`
+                        : `₹${coupon?.config?.value || "0"} OFF`}
+                    </h1>
+                  </article>
+
+                  {[...Array(3)].map((_, i) => (
                     <div
                       key={`left-${i.toString()}`}
-                      className="border border-primary absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-left"
+                      className="absolute w-[1.5rem] h-[1.5rem] rounded-full mt-8 bg-base-100"
                       style={{
-                        left: "-10px",
+                        left: "-14px",
                         top: `${(i + 0.2) * 20}%`,
                       }}
                     />
                   ))}
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={`right-${i.toString()}`}
-                      className="border border-primary absolute w-[1.5rem] h-[1.5rem] rounded-full bg-base-100 circle-right"
-                      style={{
-                        right: "-10px",
-                        top: `${(i + 0.2) * 20}%`,
-                      }}
-                    />
-                  ))}
-                  <article className="flex w-full">
-                    <Image
+
+                  <article className="w-[50%] flex justify-end items-center -mt-7">
+                    <img
                       src={coupon?.image || birthdayPlaceholder}
-                      alt="birthdayPlaceholder"
-                      width={31}
-                      height={31}
-                      className="object-cover w-10 h-10 mr-4 bg-center rounded-full"
+                      alt="coupon"
+                      className="object-cover w-[8rem] h-[8rem] rounded-xl aspect-square mr-1"
                     />
-                    <h4 className="text-base font-bold leading-4 text-primary">
-                      {coupon?.name}
-                    </h4>
                   </article>
-                  <hr
-                    className="w-full col-span-2 my-3"
-                    style={{
-                      backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                        "#000",
-                      )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "center",
-                      height: "2px",
-                    }}
-                  />
-                  <section className="grid w-full grid-cols-2 text-xs">
-                    <article className="justify-self-start">
-                      <h1>Expires on</h1>
-                      <p>{formatDate(coupon?.conditions?.couponEndDate)}</p>
-                      <p className="text-[0.6rem] mt-4">Terms & conditions</p>
-                    </article>
-                    <article className="text-right justify-self-end">
-                      <h1 className="text-base font-semibold">
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}
-                        off
-                      </h1>
-                      <button
-                        type="button"
-                        className="px-2 py-1 mt-5 text-xs rounded-full on_active_bounce text-base-200 bg-primary"
-                      >
-                        Redeem Now
-                      </button>
-                    </article>
-                  </section>
+
+                  <button
+                    type="button"
+                    className="absolute bottom-0 w-full py-1 -ml-2 text-sm text-secondary bg-primary"
+                  >
+                    Redeem Now
+                  </button>
                 </article>
               );
             })
