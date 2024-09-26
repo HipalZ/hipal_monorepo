@@ -29,9 +29,6 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
               <FoodType types={dishData.dishTypes} />
             </div>
           )}
-
-          {/* <DishTag tags={dishData?.tags} /> */}
-
           {isAvailable && (
             <div className="my-1 ml-auto shrink-0">
               <DishQuantityButton dishData={dishData} />
@@ -45,10 +42,9 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             {dishData?.name || ""}
           </div>
           <div className="my-2">
-            <span className="text-base">{price}</span>
+            <span className="text-base">₹ {price}</span>
           </div>
         </div>
-        {/* Description */}
         {dishData?.description && (
           <div className="text-xs leading-3">
             <ReadMore text={dishData?.description || ""} />
@@ -77,7 +73,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                   {portion?.name}
                 </span>
                 <span className="text-xs font-thin text-base-content">
-                  {getPrice(portion?.price)}
+                  ₹ {getPrice(portion?.price)}
                 </span>
               </div>
             ))}

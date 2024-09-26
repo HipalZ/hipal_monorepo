@@ -29,7 +29,6 @@ const MemoHorizontalCard = ({
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const openModal = useCallback(
     (dishData: DishType) => {
-      console.log("openModal");
       setSelectedDish(dishData);
       setIsModalOpen(true);
     },

@@ -2,17 +2,18 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { getRandomBlurImg } from "@/components/utils/images";
 import { cn } from "@hi/common";
-import type { CategoryType } from "@hi/db-models/src/validators";
+import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 
 interface ISubTypes {
+  parentCategory: CategoryType[];
   childCategory: CategoryType[];
 }
 
 function SubTypes(props: ISubTypes) {
-  const { childCategory } = props;
+  const { childCategory, parentCategory } = props;
   const {
     isActiveChildCategory,
     isActiveCategory,
@@ -23,26 +24,39 @@ function SubTypes(props: ISubTypes) {
     setObserverActive,
   } = useActiveClass();
 
+  console.log("parentCategory", parentCategory);
+  console.log("childCategory", childCategory);
+
   const subTypes = useMemo(
     () =>
-      childCategory.filter(
-        (category) =>
-          category.hierarchy === "CHILD" &&
+      childCategory.filter((category) => {
+        const hasNonDeletedDishes =
           category.dishIds.length > 0 &&
-          category.parentCategoryIds[0]?.toString() === isActiveParentCategory,
-      ),
+          category.dishIds.some((dish: DishType) => !dish.isDeleted);
+
+        const matchesParentCategory = category.parentCategoryIds.find(
+          (id) => id.toString() === isActiveParentCategory,
+        );
+
+        return (
+          category.hierarchy === "CHILD" &&
+          hasNonDeletedDishes &&
+          matchesParentCategory
+        );
+      }),
     [childCategory, isActiveParentCategory],
   );
 
   const setActiveCategories = useCallback(
     (category: CategoryType) => {
+      console.log("category", category);
       setObserverActive(false);
       setActiveParentCategory(category?.parentCategoryIds?.[0].toString());
       setActiveCategory(category._id?.toString() ?? "");
       setActiveChildCategory(category._id?.toString() ?? "");
       setTimeout(() => {
         setObserverActive(true);
-      }, 1000);
+      }, 2000);
       // Remove the hash from the URL
       const urlWithoutHash = window.location.href.split("#")[0];
       window.history.replaceState(null, "", urlWithoutHash);
