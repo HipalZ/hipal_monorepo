@@ -172,7 +172,7 @@ const QuickFilter = () => {
               />
               <FilterOption
                 isActive={isActiveDishType.toLowerCase() === "nonalcohol"}
-                onClick={() => handleFilter("NONALCOHOL")}
+                onClick={() => handleFilter("NON_ALCOHOL")}
                 icon={foodTypeIcons.nonalcohol}
                 label="Non Alcohol"
               />
