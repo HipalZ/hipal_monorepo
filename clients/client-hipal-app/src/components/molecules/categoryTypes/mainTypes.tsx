@@ -49,13 +49,14 @@ const MemoMainTypes = (props: IMainTypes) => {
 
   const setMainCategory = useCallback(
     (category: CategoryType) => {
+      console.log("category", category);
       setObserverActive(false);
       setActiveParentCategory(category._id?.toString() ?? "");
       setActiveParentCategoryName(category.name ?? "");
       setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
       setTimeout(() => {
         setObserverActive(true);
-      }, 1000);
+      }, 2000);
       setIsModalOpen(false);
     },
     [
@@ -104,16 +105,14 @@ const MemoMainTypes = (props: IMainTypes) => {
 
   return (
     <>
-      {/* Bottom Menu Button */}
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className="fixed px-4 py-2 rounded-full bottom-[5rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
+        className="fixed px-6 py-2 rounded-xl bottom-[5rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
       >
         Menu
       </button>
 
-      {/* Custom Modal */}
       <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="relative flex flex-col items-center justify-center p-4">
           <h2 className="absolute mb-4 text-xl font-bold top-4">Categories</h2>

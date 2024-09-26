@@ -177,7 +177,7 @@ const QuickFilter = () => {
               />
               <FilterOption
                 isActive={
-                  isActiveDishType.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
+                  isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
                   "nonalcohol"
                 }
                 onClick={() => handleFilter("NON_ALCOHOL")}

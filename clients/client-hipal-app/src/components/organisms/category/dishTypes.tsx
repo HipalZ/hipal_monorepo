@@ -16,7 +16,7 @@ const MemoDishesTypes = ({
         parentCategory={parentCategory}
         childCategory={childCategory}
       />
-      <SubTypes childCategory={childCategory} />
+      <SubTypes parentCategory={parentCategory} childCategory={childCategory} />
     </section>
   );
 };

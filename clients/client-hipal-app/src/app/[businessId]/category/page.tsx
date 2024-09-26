@@ -67,19 +67,17 @@ export default async function Page({
           parentCategory={data?.parentCategories || []}
           childCategory={data?.childCategories || []}
         />
-        <div>
-          <div className="!mt-0 !scroll-smooth">
-            <DishesList childCategory={data?.childCategories || []} />
-          </div>
-          <section className="pt-6 bg-base-100">
-            <Footer
-              themes={data?.settings || defaultThemes}
-              socialMediaLinks={data?.business?.socialMediaLinks}
-              footerDescription={data?.business?.footerDescription}
-            />
-          </section>
-          <PageName />
+        <div className="!mt-0 !scroll-smooth">
+          <DishesList childCategory={data?.childCategories || []} />
         </div>
+        <section className="pt-6 bg-base-100">
+          <Footer
+            themes={data?.settings || defaultThemes}
+            socialMediaLinks={data?.business?.socialMediaLinks}
+            footerDescription={data?.business?.footerDescription}
+          />
+        </section>
+        <PageName />
       </div>
       <CategoryPageBtn />
     </main>

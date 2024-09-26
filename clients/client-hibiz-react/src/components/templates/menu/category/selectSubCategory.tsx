@@ -67,13 +67,13 @@ const MemoSelectSubCategory = () => {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={selectedIds.includes(category._id?.toString() ?? "")}
+                checked={selectedIds.includes(category?._id?.toString() ?? "")}
                 onChange={() =>
-                  handleCategoryChange(category._id?.toString() ?? "")
+                  handleCategoryChange(category?._id?.toString() ?? "")
                 }
                 className="mr-2 text-sm text-black rounded"
               />
-              <h3 className="text-lg font-semibold">{category.name}</h3>
+              <h3 className="text-lg font-semibold">{category?.name}</h3>
             </label>
             <div className="absolute right-2">
               {category.visibility ? (
