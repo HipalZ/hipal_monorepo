@@ -108,7 +108,10 @@ const QuickFilter = () => {
 
   const handleFilter = useCallback(
     (str: string) => {
-      if (isActiveDishType.toLowerCase() === str.toLowerCase()) {
+      if (
+        isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
+        str?.replace(/[^a-zA-Z ]/, "").toLowerCase()
+      ) {
         setActiveDishType("all");
         setIsModalOpen(false);
         return;
@@ -119,7 +122,9 @@ const QuickFilter = () => {
     [setActiveDishType, isActiveDishType],
   );
 
-  const activeIcon = foodTypeIcons[isActiveDishType.toLowerCase()] || (
+  const activeIcon = foodTypeIcons[
+    isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase()
+  ] || (
     <div className="flex items-center">
       <FaCaretDown size={20} /> Filter
     </div>
@@ -171,8 +176,11 @@ const QuickFilter = () => {
                 label="Alcohol"
               />
               <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "nonalcohol"}
-                onClick={() => handleFilter("NONALCOHOL")}
+                isActive={
+                  isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
+                  "nonalcohol"
+                }
+                onClick={() => handleFilter("NON_ALCOHOL")}
                 icon={foodTypeIcons.nonalcohol}
                 label="Non Alcohol"
               />
