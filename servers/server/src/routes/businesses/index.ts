@@ -247,6 +247,15 @@ const businessesRouter = new Hono()
       if (!outLetInfo)
         return respond(c, "outletInfo not created", true, 400, {});
 
+      await Business.findByIdAndUpdate(
+        requestData.businessId,
+        {
+          logo: requestData.logoUrl,
+          address: requestData.address,
+        },
+        { new: true },
+      );
+
       return respond(c, "outletInfo created", false, 201, outLetInfo);
     },
   )
@@ -462,6 +471,15 @@ const businessesRouter = new Hono()
       if (!updateOutletInfo)
         return respond(c, "outletInfo not found", true, 404, {});
 
+      await Business.findByIdAndUpdate(
+        requestData.businessId,
+        {
+          logo: requestData.logoUrl,
+          address: requestData.address,
+        },
+        { new: true },
+      );
+
       return respond(c, "outletInfo updated", false, 200, updateOutletInfo);
     },
   )
@@ -539,7 +557,9 @@ const businessesRouter = new Hono()
     },
   )
   .get("/getAllbusinesses", async (c) => {
-    const existingBusinesses = await Business.find({});
+    const existingBusinesses = await Business.find({}).select(
+      "name _id logo customLink address",
+    );
 
     return respond(c, "businesses found", false, 200, existingBusinesses);
   })
