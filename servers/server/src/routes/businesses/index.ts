@@ -557,7 +557,7 @@ const businessesRouter = new Hono()
     },
   )
   .get("/getAllbusinesses", async (c) => {
-    const existingBusinesses = await Business.find({}).select(
+    const existingBusinesses = await Business.find({ status: true }).select(
       "name _id logo customLink address",
     );
 
