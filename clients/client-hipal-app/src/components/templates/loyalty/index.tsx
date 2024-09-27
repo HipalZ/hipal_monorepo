@@ -179,6 +179,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       <section
         className={`mt-6  ${animate ? "backInUp" : "tada"}`}
         onClick={() => setIsHiCodeModalOpen(true)}
+        onKeyDown={() => setIsHiCodeModalOpen(true)}
       >
         <CardSection />
       </section>

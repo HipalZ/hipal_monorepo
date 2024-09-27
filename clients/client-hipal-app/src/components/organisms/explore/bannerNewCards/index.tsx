@@ -107,7 +107,7 @@ const MemoBannersLayout = (props: Props) => {
             className="flex flex-col embla__parallax"
             key={layout?._id}
           >
-            <article key={layout?._id} className="shadow-lg shadow-blue-500/50">
+            <article key={layout?._id}>
               <figure className={"w-full rounded-2xl"}>
                 <Image
                   src={img?.logo || layout?.image}
@@ -115,7 +115,7 @@ const MemoBannersLayout = (props: Props) => {
                   width={320}
                   height={224}
                   className={
-                    "rounded-t-xl w-[20rem] h-[14rem] embla__parallax__img object-cover"
+                    "rounded-t-xl w-[20rem] h-[14rem] embla__parallax__img object-cover object-top"
                   }
                 />
               </figure>
@@ -183,7 +183,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] w-full object-cover shrink-0"
+                  className="rounded-xl h-[20rem] w-full object-cover object-top shrink-0"
                   height={320}
                   width={320}
                 />
@@ -246,7 +246,7 @@ const MemoBannersLayout = (props: Props) => {
               <Image
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
-                className="rounded-xl aspect-square h-[20rem] object-cover shrink-0"
+                className="rounded-xl aspect-square h-[20rem] object-cover object-top shrink-0"
                 width={320}
                 height={320}
               />
@@ -312,7 +312,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] aspect-square object-cover shrink-0"
+                  className="rounded-xl h-[20rem] aspect-square object-cover object-top shrink-0"
                   width={320}
                   height={320}
                 />
@@ -379,7 +379,7 @@ const MemoBannersLayout = (props: Props) => {
                 <Image
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
-                  className="rounded-xl h-[20rem] aspect-square object-cover"
+                  className="rounded-xl h-[20rem] aspect-square object-cover object-top"
                   width={320}
                   height={320}
                 />
@@ -503,10 +503,12 @@ const MemoBannersLayout = (props: Props) => {
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
           >
-            <img
+            <Image
               src={img?.logo || layout?.image || pastaDummy}
               alt={layout?.title}
-              className="h-[20rem] w-full object-cover"
+              className="h-[20rem] w-full object-cover object-top rounded-2xl"
+              width={320}
+              height={320}
             />
           </section>
         );

@@ -56,7 +56,7 @@ const MemoHiSites = () => {
               type="button"
               onClick={() => handleRoute(service?.navigateTo)}
               key={service?._id}
-              className="shadow-lg w-full max-w-[28rem] rounded-2xl bg-white p-4"
+              className="boxShadowCard w-full max-w-[28rem] rounded-2xl bg-white p-4"
             >
               <header className="relative flex items-center mb-4 space-x-4">
                 <img src={service?.icon} alt={service?.icon} loading="lazy" />

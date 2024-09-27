@@ -87,7 +87,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "w-full rounded-t-xl h-full max-h-[8.3rem] object-cover",
+                    "w-full rounded-t-xl h-full max-h-[8.3rem] object-cover object-top",
                     isExplorePage ? "h-full max-h-[8.5rem]" : "md:w-[15rem]",
                   )}
                 />
@@ -168,7 +168,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "rounded-2xl w-[12rem] h-[12rem] object-cover",
+                    "rounded-2xl w-[12rem] h-[12rem] object-cover object-top",
                     isExplorePage ? "" : "md:w-[15rem]",
                   )}
                 />
@@ -236,7 +236,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] w-[13rem] object-cover"
+                  className="rounded-xl h-[12rem] w-[13rem] object-cover object-top"
                 />
               </figure>
               <article
@@ -303,7 +303,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] object-cover",
+                  "rounded-xl h-[12rem] object-cover object-top",
                   isExplorePage ? "w-[12rem] md:w-[13rem]" : " w-[15rem]",
                 )}
               />
@@ -367,7 +367,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] object-cover",
+                  "rounded-xl h-[12rem] object-cover object-top",
                   isExplorePage ? "w-[12rem] " : "w-[15rem] ",
                 )}
               />
@@ -490,7 +490,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <section
             key={layout?._id}
-            className="border border-1 border-[#000] rounded-2xl overflow-hidden shrink-0"
+            className="border border-1 border-[#000] rounded-2xl overflow-hidden shrink-0 max-w-[13rem]"
             onClick={
               isExplorePage ? null : () => handleEditBanner(banner || {})
             }
@@ -498,7 +498,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
             <img
               src={img?.logo || layout?.image}
               alt={layout?.title}
-              className="w-full h-[12rem] object-cover"
+              className="w-full h-[12rem] object-cover object-top"
             />
           </section>
         );

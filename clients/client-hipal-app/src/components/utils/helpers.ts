@@ -893,3 +893,37 @@ export const getBestCouponSuggestion = (
 
   return { bestCoupon, bestDiscount, additionalAmount };
 };
+
+export const reviewColors = [
+  {
+    color: "#7AE04E",
+    bgColor: "#7EFFA3",
+    buttonTextColor: "#1A863B",
+    textColor: "#000000",
+  },
+  {
+    color: "#6A31DF",
+    bgColor: "#D1C1F2",
+    buttonTextColor: "#6A31DF",
+    textColor: "#ffffff",
+  },
+  {
+    color: "#E04950",
+    bgColor: "#EBA0A3",
+    buttonTextColor: "#E04950",
+    textColor: "#ffffff",
+  },
+];
+
+export const calculateRating = (selectedEmoji) => {
+  if (selectedEmoji === 0) {
+    return 5;
+  }
+  if (selectedEmoji === 1) {
+    return 3;
+  }
+  if (selectedEmoji === 2) {
+    return 1;
+  }
+  return 0;
+};

@@ -17,7 +17,7 @@ const MemoCardFiveLayout = () => {
   const userCoinZ = useLogin((state) => state.userCoinZ);
 
   return (
-    <section className="relative z-50 flex w-[23.5rem] max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl shadow-2xl">
+    <section className="relative z-50 flex w-[23.5rem] max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl">
       <Image
         src={
           cardLayout === "LAYOUT_ONE"
@@ -38,7 +38,7 @@ const MemoCardFiveLayout = () => {
           src={business?.logoUrl || hipalLogo}
           alt="logo"
           className="absolute top-6 right-[2rem] filter invert-0 mix-blend-screen rounded-xl"
-          style={{ filter: "invert(100%) contrast(150%) brightness(150%)" }}
+          // style={{ filter: "invert(100%) contrast(150%) brightness(150%)" }}
         />
       )}
       <figcaption className="absolute w-[80%] flex justify-between text-left text-white top-[11rem] leading-6 left-8">

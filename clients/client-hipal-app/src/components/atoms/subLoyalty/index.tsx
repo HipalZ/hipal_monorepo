@@ -8,22 +8,16 @@ import { useInView } from "framer-motion";
 import Stairs from "@/assets/backgroundStairs.png";
 import SignUpBonusBackground from "@/assets/bonuscard/signupBonus.svg";
 import Wallet from "@/assets/bonuscard/wallet.png";
-import googleImage from "@/assets/img/googleImg.png";
 import Coin from "@/assets/bonuscard/coin.png";
-import Star from "@/assets/svg/Star.svg";
-import { type IUserData, useLogin } from "@/components/store/useLogin";
+import { useLogin } from "@/components/store/useLogin";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
 import { createSrcColor, type PatternKeys } from "@/components/utils/helpers";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import { apiRpc } from "@hi/common";
 import { useParams } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/components/utils/helpers";
-import { LuArrowRight } from "react-icons/lu";
-import type { IResponse } from "@/components/types/businessData";
+import GoogleReviewCard from "../googleReviewCard";
 
 interface ILoyaltyCard {
   loyalty: ILoyaltySetting;
@@ -43,23 +37,17 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const logo = useBusinessDetails((s) => s.businessDetails?.logoUrl);
   const customLink = useParams()?.businessId as string;
   const accessToken = useUserToken.getState().accessToken;
-  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
-  const businessDetails = useBusinessDetails((s) => s.businessDetails);
-  const { userDetails, isLogin, setReviewPopup, setGoogleReviewCount } =
-    useLogin((s) => ({
-      userDetails: s.userDetails,
-      isLogin: s.isLogin,
-      setReviewPopup: s.setReviewPopup,
-      setGoogleReviewCount: s.setGoogleReviewCount,
-    }));
+  const { isLogin } = useLogin((s) => ({
+    isLogin: s.isLogin,
+  }));
 
-  const openModal = () => {
+  const openModal = useCallback(() => {
     setTimeout(() => setIsModalOpen(true), 5000);
-  };
+  }, [isModalOpen]);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
-  };
+  }, [isModalOpen]);
 
   const srcColor = useMemo(
     () => createSrcColor(loyaltySetting),
@@ -72,47 +60,6 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     },
     [srcColor],
   );
-  const isReviewGiven = async (userDetails: IUserData) => {
-    let res: IResponse;
-    const response = await apiRpc.subscribers.$get({
-      query: {
-        businessId: businessId.toString(),
-        userId: userDetails._id.toString(),
-        loyaltyId: loyalty.loyaltyId.toString(),
-      },
-    });
-    res = await response.json();
-    setGoogleReviewCount(res?.googleReviewCount);
-    return res?.googleReviewCount;
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      const count: number = await isReviewGiven(userDetails);
-      if (!!count && count > 1) return setReviewPopup(true);
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      if (user !== undefined) {
-        const res = await apiRpc.reviews.storeGoogleAuthUser.$post({
-          json: {
-            businessId: businessId.toString(),
-            loyaltyId: loyalty.loyaltyId.toString(),
-            userId: userDetails._id.toString(),
-            authorName: user?.displayName || userDetails?.name,
-          },
-        });
-      }
-
-      // Redirect to the Google review page
-      const url =
-        businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-      window.open(url, "_blank");
-      setReviewPopup(true);
-      return user;
-    } catch (error) {
-      console.error("Error during sign-in:", error);
-    }
-  };
 
   useEffect(() => {
     if (loyalty?.loyaltyId) {
@@ -241,53 +188,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           )}
         </section>
       </section>
-      {isLogin ? (
-        <div className="p-2 mb-4">
-          <div className="bg-[#FFC600] lg:w-1/2 w-full min-h-full max-h-[11rem] rounded-2xl p-4 flex relative overflow-hidden">
-            <div className="z-10 space-y-4">
-              <div className="text-black">
-                <h1 className="text-xs font-bold">Write a review &</h1>
-                <p className="relative inline-flex items-center text-xl font-bold">
-                  Earn Coinz{" "}
-                  <Image
-                    src={Star}
-                    alt="Star"
-                    width={8}
-                    height={8}
-                    className="absolute transform translate-x-1/2 -translate-y-1/2 -right-4 -top-1"
-                  />
-                  <Image
-                    src={Star}
-                    alt="Star"
-                    width={12}
-                    height={12}
-                    className="absolute transform translate-x-1/2 -translate-y-1/2 top-1 -right-2"
-                  />
-                </p>
-                <p className="text-sm text-[#000000B8]">
-                  Leave a review on Google <br /> & Claim your reward.
-                </p>
-              </div>
-              <div className="w-full h-10">
-                <button
-                  type="button"
-                  onClick={signInWithGoogle}
-                  className="flex items-center px-4 py-1.5 -ml-4 text-sm font-bold text-white scale-90 rounded-full bg-black/60"
-                >
-                  Write a review <LuArrowRight size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="absolute top-0 -right-6 z-0 w-[10rem] h-full">
-              <Image
-                src={googleImage}
-                alt="Google Review"
-                className="object-cover w-full h-full scale-150 rounded-md"
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {isLogin ? <GoogleReviewCard /> : null}
     </div>
   );
 };

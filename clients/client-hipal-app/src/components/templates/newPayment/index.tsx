@@ -214,7 +214,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
         claimedCoinz > 0 ||
-        (claimedCoinz > 0 && claimCouponz === 0)
+        (claimedCoinz === 0 && claimCouponz === 0)
       ) {
         finalReward = calculateReward(
           existingCoins,
@@ -453,7 +453,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
         claimedCoinz > 0 ||
-        (claimedCoinz > 0 && claimCouponz === 0)
+        (claimedCoinz === 0 && claimCouponz === 0)
       ) {
         const coinsObtained =
           total * (loyaltySetting?.setCashBackPercentage / 100);
@@ -465,6 +465,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           coinsObtained,
           loyaltySetting?.rewardLimit,
         ).finalReward;
+        console.log("finalReward", finalReward);
       }
       toast.success(
         "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
@@ -747,9 +748,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <p className="relative z-20 -mt-10 text-base font-semibold">
                     {businessDetails?.name}
                   </p>
-                  <span className="relative z-20 text-sm">
-                    {businessDetails?.branchName}
-                  </span>
                 </div>
               </center>
             ) : null}
