@@ -47,8 +47,9 @@ const MemoBannersLayout = (props: Props) => {
     redirectionType,
   } = props;
 
-  const { setActiveType } = useActiveClass((s) => ({
+  const { setActiveType, setActiveCategory } = useActiveClass((s) => ({
     setActiveType: s.setActiveType,
+    setActiveCategory: s.setActiveCategory,
   }));
 
   const buttonStyleTags = {
@@ -78,6 +79,7 @@ const MemoBannersLayout = (props: Props) => {
     redirectionName: string,
     redirectionType: string,
   ) => {
+    console.log("id", id, redirectionName, redirectionType);
     if (redirectionName === "EXTERNAL") {
       let url = id;
       if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -87,6 +89,7 @@ const MemoBannersLayout = (props: Props) => {
       return;
     }
     setActiveType(redirectionType);
+    setActiveCategory(id);
     router.push(`/${customLink}/category#${id}`);
   };
 

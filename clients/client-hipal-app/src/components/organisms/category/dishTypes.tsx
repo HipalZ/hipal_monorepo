@@ -1,5 +1,4 @@
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
-import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo } from "react";
 
@@ -16,7 +15,6 @@ const MemoDishesTypes = ({
         parentCategory={parentCategory}
         childCategory={childCategory}
       />
-      <SubTypes parentCategory={parentCategory} childCategory={childCategory} />
     </section>
   );
 };

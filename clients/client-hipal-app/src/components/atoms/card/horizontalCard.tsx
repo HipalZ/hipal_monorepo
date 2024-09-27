@@ -96,21 +96,21 @@ const MemoHorizontalCard = ({
             </div>
           </button>
         </div>
-        <div className={"flex flex-col"}>
+        <section className="flex flex-col">
           <div>
             {dishData?.images[0] ? (
               <div
-                className="relative w-[7.5rem] h-[7.5rem] overflow-hidden"
+                className="relative w-[7.5rem] overflow-hidden"
                 onClick={() => openModal(dishData)}
               >
                 <Image
-                  src={dishData.images[0]}
-                  layout={"intrinsic"}
+                  src={dishData?.images?.[0]}
                   alt="dish"
                   quality={95}
-                  width={125}
-                  height={125}
-                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
+                  width={120}
+                  height={90}
+                  objectFit="cover"
+                  className={`on_active_bounce aspect-square overflow-hidden rounded-2xl m-0 ${
                     dishData.availability ? "" : "grayscale"
                   }`}
                   placeholder="blur"
@@ -166,7 +166,7 @@ const MemoHorizontalCard = ({
               </div>
             </DishData>
           )}
-        </div>
+        </section>
       </div>
       <div>
         {isDishInCart && (

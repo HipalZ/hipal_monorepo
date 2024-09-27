@@ -1,142 +1,233 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import { type FC, memo, useEffect, useMemo, useRef } from "react";
+import {
+  type FC,
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { GiKnifeFork } from "react-icons/gi";
+import { InView } from "react-intersection-observer";
+import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
+import SubTypes from "@/components/molecules/categoryTypes/subTypes";
+import { useSearch } from "@/components/store/useSearch";
 
 interface IDishesProps {
   childCategory: CategoryType[];
+  parentCategory: CategoryType[];
 }
 
 const DishesList: FC<IDishesProps> = (props) => {
-  const { childCategory } = props;
-  const { isActiveDishType, isActiveCategory, setActiveCategory } =
-    useActiveClass((state) => ({
-      isActiveDishType: state.isActiveDishType,
-      isActiveCategory: state.isActiveCategory,
-      setActiveCategory: state.setActiveCategory,
-    }));
+  const { childCategory, parentCategory } = props;
+  const { isSearchActive } = useSearch();
+  const {
+    isActiveDishType,
+    isActiveCategory,
+    setActiveCategory,
+    observerActive,
+  } = useActiveClass((state) => ({
+    isActiveDishType: state.isActiveDishType,
+    isActiveCategory: state.isActiveCategory,
+    setActiveCategory: state.setActiveCategory,
+    observerActive: state.observerActive,
+  }));
 
   const subTypes = useMemo(() => {
-    return childCategory.filter(
-      (category) =>
-        category.hierarchy === "CHILD" && category.dishIds.length > 0,
-    );
+    return childCategory.filter((category) => {
+      const hasVisibleDishes =
+        category.hierarchy === "CHILD" &&
+        category.dishIds.length > 0 &&
+        category.dishIds.some(
+          (dish: DishType) => !dish.isDeleted && dish.visibility,
+        );
+      return hasVisibleDishes;
+    });
   }, [childCategory]);
 
-  const filterDishes = (dishes, dishType) => {
+  const filterDishes = (dishes: DishType[], dishType: string): DishType[] => {
     return dishes.filter(
-      (dish) => dish.visibility && dish.dishTypes.includes(dishType),
+      (dish) =>
+        dish.visibility && !dish.isDeleted && dish.dishTypes.includes(dishType),
     );
   };
+
+  const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
+  const initialHashHandledRef = useRef(false);
+  const updateActiveCategory = () => {
+    if (!observerActive) return;
+
+    const entries = Object.entries(visibleCategoriesRef.current);
+    if (entries.length === 0) return;
+
+    const closest = entries.reduce(
+      (prev, curr) => {
+        const currOffset = curr[1];
+        if (currOffset < prev.offset) {
+          return { id: curr[0], offset: currOffset };
+        }
+        return prev;
+      },
+      { id: "", offset: Infinity },
+    );
+    if (closest.id && isActiveCategory !== closest.id) {
+      setActiveCategory(closest.id);
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (!initialHashHandledRef.current) {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.style.scrollMarginTop = "110px";
+          element.scrollIntoView({ behavior: "smooth" });
+          setActiveCategory(hash);
+        }
+      }
+      initialHashHandledRef.current = true;
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.style.scrollMarginTop = "110px";
+          element.scrollIntoView({ behavior: "smooth" });
+          setActiveCategory(hash);
+        }
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
       const element = document.getElementById(isActiveCategory);
       if (element) {
-        element.style.scrollMarginTop = "200px";
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
+        element.style.scrollMarginTop = "110px";
+        element.scrollIntoView({ behavior: "smooth" });
       }
     };
     handleHashChange();
+    const urlWithoutHash = window.location.href.split("#")[0];
+    window.history.replaceState(null, "", urlWithoutHash);
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isActiveCategory]);
 
-  const handleCategoryInView = (category) => {
-    const hashUrl = window.location.hash;
-
-    if (hashUrl) {
-      const hashValue = hashUrl.substring(1);
-      setActiveCategory(hashValue);
-    } else {
-      setActiveCategory(category._id?.toString());
-
-      // Remove the hash from the URL
-      const urlWithoutHash = window.location.href.split("#")[0];
-      window.history.replaceState(null, "", urlWithoutHash);
-    }
-  };
+  console.log("DishesList");
 
   return (
     <div>
-      {subTypes?.map((category: CategoryType, index) => {
-        const headingRef = useRef(null);
-        // useEffect(() => {
-        //   const observer = new IntersectionObserver(
-        //     (entries) => {
-        //       entries.forEach((entry) => {
-        //         if (entry.isIntersecting && observerActive) {
-        //           handleCategoryInView(category);
-        //         }
-        //       });
-        //     },
-        //     {
-        //       root: null,
-        //       rootMargin: "-200px 0px 0px 0px",
-        //       threshold: 0.75,
-        //     },
-        //   );
-
-        //   if (headingRef.current) {
-        //     observer.observe(headingRef.current);
-        //   }
-
-        //   return () => {
-        //     if (headingRef.current) {
-        //       observer.unobserve(headingRef.current);
-        //     }
-        //   };
-        // }, [headingRef, category, observerActive]);
+      <section className="sticky z-50 text-primary top-[3.125rem]">
+        {!isSearchActive && (
+          <>
+            <MainTypes
+              parentCategory={parentCategory}
+              childCategory={childCategory}
+            />
+            <SubTypes childCategory={childCategory} />
+          </>
+        )}
+      </section>
+      {subTypes.map((category: CategoryType, index) => {
         return (
           <section
-            className={"min-h-60 bg-base-100 w-full pb-4"}
-            id={category._id?.toString()}
             key={`${category._id}${index}`}
+            className="w-full pb-4 min-h-60 bg-base-100"
+            id={category._id?.toString()}
           >
-            <div
-              className={cn(
-                { "border-t-2 border-primary": category.dishIds.length !== 0 },
-                "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
-              )}
+            <InView
+              rootMargin="-120px 0px 0px 0px"
+              threshold={[0, 1]}
+              onChange={(inView, entry) => {
+                const categoryId = category._id?.toString();
+                if (categoryId) {
+                  if (inView) {
+                    visibleCategoriesRef.current[categoryId] = Math.abs(
+                      entry.boundingClientRect.top - 120,
+                    );
+                  } else {
+                    delete visibleCategoriesRef.current[categoryId];
+                  }
+                  updateActiveCategory();
+                }
+              }}
             >
-              <h3 className="my-4 text-xl font-medium capitalize text-primary">
-                {category?.name || ""}
-              </h3>
-              <h4 className="my-4 text-lg font-medium text-primary">
-                {category?.dishIds?.length}
-              </h4>
-            </div>
-            <div
-              className="flex flex-col divide-y divide-base-300"
-              onTouchStart={() => handleCategoryInView(category)}
-              onScroll={() => handleCategoryInView(category)}
-            >
-              {isActiveDishType.toLowerCase() === "all" ? (
-                category?.dishIds?.map((dishData: DishType, dishIndex) => (
-                  <HorizontalCard
-                    dishData={dishData}
-                    key={`${dishData?._id?.toString()}${dishIndex}`}
-                  />
-                ))
-              ) : filterDishes(category.dishIds, isActiveDishType).length ===
-                0 ? (
-                <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
-                  <GiKnifeFork className="mr-4 text-2xl text-primary-100" /> No
-                  Dishes Available
+              {({ ref }) => (
+                <div
+                  ref={ref}
+                  className={cn(
+                    {
+                      "border-t-2 border-primary":
+                        category.dishIds.length !== 0,
+                    },
+                    "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
+                  )}
+                >
+                  <h3 className="my-4 text-xl font-medium capitalize text-primary">
+                    {category.name || ""}
+                  </h3>
+                  <h4 className="my-4 text-lg font-medium text-primary">
+                    {category.dishIds?.length}
+                  </h4>
                 </div>
-              ) : (
-                filterDishes(category.dishIds, isActiveDishType).map(
-                  (dishData: DishType, dishIndex) => (
-                    <HorizontalCard
-                      dishData={dishData}
-                      key={`${dishData?._id?.toString()}${dishIndex}`}
-                    />
-                  ),
-                )
               )}
+            </InView>
+            <div className="flex flex-col divide-y divide-base-300">
+              {(() => {
+                const visibleDishes = category.dishIds.filter(
+                  (dish: DishType) => dish.visibility && !dish.isDeleted,
+                );
+
+                if (isActiveDishType.toLowerCase() === "all") {
+                  return visibleDishes.length > 0 ? (
+                    visibleDishes.map((dishData: DishType, dishIndex) => (
+                      <HorizontalCard
+                        dishData={dishData}
+                        key={`${dishData._id?.toString()}${dishIndex}`}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
+                      <GiKnifeFork className="mr-4 text-2xl text-primary-100" />{" "}
+                      No Dishes Available
+                    </div>
+                  );
+                } else {
+                  const filteredDishes = filterDishes(
+                    visibleDishes,
+                    isActiveDishType,
+                  );
+                  return filteredDishes.length > 0 ? (
+                    filteredDishes.map((dishData: DishType, dishIndex) => (
+                      <HorizontalCard
+                        dishData={dishData}
+                        key={`${dishData._id?.toString()}${dishIndex}`}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
+                      <GiKnifeFork className="mr-4 text-2xl text-primary-100" />{" "}
+                      No Dishes Available
+                    </div>
+                  );
+                }
+              })()}
             </div>
           </section>
         );
@@ -145,5 +236,4 @@ const DishesList: FC<IDishesProps> = (props) => {
   );
 };
 
-const MemoDishesList = memo(DishesList);
-export default MemoDishesList;
+export default memo(DishesList);

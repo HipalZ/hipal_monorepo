@@ -68,7 +68,10 @@ export default async function Page({
           childCategory={data?.childCategories || []}
         />
         <div className="!mt-0 !scroll-smooth">
-          <DishesList childCategory={data?.childCategories || []} />
+          <DishesList
+            parentCategory={data?.parentCategories || []}
+            childCategory={data?.childCategories || []}
+          />
         </div>
         <section className="pt-6 bg-base-100">
           <Footer
