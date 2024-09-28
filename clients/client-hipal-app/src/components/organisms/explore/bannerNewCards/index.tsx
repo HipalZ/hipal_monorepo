@@ -47,9 +47,16 @@ const MemoBannersLayout = (props: Props) => {
     redirectionType,
   } = props;
 
-  const { setActiveType, setActiveCategory } = useActiveClass((s) => ({
+  const {
+    setActiveType,
+    setActiveCategory,
+    setActiveChildCategory,
+    setObserverActive,
+  } = useActiveClass((s) => ({
     setActiveType: s.setActiveType,
     setActiveCategory: s.setActiveCategory,
+    setActiveChildCategory: s.setActiveChildCategory,
+    setObserverActive: s.setObserverActive,
   }));
 
   const buttonStyleTags = {
@@ -89,8 +96,10 @@ const MemoBannersLayout = (props: Props) => {
       return;
     }
     setActiveType(redirectionType);
+    setActiveChildCategory(id);
     setActiveCategory(id);
-    router.push(`/${customLink}/category#${id}`);
+    setObserverActive(false);
+    router.push(`/${customLink}/category`);
   };
 
   const paragraphPropsStyle = {

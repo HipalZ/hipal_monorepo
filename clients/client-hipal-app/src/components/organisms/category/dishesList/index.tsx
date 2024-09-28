@@ -30,11 +30,15 @@ const DishesList: FC<IDishesProps> = (props) => {
     isActiveCategory,
     setActiveCategory,
     observerActive,
+    isActiveChildCategory,
+    setActiveChildCategory,
   } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
     setActiveCategory: state.setActiveCategory,
     observerActive: state.observerActive,
+    isActiveChildCategory: state.isActiveChildCategory,
+    setActiveChildCategory: state.setActiveChildCategory,
   }));
 
   const subTypes = useMemo(() => {
@@ -57,10 +61,10 @@ const DishesList: FC<IDishesProps> = (props) => {
   };
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
-  const initialHashHandledRef = useRef(false);
   const updateActiveCategory = () => {
     if (!observerActive) return;
 
+    console.log("visibleCategoriesRef", isActiveChildCategory);
     const entries = Object.entries(visibleCategoriesRef.current);
     if (entries.length === 0) return;
 
@@ -79,43 +83,17 @@ const DishesList: FC<IDishesProps> = (props) => {
     }
   };
 
-  useLayoutEffect(() => {
-    if (!initialHashHandledRef.current) {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.style.scrollMarginTop = "110px";
-          element.scrollIntoView({ behavior: "smooth" });
-          setActiveCategory(hash);
-        }
-      }
-      initialHashHandledRef.current = true;
-    }
-  }, []);
-
-  useLayoutEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        const element = document.getElementById(hash);
-        if (element) {
-          element.style.scrollMarginTop = "110px";
-          element.scrollIntoView({ behavior: "smooth" });
-          setActiveCategory(hash);
-        }
-      }
-    };
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
   useEffect(() => {
     const handleHashChange = () => {
+      if (isActiveChildCategory !== "") {
+        const element = document.getElementById(isActiveChildCategory);
+        if (element) {
+          element.style.scrollMarginTop = "110px";
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+        setActiveChildCategory("");
+        return;
+      }
       const element = document.getElementById(isActiveCategory);
       if (element) {
         element.style.scrollMarginTop = "110px";
@@ -123,23 +101,16 @@ const DishesList: FC<IDishesProps> = (props) => {
       }
     };
     handleHashChange();
-    const urlWithoutHash = window.location.href.split("#")[0];
-    window.history.replaceState(null, "", urlWithoutHash);
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isActiveCategory]);
-
-  console.log("DishesList");
 
   return (
     <div>
       <section className="sticky z-50 text-primary top-[3.125rem]">
         {!isSearchActive && (
           <>
-            <MainTypes
-              parentCategory={parentCategory}
-              childCategory={childCategory}
-            />
+            <MainTypes parentCategory={parentCategory} />
             <SubTypes childCategory={childCategory} />
           </>
         )}

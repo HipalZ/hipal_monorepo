@@ -73,8 +73,6 @@ const MemoSubTypes = (props: ISubTypes) => {
     }
   }, [isActiveCategory, subTypes]);
 
-  // New useEffect to handle URL hash on initial load
-
   return (
     <section className="overflow-x-auto border-b shadow-lg border-b-primary no-scrollbar bg-base-100 text-primary">
       {subTypes.length > 0 && (
