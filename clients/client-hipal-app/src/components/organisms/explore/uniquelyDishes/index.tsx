@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import Image from "next/image";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -20,13 +21,21 @@ const getFigureClass = (imageCount: number): string => {
 const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
   const figureClass = getFigureClass(images.length);
 
-  const { setActiveCategory } = useActiveClass();
+  const { setActiveCategory, setObserverActive, setActiveChildCategory } =
+    useActiveClass((s) => ({
+      setActiveCategory: s.setActiveCategory,
+      setObserverActive: s.setObserverActive,
+      setActiveChildCategory: s.setActiveChildCategory,
+    }));
 
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
 
   const handleRecommendedDishClick = (item: IUniquelyDishes) => {
+    setActiveChildCategory(item?.dishId);
     setActiveCategory(item?.dishId);
+    setObserverActive(false);
+    console.log("customLink", item?.dishId);
     router.push(`/${customLink}/category`);
   };
 
@@ -56,9 +65,14 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
 const MemoUniquelyDishes = (props: Props) => {
   const { uniquelyDishes } = props;
 
+  const outletType = useBusinessDetails((s) => s.businessDetails.outLetType);
+  console.log("outletType", outletType);
+
   return (
     <>
-      <center className="pb-4 text-2xl text-primary">Must Try Dishes</center>
+      <center className="pb-4 text-2xl text-primary">
+        {outletType === "MENU" ? "Must Try Dishes" : "Our Favourites"}
+      </center>
       {uniquelyDishes && uniquelyDishes.length > 0 && (
         <DynamicImageGrid images={uniquelyDishes?.slice(0, 6)} />
       )}

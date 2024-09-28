@@ -32,6 +32,7 @@ const DishesList: FC<IDishesProps> = (props) => {
     observerActive,
     isActiveChildCategory,
     setActiveChildCategory,
+    setObserverActive,
   } = useActiveClass((state) => ({
     isActiveDishType: state.isActiveDishType,
     isActiveCategory: state.isActiveCategory,
@@ -39,6 +40,7 @@ const DishesList: FC<IDishesProps> = (props) => {
     observerActive: state.observerActive,
     isActiveChildCategory: state.isActiveChildCategory,
     setActiveChildCategory: state.setActiveChildCategory,
+    setObserverActive: state.setObserverActive,
   }));
 
   const subTypes = useMemo(() => {
@@ -64,7 +66,6 @@ const DishesList: FC<IDishesProps> = (props) => {
   const updateActiveCategory = () => {
     if (!observerActive) return;
 
-    console.log("visibleCategoriesRef", isActiveChildCategory);
     const entries = Object.entries(visibleCategoriesRef.current);
     if (entries.length === 0) return;
 
@@ -88,11 +89,13 @@ const DishesList: FC<IDishesProps> = (props) => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "110px";
+          element.style.scrollMarginTop = "250px";
           element.scrollIntoView({ behavior: "smooth" });
         }
+        setTimeout(() => {
+          setObserverActive(true);
+        }, 3000);
         setActiveChildCategory("");
-        return;
       }
       const element = document.getElementById(isActiveCategory);
       if (element) {

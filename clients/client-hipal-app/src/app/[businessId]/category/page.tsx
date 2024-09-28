@@ -3,8 +3,9 @@ import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
 import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 600;
 
 const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
@@ -63,10 +64,7 @@ export default async function Page({
     <main>
       <div className="relative flex flex-col w-full pb-14">
         <TopBackground specialBanner={data?.business?.specialBannerUrl} />
-        <CategoryHeader
-          parentCategory={data?.parentCategories || []}
-          childCategory={data?.childCategories || []}
-        />
+        <CategoryHeader childCategory={data?.childCategories || []} />
         <div className="!mt-0 !scroll-smooth">
           <DishesList
             parentCategory={data?.parentCategories || []}
