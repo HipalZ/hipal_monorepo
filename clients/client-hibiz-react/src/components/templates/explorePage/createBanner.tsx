@@ -329,7 +329,7 @@ const MemoCreateBanner = () => {
             }
           />
           {openPreview ? null : (
-            <section className="absolute lg:relative flex justify-center mt-[4rem] xl:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
+            <section className="absolute lg:relative flex justify-center  mt-[4rem] xl:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
               <BannerDynamicLayout
                 img={img}
                 selectedColor={selectedColor}
@@ -352,8 +352,10 @@ const MemoCreateBanner = () => {
           )}
           &nbsp;
         </section>
-        <BannerImgContainer />
-        <BannerBtnRedirection />
+        <section>
+          <BannerImgContainer />
+          <BannerBtnRedirection />
+        </section>
         <BottomButton
           fixed
           buttons={[
