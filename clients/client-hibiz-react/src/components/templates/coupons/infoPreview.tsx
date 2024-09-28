@@ -2,7 +2,6 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { memo, lazy, Suspense, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@hi/common";
-import { MdCloudDownload } from "react-icons/md";
 import { toPng } from "html-to-image";
 
 const buttonData = [
