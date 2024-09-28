@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import SkeletonLoader from "../loader/skeletonLoader";
 import { useReview } from "@/components/store/useReview";
 import { toast } from "react-toastify";
+import LoadingSpinnerCircle from "../loader";
 
 const ExplorePageReviewCard = dynamic(() => import("./explorePage"), {
   ssr: false,
@@ -19,7 +20,7 @@ const ExplorePageReviewCard = dynamic(() => import("./explorePage"), {
 
 const GoogleReviewPagePopup = dynamic(() => import("./reviewPage"), {
   ssr: false,
-  loading: () => <SkeletonLoader />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 
 const MemoGoogleReviewCard = () => {

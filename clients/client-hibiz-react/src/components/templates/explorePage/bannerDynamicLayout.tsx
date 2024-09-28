@@ -19,7 +19,7 @@ interface Props {
   heading?: string;
   paragraph?: string;
   callToAction?: string;
-  img?: { logo: string };
+  img?: string;
   selectedColor?: { bgColor: string; textColor: string };
   paragraphStyle?: CSSProperties;
   buttonStyle?: { color: string; buttonColor?: string };
@@ -106,7 +106,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
                 }`}
               >
                 <img
-                  src={img?.logo || layout?.image || pastaDummy}
+                  src={img || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className={`rounded-t-xl w-[14rem] h-[10rem] shadow-xl object-cover ${
                     openPreview
@@ -195,7 +195,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             >
               <figure className="w-full rounded-2xl">
                 <img
-                  src={img?.logo || layout?.image || pastaDummy}
+                  src={img || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className={`rounded-xl h-[13rem] w-[13rem] object-cover ${
                     openPreview ? "h-[25rem] w-[25rem]" : ""
@@ -259,7 +259,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             >
               <figure className={`w-full rounded-2xl ${sizeClasses}`}>
                 <img
-                  src={img?.logo || layout?.image || pastaDummy}
+                  src={img || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className={`rounded-xl aspect-square object-cover ${sizeClasses}`}
                 />
@@ -323,7 +323,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             >
               <figure className={`w-full rounded-2xl ${sizeClasses}`}>
                 <img
-                  src={img?.logo || layout?.image || pastaDummy}
+                  src={img || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className={`bg-cover rounded-xl aspect-square ${sizeClasses}`}
                 />
@@ -384,7 +384,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             >
               <figure className={`w-full rounded-2xl ${sizeClasses}`}>
                 <img
-                  src={img?.logo || layout?.image || pastaDummy}
+                  src={img || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className={`${sizeClasses} rounded-2xl`}
                 />
@@ -500,7 +500,7 @@ const MemoBannerDynamicLayout = (props: Props) => {
             className="border border-1 border-[#000] rounded-2xl overflow-hidden"
           >
             <img
-              src={img?.logo || layout?.image || pastaDummy}
+              src={img || layout?.image || pastaDummy}
               alt={layout?.title}
               className={`${sizeClasses} aspect-square object-cover`}
             />

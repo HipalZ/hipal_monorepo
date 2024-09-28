@@ -9,7 +9,7 @@ const MemoGoogleReviewPagePopup = ({
 }: { signInWithGoogle: () => void }) => {
   return (
     <div className="z-10 p-2 mb-4">
-      <div className="bg-[#FFC600] lg:w-1/2 w-full min-h-full h-[13rem] rounded-2xl p-4 flex relative overflow-hidden">
+      <div className="bg-[#FFC600] lg:w-1/2 w-full min-h-full h-[16rem] rounded-2xl p-4 flex relative overflow-hidden">
         <div className="z-10 flex flex-col justify-center">
           <div className="space-y-2 text-black">
             <h1 className="text-xs font-bold">Write a review &</h1>

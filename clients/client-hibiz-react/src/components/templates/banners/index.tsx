@@ -50,7 +50,6 @@ const MemoBanners = () => {
       setBannerPage: s.setBannerPage,
       bannerPage: s.bannerPage,
       setEditBanner: s.setEditBanner,
-      handleBannerType: s.handleBannerType,
     }));
 
   const { setSelectedBannerType } = useBannerStore((s) => ({

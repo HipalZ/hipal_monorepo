@@ -19,11 +19,21 @@ const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
   return (
     <section
       onKeyDown={() => {
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        handleBannerType(
+          layout?._id,
+          layout?.isButton,
+          layout?.isPattern,
+          false,
+        );
         setToggleExplorePages(ExplorePages.NEWBANNER);
       }}
       onClick={() => {
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        handleBannerType(
+          layout?._id,
+          layout?.isButton,
+          layout?.isPattern,
+          false,
+        );
         setToggleExplorePages(ExplorePages.NEWBANNER);
       }}
       key={layout?._id}

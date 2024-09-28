@@ -68,10 +68,11 @@ const MemoColorWheel: React.FC<ColorWheelProps> = ({
   };
 
   const saveColor = () => {
+    console.log("colorType:", colorType);
     if (colorType === "backgroundColor") {
-      setStyle((prev) => ({ ...prev, bgColor: selectedColor }));
+      setStyle({ bgColor: selectedColor });
     } else {
-      setStyle((prev) => ({ ...prev, color: selectedColor }));
+      setStyle({ color: selectedColor });
     }
     close();
   };
