@@ -27,6 +27,7 @@
     "canvas-confetti": "^1.9.3",
     "color": "^4.2.3",
     "embla-carousel-autoplay": "^8.1.7",
+    "embla-carousel-react": "^8.3.0",
     "env-cmd": "^10.1.0",
     "framer-motion": "^9.1.7",
     "html2canvas": "^1.4.1",
