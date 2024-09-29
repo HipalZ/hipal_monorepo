@@ -6,6 +6,7 @@ import React, { memo, useMemo } from "react";
 import { formatDiscount } from "@/components/utils/helpers";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "../loader/skeletonLoader";
+import ShimmerImage from "../imageshimmer";
 
 const MemoPlaceholderImg = dynamic(() => import("../placeholder"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -39,7 +40,7 @@ const MemoTermsAndConditions = () => {
   return (
     <section className="relative bg-white h-[80dvh] rounded-t-2xl overflow-y-auto text-black pb-[3rem]">
       <picture className="relative">
-        <Image
+        <ShimmerImage
           src={selectedCoupon?.image}
           alt="tc"
           className="w-full border bg-[#e0dbdb]"
@@ -53,15 +54,13 @@ const MemoTermsAndConditions = () => {
         <center className="z-10 -mt-8">
           {logoUrl ? (
             <div className="w-[80px] h-[80px]">
-              <Image
+              <ShimmerImage
                 src={logoUrl}
                 height={86}
                 width={86}
                 quality={95}
                 alt="logo-business"
                 className="z-10 object-center bg-white rounded-full aspect-square"
-                placeholder="blur"
-                blurDataURL={getRandomBlurImg(65, 65)}
                 style={{ objectFit: "cover" }}
               />
             </div>

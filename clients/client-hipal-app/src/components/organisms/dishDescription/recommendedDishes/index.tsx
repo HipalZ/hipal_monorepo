@@ -9,6 +9,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
 import type { DishType } from "@hi/db-models/src/validators";
 import "@splidejs/react-splide/css";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 function RecommendedDishes({
   recommendations,
@@ -78,12 +79,10 @@ function RecommendedDishes({
                         className="w-full -mb-4 overflow-hidden"
                       >
                         {dish?.image ? (
-                          <Image
+                          <ShimmerImage
                             src={dish?.image}
                             quality={95}
                             alt={dish?.name}
-                            placeholder="blur"
-                            blurDataURL={dish?.blurDataURL}
                             width={120}
                             height={120}
                             className="object-cover rounded-md aspect-[4/3]"

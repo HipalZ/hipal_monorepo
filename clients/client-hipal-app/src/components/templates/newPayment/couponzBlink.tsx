@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const MemoCouponzBlink = () => {
   const { promoteOnBillCouponz, setPromoteOnBillCouponz } = useCouponz((s) => ({
@@ -65,7 +66,7 @@ const MemoCouponzBlink = () => {
         {promoteOnBillCouponz?.map((coupon) => {
           return (
             <center key={coupon?._id} className="ml-4">
-              <Image
+              <ShimmerImage
                 src={coupon?.image || birthdayPlaceholder}
                 alt="Birthday Placeholder"
                 width={195}

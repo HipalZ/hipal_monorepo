@@ -8,7 +8,6 @@ import { HiChevronLeft } from "react-icons/hi";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import type { IBiz } from "@/components/types/businessData";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const Terms = () => {

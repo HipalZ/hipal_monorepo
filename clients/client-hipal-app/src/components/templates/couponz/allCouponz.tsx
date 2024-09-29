@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const EmblaCarousel2 = dynamic(
   () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
@@ -136,7 +137,7 @@ const MemoAllCouponz = () => {
                   ))}
 
                   <article className="w-[50%] flex justify-end items-center -mt-7">
-                    <Image
+                    <ShimmerImage
                       src={coupon?.image || birthdayPlaceholder}
                       alt="coupon"
                       className="object-cover w-[8rem] h-[8rem] rounded-xl aspect-square mr-1"

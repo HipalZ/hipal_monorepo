@@ -12,6 +12,7 @@ import cat from "@/assets/login/cat.png";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SignUpBonus from "../explore/signupbonus";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const MemoSubScribeModal = ({
   setIsLoader,
@@ -111,7 +112,7 @@ const MemoSubScribeModal = ({
       <section className="bg-white w-full h-[16rem] z-50 absolute bottom-0 rounded-t-2xl text-base">
         {businessData?.logoUrl && (
           <center className="bg-inherit text-center mx-auto w-[5rem] h-[5rem] rounded-lg flex items-center justify-center -mt-[2.5rem] p-1 border border-[#00000050] overflow-hidden">
-            <Image
+            <ShimmerImage
               className="aspect-square w-[4.75rem] h-[4.75rem]"
               width={84}
               height={84}

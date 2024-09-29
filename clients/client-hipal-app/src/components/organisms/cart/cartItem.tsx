@@ -1,11 +1,11 @@
 import React, { memo, useState } from "react";
 import { useCartStore } from "@/components/store/useCartStore";
-import Image from "next/image";
 import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
 import dynamic from "next/dynamic";
 import DishData from "@/components/atoms/dishDescription";
 import DishPopup from "@/components/atoms/dishPopup";
 import type { DishType } from "@hi/db-models/src/validators";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
 
@@ -81,7 +81,7 @@ const CartItem = ({ cartItem }: CartItemProp) => {
       </div>
       <div className="relative flex items-center justify-between">
         {imageUrl ? (
-          <Image
+          <ShimmerImage
             src={imageUrl}
             alt={cartItem.dish.name}
             width={70}

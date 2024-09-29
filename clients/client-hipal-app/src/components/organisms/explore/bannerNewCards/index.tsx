@@ -18,6 +18,7 @@ import { cn } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
 import { hexToRGBA } from "@/components/utils/helpers";
 import { useActiveClass } from "@/components/store/useActiveClass";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 interface Props {
   redirectionId?: string;
@@ -121,7 +122,7 @@ const MemoBannersLayout = (props: Props) => {
           >
             <article key={layout?._id}>
               <figure className={"w-full rounded-2xl"}>
-                <Image
+                <ShimmerImage
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   width={320}
@@ -192,7 +193,7 @@ const MemoBannersLayout = (props: Props) => {
           >
             <article className="relative flex justify-center">
               <figure className="max-h-[20rem] w-full rounded-2xl">
-                <Image
+                <ShimmerImage
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl h-[20rem] w-full object-cover object-top shrink-0"
@@ -255,7 +256,7 @@ const MemoBannersLayout = (props: Props) => {
             className="relative flex justify-center shrink-0 max-w-[20rem] h-[20rem]"
           >
             <figure className="w-full max-w-[20rem] rounded-2xl max-h-[20rem]">
-              <Image
+              <ShimmerImage
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className="rounded-xl aspect-square h-[20rem] object-cover object-top shrink-0"
@@ -321,7 +322,7 @@ const MemoBannersLayout = (props: Props) => {
           >
             <article className="relative flex justify-center shrink-0 max-w-[20rem] aspect-square">
               <figure className="w-full max-w-[20rem] rounded-2xl max-h-[14rem]">
-                <Image
+                <ShimmerImage
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl h-[20rem] aspect-square object-cover object-top shrink-0"
@@ -388,7 +389,7 @@ const MemoBannersLayout = (props: Props) => {
           >
             <article className="relative flex justify-center shrink-0 max-w-[20rem]">
               <figure className="w-full max-w-[20rem] rounded-2xl">
-                <Image
+                <ShimmerImage
                   src={img?.logo || layout?.image || pastaDummy}
                   alt={layout?.title}
                   className="rounded-xl h-[20rem] aspect-square object-cover object-top"
@@ -515,7 +516,7 @@ const MemoBannersLayout = (props: Props) => {
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
           >
-            <Image
+            <ShimmerImage
               src={img?.logo || layout?.image || pastaDummy}
               alt={layout?.title}
               className="h-[20rem] w-full object-cover object-top rounded-2xl"

@@ -10,6 +10,7 @@ import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const searchParams = useSearchParams();
@@ -31,13 +32,11 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
 
   return (
     <div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
-      <Image
+      <ShimmerImage
         src={explore?.specialBannerUrl || img.src}
         quality={95}
         sizes="(max-width: 450px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
         alt={"Explore page wallpaper"}
-        placeholder="blur"
-        blurDataURL={getRandomBlurImg(500, 500)}
         width={500}
         height={400}
         priority={true}

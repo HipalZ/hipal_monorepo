@@ -7,6 +7,7 @@ import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import Image from "next/image";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -49,7 +50,7 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
           className={baseGridOrder[index % baseGridOrder?.length]}
           onClick={() => handleRecommendedDishClick(item)}
         >
-          <Image
+          <ShimmerImage
             className="object-cover w-full h-full max-w-[30rem] max-h-[220px] rounded-xl"
             src={item?.images?.[0]}
             alt={item.name}

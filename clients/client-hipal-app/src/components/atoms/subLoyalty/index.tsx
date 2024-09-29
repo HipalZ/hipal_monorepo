@@ -18,6 +18,7 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { useParams } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import GoogleReviewCard from "../googleReviewCard";
+import ShimmerImage from "../imageshimmer";
 
 interface ILoyaltyCard {
   loyalty: ILoyaltySetting;
@@ -105,7 +106,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 }}
               >
                 <figure className="aspect-square w-[2.5rem] h-[2.5rem] overflow-hidden absolute top-1/2 left-[8%] transform -translate-y-1/2 rounded-full">
-                  <Image src={logo} alt="logo" height={36} width={36} />
+                  <ShimmerImage src={logo} alt="logo" height={36} width={36} />
                 </figure>
 
                 <figcaption
