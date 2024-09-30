@@ -193,7 +193,7 @@ const MemoInovices = () => {
           style={{
             boxShadow: "0px 4.55px 4.55px 0px #00000040",
           }}
-          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[14rem]"
+          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[7rem]"
         >
           <article className="p-6">
             <h1>&#9679; Service: POPCORN MODEL</h1>
@@ -202,12 +202,6 @@ const MemoInovices = () => {
               <span className="float-right">
                 ₹ {business?.serviceCost * business?.months}
               </span>
-            </p>
-          </article>
-          <article className="px-6">
-            <h1>&#9679; Tax: </h1>
-            <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-              No Tax <span className="float-right">₹ 0</span>
             </p>
           </article>
         </section>
