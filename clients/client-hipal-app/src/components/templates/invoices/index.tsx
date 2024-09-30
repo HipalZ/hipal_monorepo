@@ -1,14 +1,8 @@
 "use client";
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import Hi from "@/assets/svg/hand.svg";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
-import MemoBottomButton from "@/components/molecules/bottomButton";
-import useTableData from "@/components/store/useTableData";
-import { useLogin } from "@/components/store/useLogin";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { updateTheme } from "@/components/utils/themes";
 import { BsDownload } from "react-icons/bs";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -109,29 +103,11 @@ const businessData = [
   },
 ];
 
-const MemoInovices = ({ data }) => {
-  const pathname = usePathname();
-  const router = useRouter();
+const MemoInovices = () => {
   const params = useParams();
   const printRef = useRef<HTMLDivElement | null>(null);
-  const { direction, setDirection, setInvoiceUrl, invoiceUrl, isLogin } =
-    useLogin((s) => ({
-      direction: s.direction,
-      setDirection: s.setDirection,
-      setInvoiceUrl: s.setInvoiceUrl,
-      invoiceUrl: s.invoiceUrl,
-      isLogin: s.isLogin,
-    }));
-  const setTableName = useTableData((state) => state.setTableName);
-  const { setBusinessDetails } = useBusinessDetails((s) => ({
-    setBusinessDetails: s.setBusinessDetails,
-  }));
-  const { accessToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-  }));
-  const businessClient = params?.business as string;
-  const customLink = params?.businessId as string;
 
+  const businessClient = params?.business as string;
   const business = useMemo(() => {
     return (
       businessData.find((b) => b.name === businessClient) || {
@@ -146,33 +122,6 @@ const MemoInovices = ({ data }) => {
       }
     );
   }, [businessClient]);
-
-  const handleNavigate = useCallback(() => {
-    router.push("/");
-  }, []);
-
-  const handleNavigatePayment = useCallback(() => {
-    setTableName(business.bizName);
-    router.push(
-      `/${customLink}/payment?amount=${
-        business?.serviceCost * business?.months
-      }`,
-    );
-  }, [customLink, business?.serviceCost, business?.months]);
-
-  useEffect(() => {
-    setDirection("invoice");
-    setInvoiceUrl(pathname);
-    setBusinessDetails(data?.data?.business);
-    updateTheme(data?.data?.settings);
-    if (isLogin) {
-      setDirection("");
-      setInvoiceUrl("");
-    }
-    if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
-    }
-  }, [direction, accessToken, invoiceUrl]);
 
   const handleDownloadInvoice = useCallback(async () => {
     const element = printRef?.current;
@@ -194,16 +143,16 @@ const MemoInovices = ({ data }) => {
     <>
       <article className="linear_gradient_background">
         <MemoizedHeader
-          onBack={handleNavigate}
           title="Invoice"
           isIconBusinessShow={true}
           rightImage={Hi}
+          hideBack
         />
       </article>
       <section ref={printRef}>
         <center className="my-6">
           <h1>HIAUG{business?.id}</h1>
-          <article className="on_active_bounce">
+          <article className="cursor-pointer on_active_bounce">
             <p
               onKeyDown={handleDownloadInvoice}
               onClick={handleDownloadInvoice}
@@ -216,7 +165,7 @@ const MemoInovices = ({ data }) => {
           </article>
         </center>
         <hr className="mx-1 my-4 border-2 border-black" />
-        <article className="mx-6 text-base">
+        <article className="mx-6 text-base capitalize">
           <h1>
             <b>Billed to:</b> {business?.bizName}
           </h1>
@@ -293,21 +242,6 @@ const MemoInovices = ({ data }) => {
           exclusive jurisdiction of courts in Hyderabad{" "}
         </center>
       </section>
-      {/* <MemoBottomButton>
-        <div
-          onClick={handleNavigatePayment}
-          onKeyDown={handleNavigatePayment}
-          className={`${
-            business?.serviceCost * business?.months > 0
-              ? ""
-              : "opacity-20 pointer-events-none"
-          } bg-black text-white py-3 px-3 rounded-full mx-6`}
-        >
-          <span>
-            Pay to Hipalz ₹ {business?.serviceCost * business?.months}
-          </span>
-        </div>
-      </MemoBottomButton> */}
     </>
   );
 };
