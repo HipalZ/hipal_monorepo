@@ -19,7 +19,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "soukun",
     bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
-    billValue: 42000,
     serviceCost: 3500,
     months: 12,
     address: "",
@@ -30,7 +29,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "stonewater",
     bizName: "S&D HOSPITALITY - Stone waters",
-    billValue: 42000,
     serviceCost: 3500,
     months: 12,
     address: "",
@@ -41,7 +39,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "hoist",
     bizName: "SONNET HOSPITALITY LLP - Hoist",
-    billValue: 42000,
     serviceCost: 3500,
     months: 12,
     address: "",
@@ -52,7 +49,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "talesoftelugu",
     bizName: "TALES OF TELUGU",
-    billValue: 18000,
     serviceCost: 3000,
     months: 6,
     address: "",
@@ -63,7 +59,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "kebabwala",
     bizName: "Kebabwala",
-    billValue: 12000,
     serviceCost: 2000,
     months: 6,
     address: "",
@@ -74,7 +69,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "vamsi",
     bizName: "Vamsi",
-    billValue: 1,
     serviceCost: 1,
     months: 1,
     address: "",
@@ -85,7 +79,6 @@ const businessData = [
     date: "02 Aug 2024",
     name: "zylk",
     bizName: "zylk",
-    billValue: 18000,
     serviceCost: 3000,
     months: 6,
     address:
@@ -97,12 +90,22 @@ const businessData = [
     date: "19 Sept 2024",
     name: "lifafa",
     bizName: "lifafa",
-    billValue: 10500,
     serviceCost: 3500,
     months: 3,
     address:
       "588/1 2 1/2, Inner Ring Rd, Survey Colony, Saraswathi Colony, Uppal, Hyderabad, Telangana 500039",
     gst: "36ALAPS3759F1ZX",
+  },
+  {
+    id: "009",
+    date: "30 Sept 2024",
+    name: "cafin",
+    bizName: "cafin",
+    serviceCost: 3200,
+    months: 12,
+    address:
+      "Gokul plots, 4o feet road plot no 67 & 68, venkata ramana colony, 9th Phase, Kukatpally Housing Board Colony, Hyderabad, Telangana 500085",
+    gst: "",
   },
 ];
 
@@ -136,7 +139,6 @@ const MemoInovices = ({ data }) => {
         date: "",
         name: "",
         bizName: "",
-        billValue: 0,
         serviceCost: 0,
         months: 0,
         address: "",
@@ -151,8 +153,12 @@ const MemoInovices = ({ data }) => {
 
   const handleNavigatePayment = useCallback(() => {
     setTableName(business.bizName);
-    router.push(`/${customLink}/payment?amount=${business.billValue}`);
-  }, [customLink, business.billValue]);
+    router.push(
+      `/${customLink}/payment?amount=${
+        business?.serviceCost * business?.months
+      }`,
+    );
+  }, [customLink, business?.serviceCost, business?.months]);
 
   useEffect(() => {
     setDirection("invoice");
@@ -244,7 +250,9 @@ const MemoInovices = ({ data }) => {
             <h1>&#9679; Service: POPCORN MODEL</h1>
             <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
               Rs {business?.serviceCost} for {business?.months} months{" "}
-              <span className="float-right">₹ {business?.billValue}</span>
+              <span className="float-right">
+                ₹ {business?.serviceCost * business?.months}
+              </span>
             </p>
           </article>
           <article className="px-6">
@@ -256,7 +264,10 @@ const MemoInovices = ({ data }) => {
         </section>
         <article className="text-[#6F649B] mx-10 my-6 text-xl">
           <h1 className="font-semibold">
-            Grand Total <b className="float-right">₹ {business.billValue}</b>
+            Grand Total{" "}
+            <b className="float-right">
+              ₹ {business?.serviceCost * business?.months}
+            </b>
           </h1>
         </article>
         <hr className="mx-1 my-4 border-[#000000] border-2" />
@@ -287,10 +298,14 @@ const MemoInovices = ({ data }) => {
           onClick={handleNavigatePayment}
           onKeyDown={handleNavigatePayment}
           className={`${
-            business.billValue > 0 ? "" : "opacity-20 pointer-events-none"
+            business?.serviceCost * business?.months > 0
+              ? ""
+              : "opacity-20 pointer-events-none"
           } bg-black text-white py-3 px-3 rounded-full mx-6`}
         >
-          <span>Pay to Hipalz ₹ {business.billValue}</span>
+          <span>
+            Pay to Hipalz ₹ {business?.serviceCost * business?.months}
+          </span>
         </div>
       </MemoBottomButton>
     </>
