@@ -9,6 +9,7 @@ import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import paymentsRouter from "./payments";
+import posRouter from "./pos";
 import googleReview from "./reviews";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
@@ -35,6 +36,7 @@ export const routes = app
   .route("/couponz", couponzRouter)
   .route("/reviews", googleReview)
   .route("/coupon-analytics", couponAnalytics)
-  .route("/hipalz", hipalzRouter);
+  .route("/hipalz", hipalzRouter)
+  .route("/pos", posRouter);
 
 export type AppType = typeof routes;
