@@ -293,7 +293,7 @@ const MemoInovices = ({ data }) => {
           exclusive jurisdiction of courts in Hyderabad{" "}
         </center>
       </section>
-      <MemoBottomButton>
+      {/* <MemoBottomButton>
         <div
           onClick={handleNavigatePayment}
           onKeyDown={handleNavigatePayment}
@@ -307,7 +307,7 @@ const MemoInovices = ({ data }) => {
             Pay to Hipalz ₹ {business?.serviceCost * business?.months}
           </span>
         </div>
-      </MemoBottomButton>
+      </MemoBottomButton> */}
     </>
   );
 };
