@@ -1,10 +1,10 @@
 import { connectDB } from "@hi/utils";
 import { prometheus } from "@hono/prometheus";
 import { swaggerUI } from "@hono/swagger-ui";
+import helmet from "helmet";
 import { Hono } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { serveStatic } from "hono/bun";
-import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
@@ -13,9 +13,9 @@ import { timeout } from "hono/timeout";
 import { catchErrorHandler } from "../middleware/catchErrorHandler";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
-
 import "./utils/env";
-/////
+import cookieSession = require("cookie-session");
+
 const app = new Hono({
   strict: true,
 });
@@ -27,7 +27,8 @@ const limiter = rateLimiter({
   keyGenerator: (c) => c.req.header("authorization") ?? "new-user",
   // store: new RedisStore({ client: redisClient }),
 });
-// // Apply the rate limiting middleware to all requests.
+
+// Apply the rate limiting middleware to all requests.
 app.use(limiter);
 
 const { printMetrics, registerMetrics } = prometheus();
@@ -37,7 +38,7 @@ app.get("/metrics", printMetrics);
 app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
-app.use(cors());
+
 app.use(csrf());
 app.use(logger());
 app.use("/assets/*", serveStatic({ path: "./assets" }));
@@ -47,7 +48,7 @@ app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
 (async () => {
   await connectDB();
 })();
-/////
+
 app.route("/", routes);
 
 app.get("/", async (c) => {
@@ -59,12 +60,24 @@ app.get("/", async (c) => {
   });
 });
 
+// @ts-ignore
+app.use(helmet());
+// @ts-ignore
+app.use(catchErrorHandler(app));
+// @ts-ignore
+app.use(
+  // @ts-ignore
+  cookieSession({
+    secure: true,
+    httpOnly: true,
+    signed: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: "strict",
+  }),
+);
 export default {
   port: Bun.env.PORT,
   fetch: app.fetch,
 };
-
-//@ts-ignore
-app.use(catchErrorHandler(app));
 
 export { type AppType } from "./routes";

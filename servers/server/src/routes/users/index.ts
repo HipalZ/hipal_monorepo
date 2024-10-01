@@ -232,7 +232,6 @@ const usersRouter = new Hono()
         };
 
         const response = await axios(options);
-        console.log("responsesss", response.data.message);
 
         if (
           response?.data?.message === "Mobile no. not found" ||

@@ -289,6 +289,7 @@ const categoriesRouter = new Hono()
 
   .get(
     "/",
+
     zValidator(
       "query",
       z.object({
