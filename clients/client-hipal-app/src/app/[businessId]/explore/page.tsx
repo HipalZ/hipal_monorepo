@@ -52,11 +52,6 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-const GoogleReviews = dynamics(
-  () => import("@/components/organisms/explore/googleReviews"),
-  { loading: () => <SkeletonLoader height={200} /> },
-);
-
 export async function generateMetadata() {
   return {
     title: "Explore",
@@ -74,7 +69,7 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-          <AllCouponz couponz={data?.couponz} />
+          <AllCouponz />
           <div className="bg-base-200">
             <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
           </div>
@@ -139,7 +134,6 @@ export default async function Explore({
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
           ) : null}
-          <GoogleReviews />
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
