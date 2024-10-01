@@ -15,7 +15,6 @@ import {
 } from "@/components/utils/bannerLayouts";
 import { cn } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
-import { hexToRGBA } from "@/components/utils/helpers";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 
@@ -159,9 +158,7 @@ const MemoBannersLayout = (props: Props) => {
                     overflow: "hidden",
                     ...paragraphStyle,
                   }}
-                  className={
-                    "text-[0.625rem] leading-3 mt-2 text-left opacity-70 pb-1"
-                  }
+                  className={"text-xs leading-4 mt-2 text-left opacity-70 pb-1"}
                 >
                   {paragraph
                     ? truncateDescription(paragraph)
@@ -225,7 +222,7 @@ const MemoBannersLayout = (props: Props) => {
                   overflow: "hidden",
                   ...paragraphPropsStyle,
                 }}
-                className="text-[0.625rem] leading-3 opacity-70 pb-1"
+                className="pb-1 text-xs leading-4 opacity-70"
               >
                 {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
               </p>
@@ -288,7 +285,7 @@ const MemoBannersLayout = (props: Props) => {
                   overflow: "hidden",
                   ...paragraphStyle,
                 }}
-                className="text-[0.625rem] leading-3 mt-2 text-left opacity-70 pb-1"
+                className="pb-1 mt-2 text-xs leading-4 text-left opacity-70"
               >
                 {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
               </div>

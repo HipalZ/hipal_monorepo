@@ -1,6 +1,14 @@
-import { memo, useEffect, useRef, Suspense, lazy, useCallback } from "react";
+import {
+  memo,
+  useEffect,
+  useRef,
+  Suspense,
+  lazy,
+  useCallback,
+  startTransition,
+} from "react";
 import { apiRpc } from "@hi/common";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { cn, storeImageAfterSave } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import type { IBannerPayload } from "@/components/types/businessData";
@@ -131,6 +139,8 @@ const MemoCreateBanner = () => {
     setIsPatternExists: s.setIsPatternExists,
     setOpenPreview: s.setOpenPreview,
   }));
+
+  const navigate = useNavigate();
 
   const { setToggleExplorePages } = useExploreStore((s) => ({
     setToggleExplorePages: s.setToggleExplorePages,
@@ -280,6 +290,12 @@ const MemoCreateBanner = () => {
         json: filteredPayload,
       });
     }
+    if (res.status === 401 || res.status === 403) {
+      startTransition(() => {
+        navigate("/login");
+      });
+      return;
+    }
     await res.json();
     if (res.status === 200 || res.status === 201) {
       toast.success(
@@ -311,7 +327,7 @@ const MemoCreateBanner = () => {
       <main className="lg:flex">
         <section
           className={cn(
-            "fixed top-0 lg:relative bg-white lg:bg-transparent w-full h-[16rem] md:h-[30rem] lg:h-[90vh] z-10 max-w-[69rem]",
+            "fixed top-0 lg:relative bg-white lg:bg-transparent w-full h-[16rem] md:h-[30rem] lg:h-[90vh] z-10 max-w-[69rem] flex-1",
             onlyImage ? "mb-16" : "",
           )}
         >
@@ -352,7 +368,7 @@ const MemoCreateBanner = () => {
           )}
           &nbsp;
         </section>
-        <section>
+        <section className="flex-1">
           <BannerImgContainer />
           <BannerBtnRedirection />
         </section>
