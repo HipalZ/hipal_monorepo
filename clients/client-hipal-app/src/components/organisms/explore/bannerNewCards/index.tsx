@@ -113,8 +113,7 @@ const MemoBannersLayout = (props: Props) => {
       {bannerLayouts.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <button
-            type="button"
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
@@ -170,19 +169,18 @@ const MemoBannersLayout = (props: Props) => {
                 </p>
               </article>
             </figure>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts2.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
 
         return (
-          <button
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
             key={layout?._id}
-            type="button"
             className="relative text-left"
           >
             <figure className={"w-full rounded-2xl aspect-square relative"}>
@@ -232,14 +230,13 @@ const MemoBannersLayout = (props: Props) => {
                 {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
               </p>
             </article>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts3.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <button
-            type="button"
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
@@ -296,18 +293,17 @@ const MemoBannersLayout = (props: Props) => {
                 {paragraph ? truncateDescription(paragraph) : layout?.paragraph}
               </div>
             </article>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts4.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <button
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
             key={layout?._id}
-            type="button"
             className="relative"
           >
             <figure className="w-full max-w-[20rem] rounded-2xl">
@@ -362,14 +358,13 @@ const MemoBannersLayout = (props: Props) => {
                 </button>
               )}
             </center>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts5.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <button
-            type="button"
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
@@ -426,7 +421,7 @@ const MemoBannersLayout = (props: Props) => {
                 </div>
               )}
             </article>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts6.map((layout) => {
@@ -435,8 +430,7 @@ const MemoBannersLayout = (props: Props) => {
           layout?._id === BannerType.BANNER_TYPE_12 ? "#678BFF" : "#E03030";
         const patternColor = "#00000050";
         return (
-          <button
-            type="button"
+          <article
             onClick={() =>
               handleNavigation(redirectionId, redirectionName, redirectionType)
             }
@@ -483,14 +477,13 @@ const MemoBannersLayout = (props: Props) => {
                 </div>
               )}
             </article>
-          </button>
+          </article>
         );
       })}
       {bannerLayouts7.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <button
-            type="button"
+          <article
             key={layout?._id}
             className="relative"
             onClick={() =>
@@ -504,7 +497,7 @@ const MemoBannersLayout = (props: Props) => {
               width={320}
               height={320}
             />
-          </button>
+          </article>
         );
       })}
     </>
