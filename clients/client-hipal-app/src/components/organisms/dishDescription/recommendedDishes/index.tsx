@@ -20,14 +20,14 @@ function RecommendedDishes({
 }) {
   // Use useMemo to prepare the dishes for rendering
   const processedDishes = useMemo(() => {
-    return recommendations.map((dish: DishType) => ({
+    return recommendations?.map((dish: DishType) => ({
       ...dish,
       image: dish?.images.length > 0 ? dish?.images[0] : "",
       blurDataURL: getRandomBlurImg(150, 150),
     }));
   }, [recommendations]);
 
-  if (processedDishes.length === 0) return null;
+  if (processedDishes?.length === 0) return null;
 
   return (
     <div className="-mt-4">

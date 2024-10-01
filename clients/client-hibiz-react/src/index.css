@@ -271,9 +271,18 @@ input[type='color' i] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
   gap: 1rem;
+  max-width: 69rem;
+  margin: 0 auto;
+}
+
+.banner-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.5rem;
   width: 100%;
   max-width: 69rem;
   margin: 0 auto;
+  height: auto;
 }
 
 .business_Control {
@@ -476,6 +485,15 @@ input[type='color' i] {
 @media (min-width: 1024px) {
   .business_control_background {
     background-color: #fff;
+  }
+
+  .banner-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    width: 100%;
+    max-width: 69rem;
+    margin: 0 auto;
+    scale: 1.05;
   }
 
   .business_system_cards {

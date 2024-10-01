@@ -907,21 +907,23 @@ input[type='password'] {
     background-color: #333; 
 }
 
-  .embla__button-container {
-	display: flex;
-	justify-content: space-between;
-  }
-  .embla {
-	max-width: 23rem;
+.embla {
+	width: 100%;
+	max-width: 24rem;
+	aspect-ratio: 1;
 	margin: auto;
 	--slide-height: 19rem;
 	--slide-spacing: 0rem;
 	--slide-size: 78%;
-  }
+}
+.embla__button-container {
+  display: flex;
+  justify-content: space-between;
+}
   .embla__viewport {
 	overflow: hidden;
-	padding-left: 20px; /* Left padding */
-	padding-right: 20px; /* Right padding */
+	padding-left: 16px; 
+	padding-right: 16px;
   }
   .embla__container {
 	display: flex;
@@ -1015,9 +1017,9 @@ input[type='password'] {
   .embla__slide {
 	position: relative;
 	flex: 0 0 auto;
-	width: 90%; /* Adjust slide width to include margins */
-	margin-right: 10px; /* Margin between slides */
-	min-width: 0; /* Reset min-width to handle overflow correctly */
+	width: 90%;
+	/* margin-right: 10px;  */
+	min-width: 0;
   }
   
   .explore-bento-first {  
@@ -2364,7 +2366,7 @@ input[type='password'] {
 	);
 	background-size: 200% 100%;
 	animation: shimmerAnimation 1.5s infinite linear;
-	border-radius: inherit; /* Same border radius as image */
+	border-radius: 1rem
   }
   
   @keyframes shimmerAnimation {

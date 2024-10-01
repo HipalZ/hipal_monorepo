@@ -4,17 +4,12 @@ import { memo } from "react";
 
 const MemoDishesTypes = ({
   parentCategory,
-  childCategory,
 }: {
   parentCategory: CategoryType[];
-  childCategory: CategoryType[];
 }) => {
   return (
     <section className="sticky z-50 text-primary top-[3.125rem]">
-      <MainTypes
-        parentCategory={parentCategory}
-        childCategory={childCategory}
-      />
+      <MainTypes parentCategory={parentCategory} />
     </section>
   );
 };

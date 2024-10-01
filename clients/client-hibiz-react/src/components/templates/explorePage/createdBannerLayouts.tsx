@@ -69,9 +69,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <div
             className={cn(
-              "flex flex-col shrink-0 relative",
-              isExplorePage ? "h-full max-h-[12rem] w-[12rem]" : "",
-              "border border-1 border-[#00000050]",
+              "flex flex-col shrink-0 relative max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl",
             )}
             key={layout?._id}
             onClick={
@@ -80,30 +78,26 @@ const MemoCreatedBannersLayout = (props: Props) => {
           >
             <article
               key={layout?._id}
-              className={cn(isExplorePage ? "h-full max-h-[12rem]" : "")}
+              className={cn(
+                "max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl",
+              )}
             >
               <figure>
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "w-full rounded-t-xl h-full max-h-[8.3rem] object-cover object-top",
-                    isExplorePage ? "h-full max-h-[8.5rem]" : "md:w-[15rem]",
+                    "w-full rounded-t-xl object-cover object-top max-w-[12rem] md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl",
                   )}
                 />
               </figure>
             </article>
             <article
               style={{
-                background: `linear-gradient(137.02deg, ${
-                  selectedColor?.bgColor || "white"
-                }80 1.64%,${selectedColor?.bgColor || "white"}30 98.36%)`,
+                background: selectedColor?.bgColor || "#ffffff",
               }}
               className={cn(
-                "p-2 rounded-b-xl border border-[#000000]",
-                isExplorePage
-                  ? "max-w-[12rem] "
-                  : "w-full md:max-w-[15rem] min-h-[3.7rem]",
+                "p-2 rounded-b-xl border border-[#000000] max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] absolute bottom-0",
               )}
             >
               <div className="flex justify-between ">
@@ -149,39 +143,33 @@ const MemoCreatedBannersLayout = (props: Props) => {
       })}
       {bannerLayouts2.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
-        const backgroundColor =
-          selectedColor?.bgColor === "transparent"
-            ? "transparent"
-            : selectedColor?.bgColor
-              ? hexToRGBA(selectedColor.bgColor, 0.4)
-              : "transparent";
         return (
-          <section key={layout?._id} className="shrink-0 ">
-            <article
-              className="relative flex justify-center w-full"
+          <section
+            key={layout?._id}
+            className="shrink-0  max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2x"
+          >
+            <button
+              type="button"
+              className="relative flex text-left justify-center  max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2x"
               onClick={
                 isExplorePage ? null : () => handleEditBanner(banner || {})
               }
             >
-              <figure className="rounded-2xl">
+              <figure className="max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl ">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
                   className={cn(
-                    "rounded-2xl w-[12rem] h-[12rem] object-cover object-top",
-                    isExplorePage ? "" : "md:w-[15rem]",
+                    " max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl",
                   )}
                 />
               </figure>
               <article
                 style={{
-                  backgroundColor: backgroundColor,
+                  background: selectedColor?.bgColor || "#ffffff",
                 }}
                 className={cn(
-                  "absolute bottom-2 p-2 rounded-xl mx-2 backdrop-blur-sm",
-                  isExplorePage
-                    ? "w-[90%] max-w-[11rem] max-h-[12rem] md:max-w-[11rem]"
-                    : "w-[92%] max-w-[10.5rem] md:max-w-[11.5rem] md:w-[11.5rem]",
+                  "absolute bottom-2 p-2 rounded-xl mx-2 max-w-[12rem] w-[92%] md:max-w-[14rem] lg:max-w-[17rem]",
                 )}
               >
                 <div className="flex justify-between">
@@ -194,7 +182,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   {layout?.isButton && (
                     <div
                       style={buttonStyleTags}
-                      className="flex items-center px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                      className="flex items-center px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 -mr-1 -mt-1"
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
@@ -218,7 +206,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                     : layout?.paragraph}
                 </p>
               </article>
-            </article>
+            </button>
           </section>
         );
       })}
@@ -227,16 +215,16 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <section key={layout?._id} className="shrink-0 ">
             <article
-              className="relative flex justify-center shrink-0 max-w-[13rem]"
+              className="relative flex justify-center shrink-0  max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl"
               onClick={
                 isExplorePage ? null : () => handleEditBanner(banner || {})
               }
             >
-              <figure className="rounded-2xl max-h-[13rem] ">
+              <figure className=" max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl ">
                 <img
                   src={img?.logo || layout?.image}
                   alt={layout?.title}
-                  className="rounded-xl h-[12rem] w-[13rem] object-cover object-top"
+                  className=" max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl object-cover object-top"
                 />
               </figure>
               <article
@@ -260,7 +248,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                   {layout?.isButton && (
                     <div
                       style={buttonOutlineStyleTags}
-                      className="flex items-center border border-1 px-2 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                      className="flex items-center border border-1 px-2 py-0.5 text-[0.675rem] text-white rounded-full space-x-0.5  -mr-1"
                     >
                       <button type="button">{callToAction || "Explore"}</button>{" "}
                       <span className="text-[0.6rem]">
@@ -293,18 +281,17 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <article
             key={layout?._id}
-            className="shrink-0 relative flex justify-center h-[12rem] max-w-[15rem]"
+            className="shrink-0 relative flex justify-center max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl"
             onClick={
               isExplorePage ? null : () => handleEditBanner(banner || {})
             }
           >
-            <figure className="max-w-[15rem] rounded-2xl">
+            <figure className="max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl">
               <img
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] object-cover object-top",
-                  isExplorePage ? "w-[12rem] md:w-[13rem]" : " w-[15rem]",
+                  "rounded-xl max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square object-cover object-top",
                 )}
               />
             </figure>
@@ -312,12 +299,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
               style={{
                 background:
                   selectedColor?.bgColor === "transparent"
-                    ? null
-                    : `linear-gradient(to bottom, transparent 10%, ${
-                        selectedColor?.bgColor || "black"
-                      }95 40%, transparent 90%)`,
+                    ? "transparent"
+                    : `linear-gradient(to bottom, transparent 10%, ${selectedColor?.bgColor} 40%, transparent 90%)`,
               }}
-              className="bg-black absolute bottom-1/2 translate-y-1/2 w-full max-w-[15rem] flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
+              className="bg-black absolute bottom-1/2 translate-y-1/2 max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
             >
               <h1
                 style={paragraphPropsStyle}
@@ -340,7 +325,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
               {layout?.isButton && (
                 <div
                   style={buttonOutlineStyleTags}
-                  className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                  className="flex items-center border border-1 px-1 py-0.5 text-[0.675rem] text-white rounded-full space-x-0.5 -mr-1"
                 >
                   <button type="button">{callToAction || "Explore"}</button>{" "}
                   <span className="text-[0.6rem]">
@@ -357,18 +342,17 @@ const MemoCreatedBannersLayout = (props: Props) => {
         return (
           <article
             key={layout?._id}
-            className="relative flex justify-center shrink-0 max-w-[15rem]"
+            className="relative flex justify-center shrink-0 max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square"
             onClick={
               isExplorePage ? null : () => handleEditBanner(banner || {})
             }
           >
-            <figure className="w-full max-w-[15rem] rounded-2xl">
+            <figure className="max-w-[12rem] w-full md:max-w-[14rem] lg:max-w-[17rem] aspect-square rounded-2xl">
               <img
                 src={img?.logo || layout?.image}
                 alt={layout?.title}
                 className={cn(
-                  "rounded-xl h-[12rem] object-cover object-top",
-                  isExplorePage ? "w-[12rem] " : "w-[15rem] ",
+                  "rounded-xl max-w-[12rem] w-full  md:max-w-[14rem] lg:max-w-[17rem] aspect-square object-cover object-top",
                 )}
               />
             </figure>
@@ -376,12 +360,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
               style={{
                 background:
                   selectedColor?.bgColor === "transparent"
-                    ? null
-                    : `linear-gradient(to top, transparent 10%, ${
-                        selectedColor?.bgColor || "black"
-                      } 90%)`,
+                    ? "transparent"
+                    : `linear-gradient(to bottom, ${selectedColor?.bgColor} 0%, ${selectedColor?.bgColor}00 100%)`,
               }}
-              className="absolute top-0 flex flex-col items-start justify-center w-full p-2 bg-black rounded-xl"
+              className="absolute top-0 flex flex-col items-start justify-center w-full h-16 p-2 rounded-t-xl"
             >
               <h1
                 style={paragraphPropsStyle}
@@ -404,7 +386,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
               {layout?.isButton && (
                 <div
                   style={buttonOutlineStyleTags}
-                  className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] text-white rounded-full space-x-0.5 scale-75 -mr-1"
+                  className="flex items-center border border-1 px-1 py-0.5 text-[0.675rem] text-white rounded-full space-x-0.5 -mr-1"
                 >
                   <button type="button">{callToAction || "Explore"}</button>{" "}
                   <span className="text-[0.6rem]">
@@ -426,16 +408,14 @@ const MemoCreatedBannersLayout = (props: Props) => {
             key={layout?._id}
             className={cn(
               isExplorePage
-                ? "h-[12rem] aspect-square lg:max-w-[12rem] shrink-0"
-                : "flex-1 flex-shrink-0 w-full md:max-w-[13rem] h-[13rem]",
+                ? " flex-1 w-full h-[12rem] md:h-[14rem] lg:h-[17rem] max-w-[12rem] md:max-w-[14rem] lg:max-w-[17rem] max-h-[12rem] md:max-h-[14rem] lg:max-h-[17rem] aspect-square"
+                : "flex-1 max-w-[12rem] md:max-w-[14rem] lg:max-w-[17rem] aspect-square",
             )}
           >
             <article
               className={cn(
                 "relative w-full h-full rounded-xl",
-                isExplorePage
-                  ? ""
-                  : "min-h-[11rem] max-h-[12rem] max-w-[13rem] ",
+                isExplorePage ? "" : " ",
               )}
               onClick={
                 isExplorePage ? null : () => handleEditBanner(banner || {})
@@ -472,7 +452,7 @@ const MemoCreatedBannersLayout = (props: Props) => {
                 {layout?.isButton && (
                   <div
                     style={buttonOutlineStyleTags}
-                    className="flex items-center border border-1 px-1 py-0.5 text-[0.5rem] rounded-full space-x-0.5 scale-75 -mr-1"
+                    className="flex items-center border border-1 px-1 py-0.5 text-[0.675rem] rounded-full space-x-0.5 -mr-1"
                   >
                     <button type="button">{callToAction || "Explore"}</button>{" "}
                     <span className="text-[0.6rem]">
@@ -488,9 +468,10 @@ const MemoCreatedBannersLayout = (props: Props) => {
       {bannerLayouts7.map((layout) => {
         if (layout?._id !== selectedLayout) return null;
         return (
-          <section
+          <button
+            type="button"
             key={layout?._id}
-            className="border border-1 border-[#000] rounded-2xl overflow-hidden shrink-0 max-w-[13rem]"
+            className="border border-1 border-[#000] rounded-2xl overflow-hidden shrink-0 max-w-[12rem] w-full max-w-[12rem] md:max-w-[14rem] lg:max-w-[17rem] aspect-square"
             onClick={
               isExplorePage ? null : () => handleEditBanner(banner || {})
             }
@@ -498,9 +479,9 @@ const MemoCreatedBannersLayout = (props: Props) => {
             <img
               src={img?.logo || layout?.image}
               alt={layout?.title}
-              className="w-full h-[12rem] object-cover object-top"
+              className="object-cover  object-top w-full max-w-[12rem] md:max-w-[14rem] lg:max-w-[17rem] aspect-square"
             />
-          </section>
+          </button>
         );
       })}
     </>

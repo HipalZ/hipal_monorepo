@@ -1,5 +1,6 @@
 import { type CSSProperties, type FC, memo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
+import { cn } from "@hi/common";
 
 interface ShimmerImageProps {
   src: string | StaticImageData;
@@ -15,6 +16,7 @@ interface ShimmerImageProps {
   onClick?: () => void;
   sizes?: string;
   priority?: boolean;
+  hide?: boolean;
 }
 
 const MemoShimmerImage: FC<ShimmerImageProps> = ({
@@ -31,11 +33,12 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   onClick,
   sizes,
   priority,
+  hide,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="imageWrapper">
+    <div className={cn(!hide ? "imageWrapper" : "")}>
       {isLoading && <div className="shimmer" />}
       <Image
         src={src}
