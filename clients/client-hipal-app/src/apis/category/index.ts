@@ -1,3 +1,4 @@
+import type { CategoryType } from "@hi/db-models/src/validators";
 import { fetchCommonData } from "../commonApis";
 import { apiRpc } from "@hi/common";
 
@@ -17,6 +18,7 @@ async function fetchCategoryPageData(customLink: string) {
       dishes: "true",
     },
   });
+  // const childCategoriesResponse = await apiRpc.pos.$get();
   const parentCategories = await parentCategoriesResponse.json();
   const childCategories = await childCategoriesResponse.json();
   data["parentCategories"] =

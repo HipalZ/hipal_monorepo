@@ -4,6 +4,7 @@ import Sunrays from "@/assets/img/sunrays_white.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import { cn, formatDiscount } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
+import ShimmerImage from "../imageshimmer";
 
 const MemoCouponCardCongrats = () => {
   const { selectedCoupon } = useCouponz((s) => ({
@@ -21,7 +22,7 @@ const MemoCouponCardCongrats = () => {
         />
       </center>
       <center className="relative z-50 w-64">
-        <Image
+        <ShimmerImage
           src={selectedCoupon?.image || birthdayPlaceholder}
           alt="Birthday Placeholder"
           width={256}

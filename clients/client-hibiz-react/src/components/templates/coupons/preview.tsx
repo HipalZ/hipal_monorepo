@@ -2,13 +2,16 @@
 import { memo, useRef, useState, useCallback } from "react";
 import { cn } from "@hi/common";
 import useCouponsStore from "@/components/store/useCouponsStore";
-import Background from "@/components/atom/feildBackground";
 import { FaPlus, FaTimes } from "react-icons/fa";
-import BottomButton from "@/components/atom/bottomButton";
-import AfterGrabbingCoupon from "./previewTypes/afterGrabbingCard";
 import { compressImage, getCroppedImg } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import Cropper from "react-easy-crop";
+import { lazy } from "react";
+const Background = lazy(() => import("@/components/atom/feildBackground"));
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
+const AfterGrabbingCoupon = lazy(
+  () => import("./previewTypes/afterGrabbingCard"),
+);
 
 const MemoPreview = () => {
   const { bgColor, setBgColor, couponImage, setCouponImage, setSelectedPage } =
@@ -20,8 +23,7 @@ const MemoPreview = () => {
       setSelectedPage: s.setSelectedPage,
     }));
 
-  const { selectedFile, setSelectedFile } = useMenuPageStore((s) => ({
-    selectedFile: s.selectedFile,
+  const { setSelectedFile } = useMenuPageStore((s) => ({
     setSelectedFile: s.setSelectedFile,
   }));
 
@@ -47,7 +49,7 @@ const MemoPreview = () => {
     }
   };
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+  const onCropComplete = useCallback((croppedAreaPixels) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 

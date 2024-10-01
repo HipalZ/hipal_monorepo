@@ -11,7 +11,7 @@ import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
-// export const revalidate = 30;
+// export const revalidate = 600;
 //
 const AllCouponz = dynamics(
   () => import("@/components/templates/couponz/allCouponz"),
@@ -81,17 +81,18 @@ export default async function Explore({
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
           ) && (
-            <article className="bg-base-200">
+            <article className="relative bg-base-200 pb-[3rem]">
               <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-200">
                 In Spotlight
               </h2>
+              <div className="absolute bottom-0 -translate-x-1/2 transform left-1/2 h-[3rem] w-[125%] bg-primary rounded-t-[100%]" />
               <article
                 className={cn(
                   data?.banners?.length === 1 ? "justify-center" : "",
-                  "h-[28rem] flex p-2 space-x-4 overflow-x-auto bg-base-200 rounded-lg flex-nowrap",
+                  "h-[28rem] flex gap-4 bg-base-200 rounded-lg flex-nowrap w-full gap-4",
                 )}
               >
-                <EmblaCarousel2>
+                <EmblaCarousel2 customCarousel={data?.banners?.length === 1}>
                   {data?.banners?.map((banner, index) => {
                     if (!banner?.isPublished) return null;
                     return (

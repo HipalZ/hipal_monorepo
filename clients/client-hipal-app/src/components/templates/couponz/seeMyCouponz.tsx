@@ -83,7 +83,7 @@ const MemoSeeMyCouponz = () => {
   }
 
   return (
-    <>
+    
       <main className="bg-[#F1F0F5] min-h-[100vh] h-full py-4 relative pb-[5rem]">
         <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
           <article className="flex items-center gap-4">
@@ -210,7 +210,7 @@ const MemoSeeMyCouponz = () => {
           </BottomPopUp>
         )}
       </main>
-    </>
+    
   );
 };
 

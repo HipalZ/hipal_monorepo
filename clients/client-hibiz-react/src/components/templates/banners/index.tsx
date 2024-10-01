@@ -50,7 +50,6 @@ const MemoBanners = () => {
       setBannerPage: s.setBannerPage,
       bannerPage: s.bannerPage,
       setEditBanner: s.setEditBanner,
-      handleBannerType: s.handleBannerType,
     }));
 
   const { setSelectedBannerType } = useBannerStore((s) => ({
@@ -169,7 +168,7 @@ const MemoBanners = () => {
     <Suspense fallback={<LoadingSpinner />}>
       <main className="relative h-screen mb-[2rem]">
         <header
-          className={`sticky top-0 z-50 w-full bg-white rounded-t-2xl shadow-lg ${
+          className={`sticky top-0 z-50 w-full bg-white rounded-t-2xl boxShadowCard ${
             isArrangeMode ? "opacity-50 pointer-events-none" : ""
           }`}
         >
@@ -183,7 +182,7 @@ const MemoBanners = () => {
               Size matters! Express limitless with your customers about all the
               happenings at your place.
             </p>
-            <div className="flex justify-around mb-4 md:justify-start md:space-x-10 md:ml-10">
+            <div className="flex justify-around pb-2 mb-4 md:justify-start md:space-x-10 md:ml-10">
               <button
                 type="button"
                 onClick={() => setView(ViewType.BANNERS)}
@@ -237,7 +236,7 @@ const MemoBanners = () => {
         &nbsp;
         <section
           className={
-            "mx-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 pb-[5rem] "
+            "!mx-4 !w-[92%] lg:!ml-10 !md:w-[100%] banner-cards pb-[5rem]"
           }
         >
           {filteredBanners && filteredBanners?.length > 0 ? (
@@ -245,9 +244,9 @@ const MemoBanners = () => {
               <div
                 key={`banner?._id+${index.toString()}`}
                 className={cn(
-                  "relative overflow-hidden md:w-[13rem] md:h-[13rem]",
+                  "relative overflow-hidden",
                   firstCardIndex === index
-                    ? "border-2 border-[#7D68FE] h-[12rem] rounded-2xl"
+                    ? "border-2 border-[#7D68FE]  rounded-2xl"
                     : "",
                 )}
                 onClick={() => handleCardClick(index)}
@@ -272,7 +271,7 @@ const MemoBanners = () => {
                   handleEditBanner={handleEditBanner}
                 />
                 {isArrangeMode && (
-                  <div className="absolute inset-0 z-1000 max-w-[12rem] md:max-w-[15rem] h-[12rem] flex items-center justify-center bg-gray-500 bg-opacity-50 rounded-2xl text-white text-2xl font-bold">
+                  <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white bg-gray-500 bg-opacity-50 z-1000 rounded-2xl">
                     {index + 1}
                   </div>
                 )}

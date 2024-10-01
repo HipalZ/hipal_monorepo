@@ -12,6 +12,7 @@ import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { ICategory, IDish } from "@/components/types/businessData";
 import { RxCross2 } from "react-icons/rx";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 // NOTE: A `relative` tag must be added to the parent of this component
 const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
@@ -107,14 +108,12 @@ const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => voi
                                         </div>
                                         <div className="absolute top-0 right-0 mr-[1.813rem] mt-10 overflow-hidden flex flex-col items-center">
                                             {!!present?.coverImage ? (
-                                                <Image
+                                                <ShimmerImage
                                                     src={present?.coverImage}
                                                     alt="dish"
                                                     width={125}
                                                     height={122}
                                                     onClick={() => setSearchOpen(!search)}
-                                                    placeholder="blur"
-                                                    blurDataURL={getRandomBlurImg(110, 110)}
                                                     className="on_active_bounce rounded-xl "
                                                 />
                                             ) : (

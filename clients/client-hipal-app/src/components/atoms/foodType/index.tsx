@@ -65,7 +65,7 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
         if (imageIcons[currentType]) {
           const { src, alt } = imageIcons[currentType];
           return (
-            <div key={index} className={cn(!showCart ? "" : "")}>
+            <div key={index}>
               <Image
                 src={src}
                 width={20}

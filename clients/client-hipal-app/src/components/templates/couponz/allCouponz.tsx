@@ -1,13 +1,9 @@
 "use client";
-import React, { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
 import type { Coupon } from "@/components/types/businessData";
-import {
-  formatDate,
-  formatDiscount,
-  ICouponPage,
-} from "@/components/utils/helpers";
+import { formatDate, ICouponPage } from "@/components/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useLogin } from "@/components/store/useLogin";
@@ -16,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const EmblaCarousel2 = dynamic(
   () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
@@ -23,9 +20,6 @@ const EmblaCarousel2 = dynamic(
     loading: () => <SkeletonLoader height={200} />,
   },
 );
-interface Iprops {
-  couponz: Coupon[];
-}
 
 const MemoAllCouponz = () => {
   const router = useRouter();
@@ -89,8 +83,8 @@ const MemoAllCouponz = () => {
       },
     });
     const couponz = await couponzResponse.json();
-    console.log(couponz?.data);
     setCouponz(couponz?.data || []);
+    return couponz?.data;
   };
 
   useQuery({
@@ -114,11 +108,11 @@ const MemoAllCouponz = () => {
                   onClick={() => handleRoute(coupon)}
                   onKeyDown={() => handleRoute(coupon)}
                   key={coupon?._id}
-                  className="on_active_bounce bg-base-200 rounded-2xl  overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[11.5rem] w-[20rem] px-2 shrink-0"
+                  className="on_active_bounce bg-base-200 rounded-2xl overflow-hidden relative flex flex-row justify-between items-center m-4 text-primary h-[11.5rem] w-[20rem] px-2 shrink-0"
                 >
                   <article className="flex flex-col items-start w-[60%] pl-2 -mt-6 pb-[1rem]">
                     <h4 className="text-base font-bold leading-5 text-primary">
-                      {coupon?.name || "Coupon Name"} sankalesh ashok harak
+                      {coupon?.name || "Coupon Name"}
                     </h4>
                     <p className="pt-2 text-xs text-primary">
                       Expires: {formatDate(coupon?.conditions?.couponEndDate)}
@@ -143,10 +137,12 @@ const MemoAllCouponz = () => {
                   ))}
 
                   <article className="w-[50%] flex justify-end items-center -mt-7">
-                    <img
+                    <ShimmerImage
                       src={coupon?.image || birthdayPlaceholder}
                       alt="coupon"
                       className="object-cover w-[8rem] h-[8rem] rounded-xl aspect-square mr-1"
+                      width={100}
+                      height={100}
                     />
                   </article>
 

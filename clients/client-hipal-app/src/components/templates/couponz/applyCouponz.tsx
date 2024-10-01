@@ -23,6 +23,7 @@ import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const AlertToRemove = dynamic(
   () => import("@/components/atoms/alertToRemove"),
@@ -287,7 +288,7 @@ const MemoApplyCouponz = () => {
             </article>
           </article>
           <picture className="mr-6">
-            <Image src={logoUrl} alt="logoUrl" width={44} height={44} />
+            <ShimmerImage src={logoUrl} alt="logoUrl" width={44} height={44} />
           </picture>
         </section>
         <br />

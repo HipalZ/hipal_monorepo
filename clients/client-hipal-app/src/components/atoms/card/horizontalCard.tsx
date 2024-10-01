@@ -1,7 +1,5 @@
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
 import { getPrice } from "@/components/utils/helpers";
-import { getRandomBlurImg } from "@/components/utils/images";
-import Image from "next/image";
 import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai";
 import FoodType from "../foodType";
@@ -13,6 +11,7 @@ import type { DishType } from "@hi/db-models/src/validators";
 import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 import { useCartStore } from "@/components/store/useCartStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import ShimmerImage from "../imageshimmer";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -103,9 +102,8 @@ const MemoHorizontalCard = ({
                 className="relative w-[7.5rem] h-[7.5rem] overflow-hidden"
                 onClick={() => openModal(dishData)}
               >
-                <Image
+                <ShimmerImage
                   src={dishData.images[0]}
-                  layout={"intrinsic"}
                   alt="dish"
                   quality={95}
                   width={125}
@@ -113,8 +111,6 @@ const MemoHorizontalCard = ({
                   className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
                     dishData.availability ? "" : "grayscale"
                   }`}
-                  placeholder="blur"
-                  blurDataURL={getRandomBlurImg(300, 110)}
                 />
                 {!dishData.availability && (
                   <>

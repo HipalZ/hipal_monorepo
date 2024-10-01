@@ -48,6 +48,9 @@ interface IUseCouponz {
 
   channelId: string;
   setChannelId: (channelId: string) => void;
+
+  promoteOnBillCouponz: Coupon[];
+  setPromoteOnBillCouponz: (couponz: Coupon[]) => void;
 }
 
 export const useCouponz = create(
@@ -57,7 +60,7 @@ export const useCouponz = create(
       setSelectedCoupon: (coupon) => set(() => ({ selectedCoupon: coupon })),
 
       couponz: [],
-      setCouponz: (couponz) => set(() => ({ couponz })),
+      setCouponz: (couponz) => set(() => ({ couponz: couponz })),
 
       currentPage: ICouponPage.SINGLECOUPON,
       setCurrentPage: (page) => set(() => ({ currentPage: page })),
@@ -109,6 +112,9 @@ export const useCouponz = create(
 
       channelId: "",
       setChannelId: (channelId) => set(() => ({ channelId })),
+
+      promoteOnBillCouponz: [],
+      setPromoteOnBillCouponz: (couponz) => set(() => ({ couponz: couponz })),
     }),
     {
       name: "couponz",

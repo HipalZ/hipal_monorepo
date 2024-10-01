@@ -119,6 +119,9 @@ const businessesRouter = new Hono()
 
             for (let i = 0; i < categories.length; i++) {
               const category = categories[i];
+              category.parentCategoryIds = [];
+              category.subCategoryIds = [];
+              category.dishIds = [];
 
               delete category._id;
               category.businessId = currentBusinessId;
@@ -133,6 +136,9 @@ const businessesRouter = new Hono()
               const dish = dishes[i];
               delete dish._id;
               dish.businessId = currentBusinessId;
+              dish.addOnIds = [];
+              dish.categoryIds = [];
+              dish.recommendationIds = [];
             }
             await Dish.insertMany(dishes, { session });
 

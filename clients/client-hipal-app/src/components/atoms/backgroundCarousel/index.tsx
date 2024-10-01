@@ -1,7 +1,7 @@
 import { getRandomBlurImg } from "@/components/utils/images";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
-import Image from "next/image";
 import { memo, useCallback, useState } from "react";
+import ShimmerImage from "../imageshimmer";
 import "@splidejs/react-splide/css";
 
 interface WallpaperCarouselProps {
@@ -17,34 +17,33 @@ const WallpaperCarousel = ({
 
   const totalSlides = wallpapers.length;
 
-  // Standard image dimensions (maintaining 4:3 aspect ratio)
   const imageWidth = 420;
   const imageHeight = 315;
 
-  // Function to render the image figure
-  const renderImage = (wallpaper: string) => (
-    <figure className="w-full -mt-0 overflow-hidden scale-90 aspect-square rounded-2xl">
-      <Image
-        src={wallpaper}
-        className={`w-full h-full object-contain ${
-          isAvailable ? "" : "grayscale"
-        }`}
-        alt="dish"
-        quality={95}
-        width={imageWidth}
-        height={imageHeight}
-        placeholder="blur"
-        blurDataURL={getRandomBlurImg(500, 500)}
-      />
-      {!isAvailable && (
-        <>
-          <div className="absolute z-20 text-xl text-white bottom-4 left-4">
-            Not Available
-          </div>
-          <div className="absolute bottom-0 w-full rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2" />
-        </>
-      )}
-    </figure>
+  const renderImage = useCallback(
+    (wallpaper: string) => (
+      <figure className="w-full -mt-0 overflow-hidden scale-90 aspect-square rounded-2xl">
+        <ShimmerImage
+          src={wallpaper}
+          className={`w-full h-full object-contain m-0 ${
+            isAvailable ? "" : "grayscale"
+          }`}
+          alt="dish"
+          quality={95}
+          width={imageWidth}
+          height={imageHeight}
+        />
+        {!isAvailable && (
+          <>
+            <div className="absolute z-20 text-xl text-white bottom-4 left-4">
+              Not Available
+            </div>
+            <div className="absolute bottom-0 w-full rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2" />
+          </>
+        )}
+      </figure>
+    ),
+    [],
   );
 
   if (totalSlides === 1) {

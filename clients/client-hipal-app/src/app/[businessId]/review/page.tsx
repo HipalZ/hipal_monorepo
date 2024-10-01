@@ -1,5 +1,5 @@
-import { businessApis } from "@/apis/explore";
-import Review from "@/components/templates/review";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import dynamics from "next/dynamic";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export async function generateMetadata() {
@@ -9,13 +9,18 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Page({
-  params,
-}: { params: { businessId: string } }) {
-  const data = await businessApis.all(params.businessId);
+const MainReview = dynamics(
+  () => import("@/components/templates/newReview/mainReviewPage"),
+  {
+    ssr: false,
+    loading: () => <SkeletonLoader />,
+  },
+);
+
+export default async function Page() {
   return (
     <main>
-      <Review data={data} />
+      <MainReview />
     </main>
   );
 }

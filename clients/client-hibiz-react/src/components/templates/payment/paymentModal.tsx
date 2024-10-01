@@ -24,7 +24,7 @@ const PaymentModal = (props: PaymentModalProps) => {
         {salesData?.mode}
       </button>
       <section style={{ maxHeight: "90%", overflowY: "auto" }}>
-        <div className="flex justify-between mx-6 mt-10">
+        <div className="flex justify-between mx-6 mt-6">
           <h1 className="text-base text-gray-500">
             {timestampToDateTime(salesData?.date || 0)}
           </h1>

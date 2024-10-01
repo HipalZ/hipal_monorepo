@@ -2,6 +2,7 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import { memo } from "react";
 import PlaceholderImg from "../placeholder";
+import ShimmerImage from "../imageshimmer";
 
 export interface ICard extends React.HTMLAttributes<HTMLButtonElement> {
   size: "lg";
@@ -51,14 +52,12 @@ const Card = ({
       >
         {src?.length > 0 ? (
           <figure className="w-full max-w-[22rem] h-full max-h-[22rem]">
-            <Image
+            <ShimmerImage
               src={src}
               quality={95}
               layout="fill"
               objectFit="cover"
               alt={src}
-              placeholder="blur"
-              blurDataURL={getRandomBlurImg(100, 100)}
             />
           </figure>
         ) : (

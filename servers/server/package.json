@@ -18,6 +18,7 @@
     "@hono/prometheus": "^1.0.1",
     "@hono/swagger-ui": "^0.2.2",
     "@hono/zod-validator": "^0.2.2",
+    "axios": "^1.7.7",
     "hono": "^4.4.2",
     "hono-rate-limiter": "^0.3.0",
     "prom-client": "^15.1.2",

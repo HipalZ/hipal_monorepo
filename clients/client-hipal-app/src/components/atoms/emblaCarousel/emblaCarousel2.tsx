@@ -18,8 +18,11 @@ interface IProps {
 }
 
 const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "center" }, [
-    Autoplay(),
+  const [emblaRef, emblaApi] = useEmblaCarousel({ dragFree: true }, [
+    Autoplay({
+      active: true,
+      delay: 5000,
+    }),
   ]);
   const tweenFactor = useRef(0);
   const tweenNodes = useRef<HTMLElement[]>([]);
@@ -124,39 +127,45 @@ const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
       .on("scroll", tweenScale)
       .on("slideFocus", tweenScale);
   }, [emblaApi, tweenScale]);
-
   return (
-    <div className={cn("embla", customCarousel ? "m-0" : "")}>
+    <div className={cn("embla")}>
       <div
         className={cn(customCarousel ? "" : "embla__viewport")}
         ref={emblaRef}
       >
-        <div className="embla__container">{children}</div>
+        <center
+          className={cn(customCarousel ? "ml-6" : "", "embla__container")}
+        >
+          {children}
+        </center>
       </div>
       <div
         className={cn(
-          "px-4 py-4 mt-3 embla__button-container flex items-center",
+          "py-4 mt-3 embla__button-container flex items-center",
           customCarousel ? "!justify-center" : "justify-between",
         )}
       >
         {!customCarousel && (
           <button
             type="button"
-            className="border rounded-full border-primary embla__button embla__button--prev border-1"
+            className="border rounded-full !border-primary embla__button embla__button--prev "
             onClick={onPrevClick}
           >
-            <FaAngleLeft className="text-primary" size={24} />
+            <FaAngleLeft
+              className="p-2 border rounded-full text-primary border-primary"
+              size={36}
+            />
           </button>
         )}
-        <div className="embla__dots">
+        <div className="embla__dots !space-x-2">
           {scrollSnaps.map((_, index) => (
             <button
               key={index.toString()}
               type="button"
-              className={`embla__dot  ${
+              className={`transition-all duration-500 ease-in-out ${
                 index === selectedIndex
-                  ? "embla__dot--active !bg-primary"
-                  : "embla__dot--inactive !opacity-50"
+                  ? "bg-primary w-[1rem] h-[0.5rem] rounded-xl transition-all delay-200"
+                  : "bg-[#ffffff50] rounded-full w-[0.5rem] h-[0.5rem]"
               }`}
               onClick={() => emblaApi?.scrollTo(index)}
             />
@@ -165,10 +174,13 @@ const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
         {!customCarousel && (
           <button
             type="button"
-            className="border rounded-full border-primary embla__button embla__button--next border-1"
+            className="border rounded-full !border-primary embla__button embla__button--next "
             onClick={onNextClick}
           >
-            <FaAngleRight className="text-primary" size={24} />
+            <FaAngleRight
+              className="p-2 border rounded-full text-primary border-primary"
+              size={36}
+            />
           </button>
         )}
       </div>

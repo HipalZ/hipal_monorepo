@@ -22,7 +22,7 @@ const MemoSearchPanelCom = ({ allDishes }) => {
 
   const handleBack = useCallback(() => {
     setIsSearchActive(false);
-    setShowHeader(false);
+    // setShowHeader(false);
   }, [isSearchActive, showHeader]);
 
   return (

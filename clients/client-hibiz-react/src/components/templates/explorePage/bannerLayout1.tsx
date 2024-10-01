@@ -20,11 +20,21 @@ const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
   return (
     <div
       onKeyDown={() => {
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        handleBannerType(
+          layout?._id,
+          layout?.isButton,
+          layout?.isPattern,
+          false,
+        );
         setToggleExplorePages(ExplorePages.NEWBANNER);
       }}
       onClick={() => {
-        handleBannerType(layout?._id, layout?.isButton, layout?.isPattern);
+        handleBannerType(
+          layout?._id,
+          layout?.isButton,
+          layout?.isPattern,
+          false,
+        );
         setToggleExplorePages(ExplorePages.NEWBANNER);
       }}
       className="relative flex flex-col"

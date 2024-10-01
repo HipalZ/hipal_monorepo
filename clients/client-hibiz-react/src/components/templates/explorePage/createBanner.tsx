@@ -1,75 +1,33 @@
-import {
-  type ChangeEvent,
-  memo,
-  useEffect,
-  useRef,
-  useState,
-  Suspense,
-  lazy,
-  useCallback,
-} from "react";
-import { TfiPaintBucket } from "react-icons/tfi";
+import { memo, useEffect, useRef, Suspense, lazy, useCallback } from "react";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
-import {
-  cn,
-  handleClick,
-  preDefinedButtons,
-  storeImageAfterSave,
-} from "@/components/utils/helper";
+import { cn, storeImageAfterSave } from "@/components/utils/helper";
 import toast from "react-hot-toast";
-import type {
-  Color,
-  IBannerPayload,
-  IStyles,
-} from "@/components/types/businessData";
+import type { IBannerPayload } from "@/components/types/businessData";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import { cropImage } from "@/components/cropper";
 import { BsGrid } from "react-icons/bs";
-import { FaTimes } from "react-icons/fa";
-import { BannerPage, BannerType } from "@/components/utils/bannerLayouts";
-import { CiNoWaitingSign } from "react-icons/ci";
+import { BannerPage } from "@/components/utils/bannerLayouts";
 import BottomButton from "@/components/atom/bottomButton";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
-import ReactCropperEasy from "@/components/cropper/cropper";
-import { FixedCropper } from "react-advanced-cropper";
 import EasyReactCropper from "@/components/cropper/cropper";
-
 import type Area from "react-easy-crop";
+import { useBannerTemp } from "@/components/store/useBannerTemp";
+import useLayoutHook from "@/components/store/useLayoutHook";
+import BannerImgContainer from "./bannerImgContainer";
+import BannerBtnRedirection from "./bannerBtnRedirection";
 
 // Lazy load components
 const BannerDynamicLayout = lazy(() => import("./bannerDynamicLayout"));
-const ReactCropper = lazy(() => import("@/components/cropper"));
 const PopUp = lazy(() => import("@/components/atom/popUp"));
-const SubHeader = lazy(() => import("@/components/atom/subHeader"));
-const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const RedirectionPopUp = lazy(() => import("./redirectionPopUp"));
 const ExploreColorWheel = lazy(() => import("./exploreColorWheel"));
 const SectionLoader = lazy(() => import("@/components/atom/sectionLoader"));
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
-
-const buttonColors = [
-  { bgColor: "#FFFFFF", textColor: "#000000" }, // Mint green with black text
-  { bgColor: "#9013FE", textColor: "#ffffff" }, // Purple with white text
-  { bgColor: "#F5A623", textColor: "#000000" }, // Orange with black text
-  { bgColor: "#000000", textColor: "#ffffff" }, // Red with white text
-  { bgColor: "#7ED321", textColor: "#000000" }, // Lime green with black text
-  { bgColor: "transparent", textColor: "#ffffff" }, // Black with white text
-];
-
-const preDefinedColors = [
-  "#FFFFFF", // White
-  "#9013FE", // Purple
-  "#F5A623", // Orange
-  "#000000", // Black
-  "#7ED321", // Lime green
-  "transparent",
-];
 
 interface CropperRef {
   getCroppedAreaPixels: () => Area | null;
@@ -77,46 +35,100 @@ interface CropperRef {
 
 const MemoCreateBanner = () => {
   const cropperRef = useRef<CropperRef>(null);
-  const [isPublished, setIsPublished] = useState(false);
   const { businessId } = useParams();
-  const bannerRef = useRef<HTMLInputElement | null>(null);
 
-  const [itemName, setItemName] = useState("");
-  const [img, setImg] = useState({ logo: "" });
-  const [imageFiles, setImageFiles] = useState({ logo: null });
-  const [showCropper, setShowCropper] = useState(false);
-  const [cropping, setCropping] = useState({ image: null, type: null });
-  const [heading, setHeading] = useState("");
-  const [paragraph, setParagraph] = useState("");
-  const [clickRedirect, setClickRedirect] = useState(false);
-  const [callToAction, setCallToAction] = useState("");
-  const [redirectionId, setRedirectionId] = useState("");
-  const [redirectionType, setRedirectionType] = useState("");
   const editingBanner = useBannerStore((s) => s.selectedBanner);
-  const [colorWheelBackground, setColorWheelBackground] = useState(false);
-  const [colorWheelParagraph, setColorWheelParagraph] = useState(false);
-  const [colorWheelButton, setColorWheelButton] = useState(false);
+  const {
+    itemName,
+    setItemName,
+    showCropper,
+    setShowCropper,
+    heading,
+    updateEditBanner,
+    paragraph,
+    clickRedirect,
+    setClickRedirect,
+    callToAction,
+    redirectionId,
+    setRedirectionId,
+    redirectionType,
+    setRedirectionType,
+    setColorWheelBackground,
+    colorWheelBackground,
+    isLoading,
+    setIsLoading,
+    isPublished,
+    setIsPublished,
+    imageFiles,
+    setImageFiles,
+    img,
+    setImg,
+    paragraphStyle,
+    setParagraphStyle,
+    buttonStyle,
+    selectedColor,
+    setSelectedColor,
+    cropping,
+    colorWheelParagraph,
+    setColorWheelParagraph,
+  } = useBannerTemp((s) => ({
+    itemName: s.itemName,
+    setItemName: s.setItemName,
+    showCropper: s.showCropper,
+    setShowCropper: s.setShowCropper,
+    heading: s.heading,
+    updateEditBanner: s.updateEditBanner,
+    paragraph: s.paragraph,
+    setParagraph: s.setParagraph,
+    clickRedirect: s.clickRedirect,
+    setClickRedirect: s.setClickRedirect,
+    callToAction: s.callToAction,
+    setCallToAction: s.setCallToAction,
+    redirectionId: s.redirectionId,
+    setRedirectionId: s.setRedirectionId,
+    redirectionType: s.redirectionType,
+    setRedirectionType: s.setRedirectionType,
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
+    setColorWheelBackground: s.setColorWheelBackground,
+    colorWheelBackground: s.colorWheelBackground,
+    isPublished: s.isPublished,
+    setIsPublished: s.setIsPublished,
+    imageFiles: s.imageFiles,
+    setImageFiles: s.setImageFiles,
+    img: s.img,
+    setImg: s.setImg,
+    paragraphStyle: s.paragraphStyle,
+    setParagraphStyle: s.setParagraphStyle,
+    buttonStyle: s.buttonStyle,
+    selectedColor: s.selectedColor,
+    setSelectedColor: s.setSelectedColor,
+    cropping: s.cropping,
+    colorWheelParagraph: s.colorWheelParagraph,
+    setColorWheelParagraph: s.setColorWheelParagraph,
+  }));
+
   const {
     selectedBannerType,
     isButtonExists,
     setBannerPage,
     isPatternExists,
+    updateEditBannerz,
     editBanner,
     onlyImage,
-    setIsButtonExists,
-    setOnlyImage,
     openPreview,
     setOpenPreview,
   } = useBannerStore((s) => ({
     selectedBannerType: s.selectedBannerType,
     isButtonExists: s.isButtonExists,
     setBannerPage: s.setBannerPage,
+    updateEditBannerz: s.updateEditBannerz,
     isPatternExists: s.isPatternExists,
     editBanner: s.editBanner,
     onlyImage: s.onlyImage,
-    setOnlyImage: s.setOnlyImage,
     setIsButtonExists: s.setIsButtonExists,
     openPreview: s.openPreview,
+    setIsPatternExists: s.setIsPatternExists,
     setOpenPreview: s.setOpenPreview,
   }));
 
@@ -124,66 +136,17 @@ const MemoCreateBanner = () => {
     setToggleExplorePages: s.setToggleExplorePages,
   }));
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [paragraphStyle, setParagraphStyle] = useState<IStyles>({
-    color: "",
-  });
-
-  const [buttonStyle, setButtonStyle] = useState<IStyles>({
-    color: "",
-    buttonColor: "",
-  });
-
-  const [selectedColor, setSelectedColor] = useState<Color>({
-    textColor: "",
-    bgColor: "",
-  });
+  const layoutFlags = useLayoutHook(selectedBannerType || "");
 
   useEffect(() => {
     if (editBanner && editingBanner) {
-      setImg((prev) => ({ ...prev, logo: editingBanner?.bannerImage || "" }));
-      setHeading(editingBanner?.heading || "");
-      setParagraph(editingBanner?.paragraph || "");
-      setParagraphStyle((prev) => ({
-        ...prev,
-        color: editingBanner?.paragraphColor || prev.color,
-      }));
-      setButtonStyle((prev) => ({
-        ...prev,
-        color: editingBanner?.buttonColor || prev.color,
-      }));
-      setRedirectionId(editingBanner?.redirectionId || "");
-      setRedirectionType(editingBanner?.redirectionType || "");
-      setCallToAction(editingBanner?.callToAction || "");
-      setSelectedColor((prev) => ({
-        ...prev,
-        bgColor: editingBanner?.backgroundColor || "",
-      }));
-      setItemName(editingBanner?.redirectionName || "");
-      setIsPublished(editingBanner?.isPublished || false);
-      setIsButtonExists(!!editingBanner?.callToAction);
-      if (editingBanner?.layout === BannerType.BANNER_TYPE_14) {
-        setOnlyImage(true);
-      } else {
-        setOnlyImage(false);
-      }
+      updateEditBanner(editingBanner);
+      updateEditBannerz(editingBanner, layoutFlags);
+    } else {
+      updateEditBannerz({}, {});
+      updateEditBanner({});
     }
-  }, [editingBanner, editBanner]);
-
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const type = event?.target?.dataset?.type;
-    const file = event?.target?.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setCropping({ image: reader.result, type });
-        setShowCropper(true);
-      };
-
-      setImageFiles((prev) => ({ ...prev, [type]: file }));
-    }
-  };
+  }, [editBanner, editingBanner]);
 
   const getCroppedImg = (
     imageSrc,
@@ -239,8 +202,8 @@ const MemoCreateBanner = () => {
             });
             const reader = new FileReader();
             reader.onloadend = () => {
-              setImg((prev) => ({ ...prev, [type]: reader.result }));
-              setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
+              setImg(reader?.result);
+              setImageFiles(croppedFile);
               setShowCropper(false);
             };
             reader.readAsDataURL(croppedFile);
@@ -252,55 +215,14 @@ const MemoCreateBanner = () => {
     }
   };
 
-  const handleHeadingChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setHeading(e.target.value);
+  const handleSaveRedirections = useCallback(
+    (type: string, id: string, itemName: string) => {
+      setRedirectionId(id);
+      setRedirectionType(type);
+      setItemName(itemName);
     },
-    [],
+    [setRedirectionId, setRedirectionType, setItemName],
   );
-
-  const handleDescriptionChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      setParagraph(e.target.value);
-    },
-    [],
-  );
-
-  const handleRedirections = useCallback(() => {
-    setClickRedirect(true);
-  }, []);
-
-  const handleButtonName = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setCallToAction(e.target.value);
-  }, []);
-
-  const handleCustomColor = (
-    element: string,
-    color: string,
-    buttonColor?: string,
-  ) => {
-    if (element === "paragraph" || element === "heading") {
-      setParagraphStyle((prevStyle) => ({ ...prevStyle, color }));
-    } else if (element === "button") {
-      setButtonStyle((prevStyle) => ({
-        ...prevStyle,
-        color,
-        buttonColor,
-      }));
-    } else {
-      setSelectedColor((prev) => ({ ...prev, bgColor: color }));
-    }
-  };
-
-  const handleSaveRedirections = (
-    type: string,
-    id: string,
-    itemName: string,
-  ) => {
-    setRedirectionId(id);
-    setRedirectionType(type);
-    setItemName(itemName);
-  };
 
   const handleCreateBanner = async (isPublish?: boolean) => {
     if (!businessId) return;
@@ -312,20 +234,16 @@ const MemoCreateBanner = () => {
     if (callToAction.length < 3 && isButtonExists && !onlyImage) {
       return toast.error("Button name should be more than 3 characters");
     }
-    if (img && !img.logo && !isPatternExists) {
+    if (img && !img && !isPatternExists) {
       return toast.error("Please upload an image");
     }
     let bannerImage: string | undefined;
     if (
-      imageFiles?.logo &&
-      (!img?.logo?.includes("https://storage.hipal.life") ||
-        !img?.logo?.includes("t-static.blr1.digitaloceanspaces.com"))
+      imageFiles &&
+      (!img?.includes("https://storage.hipal.life") ||
+        !img?.includes("t-static.blr1.digitaloceanspaces.com"))
     ) {
-      bannerImage = await storeImageAfterSave(
-        imageFiles?.logo,
-        img?.logo,
-        setIsLoading,
-      );
+      bannerImage = await storeImageAfterSave(imageFiles, img, setIsLoading);
     }
     const payload: IBannerPayload = {
       businessId,
@@ -349,7 +267,7 @@ const MemoCreateBanner = () => {
       ),
     );
 
-    let res;
+    let res: any;
     if (editBanner) {
       res = await apiRpc.settings.banner[":bannerId"].$put({
         param: {
@@ -372,6 +290,7 @@ const MemoCreateBanner = () => {
       setToggleExplorePages(ExplorePages.BANNERS);
     }
     setBannerPage(BannerPage.VIEW);
+    setIsLoading(false);
   };
 
   const handleBackClick = () => {
@@ -383,21 +302,9 @@ const MemoCreateBanner = () => {
     setToggleExplorePages(ExplorePages.BANNERLAYOUTS);
   };
 
-  const handleRemoveImage = useCallback(
-    (type: string) => {
-      setImageFiles((prev) => ({ ...prev, [type]: null }));
-      setImg((prev) => ({ ...prev, [type]: "" }));
-    },
-    [imageFiles],
-  );
-
-  const handleParagraphColor = useCallback(() => {
-    setColorWheelParagraph(!colorWheelParagraph);
-  }, [colorWheelParagraph]);
-
-  const handlePreview = () => {
+  const handlePreview = useCallback(() => {
     setOpenPreview(!openPreview);
-  };
+  }, [openPreview]);
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -422,7 +329,7 @@ const MemoCreateBanner = () => {
             }
           />
           {openPreview ? null : (
-            <section className="absolute lg:relative flex justify-center mt-[4rem] xl:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
+            <section className="absolute lg:relative flex justify-center  mt-[4rem] xl:translate-y-1/2 -translate-x-1/2 lg:-translate-x-0 -top-8 lg:top-0 left-1/2 lg:left-0 bg-white lg:bg-transparent">
               <BannerDynamicLayout
                 img={img}
                 selectedColor={selectedColor}
@@ -445,337 +352,47 @@ const MemoCreateBanner = () => {
           )}
           &nbsp;
         </section>
-        <section className="w-full">
-          <section className="mt-[18rem] lg:mt-16 mx-4 md:mt-[30rem]">
-            <SubHeader text="Banner Details" />
-            <section className="w-full bg-white rounded-2xl">
-              <section className="flex items-center justify-between flex-1 p-4 mt-4 space-x-4 md:justify-start">
-                <section className="flex gap-4 md:gap-6">
-                  {isPatternExists ? null : (
-                    <article>
-                      <h1 className="mb-2 text-gray-500">Image</h1>
-                      <article
-                        className={cn(
-                          "shrink-0 relative rounded-xl h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] inline-block",
-                          img?.logo
-                            ? ""
-                            : "border-dashed border-2 border-[#8C63FF]",
-                        )}
-                      >
-                        <input
-                          ref={bannerRef}
-                          onClick={(e) => handleClick(e, bannerRef)}
-                          type="file"
-                          id="logoBanner"
-                          style={{ display: "none" }}
-                          onChange={handleImageChange}
-                          data-type="logo"
-                        />
-                        <label
-                          htmlFor="logoBanner"
-                          className="relative flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
-                        >
-                          {img?.logo ? (
-                            <>
-                              <img src={img.logo} alt="Logo" />
-                              <button
-                                type="button"
-                                className="absolute p-0.5 bg-white backdrop-blur-3xl rounded-full top-1 right-1"
-                                onClick={() => handleRemoveImage("logo")}
-                              >
-                                <FaTimes size={12} />
-                              </button>
-                            </>
-                          ) : (
-                            <PlusButton />
-                          )}
-                        </label>
-                      </article>
-                    </article>
-                  )}
-                  {onlyImage ? null : (
-                    <article>
-                      <h1 className="mb-2 text-gray-500">Banner Color</h1>
-                      <article
-                        onClick={() =>
-                          setColorWheelBackground(!colorWheelBackground)
-                        }
-                        style={{
-                          background: selectedColor.bgColor || "transparent",
-                          border:
-                            selectedColor.bgColor === "transparent" ||
-                            selectedColor.bgColor === ""
-                              ? "2px dashed #8C63FF"
-                              : "1px solid black",
-                        }}
-                        className={cn(
-                          "relative px-3 py-2 rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
-                        )}
-                      >
-                        <PlusButton />
-                        <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
-                          <TfiPaintBucket size={16} />
-                        </span>
-                      </article>
-                    </article>
-                  )}
-                  {onlyImage ? null : (
-                    <section className="mb-4">
-                      <h1 className="mb-2 text-gray-500">Colors</h1>
-                      <article className="grid grid-cols-2 gap-4">
-                        {preDefinedColors.map((color) => {
-                          return (
-                            <article
-                              key={color}
-                              onClick={() => handleCustomColor("banner", color)}
-                              onKeyDown={() =>
-                                handleCustomColor("banner", color)
-                              }
-                              style={{
-                                background:
-                                  color === "transparent" ? "none" : color,
-                                border: "1px solid",
-                              }}
-                              className="w-8 h-8 rounded-full"
-                            >
-                              {color === "transparent" && (
-                                <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
-                                  <CiNoWaitingSign size={20} />
-                                </span>
-                              )}
-                            </article>
-                          );
-                        })}
-                      </article>
-                    </section>
-                  )}
-                </section>
-              </section>
-              {onlyImage ? null : (
-                <article>
-                  <section className="m-4">
-                    <div className="relative">
-                      <input
-                        maxLength={20}
-                        type="text"
-                        className="w-full rounded-2xl"
-                        value={heading}
-                        onChange={handleHeadingChange}
-                        placeholder="Heading"
-                      />
-                      <small className="absolute text-gray-700 bottom-3 right-2">
-                        {heading.length || 0}/20
-                      </small>
-                    </div>
-                  </section>
-                  <section className="m-4">
-                    <div className="relative">
-                      <textarea
-                        maxLength={70}
-                        className="w-full h-24 resize-none rounded-2xl"
-                        value={paragraph}
-                        onChange={handleDescriptionChange}
-                        placeholder="Description"
-                      />
-                      <small className="absolute text-gray-700 bottom-4 right-2">
-                        {paragraph.length || 0}/70
-                      </small>
-                    </div>
-                  </section>
-                </article>
-              )}
-            </section>
-            {onlyImage ? null : (
-              <article className="flex justify-around pt-4 bg-white rounded-t-2xl md:justify-start md:pl-6 md:gap-16">
-                <h1 className="text-gray-500">Text Color</h1>
-                <h1 className="text-gray-500">Colors</h1>
-              </article>
-            )}
-            {onlyImage ? null : (
-              <section className="rounded-b-2xl flex items-center justify-around md:justify-start bg-white pb-[2rem] p-4 md:gap-4">
-                <section>
-                  <article
-                    onClick={handleParagraphColor}
-                    onKeyDown={handleParagraphColor}
-                    style={{
-                      background: paragraphStyle?.color || "transparent",
-                      border:
-                        paragraphStyle?.color === "transparent"
-                          ? "2px dashed #8C63FF"
-                          : "1px solid black",
-                    }}
-                    className={cn(
-                      "relative px-3 py-2 rounded-full h-[6rem] w-[6rem] md:h-[8rem] md:w-[8rem] flex justify-center items-center",
-                      paragraphStyle?.color?.length
-                        ? ""
-                        : "border-dashed border-2  border-[#8C63FF]",
-                    )}
-                  >
-                    <PlusButton />
-                    <span className="absolute px-4 py-2 bg-white border border-black rounded-full border-1 -bottom-4">
-                      <TfiPaintBucket size={16} />
-                    </span>
-                  </article>
-                </section>
-                <article className="grid grid-cols-2 gap-4">
-                  {preDefinedColors.map((color) => {
-                    return (
-                      <article
-                        key={color}
-                        onClick={() => handleCustomColor("paragraph", color)}
-                        onKeyDown={() => handleCustomColor("paragraph", color)}
-                        style={{ background: color }}
-                        className="w-8 h-8 rounded-full border border-1 border-[#000]"
-                      >
-                        {color === "transparent" && (
-                          <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
-                            <CiNoWaitingSign size={20} />
-                          </span>
-                        )}
-                      </article>
-                    );
-                  })}
-                </article>
-              </section>
-            )}
-            <article className="flex-2" />
-          </section>
-          {isButtonExists && !onlyImage ? (
-            <section className="m-6">
-              <SubHeader text="Add Button Name" />
-              <article className="justify-between gap-10 p-2 pb-4 bg-white rounded-2xl">
-                <div className="relative shrink-0">
-                  <input
-                    type="text"
-                    className="w-full rounded-2xl"
-                    maxLength={10}
-                    value={callToAction}
-                    onChange={handleButtonName}
-                    placeholder="Button Name"
-                  />
-                  <small className="absolute text-gray-700 right-2 bottom-2">
-                    {callToAction.length}/10
-                  </small>
-                </div>
-                <div className="flex gap-4 mt-4">
-                  {preDefinedButtons.map((btn) => {
-                    const isSelected = callToAction === btn;
-                    return (
-                      <button
-                        key={btn}
-                        type="button"
-                        onClick={() => setCallToAction(btn)}
-                        className={`px-6 py-2 text-[0.75rem] rounded-full ${
-                          isSelected
-                            ? "bg-black text-white"
-                            : "bg-[#8C63FF40] text-[#8C63FF]"
-                        }`}
-                      >
-                        {btn}
-                      </button>
-                    );
-                  })}
-                </div>
-                <article className="gap-4 mt-4 md:mt-0">
-                  <h1 className="my-2 text-gray-500">Color of action button</h1>
-                  <div className="flex gap-4">
-                    {buttonColors.map((color) => {
-                      return (
-                        <article
-                          key={color?.bgColor}
-                          onClick={() =>
-                            handleCustomColor(
-                              "button",
-                              color?.bgColor === "transparent"
-                                ? "#808080"
-                                : color?.bgColor,
-                              color?.textColor,
-                            )
-                          }
-                          onKeyDown={() =>
-                            handleCustomColor(
-                              "button",
-                              color?.bgColor === "transparent"
-                                ? "#808080"
-                                : color?.bgColor,
-                              color?.textColor,
-                            )
-                          }
-                          style={{
-                            background:
-                              color?.bgColor === "transparent"
-                                ? "white"
-                                : color?.bgColor,
-                            color: color?.textColor,
-                          }}
-                          className="w-8 h-8 rounded-full  border border-1 border-[#000]"
-                        >
-                          {color?.bgColor === "transparent" && (
-                            <span className="flex items-center justify-center w-full h-full text-xs text-center border rounded-full border-1">
-                              <CiNoWaitingSign size={20} color="#000" />
-                            </span>
-                          )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </article>
-              </article>
-            </section>
-          ) : null}
-          <section className="m-6 pb-[7rem]">
-            <SubHeader text="Link Items" />
-            <article className="p-4 bg-white rounded-2xl">
-              <button
-                onClick={handleRedirections}
-                type="button"
-                className="w-full py-2 bg-gray-100 rounded-full"
-              >
-                <h1>
-                  &#128279; Categories | dish{" "}
-                  <span className="font-semibold">{itemName}</span>
-                </h1>
-              </button>
-            </article>
-          </section>
-          <BottomButton
-            fixed
-            buttons={[
-              {
-                text: isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <SectionLoader />
-                    Loading...
-                  </div>
-                ) : isPublished ? (
-                  "Save & Unpublish"
-                ) : (
-                  "Save & Publish"
-                ),
-                onClick: () => {
-                  const newIsPublished = !isPublished;
-                  setIsPublished(newIsPublished);
-                  handleCreateBanner(newIsPublished);
-                },
-                disabled: isLoading,
-                className: "w-full py-3 text-white bg-[#7D68FE] rounded-full",
-              },
-              {
-                text: isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <SectionLoader />
-                    Loading...
-                  </div>
-                ) : (
-                  "Save"
-                ),
-                onClick: () => handleCreateBanner(isPublished),
-                disabled: isLoading,
-                className: "w-full py-3 text-white bg-black rounded-full",
-              },
-            ]}
-          />
+        <section>
+          <BannerImgContainer />
+          <BannerBtnRedirection />
         </section>
+        <BottomButton
+          fixed
+          buttons={[
+            {
+              text: isLoading ? (
+                <div className="flex items-center justify-center">
+                  <SectionLoader />
+                  Loading...
+                </div>
+              ) : isPublished ? (
+                "Save & Unpublish"
+              ) : (
+                "Save & Publish"
+              ),
+              onClick: () => {
+                const newIsPublished = !isPublished;
+                setIsPublished(newIsPublished);
+                handleCreateBanner(newIsPublished);
+              },
+              disabled: isLoading,
+              className: "w-full py-3 text-white bg-[#7D68FE] rounded-full",
+            },
+            {
+              text: isLoading ? (
+                <div className="flex items-center justify-center">
+                  <SectionLoader />
+                  Loading...
+                </div>
+              ) : (
+                "Save"
+              ),
+              onClick: () => handleCreateBanner(isPublished),
+              disabled: isLoading,
+              className: "w-full py-3 text-white bg-black rounded-full",
+            },
+          ]}
+        />
       </main>
       <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
@@ -805,19 +422,6 @@ const MemoCreateBanner = () => {
             colorType="backgroundColor"
             setStyle={setSelectedColor}
             style={selectedColor}
-          />
-        </PopUp>
-      )}
-      {colorWheelButton && (
-        <PopUp
-          show={colorWheelButton}
-          onClose={() => setColorWheelButton(!colorWheelButton)}
-        >
-          <ExploreColorWheel
-            close={() => setColorWheelButton(!colorWheelButton)}
-            colorType="button"
-            style={buttonStyle}
-            setStyle={setButtonStyle}
           />
         </PopUp>
       )}

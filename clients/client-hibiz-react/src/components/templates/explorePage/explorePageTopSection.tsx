@@ -132,7 +132,7 @@ const MemoExplorePageSection = () => {
             >
               {img.banner ? (
                 <div className="relative w-full max-w-[28rem] h-[320px]">
-                  <figure className="w-full h-full">
+                  <figure className="w-full h-full min-w-[20rem]">
                     <img
                       src={img.banner}
                       alt="Banner"
@@ -174,8 +174,8 @@ const MemoExplorePageSection = () => {
               className="flex items-center justify-center w-full h-full overflow-hidden cursor-pointer rounded-xl"
             >
               {img.logo ? (
-                <div className="relative w-full h-full">
-                  <figure className="w-full h-full">
+                <div className="relative w-full h-full min-h-[6.25rem] aspect-square">
+                  <figure className="w-full h-full min-h-[6.25rem]">
                     <img
                       src={img.logo}
                       alt="Logo"

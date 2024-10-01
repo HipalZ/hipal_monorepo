@@ -9,7 +9,7 @@ import { SiSwiggy, SiZomato } from "react-icons/si";
 import { TbReportAnalytics } from "react-icons/tb";
 import { BsCurrencyRupee, BsFillPersonFill } from "react-icons/bs";
 import { AiFillHeart } from "react-icons/ai";
-import { toast } from "react-toastify";
+import { toast } from "react-hot-toast";
 import type { User } from "../store/useOwnerLogin";
 import Love from "@/assets/made_love.png";
 
