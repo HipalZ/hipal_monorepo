@@ -14,8 +14,15 @@ const menuBannerRouter = new Hono()
       const { businessId } = c.req.param();
       const menuBanners = await MenuBanner.find({
         businessId,
+        isPublished: true,
+        heading: { $ne: "All Hours Delights" },
       });
-      // Get the current time in milliseconds since midnight
+
+      const allHoursDelights = await MenuBanner.findOne({
+        businessId,
+        heading: "All Hours Delights",
+      });
+
       const now = new Date();
       const currentTime =
         now.getHours() * 3600000 +
@@ -30,11 +37,19 @@ const menuBannerRouter = new Hono()
           banner.endTime >= currentTime,
       );
 
+      const convertInSingleObject = filteredMenuBanners?.[0];
+      if (convertInSingleObject) {
+        convertInSingleObject.dishIds = [
+          ...convertInSingleObject.dishIds,
+          ...(allHoursDelights?.dishIds ?? []),
+        ];
+      }
+
       return c.json(
         {
           message: "Menu banners fetched",
           err: false,
-          data: filteredMenuBanners,
+          data: (convertInSingleObject as MenuBannerType) || {},
         },
         200,
       );
@@ -131,6 +146,14 @@ const menuBannerRouter = new Hono()
           businessId: businessId,
           heading: "Late Dinners",
           startTime: 21 * 60 * 60 * 1000,
+          endTime: 24 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: businessId,
+          heading: "All Hours Delights",
+          startTime: 0,
           endTime: 24 * 60 * 60 * 1000,
           isPublished: true,
           dishIds: [],
