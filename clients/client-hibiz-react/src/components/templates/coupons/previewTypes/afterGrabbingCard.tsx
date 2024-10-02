@@ -17,7 +17,6 @@ const MemoAfterGrabbingCoupon = () => {
     minimumBillAmount,
     extendedEndTime,
   } = useCouponsStore();
-  console.log("couponEndDate", couponEndDate);
 
   const formatDate = (timestamp: number | null) => {
     if (!timestamp) return "No expiry";
