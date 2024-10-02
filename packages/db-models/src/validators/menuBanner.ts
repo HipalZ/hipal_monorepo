@@ -34,9 +34,7 @@ export const menuBannerSchema = z.object({
     }),
   dishIds: z
     .array(ObjectIdSchema)
-    .min(1, {
-      message: "Dish Ids are required",
-    })
+
     .max(15, {
       message: "Dish Ids should be at most 10",
     })
