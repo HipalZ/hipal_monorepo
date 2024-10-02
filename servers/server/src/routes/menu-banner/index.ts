@@ -8,7 +8,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 const menuBannerRouter = new Hono()
   .get(
-    "/:businessId",
+    "/explore/:businessId",
     zValidator("param", z.object({ businessId: z.string() })),
     async (c) => {
       const { businessId } = c.req.param();
@@ -44,6 +44,7 @@ const menuBannerRouter = new Hono()
       );
 
       const convertInSingleObject = filteredMenuBanners?.[0];
+      console.log("convertInSingleObject", convertInSingleObject);
       if (convertInSingleObject) {
         // Merge dishIds and avoid duplicates using a Set
         const mergedDishIds = new Set([
@@ -51,77 +52,99 @@ const menuBannerRouter = new Hono()
           ...(allHoursDelights?.dishIds ?? []),
         ]);
 
+        const arra = Array.from(mergedDishIds);
+
+        const mergedDishIdsMap = new Map(
+          arra.map((dish) => [dish._id.toString(), dish]),
+        );
+        const mergedDishIdsSet = new Set([
+          ...convertInSingleObject.dishIds.map((id) => id.toString()),
+          ...(allHoursDelights?.dishIds.map((id) => id.toString()) ?? []),
+        ]);
         // Convert the Set back to an array
-        convertInSingleObject.dishIds = Array.from(mergedDishIds);
+        convertInSingleObject.dishIds = Array.from(mergedDishIdsSet).map((id) =>
+          mergedDishIdsMap.get(id),
+        );
       }
+
+      console.log("convertInSingleObject", convertInSingleObject);
 
       return c.json(
         {
           message: "Menu banners fetched",
           err: false,
-          data: (convertInSingleObject as MenuBannerType) || {},
+          data: convertInSingleObject,
         },
         200,
       );
     },
   )
-  .post("/", zValidator("json", menuBannerSchema), async (c) => {
-    const requestData = await c.req.json();
+  .get(
+    "/:bannerId",
+    zValidator("param", z.object({ bannerId: z.string() })),
+    async (c) => {
+      const { bannerId } = c.req.param();
 
-    const {
-      businessId,
-      dishIds,
-      startTime,
-      endTime,
-      heading,
-      isPublished,
-      _id,
-    } = requestData;
+      const menuBanner = await MenuBanner.findById(bannerId);
 
-    await MenuBanner.findOneAndDelete({ _id: _id });
+      if (!menuBanner) {
+        return c.json(
+          {
+            message: "Menu banner not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
 
-    if (startTime >= endTime) {
       return c.json(
         {
-          message: "Start time should be less than end time",
-          err: true,
-          data: {},
+          message: "Menu banner fetched",
+          err: false,
+          data: menuBanner as MenuBannerType,
         },
-        400,
+        200,
       );
-    }
+    },
+  )
 
-    const menuBanner = new MenuBanner({
-      businessId,
-      dishIds,
-      startTime: startTime * 60 * 60 * 1000,
-      endTime: endTime * 60 * 60 * 1000,
-      heading,
-      isPublished,
-    });
+  .put(
+    "/:bannerId",
+    zValidator("json", menuBannerSchema.partial()),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { bannerId } = c.req.param();
+      const { heading, isPublished, dishIds } = requestData;
 
-    await menuBanner.save();
+      const menuBanner = await MenuBanner.findByIdAndUpdate(
+        bannerId,
+        { heading, isPublished, dishIds },
+        { new: true },
+      );
 
-    if (!menuBanner) {
+      if (!menuBanner) {
+        return c.json(
+          {
+            message: "Menu banner not updated",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+
       return c.json(
         {
-          message: "Menu banner not created",
-          err: true,
-          data: {},
+          message: "Menu banner updated",
+          err: false,
+          data: menuBanner as MenuBannerType,
         },
-        400,
+        200,
       );
-    }
+    },
+  )
 
-    return c.json(
-      {
-        message: "Menu banner created",
-        err: false,
-        data: menuBanner as MenuBannerType,
-      },
-      201,
-    );
-  })
   .post(
     "/bulk/:businessId",
     zValidator("param", z.object({ businessId: z.string() })),
