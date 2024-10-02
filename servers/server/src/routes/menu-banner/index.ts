@@ -16,11 +16,17 @@ const menuBannerRouter = new Hono()
         businessId,
         isPublished: true,
         heading: { $ne: "All Hours Delights" },
+      }).populate({
+        path: "dishIds",
+        select: "name price description image",
       });
 
       const allHoursDelights = await MenuBanner.findOne({
         businessId,
         heading: "All Hours Delights",
+      }).populate({
+        path: "dishIds",
+        select: "name price description image",
       });
 
       const now = new Date();
@@ -39,10 +45,14 @@ const menuBannerRouter = new Hono()
 
       const convertInSingleObject = filteredMenuBanners?.[0];
       if (convertInSingleObject) {
-        convertInSingleObject.dishIds = [
+        // Merge dishIds and avoid duplicates using a Set
+        const mergedDishIds = new Set([
           ...convertInSingleObject.dishIds,
           ...(allHoursDelights?.dishIds ?? []),
-        ];
+        ]);
+
+        // Convert the Set back to an array
+        convertInSingleObject.dishIds = Array.from(mergedDishIds);
       }
 
       return c.json(
