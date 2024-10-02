@@ -25,9 +25,13 @@ import { Hono } from "hono";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { respond } from "../../utils/response";
-const FCM = require("fcm-node");
-
+const admin = require("firebase-admin");
 // Hash a passwordss
+
+const serviceAccount = require("..//../utils/service_account.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 export async function hashPassword(password: string): Promise<string> {
   try {
     const hash = await argon2.hash(password);
@@ -48,10 +52,6 @@ export async function verifyPassword(
     throw new Error("Error verifying password");
   }
 }
-
-//Server key
-const SERVER_KEY =
-  "AAAAj8kkRxk:APA91bEiutN4868JcviOMk4diZLU3MAMRHW8xmLGSYezAhNMobRGUAxWhQZrM-TzP-3qV5XQL0XIOxl_7MwOUSMh7uNH-BAfX78x0K7dt5pvBsgGkYg7BnR1OeMHYG3B9Kr8QqOFv0Bx";
 
 export const addSignUpBonus = async (
   loyaltyId: string,
@@ -1083,7 +1083,6 @@ const usersRouter = new Hono()
   )
   .post(
     "/send/PushNotification",
-
     zValidator(
       "json",
       z.object({
@@ -1107,22 +1106,28 @@ const usersRouter = new Hono()
     async (c) => {
       const requestData = await c.req.json();
       const { registrationToken, title, body } = requestData;
-      const fcm = new FCM(SERVER_KEY);
-      var message;
       const pushMessage = {
-        to: registrationToken,
+        token: registrationToken, // or use 'topic' if you're sending to a topic
         notification: {
           title: title || "Title of the Notification",
           body: body || "Need your assistance",
-          icon: "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
-          // icon:"https://t-static.blr1.digitaloceanspaces.com/HipalZ_logo_title.webp"
+          image:
+            "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
         },
       };
 
-      console.log("pushMessage", pushMessage);
-
-      fcm.send(pushMessage, (err: Error, response: unknown) => {
-        if (err) {
+      admin
+        .messaging()
+        .send(pushMessage)
+        .then((response: unknown) => {
+          console.log("Successfully sent message:", response);
+          return c.json({
+            message: "FCM message sent successfully",
+            err: false,
+            data: response,
+          });
+        })
+        .catch((err: Error) => {
           console.log("Error sending FCM message:", err);
           return c.json(
             {
@@ -1132,20 +1137,13 @@ const usersRouter = new Hono()
             },
             400,
           );
-        }
-        message = response;
+        });
 
-        console.log("FCM message sent successfully:", response);
+      return c.json({
+        message: "FCM message sent successfully",
+        err: false,
+        data: {},
       });
-
-      return c.json(
-        {
-          message: "FCM message sent successfully",
-          err: false,
-          data: message,
-        },
-        200,
-      );
     },
   )
   .put(

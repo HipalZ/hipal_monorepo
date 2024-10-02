@@ -39,6 +39,7 @@ export * from "./googleAuthUsers";
 export * from "./googleReviews";
 export * from "./group";
 export * from "./groupAnalytics";
+export * from "./menuBanner";
 export * from "./note";
 export * from "./tags";
 export * from "./tagType";
