@@ -160,6 +160,22 @@ const menuBannerRouter = new Hono()
         },
       ];
 
+      const ifMenuBannerExists = await MenuBanner.find({
+        businessId,
+        heading: { $in: requestData.map((data) => data.heading) },
+      });
+
+      if (ifMenuBannerExists.length > 0) {
+        return c.json(
+          {
+            message: "Menu banners already exists",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+
       const menuBanners = await MenuBanner.insertMany(requestData);
 
       if (!menuBanners) {
