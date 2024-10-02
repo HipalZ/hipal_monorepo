@@ -4,6 +4,7 @@ import {
   BusinessSettings,
   CouponClaim,
   Couponz,
+  DeviceToken,
   GroupAnalytic,
   LoyaltySettings,
   Order,
@@ -54,6 +55,9 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
+const admin = require("firebase-admin");
+// Hash a passwordss
+
 const { validateWebhookSignature } = require("../../utils/razorpay-utils");
 const transformData = (data: unknown[]) => {
   return data
@@ -1094,6 +1098,46 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
       });
+
+      const registrationToken = await DeviceToken.findOne({
+        businessId: businessId,
+      });
+
+      if (registrationToken && registrationToken.tokens.length > 0) {
+        for (const token of registrationToken.tokens) {
+          const pushMessage = {
+            token: token, // or use 'topic' if you're sending to a topic
+            notification: {
+              title: "Waiter Alert",
+              body: "Need your assistance",
+            },
+          };
+
+          admin
+            .messaging()
+            .send(pushMessage)
+            .then((response: unknown) => {
+              console.log("Successfully sent message:", response);
+              return c.json({
+                message: "FCM message sent successfully",
+                err: false,
+                data: response,
+              });
+            })
+            .catch((err: Error) => {
+              console.log("Error sending FCM message:", err);
+              return c.json(
+                {
+                  message: "Error sending FCM message",
+                  err: true,
+                  data: {},
+                },
+                400,
+              );
+            });
+        }
+      }
+
       return respond(c, "Alert created successfully", false, 200, alert);
     },
   )

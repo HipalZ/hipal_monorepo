@@ -1,5 +1,6 @@
 // books.ts
 import {
+  DeviceToken,
   LoyaltyCoinsInfo,
   Subscriber,
   User,
@@ -1099,6 +1100,8 @@ const usersRouter = new Hono()
         title: z.string({
           message: "title is required",
         }),
+        businessId: z.string(),
+
         body: z.any(),
       }),
     ),
@@ -1143,6 +1146,50 @@ const usersRouter = new Hono()
         message: "FCM message sent successfully",
         err: false,
         data: {},
+      });
+    },
+  )
+  .post(
+    "/save/token",
+    zValidator(
+      "json",
+      z.object({
+        registrationToken: z
+          .string()
+          .min(10, {
+            message:
+              "registrationToken is required and must be at least 10 characters",
+          })
+          .max(1000, {
+            message:
+              "registrationToken is required and must be at most 1000 characters",
+          }),
+
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const { registrationToken, businessId } = requestData;
+
+      const saveToken = await DeviceToken.findOneAndUpdate(
+        { businessId },
+        {
+          $addToSet: {
+            tokens: registrationToken,
+          },
+        },
+        {
+          upsert: true,
+          new: true,
+        },
+      );
+
+      return c.json({
+        message: "Token saved successfully",
+        err: false,
+        data: saveToken,
       });
     },
   )

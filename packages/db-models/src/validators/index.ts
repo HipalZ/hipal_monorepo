@@ -35,6 +35,7 @@ export * from "./couponClaim";
 export * from "./couponHistory";
 export * from "./couponView";
 export * from "./couponz";
+export * from "./deviceToken";
 export * from "./googleAuthUsers";
 export * from "./googleReviews";
 export * from "./group";
