@@ -47,12 +47,14 @@ const menuBannerRouter = new Hono()
       console.log("convertInSingleObject", convertInSingleObject);
       if (convertInSingleObject) {
         // Merge dishIds and avoid duplicates using a Set
-        const mergedDishIds = new Set([
-          ...convertInSingleObject.dishIds,
-          ...(allHoursDelights?.dishIds ?? []),
+        const mergedDishIdsSet = new Set([
+          ...convertInSingleObject.dishIds.map((id) => id.toString()),
+          ...(allHoursDelights?.dishIds.map((id) => id.toString()) ?? []),
         ]);
 
-        convertInSingleObject.dishIds = Array.from(mergedDishIds);
+        convertInSingleObject.dishIds = Array.from(
+          mergedDishIdsSet,
+        ) as unknown as MenuBannerType["dishIds"];
       }
 
       console.log("convertInSingleObject", convertInSingleObject);
