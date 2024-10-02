@@ -151,6 +151,93 @@ const menuBannerRouter = new Hono()
         200,
       );
     },
+  )
+  .post(
+    "/bulk/:businessId",
+    zValidator("param", z.object({ businessId: z.string() })),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = [
+        {
+          businessId: businessId,
+          heading: "Breakfast Must try",
+          startTime: 4 * 60 * 60 * 1000,
+          endTime: 12 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: businessId,
+          heading: "Lunchi Munchi",
+          startTime: 12 * 60 * 60 * 1000,
+          endTime: 17 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: businessId,
+          heading: "Snacky Evenings",
+          startTime: 17 * 60 * 60 * 1000,
+          endTime: 21 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: businessId,
+          heading: "Late Dinners",
+          startTime: 21 * 60 * 60 * 1000,
+          endTime: 24 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: businessId,
+          heading: "All Hours Delights",
+          startTime: 0,
+          endTime: 24 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+      ];
+
+      const ifMenuBannerExists = await MenuBanner.find({
+        businessId,
+        heading: { $in: requestData.map((data) => data.heading) },
+      });
+
+      if (ifMenuBannerExists.length > 0) {
+        return c.json(
+          {
+            message: "Menu banners already exists",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+
+      const menuBanners = await MenuBanner.insertMany(requestData);
+
+      if (!menuBanners) {
+        return c.json(
+          {
+            message: "Menu banners not created",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
+
+      return c.json(
+        {
+          message: "Menu banners created",
+          err: false,
+          data: menuBanners as MenuBannerType[],
+        },
+        201,
+      );
+    },
   );
 
 export default menuBannerRouter;
