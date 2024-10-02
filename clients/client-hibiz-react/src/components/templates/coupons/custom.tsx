@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from "react";
+import { useState, useRef, memo, Suspense, lazy } from "react";
 import { useEditCoupon, useSaveCoupon } from "@/hooks/useCoupon";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { cn } from "@hi/common";
@@ -7,7 +7,6 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { storeImageAfterSave } from "@/components/utils/helper";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { lazy } from "react";
 
 const AfterGrabbingCoupon = lazy(
   () => import("./previewTypes/afterGrabbingCard"),
