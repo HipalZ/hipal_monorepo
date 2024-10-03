@@ -1,6 +1,9 @@
-import type { CustomRole, HiClientzData } from '@/components/types/hiClientzData';
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import type {
+  CustomRole,
+  HiClientzData,
+} from "@/components/types/hiClientzData";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface HiClientzStore {
   captainData: HiClientzData;
@@ -13,6 +16,9 @@ interface HiClientzStore {
   setSelectedBiz: (value: CustomRole) => void;
   phoneNumber: string;
   setPhoneNumber: (value: string) => void;
+
+  pushToken: string;
+  setPushToken: (value: string) => void;
 }
 
 export const useHiClientZ = create(
@@ -23,17 +29,20 @@ export const useHiClientZ = create(
         set((state) => ({
           captainData: { ...state.captainData, ...value },
         })),
-      accessToken: '',
+      accessToken: "",
       setAccessToken: (value) => set({ accessToken: value }),
-      refreshToken: '',
+      refreshToken: "",
       setRefreshToken: (value) => set({ refreshToken: value }),
       selectedBiz: {} as CustomRole,
       setSelectedBiz: (value) => set({ selectedBiz: value }),
-      phoneNumber: '',
+      phoneNumber: "",
       setPhoneNumber: (value) => set({ phoneNumber: value }),
+
+      pushToken: "",
+      setPushToken: (value) => set({ pushToken: value }),
     }),
     {
-      name: 'hiClientZ-store',
+      name: "hiClientZ-store",
       storage: createJSONStorage(() => localStorage),
     },
   ),

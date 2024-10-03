@@ -1,16 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import hipalLogo from "@/assets/img/liteLoginIcon4.png";
 import logo from "@/assets/img/Hilogo.png";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
+import { savePushToken } from "@/utils/apiService";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const ViewInBizMemo = () => {
   const { selectedBiz, captainData } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
+  const pushToken = usePushNotifications();
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);
@@ -23,9 +26,10 @@ const ViewInBizMemo = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const navigateToBiz = useCallback(() => {
+  const navigateToBiz = async () => {
+    await savePushToken(pushToken, businessId);
     navigate(`/${businessId}/alerts`);
-  }, []);
+  };
 
   return (
     <main className="relative flex flex-col h-screen">

@@ -1,14 +1,14 @@
-import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { useLiteStore } from '@/components/store/useLiteStore';
-import useTimings from '@/components/store/useTimings';
-import type { ISalesLite } from '@/components/types/hiClientzData';
-import { getDate } from '@/components/utils/helpers';
-import { useQuery } from '@tanstack/react-query';
-import { memo } from 'react';
-import { CiGlobe } from 'react-icons/ci';
-import DateRangePickerMemo from '../dateRangePicker';
-import './index.css';
-import { apiRpc } from '@hi/common';
+import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useLiteStore } from "@/components/store/useLiteStore";
+import useTimings from "@/components/store/useTimings";
+import type { ISalesLite } from "@/components/types/hiClientzData";
+import { getDate } from "@/components/utils/helpers";
+import { useQuery } from "@tanstack/react-query";
+import { memo } from "react";
+import { CiGlobe } from "react-icons/ci";
+import DateRangePickerMemo from "../dateRangePicker";
+import "./index.css";
+import { apiRpc } from "@hi/common";
 
 const SalesLite = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
@@ -26,7 +26,7 @@ const SalesLite = () => {
   }));
   const handleSales = async () => {
     setLoading(true);
-    const res = await apiRpc.payments[':id'].salesDashboard.$get({
+    const res = await apiRpc.payments[":id"].salesDashboard.$get({
       param: { id: businessId },
       query: {
         businessId: businessId,
@@ -44,7 +44,7 @@ const SalesLite = () => {
   };
 
   useQuery({
-    queryKey: ['onlineAlerts', businessId, timeStampStart, timeStampEnd],
+    queryKey: ["onlineAlerts", businessId, timeStampStart, timeStampEnd],
     queryFn: handleSales,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
   });
@@ -54,25 +54,33 @@ const SalesLite = () => {
       <DateRangePickerMemo />
       <section className="payment_layout">
         <article className="card_payment_overview">
-          <center className="absolute left-1/2 top-4 -translate-x-1/2">{getDate(timeStampStart)}</center>
+          <center className="absolute -translate-x-1/2 left-1/2 top-4">
+            {getDate(timeStampStart)}
+          </center>
           <div className="sales_payment_background_effect1" />
           <div className="sales_payment_background_effect2" />
           <div className="sales_payment_background_effect3" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="mt-10 h-[50%] w-[0.125rem] bg-white"></div>
+            <div className="mt-10 h-[50%] w-[0.125rem] bg-white" />
           </div>
           <section>
             <h3 className="absolute bottom-14 left-4 opacity-60">Sales</h3>
-            <h1 className="absolute bottom-6 left-4 text-3xl">₹ {salesData?.totalSale}</h1>
+            <h1 className="absolute text-3xl bottom-6 left-4">
+              ₹ {salesData?.totalSale}
+            </h1>
           </section>
           <section>
-            <h3 className="absolute bottom-14 right-4 opacity-60">Total Discounts</h3>
-            <h1 className="absolute bottom-6 right-4 text-3xl">₹ {salesData?.totalDiscount}</h1>
+            <h3 className="absolute bottom-14 right-4 opacity-60">
+              Total Discounts
+            </h3>
+            <h1 className="absolute text-3xl bottom-6 right-4">
+              ₹ {salesData?.totalDiscount}
+            </h1>
           </section>
         </article>
-        <section className="mx-4 flex gap-4">
+        <section className="flex gap-4 mx-4">
           <article className="online_card1">
-            <div className="sales_payment_background_effect4"></div>
+            <div className="sales_payment_background_effect4" />
             <p className="flex">
               <CiGlobe className="mr-2" />
               <small>Online</small>
@@ -81,7 +89,7 @@ const SalesLite = () => {
           </article>
 
           <article className="online_card2">
-            <div className="sales_payment_background_effect5"></div>
+            <div className="sales_payment_background_effect5" />
             <p className="flex">
               <CiGlobe className="mr-2" />
               <small>On floor</small>
@@ -90,7 +98,7 @@ const SalesLite = () => {
           </article>
         </section>
       </section>
-      <section className="mx-4 mt-6 flex justify-between gap-4">
+      <section className="flex justify-between gap-4 mx-4 mt-6">
         <article className="w-full rounded-xl border border-[#00000050] p-4">
           <b>Coinz issued</b>
           <h6>₹ {salesData?.coinzIssued}</h6>

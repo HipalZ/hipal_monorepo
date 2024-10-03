@@ -1,20 +1,20 @@
-import { useSearch } from '@/components/store/useSearch';
-import { memo, useRef, useState } from 'react';
-import { HiSearch } from 'react-icons/hi';
-import { RxCross2 } from 'react-icons/rx';
+import { useSearch } from "@/components/store/useSearch";
+import { memo, useRef, useState } from "react";
+import { HiSearch } from "react-icons/hi";
+import { RxCross2 } from "react-icons/rx";
 
 interface ISearch {
   closeSearchBox?: () => void;
 }
-const SearchPanel = ({ closeSearchBox }: ISearch)=> {
+const SearchPanel = ({ closeSearchBox }: ISearch) => {
   const panel = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const { searchText, setSearchText } = useSearch((s)=>({
+  const { searchText, setSearchText } = useSearch((s) => ({
     searchText: s.searchText,
     setSearchText: s.setSearchText,
   }));
   const [search, setSearchOpen] = useState(false);
-  const togglePopover = (searchText = '') => {
+  const togglePopover = (searchText = "") => {
     if (searchText.length > 0) {
       if (!isPanelOpen) {
         setIsPanelOpen(true);
@@ -31,31 +31,33 @@ const SearchPanel = ({ closeSearchBox }: ISearch)=> {
   };
 
   const handleClearSearchText = () => {
-    setSearchText('');
+    setSearchText("");
     closeSearchBox?.();
   };
 
   return (
-    <div className="flex w-full flex-row" ref={panel}>
+    <div className="flex flex-row w-full" ref={panel}>
       <div
         className="max-w-screen !-mx-2 flex h-10 w-[110%] min-w-max flex-row justify-between space-x-2 overflow-hidden rounded-lg px-2 py-1.5 transition-all"
         onClick={() => togglePopover(searchText)}
       >
         <input
-          autoFocus={true}
           type="text"
           placeholder="Search"
-          className="w-full rounded-lg px-2 focus:border-none focus:outline-none"
+          className="w-full px-2 rounded-lg focus:border-none focus:outline-none"
           value={searchText}
           onChange={handleSearchTextChange}
           onClick={(e) => e.stopPropagation()}
           maxLength={50}
         />
         {searchText.length > 0 ? (
-          <RxCross2 className="mx-2 my-auto h-5 w-4 cursor-pointer text-sm" onClick={handleClearSearchText} />
+          <RxCross2
+            className="w-4 h-5 mx-2 my-auto text-sm cursor-pointer"
+            onClick={handleClearSearchText}
+          />
         ) : (
           <HiSearch
-            className="mx-2 my-auto h-4 w-4 text-sm"
+            className="w-4 h-4 mx-2 my-auto text-sm"
             onClick={(e: { stopPropagation: () => void }) => {
               e.stopPropagation();
               closeSearchBox?.();
@@ -65,7 +67,7 @@ const SearchPanel = ({ closeSearchBox }: ISearch)=> {
       </div>
     </div>
   );
-}
+};
 
 const SearchPanelMemo = memo(SearchPanel);
-export default SearchPanelMemo
+export default SearchPanelMemo;
