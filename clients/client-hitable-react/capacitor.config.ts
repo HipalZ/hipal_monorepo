@@ -1,8 +1,8 @@
 import type { PermCapacitorConfig } from "./permission.config";
 
 const config: PermCapacitorConfig = {
-  appId: "table.test.hipalz.com",
-  appName: "hitable-test",
+  appId: "hiclient.hipalz.com",
+  appName: "HiClientz",
   webDir: "dist",
   server: {
     androidScheme: "https",

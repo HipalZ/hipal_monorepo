@@ -48,7 +48,7 @@ const BusinessesMemo = memo(() => {
         <article className="space-y-2 text-white">
           <h1>For Better & Faster Experience </h1>
           <a
-            href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
+            href="https://t-static.blr1.digitaloceanspaces.com/hiclient_v1.apk"
             className="flex items-center gap-2 p-2 ml-auto text-sm font-semibold text-black bg-white w-36 rounded-xl"
           >
             <FiDownload size={16} /> <span>Download App</span>

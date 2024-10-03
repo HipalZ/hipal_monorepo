@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId: "hipal-demo",
   storageBucket: "hipal-demo.appspot.com",
   messagingSenderId: "617554921241",
-  appId: "1:617554921241:web:bdfb3cd06014c1d1d42788",
+  appId: "1:617554921241:android:8f580ecc26605b1dd42788",
   measurementId: "G-02YMLLKJVT",
 };
 
