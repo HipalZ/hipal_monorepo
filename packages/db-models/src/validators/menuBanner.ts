@@ -11,17 +11,18 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const menuBannerSchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
-
   startTime: z.coerce
     .number({
       message: "Start time is required",
     })
-    .default(0),
+    .default(0)
+    .optional(),
   endTime: z.coerce
     .number({
       message: "End time is required",
     })
-    .default(86400000),
+    .default(86400000)
+    .optional(),
 
   isPublished: z.boolean().default(true).optional(),
   heading: z
@@ -40,6 +41,9 @@ export const menuBannerSchema = z.object({
     })
     .default([]),
   isDeleted: z.boolean().default(false).optional(),
+  theme: z.boolean().default(false).optional(),
+  customColor: z.string().min(5).max(10).optional(),
+  image: z.string().url().optional(),
 });
 
 export type MenuBannerType = z.infer<typeof menuBannerSchema>;

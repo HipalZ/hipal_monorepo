@@ -39,6 +39,19 @@ const menuBannerSchema = new mongoose.Schema<MenuBannerType>(
       required: false,
       default: false,
     },
+    theme: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    customColor: {
+      type: String,
+      required: false,
+    },
+    image: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
