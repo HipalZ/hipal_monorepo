@@ -69,9 +69,11 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-          <AllCouponz />
+          <section className="h-[21rem] overflow-hidden">
+            <AllCouponz />
+          </section>
           <div className="bg-base-200">
-            <div className="-mt-10 h-[100px] rounded-b-[90%] -ml-12 w-[120%] bg-base-100" />
+            <div className="h-[40px] rounded-b-[100%] -ml-12 w-[120%] bg-base-100" />
           </div>
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
@@ -84,7 +86,7 @@ export default async function Explore({
               <article
                 className={cn(
                   data?.banners?.length === 1 ? "justify-center" : "",
-                  "h-[28rem] flex gap-4 bg-base-200 rounded-lg flex-nowrap w-full gap-4",
+                  "h-[28rem] flex gap-4 bg-base-200 rounded-lg flex-nowrap w-full",
                 )}
               >
                 <EmblaCarousel2 customCarousel={data?.banners?.length === 1}>

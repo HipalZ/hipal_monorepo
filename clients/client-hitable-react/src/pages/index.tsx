@@ -11,7 +11,6 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { memo, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 //test//
 const LoginMemo = () => {
   const setAccessToken = useUserToken((s) => s.setAccessToken);
@@ -22,8 +21,6 @@ const LoginMemo = () => {
 
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
-  const navigate = useNavigate();
-
   //methods
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneNumber(e.target.value);
@@ -48,6 +45,8 @@ const LoginMemo = () => {
       setAccessToken(response.data.accessToken);
       toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
       window.location.href = "/businesses";
+    } else {
+      toast.error(response.message);
     }
     setLoading(false);
   };

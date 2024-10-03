@@ -187,6 +187,12 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const sendPaymentResponse = useCallback(
     async (response: any) => {
       setIsLoading(true);
+      const total = calculateFinalBill(
+        billValue,
+        claimedCoinz,
+        claimCouponz,
+        tips,
+      );
       const res = await apiRpc.payments.validPayment[":merchantId"].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
@@ -197,16 +203,14 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         query: {
           couponId: availedCoupon?._id,
           userId: userDetails?._id,
+          paidAmount: total?.toString(),
+          tableName: tableName,
+          businessId: businessId,
         },
       });
       const data = await res.json();
       const orderId = data?.data as string;
-      const total = calculateFinalBill(
-        billValue,
-        claimedCoinz,
-        claimCouponz,
-        tips,
-      );
+
       const coinsObtained =
         total * (loyaltySetting?.setCashBackPercentage / 100);
       const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;

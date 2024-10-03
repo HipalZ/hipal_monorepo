@@ -1,60 +1,42 @@
-import { useQuery } from "@tanstack/react-query";
-import { Howl } from "howler";
 import { useEffect, useState } from "react";
-import { useHiClientZ } from "./components/store/useHiClientzData";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
-import { apiRpc } from "@hi/common";
-import { messaging, getToken } from "./hooks/clientApp";
-import { useLocation, useParams } from "react-router-dom";
-import { URL } from "./configs";
-////
+import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useHiClientZ } from "./components/store/useHiClientzData";
+import { fetchAlerts } from "./utils/apiService";
+import type { Alert } from "./components/types/hiClientzData";
+import { useCheckPlatform } from "./components/utils/helpers";
+
 function App() {
-  const selectedBiz = useHiClientZ((state) => state.selectedBiz);
+  const [isOnline, setIsOnline] = useState(true);
   const triggerSound = useLiteStore((s) => s.triggerSound);
+
+  const [isSlow, setIsSlow] = useState(false);
   const {
-    setLoading,
-    setOnlineCount,
-    onlineCount,
     offlineCount,
+    onlineCount,
+    setOnlineCount,
     setOfflineCount,
     setOnlineAlertData,
     setOfflineAlertData,
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
   } = useLiteStore();
-  const [isOnline, setIsOnline] = useState(true);
-  const [isSlow, setIsSlow] = useState(false);
-  const pathName = useLocation().pathname;
 
-  // Define a regular expression to extract the businessId
+  const selectedBiz = useHiClientZ((s) => s.selectedBiz);
+  const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
-  const fetchAlerts = async (alertType: string) => {
-    const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
-    setLoading(true);
-    if (!businessId) return [];
-    const res = await apiRpc.payments[":id"][endpoint].$get({
-      query: {
-        businessId,
-        alertType,
-      },
-      param: {
-        id: businessId,
-      },
-    });
-    const response = (await res.json()) || [];
-    setLoading(false);
-    return response.data || [];
-  };
+  const { isWeb } = useCheckPlatform();
 
   const handleOnlineAlerts = async () => {
-    const data = await fetchAlerts("ONLINE");
+    if (!businessId) return;
+    const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
     setOnlineAlertData(data);
+    setRefetchOnlineAlerts(refetchOnlineAlerts);
     setOnlineCount(data.length);
-    if (data.length > onlineCount) {
-      const url = `${URL}${location?.pathname}`;
-      // initializeMessaging(url, "checkout the recent payment");
+    if (data && data?.length > onlineCount && isWeb) {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -65,94 +47,36 @@ function App() {
         sound.pause();
       }, 3000);
     }
-    setRefetchOnlineAlerts(refetchOnlineAlerts);
+
     return data;
   };
 
   const handleOfflineAlerts = async () => {
-    const data = await fetchAlerts("ALL");
+    if (!businessId) return;
+    const data: Alert[] = await fetchAlerts(businessId, "ALL");
     setOfflineAlertData(data);
+    setRefetchOfflineAlerts(refetchOfflineAlerts);
     setOfflineCount(data.length);
-    if (data.length > offlineCount) {
-      const url = `${URL}${location?.pathname}`;
+    if (data && data.length > offlineCount && isWeb) {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
         loop: true,
       });
-      // initializeMessaging(url, "Confirm the offline payment");
       sound.play();
       setTimeout(() => {
         sound.pause();
       }, 3000);
     }
-    setRefetchOfflineAlerts(refetchOfflineAlerts);
+
     return data;
   };
 
-  async function initializeMessaging(body: string, title: string) {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        if ("serviceWorker" in navigator) {
-          const registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js",
-          );
-          const token = await getToken(messaging, {
-            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-            serviceWorkerRegistration: registration,
-          });
-          if (token) {
-            await apiRpc.users.send.PushNotification.$post({
-              json: {
-                registrationToken: token,
-                title,
-                body,
-              },
-            });
-
-            // Add visibilitychange event listener
-            const handleVisibilityChange = () => {
-              if (document.hidden) {
-                apiRpc.users.send.PushNotification.$post({
-                  json: {
-                    registrationToken: token,
-                    title: "Attention Needed",
-                    body: "You have a new message",
-                  },
-                });
-              }
-            };
-
-            console.log("Visibility change event listener added");
-
-            document.addEventListener(
-              "visibilitychange",
-              handleVisibilityChange,
-            );
-
-            // Cleanup event listener when the function is called again
-            return () => {
-              document.removeEventListener(
-                "visibilitychange",
-                handleVisibilityChange,
-              );
-            };
-          }
-        }
-      } else if (permission === "denied") {
-        console.log("Permission denied");
-      }
-    } catch (error) {
-      console.error("Error initializing messaging:", error);
-    }
-  }
-
   useEffect(() => {
     const checkOnlineStatus = () => {
-      const online = navigator.onLine;
-      setIsOnline(online);
+      setIsOnline(navigator.onLine);
     };
+
     const handleConnectionChange = () => {
       if ("connection" in navigator) {
         const connection =
@@ -174,6 +98,7 @@ function App() {
     };
     checkOnlineStatus();
     handleConnectionChange();
+
     window.addEventListener("online", checkOnlineStatus);
     window.addEventListener("offline", checkOnlineStatus);
     window.addEventListener("change", handleConnectionChange);
@@ -188,34 +113,49 @@ function App() {
     };
   }, []);
 
+  // UseQuery with adaptive polling based on pingTime and connection speed
   const { refetch: refetchOnlineAlerts } = useQuery({
-    queryKey: ["onlineAlerts", businessId],
+    queryKey: ["onlineAlerts", businessId, selectedBiz],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 17000, // 17 seconds
+    refetchInterval: isSlow ? 30000 : 17000,
   });
 
   const { refetch: refetchOfflineAlerts } = useQuery({
-    queryKey: ["offlineAlerts", businessId],
+    queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: 19000, // 19 seconds
+    refetchInterval: isSlow ? 30000 : 19000,
   });
 
   return (
-    <>
+    <main className="relative">
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossOrigin="anonymous"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Bungee+Inline&display=swap"
+        rel="stylesheet"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap"
+        rel="stylesheet"
+      />
       {!isOnline && (
-        <div className="text-center text-white bg-red-500">
+        <div className="fixed top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
           Please check your internet connection
         </div>
       )}
       {isOnline && isSlow && (
-        <div className="bg-[#ef9b0f] text-center text-white">
+        <div className="space-grotesk-700 fixed top-0 z-20 w-full bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
         </div>
       )}
       <MainRouter />
-    </>
+    </main>
   );
 }
 

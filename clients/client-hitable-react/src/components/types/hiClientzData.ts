@@ -27,6 +27,7 @@ export interface CustomRole {
 }
 
 export interface Business {
+  businessName: string;
   name: string;
   _id: string;
   logo: string;

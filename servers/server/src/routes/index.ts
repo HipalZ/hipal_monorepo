@@ -8,6 +8,7 @@ import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
+import menuBannerRouter from "./menu-banner";
 import paymentsRouter from "./payments";
 import posRouter from "./pos";
 import googleReview from "./reviews";
@@ -37,6 +38,7 @@ export const routes = app
   .route("/reviews", googleReview)
   .route("/coupon-analytics", couponAnalytics)
   .route("/hipalz", hipalzRouter)
-  .route("/pos", posRouter);
+  .route("/pos", posRouter)
+  .route("/menu-banner", menuBannerRouter);
 
 export type AppType = typeof routes;

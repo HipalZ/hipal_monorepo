@@ -100,7 +100,7 @@ const MemoAllCouponz = () => {
       <h2 className="py-4 mt-4 text-2xl text-center text-primary">
         My Couponz
       </h2>
-      <EmblaCarousel2 customCarousel={true}>
+      <EmblaCarousel2 customCarousel>
         {couponz && couponz?.length > 0
           ? couponz.map((coupon) => {
               return (

@@ -4,7 +4,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { apiRpc } from "@hi/common";
 import type { AddOnType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { startTransition, useCallback } from "react";
 import toast from "react-hot-toast";
 
 export const useAddOnList = () => {
@@ -37,7 +37,7 @@ export const useAddOnList = () => {
 export const useSaveAddOn = () => {
   const queryClient = useQueryClient();
 
-  const { setOpenMenu, resetStore,setIsLoading } = useMenuPageStore((s) => ({
+  const { setOpenMenu, resetStore, setIsLoading } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
     setIsLoading: s.setIsLoading,
@@ -69,6 +69,7 @@ export const useSaveAddOn = () => {
           compulsory: data.compulsory,
         },
       });
+
       return response.json();
     },
     onSuccess: (data) => {
@@ -129,10 +130,10 @@ export const useUpdateAddon = () => {
 
 export const useDeleteAddon = () => {
   const queryClient = useQueryClient();
-  const { setOpenMenu, resetStore,setIsCatDelete } = useMenuPageStore((s) => ({
+  const { setOpenMenu, resetStore, setIsCatDelete } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
-    setIsCatDelete:s.setIsCatDelete
+    setIsCatDelete: s.setIsCatDelete,
   }));
 
   const handleApiResponse = useCallback((res) => {
@@ -163,4 +164,4 @@ export const useDeleteAddon = () => {
     },
   });
   return { mutate: mutateAsync, isPending };
-}
+};

@@ -16,6 +16,12 @@
     "bundle:production": "dotenv -e ./env/.env.production bun run bundle"
   },
   "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/filesystem": "^6.0.1",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/push-notifications": "^6.0.2",
     "@headlessui/react": "^2.0.4",
     "@material-tailwind/react": "^2.1.9",
     "@tanstack/react-query": "^5.40.1",
