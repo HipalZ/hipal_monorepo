@@ -1,13 +1,13 @@
-import promoAvatar from "@/assets/img/promoCardAvatar.png";
 import bookmarkAfter from "@/assets/svg/bookmarkAfter.svg";
 import bookmarkBefore from "@/assets/svg/bookmarkBefore.svg";
-import FooterSectionMemo from "@/components/atoms/footerSection";
 import ProfileHeader from "@/components/liteAlerts/profileHeader";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { CustomRole } from "@/components/types/hiClientzData";
 import { memo, startTransition } from "react";
+import { FiDownload } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
+import smartPhone from "@/assets//img/smartphone.png";
 
 const BusinessesMemo = memo(() => {
   // store
@@ -29,20 +29,31 @@ const BusinessesMemo = memo(() => {
   };
 
   return (
-    <main className="h-screen">
+    <main className="relative h-screen">
       <header className="flex h-[5rem] items-center justify-between px-6 py-4">
         <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
         <ProfileHeader position={inBusinesses} />
       </header>
       <article
         style={{ backgroundColor: "#4C4DDC" }}
-        className="flex h-[6rem] w-full items-center overflow-hidden"
+        className="flex h-[7rem] gap-4 w-full items-center overflow-hidden"
       >
-        <img src={promoAvatar} alt="promoAvatar" width={70} loading="lazy" />
-        <h1 className="mr-4 text-base text-right text-white">
-          Welcoming to an amazing journey of connecting with your clients like
-          never before
-        </h1>
+        <img
+          src={smartPhone}
+          alt="promoAvatar"
+          width={90}
+          loading="lazy"
+          className="ml-4"
+        />
+        <article className="space-y-2 text-white">
+          <h1>For Better & Faster Experience </h1>
+          <a
+            href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
+            className="flex items-center gap-2 p-2 ml-auto text-sm font-semibold text-black bg-white w-36 rounded-xl"
+          >
+            <FiDownload size={16} /> <span>Download App</span>
+          </a>
+        </article>
       </article>
       <br />
       <h1 className="mx-5 mb-4 text-2xl text-black">You are added to</h1>
@@ -85,7 +96,6 @@ const BusinessesMemo = memo(() => {
           );
         })}
       </section>
-      <FooterSectionMemo />
     </main>
   );
 });
