@@ -37,7 +37,7 @@ const ProfileHeader = (props: { position: boolean }) => {
           <MenuItem>
             {({ active }) => (
               <a
-                href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
+                href="https://t-static.blr1.digitaloceanspaces.com/app-debug%20(2).apk"
                 className={cn(
                   defaultClass,
                   active ? "bg-gray-100" : "",

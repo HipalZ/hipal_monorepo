@@ -11,7 +11,8 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { memo, useState } from "react";
 import toast from "react-hot-toast";
-//test//
+import { cn } from "@/components/utils/helpers";
+
 const LoginMemo = () => {
   const setAccessToken = useUserToken((s) => s.setAccessToken);
   const setRefreshToken = useUserToken((s) => s.setRefreshToken);
@@ -21,8 +22,10 @@ const LoginMemo = () => {
 
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
+
   //methods
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value?.length > 10) return;
     setPhoneNumber(e.target.value);
   };
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +33,8 @@ const LoginMemo = () => {
   };
 
   //apis
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true);
     const res = await apiRpc.users[":id"].stafflogin.$post({
       json: {
@@ -43,16 +47,15 @@ const LoginMemo = () => {
       setCaptainData(response.data.user);
       setRefreshToken(response.data.refreshToken);
       setAccessToken(response.data.accessToken);
+
       toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
       window.location.href = "/businesses";
-    } else {
-      toast.error(response.message);
     }
     setLoading(false);
   };
 
   return (
-    <center>
+    <form onSubmit={handleLogin}>
       <section className="relative max-w-[30rem]">
         <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
@@ -136,18 +139,19 @@ const LoginMemo = () => {
         <div className="relative">
           <input
             onChange={handlePhoneNumberChange}
-            type="text"
+            type="number"
             value={phoneNumber}
             maxLength={10}
             minLength={10}
             id="floating_outlined3"
             className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
             placeholder=" "
+            autoComplete="tel"
             required
           />
           <label
             htmlFor="floating_outlined3"
-            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
+            className="bg-gray-100 rounded-2xl peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Your Phone Number
           </label>
@@ -161,11 +165,12 @@ const LoginMemo = () => {
             placeholder=" "
             maxLength={4}
             minLength={4}
+            autoComplete="current-password"
             required
           />
           <label
             htmlFor="floating_outlined4"
-            className="bg-base-100 peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
+            className="bg-gray-100 rounded-2xl peer-focus:text-primary peer-focus:dark:text-primary absolute left-1 top-2 z-10 origin-[0] -translate-y-4 scale-75 transform px-2 text-base text-gray-500 duration-300 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 dark:bg-gray-900 dark:text-gray-400"
           >
             Your Password
           </label>
@@ -173,14 +178,16 @@ const LoginMemo = () => {
       </section>
       <article className="flex justify-center mb-5">
         <button
-          type="button"
-          onClick={handleLogin}
-          className="on_active_bounce fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
+          type="submit"
+          className={cn(
+            phoneNumber?.length === 10 ? "" : "pointer-events-none opacity-50",
+            "bg-black on_active_bounce fixed bottom-6 z-50 w-[20.5rem] rounded-full py-[0.75rem] text-[18px] leading-[1.15rem] text-white",
+          )}
         >
           Get Started
         </button>
       </article>
-    </center>
+    </form>
   );
 };
 
