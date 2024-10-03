@@ -637,7 +637,7 @@ const paymentsRouter = new Hono()
               token: token, // or use 'topic' if you're sending to a topic
               notification: {
                 title: "Confirm Payment  !!",
-                body: `${tableName?.slice(0, 5)} requested to settle bill`,
+                body: `${tableName?.slice(-3)} requested to settle bill`,
                 icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
               },
             };
@@ -894,8 +894,7 @@ const paymentsRouter = new Hono()
             notification: {
               title: "Payment Successful !!",
               body: `${tableName?.slice(
-                0,
-                5,
+                -3,
               )} has successfully  paid ${paidAmount}`,
               icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
             },
@@ -1195,7 +1194,7 @@ const paymentsRouter = new Hono()
             token: token, // or use 'topic' if you're sending to a topic
             notification: {
               title: "Hi Captain !!",
-              body: `${tableName?.slice(0, 5)} needs your assistance`,
+              body: `${tableName?.slice(-3)} needs your assistance`,
               icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
             },
           };
