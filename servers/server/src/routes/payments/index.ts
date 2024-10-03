@@ -627,6 +627,45 @@ const paymentsRouter = new Hono()
           ],
           { session },
         );
+        const registrationToken = await DeviceToken.findOne({
+          businessId: businessId,
+        });
+
+        if (registrationToken && registrationToken.tokens.length > 0) {
+          for (const token of registrationToken.tokens) {
+            const pushMessage = {
+              token: token, // or use 'topic' if you're sending to a topic
+              notification: {
+                title: "Confirm Payment  !!",
+                body: `${tableName?.slice(0, 5)} requested to settle bill`,
+                icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                console.log("Successfully sent message:", response);
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                console.log("Error sending FCM message:", err);
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
+        }
 
         return respond(c, "Order created successfully", false, 200, {
           order_id: saveOrder?.[0]._id,
@@ -649,6 +688,9 @@ const paymentsRouter = new Hono()
       z.object({
         userId: z.string().optional(),
         couponId: z.string().optional(),
+        tableName: z.string().optional(),
+        businessId: z.string().optional(),
+        paidAmount: z.string().optional(),
       }),
     ),
 
@@ -656,7 +698,8 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { response } = requestData;
       const { merchantId } = c.req.param();
-      const { userId, couponId } = c.req.query();
+      const { userId, couponId, businessId, tableName, paidAmount } =
+        c.req.query();
       const merchantConfig = (await getMerchantConfig(
         merchantId,
       )) as MerchantConfig;
@@ -839,6 +882,49 @@ const paymentsRouter = new Hono()
       const signature = createHmac("sha256", RAZORPAY_SECRET)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest("hex");
+
+      const registrationToken = await DeviceToken.findOne({
+        businessId: businessId,
+      });
+
+      if (registrationToken && registrationToken.tokens.length > 0) {
+        for (const token of registrationToken.tokens) {
+          const pushMessage = {
+            token: token, // or use 'topic' if you're sending to a topic
+            notification: {
+              title: "Payment Successful !!",
+              body: `${tableName?.slice(
+                0,
+                5,
+              )} has successfully  paid ${paidAmount}`,
+              icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
+            },
+          };
+
+          admin
+            .messaging()
+            .send(pushMessage)
+            .then((response: unknown) => {
+              console.log("Successfully sent message:", response);
+              return c.json({
+                message: "FCM message sent successfully",
+                err: false,
+                data: response,
+              });
+            })
+            .catch((err: Error) => {
+              console.log("Error sending FCM message:", err);
+              return c.json(
+                {
+                  message: "Error sending FCM message",
+                  err: true,
+                  data: {},
+                },
+                400,
+              );
+            });
+        }
+      }
 
       if (signature === razorpay_signature) {
         return c.json({
@@ -1108,8 +1194,9 @@ const paymentsRouter = new Hono()
           const pushMessage = {
             token: token, // or use 'topic' if you're sending to a topic
             notification: {
-              title: "Waiter Alert",
-              body: "Need your assistance",
+              title: "Hi Captain !!",
+              body: `${tableName?.slice(0, 5)} needs your assistance`,
+              icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
             },
           };
 
