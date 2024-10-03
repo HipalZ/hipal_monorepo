@@ -1194,7 +1194,7 @@ const paymentsRouter = new Hono()
             token: token, // or use 'topic' if you're sending to a topic
             notification: {
               title: "Hi Captain !!",
-              body: `${tableName?.slice(-3)} needs your assistance`,
+              body: `${tableName?.slice(-3)} : ${message}`,
               icon: "https://t-static.blr1.digitaloceanspaces.com/icon.png",
             },
           };
