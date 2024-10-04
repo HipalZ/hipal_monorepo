@@ -21,8 +21,10 @@ import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useDatePicker from "@/components/hooks/useDatePicker";
+import { useErrorHandling } from "@/utils/helper";
 
 const MemoApplyCouponDatePopup = () => {
+  const { errorText } = useErrorHandling();
   const { businessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
   }));
@@ -60,6 +62,7 @@ const MemoApplyCouponDatePopup = () => {
     pickerRef,
   );
   const handleBack = useCallback(() => {
+    setShowPopup(false);
     return router.push(`/${customLink}/payment?amount=${billValue}`);
   }, [customLink, billValue]);
 
@@ -86,6 +89,9 @@ const MemoApplyCouponDatePopup = () => {
         },
       });
       result = await response.json();
+    }
+    if (!response.ok) {
+      return errorText(response.status);
     }
     if (response.status === 201) {
       triggerConfettiBlast();
@@ -131,7 +137,9 @@ const MemoApplyCouponDatePopup = () => {
       <section
         className="w-full md:min-w-[28rem] max-w-[calc(100%-2rem)] md:max-w-fit min-h-[20rem] rounded-t-2xl fixed left-1/2 transform -translate-x-1/2 bottom-0 flex justify-center"
         style={{
-          background: `linear-gradient(180deg, ${availedCoupon?.bgColour} 0%, #1A1A1A 65%)`,
+          background: `linear-gradient(180deg, ${
+            availedCoupon?.bgColour || "#9267EC"
+          } 0%, #1A1A1A 65%)`,
         }}
       >
         <article className="flex flex-col items-center -mt-10 transform">
@@ -165,7 +173,9 @@ const MemoApplyCouponDatePopup = () => {
           <button
             type="button"
             onClick={handleSubmit}
-            className={`on_active_bounce bg-[${availedCoupon?.bgColour}] w-full py-2 rounded-full mt-2 fixed bottom-4 font-semibold`}
+            className={`on_active_bounce bg-[${
+              availedCoupon?.bgColour || "#9267EC"
+            }] w-full py-2 rounded-full mt-2 fixed bottom-4 font-semibold`}
           >
             Submit
           </button>

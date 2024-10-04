@@ -14,8 +14,10 @@ import { getRandomBlurImg } from "@/components/utils/images";
 import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCouponz } from "@/components/store/useCouponz";
+import { useErrorHandling } from "@/utils/helper";
 
 const AddAmountModal = memo(() => {
+  const { errorText } = useErrorHandling();
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const business = useBusinessDetails((s) => s.businessDetails);
   const {
@@ -116,6 +118,10 @@ const AddAmountModal = memo(() => {
         userId: userDetails._id,
       },
     });
+    if (!res.ok) {
+      setLoading(false);
+      return errorText(res.status);
+    }
     if (res.status === 200) {
       toast.success("Captain will be there soon. Thank you!!");
       setLoading(false);
@@ -126,7 +132,7 @@ const AddAmountModal = memo(() => {
     }
   }, [businessId, tableName]);
   return (
-    <section className="h-[80vh] overflow-y-auto overflow-x-hidden mb-[2rem]">
+    <section className="h-[80vh] relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-white h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
@@ -168,39 +174,37 @@ const AddAmountModal = memo(() => {
             minLength={1}
             required
           />
-          <div className="flex items-end justify-between gap-4">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={callTheWaiter}
-              className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
-            >
-              {loading ? (
-                <span className="loader_spinner !border-t-black" />
-              ) : (
-                "Call Captain"
-              )}
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={proceedToPayment}
-              className={cn(
-                "w-full px-4 py-3 rounded-full text-white",
-                loading
-                  ? "opacity-50 pointer-events-none bg-gray-400"
-                  : "bg-black",
-              )}
-            >
-              {loading ? (
-                <span className="loader_spinner !border-t-primary" />
-              ) : (
-                "Next"
-              )}
-            </button>
-          </div>
         </section>
       </section>
+      <div className="flex justify-around gap-6 bottom_btn">
+        <button
+          type="button"
+          disabled={loading}
+          onClick={callTheWaiter}
+          className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
+        >
+          {loading ? (
+            <span className="loader_spinner !border-t-black" />
+          ) : (
+            "Call Captain"
+          )}
+        </button>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={proceedToPayment}
+          className={cn(
+            "w-full px-4 py-3 rounded-full text-white",
+            loading ? "opacity-50 pointer-events-none bg-gray-400" : "bg-black",
+          )}
+        >
+          {loading ? (
+            <span className="loader_spinner !border-t-primary" />
+          ) : (
+            "Next"
+          )}
+        </button>
+      </div>
     </section>
   );
 });

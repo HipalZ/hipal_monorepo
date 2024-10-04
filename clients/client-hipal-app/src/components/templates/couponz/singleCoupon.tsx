@@ -26,9 +26,11 @@ import curvedLine from "@/assets/svg/curvedline.svg";
 import { useLogin } from "@/components/store/useLogin";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { useErrorHandling } from "@/utils/helper";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
+  const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
   const router = useRouter();
   const { displayTermsAndConditions, openTc, setIsLoading } = useCouponTemp(
@@ -79,6 +81,9 @@ const MemoCouponz = () => {
           ...(channelId && { channelId }),
         },
       });
+      if (!response.ok) {
+        return errorText(response.status);
+      }
       if (response.status === 400) {
         if (requiredFields.includes("dob")) {
           setCouponOccasion("dob");
@@ -103,6 +108,9 @@ const MemoCouponz = () => {
           ...(channelId && { channelId }),
         },
       });
+      if (!response.ok) {
+        return errorText(response.status);
+      }
       if (response.status === 201) {
         setCurrentPage(ICouponPage.CONGRATULATIONZ);
       }

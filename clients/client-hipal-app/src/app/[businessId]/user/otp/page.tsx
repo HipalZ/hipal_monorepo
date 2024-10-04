@@ -18,11 +18,12 @@ import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import SignUpBonus from "@/components/organisms/explore/signupbonus";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useErrorHandling } from "@/utils/helper";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+// revalidation works only for server components
 
 function OtpPage() {
+  const { errorText } = useErrorHandling();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const { setIsLogin, setUserDetails, userDetails } = useLogin();
@@ -148,6 +149,9 @@ function OtpPage() {
       },
       param: { id: customLink },
     });
+    if (!res.ok) {
+      return errorText(res.status);
+    }
     const response = (await res.json()).data;
     if (res.status === 400) {
       setError("Invalid OTP");

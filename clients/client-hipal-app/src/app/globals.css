@@ -1879,7 +1879,7 @@ input[type='password'] {
 	z-index: 50;
 	width: 90%;
 	max-width: 30rem;
-	padding: 0.35rem 1rem;
+	padding: 0.35rem;
 	border-radius: 3rem;
 	transform: translateX(-50%);
   }

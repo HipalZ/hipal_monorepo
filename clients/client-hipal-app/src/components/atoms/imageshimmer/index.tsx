@@ -53,7 +53,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
         priority={priority}
         sizes={sizes}
         className={`${className} ${isAvailable ? "" : "grayscale"}`}
-        onLoadingComplete={() => setIsLoading(false)}
+        onLoad={() => setIsLoading(false)}
       />
     </div>
   );

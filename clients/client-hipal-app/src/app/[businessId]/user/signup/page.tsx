@@ -11,8 +11,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { apiRpc } from "@hi/common";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+// revalidation works only for server components
 
 const SignUp = memo(() => {
   const [phone, setPhone] = useState("");
@@ -126,7 +125,7 @@ const SignUp = memo(() => {
           className="w-full text-white bg-black rounded-full on_active_bounce btn"
         >
           {loader ? (
-            <span className="loader_spinner text-white !border-t-base-100 " />
+            <span className="loader_spinner text-white bg-black !border-t-base-100 " />
           ) : (
             "Get Started"
           )}

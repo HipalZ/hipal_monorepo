@@ -13,6 +13,7 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SignUpBonus from "../explore/signupbonus";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { useErrorHandling } from "@/utils/helper";
 
 const MemoSubScribeModal = ({
   setIsLoader,
@@ -25,6 +26,7 @@ const MemoSubScribeModal = ({
   closeSubscribeModal: () => void;
   setSubscribeModal: (value: boolean) => void;
 }) => {
+  const { errorText } = useErrorHandling();
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const userDetails = useLogin((s) => s.userDetails);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -60,7 +62,9 @@ const MemoSubScribeModal = ({
     const res = await apiRpc.subscribers.$post({
       json: payload,
     });
-
+    if (!res.ok) {
+      return errorText(res.status);
+    }
     const response = (await res.json()).data;
     if (res.status === 400 || res.status === 403 || res.status === 404) {
       return router.push(`/${customLink}/user/signup`);
