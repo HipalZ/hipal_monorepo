@@ -41,8 +41,8 @@ const MemoPreview = () => {
       compressImage(file, (compressedFile: File) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageSrc(reader.result as string); // For cropping
-          setIsCropping(true); // Show cropper
+          setImageSrc(reader.result as string);
+          setIsCropping(true);
         };
         reader.readAsDataURL(compressedFile);
       });

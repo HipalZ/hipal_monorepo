@@ -50,7 +50,7 @@ const CreateCategoryMain = () => {
         return;
       }
     }
-    
+
     if (isSubCategoryEditing) {
       setIsCatDelete(false);
       if (categoryStep === "LINK_SUB_CATEGORY") {
@@ -101,7 +101,6 @@ const CreateCategoryMain = () => {
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}
-          isIconBusinessShow={false}
         />
       </header>
       {categoryStep === "CATEGORY_STEP_1" && <CategoryMainForm />}
