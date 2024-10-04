@@ -15,14 +15,6 @@ const menuBannerRouter = new Hono()
       const menuBanners = await MenuBanner.find({
         businessId,
         isPublished: true,
-        heading: {
-          $in: [
-            "Breakfast Must try",
-            "Lunchi Munchi",
-            "Snacky Evenings",
-            "Late Dinners",
-          ],
-        },
       }).populate({
         path: "dishIds",
         select: "name price description image",
@@ -111,15 +103,6 @@ const menuBannerRouter = new Hono()
 
       const menuBanner = await MenuBanner.find({
         businessId,
-        heading: {
-          $in: [
-            "Breakfast Must try",
-            "Lunchi Munchi",
-            "Snacky Evenings",
-            "Late Dinners",
-            "All Hours Delights",
-          ],
-        },
       });
 
       return c.json(
