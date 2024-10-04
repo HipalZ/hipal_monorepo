@@ -111,7 +111,6 @@ const menuBannerRouter = new Hono()
 
       const menuBanner = await MenuBanner.find({
         businessId,
-        isPublished: true,
         heading: {
           $in: [
             "Breakfast Must try",
