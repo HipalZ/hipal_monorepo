@@ -402,7 +402,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
-            isPublished: true,
+            isPublish: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -410,7 +410,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             _id: { $in: grabbedCouponIds },
-            isPublished: true,
+            isPublish: true,
           },
         ],
       });
@@ -423,7 +423,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             "conditions.eligibleUser.allUsers": true,
-            isPublished: true,
+            isPublish: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -431,7 +431,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             isDeleted: false,
             "conditions.eligibleUser.allUsers": true,
-            isPublished: true,
+            isPublish: true,
           },
         ],
       });
@@ -537,7 +537,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promote: true,
             isDeleted: false,
-            isPublished: true,
+            isPublish: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -545,7 +545,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promote: true,
             isDeleted: false,
-            isPublished: true,
+            isPublish: true,
           },
         ],
       });
@@ -721,7 +721,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promoteOnBill: true,
             isDeleted: false,
-            isPublished: true,
+            isPublish: true,
           },
           {
             "conditions.couponStartDate": { $lte: currentDate },
@@ -729,7 +729,7 @@ const couponzRouter = new Hono()
             businessId: businessId,
             promoteOnBill: true,
             isDeleted: false,
-            isPublished: true,
+            isPublish: true,
           },
         ],
       });
