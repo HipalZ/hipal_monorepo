@@ -42,13 +42,14 @@ const menuBannerRouter = new Hono()
         now.getMinutes() * 60000 +
         now.getSeconds() * 1000;
 
+      console.log("currentTime", currentTime);
+
       // Filter menuBanners based on current time
       const filteredMenuBanners = menuBanners.filter(
         (banner) =>
           (banner.businessId.toString() === businessId &&
-            (banner?.startTime ?? 0) <= currentTime &&
-            banner?.endTime) ??
-          0 >= currentTime,
+            banner?.startTime <= currentTime &&
+            banner?.endTime) >= currentTime,
       );
 
       const convertInSingleObject = filteredMenuBanners?.[0];
