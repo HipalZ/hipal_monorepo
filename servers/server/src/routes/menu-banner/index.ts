@@ -15,13 +15,15 @@ const menuBannerRouter = new Hono()
       const menuBanners = await MenuBanner.find({
         businessId,
         isPublished: true,
-      }).populate({
-        path: "dishIds",
-        select: "name price description images portions",
-        populate: {
-          path: "addOnIds", // populate addOnIds within dishIds
-        },
-      });
+      })
+        .populate({
+          path: "dishIds",
+          select: "name price description images portions",
+          populate: {
+            path: "addOnIds", // populate addOnIds within dishIds
+          },
+        })
+        .lean();
 
       const allHoursDelights = await MenuBanner.findOne({
         businessId,
@@ -29,7 +31,12 @@ const menuBannerRouter = new Hono()
       }).populate({
         path: "dishIds",
         select: "name price description images",
+        populate: {
+          path: "addOnIds", // populate addOnIds within dishIds
+        },
       });
+
+      console.log("allHoursDelights", allHoursDelights);
 
       const now = new Date();
       const currentTime =
@@ -47,17 +54,8 @@ const menuBannerRouter = new Hono()
       );
 
       const convertInSingleObject = filteredMenuBanners?.[0];
-      if (convertInSingleObject) {
-        // Merge dishIds and avoid duplicates using a Set
-        const mergedDishIdsSet = new Set([
-          ...convertInSingleObject.dishIds.map((id) => id.toString()),
-          ...(allHoursDelights?.dishIds.map((id) => id.toString()) ?? []),
-        ]);
 
-        convertInSingleObject.dishIds = Array.from(
-          mergedDishIdsSet,
-        ) as unknown as MenuBannerType["dishIds"];
-      }
+      convertInSingleObject?.dishIds?.push(...allHoursDelights?.dishIds);
 
       return c.json(
         {
