@@ -116,15 +116,17 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
     <div className="embla">
       <div className="embla-_viewport" ref={emblaRef}>
         <div className="embla-_container">
-          {timings.dishIds.map((dish) => (
-            <div className="embla-_slide" key={dish._id}>
-              <div className="embla-_parallax">
-                <div className={cn("embla-_parallax__layer")}>
-                  <LivePreview dish={dish} />
+          {timings &&
+            timings.dishIds.length > 0 &&
+            timings.dishIds.map((dish) => (
+              <div className="embla-_slide" key={dish._id}>
+                <div className="embla-_parallax">
+                  <div className={cn("embla-_parallax__layer")}>
+                    <LivePreview dish={dish} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
