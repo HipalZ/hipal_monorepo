@@ -44,7 +44,7 @@ const menuBannerRouter = new Hono()
 
       console.log("currentTime", currentTime);
 
-      // Filter menuBanners based on current time
+      // Filter menuBanners based on current times
       const filteredMenuBanners = menuBanners.filter(
         (banner) =>
           (banner.businessId.toString() === businessId &&
