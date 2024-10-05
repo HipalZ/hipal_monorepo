@@ -4,6 +4,7 @@ import { FastAverageColor } from "fast-average-color";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import type { IDish } from "@/components/types/businessData";
 import Img from "@/assets/img/cake.png";
+import DishQuantityButton from "../../dishDescription/dishQuantityButton";
 
 const MemoLivePreview = ({ dish }: { dish: IDish }) => {
   const imgRef = useRef<HTMLImageElement>(null);
@@ -60,19 +61,16 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
         <h2 className="text-xl font-bold leading-5 text-gray-900 space-grotesk-700">
           {dish.name}
         </h2>
-        <p className="mt-2 text-sm text-black opacity-70 md:text-sm">
+        <p className="mt-2 text-sm text-black opacity-70 md:text-sm line-clamp-2">
           {dish.description}
         </p>
         <p className="absolute z-40 mt-2 font-bold text-gray-800 text-md md:text-lg left-4 bottom-4">
           ₹ {dish.price}
         </p>
       </figcaption>
-      <button
-        className="absolute z-40 flex items-center justify-center font-semibold px-3 py-1 text-sm bg-white border border-black/[0.1] md:right-7 rounded-lg bottom-5 lg:right-7 right-4"
-        type="button"
-      >
-        <span>Add</span> <BiPlus className="ml-1" />
-      </button>
+      <div className="absolute z-40 px-3 py-1 text-sm scale-90 rounded-lg md:right-5 bottom-4 lg:right-5 right-2">
+        <DishQuantityButton dishData={dish} />
+      </div>
     </figure>
   );
 };

@@ -113,7 +113,7 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
   }, [emblaApi, tweenParallax]);
 
   return (
-    <div className="embla">
+    <div className="embla !-mt-[3rem]">
       <div className="embla-_viewport" ref={emblaRef}>
         <div className="embla-_container">
           {timings &&
@@ -130,7 +130,7 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
         </div>
       </div>
 
-      <div className="px-6 embla-_controls ">
+      {/* <div className="px-6 embla-_controls ">
         <div className="embla-_buttons ">
           <PrevButton onClick={onPrevButtonClick} disabled={prevBtnDisabled} />
           <div className="embla-_dots">
@@ -148,7 +148,7 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
           </div>
           <NextButton onClick={onNextButtonClick} disabled={nextBtnDisabled} />
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
