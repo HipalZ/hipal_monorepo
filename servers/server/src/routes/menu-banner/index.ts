@@ -36,8 +36,6 @@ const menuBannerRouter = new Hono()
         },
       });
 
-      console.log("allHoursDelights", allHoursDelights);
-
       const now = new Date();
       const currentTime =
         now.getHours() * 3600000 +
@@ -55,7 +53,17 @@ const menuBannerRouter = new Hono()
 
       const convertInSingleObject = filteredMenuBanners?.[0];
 
-      convertInSingleObject?.dishIds?.push(...allHoursDelights?.dishIds);
+      if (convertInSingleObject && allHoursDelights?.dishIds) {
+        const existingDishIdsSet = new Set(
+          convertInSingleObject.dishIds.map((dish) => dish._id.toString()),
+        );
+
+        const newDishIds = allHoursDelights.dishIds.filter(
+          (dish) => !existingDishIdsSet.has(dish._id.toString()),
+        );
+
+        convertInSingleObject.dishIds.push(...newDishIds);
+      }
 
       return c.json(
         {
