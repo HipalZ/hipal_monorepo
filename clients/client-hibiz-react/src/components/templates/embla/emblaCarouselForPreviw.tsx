@@ -31,21 +31,18 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
   const tweenFactor = useRef(0);
   const tweenNodes = useRef<HTMLElement[]>([]);
 
-  const { selectedDishes, setMenuBannerType } = useMenuBanner((s) => ({
+  const { selectedDishes } = useMenuBanner((s) => ({
     selectedDishes: s.selectedDishes,
-    setMenuBannerType: s.setMenuBannerType,
   }));
 
-  // Fetch all dishes from the store
   const { dishes } = useDishesStore((s) => ({
     dishes: s.dishes,
   }));
 
-  // Create array of selected dish objects
   const selectedDishObjects = useMemo(() => {
     return selectedDishes
-      .map((dishID) => dishes.find((dish) => dish._id === dishID)) // Find dish object by ID
-      .filter((dish) => dish !== undefined); // Filter out undefined dishes
+      .map((dishID) => dishes.find((dish) => dish._id === dishID))
+      .filter((dish) => dish !== undefined);
   }, [selectedDishes, dishes]);
 
   const { selectedIndex, scrollSnaps, onDotButtonClick } =
@@ -138,7 +135,6 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
             <div className="embla-_slide" key={dish._id}>
               <div className="embla-_parallax">
                 <div className={cn("embla-_parallax__layer")}>
-                  {/* Pass dish object as prop */}
                   <LivePreview dish={dish} />
                 </div>
               </div>

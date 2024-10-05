@@ -18,12 +18,20 @@ async function fetchCategoryPageData(customLink: string) {
       dishes: "true",
     },
   });
-  // const childCategoriesResponse = await apiRpc.pos.$get();
+
+  const response = await apiRpc["menu-banner"].explore[":businessId"].$get({
+    param: {
+      businessId: bizId,
+    },
+  });
+  const timingData = await response.json();
+
   const parentCategories = await parentCategoriesResponse.json();
   const childCategories = await childCategoriesResponse.json();
   data["parentCategories"] =
     parentCategories?.data as unknown as CategoryType[];
   data["childCategories"] = childCategories?.data as unknown as CategoryType[];
+  data["timings"] = timingData?.data;
   return data;
 }
 

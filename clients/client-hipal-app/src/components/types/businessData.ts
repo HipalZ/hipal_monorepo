@@ -164,6 +164,15 @@ interface IOutlet {
   outLetType: string;
 }
 
+export interface TimingType {
+  _id: string;
+  name: string;
+  businessId: string;
+  isPublished: boolean;
+  heading: string;
+  dishIds: IDish[];
+}
+
 export interface IBusinessData {
   couponz: Coupon[];
   outletInfo: IOutlet;
@@ -181,6 +190,7 @@ export interface IBusinessData {
   loyalty: ILoyaltySetting;
   cart?: ICart[];
   coupon?: Coupon;
+  timings: TimingType;
 }
 
 export interface ICategories extends ICategory {

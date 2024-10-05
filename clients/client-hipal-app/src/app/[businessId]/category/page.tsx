@@ -69,6 +69,7 @@ export default async function Page({
           <DishesList
             parentCategory={data?.parentCategories || []}
             childCategory={data?.childCategories || []}
+            timings={data?.timings}
           />
         </div>
         <section className="pt-6 bg-base-100">
