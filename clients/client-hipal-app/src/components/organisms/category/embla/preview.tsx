@@ -1,9 +1,11 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { BiPlus } from "react-icons/bi";
 import { FastAverageColor } from "fast-average-color";
-import Image from "next/image";
+import ShimmerImage from "@/components/atoms/imageshimmer";
+import type { IDish } from "@/components/types/businessData";
+import Img from "@/assets/img/cake.png";
 
-const MemoLivePreview = ({ dish }: { dish: any }) => {
+const MemoLivePreview = ({ dish }: { dish: IDish }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [dominantColor, setDominantColor] = useState(
     "rgba(255, 255, 255, 0.9)",
@@ -32,14 +34,14 @@ const MemoLivePreview = ({ dish }: { dish: any }) => {
 
   return (
     <figure
-      key={dish.name}
+      key={dish?.name}
       className="relative w-full flex-2 max-w-[85%] md:max-w-[20rem] mt-16 md:mt-[4rem] rounded-2xl overflow-hidden border border-[#ffffff30]"
     >
       <div className="w-full aspect-[2/3] overflow-hidden">
-        <Image
+        <ShimmerImage
           ref={imgRef}
-          src={dish?.images[0]}
-          alt={dish.name}
+          src={dish?.images?.[0] || Img}
+          alt={dish?.name}
           width={350}
           height={233}
           className="object-contain w-full h-full embla-_slide__img embla-_parallax__img"

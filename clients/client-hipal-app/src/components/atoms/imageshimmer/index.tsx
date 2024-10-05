@@ -1,4 +1,10 @@
-import { type CSSProperties, type FC, memo, useState } from "react";
+import {
+  type CSSProperties,
+  type FC,
+  memo,
+  type RefObject,
+  useState,
+} from "react";
 import Image, { type StaticImageData } from "next/image";
 import { cn } from "@hi/common";
 
@@ -17,6 +23,7 @@ interface ShimmerImageProps {
   sizes?: string;
   priority?: boolean;
   hide?: boolean;
+  ref: RefObject<HTMLImageElement>;
 }
 
 const MemoShimmerImage: FC<ShimmerImageProps> = ({
@@ -34,6 +41,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   sizes,
   priority,
   hide,
+  ref,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,6 +51,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
       <Image
         src={src}
         alt={alt}
+        ref={ref}
         width={width}
         height={height}
         quality={quality}
