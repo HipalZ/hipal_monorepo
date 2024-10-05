@@ -1,13 +1,6 @@
 "use client";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
-import {
-  type FC,
-  memo,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
@@ -16,14 +9,18 @@ import { InView } from "react-intersection-observer";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import { useSearch } from "@/components/store/useSearch";
+import type { TimingType } from "@/components/types/businessData";
+import EmblaCarouselPreview from "../embla/emblaCarousalPreview";
+import type { EmblaOptionsType } from "embla-carousel";
 
 interface IDishesProps {
   childCategory: CategoryType[];
   parentCategory: CategoryType[];
+  timings: TimingType;
 }
 
 const DishesList: FC<IDishesProps> = (props) => {
-  const { childCategory, parentCategory } = props;
+  const { childCategory, parentCategory, timings } = props;
   const { isSearchActive } = useSearch();
   const {
     isActiveDishType,
@@ -55,6 +52,11 @@ const DishesList: FC<IDishesProps> = (props) => {
     });
   }, [childCategory]);
 
+  const getAllDishes = useMemo(() => {
+    return childCategory.flatMap((category) => category.dishIds);
+  }, [childCategory]);
+  console.log("getAllDishes", getAllDishes);
+
   const filterDishes = (dishes: DishType[], dishType: string): DishType[] => {
     return dishes.filter(
       (dish) =>
@@ -84,6 +86,8 @@ const DishesList: FC<IDishesProps> = (props) => {
     }
   };
 
+  const OPTIONS: EmblaOptionsType = { dragFree: true, loop: true };
+
   useEffect(() => {
     const handleHashChange = () => {
       if (isActiveChildCategory !== "") {
@@ -97,7 +101,8 @@ const DishesList: FC<IDishesProps> = (props) => {
         }, 3000);
         setActiveChildCategory("");
       }
-      const element = document.getElementById(isActiveCategory);
+      const active = timings.dishIds.length > 0 ? "" : isActiveCategory;
+      const element = document.getElementById(active);
       if (element) {
         element.style.scrollMarginTop = "110px";
         element.scrollIntoView({ behavior: "smooth" });
@@ -118,6 +123,19 @@ const DishesList: FC<IDishesProps> = (props) => {
           </>
         )}
       </section>
+      {timings.dishIds.length > 0 && (
+        <section className="relative flex items-center justify-center w-full pt-[2rem] bg-base-100">
+          <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[3rem] overflow-hidden pb-[10.5rem] bg-base-100 relative">
+            <h1 className="absolute text-4xl text-center -translate-x-1/2 text-primary top-2 bungee-inline left-1/2">
+              <span className="opacity-50">
+                {timings?.heading || "Specials"}
+              </span>
+            </h1>
+            <div className="absolute top-0 w-full rounded-full bg-base-300" />
+            <EmblaCarouselPreview timings={timings} options={OPTIONS} />
+          </section>
+        </section>
+      )}
       {subTypes.map((category: CategoryType, index) => {
         return (
           <section

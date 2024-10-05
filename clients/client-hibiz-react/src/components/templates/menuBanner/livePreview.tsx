@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState, useMemo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { BiPlus } from "react-icons/bi";
 import { FastAverageColor } from "fast-average-color";
 
