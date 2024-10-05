@@ -83,7 +83,7 @@ function BottomButton({
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "fixed bottom-0 z-20 py-3 w-full max-w-[30rem]",
+            "sticky bottom-0 z-20 py-3 w-full max-w-[30rem]",
           )}
         >
           {children}

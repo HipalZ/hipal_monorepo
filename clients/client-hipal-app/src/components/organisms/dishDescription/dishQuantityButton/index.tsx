@@ -8,7 +8,7 @@ import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 import MemoAlertVariant from "@/components/atoms/alertVariant";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
 
-const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
+const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   const {
     openBottomPanel,
     setOpenBottomPanel,
@@ -145,5 +145,5 @@ const DishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   );
 };
 
-const MemoDishQuantityButton = memo(DishQuantityButton);
-export default MemoDishQuantityButton;
+const DishQuantityButton = memo(MemoDishQuantityButton);
+export default DishQuantityButton;

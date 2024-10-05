@@ -96,7 +96,8 @@ const DishesList: FC<IDishesProps> = (props) => {
         }, 3000);
         setActiveChildCategory("");
       }
-      const active = timings.dishIds.length > 0 ? "" : isActiveCategory;
+      const active =
+        timings.dishIds.length > 0 && observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
         element.style.scrollMarginTop = "110px";
@@ -109,7 +110,7 @@ const DishesList: FC<IDishesProps> = (props) => {
   }, [isActiveCategory]);
 
   return (
-    <div>
+    <>
       <section className="sticky z-50 text-primary top-[3.125rem]">
         {!isSearchActive && (
           <>
@@ -119,14 +120,14 @@ const DishesList: FC<IDishesProps> = (props) => {
         )}
       </section>
       {timings && timings.dishIds.length > 0 && (
-        <section className="relative flex items-center justify-center w-full pt-[2rem] bg-base-100">
-          <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[3rem] overflow-hidden pb-[10.5rem] bg-base-100 relative">
-            <h1 className="absolute text-4xl text-center -translate-x-1/2 text-primary top-2 bungee-inline left-1/2">
-              <span className="opacity-50">
+        <section className="relative flex items-center justify-center w-full bg-base-100">
+          <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[5rem] md:pb-[10rem] bg-base-100 relative">
+            <h1 className="relative z-10 text-[1.75rem] text-primary bungee-inline">
+              <span className="opacity-80 text-primary">
                 {timings?.heading || "Specials"}
               </span>
             </h1>
-            <div className="absolute top-0 w-full rounded-full bg-base-300" />
+            <div className="absolute -top-[6rem] w-[110%] h-[15rem] rounded-full bg-base-300" />
             <EmblaCarouselPreview timings={timings} options={OPTIONS} />
           </section>
         </section>
@@ -219,7 +220,7 @@ const DishesList: FC<IDishesProps> = (props) => {
           </section>
         );
       })}
-    </div>
+    </>
   );
 };
 
