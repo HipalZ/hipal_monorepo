@@ -1039,25 +1039,25 @@ button:hover .shine2 {
   --slide-spacing: 0.5rem;
   --slide-size: 80%;
 }
-.embla__viewport {
+.embla-_viewport {
   overflow: hidden;
 }
-.embla__container {
+.embla-_container {
   display: flex;
   touch-action: pan-y pinch-zoom;
   margin-left: calc(var(--slide-spacing) * -1);
 }
-.embla__slide {
+.embla-_slide {
   transform: translate3d(0, 0, 0);
   flex: 0 0 var(--slide-size);
   min-width: 0;
 }
-.embla__slide__img {
+.embla-_slide__img {
   display: block;
   width: 100%;
 }
 
-.embla__controls {
+.embla-_controls {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1066,7 +1066,7 @@ button:hover .shine2 {
   margin-top: 2rem;
 }
 
-.embla__buttons {
+.embla-_buttons {
   width: 100%;
 
   display: flex;
@@ -1075,7 +1075,7 @@ button:hover .shine2 {
   align-items: center;
 }
 
-.embla__button {
+.embla-_button {
   -webkit-tap-highlight-color: rgba(var(--text-high-contrast-rgb-value), 0.5);
   -webkit-appearance: none;
   appearance: none;
@@ -1097,19 +1097,19 @@ button:hover .shine2 {
   box-shadow: inset 0 0 0 0.2rem var(--detail-medium-contrast);
 }
 
-.embla__button:disabled {
+.embla-_button:disabled {
   color: var(--detail-high-contrast);
   opacity: 0.5;
 }
 
-.embla__dots {
+.embla-_dots {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.6rem;
 }
 
-.embla__dot {
+.embla-_dot {
   -webkit-tap-highlight-color: rgba(var(--text-high-contrast-rgb-value), 0.5);
   -webkit-appearance: none;
   appearance: none;
@@ -1129,31 +1129,31 @@ button:hover .shine2 {
   position: relative;
 }
 
-.embla__dot:after {
+.embla-_dot:after {
   width: 2rem;
   height: 0.5rem;
   border-radius: 50%;
   content: '';
 }
 
-.embla__dot--selected:after {
+.embla-_dot--selected:after {
   background-color: #ffffff;
   width: 3rem !important; 
   height: 0.5rem;
 }
 
-.embla__parallax {
+.embla-_parallax {
   border-radius: 1rem;
   height: 100%;
   overflow: hidden;
 }
-.embla__parallax__layer {
+.embla-_parallax__layer {
   position: relative;
   height: 100%;
   display: flex;
   justify-content: center;
 }
-.embla__parallax__img {
+.embla-_parallax__img {
   max-width: none;
   flex: 0 0 calc(115% + (var(--slide-spacing) * 2));
   border-radius: 1rem;

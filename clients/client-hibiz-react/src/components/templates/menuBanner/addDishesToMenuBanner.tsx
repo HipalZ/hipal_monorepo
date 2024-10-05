@@ -103,7 +103,7 @@ const MemoAddDishesToMenuBanner = () => {
                   value={headerTitle}
                   placeholder={headerTitle || "Enter the name of the menu"}
                   minLength={2}
-                  maxLength={25}
+                  maxLength={20}
                   className="w-full px-4 py-3 border border-black rounded-2xl"
                   onChange={changeHeading}
                 />

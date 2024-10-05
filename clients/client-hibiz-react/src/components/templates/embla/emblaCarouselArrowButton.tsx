@@ -60,7 +60,7 @@ export const PrevButton: React.FC<PropType> = (props) => {
 
   return (
     <button
-      className="embla__button embla__button--prev"
+      className="embla-_button embla-_button--prev"
       type="button"
       {...restProps}
     >
@@ -75,7 +75,7 @@ export const NextButton: React.FC<PropType> = (props) => {
 
   return (
     <button
-      className="embla__button embla__button--next"
+      className="embla-_button embla-_button--next"
       type="button"
       {...restProps}
     >

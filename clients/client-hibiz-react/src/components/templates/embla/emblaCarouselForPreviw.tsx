@@ -59,7 +59,7 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
 
   const setTweenNodes = useCallback((emblaApi: EmblaCarouselType): void => {
     tweenNodes.current = emblaApi.slideNodes().map((slideNode) => {
-      return slideNode.querySelector(".embla__parallax__layer") as HTMLElement;
+      return slideNode.querySelector(".embla-_parallax__layer") as HTMLElement;
     });
   }, []);
 
@@ -132,12 +132,12 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
 
   return (
     <div className="embla">
-      <div className="embla__viewport" ref={emblaRef}>
-        <div className="embla__container">
+      <div className="embla-_viewport" ref={emblaRef}>
+        <div className="embla-_container">
           {selectedDishObjects.map((dish) => (
-            <div className="embla__slide" key={dish._id}>
-              <div className="embla__parallax">
-                <div className={cn("embla__parallax__layer")}>
+            <div className="embla-_slide" key={dish._id}>
+              <div className="embla-_parallax">
+                <div className={cn("embla-_parallax__layer")}>
                   {/* Pass dish object as prop */}
                   <LivePreview dish={dish} />
                 </div>
@@ -147,10 +147,10 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
         </div>
       </div>
 
-      <div className="px-6 embla__controls">
-        <div className="embla__buttons">
+      <div className="px-6 embla-_controls">
+        <div className="embla-_buttons">
           <PrevButton onClick={onPrevButtonClick} disabled={prevBtnDisabled} />
-          <div className="embla__dots">
+          <div className="embla-_dots">
             {scrollSnaps.map((_, index) => (
               <DotButton
                 key={index}
