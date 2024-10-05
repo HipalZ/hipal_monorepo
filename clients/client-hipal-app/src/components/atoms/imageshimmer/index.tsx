@@ -1,10 +1,4 @@
-import {
-  type CSSProperties,
-  type FC,
-  memo,
-  type RefObject,
-  useState,
-} from "react";
+import { type CSSProperties, type FC, memo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { cn } from "@hi/common";
 
@@ -23,7 +17,7 @@ interface ShimmerImageProps {
   sizes?: string;
   priority?: boolean;
   hide?: boolean;
-  ref: RefObject<HTMLImageElement>;
+  onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
 const MemoShimmerImage: FC<ShimmerImageProps> = ({
@@ -41,9 +35,18 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   sizes,
   priority,
   hide,
-  ref,
+  onLoad,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleImageLoad = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    setIsLoading(false);
+    if (onLoad) {
+      onLoad(event);
+    }
+  };
 
   return (
     <div className={cn(!hide ? "imageWrapper" : "")}>
@@ -51,7 +54,6 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
       <Image
         src={src}
         alt={alt}
-        ref={ref}
         width={width}
         height={height}
         quality={quality}
@@ -62,7 +64,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
         priority={priority}
         sizes={sizes}
         className={`${className} ${isAvailable ? "" : "grayscale"}`}
-        onLoad={() => setIsLoading(false)}
+        onLoad={handleImageLoad}
       />
     </div>
   );

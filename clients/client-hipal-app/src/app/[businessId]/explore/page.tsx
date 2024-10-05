@@ -102,27 +102,31 @@ export default async function Explore({
                             : "",
                         )}
                       >
-                        <BannerLayouts
-                          redirectionId={banner?.redirectionId || ""}
-                          redirectionName={banner?.redirectionName || ""}
-                          selectedLayout={banner?.layout || ""}
-                          heading={banner?.heading || ""}
-                          paragraph={banner?.paragraph || ""}
-                          callToAction={banner?.callToAction || ""}
-                          img={{ logo: banner?.bannerImage || "" }}
-                          selectedColor={{
-                            bgColor: banner?.backgroundColor || "",
-                            textColor: banner?.backgroundColor || "",
-                          }}
-                          paragraphStyle={{
-                            color: banner?.paragraphColor || "",
-                          }}
-                          buttonStyle={{
-                            color: banner?.buttonColor || "",
-                            buttonColor: banner?.buttonTextColor || "",
-                          }}
-                          redirectionType={banner?.redirectionType || ""}
-                        />
+                        <div className="embla-_parallax">
+                          <div className={cn("embla-_parallax__layer")}>
+                            <BannerLayouts
+                              redirectionId={banner?.redirectionId || ""}
+                              redirectionName={banner?.redirectionName || ""}
+                              selectedLayout={banner?.layout || ""}
+                              heading={banner?.heading || ""}
+                              paragraph={banner?.paragraph || ""}
+                              callToAction={banner?.callToAction || ""}
+                              img={{ logo: banner?.bannerImage || "" }}
+                              selectedColor={{
+                                bgColor: banner?.backgroundColor || "",
+                                textColor: banner?.backgroundColor || "",
+                              }}
+                              paragraphStyle={{
+                                color: banner?.paragraphColor || "",
+                              }}
+                              buttonStyle={{
+                                color: banner?.buttonColor || "",
+                                buttonColor: banner?.buttonTextColor || "",
+                              }}
+                              redirectionType={banner?.redirectionType || ""}
+                            />
+                          </div>
+                        </div>
                       </div>
                     );
                   })}

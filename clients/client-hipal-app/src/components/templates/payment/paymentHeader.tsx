@@ -1,5 +1,4 @@
 import MemoPlaceholderImg from "@/components/atoms/placeholder";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";

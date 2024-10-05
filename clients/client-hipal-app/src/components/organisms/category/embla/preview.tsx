@@ -1,5 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
-import { BiPlus } from "react-icons/bi";
+import { memo, useCallback, useState } from "react";
 import { FastAverageColor } from "fast-average-color";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import type { IDish } from "@/components/types/businessData";
@@ -7,27 +6,34 @@ import Img from "@/assets/img/cake.png";
 import DishQuantityButton from "../../dishDescription/dishQuantityButton";
 
 const MemoLivePreview = ({ dish }: { dish: IDish }) => {
-  const imgRef = useRef<HTMLImageElement>(null);
   const [dominantColor, setDominantColor] = useState(
     "rgba(255, 255, 255, 0.9)",
   );
 
-  // Color extraction logic
-  useEffect(() => {
-    if (!imgRef.current || !dish) return;
+  const extractColor = useCallback(
+    (image: HTMLImageElement | null) => {
+      if (!image || !dish) return;
 
-    const fac = new FastAverageColor();
-    fac
-      .getColorAsync(imgRef.current)
-      .then((color) => {
-        setDominantColor(
-          `rgba(${color.value[0]}, ${color.value[1]}, ${color.value[2]},0.5)`,
-        );
-      })
-      .catch((e) => {
-        console.error("Error extracting color:", e);
-      });
-  }, [dish]);
+      const fac = new FastAverageColor();
+      fac
+        .getColorAsync(image)
+        .then((color) => {
+          setDominantColor(
+            `rgba(${color.value[0]}, ${color.value[1]}, ${color.value[2]}, 0.5)`,
+          );
+        })
+        .catch((e) => {
+          console.error("Error extracting color:", e);
+        });
+    },
+    [dish],
+  );
+
+  const handleImageLoad = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    extractColor(event.currentTarget);
+  };
 
   if (!dish) {
     return <p className="text-center text-gray-500">Dish not found</p>;
@@ -40,12 +46,12 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
     >
       <div className="w-full aspect-[2/3] overflow-hidden">
         <ShimmerImage
-          ref={imgRef}
           src={dish?.images?.[0] || Img}
           alt={dish?.name}
           width={350}
           height={233}
           className="object-contain w-full h-full embla-_slide__img embla-_parallax__img"
+          onLoad={handleImageLoad}
           style={{
             objectPosition: "50% 0%",
           }}
@@ -68,6 +74,7 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
           ₹ {dish.price}
         </p>
       </figcaption>
+
       <div className="absolute z-40 px-3 py-1 text-sm scale-90 rounded-lg md:right-5 bottom-4 lg:right-5 right-2">
         <DishQuantityButton dishData={dish} />
       </div>

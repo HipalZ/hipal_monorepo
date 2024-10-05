@@ -916,6 +916,14 @@ input[type='password'] {
 	--slide-spacing: 0rem;
 	--slide-size: 78%;
 }
+.embla2 {
+	width: 100%;
+	aspect-ratio: 1;
+	margin: auto;
+	--slide-height: 19rem;
+	--slide-spacing: 0rem;
+	--slide-size: 78%;
+}
 .embla__button-container {
   display: flex;
   justify-content: space-between;

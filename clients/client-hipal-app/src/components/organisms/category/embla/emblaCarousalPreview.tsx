@@ -7,12 +7,7 @@ import type {
 import useEmblaCarousel from "embla-carousel-react";
 
 import { cn } from "@hi/common";
-import { DotButton, useDotButton } from "./emblaCarouselDotButton";
-import {
-  NextButton,
-  PrevButton,
-  usePrevNextButtons,
-} from "./emblaCarouselArrowButton";
+
 import LivePreview from "./preview";
 import type { TimingType } from "@/components/types/businessData";
 
@@ -31,15 +26,6 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
   const tweenFactor = useRef(0);
   const tweenNodes = useRef<HTMLElement[]>([]);
-
-  const { selectedIndex, scrollSnaps, onDotButtonClick } =
-    useDotButton(emblaApi);
-  const {
-    prevBtnDisabled,
-    nextBtnDisabled,
-    onPrevButtonClick,
-    onNextButtonClick,
-  } = usePrevNextButtons(emblaApi);
 
   const setTweenNodes = useCallback((emblaApi: EmblaCarouselType): void => {
     tweenNodes.current = emblaApi.slideNodes().map((slideNode) => {
@@ -113,7 +99,7 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
   }, [emblaApi, tweenParallax]);
 
   return (
-    <div className="embla !-mt-[3rem]">
+    <div className="embla2 !-mt-[3rem]">
       <div className="embla-_viewport" ref={emblaRef}>
         <div className="embla-_container">
           {timings &&

@@ -8,7 +8,6 @@ const MemoLivePreview = ({ dish }: { dish: any }) => {
     "rgba(255, 255, 255, 0.9)",
   );
 
-  // Color extraction logic
   useEffect(() => {
     if (!imgRef.current || !dish) return;
 
