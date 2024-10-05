@@ -37,11 +37,13 @@ const menuBannerRouter = new Hono()
       });
 
       const now = new Date();
-      const currentTime =
-        now.getHours() * 3600000 +
-        now.getMinutes() * 60000 +
-        now.getSeconds() * 1000;
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istTime = new Date(now.getTime() + istOffset);
 
+      const currentTime =
+        istTime.getHours() * 3600000 +
+        istTime.getMinutes() * 60000 +
+        istTime.getSeconds() * 1000;
       console.log("currentTime", currentTime);
 
       // Filter menuBanners based on current times
