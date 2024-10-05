@@ -67,7 +67,7 @@ const menuBannerRouter = new Hono()
 
       return c.json(
         {
-          message: "Menu banners fetched",
+          message: "Menu banners fetcheds",
           err: false,
           data: convertInSingleObject,
         },
