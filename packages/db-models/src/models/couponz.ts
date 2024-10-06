@@ -193,6 +193,10 @@ const couponSchema = new mongoose.Schema<CouponzType>({
       type: [String],
     },
   }),
+  isExpired: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Couponz: Model<CouponzType> = mongoose.model<CouponzType>(
