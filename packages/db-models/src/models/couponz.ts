@@ -197,6 +197,10 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     type: Boolean,
     default: false,
   },
+  dineIn: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Couponz: Model<CouponzType> = mongoose.model<CouponzType>(

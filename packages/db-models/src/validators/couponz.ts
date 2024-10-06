@@ -181,6 +181,7 @@ export const couponSchema = z.object({
     .optional(),
   isDeleted: z.boolean().default(false),
   isExpired: z.boolean().default(false),
+  dineIn: z.boolean().default(false),
   conditions: z.object({
     individualUserLimit: limitSchema.optional(),
     billValue: positiveNumber("billValue").optional(),
