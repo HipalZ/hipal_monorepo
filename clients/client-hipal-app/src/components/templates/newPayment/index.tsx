@@ -443,7 +443,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         cashbackAvailable: availedCoupon?.cashbackAvailable,
       },
     });
-    if (!res.ok) {
+    if (res.status === 401) {
       setIsLoading(false);
       return errorText(res.status);
     }
