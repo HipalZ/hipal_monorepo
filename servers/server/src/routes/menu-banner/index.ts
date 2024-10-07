@@ -70,7 +70,7 @@ const menuBannerRouter = new Hono()
         {
           message: "Menu banners fetcheds",
           err: false,
-          data: convertInSingleObject || {},
+          data: convertInSingleObject,
         },
         200,
       );
