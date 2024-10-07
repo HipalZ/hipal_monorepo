@@ -96,7 +96,7 @@ const MemoAllCouponz = () => {
   if (!!couponz && couponz.length === 0) return null;
 
   return (
-    <>
+    <section className="h-[21rem] overflow-hidden">
       <h2 className="py-4 mt-4 text-2xl text-center text-primary">
         My Couponz
       </h2>
@@ -157,7 +157,7 @@ const MemoAllCouponz = () => {
             })
           : null}
       </EmblaCarousel2>
-    </>
+    </section>
   );
 };
 

@@ -69,9 +69,7 @@ export default async function Explore({
         <MainBackground explore={data?.business} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-          <section className="h-[21rem] overflow-hidden">
-            <AllCouponz />
-          </section>
+          <AllCouponz />
           <div className="bg-base-200">
             <div className="h-[40px] rounded-b-[100%] -ml-12 w-[120%] bg-base-100" />
           </div>
