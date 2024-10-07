@@ -15,60 +15,62 @@ const menuBannerRouter = new Hono()
       const menuBanners = await MenuBanner.find({
         businessId,
         isPublished: true,
-        heading: {
-          $in: [
-            "Breakfast Must try",
-            "Lunchi Munchi",
-            "Snacky Evenings",
-            "Late Dinners",
-          ],
-        },
-      }).populate({
-        path: "dishIds",
-        select: "name price description image",
-      });
+      })
+        .populate({
+          path: "dishIds",
+          select: "name price description images portions",
+          populate: {
+            path: "addOnIds", // populate addOnIds within dishIds
+          },
+        })
+        .lean();
 
       const allHoursDelights = await MenuBanner.findOne({
         businessId,
         heading: "All Hours Delights",
       }).populate({
         path: "dishIds",
-        select: "name price description image",
+        select: "name price description images",
+        populate: {
+          path: "addOnIds", // populate addOnIds within dishIds
+        },
       });
 
       const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istTime = new Date(now.getTime() + istOffset);
       const currentTime =
-        now.getHours() * 3600000 +
-        now.getMinutes() * 60000 +
-        now.getSeconds() * 1000;
+        istTime.getHours() * 3600000 +
+        istTime.getMinutes() * 60000 +
+        istTime.getSeconds() * 1000;
 
-      // Filter menuBanners based on current time
+      // Filter menuBanners based on current times
       const filteredMenuBanners = menuBanners.filter(
         (banner) =>
           (banner.businessId.toString() === businessId &&
-            (banner?.startTime ?? 0) <= currentTime &&
-            banner?.endTime) ??
-          0 >= currentTime,
+            banner?.startTime <= currentTime &&
+            banner?.endTime) >= currentTime,
       );
 
       const convertInSingleObject = filteredMenuBanners?.[0];
-      if (convertInSingleObject) {
-        // Merge dishIds and avoid duplicates using a Set
-        const mergedDishIdsSet = new Set([
-          ...convertInSingleObject.dishIds.map((id) => id.toString()),
-          ...(allHoursDelights?.dishIds.map((id) => id.toString()) ?? []),
-        ]);
 
-        convertInSingleObject.dishIds = Array.from(
-          mergedDishIdsSet,
-        ) as unknown as MenuBannerType["dishIds"];
+      if (convertInSingleObject && allHoursDelights?.dishIds) {
+        const existingDishIdsSet = new Set(
+          convertInSingleObject.dishIds.map((dish) => dish._id.toString()),
+        );
+
+        const newDishIds = allHoursDelights.dishIds.filter(
+          (dish) => !existingDishIdsSet.has(dish._id.toString()),
+        );
+
+        convertInSingleObject.dishIds.push(...newDishIds);
       }
 
       return c.json(
         {
-          message: "Menu banners fetched",
+          message: "Menu banners fetcheds",
           err: false,
-          data: convertInSingleObject,
+          data: convertInSingleObject || {},
         },
         200,
       );
@@ -111,16 +113,6 @@ const menuBannerRouter = new Hono()
 
       const menuBanner = await MenuBanner.find({
         businessId,
-        isPublished: true,
-        heading: {
-          $in: [
-            "Breakfast Must try",
-            "Lunchi Munchi",
-            "Snacky Evenings",
-            "Late Dinners",
-            "All Hours Delights",
-          ],
-        },
       });
 
       return c.json(

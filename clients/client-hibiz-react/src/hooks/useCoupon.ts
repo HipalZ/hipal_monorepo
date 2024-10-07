@@ -121,8 +121,8 @@ export const useSaveCoupon = () => {
 };
 
 export const useEditCoupon = () => {
-  const resetFunction = useCouponsStore((s) => s.resetCouponState); // Reset the coupon state after success
-  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage); // Redirect to another page after success
+  const resetFunction = useCouponsStore((s) => s.resetCouponState);
+  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async ({
@@ -233,9 +233,6 @@ export interface IAnalytics {
 export const useIndividualCouponAnalytics = (to: number) => {
   const couponId = useCouponsStore((state) => state.couponId);
   const { couponStartDate } = useCouponsStore();
-
-  console.log("couponStartDate", couponStartDate, to);
-
   const getIndividualAnalytics = useCallback(async () => {
     const res = await apiRpc["coupon-analytics"].couponDashboard[
       ":couponId"

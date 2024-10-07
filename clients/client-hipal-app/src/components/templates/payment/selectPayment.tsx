@@ -10,14 +10,6 @@ import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { cn } from "@/components/utils/helpers";
 
-interface Business {
-  isPaymentIntegrated: boolean;
-}
-
-interface Data {
-  business?: Business;
-}
-
 interface PaymentComponentProps {
   handleCreateOrder: (amount: number, mode: string) => void;
   total: number;
@@ -125,7 +117,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           <Image width={480} height={200} src={Grid} alt="Payment Image" />
         </div>
       </div>
-      <section className="absolute text-primary">
+      <section className="absolute w-full text-primary">
         <center className="text-black text-2xl pt-4 transform bg-transparent w-full h-[5rem]">
           How do you want to settle ?
         </center>
@@ -161,7 +153,6 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           </article>
           <article
             onClick={() => handleOnlineMode(billValue)}
-            onKeyDown={() => handleOnlineMode(billValue)}
             className="w-full max-w-[12.625rem] h-[15.65rem] relative bg-base-200/50 rounded-2xl overflow-hidden shadow-xl"
           >
             <center

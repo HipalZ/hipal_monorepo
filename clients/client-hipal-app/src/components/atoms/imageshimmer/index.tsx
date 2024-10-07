@@ -17,6 +17,7 @@ interface ShimmerImageProps {
   sizes?: string;
   priority?: boolean;
   hide?: boolean;
+  onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
 const MemoShimmerImage: FC<ShimmerImageProps> = ({
@@ -34,8 +35,18 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   sizes,
   priority,
   hide,
+  onLoad,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+
+  const handleImageLoad = (
+    event: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    setIsLoading(false);
+    if (onLoad) {
+      onLoad(event);
+    }
+  };
 
   return (
     <div className={cn(!hide ? "imageWrapper" : "")}>
@@ -53,7 +64,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
         priority={priority}
         sizes={sizes}
         className={`${className} ${isAvailable ? "" : "grayscale"}`}
-        onLoadingComplete={() => setIsLoading(false)}
+        onLoad={handleImageLoad}
       />
     </div>
   );

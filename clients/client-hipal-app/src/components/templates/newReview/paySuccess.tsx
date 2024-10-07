@@ -134,7 +134,7 @@ const MemoPayOnlineSuccess = () => {
           : `radial-gradient(50% 50% at 50% 50%, ${textContent?.color} 0%, rgba(26, 26, 26, 0.75) 100%)`,
       }}
     >
-      <center className="space-grotesk-700">
+      <center className="relative space-grotesk-700">
         <Image
           src={Avtaar}
           alt="avatar"
@@ -178,7 +178,7 @@ const MemoPayOnlineSuccess = () => {
         style={{
           boxShadow: "0px 0px 2px 0px #0000001F",
         }}
-        className="rounded-t-2xl fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
+        className="w-full max-w-[30rem] rounded-t-2xl fixed bottom-0 h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
       >
         <h1 className="text-xs text-left inter">
           Share Your Experience with us

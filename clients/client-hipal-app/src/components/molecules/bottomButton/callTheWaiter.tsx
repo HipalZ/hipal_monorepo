@@ -1,10 +1,10 @@
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
+import { useErrorHandling } from "@/utils/helper";
 
 const messages = [
   "Need Bill",
@@ -16,6 +16,7 @@ const messages = [
 ];
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
+  const { errorText } = useErrorHandling();
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
   const name = useLogin((s) => s.userDetails?.name);
@@ -47,6 +48,10 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         userId: userDetailes._id,
       },
     });
+    if (!res.ok) {
+      setLoading(false);
+      return errorText(res.status);
+    }
     if (res.status === 200) {
       toast.success("Captain will be there soon. Thank you!!");
       onClose();

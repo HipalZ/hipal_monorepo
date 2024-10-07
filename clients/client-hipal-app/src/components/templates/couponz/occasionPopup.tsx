@@ -21,8 +21,10 @@ import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useDatePicker from "@/components/hooks/useDatePicker";
+import { useErrorHandling } from "@/utils/helper";
 
 const MemoOccasionPopup = () => {
+  const { errorText } = useErrorHandling();
   const { businessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
   }));
@@ -93,6 +95,9 @@ const MemoOccasionPopup = () => {
           specialday: convertToTimestamp(date),
         },
       });
+    }
+    if (!response.ok) {
+      return errorText(response.status);
     }
     if (response.status === 201) {
       toast.success("Coupon grabbed successfully");

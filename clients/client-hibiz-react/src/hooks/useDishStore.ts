@@ -145,6 +145,5 @@ export async function deleteDishData(id: string): Promise<any> {
     },
   });
   const data = await dishResponse.json();
-  console.log("data", data);
   return { data, dishResponse };
 }

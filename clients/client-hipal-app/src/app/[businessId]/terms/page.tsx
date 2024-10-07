@@ -1,13 +1,12 @@
 "use client";
 import React, { memo } from "react";
-import Image from "next/image";
 import Logo from "@/assets/hipalNewLogo.svg";
 import { isEmpty } from "lodash-es";
 import { useRouter } from "next/navigation";
 import { HiChevronLeft } from "react-icons/hi";
-import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import ShimmerImage from "@/components/atoms/imageshimmer";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const Terms = () => {
@@ -23,7 +22,7 @@ const Terms = () => {
       </div>
       <div className="flex items-center justify-center w-1/2 mx-auto mt-6 mb-12">
         {!isEmpty(businessDetails?.logoUrl) ? (
-          <Image
+          <ShimmerImage
             src={businessDetails?.logoUrl ? businessDetails?.logoUrl : Logo}
             height={100}
             width={100}
@@ -31,8 +30,6 @@ const Terms = () => {
             objectFit="contain"
             alt="logo-business"
             className="object-center w-1/3 border rounded-lg shadow-sm aspect-square"
-            placeholder="blur"
-            blurDataURL={getRandomBlurImg(100, 100)}
           />
         ) : (
           <PlaceholderImg />

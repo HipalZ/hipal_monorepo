@@ -2,7 +2,11 @@ import axios from "axios";
 import { apiRpc } from "@hi/common";
 import type { Alert } from "@/components/types/hiClientzData";
 
-export const savePushToken = async (pushToken: string, businessId: string) => {
+export const savePushToken = async (
+  pushToken: string,
+  businessId: string,
+  userId: string,
+) => {
   try {
     let url = import.meta.env.VITE_API_URL;
     if (url.includes("localhost")) {
@@ -15,6 +19,7 @@ export const savePushToken = async (pushToken: string, businessId: string) => {
       data: {
         registrationToken: pushToken,
         businessId,
+        userId,
       },
     };
     const res = await axios(config);

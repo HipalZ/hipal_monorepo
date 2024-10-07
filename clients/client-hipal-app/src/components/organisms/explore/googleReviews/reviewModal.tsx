@@ -8,12 +8,14 @@ import ReviewCoinz from "@/assets/img/googleReviewStars.png";
 import { apiRpc } from "@hi/common";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { useLogin } from "@/components/store/useLogin";
+import { useErrorHandling } from "@/utils/helper";
 
 const MemoReviewModal = ({
   closeModal,
 }: {
   closeModal: () => void;
 }) => {
+  const { errorText } = useErrorHandling();
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
@@ -36,13 +38,16 @@ const MemoReviewModal = ({
   }
 
   const updateGoogleReviewCount = async () => {
-    await apiRpc.reviews["update-googlreview"].$put({
+    const res = await apiRpc.reviews["update-googlreview"].$put({
       json: {
         loyaltyId: loyaltySetting?.loyaltyId,
         userId: userDetails?._id,
       },
     });
     await closeModal();
+    if (!res.ok) {
+      return errorText(res.status);
+    }
   };
 
   useEffect(() => {
@@ -52,7 +57,7 @@ const MemoReviewModal = ({
 
   return (
     <section
-      className="h-[100dvh] relative z-[50]"
+      className="h-[100dvh] relative z-[50] overflow-y-hidden"
       style={{
         background:
           "linear-gradient(180deg, #6A35FF 9.72%, #C7B2FF 34.68%, #C7B2FF 56.43%, #6A35FF 89.96%)",
@@ -71,7 +76,7 @@ const MemoReviewModal = ({
         </article>
       </section>
       <section className="absolute inset-0 flex items-center justify-center">
-        <center className="absolute w-[1000px] opacity-50">
+        <center className="absolute w-[500px] opacity-50">
           <Image
             className="animate-spin"
             width={1080}

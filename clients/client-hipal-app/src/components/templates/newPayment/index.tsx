@@ -29,6 +29,7 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
+import { useErrorHandling } from "@/utils/helper";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -102,6 +103,7 @@ const PaymentCard = dynamic(
 
 const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
+  const { errorText } = useErrorHandling();
   const businessId = data?.business?.businessId;
   const { setLoyaltySetting } = useLoyaltyData();
   const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
@@ -208,6 +210,9 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           businessId: businessId,
         },
       });
+      if (!res.ok) {
+        return errorText(res.status);
+      }
       const data = await res.json();
       const orderId = data?.data as string;
 
@@ -438,6 +443,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         cashbackAvailable: availedCoupon?.cashbackAvailable,
       },
     });
+    if (res.status === 401) {
+      setIsLoading(false);
+      return errorText(res.status);
+    }
     const response = (await res.json()) as unknown as {
       data: { order_id: string };
       message: string;
@@ -528,6 +537,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           cashbackAvailable: availedCoupon?.cashbackAvailable,
         },
       });
+      if (!res.ok) {
+        setIsLoading(false);
+        errorText(res.status);
+      }
       const response = (await res.json()) as unknown as { data: string };
       const orderId = response.data.order_id;
       setRazorPayOrderId(orderId);

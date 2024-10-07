@@ -1,10 +1,8 @@
 "use client";
-import React, { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import Hi from "@/assets/svg/hand.svg";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
-import MemoBottomButton from "@/components/molecules/bottomButton";
-import useTableData from "@/components/store/useTableData";
 import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { updateTheme } from "@/components/utils/themes";
@@ -49,7 +47,6 @@ const QrInvoices = ({ data }) => {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
-  const setTableName = useTableData((state) => state.setTableName);
   const { setBusinessDetails } = useBusinessDetails((s) => ({
     setBusinessDetails: s.setBusinessDetails,
   }));
@@ -81,11 +78,6 @@ const QrInvoices = ({ data }) => {
   const handleNavigate = useCallback(() => {
     router.push("/");
   }, []);
-
-  const handleNavigatePayment = useCallback(() => {
-    setTableName(business.bizName);
-    router.push(`/${customLink}/payment?amount=${business.billValue}`);
-  }, [customLink, business.billValue]);
 
   useEffect(() => {
     setDirection("invoice");
@@ -174,16 +166,6 @@ const QrInvoices = ({ data }) => {
         This is a computer generated invoice. All disputes subjected to
         exclusive jurisdiction of courts in Hyderabad{" "}
       </center>
-      <MemoBottomButton>
-        <div
-          onClick={handleNavigatePayment}
-          className={`${
-            business.billValue > 0 ? "" : "opacity-20 pointer-events-none"
-          } bg-black text-white py-3 px-3 rounded-full mx-6`}
-        >
-          <span>Pay to Hipalz ₹ {business?.billValue}</span>
-        </div>
-      </MemoBottomButton>
     </>
   );
 };

@@ -10,6 +10,7 @@ import { useReview } from "@/components/store/useReview";
 import dynamic from "next/dynamic";
 import { calculateRating, cn } from "@/components/utils/helpers";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import { useErrorHandling } from "@/utils/helper";
 
 const Staffs = dynamic(() => import("./staffs"), {
   ssr: false,
@@ -57,6 +58,7 @@ interface Payload {
 
 const MemoReviewPage = () => {
   const customLink = useParams()?.businessId as string;
+  const { errorText } = useErrorHandling();
   const router = useRouter();
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const searchParams = useSearchParams();
@@ -122,6 +124,9 @@ const MemoReviewPage = () => {
     const res = await apiRpc.payments.reviews.$post({
       json: payload,
     });
+    if (!res.ok) {
+      return errorText(res.status);
+    }
     const response = await res.json();
     if (res.status === 200) {
       toast.success(response.message || "Review submitted successfully");

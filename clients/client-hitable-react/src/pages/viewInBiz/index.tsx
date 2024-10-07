@@ -27,7 +27,7 @@ const ViewInBizMemo = () => {
   }, []);
 
   const navigateToBiz = async () => {
-    await savePushToken(pushToken, businessId);
+    await savePushToken(pushToken, businessId, captainData?._id);
     navigate(`/${businessId}/alerts`);
   };
 

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import DishAndCat from "@/assets/dishAdbcat.png";
 import Manager from "@/assets/menuManager.png";
+import Card from "@/assets/cards/card62.png";
 
 const menuArray = [
   {
@@ -24,6 +25,14 @@ const menuArray = [
       "Organize dishes and categories for efficient menu management and presentation",
     navigate: "manager",
     image: Manager,
+  },
+  {
+    id: 3,
+    title: "Menu Banners",
+    subTitle:
+      "Promote what makes your place special across different timings and situations",
+    navigate: "menubanners",
+    image: Card,
   },
 ];
 
@@ -43,7 +52,6 @@ const MemoMenu = () => {
           onBack={handleBack}
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}
-          isIconBusinessShow={false}
         />
       </div>
       <section>
