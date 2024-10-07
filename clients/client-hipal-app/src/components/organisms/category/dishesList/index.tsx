@@ -97,7 +97,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         setActiveChildCategory("");
       }
       const active =
-        timings.dishIds.length > 0 && observerActive ? "" : isActiveCategory;
+        timings?.dishIds?.length > 0 && observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
         element.style.scrollMarginTop = "110px";
