@@ -1,4 +1,4 @@
-package table.test.hipalz.com;
+package hiclient.hipalz.com;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

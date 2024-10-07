@@ -4,10 +4,10 @@ plugins {
 }
 
 android {
-    namespace "table.test.hipalz.com"
+    namespace "hiclient.hipalz.com"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "table.test.hipalz.com"
+        applicationId "hiclient.hipalz.com"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

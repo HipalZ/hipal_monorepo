@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">hitable-test</string>
-    <string name="title_activity_main">hitable-test</string>
-    <string name="package_name">table.test.hipalz.com</string>
-    <string name="custom_url_scheme">table.test.hipalz.com</string>
+    <string name="app_name">HiClientz</string>
+    <string name="title_activity_main">HiClientz</string>
+    <string name="package_name">hiclient.hipalz.com</string>
+    <string name="custom_url_scheme">hiclient.hipalz.com</string>
 </resources>
