@@ -119,7 +119,7 @@ const DishesList: FC<IDishesProps> = (props) => {
           </>
         )}
       </section>
-      {timings && timings.dishIds.length > 0 && (
+      {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
         <section className="relative flex items-center justify-center w-full bg-base-100">
           <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-base-100 relative">
             <h1 className="relative z-10 text-[1.75rem] text-primary bungee-inline">
