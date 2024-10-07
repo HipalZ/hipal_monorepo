@@ -638,9 +638,13 @@ const paymentsRouter = new Hono()
               notification: {
                 title: "Confirm Payment  !!",
                 body: `${tableName?.slice(-3)} requested to settle bill`,
-                android_channel_id: "custom_channel_id",
               },
-              priority: "high",
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
+                },
+              },
             };
 
             admin
@@ -897,9 +901,13 @@ const paymentsRouter = new Hono()
               body: `${tableName?.slice(
                 -3,
               )} has successfully  paid ${paidAmount}`,
-              android_channel_id: "custom_channel_id",
             },
-            priority: "high",
+            android: {
+              notification: {
+                channel_id: "custom_channel_id",
+                sound: "order",
+              },
+            },
           };
 
           admin
@@ -1197,9 +1205,13 @@ const paymentsRouter = new Hono()
             notification: {
               title: "Hi Captain !!",
               body: `${tableName?.slice(-3)} : ${message}`,
-              android_channel_id: "custom_channel_id",
             },
-            priority: "high",
+            android: {
+              notification: {
+                channel_id: "custom_channel_id",
+                sound: "order",
+              },
+            },
           };
 
           admin
