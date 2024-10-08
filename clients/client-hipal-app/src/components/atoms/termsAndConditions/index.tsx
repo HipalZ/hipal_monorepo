@@ -40,7 +40,7 @@ const MemoTermsAndConditions = () => {
   return (
     <section className="relative bg-white h-[80dvh] rounded-t-2xl overflow-y-auto text-black pb-[3rem]">
       <picture className="relative">
-        <ShimmerImage
+        <Image
           src={selectedCoupon?.image}
           alt="tc"
           className="w-full border bg-[#e0dbdb]"
