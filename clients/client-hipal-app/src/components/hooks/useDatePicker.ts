@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
   const [date, setDate] = useState({
@@ -33,17 +34,27 @@ const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
         value: `${i + 1}`,
         label: `${i + 1}`,
       })),
-      month:
-        selectedYear === currentYear
-          ? prev.month.slice(0, currentMonth)
-          : prev.month,
     }));
   }, [date.year, date.month]);
 
   const handleDateChange = (name, value) => {
     setDate((prev) => {
       let newState = { ...prev, [name]: value };
+      const selectedDate = new Date(
+        Number.parseInt(newState.year),
+        Number.parseInt(newState.month) - 1,
+        Number.parseInt(newState.day),
+      ).getTime();
+      const today = new Date(
+        currentYear,
+        currentMonth - 1,
+        currentDay,
+      ).getTime();
 
+      if (selectedDate > today) {
+        toast.error("You cannot select a date in the future.");
+        return prev;
+      }
       const daysInMonth = new Date(
         Number.parseInt(newState.year),
         Number.parseInt(newState.month),
@@ -54,30 +65,13 @@ const useDatePicker = (currentYear, currentMonth, currentDay, pickerRef) => {
         newState.day = `${daysInMonth}`;
       }
 
-      if (name === "month" || name === "year") {
-        const newMonthOptions =
-          Number.parseInt(newState.year) === currentYear
-            ? optionGroups.month.slice(0, currentMonth)
-            : optionGroups.month;
-
-        const newDayOptions =
-          Number.parseInt(newState.year) === currentYear &&
-          Number.parseInt(newState.month) === currentMonth
-            ? Array.from({ length: currentDay }, (_, i) => ({
-                value: `${i + 1}`,
-                label: `${i + 1}`,
-              }))
-            : Array.from({ length: daysInMonth }, (_, i) => ({
-                value: `${i + 1}`,
-                label: `${i + 1}`,
-              }));
-
-        setOptionGroups({
-          ...optionGroups,
-          day: newDayOptions,
-          month: newMonthOptions,
-        });
-      }
+      setOptionGroups((prev) => ({
+        ...prev,
+        day: Array.from({ length: daysInMonth }, (_, i) => ({
+          value: `${i + 1}`,
+          label: `${i + 1}`,
+        })),
+      }));
 
       return newState;
     });
