@@ -17,11 +17,16 @@ const LoginMemo = () => {
   const setAccessToken = useUserToken((s) => s.setAccessToken);
   const setRefreshToken = useUserToken((s) => s.setRefreshToken);
   const [password, setPassword] = useState<string>("");
+
   const { setLoading } = useLiteStore();
   //
 
   // store
-  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ();
+  const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ((s) => ({
+    setCaptainData: s.setCaptainData,
+    phoneNumber: s.phoneNumber,
+    setPhoneNumber: s.setPhoneNumber,
+  }));
 
   //methods
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,25 +38,35 @@ const LoginMemo = () => {
   };
 
   //apis
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    const res = await apiRpc.users[":id"].stafflogin.$post({
-      json: {
-        phone: phoneNumber,
-        password: password,
-      },
-    });
-    const response = await res.json();
-    if (res.status === 200) {
-      setCaptainData(response.data.user);
-      setRefreshToken(response.data.refreshToken);
-      setAccessToken(response.data.accessToken);
 
-      toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
-      window.location.href = "/businesses";
+    try {
+      const res = await apiRpc.users[":id"].stafflogin.$post({
+        json: {
+          phone: phoneNumber,
+          password: password,
+        },
+      });
+
+      const response = await res.json();
+      if (res.status === 200) {
+        setCaptainData(response.data.user);
+        setRefreshToken(response.data.refreshToken);
+        setAccessToken(response.data.accessToken);
+        toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
+        setLoading(false);
+        window.location.href = "/businesses";
+      } else {
+        toast.error("Invalid login");
+        setLoading(false);
+      }
+    } catch (error) {
+      toast.error("Failed to login. Please check your credentials.");
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -159,6 +174,7 @@ const LoginMemo = () => {
         <div className="relative">
           <input
             onChange={handlePasswordChange}
+            hidden
             type="password"
             id="floating_outlined4"
             className="block w-full pt-3 pb-3 pl-4 pr-4 mb-0 ml-0 mr-0 text-base text-gray-900 bg-transparent border border-black dark:text-base-100 focus:border-primary peer rounded-xl focus:outline-none dark:border-gray-600"
