@@ -37,7 +37,7 @@ const ProfileHeader = (props: { position: boolean }) => {
           <MenuItem>
             {({ active }) => (
               <a
-                href="https://t-static.blr1.digitaloceanspaces.com/hiclient_v1.apk"
+                href="https://t-static.blr1.digitaloceanspaces.com/hiclient-1.1.0.apk"
                 className={cn(
                   defaultClass,
                   active ? "bg-gray-100" : "",
