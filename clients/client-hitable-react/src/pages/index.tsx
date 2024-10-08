@@ -59,6 +59,7 @@ const LoginMemo = () => {
         window.location.href = "/businesses";
       } else {
         toast.error("Invalid login");
+        setLoading(false);
       }
     } catch (error) {
       toast.error("Failed to login. Please check your credentials.");
