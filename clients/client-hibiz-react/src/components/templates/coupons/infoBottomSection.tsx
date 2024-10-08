@@ -16,6 +16,7 @@ const MemoInfoBottomSection = () => {
     expiryClaimLimitValue,
     couponForEveryOne,
     links,
+    isPublish,
   } = useCouponsStore((s) => ({
     couponName: s.couponName,
     couponType: s.couponType,
@@ -31,6 +32,7 @@ const MemoInfoBottomSection = () => {
     selectedPage: s.selectedPage,
     isActive: s.isActive,
     links: s.links,
+    isPublish: s.isPublish,
   }));
 
   const copyToClipboard = (link: string) => {
@@ -189,7 +191,7 @@ const MemoInfoBottomSection = () => {
           </button>
         </section>
       </Background>
-      {links && links?.length > 0 && (
+      {isPublish && links && links?.length > 0 && (
         <section>
           <h2 className="mt-4 mb-2 font-bold opacity-60">Links</h2>
           <Background className="!my-0">

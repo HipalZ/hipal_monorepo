@@ -7,7 +7,6 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 import InfoBottomSection from "./infoBottomSection";
 import InfoPreview from "./infoPreview";
-import SocialMedia from "./previewTypes/socialMedia";
 
 const MemoInfo = () => {
   const { isPublish, couponId } = useCouponsStore((s) => ({

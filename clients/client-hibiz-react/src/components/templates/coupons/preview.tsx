@@ -4,9 +4,12 @@ import { cn } from "@hi/common";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { compressImage } from "@/components/utils/helper";
+
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import Cropper from "react-easy-crop";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import PopUp from "@/components/atom/popUp";
 const Background = lazy(() => import("@/components/atom/feildBackground"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const AfterGrabbingCoupon = lazy(
@@ -128,10 +131,30 @@ const MemoPreview = () => {
           "overflow-y-auto pb-[10rem] relative flex flex-col lg:flex-row gap-0 lg:gap-6 items-center lg:items-start justify-center",
         )}
       >
-        <AfterGrabbingCoupon />
+        <div className="relative">
+          <AfterGrabbingCoupon />
+          {!couponImage && (
+            <MdOutlineAddPhotoAlternate
+              onClick={triggerFileInput}
+              size={42}
+              className="absolute p-2 text-white bg-black rounded-full top-3 right-3"
+            />
+          )}
+          {couponImage && (
+            <button
+              type="button"
+              onClick={removeImage}
+              className="absolute p-2 text-xl text-white bg-black rounded-full top-3 right-3"
+            >
+              <FaTimes />
+            </button>
+          )}
+        </div>
         <Background className="w-[90%] mx-4 max-w-[24rem] lg:mt-12">
           <div className="mt-2">
-            <h3 className="text-lg font-semibold">Select Background Color</h3>
+            <h3 className="text-lg font-semibold opacity-60">
+              Select Background Color
+            </h3>
             <div className="flex justify-between gap-4 mt-4">
               {["#FFC93C", "#67A5EC", "#9267EC", "#EC678D", "#70EC67"].map(
                 (color) => (
@@ -146,99 +169,72 @@ const MemoPreview = () => {
               )}
             </div>
           </div>
-          <div className="mt-6">
-            <h3 className="mb-4 text-lg font-semibold">Upload Coupon Image</h3>
-            {isCropping && imageSrc ? (
-              <div
-                className="cropper-container"
-                style={{ position: "relative", width: "100%", height: "300px" }}
-              >
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={1}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onCropComplete={onCropComplete}
-                  minZoom={1}
-                  maxZoom={3}
-                />
-              </div>
-            ) : (
-              <article
-                className={cn(
-                  "h-[10rem] w-full rounded-xl flex justify-center items-center relative",
-                  couponImage
-                    ? "border-none"
-                    : "border-2 border-black border-dashed",
-                )}
-                style={{
-                  backgroundImage: couponImage ? `url(${couponImage})` : "none",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundColor: `${bgColor}20`,
-                }}
-                onClick={triggerFileInput}
-              >
-                {!couponImage && (
-                  <FaPlus
-                    style={{
-                      color: bgColor || "#9267EC",
-                    }}
-                    className="text-xl"
-                  />
-                )}
-                {couponImage && (
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute p-1 text-white bg-black rounded-full top-2 right-2"
-                  >
-                    <FaTimes />
-                  </button>
-                )}
-              </article>
-            )}
-
-            <input
-              type="file"
-              accept="image/jpeg, image/png, image/heif, image/heic"
-              onChange={handleImageUpload}
-              className="hidden"
-              ref={fileInputRef}
-            />
+          <input
+            type="file"
+            accept="image/jpeg, image/png, image/heif, image/heic"
+            onChange={handleImageUpload}
+            className="hidden"
+            ref={fileInputRef}
+          />
+          <div className="flex items-center justify-between gap-4 mt-6">
+            <h3 className="text-base font-semibold opacity-60">
+              Upload Coupon Image
+            </h3>
+            <button
+              className="bg-[#000000] px-3 py-2 rounded-full text-white text-sm"
+              type="button"
+              onClick={triggerFileInput}
+            >
+              + Upload Image
+            </button>
           </div>
         </Background>
-        {isCropping ? (
-          <BottomButton
-            fixed
-            buttons={[
-              {
-                text: "Back",
-                onClick: () => setIsCropping(false),
-              },
-              {
-                text: "Save",
-                onClick: showCroppedImage,
-              },
-            ]}
-          />
-        ) : (
-          <BottomButton
-            fixed
-            buttons={[
-              {
-                text: "Back",
-                onClick: () => setSelectedPage("Terms"),
-              },
-              {
-                text: "save & next",
-                onClick: () => setSelectedPage("CUSTOM"),
-              },
-            ]}
-          />
+        {isCropping && (
+          <PopUp show={isCropping} onClose={() => setIsCropping(false)}>
+            <div
+              className="cropper-container max-w-[20rem] mx-auto mt-[3rem] mb-[7rem]"
+              style={{ position: "relative", width: "100%", height: "300px" }}
+            >
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                minZoom={1}
+                maxZoom={3}
+              />
+            </div>
+            <BottomButton
+              buttons={[
+                {
+                  text: "Back",
+                  onClick: () => setIsCropping(false),
+                },
+                {
+                  text: "Save",
+                  onClick: showCroppedImage,
+                },
+              ]}
+            />
+          </PopUp>
         )}
+
+        <BottomButton
+          fixed
+          buttons={[
+            {
+              text: "Back",
+              onClick: () => setSelectedPage("EXPIRED"),
+            },
+            {
+              text: "save & next",
+              onClick: () => setSelectedPage("CUSTOM"),
+            },
+          ]}
+        />
       </section>
     </Suspense>
   );

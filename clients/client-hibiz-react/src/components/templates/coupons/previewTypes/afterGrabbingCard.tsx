@@ -1,7 +1,8 @@
 import useCouponsStore from "@/components/store/useCouponsStore";
-import birthdayPlaceholder from "@/assets/coupon/birthdayCouponz.png";
+import BirthdayPlaceholder from "@/assets/hisite/layout3.jpg";
 
 import { memo } from "react";
+import { formatDate } from "@/components/utils/helper";
 
 const MemoAfterGrabbingCoupon = () => {
   const {
@@ -18,21 +19,21 @@ const MemoAfterGrabbingCoupon = () => {
     extendedEndTime,
   } = useCouponsStore();
 
-  const formatDate = (timestamp: number | null) => {
-    if (!timestamp) return "No expiry";
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
-  };
-
   return (
-    <center className="relative">
+    <center
+      style={{
+        backgroundColor: bgColor || "#9267EC",
+      }}
+      className="relative max-w-[20rem] p-6 rounded-xl"
+    >
       <img
-        src={couponImage || birthdayPlaceholder}
+        src={couponImage || BirthdayPlaceholder}
         alt="Coupon"
         width={256}
         style={{
-          height: "200px",
+          height: "210px",
           objectFit: "cover",
+          objectPosition: "0px -36px",
         }}
         className="rounded-t-xl"
       />
@@ -40,12 +41,14 @@ const MemoAfterGrabbingCoupon = () => {
         <div className="flex flex-col items-start space-y-1">
           <h3 className="text-xs text-gray-500">Min. Bill Amount</h3>
           <p className="text-xl font-semibold">
-            ₹ {minimumBillAmount || couponPrice}
+            ₹ {minimumBillAmount || couponPrice || "Bill amt"}
           </p>
         </div>
         <div className="flex flex-col items-start space-y-1">
           <h3 className="text-xs text-gray-500">Valid Till</h3>
-          <p className="text-lg font-semibold">{formatDate(couponEndDate)}</p>
+          <p className="text-base font-semibold text-wrap">
+            {couponEndDate ? formatDate(couponEndDate) : "No Expiry"}
+          </p>
         </div>
         <div className="flex flex-col items-start space-y-1">
           <h3 className="text-xs text-gray-500">Applicable On</h3>

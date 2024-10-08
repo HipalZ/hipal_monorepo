@@ -2,11 +2,12 @@ import { memo, useCallback, useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import Background from "@/components/atom/feildBackground";
+import { formatDate } from "@/components/utils/helper";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MAX_TERMS = 10; // Max limit for terms and conditions
 
 const CouponConditionsBox = ({
-  couponType,
   couponDiscount,
   couponPrice,
   minimumBillAmount,
@@ -17,93 +18,86 @@ const CouponConditionsBox = ({
   couponEndDate,
   termsAndConditions,
   handleRemoveCondition,
+  validOnDays,
+  startTime,
+  endTime,
 }: {
-  couponType: string;
   couponDiscount: number;
   couponPrice: number;
   minimumBillAmount: number;
   overAllLimit: number;
-  expiryCoupon: string;
+  expiryCoupon: number;
   customDays: string[];
-  couponStartDate: number | null;
-  couponEndDate: number | null;
+  couponStartDate: number;
+  couponEndDate: number;
   termsAndConditions: string[];
   handleRemoveCondition: (index: number) => void;
+  validOnDays: string[];
+  startTime: number;
+  endTime: number;
 }) => {
-  console.log(termsAndConditions);
+  const businessName = useBusinessData((s) => s.businessData?.name);
+  const { selectFlow } = useCouponsStore((s) => ({
+    selectFlow: s.selectFlow,
+  }));
+  const dineInOnly = true;
 
   const getExpiryMessage = useCallback(() => {
-    const now = new Date().getTime();
-
-    if (
-      couponStartDate === null &&
-      couponEndDate === null &&
-      overAllLimit > 0
-    ) {
-      return `Expires after ${overAllLimit} claims`;
+    if (couponStartDate && couponEndDate) {
+      const startDateFormatted = formatDate(couponStartDate);
+      const endDateFormatted = formatDate(couponEndDate);
+      return `This coupon is only valid from "${startDateFormatted}" to "${endDateFormatted}"`;
     }
+    return "No expiration details available";
+  }, [couponStartDate, couponEndDate]);
 
-    if (couponStartDate === null && couponEndDate !== null) {
-      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days${
-        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
-      }`;
-    }
-
-    if (couponStartDate !== null && couponEndDate !== null) {
-      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days${
-        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
-      }`;
-    }
-
-    if (overAllLimit > 0) {
-      return `Expires after ${overAllLimit} claims`;
-    }
-    return "Expires: None";
-  }, [couponEndDate, couponStartDate, overAllLimit]);
+  // Generate terms
+  const generatedTerms = [
+    `This coupon is created by "${businessName?.toUpperCase()}" and has the final say in case of any disputes.`,
+    `This is an ${selectFlow} coupon, hence transferring it to anyone else is ${
+      selectFlow === "ASSIGN" ? "" : "not"
+    } acceptable.`,
+    couponPrice > 0
+      ? `This coupon works on bill value above "₹${couponPrice}" only.`
+      : null,
+    customDays && customDays.length > 0
+      ? `This coupon works only on "${customDays?.join(", ")}".`
+      : null,
+    validOnDays && validOnDays.length > 0
+      ? `This coupon works only on "${validOnDays?.join(", ")}".`
+      : null,
+    startTime !== null && endTime !== null
+      ? `This coupon works only between ${startTime}:00 AM to ${endTime}:00 AM.`
+      : null,
+    getExpiryMessage(),
+    dineInOnly ? "This coupon is applicable only on dine-in." : null,
+    "Hipalz has no role to play on issues, charges, refunds and other things related to this.",
+    "Other T&C may apply.",
+  ].filter(Boolean);
 
   return (
-    <div className="relative p-4 bg-white border border-gray-300 rounded-lg shadow-md w-[100%] max-w-[28rem]">
-      <ul className="ml-4 list-disc ">
-        <li>
-          <h3 className="text-lg font-semibold text-black">
-            {couponType === "PERCENTAGE" && couponDiscount
-              ? `${couponDiscount}% off on ${
-                  couponPrice > 0 ? `₹${couponPrice}` : "every bill"
-                }`
-              : `₹${couponPrice || "0"} off on ${
-                  minimumBillAmount > 0 ? `₹${minimumBillAmount}` : "up to bill"
-                }`}
-          </h3>
-        </li>
-        <li className="mt-2 text-sm">
-          {getExpiryMessage()}
-          {overAllLimit > 0 &&
-            expiryCoupon !==
-              "After Specific Use (e.g., Expires after it’s used 10 times)"}
-        </li>
-        {customDays && customDays.length > 0 ? (
-          <li className="mt-2 text-sm">
-            Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
+    <div className="relative p-4 bg-white border border-gray-300 rounded-lg shadow-md w-full max-w-[28rem]">
+      <ul className="ml-4 space-y-2 list-disc">
+        {generatedTerms.map((term, index) => (
+          <li key={index} className="text-sm">
+            {term}
           </li>
-        ) : (
-          <li className="mt-2 text-sm">Valid all the time</li>
-        )}
+        ))}
       </ul>
+
       {termsAndConditions && termsAndConditions.length > 0 && (
-        <ul className="ml-4 list-disc ">
-          {termsAndConditions?.map((term, index) => (
-            <li key={index} className="relative flex justify-between space-y-3">
-              <div className="absolute w-1 h-1 bg-black rounded-full -left-4 top-[1.35rem]" />
-              <span className="w-[96%]">{term}</span>
+        <ul className="mt-4 ml-4 space-y-2 list-disc">
+          {termsAndConditions.map((term, index) => (
+            <li key={index} className="relative flex items-start">
+              <span className="w-full pr-6">{term}</span>
               <button
                 type="button"
-                className=" bg-[#9267EC] text-white w-5 h-5 rounded-full text-xs absolute -right-2 top-1"
+                className="absolute right-0 w-5 h-5 text-xs text-white bg-red-500 rounded-full"
                 onClick={() => handleRemoveCondition(index)}
               >
                 ✕
               </button>
+              <div className="absolute -left-3.5 rounded-full w-1 h-1 bg-black top-[0.75rem]" />
             </li>
           ))}
         </ul>
@@ -130,6 +124,8 @@ const MemoTerms = () => {
     couponEndDate,
     termsAndConditions,
     setTermsAndConditions,
+    startTime,
+    endTime,
   } = useCouponsStore((s) => ({
     requiredFields: s.requiredFields,
     setRequiredFields: s.setRequiredFields,
@@ -147,6 +143,8 @@ const MemoTerms = () => {
     couponEndDate: s.couponEndDate,
     termsAndConditions: s.termsAndConditions,
     setTermsAndConditions: s.setTermsAndConditions,
+    startTime: s.startTime,
+    endTime: s.endTime,
   }));
 
   const [newCondition, setNewCondition] = useState("");
@@ -167,7 +165,7 @@ const MemoTerms = () => {
   );
 
   const handleNext = useCallback(() => {
-    setSelectedPage("PREVIEW");
+    setSelectedPage("SHARE");
   }, []);
 
   return (
@@ -187,7 +185,6 @@ const MemoTerms = () => {
             </label>
           </article>
         ) : null}
-
         <CouponConditionsBox
           couponDiscount={couponDiscount}
           couponPrice={couponPrice}
@@ -200,8 +197,10 @@ const MemoTerms = () => {
           couponStartDate={couponStartDate}
           termsAndConditions={termsAndConditions}
           handleRemoveCondition={handleRemoveCondition}
+          validOnDays={customDays}
+          startTime={startTime}
+          endTime={endTime}
         />
-
         <section className="flex flex-col mt-4">
           <label htmlFor="terms" className="font-semibold opacity-50">
             Add Terms and Conditions (up to 10)
@@ -235,7 +234,7 @@ const MemoTerms = () => {
 
       <BottomButton
         buttons={[
-          { text: "Back", onClick: () => setSelectedPage("GRABBING") },
+          { text: "Back", onClick: () => setSelectedPage("CUSTOM") },
           { text: "Save and customize", onClick: handleNext },
         ]}
         fixed

@@ -420,7 +420,8 @@ export const calculateFutureDate = (remainder, duration: string) => {
   return now;
 };
 
-export const formatDate = (date: Date) => {
+export const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp);
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

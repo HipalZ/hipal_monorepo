@@ -18,6 +18,7 @@ export type CouponFlow =
   | "ANALYTICS"
   | "ANALYTICS_INFO"
   | "LINK_CHANNELS"
+  | "SHARE"
   | "CHANNELS";
 
 export type CouponType = "PERCENTAGE" | "AMOUNT";
@@ -34,18 +35,32 @@ export type eligibilityModal = "people" | "group" | "";
 
 export type expiryClaimLimit = "NO_LIMIT" | "SET_LIMIT";
 
+export type CouponFlowType = "ASSIGN" | "GRAB" | "SPECIAL";
+
 interface ICoupon {
   selectedPage: CouponFlow;
   setSelectedPage: (page: CouponFlow) => void;
 
+  selectFlow: CouponFlowType;
+  setSelectFlow: (flow: CouponFlowType) => void;
+
   couponName: string;
   setCouponName: (name: string) => void;
+
+  dayRestriction: boolean;
+  setDayRestriction: (day: boolean) => void;
+
+  timeBasedRestriction: boolean;
+  setTimeBasedRestriction: (day: boolean) => void;
 
   couponType: CouponType;
   setCouponType: (type: CouponType) => void;
 
   couponPrice: number;
   setCouponPrice: (price: number) => void;
+
+  isNoValidity: boolean;
+  setIsNoValidity: (value: boolean) => void;
 
   addMinimumBillAmount: boolean;
   setAddMinimumBillAmount: (value: boolean) => void;
@@ -67,6 +82,9 @@ interface ICoupon {
 
   openAvailableModal: boolean;
   setOpenAvailableModal: (value: boolean) => void;
+
+  couponUserClaim: boolean;
+  setCouponUserClaim: (value: boolean) => void;
 
   when: availability;
   setWhen: (value: availability) => void;
@@ -182,6 +200,9 @@ const useCouponsStore = create<ICoupon>((set) => ({
   selectedPage: "MANAGE",
   setSelectedPage: (page: CouponFlow) => set(() => ({ selectedPage: page })),
 
+  selectFlow: "ASSIGN",
+  setSelectFlow: (flow: CouponFlowType) => set(() => ({ selectFlow: flow })),
+
   couponName: "",
   setCouponName: (name: string) => set(() => ({ couponName: name })),
 
@@ -190,6 +211,9 @@ const useCouponsStore = create<ICoupon>((set) => ({
 
   couponPrice: 0,
   setCouponPrice: (price: number) => set(() => ({ couponPrice: price })),
+
+  isNoValidity: true,
+  setIsNoValidity: (value: boolean) => set(() => ({ isNoValidity: value })),
 
   addMinimumBillAmount: false,
   setAddMinimumBillAmount: (value: boolean) =>
@@ -217,11 +241,22 @@ const useCouponsStore = create<ICoupon>((set) => ({
   setOpenAvailableModal: (value: boolean) =>
     set(() => ({ openAvailableModal: value })),
 
+  dayRestriction: false,
+  setDayRestriction: (day: boolean) => set(() => ({ dayRestriction: day })),
+
+  timeBasedRestriction: false,
+  setTimeBasedRestriction: (day: boolean) =>
+    set(() => ({ timeBasedRestriction: day })),
+
   when: "allthetime",
   setWhen: (value: availability) => set(() => ({ when: value })),
 
   customDays: [],
   setCustomDays: (value: string[]) => set(() => ({ customDays: value })),
+
+  couponUserClaim: false,
+  setCouponUserClaim: (value: boolean) =>
+    set(() => ({ couponUserClaim: value })),
 
   expiryCoupon: "",
   setExpiryCoupon: (value: string) => set(() => ({ expiryCoupon: value })),
@@ -232,7 +267,7 @@ const useCouponsStore = create<ICoupon>((set) => ({
   expiryModal: false,
   setExpiryModal: (value: boolean) => set(() => ({ expiryModal: value })),
 
-  couponStartDate: null,
+  couponStartDate: new Date().getTime(),
   setCouponStartDate: (timestamp: number | null) =>
     set(() => ({ couponStartDate: timestamp })),
 
