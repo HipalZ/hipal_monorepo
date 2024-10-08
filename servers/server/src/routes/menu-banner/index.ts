@@ -18,7 +18,7 @@ const menuBannerRouter = new Hono()
       })
         .populate({
           path: "dishIds",
-          select: "name price description images portions",
+          select: "name price description images portions dishTypes",
           populate: {
             path: "addOnIds", // populate addOnIds within dishIds
           },
@@ -30,7 +30,7 @@ const menuBannerRouter = new Hono()
         heading: "All Hours Delights",
       }).populate({
         path: "dishIds",
-        select: "name price description images",
+        select: "name price description images portions dishTypes",
         populate: {
           path: "addOnIds", // populate addOnIds within dishIds
         },
