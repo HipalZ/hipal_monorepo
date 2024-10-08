@@ -14,6 +14,7 @@ import ellipse from "@/assets/svg/ellipse.svg";
 import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
+import { useErrorHandling } from "@/utils/helper";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(
@@ -22,6 +23,7 @@ const BottomButton = dynamic(
 
 const LoyaltyId = ({ data }: { data: IBusinessData }) => {
   const [loading, setLoading] = useState(false);
+  const { errorText } = useErrorHandling();
   const [pageNumber, setPageNumber] = useState(1);
   const { userDetails } = useLogin();
   const [itemData, setItemData] = useState<UserData[]>([]);
@@ -67,6 +69,9 @@ const LoyaltyId = ({ data }: { data: IBusinessData }) => {
       if (data?.loyalty?.loyaltyId === undefined) {
         return router.push(`/${customLink}/explore`);
       }
+    }
+    if (historyData.status === 401) {
+      errorText(historyData.status);
     }
     return response;
   };

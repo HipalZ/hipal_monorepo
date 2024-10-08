@@ -20,6 +20,7 @@ import CardSection from "@/components/atoms/cardSection";
 import Avtaar from "@/assets/login/cat.png";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
+import { useErrorHandling } from "@/utils/helper";
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
@@ -32,6 +33,7 @@ const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
 });
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
+  const { errorText } = useErrorHandling();
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
@@ -71,6 +73,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       setUserReward(response);
       setUserCoinZ(response?.rewards || 0);
     }
+    if (userReward?.status === 401) {
+      errorText(userReward.status);
+    }
     return response;
   };
 
@@ -91,6 +96,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     if (response.status === 404 || response.status === 400) {
       toast.error("User not found");
       return;
+    }
+    if (response.status === 401) {
+      errorText(response.status);
     }
     return res;
   };

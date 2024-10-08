@@ -124,7 +124,7 @@ const MemoReviewPage = () => {
     const res = await apiRpc.payments.reviews.$post({
       json: payload,
     });
-    if (!res.ok) {
+    if (res.status === 401) {
       return errorText(res.status);
     }
     const response = await res.json();

@@ -12,6 +12,7 @@ import SkeletonLoader from "../loader/skeletonLoader";
 import { useReview } from "@/components/store/useReview";
 import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "../loader";
+import { useErrorHandling } from "@/utils/helper";
 
 const ExplorePageReviewCard = dynamic(() => import("./explorePage"), {
   ssr: false,
@@ -25,6 +26,7 @@ const GoogleReviewPagePopup = dynamic(() => import("./reviewPage"), {
 
 const MemoGoogleReviewCard = () => {
   const router = useRouter();
+  const { errorText } = useErrorHandling();
   const customLink = useParams()?.businessId as string;
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const { setShowGoogleReview } = useReview((s) => ({
@@ -75,6 +77,9 @@ const MemoGoogleReviewCard = () => {
         router.push(`/${customLink}/explore`);
         setShowGoogleReview(false);
         return null;
+      }
+      if (res.status === 401) {
+        return errorText(res.status);
       }
 
       // Redirect to the Google review page
