@@ -93,11 +93,13 @@ const MemoBannersLayout = (props: Props) => {
       window.open(url, "_blank");
       return;
     }
-    setActiveType(redirectionType);
-    setActiveChildCategory(id);
-    setActiveCategory(id);
-    setObserverActive(false);
-    router.push(`/${customLink}/category`);
+    if (id) {
+      setActiveType(redirectionType);
+      setActiveChildCategory(id);
+      setActiveCategory(id);
+      setObserverActive(false);
+      router.push(`/${customLink}/category`);
+    }
   };
 
   const paragraphPropsStyle = {
