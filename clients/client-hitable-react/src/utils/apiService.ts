@@ -1,32 +1,34 @@
 import axios from "axios";
 import { apiRpc } from "@hi/common";
 import type { Alert } from "@/components/types/hiClientzData";
+import { useHiClientZ } from "@/components/store/useHiClientzData";
 
-export const savePushToken = async (
-  pushToken: string,
-  businessId: string,
-  userId: string,
-) => {
-  try {
-    let url = import.meta.env.VITE_API_URL;
-    if (url.includes("localhost")) {
-      url = "https://api.test.hipalz.com";
+export const usePushTokenApi = () => {
+  const { pushToken, selectedBiz, captainData } = useHiClientZ((s) => ({
+    selectedBiz: s.selectedBiz,
+    captainData: s.captainData,
+    pushToken: s.pushToken,
+  }));
+  const businessId = selectedBiz?.businessId?._id;
+  const savePushToken = async () => {
+    try {
+      const url = import.meta.env.VITE_API_URL;
+      const config = {
+        url: `${url}/users/save/token`,
+        method: "POST",
+        data: {
+          registrationToken: pushToken,
+          businessId,
+          userId: captainData?._id,
+        },
+      };
+      const res = await axios(config);
+      return res || "";
+    } catch (error) {
+      return "";
     }
-    console.log("url", import.meta.env.VITE_API_URL);
-    const config = {
-      url: `${url}/users/save/token`,
-      method: "POST",
-      data: {
-        registrationToken: pushToken,
-        businessId,
-        userId,
-      },
-    };
-    const res = await axios(config);
-    return res || "";
-  } catch (error) {
-    return "";
-  }
+  };
+  return { savePushToken };
 };
 
 export const fetchAlerts = async (

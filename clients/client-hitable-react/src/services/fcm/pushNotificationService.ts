@@ -4,14 +4,12 @@ export class PushNotificationService {
   // Request permission for push notifications and return token
   async initializePushNotifications(): Promise<string | null> {
     const permission = await PushNotifications.requestPermissions();
-    console.log("Push notification permission:", permission);
     if (permission.receive === "granted") {
       PushNotifications.register();
 
       return new Promise((resolve, reject) => {
         // Listen for registration token
         PushNotifications.addListener("registration", (token) => {
-          console.log("Push registration token:", token.value);
           resolve(token.value); // Resolve the promise with the token
         });
 

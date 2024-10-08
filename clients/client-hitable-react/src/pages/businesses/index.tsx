@@ -4,7 +4,7 @@ import ProfileHeader from "@/components/liteAlerts/profileHeader";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { CustomRole } from "@/components/types/hiClientzData";
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { FiDownload } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
 import smartPhone from "@/assets//img/smartphone.png";
@@ -23,9 +23,7 @@ const BusinessesMemo = memo(() => {
   const exploreBusiness = (biz: CustomRole) => {
     setSelectedBiz(biz);
     setTriggerSound(true);
-    startTransition(() => {
-      navigate("/viewInBiz");
-    });
+    navigate("/viewInBiz");
   };
 
   return (

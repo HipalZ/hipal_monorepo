@@ -7,11 +7,21 @@ import { useHiClientZ } from "./components/store/useHiClientzData";
 import { fetchAlerts } from "./utils/apiService";
 import type { Alert } from "./components/types/hiClientzData";
 import { useCheckPlatform } from "./components/utils/helpers";
+import SpinnerMemo from "./components/atoms/loadingSpinner";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 
 function App() {
   const [isOnline, setIsOnline] = useState(true);
+  const pushTokenInitialize = usePushNotifications();
+  const { pushToken, setPushToken } = useHiClientZ((s) => ({
+    pushToken: s.pushToken,
+    setPushToken: s.setPushToken,
+  }));
+  useEffect(() => {
+    if (pushToken && pushToken?.length > 0) return;
+    setPushToken(pushTokenInitialize);
+  }, [pushTokenInitialize, setPushToken, pushToken]);
   const triggerSound = useLiteStore((s) => s.triggerSound);
-
   const [isSlow, setIsSlow] = useState(false);
   const {
     offlineCount,
@@ -22,9 +32,12 @@ function App() {
     setOfflineAlertData,
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
+    loading,
   } = useLiteStore();
 
-  const selectedBiz = useHiClientZ((s) => s.selectedBiz);
+  const { selectedBiz } = useHiClientZ((s) => ({
+    selectedBiz: s.selectedBiz,
+  }));
   const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
@@ -154,6 +167,7 @@ function App() {
           ⚠ Your connection is too slow
         </div>
       )}
+      {loading ? <SpinnerMemo /> : null}
       <MainRouter />
     </main>
   );

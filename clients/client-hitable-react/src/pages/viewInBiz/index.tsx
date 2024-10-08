@@ -5,15 +5,14 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
-import { savePushToken } from "@/utils/apiService";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePushTokenApi } from "@/utils/apiService";
 
 const ViewInBizMemo = () => {
+  const { savePushToken } = usePushTokenApi();
   const { selectedBiz, captainData } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
-  const pushToken = usePushNotifications();
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);
@@ -27,7 +26,7 @@ const ViewInBizMemo = () => {
   }, []);
 
   const navigateToBiz = async () => {
-    await savePushToken(pushToken, businessId, captainData?._id);
+    await savePushToken();
     navigate(`/${businessId}/alerts`);
   };
 
