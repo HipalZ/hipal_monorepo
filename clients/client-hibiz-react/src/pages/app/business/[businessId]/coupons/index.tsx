@@ -92,7 +92,7 @@ const MemoCoupons = () => {
         setSelectedPage("AVAILABLE");
         break;
       case "Terms":
-        setSelectedPage("GRABBING");
+        setSelectedPage("CUSTOM");
         break;
       case "PREVIEW":
         setSelectedPage("Terms");
