@@ -101,6 +101,18 @@ const businessData = [
       "Gokul plots, 4o feet road plot no 67 & 68, venkata ramana colony, 9th Phase, Kukatpally Housing Board Colony, Hyderabad, Telangana 500085",
     gst: "",
   },
+  // 10 invoice is added previously
+  {
+    id: "011",
+    date: "08 Oct 2024",
+    name: "skycafe",
+    bizName: "AF & NS Food Pvt Ltd - Skycafe",
+    serviceCost: 3500,
+    months: 3,
+    address:
+      "PLOT NO: 48,49 & 50  Vinayak Nagar, Indira Nagar, Gachibowli, Hyderabad, Telangana 500032",
+    gst: "36AAZCA6985E1ZW",
+  },
 ];
 
 const MemoInovices = () => {
