@@ -16,6 +16,7 @@ import dynamic from "next/dynamic";
 import CurvedText from "@/components/atoms/curvedText";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
+import { useErrorHandling } from "@/utils/helper";
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
@@ -24,6 +25,7 @@ const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
 
 const MemoPayOnlineSuccess = () => {
   const userName = useLogin((s) => s.userDetails.name);
+  const { errorText } = useErrorHandling();
   const { setIsPaymentDone } = useReview((s) => ({
     setIsPaymentDone: s.setIsPaymentDone,
   }));
@@ -64,6 +66,9 @@ const MemoPayOnlineSuccess = () => {
     if (userReward.status === 200 || userReward.status === 201) {
       setUserReward(response);
       setUserCoinZ(response?.rewards || 0);
+    }
+    if (userReward.status === 401) {
+      errorText(userReward.status);
     }
     return response;
   };

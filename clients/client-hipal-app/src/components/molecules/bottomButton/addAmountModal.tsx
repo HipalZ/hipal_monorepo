@@ -118,7 +118,7 @@ const AddAmountModal = memo(() => {
         userId: userDetails._id,
       },
     });
-    if (!res.ok) {
+    if (res.status === 401) {
       setLoading(false);
       return errorText(res.status);
     }

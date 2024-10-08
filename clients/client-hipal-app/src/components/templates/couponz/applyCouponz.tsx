@@ -24,6 +24,7 @@ import { RxCross2 } from "react-icons/rx";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { useErrorHandling } from "@/utils/helper";
 
 const AlertToRemove = dynamic(
   () => import("@/components/atoms/alertToRemove"),
@@ -40,6 +41,7 @@ const ApplyCouponDatePopup = dynamic(
 );
 
 const MemoApplyCouponz = () => {
+  const { errorText } = useErrorHandling();
   const logoUrl = useBusinessDetails(
     (state) => state?.businessDetails?.logoUrl,
   );
@@ -171,6 +173,9 @@ const MemoApplyCouponz = () => {
         setSelectedCoupon(coupon);
         setIsLoading(false);
         return;
+      }
+      if (response?.status === 401) {
+        return errorText(response.status);
       }
       setIsLoading(false);
       // any condition apply the coupon

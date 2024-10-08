@@ -96,7 +96,7 @@ const MemoOccasionPopup = () => {
         },
       });
     }
-    if (!response.ok) {
+    if (response?.status === 401) {
       return errorText(response.status);
     }
     if (response.status === 201) {
