@@ -19,6 +19,12 @@ interface HiClientzStore {
 
   pushToken: string;
   setPushToken: (value: string) => void;
+
+  notification: boolean;
+  setNotification: (value: boolean) => void;
+
+  platform: string;
+  setPlatform: (platform: string) => void;
 }
 
 export const useHiClientZ = create(
@@ -40,6 +46,12 @@ export const useHiClientZ = create(
 
       pushToken: "",
       setPushToken: (value) => set({ pushToken: value }),
+
+      notification: true,
+      setNotification: (value) => set({ notification: value }),
+
+      platform: "android",
+      setPlatform: (value: string) => set({ platform: value }),
     }),
     {
       name: "hiClientZ-store",
