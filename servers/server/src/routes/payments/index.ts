@@ -627,48 +627,50 @@ const paymentsRouter = new Hono()
           ],
           { session },
         );
-        const registrationToken = await DeviceToken.findOne({
+        const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
 
-        if (registrationToken && registrationToken.tokens.length > 0) {
-          for (const token of registrationToken.tokens) {
-            const pushMessage = {
-              token: token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Confirm Payment  !!",
-                body: `T-${tableName?.slice(-2)} requested to settle bill`,
-              },
-              android: {
+        if (registrationToken.length > 0) {
+          for (const obj of registrationToken) {
+            if (obj.notification) {
+              const pushMessage = {
+                token: obj.token, // or use 'topic' if you're sending to a topic
                 notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
+                  title: "Confirm Payment !!",
+                  body: `T-${tableName?.slice(-2)} requested to settle bill`,
                 },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
+                android: {
+                  notification: {
+                    channel_id: "custom_channel_id",
+                    sound: "order",
                   },
-                  400,
-                );
-              });
+                },
+              };
+
+              admin
+                .messaging()
+                .send(pushMessage)
+                .then((response: unknown) => {
+                  console.log("Successfully sent message:", response);
+                  return c.json({
+                    message: "FCM message sent successfully",
+                    err: false,
+                    data: response,
+                  });
+                })
+                .catch((err: Error) => {
+                  console.log("Error sending FCM message:", err);
+                  return c.json(
+                    {
+                      message: "Error sending FCM message",
+                      err: true,
+                      data: {},
+                    },
+                    400,
+                  );
+                });
+            }
           }
         }
 
@@ -888,50 +890,52 @@ const paymentsRouter = new Hono()
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
         .digest("hex");
 
-      const registrationToken = await DeviceToken.findOne({
+      const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
 
-      if (registrationToken && registrationToken.tokens.length > 0) {
-        for (const token of registrationToken.tokens) {
-          const pushMessage = {
-            token: token, // or use 'topic' if you're sending to a topic
-            notification: {
-              title: "Payment Successful !!",
-              body: `T-${tableName?.slice(
-                -2,
-              )} has successfully  paid ${paidAmount}`,
-            },
-            android: {
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
               notification: {
-                channel_id: "custom_channel_id",
-                sound: "order",
+                title: "Payment Successful !!",
+                body: `T-${tableName?.slice(
+                  -2,
+                )} has successfully paid ${paidAmount}`,
               },
-            },
-          };
-
-          admin
-            .messaging()
-            .send(pushMessage)
-            .then((response: unknown) => {
-              console.log("Successfully sent message:", response);
-              return c.json({
-                message: "FCM message sent successfully",
-                err: false,
-                data: response,
-              });
-            })
-            .catch((err: Error) => {
-              console.log("Error sending FCM message:", err);
-              return c.json(
-                {
-                  message: "Error sending FCM message",
-                  err: true,
-                  data: {},
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
                 },
-                400,
-              );
-            });
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                console.log("Successfully sent message:", response);
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                console.log("Error sending FCM message:", err);
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
         }
       }
 
@@ -1194,48 +1198,50 @@ const paymentsRouter = new Hono()
         order_id: new ObjectId(),
       });
 
-      const registrationToken = await DeviceToken.findOne({
+      const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
 
-      if (registrationToken && registrationToken.tokens.length > 0) {
-        for (const token of registrationToken.tokens) {
-          const pushMessage = {
-            token: token, // or use 'topic' if you're sending to a topic
-            notification: {
-              title: "Hi Captain !!",
-              body: `T-${tableName?.slice(-2)} : ${message}`,
-            },
-            android: {
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
               notification: {
-                channel_id: "custom_channel_id",
-                sound: "order",
+                title: "Hi Captain !!",
+                body: `T-${tableName?.slice(-2)} : ${message}`,
               },
-            },
-          };
-
-          admin
-            .messaging()
-            .send(pushMessage)
-            .then((response: unknown) => {
-              console.log("Successfully sent message:", response);
-              return c.json({
-                message: "FCM message sent successfully",
-                err: false,
-                data: response,
-              });
-            })
-            .catch((err: Error) => {
-              console.log("Error sending FCM message:", err);
-              return c.json(
-                {
-                  message: "Error sending FCM message",
-                  err: true,
-                  data: {},
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
                 },
-                400,
-              );
-            });
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                console.log("Successfully sent message:", response);
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                console.log("Error sending FCM message:", err);
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
         }
       }
 
