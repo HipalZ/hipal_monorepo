@@ -1111,17 +1111,23 @@ const usersRouter = new Hono()
       });
 
       if (!alreadyExist) {
-        await DeviceToken.create({
+        const save = await DeviceToken.create({
           businessId,
           userId,
           token: registrationToken,
+        });
+
+        return c.json({
+          message: "Token saved successfully",
+          err: false,
+          data: save,
         });
       }
 
       return c.json({
         message: "Token saved successfully",
         err: false,
-        data: {},
+        data: alreadyExist,
       });
     },
   )
