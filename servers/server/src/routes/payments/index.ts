@@ -637,7 +637,7 @@ const paymentsRouter = new Hono()
               token: token, // or use 'topic' if you're sending to a topic
               notification: {
                 title: "Confirm Payment  !!",
-                body: `${tableName?.slice(-3)} requested to settle bill`,
+                body: `T-${tableName?.slice(-2)} requested to settle bill`,
               },
               android: {
                 notification: {
@@ -898,8 +898,8 @@ const paymentsRouter = new Hono()
             token: token, // or use 'topic' if you're sending to a topic
             notification: {
               title: "Payment Successful !!",
-              body: `${tableName?.slice(
-                -3,
+              body: `T-${tableName?.slice(
+                -2,
               )} has successfully  paid ${paidAmount}`,
             },
             android: {
@@ -1204,7 +1204,7 @@ const paymentsRouter = new Hono()
             token: token, // or use 'topic' if you're sending to a topic
             notification: {
               title: "Hi Captain !!",
-              body: `${tableName?.slice(-3)} : ${message}`,
+              body: `T-${tableName?.slice(-2)} : ${message}`,
             },
             android: {
               notification: {
