@@ -6,22 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useHiClientZ } from "./components/store/useHiClientzData";
 import { fetchAlerts } from "./utils/apiService";
 import type { Alert } from "./components/types/hiClientzData";
-import { useCheckPlatform } from "./components/utils/helpers";
 import SpinnerMemo from "./components/atoms/loadingSpinner";
+import toast from "react-hot-toast";
+import { LuBellRing } from "react-icons/lu";
+import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 
 function App() {
   const [isOnline, setIsOnline] = useState(true);
-  const pushTokenInitialize = usePushNotifications();
-  const { pushToken, setPushToken } = useHiClientZ((s) => ({
-    pushToken: s.pushToken,
-    setPushToken: s.setPushToken,
-  }));
-  useEffect(() => {
-    if (pushToken && pushToken?.length > 0) return;
-    setPushToken(pushTokenInitialize);
-  }, [pushTokenInitialize, setPushToken, pushToken]);
-  const triggerSound = useLiteStore((s) => s.triggerSound);
   const [isSlow, setIsSlow] = useState(false);
   const {
     offlineCount,
@@ -33,15 +25,36 @@ function App() {
     setRefetchOnlineAlerts,
     setRefetchOfflineAlerts,
     loading,
+    triggerSound,
+    notificationStatus,
+    setNotificationStatus,
   } = useLiteStore();
-
-  const { selectedBiz } = useHiClientZ((s) => ({
+  const { initializePushNotifications } = usePushNotifications();
+  const { selectedBiz, platform } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
+    platform: s.platform,
   }));
+
+  const pushNotify = async () => {
+    try {
+      NativeSettings.openAndroid({
+        option: AndroidSettings.ApplicationDetails,
+      });
+    } catch (error) {
+      console.error("Error requesting notifications permission:", error);
+      toast.error("Error enabling notifications.");
+      setNotificationStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Notification Status", notificationStatus);
+    initializePushNotifications();
+  }, [notificationStatus]);
+
   const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
-  const { isWeb } = useCheckPlatform();
 
   const handleOnlineAlerts = async () => {
     if (!businessId) return;
@@ -49,7 +62,7 @@ function App() {
     setOnlineAlertData(data);
     setRefetchOnlineAlerts(refetchOnlineAlerts);
     setOnlineCount(data.length);
-    if (data && data?.length > onlineCount && isWeb) {
+    if (data && data?.length > onlineCount && platform === "web") {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -70,7 +83,7 @@ function App() {
     setOfflineAlertData(data);
     setRefetchOfflineAlerts(refetchOfflineAlerts);
     setOfflineCount(data.length);
-    if (data && data.length > offlineCount && isWeb) {
+    if (data && data.length > offlineCount && platform === "web") {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -165,6 +178,21 @@ function App() {
       {isOnline && isSlow && (
         <div className="space-grotesk-700 fixed top-0 z-20 w-full bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
+        </div>
+      )}
+      {!notificationStatus && platform === "android" && (
+        <div className="z-20 flex items-center justify-between w-full h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
+          <h1 className="flex items-center gap-2 text-white">
+            <LuBellRing />
+            <span className="text-sm">Allow Notifications to get alerts</span>
+          </h1>
+          <button
+            type="button"
+            onClick={pushNotify}
+            className="px-3 py-1 text-sm text-white bg-black on_active_bounce rounded-xl"
+          >
+            Enable
+          </button>
         </div>
       )}
       {loading ? <SpinnerMemo /> : null}

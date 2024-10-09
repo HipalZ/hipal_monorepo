@@ -1,5 +1,4 @@
-import { ClassValue, clsx } from "clsx";
-import { useMemo } from "react";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function timestampToDateTime(timestamp: number): string {
@@ -25,7 +24,7 @@ export function timestampToDateTime(timestamp: number): string {
   const month = monthNames[date.getUTCMonth()];
 
   // Determine the day suffix
-  let daySuffix;
+  let daySuffix: string;
   switch (day) {
     case 1:
     case 21:
@@ -64,18 +63,4 @@ export const getDate = (timeStampStart: number) => {
     month: "long",
     day: "numeric",
   });
-};
-
-export const useCheckPlatform = () => {
-  const isAndroid = useMemo(() => /Android/i.test(navigator.userAgent), []);
-  const isWeb = useMemo(
-    () =>
-      typeof window !== "undefined" && typeof window.document !== "undefined",
-    [],
-  );
-
-  return {
-    isAndroid,
-    isWeb,
-  };
 };

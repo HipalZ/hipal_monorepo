@@ -66,13 +66,8 @@ const ProfileHeader = () => {
             {({ active }) => (
               <button
                 type="button"
-                disabled={position}
                 onClick={UpdateNotification}
-                className={cn(
-                  defaultClass,
-                  active ? "bg-gray-100" : "",
-                  position ? "opacity-50" : "",
-                )}
+                className={cn(defaultClass, active ? "bg-gray-100" : "")}
               >
                 {notification ? (
                   <LuBellRing className="mr-2 text-green-500" size={20} />

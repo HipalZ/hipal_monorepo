@@ -1,6 +1,7 @@
 import { apiRpc } from "@hi/common";
 import type { Alert } from "@/components/types/hiClientzData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
+import toast from "react-hot-toast";
 interface SavePushTokenResponse {
   message: string;
   err: boolean;
@@ -85,6 +86,7 @@ export const useUpdateNotifications = () => {
       const response: SavePushTokenResponse = await res.json();
       if (response.data) {
         setNotification(response.data.notification);
+        toast.success(`Alerts ${notification ? "on" : "off"} updated`);
       }
       return response;
     } catch (error) {
