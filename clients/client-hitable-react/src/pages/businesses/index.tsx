@@ -6,7 +6,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import type { CustomRole } from "@/components/types/hiClientzData";
 import { memo } from "react";
 import { FiDownload } from "react-icons/fi";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import smartPhone from "@/assets//img/smartphone.png";
 
 const BusinessesMemo = memo(() => {
@@ -16,9 +16,8 @@ const BusinessesMemo = memo(() => {
     setSelectedBiz: s.setSelectedBiz,
   }));
   const navigate = useNavigate();
-  const location = useLocation();
+
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
-  const inBusinesses = location.pathname.includes("businesses");
 
   const exploreBusiness = (biz: CustomRole) => {
     setSelectedBiz(biz);
@@ -30,7 +29,7 @@ const BusinessesMemo = memo(() => {
     <main className="relative h-screen">
       <header className="flex h-[5rem] items-center justify-between px-6 py-4">
         <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
-        <ProfileHeader position={inBusinesses} />
+        <ProfileHeader />
       </header>
       <article
         style={{ backgroundColor: "#4C4DDC" }}

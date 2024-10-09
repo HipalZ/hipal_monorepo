@@ -1,25 +1,30 @@
-import hipalLogo from '@/assets/img/liteLoginIcon4.png';
-import { useHiClientZ } from '@/components/store/useHiClientzData';
-import { useLiteStore } from '@/components/store/useLiteStore';
-import { memo } from 'react';
-import { HiOutlineRefresh } from 'react-icons/hi';
-import ProfileHeader from '../profileHeader';
-import './index.css';
+import hipalLogo from "@/assets/img/liteLoginIcon4.png";
+import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useLiteStore } from "@/components/store/useLiteStore";
+import { memo } from "react";
+import { HiOutlineRefresh } from "react-icons/hi";
+import ProfileHeader from "../profileHeader";
+import "./index.css";
 
 const HeaderAlerts = () => {
-  const { selectedBiz } = useHiClientZ((s)=>({
+  const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
   }));
-  const { selectedNavItem, refetchOfflineAlerts, refetchOnlineAlerts, loading } = useLiteStore((s)=>({
+  const {
+    selectedNavItem,
+    refetchOfflineAlerts,
+    refetchOnlineAlerts,
+    loading,
+  } = useLiteStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     refetchOfflineAlerts: s.refetchOfflineAlerts,
     refetchOnlineAlerts: s.refetchOnlineAlerts,
     loading: s.loading,
   }));
   const refetchData = () => {
-    if (selectedNavItem === 'online') {
+    if (selectedNavItem === "online") {
       refetchOnlineAlerts();
-    } else if (selectedNavItem === 'on floor') {
+    } else if (selectedNavItem === "on floor") {
       refetchOfflineAlerts();
     }
   };
@@ -28,7 +33,7 @@ const HeaderAlerts = () => {
       <div className="flex items-center space-x-3">
         <figure className="w-[3rem]">
           <img
-            className="border-1 rounded-full border border-black"
+            className="border border-black rounded-full border-1"
             src={selectedBiz?.businessId?.logo || hipalLogo}
             alt="logo"
             width={47}
@@ -36,17 +41,28 @@ const HeaderAlerts = () => {
           />
         </figure>
         <div>
-          <h6 className="text-base font-semibold">{selectedBiz?.businessId?.businessName}</h6>
-          <p title={selectedBiz?.businessId?.address} className="w-48 truncate text-sm">
+          <h6 className="text-base font-semibold">
+            {selectedBiz?.businessId?.businessName}
+          </h6>
+          <p
+            title={selectedBiz?.businessId?.address}
+            className="w-48 text-sm truncate"
+          >
             {selectedBiz?.businessId?.address}
           </p>
         </div>
       </div>
       <div className="flex items-center space-x-3">
-        {(selectedNavItem === 'online' || selectedNavItem === 'on floor') && (
-          <HiOutlineRefresh onClick={refetchData} size={24} className={`cursor-pointer ${loading ? 'animate-spin' : ''}`} />
+        {(selectedNavItem === "online" || selectedNavItem === "on floor") && (
+          <HiOutlineRefresh
+            onClick={refetchData}
+            size={24}
+            className={`cursor-pointer text-green-500 ${
+              loading ? "animate-spin" : ""
+            }`}
+          />
         )}
-        <ProfileHeader position={false} />
+        <ProfileHeader />
       </div>
     </header>
   );
