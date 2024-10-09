@@ -30,9 +30,10 @@ function App() {
     setNotificationStatus,
   } = useLiteStore();
   const { initializePushNotifications } = usePushNotifications();
-  const { selectedBiz, platform } = useHiClientZ((s) => ({
+  const { selectedBiz, platform, notification } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
     platform: s.platform,
+    notification: s.notification,
   }));
 
   const pushNotify = async () => {
@@ -179,6 +180,11 @@ function App() {
         <div className="space-grotesk-700 fixed top-0 z-20 w-full bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
         </div>
+      )}
+      {notification ? null : (
+        <center className="z-20 w-full p-2 text-center text-white bg-red-200 border space-grotesk-700">
+          You Turned off alerts, Turn on to get Alerts
+        </center>
       )}
       {!notificationStatus && platform === "android" && (
         <div className="z-20 flex items-center justify-between w-full h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">

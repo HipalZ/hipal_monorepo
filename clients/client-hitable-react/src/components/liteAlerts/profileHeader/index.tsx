@@ -54,7 +54,7 @@ const ProfileHeader = () => {
           <MenuItem>
             {({ active }) => (
               <a
-                href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
+                href="https://t-static.blr1.digitaloceanspaces.com/hiclient-1.1.2.apk"
                 className={cn(defaultClass, active ? "bg-gray-100" : "")}
               >
                 <FiDownload className="mr-2 text-blue-500" size={20} /> Download
@@ -74,7 +74,7 @@ const ProfileHeader = () => {
                 ) : (
                   <LuBellOff className="mr-2 text-red-500" size={20} />
                 )}{" "}
-                Notifications {notification ? "On" : "Off"}
+                Alerts {notification ? "On" : "Off"}
               </button>
             )}
           </MenuItem>
