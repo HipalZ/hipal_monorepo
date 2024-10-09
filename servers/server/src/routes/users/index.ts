@@ -64,8 +64,6 @@ export const addSignUpBonus = async (
     loyaltyId,
   });
 
-  console.log("existingReward", existingReward);
-
   if (!existingReward) {
     const newReward = new UserReward({
       userId,
@@ -83,8 +81,7 @@ export const addSignUpBonus = async (
       },
     );
 
-    const u = await newReward.save();
-    console.log("u", u);
+    await newReward.save();
     const data = new UserRewardHistory({
       userId,
       status: "PLUS",
@@ -1082,73 +1079,7 @@ const usersRouter = new Hono()
       }
     },
   )
-  .post(
-    "/send/PushNotification",
-    zValidator(
-      "json",
-      z.object({
-        registrationToken: z
-          .string()
-          .min(10, {
-            message:
-              "registrationToken is required and must be at least 10 characters",
-          })
-          .max(1000, {
-            message:
-              "registrationToken is required and must be at most 1000 characters",
-          }),
-        title: z.string({
-          message: "title is required",
-        }),
-        businessId: z.string(),
 
-        body: z.any(),
-      }),
-    ),
-
-    async (c) => {
-      const requestData = await c.req.json();
-      const { registrationToken, title, body } = requestData;
-      const pushMessage = {
-        token: registrationToken, // or use 'topic' if you're sending to a topic
-        notification: {
-          title: title || "Title of the Notification",
-          body: body || "Need your assistance",
-          image:
-            "https://storage.hipal.life/minio/assets/5da74158-813b-4a88-b020-759a40e722cf",
-        },
-      };
-
-      admin
-        .messaging()
-        .send(pushMessage)
-        .then((response: unknown) => {
-          console.log("Successfully sent message:", response);
-          return c.json({
-            message: "FCM message sent successfully",
-            err: false,
-            data: response,
-          });
-        })
-        .catch((err: Error) => {
-          console.log("Error sending FCM message:", err);
-          return c.json(
-            {
-              message: "Error sending FCM message",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        });
-
-      return c.json({
-        message: "FCM message sent successfully",
-        err: false,
-        data: {},
-      });
-    },
-  )
   .post(
     "/save/token",
     zValidator(
@@ -1166,30 +1097,62 @@ const usersRouter = new Hono()
           }),
 
         businessId: z.string(),
+        userId: z.string(),
       }),
     ),
 
     async (c) => {
       const requestData = await c.req.json();
-      const { registrationToken, businessId } = requestData;
+      const { registrationToken, businessId, userId } = requestData;
 
-      const saveToken = await DeviceToken.findOneAndUpdate(
-        { businessId },
+      const alreadyExist = await DeviceToken.findOne({
+        businessId,
+        userId,
+      });
+
+      if (!alreadyExist) {
+        await DeviceToken.create({
+          businessId,
+          userId,
+          token: registrationToken,
+        });
+      }
+
+      return c.json({
+        message: "Token saved successfully",
+        err: false,
+        data: {},
+      });
+    },
+  )
+  .put(
+    "/update/token",
+    zValidator(
+      "json",
+      z.object({
+        notification: z.boolean(),
+        businessId: z.string(),
+        userId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const { notification, businessId, userId } = requestData;
+
+      const updateDeviceToken = await DeviceToken.findOneAndUpdate(
         {
-          $addToSet: {
-            tokens: registrationToken,
-          },
+          businessId,
+          userId,
         },
-        {
-          upsert: true,
-          new: true,
-        },
+        { notification: notification },
+        { new: true },
       );
 
       return c.json({
         message: "Token saved successfully",
         err: false,
-        data: saveToken,
+        data: updateDeviceToken,
       });
     },
   )

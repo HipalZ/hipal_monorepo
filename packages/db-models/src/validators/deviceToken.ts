@@ -10,8 +10,10 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 
 export const deviceTokenSchema = z.object({
-  tokens: z.array(z.string().min(1).max(700)),
   businessId: ObjectIdSchema,
+  userId: ObjectIdSchema,
+  token: z.string().min(1).max(700),
+  notification: z.boolean().default(true),
 });
 
 export type DeviceTokenType = z.infer<typeof deviceTokenSchema>;
