@@ -1,31 +1,45 @@
-import axios from "axios";
 import { apiRpc } from "@hi/common";
 import type { Alert } from "@/components/types/hiClientzData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
+interface SavePushTokenResponse {
+  message: string;
+  err: boolean;
+  data?: {
+    _id: string;
+    businessId: string;
+    userId: string;
+    token?: string;
+    notification: boolean;
+    __v: number;
+  } | null;
+}
 
 export const usePushTokenApi = () => {
-  const { pushToken, selectedBiz, captainData } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    captainData: s.captainData,
-    pushToken: s.pushToken,
-  }));
+  const { pushToken, selectedBiz, captainData, setNotification } = useHiClientZ(
+    (s) => ({
+      selectedBiz: s.selectedBiz,
+      captainData: s.captainData,
+      pushToken: s.pushToken,
+      setNotification: s.setNotification,
+    }),
+  );
   const businessId = selectedBiz?.businessId?._id;
-  const savePushToken = async () => {
+  const savePushToken = async (): Promise<SavePushTokenResponse | null> => {
     try {
-      const url = import.meta.env.VITE_API_URL;
-      const config = {
-        url: `${url}/users/save/token`,
-        method: "POST",
-        data: {
+      const res = await apiRpc.users.save.token.$post({
+        json: {
           registrationToken: pushToken,
           businessId,
           userId: captainData?._id,
         },
-      };
-      const res = await axios(config);
-      return res || "";
+      });
+      const response: SavePushTokenResponse = await res.json();
+      if (response.data) {
+        setNotification(response.data.notification);
+      }
+      return response;
     } catch (error) {
-      return "";
+      return null;
     }
   };
   return { savePushToken };
@@ -43,9 +57,39 @@ export const fetchAlerts = async (
       param: { id: businessId },
     });
     const response = await res.json();
-    return response.data || [];
+    return (response.data as Alert[]) || [];
   } catch (error) {
     console.error("Error fetching alerts:", error);
     return [];
   }
+};
+
+export const useUpdateNotifications = () => {
+  const { selectedBiz, captainData, setNotification } = useHiClientZ((s) => ({
+    selectedBiz: s.selectedBiz,
+    captainData: s.captainData,
+    setNotification: s.setNotification,
+  }));
+  const businessId = selectedBiz?.businessId?._id;
+  const updateNotificationsApi = async (
+    notification: boolean,
+  ): Promise<SavePushTokenResponse | null> => {
+    try {
+      const res = await apiRpc.users.update.token.$put({
+        json: {
+          businessId,
+          notification,
+          userId: captainData?._id,
+        },
+      });
+      const response: SavePushTokenResponse = await res.json();
+      if (response.data) {
+        setNotification(response.data.notification);
+      }
+      return response;
+    } catch (error) {
+      return null;
+    }
+  };
+  return { updateNotificationsApi };
 };
