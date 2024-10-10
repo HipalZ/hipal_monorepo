@@ -118,7 +118,7 @@
 # Suggested Library to prevent syncfusion usage (optional):
 
 _will increase development time but results in better code quality. These Librabries are industry standards and provide better performance and apis to interact with their components, although UI is different changing that only will take time._
-
+/
 1. **react-table**
    [Check an example](https://react-table-v7.tanstack.com/docs/examples/filtering).
 
