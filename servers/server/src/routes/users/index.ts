@@ -1106,8 +1106,7 @@ const usersRouter = new Hono()
       const { registrationToken, businessId, userId } = requestData;
 
       const alreadyExist = await DeviceToken.findOne({
-        businessId,
-        userId,
+        token: registrationToken,
       });
 
       if (!alreadyExist) {
@@ -1139,17 +1138,17 @@ const usersRouter = new Hono()
         notification: z.boolean(),
         businessId: z.string(),
         userId: z.string(),
+        registrationToken: z.string(),
       }),
     ),
 
     async (c) => {
       const requestData = await c.req.json();
-      const { notification, businessId, userId } = requestData;
+      const { notification, registrationToken } = requestData;
 
       const updateDeviceToken = await DeviceToken.findOneAndUpdate(
         {
-          businessId,
-          userId,
+          token: registrationToken,
         },
         { notification: notification },
         { new: true },

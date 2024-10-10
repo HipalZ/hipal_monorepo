@@ -18,14 +18,13 @@ const deviceTokenSchema = new mongoose.Schema<DeviceTokenType>({
     required: true,
     minlength: 1,
     maxlength: 700,
+    unique: true,
   },
   notification: {
     type: Boolean,
     default: true,
   },
 });
-
-deviceTokenSchema.index({ businessId: 1, userId: 1 }, { unique: true });
 
 const DeviceToken: Model<DeviceTokenType> = mongoose.model<DeviceTokenType>(
   "DeviceToken",
