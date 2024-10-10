@@ -29,3 +29,11 @@ jobs:
           IMAGE_TAG=latest
           docker build --target server -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
+
+      - name: Configure kubectl
+        run: |
+          doctl kubernetes cluster kubeconfig save 2f8ac9f8-4243-4075-a99b-0faf86368901
+
+      - name: Restart Kubernetes deployment
+        run: |
+          kubectl rollout restart deployment -n hipalz server-test

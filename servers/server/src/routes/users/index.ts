@@ -1155,7 +1155,7 @@ const usersRouter = new Hono()
       );
 
       return c.json({
-        message: "Token saved successfully",
+        message: "Token saved successfully ",
         err: false,
         data: updateDeviceToken,
       });
