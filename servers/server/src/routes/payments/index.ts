@@ -1204,7 +1204,9 @@ const paymentsRouter = new Hono()
 
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
+          console.log("OBJ", obj);
           if (obj.notification) {
+            console.log("ALERT", obj.notification);
             const pushMessage = {
               token: obj.token, // or use 'topic' if you're sending to a topic
               notification: {
