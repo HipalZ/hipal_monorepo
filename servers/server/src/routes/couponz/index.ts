@@ -123,6 +123,7 @@ const couponzRouter = new Hono()
       const { businessId } = c.req.param();
 
       const coupons = await Couponz.find({
+        isDeleted: false,
         businessId,
       })
         .sort({ _id: -1 })
