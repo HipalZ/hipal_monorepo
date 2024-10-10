@@ -9,14 +9,10 @@ import { RxDashboard } from "react-icons/rx";
 import { AiOutlineLogout } from "react-icons/ai";
 import { useUpdateNotifications } from "@/utils/apiService";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
-import { useUserToken } from "@hi/common/src/useUserToken";
 
 const ProfileHeader = () => {
   const location = useLocation();
-  const { setAccessToken, setRefreshToken } = useUserToken((s) => ({
-    setAccessToken: s.setAccessToken,
-    setRefreshToken: s.setRefreshToken,
-  }));
+
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
   const { notification, setNotification } = useHiClientZ((s) => ({
@@ -31,12 +27,10 @@ const ProfileHeader = () => {
     navigate("/businesses");
   }, [navigate]);
 
-  const handleLogout = useCallback(() => {
-    setAccessToken("");
-    setRefreshToken("");
-    navigate("/");
-  }, [navigate, setAccessToken, setRefreshToken]);
-
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/";
+  };
   const UpdateNotification = useCallback(async () => {
     const updatedNotification = !notification;
     setNotification(updatedNotification);
@@ -60,7 +54,7 @@ const ProfileHeader = () => {
           <MenuItem>
             {({ active }) => (
               <a
-                href="https://t-static.blr1.digitaloceanspaces.com/hiclient-1.1.2.apk"
+                href="https://t-static.blr1.digitaloceanspaces.com/hiclient-1.1.3.apk"
                 className={cn(defaultClass, active ? "bg-gray-100" : "")}
               >
                 <FiDownload className="mr-2 text-blue-500" size={20} /> Download

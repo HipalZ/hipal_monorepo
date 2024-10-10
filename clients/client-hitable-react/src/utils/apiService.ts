@@ -18,14 +18,19 @@ interface SavePushTokenResponse {
 
 export const usePushTokenApi = () => {
   const { errorText } = useErrorHandling();
-  const { pushToken, selectedBiz, captainData, setNotification } = useHiClientZ(
-    (s) => ({
-      selectedBiz: s.selectedBiz,
-      captainData: s.captainData,
-      pushToken: s.pushToken,
-      setNotification: s.setNotification,
-    }),
-  );
+  const {
+    pushToken,
+    selectedBiz,
+    captainData,
+    setNotification,
+    setRegisteredToken,
+  } = useHiClientZ((s) => ({
+    selectedBiz: s.selectedBiz,
+    captainData: s.captainData,
+    pushToken: s.pushToken,
+    setNotification: s.setNotification,
+    setRegisteredToken: s.setRegisteredToken,
+  }));
   const businessId = selectedBiz?.businessId?._id;
   const savePushToken = async (): Promise<SavePushTokenResponse | null> => {
     try {
@@ -42,6 +47,7 @@ export const usePushTokenApi = () => {
       const response: SavePushTokenResponse = await res.json();
       if (response.data) {
         setNotification(response.data.notification);
+        setRegisteredToken(true);
       }
       return response;
     } catch (error) {
