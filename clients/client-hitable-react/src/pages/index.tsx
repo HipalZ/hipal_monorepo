@@ -12,8 +12,10 @@ import { apiRpc } from "@hi/common";
 import { memo, useState } from "react";
 import toast from "react-hot-toast";
 import { cn } from "@/components/utils/helpers";
-
+import { useErrorHandling } from "@/components/utils/helpers";
+//test//
 const LoginMemo = () => {
+  const { errorText } = useErrorHandling();
   const setAccessToken = useUserToken((s) => s.setAccessToken);
   const setRefreshToken = useUserToken((s) => s.setRefreshToken);
   const [password, setPassword] = useState<string>("");
@@ -50,7 +52,9 @@ const LoginMemo = () => {
           password: password,
         },
       });
-
+      if (res.status === 401) {
+        return errorText();
+      }
       const response = await res.json();
       if (res.status === 200) {
         setCaptainData(response.data.user);

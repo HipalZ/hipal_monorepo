@@ -4,7 +4,7 @@ import MainRouter from "./routes";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useHiClientZ } from "./components/store/useHiClientzData";
-import { fetchAlerts } from "./utils/apiService";
+import { useFetchAlerts } from "./utils/apiService";
 import type { Alert } from "./components/types/hiClientzData";
 import SpinnerMemo from "./components/atoms/loadingSpinner";
 import toast from "react-hot-toast";
@@ -15,6 +15,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 
 function App() {
   const navigate = useNavigate();
+  const { fetchAlerts } = useFetchAlerts();
   const accessToken = useUserToken((s) => s.accessToken);
   const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
