@@ -66,11 +66,14 @@ export const fetchAlerts = async (
 };
 
 export const useUpdateNotifications = () => {
-  const { selectedBiz, captainData, setNotification } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    captainData: s.captainData,
-    setNotification: s.setNotification,
-  }));
+  const { selectedBiz, captainData, setNotification, pushToken } = useHiClientZ(
+    (s) => ({
+      selectedBiz: s.selectedBiz,
+      captainData: s.captainData,
+      setNotification: s.setNotification,
+      pushToken: s.pushToken,
+    }),
+  );
   const businessId = selectedBiz?.businessId?._id;
   const updateNotificationsApi = async (
     notification: boolean,
@@ -81,6 +84,7 @@ export const useUpdateNotifications = () => {
           businessId,
           notification,
           userId: captainData?._id,
+          registrationToken: pushToken,
         },
       });
       const response: SavePushTokenResponse = await res.json();

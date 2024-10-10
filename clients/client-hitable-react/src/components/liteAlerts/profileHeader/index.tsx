@@ -9,9 +9,14 @@ import { RxDashboard } from "react-icons/rx";
 import { AiOutlineLogout } from "react-icons/ai";
 import { useUpdateNotifications } from "@/utils/apiService";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const ProfileHeader = () => {
   const location = useLocation();
+  const { setAccessToken, setRefreshToken } = useUserToken((s) => ({
+    setAccessToken: s.setAccessToken,
+    setRefreshToken: s.setRefreshToken,
+  }));
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
   const { notification, setNotification } = useHiClientZ((s) => ({
@@ -27,9 +32,10 @@ const ProfileHeader = () => {
   }, [navigate]);
 
   const handleLogout = useCallback(() => {
-    localStorage.clear();
+    setAccessToken("");
+    setRefreshToken("");
     navigate("/");
-  }, [navigate]);
+  }, [navigate, setAccessToken, setRefreshToken]);
 
   const UpdateNotification = useCallback(async () => {
     const updatedNotification = !notification;
@@ -74,7 +80,7 @@ const ProfileHeader = () => {
                 ) : (
                   <LuBellOff className="mr-2 text-red-500" size={20} />
                 )}{" "}
-                Notifications {notification ? "On" : "Off"}
+                Alerts {notification ? "On" : "Off"}
               </button>
             )}
           </MenuItem>
