@@ -282,17 +282,6 @@ const MemoInovices = ({ data }) => {
           exclusive jurisdiction of courts in Hyderabad{" "}
         </center>
       </section>
-      <MemoBottomButton>
-        <div
-          onClick={handleNavigatePayment}
-          onKeyDown={handleNavigatePayment}
-          className={`${
-            business.billValue > 0 ? "" : "opacity-20 pointer-events-none"
-          } bg-black text-white py-3 px-3 rounded-full mx-6`}
-        >
-          <span>Pay to Hipalz ₹ {business.billValue}</span>
-        </div>
-      </MemoBottomButton>
     </>
   );
 };
