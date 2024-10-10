@@ -3,7 +3,10 @@ import { handleRemoveAlert } from "@/components/hooks/commonApi";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { Alert } from "@/components/types/hiClientzData";
-import { timestampToDateTime } from "@/components/utils/helpers";
+import {
+  timestampToDateTime,
+  useErrorHandling,
+} from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { memo } from "react";
 import { CiGlobe } from "react-icons/ci";
@@ -15,6 +18,7 @@ interface IOfflineProp {
 }
 
 const OfflineAlertCard = (props: IOfflineProp) => {
+  const { errorText } = useErrorHandling();
   const { offlineAlertData } = props;
   const {
     removeOfflineAlert,
@@ -41,6 +45,9 @@ const OfflineAlertCard = (props: IOfflineProp) => {
   const removeAlert = async (id: string) => {
     try {
       const res = await handleRemoveAlert(apiRpc, id, captainData?.name);
+      if (res.status === 401) {
+        return errorText();
+      }
       if (res.status === 200) {
         removeOfflineAlert(id);
         removeOfflineCount();
