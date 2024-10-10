@@ -35,7 +35,8 @@ function App() {
     notificationStatus,
     setNotificationStatus,
   } = useLiteStore();
-  const { initializePushNotifications } = usePushNotifications();
+  const { initializePushNotifications, initializedRef } =
+    usePushNotifications();
   const { selectedBiz, platform, pushToken, notification } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
@@ -59,10 +60,14 @@ function App() {
 
   useEffect(() => {
     if (accessToken && pushToken && selectedBiz?.businessId?.name) {
-      navigate("/viewInBiz");
+      navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
-    initializePushNotifications();
   }, []);
+
+  useEffect(() => {
+    initializedRef.current = false;
+    initializePushNotifications();
+  }, [notificationStatus]);
 
   const handleOnlineAlerts = async () => {
     if (!businessId) return;
