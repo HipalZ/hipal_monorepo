@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { getToken } from "firebase/messaging";
 import { messaging } from "./clientApp";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
@@ -71,7 +71,7 @@ export const usePushNotifications = () => {
   };
 
   return {
-    pushTokenInitialize: pushToken,
     initializePushNotifications,
+    initializedRef,
   };
 };
