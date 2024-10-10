@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useHiClientZ } from "./components/store/useHiClientzData";
 import { fetchAlerts } from "./utils/apiService";
@@ -11,8 +11,14 @@ import toast from "react-hot-toast";
 import { LuBellRing } from "react-icons/lu";
 import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { usePushNotifications } from "./hooks/usePushNotifications";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 function App() {
+  const navigate = useNavigate();
+  const accessToken = useUserToken((s) => s.accessToken);
+  const pathName = useLocation().pathname;
+  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
+  const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const {
@@ -30,32 +36,33 @@ function App() {
     setNotificationStatus,
   } = useLiteStore();
   const { initializePushNotifications } = usePushNotifications();
-  const { selectedBiz, platform, notification } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    platform: s.platform,
-    notification: s.notification,
-  }));
+  const { selectedBiz, platform, pushToken, notification } = useHiClientZ(
+    (s) => ({
+      selectedBiz: s.selectedBiz,
+      platform: s.platform,
+      pushToken: s.pushToken,
+      notification: s.notification,
+    }),
+  );
 
   const pushNotify = async () => {
     try {
       NativeSettings.openAndroid({
         option: AndroidSettings.ApplicationDetails,
       });
+      setNotificationStatus(true);
     } catch (error) {
-      console.error("Error requesting notifications permission:", error);
-      toast.error("Error enabling notifications.");
+      toast.error("Error enabling notifications. Try after some time");
       setNotificationStatus(false);
     }
   };
 
   useEffect(() => {
-    console.log("Notification Status", notificationStatus);
+    if (accessToken && pushToken && selectedBiz?.businessId?.name) {
+      navigate("/viewInBiz");
+    }
     initializePushNotifications();
-  }, [notificationStatus]);
-
-  const pathName = useLocation().pathname;
-  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
-  const businessId = businessIdMatch ? businessIdMatch[1] : null;
+  }, []);
 
   const handleOnlineAlerts = async () => {
     if (!businessId) return;
