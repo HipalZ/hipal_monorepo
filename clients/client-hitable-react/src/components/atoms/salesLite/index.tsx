@@ -2,7 +2,7 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import useTimings from "@/components/store/useTimings";
 import type { ISalesLite } from "@/components/types/hiClientzData";
-import { getDate } from "@/components/utils/helpers";
+import { getDate, useErrorHandling } from "@/components/utils/helpers";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { CiGlobe } from "react-icons/ci";
@@ -11,6 +11,7 @@ import "./index.css";
 import { apiRpc } from "@hi/common";
 
 const SalesLite = () => {
+  const { errorText } = useErrorHandling();
   const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
   }));
@@ -34,6 +35,9 @@ const SalesLite = () => {
         to: timeStampEnd.toString(),
       },
     });
+    if (res.status === 401) {
+      return errorText();
+    }
     const response = (await res.json()).data as ISalesLite;
     if (res.status === 200) {
       setSalesData(response);

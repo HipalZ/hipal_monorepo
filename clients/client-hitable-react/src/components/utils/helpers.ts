@@ -1,4 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 
 export function timestampToDateTime(timestamp: number): string {
@@ -63,4 +65,18 @@ export const getDate = (timeStampStart: number) => {
     month: "long",
     day: "numeric",
   });
+};
+
+export const useErrorHandling = () => {
+  const navigate = useNavigate();
+
+  const errorText = () => {
+    let message = "";
+    navigate("/");
+    message = "Session Expired: Please log in again to continue.";
+    toast.error(message);
+    return message;
+  };
+
+  return { errorText };
 };

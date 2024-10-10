@@ -5,7 +5,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import SpinnerMemo from "../atoms/loadingSpinner";
 import { useNavigate } from "react-router-dom";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import toast from "react-hot-toast";
 
 const Boundary = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ const Boundary = ({ children }: { children: ReactNode }) => {
     if (renderRef.current) return;
 
     if (!validateToken()) {
-//       toast.error("Session expired, please login again");
+      //       toast.error("Session expired, please login again");
       navigate("/");
     }
 

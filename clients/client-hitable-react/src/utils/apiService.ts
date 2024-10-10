@@ -2,6 +2,7 @@ import { apiRpc } from "@hi/common";
 import type { Alert } from "@/components/types/hiClientzData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import toast from "react-hot-toast";
+import { useErrorHandling } from "@/components/utils/helpers";
 interface SavePushTokenResponse {
   message: string;
   err: boolean;
@@ -16,6 +17,7 @@ interface SavePushTokenResponse {
 }
 
 export const usePushTokenApi = () => {
+  const { errorText } = useErrorHandling();
   const { pushToken, selectedBiz, captainData, setNotification } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
@@ -34,6 +36,9 @@ export const usePushTokenApi = () => {
           userId: captainData?._id,
         },
       });
+      if (res.status === 401) {
+        errorText();
+      }
       const response: SavePushTokenResponse = await res.json();
       if (response.data) {
         setNotification(response.data.notification);
@@ -46,26 +51,34 @@ export const usePushTokenApi = () => {
   return { savePushToken };
 };
 
-export const fetchAlerts = async (
-  businessId: string,
-  alertType: string,
-): Promise<Alert[]> => {
-  const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
-  if (!businessId) return [];
-  try {
-    const res = await apiRpc.payments[":id"][endpoint].$get({
-      query: { businessId, alertType },
-      param: { id: businessId },
-    });
-    const response = await res.json();
-    return (response.data as Alert[]) || [];
-  } catch (error) {
-    console.error("Error fetching alerts:", error);
-    return [];
-  }
+export const useFetchAlerts = () => {
+  const { errorText } = useErrorHandling();
+  const fetchAlerts = async (
+    businessId: string,
+    alertType: string,
+  ): Promise<Alert[]> => {
+    const endpoint = alertType === "ONLINE" ? "paymentAlerts" : "offlineAlerts";
+    if (!businessId) return [];
+    try {
+      const res = await apiRpc.payments[":id"][endpoint].$get({
+        query: { businessId, alertType },
+        param: { id: businessId },
+      });
+      if (res.status === 401) {
+        errorText();
+      }
+      const response = await res.json();
+      return (response.data as Alert[]) || [];
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+      return [];
+    }
+  };
+  return { fetchAlerts };
 };
 
 export const useUpdateNotifications = () => {
+  const { errorText } = useErrorHandling();
   const { selectedBiz, captainData, setNotification, pushToken } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
@@ -87,6 +100,9 @@ export const useUpdateNotifications = () => {
           registrationToken: pushToken,
         },
       });
+      if (res.status === 401) {
+        errorText();
+      }
       const response: SavePushTokenResponse = await res.json();
       if (response.data) {
         setNotification(response.data.notification);

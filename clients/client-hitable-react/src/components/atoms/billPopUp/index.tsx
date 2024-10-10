@@ -1,6 +1,10 @@
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
-import { cn, timestampToDateTime } from "@/components/utils/helpers";
+import {
+  cn,
+  timestampToDateTime,
+  useErrorHandling,
+} from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { type ChangeEvent, memo, useCallback, useState } from "react";
 import { FiCopy } from "react-icons/fi";
@@ -10,6 +14,7 @@ import LoadingSpinner from "../loadingSpinner";
 import PopUp from "../popUp";
 
 const BillPopUpMemo = () => {
+  const { errorText } = useErrorHandling();
   const { selectedNavItem, viewData, removeOfflineAlert } = useLiteStore(
     (s) => ({
       selectedNavItem: s.selectedNavItem,
@@ -55,12 +60,15 @@ const BillPopUpMemo = () => {
   }, []);
 
   const handleCloseAlert = async (id: string) => {
-    await apiRpc.payments[":pid"].rejectOrder[":alertId"].$put({
+    const res = await apiRpc.payments[":pid"].rejectOrder[":alertId"].$put({
       json: {
         waiterName: captainData?.name,
       },
       param: { alertId: id },
     });
+    if (res.status === 401) {
+      return errorText();
+    }
     toast.success("order reject successfully");
     setClickViewMore(!clickViewMore);
     removeOfflineAlert(id);
@@ -79,6 +87,9 @@ const BillPopUpMemo = () => {
         waiterName: captainData?.name,
       },
     });
+    if (res.status === 401) {
+      return errorText();
+    }
     if (res.status === 200) {
       toast.success("order confirm successfully");
       setIsLoading(false);
