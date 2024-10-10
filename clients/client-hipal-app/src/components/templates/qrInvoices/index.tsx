@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Hi from "@/assets/svg/hand.svg";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
@@ -7,12 +7,16 @@ import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { updateTheme } from "@/components/utils/themes";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { BsDownload } from "react-icons/bs";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 const QrInvoices = ({ data }) => {
   const businessData = [
     {
       id: "001",
       name: "soukun",
+      date: "02 Aug 2024",
       bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
       standsNumber: 40,
       billValue: 5800,
@@ -21,6 +25,7 @@ const QrInvoices = ({ data }) => {
     {
       id: "002",
       name: "stonewater",
+      date: "02 Aug 2024",
       bizName: "S&D HOSPITALITY - Stone waters",
       standsNumber: 45,
       billValue: 6525,
@@ -29,6 +34,7 @@ const QrInvoices = ({ data }) => {
     {
       id: "003",
       name: "hoist",
+      date: "02 Aug 2024",
       bizName: "SONNET HOSPITALITY LLP - Hoist",
       standsNumber: 60,
       billValue: 8400,
@@ -37,6 +43,7 @@ const QrInvoices = ({ data }) => {
     {
       id: "006",
       name: "vamsi",
+      date: "02 Aug 2024",
       bizName: "Vamsi",
       standsNumber: 1,
       billValue: 1,
@@ -47,6 +54,7 @@ const QrInvoices = ({ data }) => {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
+  const printRef = useRef<HTMLDivElement | null>(null);
   const { setBusinessDetails } = useBusinessDetails((s) => ({
     setBusinessDetails: s.setBusinessDetails,
   }));
@@ -67,6 +75,8 @@ const QrInvoices = ({ data }) => {
     return (
       businessData.find((b) => b.name === businessClient) || {
         id: "",
+        name: "",
+        date: "",
         bizName: "",
         standsNumber: 0,
         billValue: 0,
@@ -93,6 +103,22 @@ const QrInvoices = ({ data }) => {
     }
   }, [direction, accessToken, invoiceUrl]);
 
+  const handleDownloadInvoice = useCallback(async () => {
+    const element = printRef?.current;
+    if (element === null) return;
+    const canvas = await html2canvas(element);
+    const data = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+
+    pdf.addImage(data, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.save(`qrInvoice_${business.name}.pdf`);
+  }, [business.name]);
+
   return (
     <>
       <article className="linear_gradient_background">
@@ -103,69 +129,82 @@ const QrInvoices = ({ data }) => {
           rightImage={Hi}
         />
       </article>
-      <center className="my-6">
-        <h1>HIAUG{business?.id}</h1>
-      </center>
-      <hr className="mx-1 my-4 border-2 border-black" />
-      <article className="mx-6 text-base">
-        <h1>
-          <b>Billed to:</b> {business?.bizName}
-        </h1>
-        <h1>
-          <b className="mr-8">Date: </b> 2 Aug 2024
-        </h1>
-        <h1>
-          <b className="mr-4">Status: </b>{" "}
-          <span className="text-red-500">Not Paid</span>
-        </h1>
-      </article>
-      <section
-        style={{
-          boxShadow: "0px 4.55px 4.55px 0px #00000040",
-        }}
-        className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[14rem]"
-      >
-        <article className="p-6">
-          <h1>&#9679; Service: POPCORN MODEL</h1>
-          <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-            Rs {business.serviceCost} for {business?.standsNumber} stands{" "}
-            <span className="float-right">₹ {business?.billValue}</span>
-          </p>
+      <section ref={printRef}>
+        <center className="my-6">
+          <h1>HIAUG{business?.id}</h1>
+          <article className="cursor-pointer on_active_bounce">
+            <p
+              onKeyDown={handleDownloadInvoice}
+              onClick={handleDownloadInvoice}
+              style={{ cursor: "pointer" }}
+              className="my-2 text-xs"
+            >
+              Download Invoice
+            </p>
+            <BsDownload size={20} onClick={handleDownloadInvoice} />
+          </article>
+        </center>
+        <hr className="mx-1 my-4 border-2 border-black" />
+        <article className="mx-6 text-base">
+          <h1>
+            <b>Billed to:</b> {business?.bizName}
+          </h1>
+          <h1>
+            <b className="mr-8">Date: </b> {business?.date}
+          </h1>
+          <h1>
+            <b className="mr-4">Status: </b>{" "}
+            <span className="text-red-500">Not Paid</span>
+          </h1>
         </article>
-        <article className="px-6">
-          <h1>&#9679; Tax: </h1>
-          <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-            No Tax <span className="float-right">₹ 0</span>
-          </p>
+        <section
+          style={{
+            boxShadow: "0px 4.55px 4.55px 0px #00000040",
+          }}
+          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[14rem]"
+        >
+          <article className="p-6">
+            <h1>&#9679; Service: POPCORN MODEL</h1>
+            <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
+              Rs {business.serviceCost} for {business?.standsNumber} stands{" "}
+              <span className="float-right">₹ {business?.billValue}</span>
+            </p>
+          </article>
+          <article className="px-6">
+            <h1>&#9679; Tax: </h1>
+            <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
+              No Tax <span className="float-right">₹ 0</span>
+            </p>
+          </article>
+        </section>
+        <article className="text-[#6F649B] mx-10 my-6 text-xl">
+          <h1 className="font-semibold">
+            Grand Total <b className="float-right">₹ {business?.billValue}</b>
+          </h1>
         </article>
+        <hr className="mx-1 my-4 border-[#000000] border-2" />
+        <article className="mx-6 space-y-2 text-base">
+          <h1>
+            <b>Account Name : </b> PALTRIBE SOLUTIONS PTIVATE LIMITED
+          </h1>
+          <h1>
+            <b>Account No: </b> 259177914130
+          </h1>
+          <h1>
+            <b>IFSC Code:</b> INDB0000740
+          </h1>
+          <h1>
+            <b>GST No : </b> 36AAMCP3900B1ZR (Composition Dealer )
+          </h1>
+          <h1>
+            <b>CIN : </b> U72200TG2021PTC156074
+          </h1>
+        </article>
+        <center className="mx-4 mt-16 text-xs opacity-50">
+          This is a computer generated invoice. All disputes subjected to
+          exclusive jurisdiction of courts in Hyderabad{" "}
+        </center>
       </section>
-      <article className="text-[#6F649B] mx-10 my-6 text-xl">
-        <h1 className="font-semibold">
-          Grand Total <b className="float-right">₹ {business?.billValue}</b>
-        </h1>
-      </article>
-      <hr className="mx-1 my-4 border-[#000000] border-2" />
-      <article className="mx-6 space-y-2 text-base">
-        <h1>
-          <b>Account Name : </b> PALTRIBE SOLUTIONS PTIVATE LIMITED
-        </h1>
-        <h1>
-          <b>Account No: </b> 259177914130
-        </h1>
-        <h1>
-          <b>IFSC Code:</b> INDB0000740
-        </h1>
-        <h1>
-          <b>GST No : </b> 36AAMCP3900B1ZR (Composition Dealer )
-        </h1>
-        <h1>
-          <b>CIN : </b> U72200TG2021PTC156074
-        </h1>
-      </article>
-      <center className="mx-4 mt-16 text-xs opacity-50">
-        This is a computer generated invoice. All disputes subjected to
-        exclusive jurisdiction of courts in Hyderabad{" "}
-      </center>
     </>
   );
 };
