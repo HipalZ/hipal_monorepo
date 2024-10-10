@@ -124,7 +124,7 @@ _will increase development time but results in better code quality. These Librab
 
 # Folder Structure:
 
-```bash
+```bashs
 ├── src
 │   ├── apis
 │   │   ├── example.api.ts
