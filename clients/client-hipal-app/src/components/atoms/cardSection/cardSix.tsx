@@ -31,7 +31,7 @@ const MemoCardSixLayout = () => {
         className=" w-[100%] max-w-[28rem]  rounded-2xl"
       />
       {business?.logoUrl && (
-        <ShimmerImage
+        <Image
           width={64}
           height={64}
           src={business?.logoUrl || hipalLogo}
