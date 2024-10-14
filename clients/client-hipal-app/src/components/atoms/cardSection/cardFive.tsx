@@ -9,7 +9,6 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import Image from "next/image";
 import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import ShimmerImage from "../imageshimmer";
 
 const MemoCardFiveLayout = () => {
   const cardLayout = useLoyaltyData((s) => s.loyaltySetting.cardLayout);
@@ -18,7 +17,7 @@ const MemoCardFiveLayout = () => {
   const userCoinZ = useLogin((state) => state.userCoinZ);
 
   return (
-    <section className="relative z-50 flex w-[23.5rem] max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl">
+    <section className="relative z-50 flex w-[23.5rem] mx-auto min-w-auto max-w-[28rem] h-[15.5rem] justify-between gap-4 p-4 overflow-hidden lg:rounded-2xl">
       <Image
         src={
           cardLayout === "LAYOUT_ONE"
@@ -33,7 +32,7 @@ const MemoCardFiveLayout = () => {
         className=" w-[100%] max-w-[28rem]  rounded-2xl"
       />
       {business?.logoUrl && (
-        <ShimmerImage
+        <Image
           width={64}
           height={64}
           src={business?.logoUrl || hipalLogo}

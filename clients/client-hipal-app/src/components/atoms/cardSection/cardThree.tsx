@@ -7,7 +7,6 @@ import Image from "next/image";
 import hipalLogo from "@/assets/HIPAL_LOGO.svg";
 import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import ShimmerImage from "../imageshimmer";
 
 const MemoCardThreeLayout = () => {
   const cardLayout = useLoyaltyData((s) => s.loyaltySetting.cardLayout);
@@ -16,7 +15,7 @@ const MemoCardThreeLayout = () => {
   const userCoinZ = useLogin((state) => state.userCoinZ);
 
   return (
-    <section className="relative flex justify-between w-[23.5rem] max-w-[28rem] h-[15.5rem] gap-4 overflow-hidden p-4 lg:rounded-2xl">
+    <section className="relative flex justify-between mx-auto min-w-auto w-[23.5rem] max-w-[28rem] h-[15.5rem] gap-4 overflow-hidden p-4 lg:rounded-2xl">
       <Image
         src={
           cardLayout === "LAYOUT_ONE"
