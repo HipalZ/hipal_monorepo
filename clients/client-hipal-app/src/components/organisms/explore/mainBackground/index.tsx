@@ -34,13 +34,13 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
     <div className="relative w-full h-auto mx-auto overflow-hidden max-h-96">
       <ShimmerImage
         src={explore?.specialBannerUrl || img.src}
-        quality={95}
+        quality={100}
         sizes="(max-width: 450px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
         alt={"Explore page wallpaper"}
         width={500}
-        height={400}
+        height={500}
         priority={true}
-        className="object-cover object-center -mt-[3rem] w-full h-full aspect-square"
+        className="object-contain object-center w-full h-full aspect-square"
       />
 
       <div className="absolute top-0 right-0 flex justify-between px-4 py-3 mb-10">
