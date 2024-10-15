@@ -15,6 +15,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "assets.hipalz.com",
+      },
+      {
+        protocol: "https",
         hostname: "pal-tribe.s3.ap-south-1.amazonaws.com",
       },
       {
