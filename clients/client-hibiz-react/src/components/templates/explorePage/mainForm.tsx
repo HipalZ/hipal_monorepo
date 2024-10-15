@@ -289,8 +289,8 @@ const MemoMainForm = (props: Props) => {
           <EasyReactCropper
             image={cropping.image}
             ref={cropperRef}
-            height={300}
-            width={400}
+            height={480}
+            width={480}
           />
         </section>
         <BottomButton
