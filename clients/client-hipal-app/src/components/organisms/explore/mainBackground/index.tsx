@@ -19,7 +19,7 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const customLink = params?.businessId as string;
   const tableName = searchParams?.get("tableName");
   const { setTableName } = useTableData();
-  const setDirection = useLogin(s=>s.setDirection);
+  const setDirection = useLogin((s) => s.setDirection);
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
@@ -31,7 +31,7 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   }, [tableName]);
 
   return (
-    <div className="relative h-[60vh] max-h-96 overflow-hidden w-full mx-auto">
+    <div className="relative w-full h-auto mx-auto overflow-hidden max-h-96">
       <ShimmerImage
         src={explore?.specialBannerUrl || img.src}
         quality={95}
@@ -40,17 +40,22 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
         width={500}
         height={400}
         priority={true}
+        className="object-cover object-center -mt-[3rem] w-full h-full aspect-square"
       />
 
       <div className="absolute top-0 right-0 flex justify-between px-4 py-3 mb-10">
-        { !accessToken && (
+        {!accessToken && (
           <div className="flex flex-row space-x-2">
             <Link
               href={
                 customLink ? routePaths[PAGE_TYPES.SIGN_UP](customLink) : "#"
               }
             >
-              <button onClick={()=>setDirection("explore")} type="button" className="glass-morphism">
+              <button
+                onClick={() => setDirection("explore")}
+                type="button"
+                className="glass-morphism"
+              >
                 Login/Sign up
               </button>
             </Link>
