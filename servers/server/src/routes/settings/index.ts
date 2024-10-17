@@ -346,6 +346,13 @@ const settingsRouter = new Hono()
           razorpayKeyId: "rzp_live_j4TGFR1g1Ah1kv",
         };
       }
+      if (businessId === "66e73800539ac167a2ba63a4") {
+        merchant = {
+          businessId: "66e73800539ac167a2ba63a4",
+          razorpayMerchantId: "P7KMwhrfQWAjkg",
+          razorpayKeyId: "rzp_live_rgCBLhpnx7kcCO",
+        };
+      }
 
       const razorpayObject = {
         businessId: merchant?.businessId,
