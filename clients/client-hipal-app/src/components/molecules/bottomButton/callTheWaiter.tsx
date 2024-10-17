@@ -5,15 +5,7 @@ import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import { useErrorHandling } from "@/utils/helper";
-
-const messages = [
-  "Need Bill",
-  "Bring Water bottles",
-  "Bring Menu",
-  "Bring Tissue Paper",
-  "Please settle my table",
-  "Other",
-];
+import { messages } from "@/components/utils/helpers";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const { errorText } = useErrorHandling();
@@ -31,7 +23,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
   const callTheWaiter = useCallback(async () => {
     if (message === "") {
-      return toast.error("Please select a message to call waiter");
+      return toast.error("Please select a message to call captain");
     }
     if (loading) {
       return toast.error("Please wait for a moment");

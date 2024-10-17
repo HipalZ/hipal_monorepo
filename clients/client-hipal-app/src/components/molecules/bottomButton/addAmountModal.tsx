@@ -98,7 +98,7 @@ const AddAmountModal = memo(() => {
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
-      toast.error("Please Scan the table to call waiter");
+      toast.error("Please Scan the table to call captain");
       return;
     }
     if (loading) {
