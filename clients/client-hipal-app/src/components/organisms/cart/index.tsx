@@ -54,7 +54,7 @@ const Cart = () => {
           type="button"
           className="absolute w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
         >
-          Call Waiter
+          Call Captain
         </button>
       )}
       {callWaiterModal && (

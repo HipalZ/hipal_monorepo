@@ -927,3 +927,12 @@ export const calculateRating = (selectedEmoji) => {
   }
   return 0;
 };
+
+export const messages = [
+  "Get Me The Bill",
+  "Get Me Water Bottles",
+  "Get Me Tissue Paper",
+  "Please Settle My Table",
+  "Take My Order",
+  "Other",
+];
