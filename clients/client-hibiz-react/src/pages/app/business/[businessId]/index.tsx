@@ -4,6 +4,7 @@ import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
+import { motion } from "framer-motion";
 import {
   type ILiteVersionCardButton,
   liteVersionCardButtons,
@@ -104,16 +105,17 @@ const Business = () => {
               Unlock all services after setting the Theme
             </center>
           )}
-          <section className="business_system_cards">
+          <section className="grid grid-cols-2 gap-2 p-2 mx-auto sm:p-4 md:p-6 sm:gap-4 md:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-7xl">
             {liteVersionCardButtons.map((item: ILiteVersionCardButton) => (
-              <button
+              <motion.button
                 type="button"
                 onClick={() => handleClick(item?.navigateTo || "")}
                 key={item.text}
                 className={cn(
-                  "relative overflow-hidden rounded-2xl text-left min-h-[10rem]",
+                  "relative overflow-hidden rounded-2xl text-left aspect-square w-full",
+                  "transition-all duration-300 ease-in-out transform hover:scale-105",
                   {
-                    "bg-gray-400 cursor-not-allowed":
+                    "bg-gray-400 cursor-not-allowed opacity-70":
                       item.navigateTo !== "businessControl" &&
                       !businessData?.themeApplied,
                   },
@@ -122,61 +124,31 @@ const Business = () => {
                   item.navigateTo !== "businessControl" &&
                   !businessData?.themeApplied
                 }
+                whileHover={{ y: -5 }}
               >
-                <figure>
+                <div className="absolute inset-0 bg-black">
                   <img
-                    width={200}
-                    height={200}
                     src={item.image}
                     alt={item.text}
-                    className={cn({
-                      "opacity-50":
-                        item.navigateTo !== "businessControl" &&
-                        !businessData?.themeApplied,
-                    })}
+                    className="object-contain w-full h-full transition-opacity duration-300 md:object-cover"
                   />
-                </figure>
-                <figcaption className="absolute bottom-0 left-0 p-2 w-full max-w-[12.5rem] bg-[#F6E9E2] h-[45%]">
-                  <section className="flex items-center justify-between">
-                    <h4
-                      className={cn("font-semibold leading-6", {
-                        "text-gray-500":
-                          item.navigateTo !== "businessControl" &&
-                          !businessData?.themeApplied,
-                        "text-black":
-                          businessData?.themeApplied ||
-                          item.navigateTo === "businessControl",
-                      })}
-                    >
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent h-1/2" />
+                <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4 text-white backdrop-blur-sm bg-[#ffffff20]">
+                  <div className="flex items-center justify-between mb-1 sm:mb-2">
+                    <h4 className="mr-2 text-sm font-semibold leading-tight truncate sm:text-base md:text-lg">
                       {item.text}
                     </h4>
-                    <FaArrowRight
-                      className={cn("-rotate-45", {
-                        "text-gray-500":
-                          item.navigateTo !== "businessControl" &&
-                          !businessData?.themeApplied,
-                        "text-black":
-                          businessData?.themeApplied ||
-                          item.navigateTo === "businessControl",
-                      })}
-                    />
-                  </section>
-                  <h4
-                    className={cn("opacity-50 mt-1 text-xs", {
-                      "text-gray-500":
-                        item.navigateTo !== "businessControl" &&
-                        !businessData?.themeApplied,
-                      "text-black":
-                        businessData?.themeApplied ||
-                        item.navigateTo === "businessControl",
-                    })}
-                  >
-                    {!businessData?.themeApplied
+                    <FaArrowRight className="text-xs transform -rotate-45 sm:text-sm" />
+                  </div>
+                  <p className="text-xs sm:text-sm opacity-90 line-clamp-2">
+                    {!businessData?.themeApplied &&
+                    item.navigateTo !== "businessControl"
                       ? "Activate after Themes"
                       : item.description}
-                  </h4>
-                </figcaption>
-              </button>
+                  </p>
+                </div>
+              </motion.button>
             ))}
           </section>
         </>
