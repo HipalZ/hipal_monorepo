@@ -8,12 +8,18 @@ import Services from "@/components/landingPage/services";
 import UserExp from "@/components/landingPage/userExp";
 import Logo from "@/assets/topsection/logo.svg";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 ///
 export default function Home() {
+  const router = useRouter();
+  const goToAllBusiness = () => {
+    router.push("/biz");
+  };
+
   return (
     <section className="bg-black">
-      <center className="mb-4">
+      <center onClick={goToAllBusiness} className="mb-4">
         <Image
           className="nav_bar_logo_mobile show_mobile"
           width={30}

@@ -66,7 +66,7 @@ function HeroSection() {
             />
           </figure>
           <section className="zoomIn">
-            <Image width={550} height={550} src={Iphone} alt="mid-iphone" />
+            <Image width={1280} height={1080} src={Iphone} alt="mid-iphone" />
           </section>
           <section>
             <figure>
@@ -105,7 +105,7 @@ function HeroSection() {
       <section className="show_mobile">
         <center>
           <section className="mobile_Iphone">
-            <Image width={350} height={400} src={Iphone} alt="mid-iphone" />
+            <Image width={850} height={800} src={Iphone} alt="mid-iphone" />
           </section>
           <section className="image-container-topsection">
             <Image
