@@ -40,25 +40,53 @@ const DishesList: FC<IDishesProps> = (props) => {
     setActiveChildCategory: state.setActiveChildCategory,
     setObserverActive: state.setObserverActive,
   }));
-
   const subTypes = useMemo(() => {
-    return childCategory.filter((category) => {
-      const hasVisibleDishes =
+    const hasVisibleDishes = (category: CategoryType): boolean => {
+      return (
         category.hierarchy === "CHILD" &&
+        category.dishIds &&
         category.dishIds.length > 0 &&
         category.dishIds.some(
           (dish: DishType) => !dish.isDeleted && dish.visibility,
-        );
-      return hasVisibleDishes;
-    });
-  }, [childCategory]);
+        )
+      );
+    };
 
-  const filterDishes = (dishes: DishType[], dishType: string): DishType[] => {
-    return dishes.filter(
-      (dish) =>
-        dish.visibility && !dish.isDeleted && dish.dishTypes.includes(dishType),
-    );
-  };
+    if (parentCategory && parentCategory.length > 0) {
+      const allSubCategoryIds = parentCategory.reduce(
+        (acc: string[], parentCat: CategoryType) => {
+          if (parentCat.subCategoryIds && parentCat.subCategoryIds.length > 0) {
+            return acc.concat(parentCat.subCategoryIds);
+          } else {
+            return acc;
+          }
+        },
+        [] as string[],
+      );
+      const orderedSubTypes = allSubCategoryIds
+        .map((subCatId: string) => {
+          return childCategory.find(
+            (childCat: CategoryType) => childCat._id === subCatId,
+          );
+        })
+        .filter((cat): cat is CategoryType => Boolean(cat));
+
+      return orderedSubTypes.filter(hasVisibleDishes);
+    } else {
+      return childCategory.filter(hasVisibleDishes);
+    }
+  }, [childCategory, parentCategory]);
+
+  const filterDishes = useMemo(() => {
+    return (dishes: DishType[], dishType: string): DishType[] => {
+      return dishes.filter(
+        (dish) =>
+          dish.visibility &&
+          !dish.isDeleted &&
+          dish.dishTypes?.includes(dishType),
+      );
+    };
+  }, []);
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
   const updateActiveCategory = () => {
