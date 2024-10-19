@@ -1,7 +1,5 @@
 "use client";
-import { getRandomBlurImg } from "@/components/utils/images";
-import Image from "next/image";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect } from "react";
 import img from "@/assets/img/cut.png";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { useParams, useSearchParams } from "next/navigation";
@@ -31,16 +29,15 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   }, [tableName]);
 
   return (
-    <div className="relative w-full h-auto mx-auto overflow-hidden max-h-96">
+    <div className="relative w-full max-w-[30rem]  mx-auto overflow-hidden aspect-square">
       <ShimmerImage
         src={explore?.specialBannerUrl || img.src}
-        quality={100}
         sizes="(max-width: 450px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw"
         alt={"Explore page wallpaper"}
         width={500}
         height={500}
         priority={true}
-        className="object-contain object-center w-full h-full aspect-square"
+        className="object-cover object-center w-full h-full aspect-square"
       />
 
       <div className="absolute top-0 right-0 flex justify-between px-4 py-3 mb-10">

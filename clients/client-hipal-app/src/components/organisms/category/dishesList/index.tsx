@@ -21,6 +21,7 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, timings } = props;
+  console.log(parentCategory);
   const { isSearchActive } = useSearch();
   const {
     isActiveDishType,
