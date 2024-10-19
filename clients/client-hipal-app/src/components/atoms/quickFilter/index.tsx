@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import QuickFilterPopup from "../quickFilterPopup";
 import Image from "next/image";
@@ -66,11 +66,18 @@ const FilterOption = ({
   color,
   label,
   isNone = false,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  color?: string;
+  label: string;
+  isNone?: boolean;
 }) => (
   <div
     className={`${
       isActive ? "bg-primary text-base-100" : ""
-    } flex justify-center items-center px-2 rounded-full py-1 border border-primary `}
+    } flex justify-start items-center px-2 rounded-full py-1 border border-primary `}
     onClick={onClick}
   >
     {icon ? (
@@ -154,7 +161,7 @@ const QuickFilter = () => {
       </section>
       {isModalOpen && (
         <QuickFilterPopup show={isModalOpen} onClose={closeModal}>
-          <div className="pt-4 pb-8 w-[7rem] text-base-content bg-base-100 rounded-xl mb-4">
+          <div className="pt-4 pb-8 mb-4  text-base-content bg-base-100 rounded-xl">
             <div className="mb-4 text-xl text-center text-primary">Filters</div>
             <div className="mx-[1rem] font-medium space-y-4">
               <FilterOption

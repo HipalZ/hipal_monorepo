@@ -21,7 +21,6 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, timings } = props;
-  console.log(parentCategory);
   const { isSearchActive } = useSearch();
   const {
     isActiveDishType,
@@ -76,17 +75,6 @@ const DishesList: FC<IDishesProps> = (props) => {
       return childCategory.filter(hasVisibleDishes);
     }
   }, [childCategory, parentCategory]);
-
-  const filterDishes = useMemo(() => {
-    return (dishes: DishType[], dishType: string): DishType[] => {
-      return dishes.filter(
-        (dish) =>
-          dish.visibility &&
-          !dish.isDeleted &&
-          dish.dishTypes?.includes(dishType),
-      );
-    };
-  }, []);
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
   const updateActiveCategory = () => {
@@ -144,7 +132,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         {!isSearchActive && (
           <>
             <MainTypes parentCategory={parentCategory} />
-            <SubTypes childCategory={childCategory} />
+            <SubTypes childCategory={subTypes} />
           </>
         )}
       </section>
@@ -162,6 +150,17 @@ const DishesList: FC<IDishesProps> = (props) => {
         </section>
       )}
       {subTypes.map((category: CategoryType, index) => {
+        const visibleDishes = category.dishIds.filter(
+          (dish: DishType) => dish.visibility && !dish.isDeleted,
+        );
+
+        const dishesToRender =
+          isActiveDishType.toLowerCase() === "all"
+            ? visibleDishes
+            : visibleDishes.filter((dish) =>
+                dish.dishTypes?.includes(isActiveDishType),
+              );
+        if (dishesToRender.length === 0) return null;
         return (
           <section
             key={`${category._id}${index}`}
@@ -206,45 +205,14 @@ const DishesList: FC<IDishesProps> = (props) => {
               )}
             </InView>
             <div className="flex flex-col divide-y divide-base-300">
-              {(() => {
-                const visibleDishes = category.dishIds.filter(
-                  (dish: DishType) => dish.visibility && !dish.isDeleted,
-                );
-
-                if (isActiveDishType.toLowerCase() === "all") {
-                  return visibleDishes.length > 0 ? (
-                    visibleDishes.map((dishData: DishType, dishIndex) => (
-                      <HorizontalCard
-                        dishData={dishData}
-                        key={`${dishData._id?.toString()}${dishIndex}`}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
-                      <GiKnifeFork className="mr-4 text-2xl text-primary-100" />{" "}
-                      No Dishes Available
-                    </div>
-                  );
-                } else {
-                  const filteredDishes = filterDishes(
-                    visibleDishes,
-                    isActiveDishType,
-                  );
-                  return filteredDishes.length > 0 ? (
-                    filteredDishes.map((dishData: DishType, dishIndex) => (
-                      <HorizontalCard
-                        dishData={dishData}
-                        key={`${dishData._id?.toString()}${dishIndex}`}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center h-full mt-16 text-lg text-primary">
-                      <GiKnifeFork className="mr-4 text-2xl text-primary-100" />{" "}
-                      No Dishes Available
-                    </div>
-                  );
-                }
-              })()}
+              {dishesToRender.length > 0
+                ? dishesToRender.map((dishData: DishType, dishIndex) => (
+                    <HorizontalCard
+                      dishData={dishData}
+                      key={`${dishData._id}-${dishIndex}`}
+                    />
+                  ))
+                : null}
             </div>
           </section>
         );
