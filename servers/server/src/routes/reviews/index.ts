@@ -1,4 +1,10 @@
-import { GoogleAuthUser, GoogleReview, User, UserReward } from "@hi/db-models";
+import {
+  GoogleAuthUser,
+  GoogleReview,
+  Reviews,
+  User,
+  UserReward,
+} from "@hi/db-models";
 import {
   GoogleAuthUsersAttrs,
   GoogleReviewsAttr,
@@ -9,6 +15,15 @@ import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+
+interface StaffReview {
+  name: string;
+  _id: string;
+  1: number;
+  3: number;
+  5: number;
+}
+
 const reviewRouter = new Hono()
   .get(
     "/googleReviews",
@@ -162,6 +177,74 @@ const reviewRouter = new Hono()
       );
 
       return respond(c, "review post successFully", false, 200, {});
+    },
+  )
+  .post(
+    "/staffReviews",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(100),
+        from: z.number().optional(),
+        to: z.number().optional(),
+        best: z.boolean().optional(),
+        worst: z.boolean().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      let { businessId, from, to, best, worst } = requestData;
+
+      const currentTime = Date.now();
+      const fifteenDaysAgo = currentTime - 15 * 24 * 60 * 60 * 1000;
+
+      from = from ?? fifteenDaysAgo;
+      to = to ?? currentTime;
+
+      const reviews = await Reviews.find({
+        businessId,
+        date: { $gte: new Date(from), $lte: new Date(to) },
+        staffs: { $exists: true, $ne: [] },
+      }).populate({
+        path: "staffs",
+        select: "name",
+      });
+
+      interface ReviewObj {
+        [key: string]: StaffReview;
+      }
+      const reviewObj: ReviewObj = {};
+
+      for (const review of reviews) {
+        for (const staff of review?.staffs || []) {
+          if (!reviewObj[staff?._id]) {
+            reviewObj[staff._id] = {
+              name: staff.name,
+              _id: staff._id,
+              1: 0,
+              3: 0,
+              5: 0,
+            };
+          }
+          reviewObj[staff._id][review.reviewRating] =
+            (reviewObj[staff._id][review.reviewRating] || 0) + 1;
+        }
+      }
+
+      let res = Object.values(reviewObj);
+
+      if (best) {
+        res = res.filter((staff) => staff[5] > 0 && staff[1] === 0);
+      }
+
+      if (worst) {
+        res = res.filter((staff) => staff[1] > 0 && staff[5] === 0);
+      }
+
+      return respond(c, "reviews fetched successfully", false, 200, {
+        res,
+      });
     },
   );
 
