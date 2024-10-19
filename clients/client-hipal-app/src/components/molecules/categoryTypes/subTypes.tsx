@@ -15,25 +15,32 @@ const MemoSubTypes = (props: ISubTypes) => {
   const { childCategory } = props;
   const {
     isActiveCategory,
-    isActiveChildCategory,
+    isActiveDishType,
     setActiveCategory,
     setActiveParentCategory,
     setActiveChildCategory,
     setObserverActive,
   } = useActiveClass();
 
-  const subTypes = useMemo(
-    () =>
-      childCategory.filter((category) => {
-        const hasVisibleDishes =
-          category.dishIds.length > 0 &&
-          category.dishIds.some(
-            (dish: DishType) => !dish.isDeleted && dish.visibility,
+  const subTypes = useMemo(() => {
+    const hasVisibleDishesOfType = (category: CategoryType): boolean => {
+      return (
+        category.hierarchy === "CHILD" &&
+        category.dishIds &&
+        category.dishIds.length > 0 &&
+        category.dishIds.some((dish: DishType) => {
+          return (
+            !dish.isDeleted &&
+            dish.visibility &&
+            (isActiveDishType.toLowerCase() === "all" ||
+              dish.dishTypes?.includes(isActiveDishType))
           );
-        return category.hierarchy === "CHILD" && hasVisibleDishes;
-      }),
-    [childCategory],
-  );
+        })
+      );
+    };
+
+    return childCategory.filter(hasVisibleDishesOfType);
+  }, [childCategory, isActiveDishType]);
 
   const setActiveCategories = useCallback(
     (category: CategoryType) => {
