@@ -2,7 +2,7 @@
 import { memo, useRef, useState, useCallback, lazy, Suspense } from "react";
 import { cn } from "@hi/common";
 import useCouponsStore from "@/components/store/useCouponsStore";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { compressImage } from "@/components/utils/helper";
 
 import useMenuPageStore from "@/components/store/useMenuStorage";

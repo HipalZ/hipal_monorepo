@@ -50,7 +50,6 @@ const Business = () => {
             leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
-            isIconBusinessShow={false}
           />
         </section>
         <section className="business_gradient_hero_section">

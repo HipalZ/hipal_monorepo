@@ -28,7 +28,7 @@ const MemoMinimumBillCondition = () => {
       setMinimumBillAmount(value);
       if (value <= couponPrice) {
         setErrorMessage(
-          "Minimum bill amount should be greater than coupon price.",
+          `Minimum bill amount (${couponPrice}) should be greater than coupon price.`,
         );
       } else {
         setErrorMessage("");

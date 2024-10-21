@@ -74,8 +74,6 @@ const MemoTerms = () => {
     "Other T&C may apply.",
   ].filter(Boolean);
 
-  console.log(termsAndConditions);
-
   const handleAddCondition = useCallback(() => {
     if (newCondition.trim() !== "" && termsAndConditions.length < MAX_TERMS) {
       setTermsAndConditions([...termsAndConditions, newCondition]);
@@ -102,7 +100,7 @@ const MemoTerms = () => {
   return (
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col pb-[7rem]">
-        {selectedGroupIds.length === 0 && selectedUserIds.length === 0 ? (
+        {selectFlow === "GRAB" ? (
           <article className="flex items-center gap-2">
             <input
               type="checkbox"

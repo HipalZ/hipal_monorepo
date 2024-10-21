@@ -121,15 +121,12 @@ const MemoShare = () => {
       return;
     }
 
-    const availability =
-      when === "birthdayweek" || when === "birthdaymonth"
-        ? { when: "allthetime", customDays: [], startTime: 0, endTime: 0 }
-        : {
-            when: when,
-            customDays: customDays,
-            startTime: startTime,
-            endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
-          };
+    const availability = {
+      when: customDays.length > 0 ? "custom" : "allthetime",
+      customDays: customDays,
+      startTime: startTime,
+      endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
+    };
 
     const eligibleUser = couponForEveryOne
       ? { allUsers: true }

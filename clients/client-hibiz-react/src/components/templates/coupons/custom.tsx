@@ -28,22 +28,20 @@ const MemoCustom = () => {
     promoteOnBill,
     promote,
     cashbackAvailable,
-    selectedUserIds,
-    selectedGroupIds,
     setPromoteOnBill,
     setPromote,
     setCashbackAvailable,
     setSelectedPage,
+    selectFlow,
   } = useCouponsStore((s) => ({
     promoteOnBill: s.promoteOnBill,
     promote: s.promote,
     cashbackAvailable: s.cashbackAvailable,
-    selectedUserIds: s.selectedUserIds,
-    selectedGroupIds: s.selectedGroupIds,
     setPromoteOnBill: s.setPromoteOnBill,
     setPromote: s.setPromote,
     setCashbackAvailable: s.setCashbackAvailable,
     setSelectedPage: s.setSelectedPage,
+    selectFlow: s.selectFlow,
   }));
 
   const [selectedPreview, setSelectedPreview] = useState("beforeGrabbing");
@@ -116,36 +114,33 @@ const MemoCustom = () => {
           </div>
 
           <div className="flex flex-col gap-4 px-4">
-            {selectedUserIds?.length === 0 &&
-              selectedGroupIds?.length === 0 && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="promoteOnBill"
-                      checked={promoteOnBill}
-                      className="text-black rounded"
-                      onChange={(e) => setPromoteOnBill(e.target.checked)}
-                    />
-                    <label htmlFor="promoteOnBill">
-                      Promote this after every payment bill
-                    </label>
-                  </div>
+            {selectFlow === "GRAB" && (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="promoteOnBill"
+                    checked={promoteOnBill}
+                    className="text-black rounded"
+                    onChange={(e) => setPromoteOnBill(e.target.checked)}
+                  />
+                  <label htmlFor="promoteOnBill">
+                    Promote this after every payment bill
+                  </label>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="promote"
-                      checked={promote}
-                      className="text-black rounded"
-                      onChange={(e) => setPromote(e.target.checked)}
-                    />
-                    <label htmlFor="promote">
-                      Promote this in explore page
-                    </label>
-                  </div>
-                </>
-              )}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="promote"
+                    checked={promote}
+                    className="text-black rounded"
+                    onChange={(e) => setPromote(e.target.checked)}
+                  />
+                  <label htmlFor="promote">Promote this in explore page</label>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center gap-2">
               <input
