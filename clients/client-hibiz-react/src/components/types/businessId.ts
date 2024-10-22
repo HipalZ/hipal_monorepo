@@ -8,6 +8,9 @@ import HiPeopleImage from "@/assets/services/hi ppl.png";
 import LoyaltyImage from "@/assets/services/loyalty.png";
 import MenuImage from "@/assets/services/menu.png";
 import StaffImage from "@/assets/services/staff.png";
+import Review from "@/assets/services/review.png";
+import Themes from "@/assets/services/themes.png";
+import Settings from "@/assets/services/setting.png";
 export interface ICardButton {
   Icon: React.ElementType;
   text: string;
@@ -31,7 +34,7 @@ export interface ILiteVersionCardButton {
 
 export const liteVersionCardButtons: ILiteVersionCardButton[] = [
   {
-    image: Love,
+    image: Themes,
     text: "Themes ",
     description: "Make your app look good",
     navigateTo: "businessControl",
@@ -55,7 +58,7 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     navigateTo: "hiSite",
   },
   {
-    image: Love,
+    image: Settings,
     text: "Settings",
     description: "All settings in one place",
     navigateTo: "settings",
@@ -85,10 +88,10 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     navigateTo: "coupons",
   },
   {
-    image: Love,
-    text: "WhatsApp",
-    description: "Create Manage Your WhatsApp",
-    navigateTo: "whatsapp",
+    image: Review,
+    text: "Reviews",
+    description: "Manage your reviews",
+    navigateTo: "reviews",
   },
 ];
 export interface AccessControlMapping {
