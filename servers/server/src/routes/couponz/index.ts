@@ -44,7 +44,7 @@ function switchDayEligibility(
   }
 }
 
-const createAndScheduleCoupon = async (
+export const createAndScheduleCoupon = async (
   userId: string,
   businessId: string,
   expiryHour: number,

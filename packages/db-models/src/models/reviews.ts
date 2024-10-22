@@ -54,8 +54,13 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       type: Number,
     },
     order_id: {
-      type: String,
+      type: ObjectId,
+      ref: "Order",
       required: true,
+    },
+    seen: {
+      type: Boolean,
+      default: false,
     },
   },
   {
