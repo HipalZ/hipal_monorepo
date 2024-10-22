@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import type {
   businessType,
   exploreLayout,
@@ -740,4 +740,26 @@ export interface ICoupon {
   conditions: Conditions;
   __v: number;
   links: Link[];
+}
+
+export interface WhatsAppTemplateComponent {
+  type: string;
+  format?: string; // Optional, only applies to HEADER component
+  text?: string;
+  buttons?: WhatsAppTemplateButton[];
+}
+
+export interface WhatsAppTemplateButton {
+  type: string;
+  text: string;
+}
+
+export interface WhatsAppTemplate {
+  name: string;
+  parameter_format: string;
+  components: WhatsAppTemplateComponent[];
+  language: string;
+  status: string;
+  category: string;
+  id: string;
 }

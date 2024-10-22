@@ -32,15 +32,11 @@ const Business = () => {
   );
 
   const handleBack = useCallback(() => {
-    startTransition(() => {
-      navigate("/app/business/");
-    });
+    navigate("/app/business/");
   }, [navigate]);
 
   const goToBusinessControl = useCallback(() => {
-    startTransition(() => {
-      navigate(`/app/business/${businessId}/businessControl`);
-    });
+    navigate(`/app/business/${businessId}/businessControl`);
   }, [navigate]);
 
   return (

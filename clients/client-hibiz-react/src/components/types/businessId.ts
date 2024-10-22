@@ -84,6 +84,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your coupons",
     navigateTo: "coupons",
   },
+  {
+    image: Love,
+    text: "WhatsApp",
+    description: "Create Manage Your WhatsApp",
+    navigateTo: "whatsapp",
+  },
 ];
 export interface AccessControlMapping {
   [key: string]: string;
