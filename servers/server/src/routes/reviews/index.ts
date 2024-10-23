@@ -126,6 +126,7 @@ const couponCreated = async (
           urlCode: uniqueOrderId,
         },
       ],
+
       {
         session,
       },
@@ -594,7 +595,7 @@ const reviewRouter = new Hono()
 
         const user = await User.findById(userId);
         if (loyaltyId) {
-          ///add coins
+          //add coins
           const loyaltyUser = await UserReward.findOne({
             userId,
             loyaltyId,
@@ -629,18 +630,10 @@ const reviewRouter = new Hono()
             loyaltySetting?.rewardLimit || 4999,
           );
 
-          await UserReward.findOneAndUpdate(
-            { userId, loyaltyId },
-            {
-              $inc: { rewards: reward.finalReward },
-            },
-            session,
-          );
-
           // send whatsapp message
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
-          const body = `Hi ${user?.name},\nWe understand that we could not give you a great experience and we look forward on working towards them. \nWe thank you for your valuable feedback.\n We also are extending you a small token by gifting you **${coins} Coinz** check your rewardz here \nhttps://hipal-test.hipalz.com/${customLink}/explore?tableName=review \n Please review us on google ${placeUrl}`;
+          const body = `Hi **${user?.name}**,\n\nWe understand that we could not give you a great experience and we look forward on working towards them. We thank you for your valuable feedback.\n\nWe also are extending you a small token by gifting you **${coins} Coinz** check your rewardz here.\nhttps://hipal-test.hipalz.com/${customLink}/explore?tableName=review \n\nPlease review us on google ${placeUrl}`;
           const whatappConfig = {
             method: "post",
             url: "https://graph.facebook.com/v21.0/365941956611521/messages",
@@ -656,14 +649,25 @@ const reviewRouter = new Hono()
                 body: body,
               },
             },
+            session: session,
           };
 
-          await axios(whatappConfig);
+          const res = await axios(whatappConfig);
 
-          return respond(c, "Coins added successfully", false, 200, {});
+          if (res.status === 200) {
+            await UserReward.findOneAndUpdate(
+              { userId, loyaltyId },
+              {
+                $inc: { rewards: reward.finalReward },
+              },
+              session,
+            );
+            return respond(c, "Coins added successfully", false, 200, {});
+          }
+
+          return respond(c, "Failed to send message", true, 400, {});
         }
-        ///create coupon
-
+        //create coupon
         if (!loyaltyId) {
           const createCoupon = await couponCreated(
             businessId,
@@ -677,7 +681,7 @@ const reviewRouter = new Hono()
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
 
-          const body = `Hi ${user?.name},\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\nMake sure to use our loyalty program to grab exclusive rewards on every billing.\nWe would love for you to share your experience on Google & win more coinz. It really helps us! \nHere your coupon link ${createCoupon.link}  \n Please review us on google ${placeUrl}`;
+          const body = `Hi **${user?.name}**,\n\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\n\nMake sure to use our loyalty program to grab exclusive rewards on every billing.\n\nWe would love for you to share your experience on Google & win more coinz. It really helps us!. \n\nHere your coupon link ${createCoupon.link}  \n\n Please review us on google ${placeUrl}`;
           const whatappConfig = {
             method: "post",
             url: "https://graph.facebook.com/v21.0/365941956611521/messages",
@@ -693,8 +697,18 @@ const reviewRouter = new Hono()
             },
           };
 
-          await axios(whatappConfig);
-          return respond(c, " successfully", false, 200, {});
+          const res = await axios(whatappConfig);
+          if (res.status === 200) {
+            return respond(
+              c,
+              "coupon created and send to what app successfully",
+              false,
+              200,
+              {},
+            );
+          }
+
+          return respond(c, "Failed to send message", true, 400, {});
         }
       });
     },

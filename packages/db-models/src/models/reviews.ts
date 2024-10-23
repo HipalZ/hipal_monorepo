@@ -48,6 +48,7 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     staffs: {
       type: [ObjectId],
       ref: "User",
+      default: [],
     },
     date: {
       required: true,
