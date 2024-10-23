@@ -573,6 +573,7 @@ const reviewRouter = new Hono()
         businessName: z.string().optional(),
         placeUrl: z.string().optional(),
         customLink: z.string().optional(),
+        message: z.string().min(1).max(500),
       }),
     ),
 
@@ -591,6 +592,7 @@ const reviewRouter = new Hono()
           couponEndDate,
           businessName,
           customLink,
+          message,
         } = requestData;
 
         const user = await User.findById(userId);
@@ -636,7 +638,7 @@ const reviewRouter = new Hono()
           // send whatsapp message
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
-          const body = `Hi **${user?.name}**,\n\nWe understand that we could not give you a great experience and we look forward on working towards them. We thank you for your valuable feedback.\n\nWe also are extending you a small token by gifting you **${coins} Coinz** check your rewardz here.\nhttps://hipal-test.hipalz.com/${customLink}/explore?tableName=review \n\nPlease review us on google ${placeUrl?.placeUrl}`;
+          const body = `${message}.\nhttps://hipal-test.hipalz.com/${customLink}/explore?tableName=review`;
           const whatappConfig = {
             method: "post",
             url: "https://graph.facebook.com/v21.0/365941956611521/messages",
@@ -684,7 +686,7 @@ const reviewRouter = new Hono()
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
 
-          const body = `Hi **${user?.name}**,\n\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\n\nMake sure to use our loyalty program to grab exclusive rewards on every billing.\n\nWe would love for you to share your experience on Google & win more coinz. It really helps us!. \n\nHere your coupon link ${createCoupon.link}  \n\n Please review us on google ${placeUrl?.placeUrl}`;
+          const body = `${message}\n\nHere your coupon link ${createCoupon.link}`;
           const whatappConfig = {
             method: "post",
             url: "https://graph.facebook.com/v21.0/365941956611521/messages",
@@ -717,7 +719,7 @@ const reviewRouter = new Hono()
         const token =
           "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
 
-        const body = `Hi **${user?.name}**,\n\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\n\nMake sure to use our loyalty program to grab exclusive rewards on every billing.\n\nWe would love for you to share your experience on Google & win more coinz. It really helps us!.\n\n Please review us on google ${placeUrl?.placeUrl}`;
+        const body = `${message}.\n\n Please review us on google ${placeUrl?.placeUrl}`;
         const whatappConfig = {
           method: "post",
           url: "https://graph.facebook.com/v21.0/365941956611521/messages",
