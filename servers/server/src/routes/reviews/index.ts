@@ -713,6 +713,38 @@ const reviewRouter = new Hono()
 
           return respond(c, "Failed to send message", true, 400, {});
         }
+
+        const token =
+          "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+
+        const body = `Hi **${user?.name}**,\n\nWe are so glad that you loved our service. We work really hard to make sure that we make your every visit special.\n\nMake sure to use our loyalty program to grab exclusive rewards on every billing.\n\nWe would love for you to share your experience on Google & win more coinz. It really helps us!.\n\n Please review us on google ${placeUrl?.placeUrl}`;
+        const whatappConfig = {
+          method: "post",
+          url: "https://graph.facebook.com/v21.0/365941956611521/messages",
+          headers: { Authorization: `Bearer ${token}` },
+          data: {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: `${user?.phone}`,
+            type: "text",
+            text: {
+              body: body,
+            },
+          },
+        };
+
+        const res = await axios(whatappConfig);
+        if (res.status === 200) {
+          return respond(
+            c,
+            "coupon created and send to what app successfully",
+            false,
+            200,
+            {},
+          );
+        }
+
+        return respond(c, "Failed to send message", true, 400, {});
       });
     },
   )
