@@ -322,32 +322,39 @@ const reviewRouter = new Hono()
       return respond(c, "review post successFully", false, 200, {});
     },
   )
-  .post(
+  .get(
     "/staffReviews",
     zValidator(
-      "json",
+      "query",
       z.object({
         businessId: z.string().min(1).max(100),
-        from: z.number().optional(),
-        to: z.number().optional(),
-        best: z.boolean().optional(),
-        worst: z.boolean().optional(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        best: z.string().optional(),
+        worst: z.string().optional(),
       }),
     ),
 
     async (c) => {
-      const requestData = await c.req.json();
-      let { businessId, from, to, best, worst } = requestData;
+      const { businessId, from, to, best, worst } = c.req.query() as {
+        businessId: string;
+        from?: string;
+        to?: string;
+        best?: string;
+        worst?: string;
+      };
+      const fromDate = from ? Number(from) : undefined;
+      const toDate = to ? Number(to) : undefined;
 
       const currentTime = Date.now();
-      const fifteenDaysAgo = currentTime - 15 * 24 * 60 * 60 * 1000;
+      const fiveDaysAgo = currentTime - 15 * 24 * 60 * 60 * 1000;
 
-      from = from ?? fifteenDaysAgo;
-      to = to ?? currentTime;
+      const fromTimestamp = fromDate ?? fiveDaysAgo;
+      const toTimestamp = toDate ?? currentTime;
 
       const reviews = await Reviews.find({
         businessId,
-        date: { $gte: new Date(from), $lte: new Date(to) },
+        date: { $gte: new Date(fromTimestamp), $lte: new Date(toTimestamp) },
         staffs: { $exists: true, $ne: [] },
       }).populate({
         path: "staffs",
@@ -377,11 +384,11 @@ const reviewRouter = new Hono()
 
       let res = Object.values(reviewObj);
 
-      if (best) {
+      if (best === "true") {
         res = res.filter((staff) => staff[5] > 0 && staff[1] === 0);
       }
 
-      if (worst) {
+      if (worst === "true") {
         res = res.filter((staff) => staff[1] > 0 && staff[5] === 0);
       }
 
