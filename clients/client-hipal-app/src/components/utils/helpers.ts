@@ -933,6 +933,6 @@ export const messages = [
   "Get Me Water Bottles",
   "Get Me Tissue Paper",
   "Please Settle My Table",
-  "Take My Order",
+  "Please Take My Order",
   "Other",
 ];

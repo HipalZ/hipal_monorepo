@@ -7,6 +7,17 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 import MemoAlertVariant from "@/components/atoms/alertVariant";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
+import { useCart } from "@/components/store/useCart";
+
+function generateCartItemId(dishId, portionId, extras) {
+  const sortedExtras = [...extras]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((e) => `${e.id}:${e.quantity}`)
+    .join("|");
+  return `${dishId}_${portionId || "no_portion"}_${
+    sortedExtras || "no_extras"
+  }`;
+}
 
 const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   const {
@@ -24,6 +35,8 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     resetSelections,
     updateCartItem,
   } = useCartStore();
+
+  const { setShowCart, showCart } = useCart();
 
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
@@ -47,7 +60,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         return;
       }
       const item = {
-        id: addDish._id,
+        id: generateCartItemId(addDish._id, null, []),
         dish: addDish,
         portion: null,
         extras: [],
@@ -61,7 +74,14 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
 
   const handleAddToCart = useCallback(() => {
     const item = {
-      id: selectedDish._id,
+      id: generateCartItemId(
+        selectedDish._id,
+        selectedPortion?._id || null,
+        selectedChoices.map((choice) => ({
+          id: choice.id,
+          quantity: choice.quantity,
+        })),
+      ),
       dish: selectedDish,
       portion: selectedPortion,
       extras: selectedChoices,
@@ -71,43 +91,60 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     closeModal();
   }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal]);
 
-  const handleIncreaseQuantity = useCallback(
-    (item) => {
-      updateCartItem({ ...item, quantity: item.quantity + 1 });
-    },
-    [updateCartItem],
+  const cartItemsForDish = cart.filter(
+    (item) => item.dish._id === dishData._id,
   );
 
-  const handleDecreaseQuantity = useCallback(
-    (item) => {
+  const totalQuantity = cartItemsForDish.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
+
+  const handleIncreaseQuantity = useCallback(() => {
+    if (cartItemsForDish.length > 0) {
+      const item = cartItemsForDish[0];
+      setSelectedDish(item.dish);
+      if (
+        item?.dish?.portions?.length > 0 ||
+        item?.dish?.addOnIds?.length > 0
+      ) {
+        setCartPopup("BOTTOM_PANEL");
+        handleOpenModal();
+        return;
+      }
+      updateCartItem({ ...item, quantity: item.quantity + 1 });
+    }
+  }, [cartItemsForDish, updateCartItem]);
+
+  const handleDecreaseQuantity = useCallback(() => {
+    if (cartItemsForDish.length > 0) {
+      const item = cartItemsForDish[0];
+      setSelectedDish(item.dish);
+      if (
+        item?.dish?.portions?.length > 0 ||
+        item?.dish?.addOnIds?.length > 0
+      ) {
+        setShowCart(!showCart);
+        return;
+      }
       if (item.quantity > 1) {
         updateCartItem({ ...item, quantity: item.quantity - 1 });
       } else {
         removeFromCart(item.id);
       }
-    },
-    [updateCartItem, removeFromCart],
-  );
-
-  const cartItem = cart.find((item) => item?.id === dishData?._id);
-
+    }
+  }, [cartItemsForDish, updateCartItem, removeFromCart]);
   return (
     <>
-      {cartItem ? (
+      {totalQuantity > 0 ? (
         <div className="relative z-10 flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
-          <button
-            type="button"
-            onClick={() => handleDecreaseQuantity(cartItem)}
-          >
+          <button type="button" onClick={handleDecreaseQuantity}>
             <HiMinusSm size={16} />
           </button>
           <span className="w-1/3 px-2 text-xs font-bold text-center">
-            {cartItem.quantity}
+            {totalQuantity}
           </span>
-          <button
-            type="button"
-            onClick={() => handleIncreaseQuantity(cartItem)}
-          >
+          <button type="button" onClick={handleIncreaseQuantity}>
             <HiPlusSm size={16} />
           </button>
         </div>

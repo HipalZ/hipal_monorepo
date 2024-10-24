@@ -88,7 +88,7 @@ function RecommendedDishes({
                             className="object-cover rounded-md aspect-[4/3]"
                           />
                         ) : (
-                          <PlaceholderImg className="w-30 h-30 rounded-2xl" />
+                          <PlaceholderImg className="!w-[5.5rem] !h-[5.5rem] rounded-2xl" />
                         )}
                       </button>
                       <div className="mt-6 overflow-hidden text-xs font-medium text-left capitalize whitespace-nowrap overflow-ellipsis">
