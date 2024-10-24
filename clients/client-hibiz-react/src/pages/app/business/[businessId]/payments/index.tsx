@@ -30,7 +30,6 @@ const Payments = () => {
           title="Payments"
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}
-          isIconBusinessShow={false}
         />
       </article>
 

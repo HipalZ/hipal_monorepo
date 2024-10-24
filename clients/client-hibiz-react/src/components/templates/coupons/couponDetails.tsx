@@ -59,7 +59,6 @@ const MemoCouponDetails = () => {
     }
 
     if (!isNoValidity) {
-      console.log(couponStartDate, couponEndDate);
       if (!couponStartDate || !couponEndDate) {
         return showToast("Please select the validity of the coupon!");
       }

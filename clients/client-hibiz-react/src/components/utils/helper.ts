@@ -5,7 +5,7 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import veg from "@/assets/dishTypes/veg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import axios from "@/axios";
-import { DishTypeEnum } from "@hi/db-models/src/validators";
+import { DishTypeEnum, type ReviewsType } from "@hi/db-models/src/validators";
 import { type ClassValue, clsx } from "clsx";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
 import type { ChangeEvent } from "react";
@@ -553,4 +553,13 @@ export const truncateText = (text, maxLength) => {
     return text?.substring(0, maxLength) + "...";
   }
   return text;
+};
+
+export const getReviewAttributes = (review: ReviewsType) => {
+  const attributes = [];
+  if (review?.foodTaste === 1) attributes.push("Food");
+  if (review?.ambience === 1) attributes.push("Ambience");
+  if (review?.hygiene === 1) attributes.push("Hygiene");
+  if (review?.service === 1) attributes.push("Service");
+  return attributes;
 };

@@ -4,7 +4,6 @@ import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
-import { GiKnifeFork } from "react-icons/gi";
 import { InView } from "react-intersection-observer";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";

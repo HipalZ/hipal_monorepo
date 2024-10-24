@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback, useState } from "react";
+import { memo, startTransition, useCallback } from "react";
 import HiPeopleLogo from "@/assets/hibizNewLogo.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -13,7 +13,6 @@ import { PiSealWarningFill } from "react-icons/pi";
 
 const Business = () => {
   const setSelectedIcon = useSelectedIcon((s) => s.setSelectedIcon);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const businessData = useBusinessData((s) => s.businessData);
@@ -97,38 +96,37 @@ const Business = () => {
             </center>
           )}
           <section className="grid grid-cols-2 gap-2 p-2 mx-auto sm:p-4 md:p-6 sm:gap-4 md:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-7xl">
-            {liteVersionCardButtons.map((item, index) => {
+            {liteVersionCardButtons.map((item) => {
               const isDisabled =
                 item.navigateTo !== "businessControl" &&
                 !businessData?.themeApplied;
 
               return (
-                <motion.button
-                  type="button"
-                  onClick={() => handleClick(item.navigateTo || "")}
+                <motion.article
+                  onClick={() =>
+                    !isDisabled && handleClick(item.navigateTo || "")
+                  }
                   key={item.text}
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
                   className={cn(
                     "relative overflow-hidden rounded-2xl text-left aspect-square w-full",
                     "transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary",
                     {
-                      "bg-gray-400 cursor-not-allowed opacity-70": isDisabled,
+                      "bg-gray-400 cursor-not-allowed opacity-70 pointer-events-none":
+                        isDisabled,
                     },
                   )}
-                  disabled={isDisabled}
                   whileHover={{ y: -8 }}
                   aria-label={`${item.text} - ${
                     isDisabled ? "Activate after Themes" : item.description
                   }`}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#FCD6CF80] via-[#F3D0F9] to-[#D9CCFF]">
-                    <div className="absolute inset-0 bg-gradient-to-tl from-[#7F66FE70] via-transparent to-transparent">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#FCD6CF80] via-[#F3D0F950] to-[#D9CCFF50]">
+                    <div className="absolute inset-0 bg-gradient-to-tl from-[#7F66FE50] via-transparent to-transparent">
                       <div className="relative w-full h-full">
                         <img
                           src={item.image}
                           alt=""
-                          className="relative z-0 object-contain w-full h-full transition-transform duration-300 md:object-cover filter brightness-110 contrast-110"
+                          className="relative z-0 object-right-top object-contain w-full h-full transition-transform duration-300 filter brightness-110 saturate-[1.25] contrast-110"
                         />
                         <div className="absolute inset-0 transition-opacity duration-300" />
                       </div>
@@ -149,7 +147,7 @@ const Business = () => {
                       {isDisabled ? "Activate after Themes" : item.description}
                     </p>
                   </div>
-                </motion.button>
+                </motion.article>
               );
             })}
           </section>

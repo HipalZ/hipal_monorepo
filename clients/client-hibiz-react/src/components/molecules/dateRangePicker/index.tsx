@@ -71,7 +71,7 @@ const DateRangePicker: React.FC = memo(() => {
   }, []);
 
   return (
-    <div className="flex items-center justify-between px-6 pt-4 space-x-2">
+    <div className="flex items-center justify-between pt-4 pl-4 space-x-2">
       <div className="sticky top-0">
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
@@ -120,8 +120,14 @@ const DateRangePicker: React.FC = memo(() => {
       </div>
       <div className="mx-6 date-picker-container">
         {isCustomDate && (
-          <PopUp show={isCustomDate} onClose={() => setIsCustomDate(false)}>
-            <div className="flex justify-center pb-[20vh] pt-6 date-picker-container item-center">
+          <PopUp
+            hide
+            show={isCustomDate}
+            onClose={() => setIsCustomDate(false)}
+            width="  w-full max-w-[30rem]"
+            height="h-[100dvh] md:h-auto"
+          >
+            <div className="flex justify-center pt-6 date-picker-container item-center">
               <DatePicker
                 selected={startDate}
                 onChange={(dates: any) => {
@@ -134,6 +140,7 @@ const DateRangePicker: React.FC = memo(() => {
                 }}
                 startDate={startDate}
                 endDate={endDate}
+                maxDate={new Date()}
                 selectsRange
                 inline
               />

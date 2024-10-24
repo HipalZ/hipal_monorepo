@@ -130,8 +130,8 @@ const MemoizeDishAndCat = () => {
     { icon: Hi, text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
   ];
 
-  const dynamicHeading = useCallback(()=>{
-    switch(selectedPage){
+  const dynamicHeading = useCallback(() => {
+    switch (selectedPage) {
       case "DISHES":
         return "Dishes";
       case "MAIN_CATEGORY":
@@ -143,7 +143,7 @@ const MemoizeDishAndCat = () => {
       default:
         return "";
     }
-  },[selectedPage])
+  }, [selectedPage]);
 
   const removeAllUnwanted = useCallback((page: MenuPageType, text: string) => {
     const normalize = (str: string) =>
@@ -169,7 +169,6 @@ const MemoizeDishAndCat = () => {
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
             rightImage={Hi}
-            isIconBusinessShow={false}
           />
         </article>
         <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
