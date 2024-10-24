@@ -30,19 +30,6 @@ const CartItem = ({ cartItem }: CartItemProp) => {
     cartItem.dish.images[0] ||
     cartItem.dish.images[1] ||
     cartItem.dish.images[2];
-  const [showDescription, setShowDescription] = useState(false);
-  const [selectedDish, setSelectedDish] = useState<DishType>({} as DishType);
-
-  const openModal = (dishData: DishType) => {
-    setSelectedDish(dishData);
-    setShowDescription(true);
-  };
-
-  const closeModal = () => {
-    setSelectedDish({} as DishType);
-    setShowDescription(false);
-  };
-
   const increaseQuantity = () => {
     updateCartItem({ ...cartItem, quantity: cartItem.quantity + 1 });
   };
@@ -55,31 +42,46 @@ const CartItem = ({ cartItem }: CartItemProp) => {
     }
   };
 
+  const calculateTotalPrice = () => {
+    const basePrice = cartItem.dish.price;
+    const extrasPrice = cartItem.extras.reduce(
+      (total, extra) => total + extra.price * extra.quantity,
+      0,
+    );
+
+    const totalPriceForOne = cartItem.portion
+      ? cartItem.portion.price + extrasPrice
+      : basePrice + extrasPrice;
+
+    return totalPriceForOne * cartItem.quantity;
+  };
   return (
-    <section className="flex items-center justify-between p-4 border-b">
-      <div className="flex flex-col w-[70%]">
-        <FoodType type={cartItem.dish.dishType as FOOD_TYPES} />
-        <span className="my-2 text-lg font-semibold">
-          <span>{cartItem.quantity} X</span> {cartItem.dish.name}
-        </span>
+    <section className="flex items-center justify-between py-4 pl-6 border-b">
+      <div className="flex flex-col w-[70%] space-y-1">
+        <h5 className="flex items-start gap-3 text-base font-medium leading-6 -ml-7">
+          <div className="-mr-2 scale-75">
+            <FoodType types={cartItem.dish.dishTypes} />
+          </div>
+
+          {cartItem.dish.name}
+        </h5>
         {cartItem.portion && (
-          <span className="pb-2 text-xs text-gray-600">
+          <span className="text-xs text-primary opacity-80">
             Portion: {cartItem.portion.name}
           </span>
         )}
         {cartItem.extras.length > 0 && (
-          <span className="pb-2 text-xs text-gray-600">
+          <span className="text-xs text-primary opacity-80 ">
             Extras: {cartItem.extras.map((extra) => extra.name).join(", ")}
           </span>
         )}
-        <span
-          onClick={() => openModal(cartItem.dish)}
-          className="bg-base-100/50 text-center px-2 py-0.25 w-12 rounded-full border-1 border border-primary text-sm cursor-pointer"
-        >
-          Info
-        </span>
+        <div className="text-left">
+          <span className="block text-sm font-medium text-primary">
+            ₹{calculateTotalPrice().toFixed(2)}
+          </span>
+        </div>
       </div>
-      <div className="relative flex items-center justify-between">
+      <div className="relative flex items-center justify-between mb-2 -mt-2">
         {imageUrl ? (
           <ShimmerImage
             src={imageUrl}
@@ -110,13 +112,6 @@ const CartItem = ({ cartItem }: CartItemProp) => {
             </button>
           </div>
         </div>
-        {showDescription && (
-          <DishData show={showDescription} onClose={closeModal}>
-            <div className="relative">
-              <DishPopup dishData={selectedDish} />
-            </div>
-          </DishData>
-        )}
       </div>
     </section>
   );

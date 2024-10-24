@@ -4,14 +4,27 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export type REPEAT = "BOTTOM_PANEL" | "ADD_PREVIOUS" | "ADD_NEW" | "";
 
-
 interface ICartItem {
-    id: string;
-    dish: DishType;
-    portion: { _id: number; name: string; price: number } | null;
-    extras: Array<{ id: string; name: string; quantity: number; price: number }>;
-    quantity: number;
-  }
+  id: string;
+  dish: DishType;
+  portion: { _id: number; name: string; price: number } | null;
+  extras: Array<{ id: string; name: string; quantity: number; price: number }>;
+  quantity: number;
+}
+
+function generateCartItemId(
+  dishId: string,
+  portionId: string | null,
+  extras: Array<{ id: string; quantity: number }>,
+): string {
+  const sortedExtras = [...extras]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((e) => `${e.id}:${e.quantity}`)
+    .join("|");
+  return `${dishId}_${portionId || "no_portion"}_${
+    sortedExtras || "no_extras"
+  }`;
+}
 
 interface ICartStore {
   openBottomPanel: boolean;
@@ -80,13 +93,13 @@ export const useCartStore = create(
         set({ selectedPortion: portion });
       },
 
-        resetSelections: () => {
-            set({
-            selectedDish: {} as DishType,
-            selectedPortion: null,
-            selectedChoices: [],
-            });
-        },
+      resetSelections: () => {
+        set({
+          selectedDish: {} as DishType,
+          selectedPortion: null,
+          selectedChoices: [],
+        });
+      },
 
       selectedChoices: [],
       setSelectedChoice: (choice) => {
@@ -105,29 +118,47 @@ export const useCartStore = create(
         }));
       },
 
-        cart: [],
-        setCartEmpty: () => {
-          set({ cart: [] });
-        },
-        addToCart: (item) => {
-          set((state) => {
-            return {
-              cart: [...state.cart, item],
-            };
-          });
-        },
+      cart: [],
+      setCartEmpty: () => {
+        set({ cart: [] });
+      },
+      addToCart: (newItem) => {
+        const itemId = generateCartItemId(
+          newItem.dish._id,
+          newItem.portion?._id || null,
+          newItem.extras.map((e) => ({ id: e.id, quantity: e.quantity })),
+        );
 
-        updateCartItem: (item) => {
-            set((state) => ({
-              cart: state.cart.map((i) => (i.id === item.id ? item : i)),
-            }));
-          },
+        newItem.id = itemId;
 
-        removeFromCart: (id) => {
-            set((state) => ({
-              cart: state.cart.filter((i) => i.id !== id),
-            }));
-          },
+        set((state) => {
+          const existingItemIndex = state.cart.findIndex(
+            (item) => item.id === itemId,
+          );
+
+          if (existingItemIndex !== -1) {
+            // Item exists, increase its quantity
+            const updatedCart = [...state.cart];
+            updatedCart[existingItemIndex].quantity += newItem.quantity;
+            return { cart: updatedCart };
+          } else {
+            // Item does not exist, add to cart
+            return { cart: [...state.cart, newItem] };
+          }
+        });
+      },
+
+      updateCartItem: (item) => {
+        set((state) => ({
+          cart: state.cart.map((i) => (i.id === item.id ? item : i)),
+        }));
+      },
+
+      removeFromCart: (id) => {
+        set((state) => ({
+          cart: state.cart.filter((i) => i.id !== id),
+        }));
+      },
 
       dishes: {} as DishType,
     }),

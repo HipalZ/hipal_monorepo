@@ -11,6 +11,7 @@ import { useSearch } from "@/components/store/useSearch";
 import type { TimingType } from "@/components/types/businessData";
 import EmblaCarouselPreview from "../embla/emblaCarousalPreview";
 import type { EmblaOptionsType } from "embla-carousel";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -20,6 +21,7 @@ interface IDishesProps {
 
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, timings } = props;
+  const { setDishes } = useDishesStore();
   const { isSearchActive } = useSearch();
   const {
     isActiveDishType,
@@ -124,6 +126,21 @@ const DishesList: FC<IDishesProps> = (props) => {
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [isActiveCategory]);
+
+  useMemo(() => {
+    const allDishes = subTypes.reduce(
+      (acc: DishType[], category: CategoryType) => {
+        return acc.concat(
+          category.dishIds.filter(
+            (dish: DishType) => dish.visibility && !dish.isDeleted,
+          ),
+        );
+      },
+      [],
+    );
+    setDishes(allDishes);
+    return allDishes;
+  }, [subTypes, isActiveDishType]);
 
   return (
     <>
