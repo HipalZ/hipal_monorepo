@@ -354,6 +354,14 @@ const settingsRouter = new Hono()
         };
       }
 
+      if (businessId === "66b4cf43c88e8035f92d9e50") {
+        merchant = {
+          businessId: "66b4cf43c88e8035f92d9e50",
+          razorpayMerchantId: "P8r2y6iMlbTAn8",
+          razorpayKeyId: "rzp_live_CWW534Oc5LX3MV",
+        };
+      }
+
       const razorpayObject = {
         businessId: merchant?.businessId,
         razorpayKeyId: merchant?.razorpayKeyId,

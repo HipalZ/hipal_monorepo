@@ -3,7 +3,6 @@ import {
   AddOn,
   Banner,
   Business,
-  BusinessSettings,
   Category,
   Dish,
   LoyaltySettings,
@@ -11,7 +10,6 @@ import {
   Permissions,
   Role,
   Theme,
-  UserReward,
 } from "@hi/db-models";
 import {
   BranchSchema,
@@ -187,41 +185,6 @@ const businessesRouter = new Hono()
                 { session },
               );
             }
-          }
-
-          if (rewards) {
-            const loyaltySettings = await LoyaltySettings.findOne({
-              businessId: parentOutLetId,
-            }).lean();
-            if (!loyaltySettings)
-              return respond(c, "loyaltySettings not found", true, 404, {});
-            delete loyaltySettings._id;
-            await LoyaltySettings.create(
-              [{ ...loyaltySettings, businessId: currentBusinessId }],
-              { session },
-            );
-
-            const loyaltyUsers = await UserReward.find({
-              loyaltyId: parentOutLetId,
-            }).lean();
-            for (const user of loyaltyUsers) {
-              delete user._id;
-              user.loyaltyId = currentBusinessId.toString();
-            }
-            await UserReward.insertMany(loyaltyUsers, { session });
-          }
-
-          if (paymentAndBusinessSettings) {
-            const businessSetting = await BusinessSettings.findOne({
-              businessId: parentOutLetId,
-            }).lean();
-            if (!businessSetting)
-              return respond(c, "businessSetting not found", true, 404, {});
-            delete businessSetting._id;
-            await BusinessSettings.create(
-              [{ ...businessSetting, businessId: currentBusinessId }],
-              { session },
-            );
           }
         }
 
