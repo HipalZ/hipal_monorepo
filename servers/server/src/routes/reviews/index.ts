@@ -563,11 +563,23 @@ const reviewRouter = new Hono()
       "json",
       z.object({
         userId: z.string().min(1).max(100),
-        loyaltyId: z.string().min(1).max(100).optional(),
-        coins: z.number().optional(),
-        password: z.number().optional(),
+        loyaltyId: z.string().optional(),
+        coins: z.coerce
+          .number({
+            message: "coins is required",
+          })
+          .optional(),
+        password: z.coerce
+          .number({
+            message: "password is required",
+          })
+          .optional(),
         businessId: z.string().min(1).max(100),
-        value: z.number().optional(),
+        value: z.coerce
+          .number({
+            message: "value is required",
+          })
+          .optional(),
         couponStartDate: z.number().optional(),
         couponEndDate: z.number().optional(),
         businessName: z.string().optional(),
@@ -703,6 +715,7 @@ const reviewRouter = new Hono()
           };
 
           const res = await axios(whatappConfig);
+
           if (res.status === 200) {
             return respond(
               c,

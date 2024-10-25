@@ -15,7 +15,7 @@ const { Schema } = mongoose;
 const couponConfigSchema = new Schema({
   value: {
     type: Number,
-    required: false,
+    required: true,
   },
   discountType: {
     type: String,
