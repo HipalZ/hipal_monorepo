@@ -18,6 +18,7 @@ const MemoStylingsIcons = ({
     <aside className="flex mt-4 space-x-4">
       <article
         onClick={() => setColorWheel(!colorWheel)}
+        onKeyDown={() => setColorWheel(!colorWheel)}
         className="px-3 py-2 border border-black on_active_bounce rounded-2xl border-1"
       >
         <span>

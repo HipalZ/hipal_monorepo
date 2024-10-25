@@ -4,7 +4,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { apiRpc } from "@hi/common";
 import type { AddOnType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { startTransition, useCallback } from "react";
+import { useCallback } from "react";
 import toast from "react-hot-toast";
 
 export const useAddOnList = () => {

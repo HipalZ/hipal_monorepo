@@ -1,64 +1,21 @@
-import Paragraph from "@/components/atom/paragraph";
-import PlusButton from "@/components/atom/plusButton";
-import SubHeader from "@/components/atom/subHeader";
+import { useFooterSection } from "@/components/helpers/explorePageHelpers";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { cn, handleClick, handleImageChange } from "@/components/utils/helper";
-import { type ChangeEvent, memo, useCallback, useRef } from "react";
-import toast from "react-hot-toast";
+import { cn, handleClick } from "@/components/utils/helper";
+import { lazy, memo, useRef } from "react";
 import { CiEdit } from "react-icons/ci";
 
-const MemoFooterBanner = () => {
-  const {
-    bizInfo,
-    setBizInfo,
-    img,
-    setCropping,
-    setShowCropper,
-    setImageFiles,
-  } = useExploreStore((s) => ({
+const Paragraph = lazy(() => import("@/components/atom/paragraph"));
+const PlusButton = lazy(() => import("@/components/atom/plusButton"));
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
+const MemoFooterSection = () => {
+  const { bizInfo, img } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
-    setBizInfo: s.setBizInfo,
     img: s.img,
-    setCropping: s.setCropping,
-    setShowCropper: s.setShowCropper,
-    setImageFiles: s.setImageFiles,
   }));
-  const handleImage = async (event) => {
-    const result = await handleImageChange(event);
-    if (result) {
-      const { image, type, compressedFile } = result;
-      setCropping({ image, type });
-      setShowCropper(true);
-      setImageFiles({ [type]: compressedFile });
-    }
-  };
+  const { handleImage, handleFooterComment, handleFssaiNumber, handlegst } =
+    useFooterSection();
 
   const footerInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleFssaiNumber = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value.length >= 50)
-        return toast.error("FSSAI number should be less than 50 characters");
-      setBizInfo({ ...bizInfo, fssai: e.target.value });
-    },
-    [bizInfo],
-  );
-
-  const handlegst = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      if (e.target.value.length >= 26)
-        return toast.error("GST number should be less than 26 characters");
-      setBizInfo({ ...bizInfo, gst: e.target.value });
-    },
-    [bizInfo],
-  );
-
-  const handleFooterComment = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      setBizInfo({ ...bizInfo, footerDescription: e.target.value });
-    },
-    [bizInfo],
-  );
 
   return (
     <section className="md:flex md:space-x-10">
@@ -66,7 +23,7 @@ const MemoFooterBanner = () => {
         <SubHeader text="Footer Banner" />
         <article
           className={cn(
-            "relative rounded-xl w-full ",
+            "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
             img?.footer?.length > 0
               ? ""
               : "border-dashed border-2 border-[#8C63FF]",
@@ -161,5 +118,5 @@ const MemoFooterBanner = () => {
   );
 };
 
-const FooterBanner = memo(MemoFooterBanner);
-export default FooterBanner;
+const FooterSection = memo(MemoFooterSection);
+export default FooterSection;

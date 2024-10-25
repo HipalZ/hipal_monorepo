@@ -1,4 +1,3 @@
-import { startTransition } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -27,9 +26,7 @@ export const useLayoutThemes = () => {
         toast.success("Colors saved successfully");
         updateThemeApplied(true);
         setStep(0);
-        startTransition(() => {
-          navigate(`/app/business/${businessData?._id}`);
-        });
+        navigate(`/app/business/${businessData?._id}`);
       }
     },
     onError: (error: any) => {

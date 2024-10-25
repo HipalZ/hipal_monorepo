@@ -2,20 +2,23 @@ import { useBannerStore } from "@/components/store/useBannerStore";
 import type { BannerLayout } from "@/components/types/businessData";
 import { memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
-import SelectingCardLayout from "./selectingCardLayout";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
 
-const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
+import { lazy } from "react";
+
+const SelectingCardLayout = lazy(
+  () => import("../explorePage/selectingCardLayout"),
+);
+const MemoBannerLayout2 = ({ layout }: { layout: BannerLayout }) => {
   const { handleBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
   }));
   const { setToggleExplorePages } = useExploreStore((s) => ({
     setToggleExplorePages: s.setToggleExplorePages,
   }));
-
   return (
     <section
       onKeyDown={() => {
@@ -38,27 +41,21 @@ const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
       }}
       key={layout?._id}
     >
-      <article className="relative flex justify-center shadow-lg rounded-2xl shrink-0 max-w-[12rem]">
+      <article className="relative flex justify-start rounded-2xl shrink-0">
         <figure className="w-full max-w-[12rem]">
           <img
             src={layout?.image}
             alt={layout?.title}
-            className="rounded-xl w-[12rem] h-[11rem] bg-cover"
+            className="rounded-xl w-[12rem] h-[12rem] bg-cover"
           />
         </figure>
-        <article
-          style={{
-            background:
-              "linear-gradient(to bottom, transparent 10%, black 90%)",
-          }}
-          className="absolute bottom-0 w-full p-2 rounded-xl h-[3.5rem]"
-        >
+        <article className="absolute bottom-2 bg-emerald-100 w-100% backdrop-blur-sm max-w-[11rem] mx-2 p-2 rounded-xl h-[3.5rem]">
           <div className="flex justify-between">
-            <h1 className="text-[0.7rem] truncate text-white">
+            <h1 className="text-[0.7rem] font-semibold truncate">
               {layout?.heading}
             </h1>
             {layout?.isButton && (
-              <div className="flex items-center border border-1 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
+              <div className="flex items-center bg-red-700 px-1 py-0.5 text-[0.6rem] text-white rounded-full space-x-0.5 scale-75 -mr-1">
                 <button type="button">{layout?.buttonText}</button>{" "}
                 <span className="text-[0.6rem]">
                   <LuArrowUpRight />
@@ -73,7 +70,7 @@ const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
             }}
-            className="text-[0.5rem] text-white"
+            className="text-[0.5rem]"
           >
             {layout?.paragraph}
           </p>
@@ -84,5 +81,5 @@ const MemoBannerLayout3 = ({ layout }: { layout: BannerLayout }) => {
   );
 };
 
-const BannerLayout3 = memo(MemoBannerLayout3);
-export default BannerLayout3;
+const BannerLayout2 = memo(MemoBannerLayout2);
+export default BannerLayout2;

@@ -143,10 +143,32 @@ export const TagsEnum = [
   "Popular",
 ];
 
-const MAX_WIDTH = 1000;
-const MAX_HEIGHT = 1000;
+const MAX_WIDTH = 500;
+const MAX_HEIGHT = 500;
 const MIME_TYPE = "image/webp";
-const QUALITY = 0.9;
+const QUALITY = 0.95;
+
+const calculateSize = (
+  img: HTMLImageElement,
+  maxWidth: number,
+  maxHeight: number,
+): [number, number] => {
+  let width = img.width;
+  let height = img.height;
+
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height);
+      height = maxHeight;
+    }
+  }
+  return [width, height];
+};
 
 export const compressImage = (file, callback) => {
   const blobURL = URL.createObjectURL(file);
@@ -182,28 +204,6 @@ export const compressImage = (file, callback) => {
       );
     }
   };
-};
-
-const calculateSize = (
-  img: HTMLImageElement,
-  maxWidth: number,
-  maxHeight: number,
-): [number, number] => {
-  let width = img.width;
-  let height = img.height;
-
-  if (width > height) {
-    if (width > maxWidth) {
-      height = Math.round((height * maxWidth) / width);
-      width = maxWidth;
-    }
-  } else {
-    if (height > maxHeight) {
-      width = Math.round((width * maxHeight) / height);
-      height = maxHeight;
-    }
-  }
-  return [width, height];
 };
 
 export const handleCrop = async (

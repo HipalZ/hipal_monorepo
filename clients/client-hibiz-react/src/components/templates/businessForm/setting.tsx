@@ -1,14 +1,11 @@
-import { useState, useEffect, useCallback, startTransition } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { IphoneCategory, IphoneExplore } from "@/components/atom/svgtheme";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import { colors } from "./businessCtrlStore";
 import { CgArrowsHAlt } from "react-icons/cg";
 import PopUp from "@/components/atom/popUp";
 import ColorWheel from "@/components/atom/colorWheel";
-import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import { useLayoutThemes } from "@/hooks/useLayoutThemes";
 
 const Setting = () => {
@@ -19,25 +16,20 @@ const Setting = () => {
     menuLayout,
     setPrimaryColor,
     setSecondaryColor,
-    setStep,
   } = useBusinessCtrl((s) => ({
     primaryColor: s.primaryColor,
     secondaryColor: s.secondaryColor,
     setPrimaryColor: s.setPrimaryColor,
     setSecondaryColor: s.setSecondaryColor,
-    setStep: s.setStep,
     exploreLayout: s.exploreLayout,
     menuLayout: s.menuLayout,
   }));
 
   const { mutate } = useLayoutThemes();
-  const { businessData, themeApplied, updateThemeData } = useBusinessData(
-    (s) => ({
-      businessData: s.businessData,
-      themeApplied: s.businessData?.themeApplied,
-      updateThemeData: s.updateThemeData,
-    }),
-  );
+  const { businessData, updateThemeData } = useBusinessData((s) => ({
+    businessData: s.businessData,
+    updateThemeData: s.updateThemeData,
+  }));
   const [selectedPrimaryColor, setSelectedPrimaryColor] =
     useState(primaryColor);
   const [selectedSecondaryColor, setSelectedSecondaryColor] =

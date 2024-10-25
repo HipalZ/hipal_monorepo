@@ -1,26 +1,26 @@
-import type { BannerLayout } from "@/components/types/businessData";
-import { BannerType } from "@/components/utils/bannerLayouts";
-import { memo } from "react";
-import { LuArrowUpRight } from "react-icons/lu";
-import SelectingCardLayout from "./selectingCardLayout";
 import { useBannerStore } from "@/components/store/useBannerStore";
+import type { BannerLayout } from "@/components/types/businessData";
+import { lazy, memo } from "react";
+import { LuArrowUpRight } from "react-icons/lu";
+import { FaCheck } from "react-icons/fa";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
 
-const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
-  const { handleBannerType } = useBannerStore((s) => ({
+const SelectingCardLayout = lazy(
+  () => import("../explorePage/selectingCardLayout"),
+);
+
+const MemoBannerLayout4 = ({ layout }: { layout: BannerLayout }) => {
+  const { handleBannerType, selectedBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
+    selectedBannerType: s.selectedBannerType,
   }));
 
   const { setToggleExplorePages } = useExploreStore((s) => ({
     setToggleExplorePages: s.setToggleExplorePages,
   }));
-
-  const color =
-    layout?._id === BannerType.BANNER_TYPE_12 ? "#678BFF" : "#E03030";
-  const patternColor = "#00000050";
 
   return (
     <section
@@ -44,23 +44,32 @@ const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
       }}
       key={layout?._id}
     >
-      <article
-        className="relative h-[11.5rem] max-w-[12rem] rounded-xl shadow-lg "
-        style={{ backgroundColor: color }}
-      >
-        <figure className="absolute top-2 left-2">
-          {layout?.isPattern && <layout.pattern color={patternColor} />}
+      <article className="relative flex justify-center shrink-0 max-w-[12rem]">
+        {selectedBannerType === layout?._id && (
+          <div className="absolute inset-0 top-0 right-0 w-6 h-6 p-1 bg-green-500 rounded-full">
+            <FaCheck className="text-white" />
+          </div>
+        )}
+        <figure className="w-full max-w-[12rem] rounded-2xl shadow-lg">
+          <img
+            src={layout?.image}
+            alt={layout?.title}
+            className="rounded-xl w-[12rem] h-[11rem] bg-cover"
+          />
         </figure>
-        <figure className="absolute -rotate-180 bottom-2 right-2">
-          {layout?.isPattern && <layout.pattern color={patternColor} />}
-        </figure>
-        <article className="absolute flex flex-col items-center justify-center w-full p-2 translate-y-1/2 bottom-1/2 rounded-xl">
+        <article
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent 10% , black 50%, transparent 80%)",
+          }}
+          className="bg-black absolute bottom-1/2 translate-y-1/2 w-full flex flex-col items-center justify-center p-2 rounded-xl h-[7rem]"
+        >
           <h1 className="text-[0.7rem] truncate text-white">
             {layout?.heading}
           </h1>
           <p
             style={{
-              WebkitLineClamp: BannerType.BANNER_TYPE_13 ? 3 : 2,
+              WebkitLineClamp: 2,
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
@@ -84,5 +93,5 @@ const MemoBannerLayouts6 = ({ layout }: { layout: BannerLayout }) => {
   );
 };
 
-const BannerLayouts6 = memo(MemoBannerLayouts6);
-export default BannerLayouts6;
+const BannerLayout4 = memo(MemoBannerLayout4);
+export default BannerLayout4;

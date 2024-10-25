@@ -1,6 +1,6 @@
 import Header from "@/components/molecules/header";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
@@ -16,9 +16,7 @@ const AddBusinessForm = () => {
 
   const handleBack = useCallback(() => {
     if (step === 0) {
-      startTransition(() => {
-        navigate("/app/business");
-      });
+      navigate("/app/business");
     } else {
       setStep(step - 1);
     }
@@ -40,7 +38,6 @@ const AddBusinessForm = () => {
 
   return (
     <section>
-
       {step === 3 && (
         <SectionWithLogo>
           <Congratulation />
@@ -66,14 +63,12 @@ const AddBusinessForm = () => {
           </>
         )}
 
-        {step === 0 &&  <BusinessType />}
+        {step === 0 && <BusinessType />}
 
         {step === 1 && <OutletType />}
 
         {step === 2 && <AddName />}
-
       </main>
-
     </section>
   );
 };

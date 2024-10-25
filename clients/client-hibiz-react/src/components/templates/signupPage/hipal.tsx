@@ -1,9 +1,9 @@
 import HipalLogo from "@/assets/hipal.png";
 import Background from "@/assets/login/background.png";
 import useLoginStore from "@/components/store/useLogin";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { LuMoveRight } from "react-icons/lu";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const MemoHipal = () => {
   const { setStep, step } = useLoginStore((state) => ({
@@ -13,10 +13,8 @@ const MemoHipal = () => {
   const navigate = useNavigate();
 
   const createAccount = useCallback(() => {
-    startTransition(() => {
-      navigate("/signup");
-      setStep(2);
-    });
+    navigate("/signup");
+    setStep(2);
   }, [step]);
   return (
     <main>

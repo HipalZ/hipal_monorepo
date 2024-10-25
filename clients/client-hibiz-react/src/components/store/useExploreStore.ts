@@ -23,12 +23,12 @@ interface ICropping {
 
 interface IExploreStore {
   clearOriginalDishes: () => void;
+  clearBizInfo: () => void;
+  clearImageFiles: () => void;
   dishes: IDish[];
   setDishes: (dishes: IDish[]) => void;
   bizInfo: IBizInfo;
   setBizInfo: (bizInfo: IBizInfo) => void;
-  selectedDishes: IDish[];
-  setSelectedDishes: (dishes: IDish[]) => void;
   originalDishes: IDish[];
   setOriginalDishes: (dishes: IDish[]) => void;
   uniquelyDishes: IDish[];
@@ -136,8 +136,6 @@ export const useExploreStore = create(
             address: newBizInfo.address || "",
           },
         })),
-      selectedDishes: [],
-      setSelectedDishes: (dishes) => set(() => ({ selectedDishes: dishes })),
       originalDishes: [],
       setOriginalDishes: (dishes) => set(() => ({ originalDishes: dishes })),
       uniquelyDishes: [],
@@ -194,7 +192,36 @@ export const useExploreStore = create(
           },
         })),
       clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
-
+      clearBizInfo: () =>
+        set(() => ({
+          bizInfo: {
+            _id: "",
+            amenities: [],
+            avgPricingForTwo: "",
+            businessId: "",
+            description: "",
+            location: "",
+            name: "",
+            phone: "",
+            socialMediaLinks: [],
+            fssai: "",
+            gst: "",
+            tags: [],
+            specialBannerUrl: "",
+            logoUrl: "",
+            endBannerUrl: "",
+            footerDescription: "",
+            fixOpenTime: "",
+            fixCloseTime: "",
+            customTiming: [],
+            isCustomTime: false,
+            address: "",
+          },
+        })),
+      clearImageFiles: () =>
+        set(() => ({
+          imageFiles: { banner: null, logo: null, footer: null },
+        })),
       img: {
         banner: null,
         logo: null,

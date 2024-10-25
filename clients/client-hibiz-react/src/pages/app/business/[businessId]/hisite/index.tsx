@@ -10,6 +10,7 @@ const MemoHiSites = () => {
 
   const navigate = useNavigate();
 
+  // navigating to hisite services
   const handleRoute = useCallback(
     (navigateTo: string) => {
       navigate(`/app/business/${businessId}/${navigateTo}`);
@@ -17,13 +18,15 @@ const MemoHiSites = () => {
     [businessId],
   );
 
+  // navigating to themes and layout
   const handleThemes = useCallback(() => {
     navigate(`/app/business/${businessId}/businesscontrol`);
-  }, [businessId]);
+  }, [navigate, businessId]);
 
+  // navigating back to business page
   const goBack = useCallback(() => {
     navigate(`/app/business/${businessId}`);
-  }, [businessId]);
+  }, [navigate, businessId]);
 
   return (
     <main>

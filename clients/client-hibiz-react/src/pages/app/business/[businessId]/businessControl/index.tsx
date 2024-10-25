@@ -1,4 +1,4 @@
-import { startTransition, useCallback, lazy, memo } from "react";
+import { useCallback, lazy, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
@@ -37,9 +37,7 @@ const MainBusinessPage: React.FC = () => {
     if (themeApplied && layoutFlowEnabled && step === 1) {
       setStep(0);
     } else if (step === 0) {
-      startTransition(() => {
-        navigate(`/app/business/${businessId}`);
-      });
+      navigate(`/app/business/${businessId}`);
     } else {
       setStep(step - 1);
     }

@@ -1,4 +1,4 @@
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@hi/common";
@@ -8,6 +8,7 @@ interface HeaderProps {
   centerImage?: string;
   rightImage?: string;
   rightButton?: JSX.Element;
+  isIconBusinessShow?: boolean;
   title?: string;
   onBack?: () => void;
   children?: React.ReactNode;
@@ -32,17 +33,13 @@ const Header: React.FC<HeaderProps> = memo(
       if (onBack) {
         onBack();
       } else {
-        startTransition(() => {
-          navigate(-1);
-        });
+        navigate(-1);
       }
     };
 
     const logoutUser = () => {
       localStorage.clear();
-      startTransition(() => {
-        navigate("/");
-      });
+      navigate("/");
     };
 
     return (
@@ -73,8 +70,9 @@ const Header: React.FC<HeaderProps> = memo(
                 centerImage
                   ? "mr-8"
                   : "absolute transform -translate-x-1/2 left-1/2 top-6",
-                "text-2xl font-medium capitalize text-nowrap",
+                "text-2xl font-medium capitalize truncate",
                 headingColor && `text-[${headingColor}]`,
+                "max-w-[16ch]",
               )}
             >
               {title?.toLowerCase()}

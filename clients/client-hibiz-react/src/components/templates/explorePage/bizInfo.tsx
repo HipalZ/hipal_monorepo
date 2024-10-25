@@ -1,7 +1,7 @@
-import { memo, useEffect, useState } from "react";
-import SubHeader from "@/components/atom/subHeader";
+import { lazy, memo, useEffect, useState } from "react";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { BasicInfo } from "@/components/types/businessData";
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
 interface PropsBasicInfo {
   handleBizInfo: () => void;
@@ -35,6 +35,7 @@ const MemoBizInfo = (props: PropsBasicInfo) => {
       <SubHeader text="Basic Information" />
       <article
         onClick={handleBizInfo}
+        onKeyDown={handleBizInfo}
         className="flex flex-wrap gap-4 p-2 mt-4 bg-white rounded-xl"
       >
         {basicInfos.map((info) => {

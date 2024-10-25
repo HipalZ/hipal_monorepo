@@ -1,4 +1,4 @@
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
@@ -32,23 +32,17 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
       if (onBack) {
         onBack();
       } else {
-        startTransition(() => {
-          navigate(-1);
-        });
+        navigate(-1);
       }
     };
 
     const profile = () => {
-      startTransition(() => {
-        navigate("/app/business/profile");
-      });
+      navigate("/app/business/profile");
     };
 
     const logoutUser = () => {
       localStorage.clear();
-      startTransition(() => {
-        navigate("/");
-      });
+      navigate("/");
     };
 
     return (

@@ -6,13 +6,11 @@ import {
   useCallback,
   useState,
   type ChangeEvent,
-  startTransition,
 } from "react";
 import { debounce } from "lodash";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import PopUp from "@/components/atom/popUp";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import BottomButton from "@/components/atom/bottomButton";
 import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
@@ -306,15 +304,15 @@ const AddName = () => {
             </section>
             <br />
           </section>
-            <BottomButton
-              buttons={[
-                {
-                  text: "Save",
-                  onClick: createBranch,
-                  type: "button",
-                },
-              ]}
-            />
+          <BottomButton
+            buttons={[
+              {
+                text: "Save",
+                onClick: createBranch,
+                type: "button",
+              },
+            ]}
+          />
         </PopUp>
       )}
       {isLoading && <LoadingSpinner />}

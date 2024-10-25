@@ -10,7 +10,7 @@ import {
   storeImageAfterSave,
 } from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
-import { postDishData } from "@/hooks/useDishStore";
+import { postDishData } from "@/hooks/useDish";
 import toast from "react-hot-toast";
 import DishImages from "./[editDish]/dishImages";
 import SectionLoader from "@/components/atom/sectionLoader";

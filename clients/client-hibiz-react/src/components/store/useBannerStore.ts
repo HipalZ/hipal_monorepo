@@ -107,13 +107,6 @@ export const useBannerStore = create(
         isPatternExists: boolean,
         onlyImage?: boolean,
       ) => {
-        console.log(
-          "handleBannerType",
-          id,
-          isButton,
-          isPatternExists,
-          onlyImage,
-        );
         set(() => ({
           isButtonExists: isButton,
           isPatternExists: isPatternExists,
@@ -138,12 +131,6 @@ export const useBannerStore = create(
       setOpenPreview: (preview) => set({ openPreview: preview }),
 
       updateEditBannerz: (editingBanner, layoutFlags) => {
-        console.log(
-          "updateEditBannerz",
-          editingBanner,
-          "layoutflags",
-          layoutFlags,
-        );
         const newState: Partial<IBannerStore> = {
           selectedRedirectionName: editingBanner?.redirectionName || "",
           selectedRedirectionId: editingBanner?.redirectionId || "",

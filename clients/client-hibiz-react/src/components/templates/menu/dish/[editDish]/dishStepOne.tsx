@@ -18,7 +18,7 @@ import {
 } from "@/components/utils/helper";
 import type { DishType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
-import { putDishData } from "@/hooks/useDishStore";
+import { putDishData } from "@/hooks/useDish";
 import { useLocation, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Switch } from "@headlessui/react";

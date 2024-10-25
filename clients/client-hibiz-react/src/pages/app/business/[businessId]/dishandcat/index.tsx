@@ -1,14 +1,7 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import {
-  type ChangeEvent,
-  memo,
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { type ChangeEvent, memo, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
@@ -35,6 +28,7 @@ import { useBulkUploadDishes } from "@/hooks/useCategory";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoizeDishAndCat = () => {
+  // imports
   const businessData = useBusinessData((s) => s.businessData);
   const {
     selectedPage,
@@ -74,13 +68,11 @@ const MemoizeDishAndCat = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, []);
+  }, [fileInputRef]);
 
   const navigate = useNavigate();
   const handleBack = () => {
-    startTransition(() => {
-      navigate(routeToDashboard(businessData?._id as string));
-    });
+    navigate(routeToDashboard(businessData?._id as string));
   };
 
   const pathname = useLocation().pathname;

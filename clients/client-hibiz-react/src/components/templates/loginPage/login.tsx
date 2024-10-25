@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import Hand from "@/assets/login/hand.png";
 import { PiSealWarningBold } from "react-icons/pi";
 import useLoginStore from "@/components/store/useLogin";
@@ -83,9 +83,7 @@ const Login: React.FC = () => {
   }, [step]);
 
   const goToSignUp = useCallback(() => {
-    startTransition(() => {
-      navigate("/signup");
-    });
+    navigate("/signup");
   }, [navigate]);
 
   return (

@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import { useChildCategories } from "@/hooks/useDishStore";
+import { useChildCategories } from "@/hooks/useDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import BottomButton from "@/components/atom/bottomButton";
 

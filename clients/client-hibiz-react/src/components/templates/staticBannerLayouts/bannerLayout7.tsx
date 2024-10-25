@@ -1,13 +1,15 @@
 import { useBannerStore } from "@/components/store/useBannerStore";
-import type { BannerLayout } from "@/components/types/businessData";
-import { memo } from "react";
-import SelectingCardLayout from "./selectingCardLayout";
+import { lazy, memo } from "react";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
+import pastaDummy from "@/assets/pastaDummy.png";
+const SelectingCardLayout = lazy(
+  () => import("../explorePage/selectingCardLayout"),
+);
 
-const MemoBannerLayout7 = ({ layout }: { layout: BannerLayout }) => {
+const MemoBannerLayout7 = ({ layout }: { layout }) => {
   const { handleBannerType } = useBannerStore((s) => ({
     handleBannerType: s.handleBannerType,
   }));
@@ -39,7 +41,7 @@ const MemoBannerLayout7 = ({ layout }: { layout: BannerLayout }) => {
       key={layout?._id}
     >
       <img
-        src={layout?.image}
+        src={pastaDummy}
         alt={layout?.title}
         className="bg-cover rounded-2xl w-full max-w-[11.5rem] h-[11.5rem] aspect-square shadow-lg"
       />

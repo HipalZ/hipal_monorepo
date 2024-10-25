@@ -19,7 +19,7 @@ import Share from "@/components/templates/coupons/share";
 import Terms from "@/components/templates/coupons/terms";
 import { routeToDashboard } from "@/components/utils/routes";
 import { cn } from "@hi/common";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -60,9 +60,7 @@ const MemoCoupons = () => {
   const handleBack = useCallback(() => {
     switch (selectedPage) {
       case "MANAGE":
-        startTransition(() => {
-          navigate(routeToDashboard(businessData?._id as string));
-        });
+        navigate(routeToDashboard(businessData?._id as string));
         break;
       case "CREATE":
       case "EDIT":
@@ -111,9 +109,7 @@ const MemoCoupons = () => {
         setSelectedPage("ANALYTICS_INFO");
         break;
       default:
-        startTransition(() => {
-          navigate(routeToDashboard(businessData?._id as string));
-        });
+        navigate(routeToDashboard(businessData?._id as string));
         break;
     }
   }, [selectedPage, businessData?._id]);

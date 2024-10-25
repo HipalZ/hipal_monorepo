@@ -5,7 +5,7 @@ import DishStepOne from "./dishStepOne";
 import { memo, useCallback } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import DishStepTwo from "./dishStepTwo";
-import { useAddons } from "@/hooks/useDishStore";
+import { useAddons } from "@/hooks/useDish";
 import ReactCropper from "@/components/cropper";
 import { handleCrop } from "@/components/utils/helper";
 import LinkItems from "./[editDish]/linkItems";

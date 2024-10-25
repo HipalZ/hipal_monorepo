@@ -19,7 +19,6 @@ interface MemoReactCropperProps {
 
 const MemoReactCropper = forwardRef<CropperRef, MemoReactCropperProps>(
   ({ image, width = 320, height = 320 }, ref) => {
-    console.log("MemoReactCropper", ref);
     const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(

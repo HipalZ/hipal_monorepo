@@ -7,7 +7,7 @@ import type { IBusinessData } from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
@@ -22,16 +22,12 @@ const Business = () => {
   const navigate = useNavigate();
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
-    startTransition(() => {
-      navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
-    });
+    navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
   };
 
   function addBusiness() {
     reset();
-    startTransition(() => {
-      navigate("/app/business/add");
-    });
+    navigate("/app/business/add");
   }
 
   const { data: sample } = useQuery({

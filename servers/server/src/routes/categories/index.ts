@@ -481,6 +481,33 @@ const categoriesRouter = new Hono()
         {},
       );
     },
+  )
+  .get(
+    "/all/subCategories",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const existingCategories = await Category.find({
+        businessId,
+        hierarchy: "CHILD",
+        isDeleted: false,
+        dishIds: { $ne: [] },
+      }).select("_id name coverImage");
+
+      return respond(
+        c,
+        "Categories fetched successfully",
+        false,
+        200,
+        existingCategories,
+      );
+    },
   );
 
 export default categoriesRouter;

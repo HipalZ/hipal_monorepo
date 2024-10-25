@@ -1,6 +1,6 @@
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import Img from "@/assets/background.png";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { businessCtrlServices } from "./businessCtrlStore";
@@ -49,9 +49,7 @@ const BusinessControl = () => {
 
   const navigateService = useCallback(
     (service: string) => {
-      startTransition(() => {
-        navigate(`/app/business/${businessData?._id}/${service}`);
-      });
+      navigate(`/app/business/${businessData?._id}/${service}`);
     },
     [navigate, businessData],
   );

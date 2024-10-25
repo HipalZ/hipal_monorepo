@@ -18,7 +18,7 @@ import {
 } from "@/components/utils/helper";
 import type { DishType, DishTypeEnumType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
-import { postDishData } from "@/hooks/useDishStore";
+import { postDishData } from "@/hooks/useDish";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import SectionLoader from "@/components/atom/sectionLoader";

@@ -59,31 +59,37 @@ const MemoSelectSubCategory = () => {
         className="w-[92%] p-2 border rounded-2xl mx-6"
       />
       <div className="flex flex-wrap justify-start gap-3 mx-4 mt-4 lg:grid md:grid-cols-3 lg:mx-6">
-        {filteredsubCategories?.map((category: CategoryType) => (
-          <div
-            key={category._id?.toString()}
-            className="relative flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow md:max-w-[14.75rem] lg:max-w-[15rem]"
-          >
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(category?._id?.toString() ?? "")}
-                onChange={() =>
-                  handleCategoryChange(category?._id?.toString() ?? "")
-                }
-                className="mr-2 text-sm text-black rounded"
-              />
-              <h3 className="text-lg font-semibold">{category?.name}</h3>
-            </label>
-            <div className="absolute right-2">
-              {category.visibility ? (
-                <FaEye className="text-green-500" />
-              ) : (
-                <FaEyeSlash className="text-red-500" />
-              )}
+        {filteredsubCategories?.length > 0 ? (
+          filteredsubCategories?.map((category: CategoryType) => (
+            <div
+              key={category._id?.toString()}
+              className="relative flex items-center justify-between w-full p-4 bg-white rounded-2xl shadow md:max-w-[14.75rem] lg:max-w-[15rem]"
+            >
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(
+                    category?._id?.toString() ?? "",
+                  )}
+                  onChange={() =>
+                    handleCategoryChange(category?._id?.toString() ?? "")
+                  }
+                  className="mr-2 text-sm text-black rounded"
+                />
+                <h3 className="text-lg font-semibold">{category?.name}</h3>
+              </label>
+              <div className="absolute right-2">
+                {category.visibility ? (
+                  <FaEye className="text-green-500" />
+                ) : (
+                  <FaEyeSlash className="text-red-500" />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div>No Sub categories are linked with dishes</div>
+        )}
       </div>
       <BottomButton
         buttons={[

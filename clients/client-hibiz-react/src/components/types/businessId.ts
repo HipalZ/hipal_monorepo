@@ -1,6 +1,5 @@
 import { toast } from "react-hot-toast";
 import type { User } from "../store/useOwnerLogin";
-import Love from "@/assets/made_love.png";
 import CouponsImage from "@/assets/services/coupons.png";
 import HibizImage from "@/assets/services/hibiz.png";
 import BillsImage from "@/assets/services/bills.png";
@@ -92,6 +91,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     text: "Reviews",
     description: "Manage your reviews",
     navigateTo: "reviews",
+  },
+  {
+    image: HiPeopleImage,
+    text: "WhatsApp",
+    description: "Manage your WhatsApp",
+    navigateTo: "whatsapp",
   },
 ];
 export interface AccessControlMapping {

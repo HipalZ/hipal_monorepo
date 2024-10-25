@@ -1,8 +1,10 @@
-import SubHeader from "@/components/atom/subHeader";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import type { SocialMediaLink } from "@/components/types/businessData";
-import { memo, useCallback, useMemo, type ChangeEvent } from "react";
+import { lazy, memo, useCallback, useMemo, type ChangeEvent } from "react";
+import { IoMdArrowUp } from "react-icons/io";
 
+const Paragraph = lazy(() => import("@/components/atom/paragraph"));
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 interface Props {
   handleSaveSocialMediaLink: (e: ChangeEvent<HTMLInputElement>) => void;
   socialMediaLinks: SocialMediaLink[];
@@ -64,6 +66,13 @@ const MemoSocialMediaLinks = ({
             </div>
           </article>
         )}
+      </section>
+      <section className="mt-4 opacity-30">
+        <SubHeader text="Terms & Condition" />
+        <article className="flex items-center justify-between p-4 bg-white rounded-2xl">
+          <Paragraph text="Add your terms and conditions here" />
+          <IoMdArrowUp size={20} className="rotate-45" />
+        </article>
       </section>
     </>
   );

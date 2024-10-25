@@ -1,7 +1,6 @@
 import MemoizedHeader from "@/components/molecules/header";
-import { lazy, memo, startTransition, Suspense, useCallback } from "react";
+import { lazy, memo, Suspense, useCallback } from "react";
 import { FaArrowLeft, FaChevronRight } from "react-icons/fa";
-import Hi from "@/assets/svg/hi.svg";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLoyalty } from "@/components/store/useLoyalty";
 import SelectCardFromBottom from "./bottomSelectionPanel";
@@ -73,10 +72,8 @@ const MemoCardSelection = () => {
   const navigate = useNavigate();
 
   const goBack = useCallback(() => {
-    startTransition(() => {
-      navigate(`/app/business/${businessId}`);
-    });
-  }, [setSelectedPage]);
+    navigate(`/app/business/${businessId}`);
+  }, [setSelectedPage, navigate, businessId]);
 
   const LoyaltyToggleArray = [
     {
@@ -233,9 +230,7 @@ const MemoCardSelection = () => {
         toast.success("Loyalty settings saved successfully!");
         resetFields();
         setOpenModal(false);
-        startTransition(() => {
-          navigate(`/app/business/${businessId}`);
-        });
+        navigate(`/app/business/${businessId}`);
       } else {
         toast.error("Failed to save loyalty settings.");
       }
@@ -276,9 +271,7 @@ const MemoCardSelection = () => {
         toast.success("Loyalty settings updated successfully!");
         resetFields();
         setOpenModal(false);
-        startTransition(() => {
-          navigate(`/app/business/${businessId}`);
-        });
+        navigate(`/app/business/${businessId}`);
       } else {
         toast.error("Failed to update loyalty settings.");
       }

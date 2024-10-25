@@ -1,4 +1,4 @@
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import HiPeopleLogo from "@/assets/hibizNewLogo.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -21,10 +21,8 @@ const Business = () => {
     (text: string) => {
       setSelectedIcon(text);
       const urlFriendlyText = text?.toLowerCase().replace(/ /g, "");
-      startTransition(() => {
-        navigate(`/app/business/${businessId}/${urlFriendlyText}`, {
-          replace: true,
-        });
+      navigate(`/app/business/${businessId}/${urlFriendlyText}`, {
+        replace: true,
       });
     },
     [businessId],

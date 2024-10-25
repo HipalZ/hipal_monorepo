@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import Hand from "@/assets/login/hand.png";
 import { PiSealWarningBold } from "react-icons/pi";
 import useLoginStore from "@/components/store/useLogin";
@@ -51,9 +51,7 @@ const SignUpPage: React.FC = () => {
   }, [validPhone, step, name, phone]);
 
   const goToLoginScreens = useCallback(() => {
-    startTransition(() => {
-      navigate("/login");
-    });
+    navigate("/login");
   }, [navigate]);
 
   return (

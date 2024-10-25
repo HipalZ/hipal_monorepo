@@ -1,12 +1,15 @@
 import { useBannerStore } from "@/components/store/useBannerStore";
 import type { BannerLayout } from "@/components/types/businessData";
-import { memo } from "react";
+import { lazy, memo } from "react";
 import { LuArrowUpRight } from "react-icons/lu";
-import SelectingCardLayout from "./selectingCardLayout";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
+
+const SelectingCardLayout = lazy(
+  () => import("../explorePage/selectingCardLayout"),
+);
 
 const MemoBannerLayout1 = ({ layout }: { layout: BannerLayout }) => {
   const { setToggleExplorePages } = useExploreStore((s) => ({

@@ -1,6 +1,6 @@
 import { useSettings } from "@/components/store/useSettings";
 import SettingsForm from "@/components/templates/settingsForm/mainSetting";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import HiSiteMiddleImage from "@/assets/hisite/hisiteHeader.png";
 import MemoizedHeader from "@/components/molecules/header";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const MemoSettingsForm = () => {
     if (pageToggle === "OUTLET_FORM" || pageToggle === "BUSINESS_FORM") {
       setPageToggle("MAIN");
     } else {
-      startTransition(() => navigate(`/app/business/${businessData?._id}`));
+      navigate(`/app/business/${businessData?._id}`);
     }
   }, [pageToggle, setPageToggle, businessData, navigate]);
 

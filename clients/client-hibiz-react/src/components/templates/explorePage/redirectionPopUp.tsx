@@ -1,13 +1,13 @@
 import type { ICategory, IDish } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { memo, useState, useEffect, useCallback } from "react";
+import { memo, useState, useEffect, useCallback, lazy } from "react";
 import { useParams } from "react-router-dom";
 import { combineAllDishes } from "./explorePageStore";
 import { useQuery } from "@tanstack/react-query";
 import { IoIosSearch } from "react-icons/io";
-import SubHeader from "@/components/atom/subHeader";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { FaArrowLeft } from "react-icons/fa";
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
 interface IProps {
   setClickRedirect: (value: boolean) => void;
@@ -51,25 +51,29 @@ const MemoRedirectionPopUp = (props: IProps) => {
   const [filteredDishes, setFilteredDishes] = useState<IDish[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<ICategory[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isVisible, setIsVisible] = useState(false);
 
+  // redirection type selection categories
   const handleSelectCategory = useCallback(() => {
     setSelectedLink(RedirectionType.CATEGORIES);
   }, [selectedLink]);
 
-  const [isVisible, setIsVisible] = useState(false);
-
+  // toggle search bar
   const toggleSearch = useCallback(() => {
     setIsVisible(!isVisible);
   }, [isVisible]);
 
+  // redirection type selection dishes
   const handleSelectDish = useCallback(() => {
     setSelectedLink(RedirectionType.DISHES);
   }, [selectedLink]);
 
+  // redirection type selection external link
   const handleExternalLink = useCallback(() => {
     setSelectedLink(RedirectionType.LINK);
   }, [selectedLink]);
 
+  // save redirections
   const handleSave = () => {
     handleSaveRedirections(
       selectedLink,
@@ -79,11 +83,13 @@ const MemoRedirectionPopUp = (props: IProps) => {
     setClickRedirect(false);
   };
 
+  // setting redirection id and name
   const handleItem = useCallback((id: string, name: string) => {
     setSelectedRedirectionId(id);
     setSelectedRedirectionName(name);
   }, []);
 
+  // all category data
   const getAllCategoryData = async (businessId: string): Promise<IDish[]> => {
     if (redirectCategories.length > 0) {
       setCategories(redirectCategories);
@@ -134,12 +140,12 @@ const MemoRedirectionPopUp = (props: IProps) => {
     }
   }, [searchQuery, selectedLink, categories, dishes]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setSelectedLink("");
     if (selectedLink === "") {
       setClickRedirect(false);
     }
-  };
+  }, [selectedLink, setClickRedirect]);
 
   useQuery<ICategory[]>({
     queryKey: ["categories", businessId],
@@ -196,7 +202,6 @@ const MemoRedirectionPopUp = (props: IProps) => {
                   className="h-[2rem] border border-gray-300 rounded-2xl"
                   placeholder="Search for a dish or category"
                   value={searchQuery}
-                  autoFocus
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>

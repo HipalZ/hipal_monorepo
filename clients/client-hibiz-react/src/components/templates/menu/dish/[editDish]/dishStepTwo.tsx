@@ -11,7 +11,7 @@ import {
   updateImage,
 } from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
-import { putDishData } from "@/hooks/useDishStore";
+import { putDishData } from "@/hooks/useDish";
 import toast from "react-hot-toast";
 import { MdDelete } from "react-icons/md";
 import SectionLoader from "@/components/atom/sectionLoader";
