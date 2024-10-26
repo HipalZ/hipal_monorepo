@@ -5,6 +5,7 @@ import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
+
 // export const revalidate = 600;
 
 const CategoryHeader = dynamics(
