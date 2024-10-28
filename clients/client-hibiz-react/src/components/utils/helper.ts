@@ -462,28 +462,6 @@ export function hexToRGBA(hex: string, opacity: string) {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-export const handleImageChange = async (
-  event: ChangeEvent<HTMLInputElement>,
-) => {
-  const type = event.target.dataset.type as keyof ImageFiles;
-  const file = event.target.files?.[0];
-  if (file) {
-    return new Promise((resolve) => {
-      compressImage(file, (compressedFile) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onloadend = () => {
-          resolve({
-            image: reader.result,
-            type,
-            compressedFile,
-          });
-        };
-      });
-    });
-  }
-};
-
 export const formatNumber = (num: number): string => {
   if (num >= 10000000) {
     return (num / 10000000).toFixed(1) + "Cr"; // Crores

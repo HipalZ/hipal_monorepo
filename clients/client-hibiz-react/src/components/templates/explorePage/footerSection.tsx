@@ -1,4 +1,7 @@
-import { useFooterSection } from "@/components/helpers/explorePageHelpers";
+import {
+  useFooterSection,
+  useImageChange,
+} from "@/components/helpers/explorePageHelpers";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn, handleClick } from "@/components/utils/helper";
 import { lazy, memo, useRef } from "react";
@@ -12,8 +15,9 @@ const MemoFooterSection = () => {
     bizInfo: s.bizInfo,
     img: s.img,
   }));
-  const { handleImage, handleFooterComment, handleFssaiNumber, handlegst } =
+  const { handleFooterComment, handleFssaiNumber, handlegst } =
     useFooterSection();
+  const { handleImageChange } = useImageChange();
 
   const footerInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,9 +39,8 @@ const MemoFooterSection = () => {
             type="file"
             id="footerInput"
             style={{ display: "none" }}
-            onChange={handleImage}
+            onChange={handleImageChange}
             data-type="footer"
-            accept="*"
           />
           <figure className="w-full max-w-[28rem] h-[320px] mx-auto lg:mx-0 ">
             <label

@@ -3,7 +3,6 @@ import {
   type ImageFiles,
   useExploreStore,
 } from "@/components/store/useExploreStore";
-import { compressImage, handleImageChange } from "@/components/utils/helper";
 import { type ChangeEvent, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -67,15 +66,18 @@ export const useImageChange = () => {
       const type = event.target.dataset.type as keyof ImageFiles;
       const file = event.target.files?.[0];
       if (file) {
-        compressImage(file, (compressedFile) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(compressedFile);
-          reader.onloadend = () => {
-            setCropping({ image: reader.result, type });
-            setShowCropper(true);
-            setImageFiles({ [type]: compressedFile });
-          };
-        });
+        const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
+        if (file.size > maxSizeInBytes) {
+          toast.error("File size exceeds 1MB. Please select a smaller file.");
+          return;
+        }
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          setCropping({ image: reader.result, type });
+          setShowCropper(true);
+          setImageFiles({ [type]: file });
+        };
       }
     },
     [setImageFiles, setCropping, setShowCropper],
@@ -86,23 +88,11 @@ export const useImageChange = () => {
 
 // Callbacks to handle changes in the footer section of the explore page
 export const useFooterSection = () => {
-  const { bizInfo, setBizInfo, setCropping, setShowCropper, setImageFiles } =
-    useExploreStore((s) => ({
-      bizInfo: s.bizInfo,
-      setBizInfo: s.setBizInfo,
-      setCropping: s.setCropping,
-      setShowCropper: s.setShowCropper,
-      setImageFiles: s.setImageFiles,
-    }));
-  const handleImage = async (event) => {
-    const result = await handleImageChange(event);
-    if (result) {
-      const { image, type, compressedFile } = result;
-      setCropping({ image, type });
-      setShowCropper(true);
-      setImageFiles({ [type]: compressedFile });
-    }
-  };
+  const { bizInfo, setBizInfo } = useExploreStore((s) => ({
+    bizInfo: s.bizInfo,
+    setBizInfo: s.setBizInfo,
+  }));
+
   const handleFssaiNumber = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (e.target.value.length >= 50)
@@ -128,7 +118,7 @@ export const useFooterSection = () => {
     [bizInfo, setBizInfo],
   );
 
-  return { handleImage, handleFssaiNumber, handlegst, handleFooterComment };
+  return { handleFssaiNumber, handlegst, handleFooterComment };
 };
 
 // explore page banner, logo, footer images by cropping n compressing
@@ -182,25 +172,19 @@ export const useCroppedImg = () => {
       };
     });
   };
+
   const handleCrop = async (cropperRef: CropperRef) => {
-    const { image, type } = cropping;
-    if (image && type) {
+    const { image, type: sectionType } = cropping;
+    if (image && sectionType) {
       const croppedAreaPixels = cropperRef.current?.getCroppedAreaPixels();
       if (croppedAreaPixels) {
         try {
-          // Revoke the previous object URL if it exists
-          if (
-            typeof imageFiles[type]?.preview === "string" &&
-            imageFiles[type].preview.startsWith("blob:")
-          ) {
-            URL.revokeObjectURL(imageFiles[type].preview);
-          }
-          const mimeType = imageFiles[type]?.type || "image/webp";
-          const isGif = imageFiles[type]?.name.toLowerCase().endsWith(".gif");
+          const mimeType = imageFiles[sectionType]?.type || "image/webp";
+          const isGif = imageFiles[sectionType]?.type?.includes("gif");
 
-          let croppedData: string | Blob;
+          let croppedData: Blob | string;
           if (isGif) {
-            // croppedData = await compressGif(image, croppedAreaPixels);
+            // croppedData = await compressGif(imageFiles, croppedAreaPixels);
             croppedData = image;
           } else {
             croppedData = await getCroppedImg(
@@ -209,34 +193,19 @@ export const useCroppedImg = () => {
               mimeType,
             );
           }
-          let blob: Blob;
-          if (typeof croppedData === "string") {
-            // For non-GIF images
-            blob = await fetch(croppedData).then((r) => r.blob());
-          } else {
-            // For GIF images
-            blob = croppedData;
-          }
-          let previewUrl: string;
-          if (isGif) {
-            previewUrl = URL.createObjectURL(blob);
-          } else {
-            previewUrl = await new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(blob);
-            });
-          }
 
-          const croppedFile = new File([blob], imageFiles[type]?.name, {
-            type: mimeType,
+          // Use croppedData directly as reader result
+          const blob = await (await fetch(croppedData)).blob();
+          const croppedFile = new File([blob], imageFiles?.name, {
+            type: "image/png",
           });
-
-          // Add the preview URL to the file object
-          Object.assign(croppedFile, { preview: previewUrl });
-          setImg((prev) => ({ ...prev, [type]: previewUrl }));
-          setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
-          setShowCropper(false);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImg((prev) => ({ ...prev, [sectionType]: reader?.result }));
+            setImageFiles((prev) => ({ ...prev, [sectionType]: croppedFile }));
+            setShowCropper(false);
+          };
+          reader.readAsDataURL(croppedFile);
         } catch (err) {
           console.error(err);
         }

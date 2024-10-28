@@ -16,7 +16,6 @@ import { FaXTwitter } from "react-icons/fa6";
 import { TbBrandTelegram } from "react-icons/tb";
 import { RiDiscordLine } from "react-icons/ri";
 import {
-  useAllCategoryData,
   useBanners,
   useOutletInfo,
   useUniquelyYours,

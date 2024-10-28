@@ -303,6 +303,7 @@ const MemoCreateBanner = () => {
       <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
           <EasyReactCropper
+            key={cropping.image}
             image={cropping.image}
             ref={cropperRef}
             width={400}
