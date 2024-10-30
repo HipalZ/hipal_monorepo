@@ -33,7 +33,7 @@ const Rewards = () => {
           <article className="flex items-center justify-center gap-2">
             <TfiWallet size={30} />
             <div className="leading-4 text-start">
-              <h3 className="text-sm font-semibold text-primary">Rewards</h3>
+              <h3 className="text-sm font-semibold text-primary">CoinZ</h3>
               <p className="text-[0.625rem] text-base-content opacity-60 text-nowrap">
                 Use {userCoinZ} CoinZ
               </p>
@@ -44,7 +44,7 @@ const Rewards = () => {
             <div className="leading-4 text-start">
               <h3 className="text-sm font-semibold text-primary">Couponz</h3>
               <p className="text-[0.625rem] text-base-content opacity-60 text-nowrap">
-                Coming Soon
+                Grab & Avail
               </p>
             </div>
           </article>

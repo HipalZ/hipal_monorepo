@@ -8,10 +8,12 @@ import { useCartStore } from "@/components/store/useCartStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useCart } from "@/components/store/useCart";
 import { BiArrowBack } from "react-icons/bi";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const Cart = () => {
   const { cart } = useCartStore();
   const { setShowCart } = useCart();
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
@@ -60,7 +62,7 @@ const Cart = () => {
           Call Captain
         </button>
       )}
-      {callWaiterModal && (
+      {callWaiterModal && outletInfo?.outLetType === "OTHER" && (
         <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
           <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
         </MemoBottomPopUp>

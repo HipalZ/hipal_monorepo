@@ -1,11 +1,11 @@
-import React, { memo, useState } from "react";
+import { memo } from "react";
 import { useCartStore } from "@/components/store/useCartStore";
-import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
+import FoodType from "@/components/atoms/foodType";
 import dynamic from "next/dynamic";
-import DishData from "@/components/atoms/dishDescription";
-import DishPopup from "@/components/atoms/dishPopup";
 import type { DishType } from "@hi/db-models/src/validators";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { cn } from "@/components/utils/helpers";
 
 const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
 
@@ -27,12 +27,15 @@ interface CartItemProp {
 const CartItem = ({ cartItem }: CartItemProp) => {
   const { updateCartItem, removeFromCart } = useCartStore();
   const imageUrl =
-    cartItem.dish.images[0] ||
-    cartItem.dish.images[1] ||
-    cartItem.dish.images[2];
+    cartItem?.dish?.images?.[0] ||
+    cartItem?.dish?.images?.[1] ||
+    cartItem?.dish?.images?.[2];
+
   const increaseQuantity = () => {
     updateCartItem({ ...cartItem, quantity: cartItem.quantity + 1 });
   };
+
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const decreaseQuantity = () => {
     if (cartItem.quantity > 1) {
@@ -44,13 +47,13 @@ const CartItem = ({ cartItem }: CartItemProp) => {
 
   const calculateTotalPrice = () => {
     const basePrice = cartItem.dish.price;
-    const extrasPrice = cartItem.extras.reduce(
+    const extrasPrice = cartItem?.extras.reduce(
       (total, extra) => total + extra.price * extra.quantity,
       0,
     );
 
     const totalPriceForOne = cartItem.portion
-      ? cartItem.portion.price + extrasPrice
+      ? cartItem?.portion?.price + extrasPrice
       : basePrice + extrasPrice;
 
     return totalPriceForOne * cartItem.quantity;
@@ -58,24 +61,35 @@ const CartItem = ({ cartItem }: CartItemProp) => {
   return (
     <section className="flex items-center justify-between py-4 pl-6 border-b">
       <div className="flex flex-col w-[70%] space-y-1">
-        <h5 className="flex items-start gap-3 text-base font-medium leading-6 -ml-7">
-          <div className="-mr-2 scale-75">
-            <FoodType types={cartItem.dish.dishTypes} />
-          </div>
-
-          {cartItem.dish.name}
+        <h5
+          className={cn(
+            "flex items-start gap-3 text-base font-medium leading-6",
+            outletInfo?.outLetType !== "OTHER" ? "-ml-7" : "-ml-3",
+          )}
+        >
+          {outletInfo?.outLetType !== "OTHER" && (
+            <div className="-mr-2 scale-75">
+              <FoodType types={cartItem?.dish?.dishTypes} />
+            </div>
+          )}
+          {cartItem?.dish?.name}
         </h5>
-        {cartItem.portion && (
+        {cartItem?.portion && (
           <span className="text-xs text-primary opacity-80">
-            Portion: {cartItem.portion.name}
+            Portion: {cartItem?.portion?.name}
           </span>
         )}
-        {cartItem.extras.length > 0 && (
+        {cartItem?.extras?.length > 0 && (
           <span className="text-xs text-primary opacity-80 ">
-            Extras: {cartItem.extras.map((extra) => extra.name).join(", ")}
+            Extras: {cartItem?.extras?.map((extra) => extra.name).join(", ")}
           </span>
         )}
-        <div className="text-left">
+        <div
+          className={cn(
+            "text-left",
+            outletInfo?.outLetType !== "OTHER" ? "-ml-1" : "-ml-3",
+          )}
+        >
           <span className="block text-sm font-medium text-primary">
             ₹{calculateTotalPrice().toFixed(2)}
           </span>
@@ -85,7 +99,7 @@ const CartItem = ({ cartItem }: CartItemProp) => {
         {imageUrl ? (
           <ShimmerImage
             src={imageUrl}
-            alt={cartItem.dish.name}
+            alt={cartItem?.dish?.name}
             width={70}
             height={70}
             className="object-cover w-20 h-20 rounded-md"

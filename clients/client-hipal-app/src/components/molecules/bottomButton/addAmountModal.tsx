@@ -15,10 +15,12 @@ import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useErrorHandling } from "@/utils/helper";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const AddAmountModal = memo(() => {
   const { errorText } = useErrorHandling();
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = useBusinessDetails((s) => s.businessDetails);
   const {
     billValue,
@@ -158,7 +160,13 @@ const AddAmountModal = memo(() => {
       </header>
       <section className="relative -mt-4 scale-90">
         <center>
-          <Image width={1080} height={1080} src={hipayBg} alt="hipayBg" />
+          <Image
+            width={1080}
+            height={1080}
+            src={hipayBg}
+            alt="hipayBg"
+            className="animate-spin"
+          />
           <figure className={`${style.globe_payment} mt-24`}>
             <Image width={193} height={193} src={Hipay} alt="Hipay" />
           </figure>
@@ -177,18 +185,20 @@ const AddAmountModal = memo(() => {
         </section>
       </section>
       <div className="flex justify-around gap-6 bottom_btn">
-        <button
-          type="button"
-          disabled={loading}
-          onClick={callTheWaiter}
-          className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
-        >
-          {loading ? (
-            <span className="loader_spinner !border-t-black" />
-          ) : (
-            "Call Captain"
-          )}
-        </button>
+        {outletInfo?.outLetType !== "OTHER" && (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={callTheWaiter}
+            className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
+          >
+            {loading ? (
+              <span className="loader_spinner !border-t-black" />
+            ) : (
+              "Call Captain"
+            )}
+          </button>
+        )}
         <button
           type="button"
           disabled={loading}

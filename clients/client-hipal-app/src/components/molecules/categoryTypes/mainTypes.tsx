@@ -3,6 +3,7 @@ import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo, useCallback, useMemo, useState } from "react";
 import CustomModal from "./customModal";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface IMainTypes {
   parentCategory: CategoryType[];
@@ -18,6 +19,7 @@ const MemoMainTypes = (props: IMainTypes) => {
       parentCategory?.filter((category) => category.subCategoryIds.length > 0),
     [parentCategory],
   );
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const {
     isActiveParentCategory,
@@ -55,7 +57,7 @@ const MemoMainTypes = (props: IMainTypes) => {
             onClick={() => setIsModalOpen(true)}
             className="fixed px-6 py-2 rounded-xl bottom-[5rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
           >
-            Menu
+            {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
           </button>
 
           <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
