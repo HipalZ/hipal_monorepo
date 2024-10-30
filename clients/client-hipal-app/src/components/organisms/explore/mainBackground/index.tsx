@@ -51,7 +51,7 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
               <button
                 onClick={() => setDirection("explore")}
                 type="button"
-                className="glass-morphism"
+                className="glass-morphism "
               >
                 Login/Sign up
               </button>

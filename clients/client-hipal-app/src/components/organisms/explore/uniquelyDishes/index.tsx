@@ -1,13 +1,12 @@
 "use client";
 import React, { memo } from "react";
-import Section from "@/components/molecules/section";
 import type { IUniquelyDishes } from "@/components/types/businessData";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import Image from "next/image";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -65,14 +64,14 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
 
 const MemoUniquelyDishes = (props: Props) => {
   const { uniquelyDishes } = props;
-
-  const outletType = useBusinessDetails((s) => s.businessDetails.outLetType);
-  console.log("outletType", outletType);
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   return (
     <>
       <center className="pb-4 text-2xl text-primary">
-        {outletType === "MENU" ? "Must Try Dishes" : "Our Favourites"}
+        {outletInfo?.outLetType !== "OTHER"
+          ? "Must Try Dishes"
+          : "Our Favourites"}
       </center>
       {uniquelyDishes && uniquelyDishes.length > 0 && (
         <DynamicImageGrid images={uniquelyDishes?.slice(0, 6)} />

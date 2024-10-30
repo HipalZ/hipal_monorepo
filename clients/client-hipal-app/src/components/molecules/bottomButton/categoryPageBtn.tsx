@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -80,6 +81,8 @@ const CategoryPageBtn = () => {
     openModal,
   ]);
 
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
     if (!tableName) {
@@ -114,13 +117,15 @@ const CategoryPageBtn = () => {
                 Home
               </center>
             </Link>
-            <center
-              onClick={triggerCallWaiter}
-              className="w-full font-light text-base-100 "
-            >
-              <FaConciergeBell size={20} className="mb-2" />
-              Call captain
-            </center>
+            {outletInfo?.outLetType !== "OTHER" && (
+              <center
+                onClick={triggerCallWaiter}
+                className="w-full font-light text-base-100 "
+              >
+                <FaConciergeBell size={20} className="mb-2" />
+                Call captain
+              </center>
+            )}
             <center
               onClick={showingCart}
               className="w-full font-light text-base-100"
