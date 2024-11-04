@@ -1167,6 +1167,141 @@ const paymentsRouter = new Hono()
     });
   })
 
+  .post("/razorpay-webhook/2/:merchantId", async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { merchantId } = c.req.param();
+      const merchantConfig = (await getMerchantConfig(
+        merchantId,
+      )) as MerchantConfig;
+
+      let RAZORPAY_WEBHOOK_SECRET = "";
+      const body = await c.req.json();
+      if (!merchantConfig) {
+        const merchant = await BusinessSettings.findOne({
+          razorpayMerchantId: merchantId,
+        }).select("razorpayWebhookSecret");
+        RAZORPAY_WEBHOOK_SECRET = merchant?.razorpayWebhookSecret || "";
+      } else {
+        RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
+      }
+
+      if (!RAZORPAY_WEBHOOK_SECRET) {
+        console.log("razorpay_webhook_secret missing");
+      }
+
+      const headersResult = RazorpayWebhookHeadersSchema.safeParse(
+        c.req.header(),
+      );
+      if (!headersResult.success) {
+        console.log("Invalid headers");
+        return respond(c, "Invalid headers", true, 200, {});
+      }
+
+      const {
+        "x-razorpay-signature": razorpaySignature,
+        "x-razorpay-event-id": razorpayEventId,
+      } = headersResult.data as RazorpayWebhookHeaders;
+
+      const isSignatureValid = validateWebhookSignature(
+        JSON.stringify(body),
+        razorpaySignature,
+        RAZORPAY_WEBHOOK_SECRET,
+      );
+      if (!isSignatureValid) {
+        console.log("Invalid signature");
+        return respond(c, "Invalid signature", true, 200, {});
+      }
+
+      const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
+
+      if (!bodyResult.success) {
+        console.log("Invalid body", bodyResult);
+
+        return respond(c, "Invalid body", true, 200, {});
+      }
+      //@ts-ignore
+      const { event, payload } = bodyResult.data;
+
+      const getOrder = await Order.findOne({
+        order_id: payload.payment.entity.order_id,
+      });
+
+      if (event === "payment.captured") {
+        const paymentAlreadyExist = await Payment.findOne({
+          razorpayEventId: razorpayEventId,
+        });
+
+        if (!paymentAlreadyExist && getOrder) {
+          const claimCoins = Number(getOrder?.claimedCoins) || 0;
+
+          if (payload.payment.entity.notes.loyaltyId) {
+            const existingUser = (await UserReward.findOne({
+              userId: getOrder.userId,
+              loyaltyId: payload.payment.entity.notes.loyaltyId,
+            }).select("rewards")) || { rewards: 0 };
+
+            const existingLoyalty = await LoyaltySettings.findOne({
+              businessId: getOrder.businessId,
+            }).select("rewardLimit");
+
+            const coinsCalculated = await calculateReward(
+              existingUser.rewards,
+              claimCoins,
+              existingLoyalty?.rewardLimit as number,
+              session,
+            );
+
+            const userAnalytics = await UserAnalytic.findOne({
+              userId: getOrder?.userId,
+            }).select("totalSpend visitCount");
+            if (userAnalytics) {
+              const countAvgSpend =
+                Math.round(
+                  userAnalytics.totalSpend || 0 / userAnalytics.visitCount || 0,
+                ) || 0;
+              await UserAnalytic.findOneAndUpdate(
+                { userId: getOrder?.userId },
+                {
+                  $inc: {
+                    totalSpend: getOrder.total,
+                    visitCount: 1,
+                    coinzIssued: coinsCalculated.finalReward,
+                    coinzUsed: claimCoins,
+                  },
+                  $set: {
+                    avgSpend: countAvgSpend,
+                    tableName: getOrder?.tableName,
+                  },
+                },
+                { session },
+              );
+            } else {
+              await UserAnalytic.create(
+                [
+                  {
+                    userId: getOrder?.userId,
+                    businessId: getOrder?.businessId,
+                    visitCount: 1,
+                    totalSpend: getOrder.total,
+                    avgSpend: getOrder.total,
+                    dateOfJoining: Date.now(),
+                    coinzIssued: coinsCalculated.finalReward,
+                    coinzUsed: claimCoins,
+                    tableName: getOrder?.tableName,
+                  },
+                ],
+                { session },
+              );
+            }
+          }
+        }
+      }
+
+      return respond(c, "2 Webhook received successfully", false, 200, {});
+    });
+  })
+
   .post(
     "/createWaiterAlert",
     authTokenValidator,
@@ -2194,10 +2329,12 @@ const paymentsRouter = new Hono()
           select: "name phone",
         });
 
-      const userReward = await UserReward.find({
+      const userReward = await UserReward.findOne({
         userId,
         loyaltyId: businessId,
       }).select("rewards");
+
+      console.log("userReward", userReward);
 
       const existingPayments = await Payment.find({
         userId,
@@ -2220,7 +2357,7 @@ const paymentsRouter = new Hono()
         data: {
           name: userTotalSale?.userId.name,
           phone: userTotalSale?.userId.phone,
-          userCurrentReward: userReward.rewards,
+          currentCoinz: userReward.rewards || 0,
           totalSale: userTotalSale?.totalSpend,
           AvarageSale: userTotalSale?.avgSpend,
           NumOfVisits: userTotalSale?.visitCount,

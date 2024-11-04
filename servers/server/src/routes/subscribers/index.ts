@@ -3,6 +3,7 @@ import {
   LoyaltySettings,
   Subscriber,
   User,
+  UserAnalytic,
   UserReward,
 } from "@hi/db-models";
 import { businessSubscriberValidator } from "@hi/db-models/src/validators";
@@ -19,6 +20,23 @@ const subsCriberRouter = new Hono()
       businessId,
       isDeleted: false,
     });
+
+    const userAnalytics = await UserAnalytic.findOne({
+      userId: userId,
+    }).select("userId");
+
+    if (!userAnalytics) {
+      await UserAnalytic.create({
+        userId: userId,
+        businessId: businessId,
+        avgSpend: 0,
+        totalSpend: 0,
+        visitCount: 0,
+        coinzIssued: 0,
+        coinzUsed: 0,
+        dateOfJoining: Date.now(),
+      });
+    }
 
     //
     if (existingSubscriber) {

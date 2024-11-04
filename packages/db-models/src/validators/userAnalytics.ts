@@ -39,6 +39,8 @@ export const UserAnalyticsAttrs = z.object({
       message: "dateOfJoining is required",
     })
     .optional(),
+
+  tableName: z.string().optional(),
 });
 
 export type UserAnalytics = z.infer<typeof UserAnalyticsAttrs>;
