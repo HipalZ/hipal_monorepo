@@ -26,6 +26,7 @@ const GoogleReviewPagePopup = dynamic(() => import("./reviewPage"), {
 
 const MemoGoogleReviewCard = () => {
   const router = useRouter();
+  const windowReference = window.open();
   const { errorText } = useErrorHandling();
   const customLink = useParams()?.businessId as string;
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
@@ -72,20 +73,39 @@ const MemoGoogleReviewCard = () => {
           authorName: user?.displayName || userDetails?.name,
         },
       });
-      if (res.status === 400) {
-        toast.error("Review Already Submitted");
-        router.push(`/${customLink}/explore`);
-        setShowGoogleReview(false);
-        return null;
-      }
-      if (res.status === 401) {
-        return errorText(res.status);
-      }
+      // if (res.status === 400) {
+      //   toast.error("Review Already Submitted");
+      //   router.push(`/${customLink}/explore`);
+      //   setShowGoogleReview(false);
+      //   return null;
+      // }
+      // if (res.status === 401) {
+      //   return errorText(res.status);
+      // }
 
-      // Redirect to the Google review page
       const url =
         businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-      window.open(url);
+
+      // Try to open the URL in a new tab
+      const newWindow = window.open(url, "_blank");
+
+      // If the new window is blocked or not created, fall back to changing the current window's location
+      if (
+        !newWindow ||
+        newWindow.closed ||
+        typeof newWindow.closed === "undefined"
+      ) {
+        // Create a temporary anchor element
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        // Programmatically click the link
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
       setReviewPopup(true);
       setShowGoogleReview(false);
       return user;
