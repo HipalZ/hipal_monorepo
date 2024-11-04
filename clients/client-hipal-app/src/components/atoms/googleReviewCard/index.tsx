@@ -85,7 +85,7 @@ const MemoGoogleReviewCard = () => {
       // Redirect to the Google review page
       const url =
         businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-      window.open(url, "_blank");
+      router.push(url);
       setReviewPopup(true);
       setShowGoogleReview(false);
       return user;
