@@ -26,7 +26,6 @@ const GoogleReviewPagePopup = dynamic(() => import("./reviewPage"), {
 
 const MemoGoogleReviewCard = () => {
   const router = useRouter();
-  const windowReference = window.open();
   const { errorText } = useErrorHandling();
   const customLink = useParams()?.businessId as string;
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
