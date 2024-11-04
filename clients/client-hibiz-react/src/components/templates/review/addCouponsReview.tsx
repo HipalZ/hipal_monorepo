@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import DatePicker from "react-datepicker";
 import { useReview } from "@/components/store/useReview";
@@ -12,8 +12,9 @@ const addDays = (days: number) => {
   return date.getTime();
 };
 
-const MemoAddCouponsReview = () => {
-  const { amount, setAmount } = useReview();
+const MemoAddCouponsReview = ({ call }: { call?: boolean }) => {
+  const { amount, setAmount, review } = useReview();
+  const [selectedDays, setSelectedDays] = useState(0);
   const {
     couponStartDate,
     couponEndDate,
@@ -55,9 +56,9 @@ const MemoAddCouponsReview = () => {
             type="tel"
             value={amount}
             onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                setAmount(value);
-              }}
+              const value = e.target.value.replace(/\D/g, "");
+              setAmount(value);
+            }}
             placeholder="Please enter the amount"
             maxLength={6}
             className="w-full px-4 py-2 border rounded-2xl focus:outline-none focus:border-[#7A69FE50] border-gray-300"
@@ -89,8 +90,13 @@ const MemoAddCouponsReview = () => {
             <button
               key={days}
               type="button"
-              className="px-4 py-2 mt-2 text-white bg-[#7A69FE] rounded-2xl text-sm"
-              onClick={() => setCouponEndDate(addDays(days))}
+              className={`px-4 py-2 mt-2 text-white rounded-2xl text-sm  ${
+                selectedDays === days ? "bg-black" : "bg-[#7A69FE]"
+              }`}
+              onClick={() => {
+                setCouponEndDate(addDays(days));
+                setSelectedDays(days);
+              }}
             >
               {days} Days
             </button>
@@ -100,10 +106,15 @@ const MemoAddCouponsReview = () => {
 
       <BottomButton
         buttons={[
-          {
-            text: "Apply",
-            onClick: goNext,
-          },
+          call
+            ? {
+                text: `Assign Coupon to ${review?.userId?.name || "user"}`,
+                onClick: goNext,
+              }
+            : {
+                text: "Apply",
+                onClick: goNext,
+              },
         ]}
       />
     </>

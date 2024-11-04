@@ -46,7 +46,6 @@ const MemoReview = () => {
   };
 
   const saveReview = (review: ReviewsType) => {
-    console.log("review", review);
     setReview(review);
     setPage("user");
     if (review.seen) return;

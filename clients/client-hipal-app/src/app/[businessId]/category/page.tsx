@@ -19,7 +19,7 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <CategorySkeleton />,
 });
 const Footer = dynamics(() => import("@/components/molecules/footer"), {
-  ssr: false,
+  ssr: true,
   loading: () => <CategorySkeleton />,
 });
 const DishesList = dynamics(

@@ -55,7 +55,7 @@ const SignUpPage: React.FC = () => {
   }, [navigate]);
 
   return (
-    <>
+    <section className="">
       <img
         className="absolute left-0 right-0 m-auto -top-[6.5rem]"
         width={63}
@@ -63,16 +63,7 @@ const SignUpPage: React.FC = () => {
         src={Hand}
         alt="Hipal_hand"
       />
-      <h5>
-        Already User?{" "}
-        <button
-          type="button"
-          onClick={goToLoginScreens}
-          className="text-[#1C4EFF] text-sm font-semibold cursor-pointer"
-        >
-          Login
-        </button>
-      </h5>
+
       <h3 className="mt-4 text-xl font-semibold leading-8">
         Hi Pal, Let’s get started
       </h3>
@@ -113,9 +104,19 @@ const SignUpPage: React.FC = () => {
         </div>
       </section>
       <button type="button" className="action_btn" onClick={handleSubmit}>
-        Create my biz
+        Signup to create business
       </button>
-    </>
+      <h5 className="mt-4 -mb-2 text-center">
+        Already User?{" "}
+        <button
+          type="button"
+          onClick={goToLoginScreens}
+          className="text-[#1C4EFF] text-sm font-semibold cursor-pointer"
+        >
+          Login
+        </button>
+      </h5>
+    </section>
   );
 };
 

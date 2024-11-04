@@ -63,7 +63,8 @@ const Login: React.FC = () => {
     if (
       response.status === 409 ||
       response.status === 400 ||
-      response.status === 401
+      response.status === 401 ||
+      response.status === 404
     ) {
       toast.error(user?.message || "Check credentials");
       return;
@@ -95,7 +96,8 @@ const Login: React.FC = () => {
         src={Hand}
         alt="Hipal_hand"
       />
-      <h5>
+
+      <h5 className="">
         New User?{" "}
         <button
           type="button"
@@ -154,8 +156,12 @@ const Login: React.FC = () => {
           />
         </div>
       </section>
-      <button type="button" className="action_btn" onClick={handleSubmit}>
-        Enter In
+      <button
+        type="button"
+        className="font-semibold action_btn"
+        onClick={handleSubmit}
+      >
+        Login
       </button>
       <center className="mt-4">
         Forgot Password?{" "}

@@ -5,13 +5,20 @@ import { useReview } from "@/components/store/useReview";
 import { getReviewAttributes } from "@/components/utils/helper";
 import { FaSmile, FaSmileBeam } from "react-icons/fa";
 import { PiSmileyAngryFill } from "react-icons/pi";
+import PopUp from "@/components/atom/popUp";
+import { MdArrowBack } from "react-icons/md";
+import AddCouponsReview from "./addCouponsReview";
 
 const StarUser = memo(() => {
   const logo = useBusinessData((state) => state.businessData?.logo);
-  const { setPage, review } = useReview((s) => ({
+  const { setPage, review, open, setOpen } = useReview((s) => ({
     setPage: s.setPage,
     review: s.review,
+    open: s.open,
+    setOpen: s.setOpen,
   }));
+
+  const closeModel = useCallback(() => setOpen(false), [setOpen]);
 
   const sendMessage = useCallback(() => {
     setPage("message");
@@ -69,9 +76,32 @@ const StarUser = memo(() => {
       <h6 className="mt-4 text-center">
         {review?.description || "No description"}
       </h6>
+      {open && (
+        <PopUp
+          hide
+          onClose={closeModel}
+          show={open}
+          width="w-[30rem]"
+          height="h-[100dvh] lg:h-auto"
+        >
+          <section>
+            <button
+              type="button"
+              onClick={closeModel}
+              className="absolute top-5 left-6 bg-[#ffffff] rounded-2xl px-3 py-1"
+            >
+              <MdArrowBack />
+            </button>
+            <AddCouponsReview call />
+          </section>
+        </PopUp>
+      )}
       <BottomButton
         fixed
-        buttons={[{ text: "WatsApp", onClick: sendMessage }]}
+        buttons={[
+          { text: "Assign Coupon", onClick: () => setOpen(true) },
+          { text: "WatsApp", onClick: sendMessage },
+        ]}
       />
     </section>
   );

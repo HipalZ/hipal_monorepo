@@ -8,7 +8,6 @@ import AddCoinzReview from "./addCoinz";
 import AddCouponsReview from "./addCouponsReview";
 import { MdArrowBack } from "react-icons/md";
 import useCouponsStore from "@/components/store/useCouponsStore";
-import { useLoyalty } from "@/components/store/useLoyalty";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useCreateReviewTemplate } from "@/hooks/useReview";
 import { getReviewAttributes } from "@/components/utils/helper";
@@ -36,7 +35,7 @@ export default function ReviewComponent() {
   }));
 
   const { couponStartDate, couponEndDate } = useCouponsStore();
-  const { loyaltyID } = useLoyalty();
+  const existingLoyalty = useBusinessData((state) => state.existingLoyalty);
   const { businessData } = useBusinessData();
   const { createReview, isPending } = useCreateReviewTemplate();
   const [message, setMessage] = useState("");
@@ -121,7 +120,12 @@ export default function ReviewComponent() {
     };
 
     if (modelType === "COINS" && coin && password) {
-      return { ...basePayload, coins: coin, password, loyaltyId: loyaltyID };
+      return {
+        ...basePayload,
+        coins: coin,
+        password,
+        loyaltyId: existingLoyalty.loyaltyId,
+      };
     }
 
     if (modelType === "COUPONZ" && amount && couponStartDate && couponEndDate) {
@@ -137,7 +141,7 @@ export default function ReviewComponent() {
     couponEndDate,
     couponStartDate,
     customLink,
-    loyaltyID,
+    existingLoyalty.loyaltyId,
     message,
     modelType,
     password,
