@@ -84,6 +84,7 @@ const CategoryPageBtn = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const triggerCallWaiter = useCallback(() => {
+    console.log("triggerCallWaiter");
     setDirection("category");
     if (!tableName) {
       return router.push(`/${customLink}/scan`);
@@ -118,13 +119,14 @@ const CategoryPageBtn = () => {
               </center>
             </Link>
             {outletInfo?.outLetType !== "OTHER" && (
-              <center
+              <button
+                type="button"
                 onClick={triggerCallWaiter}
                 className="w-full font-light text-base-100 "
               >
                 <FaConciergeBell size={20} className="mb-2" />
                 Call captain
-              </center>
+              </button>
             )}
             <center
               onClick={showingCart}

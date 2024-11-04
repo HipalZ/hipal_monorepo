@@ -10,8 +10,8 @@ export const fetchCache = "force-no-store";
 const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
-    ssr: false,
-    loading: () => <CategorySkeleton />,
+    ssr: true,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
@@ -25,8 +25,8 @@ const Footer = dynamics(() => import("@/components/molecules/footer"), {
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
-    ssr: false,
-    loading: () => <CategorySkeleton />,
+    ssr: true,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
 const CategoryPageBtn = dynamics(
@@ -39,8 +39,8 @@ const CategoryPageBtn = dynamics(
 const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
-    ssr: false,
-    loading: () => <CategorySkeleton />,
+    ssr: true,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
 
