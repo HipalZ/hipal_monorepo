@@ -38,6 +38,10 @@ const userAnalyticsSchema = new mongoose.Schema<UserAnalytics>({
     type: Number,
     required: false,
   },
+  tableName: {
+    type: String,
+    required: false,
+  },
 });
 
 const UserAnalytic: Model<UserAnalytics> = mongoose.model<UserAnalytics>(
