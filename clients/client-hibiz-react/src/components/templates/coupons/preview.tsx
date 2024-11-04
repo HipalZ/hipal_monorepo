@@ -10,6 +10,7 @@ import Cropper from "react-easy-crop";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import PopUp from "@/components/atom/popUp";
+import toast from "react-hot-toast";
 const Background = lazy(() => import("@/components/atom/feildBackground"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 const AfterGrabbingCoupon = lazy(
@@ -121,6 +122,13 @@ const MemoPreview = () => {
     }
   }, []);
 
+  const goNext = useCallback(() => {
+    if (!imageSrc) {
+      return toast.error("Please select image before proceeding");
+    }
+    setSelectedPage("CUSTOM");
+  }, [imageSrc]);
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <section
@@ -231,7 +239,7 @@ const MemoPreview = () => {
             },
             {
               text: "save & next",
-              onClick: () => setSelectedPage("CUSTOM"),
+              onClick: goNext,
             },
           ]}
         />

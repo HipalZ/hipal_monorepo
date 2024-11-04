@@ -86,18 +86,18 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your coupons",
     navigateTo: "coupons",
   },
-  {
-    image: Review,
-    text: "Reviews",
-    description: "Manage your reviews",
-    navigateTo: "reviews",
-  },
-  {
-    image: HiPeopleImage,
-    text: "WhatsApp",
-    description: "Manage your WhatsApp",
-    navigateTo: "whatsapp",
-  },
+  // {
+  //   image: Review,
+  //   text: "Reviews",
+  //   description: "Manage your reviews",
+  //   navigateTo: "reviews",
+  // },
+  // {
+  //   image: HiPeopleImage,
+  //   text: "WhatsApp",
+  //   description: "Manage your WhatsApp",
+  //   navigateTo: "whatsapp",
+  // },
 ];
 export interface AccessControlMapping {
   [key: string]: string;

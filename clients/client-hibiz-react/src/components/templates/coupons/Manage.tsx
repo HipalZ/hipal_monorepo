@@ -126,7 +126,7 @@ const MemoManage = () => {
         <button
           type="button"
           onClick={() => setSelectedPage("ANALYTICS")}
-          className="absolute left-1/2 top-0 flex -translate-x-1/2 text-white -translate-y-1/2 transform items-center justify-center rounded-2xl border border-[#6A32DF] bg-black px-4 py-1 text-sm text-[#6A32DF]"
+          className="absolute left-1/2 top-0 flex -translate-x-1/2 text-white -translate-y-1/2 transform items-center justify-center rounded-2xl border border-[#6A32DF] bg-black px-4 py-1 text-sm "
         >
           Analytics
           <motion.div

@@ -128,13 +128,14 @@ const MemoShare = () => {
       endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
     };
 
-    const eligibleUser = couponForEveryOne
-      ? { allUsers: true }
-      : {
-          allUsers: false,
-          userIds: selectedUserIds.length ? selectedUserIds : undefined,
-          groupIds: selectedGroupIds.length ? selectedGroupIds : undefined,
-        };
+    const eligibleUser =
+      selectedUserIds.length > 0 || selectedGroupIds.length > 0
+        ? {
+            allUsers: false,
+            userIds: selectedUserIds.length ? selectedUserIds : undefined,
+            groupIds: selectedGroupIds.length ? selectedGroupIds : undefined,
+          }
+        : { allUsers: true };
 
     const payload = {
       businessId: businessData?._id || "",

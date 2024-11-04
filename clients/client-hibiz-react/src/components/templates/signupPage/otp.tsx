@@ -53,7 +53,7 @@ const Otp = ({ login }: { login?: boolean }) => {
       return;
     }
 
-    if (res.status === 200) {
+    if (res.status === 200 || res.status === 201) {
       setAccessToken(response.data.accessToken);
       setRefreshToken(response.data.refreshToken);
       setUser(response.data.user);

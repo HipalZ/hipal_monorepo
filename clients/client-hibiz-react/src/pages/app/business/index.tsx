@@ -14,14 +14,34 @@ import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import type { LoyaltyType } from "@hi/db-models/src/validators";
 ///
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
+  const setExistingLoyalty = useBusinessData((s) => s.setExistingLoyalty);
   const { reset } = useBusinessCtrl();
   const user = useOwnerLogin((s) => s.user);
   const navigate = useNavigate();
+
+  const getLoyaltyData = async (business: IBusinessData) => {
+    const response = await apiRpc.businesses[":businessId"].loyalty.$get({
+      param: {
+        businessId: business?._id,
+      },
+    });
+    const loyaltyData = (await response.json()).data as LoyaltyType;
+    if (response.status === 200 || response.status === 201) {
+      setExistingLoyalty(loyaltyData);
+    }
+    if (response.status === 404) {
+      setExistingLoyalty(null);
+    }
+    return loyaltyData;
+  };
+
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
+    getLoyaltyData(business);
     navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
   };
 
