@@ -130,16 +130,17 @@ const MemoReviewPage = () => {
     const response = await res.json();
     if (res.status === 200) {
       toast.success(response.message || "Review submitted successfully");
+      return router.push(`/${customLink}/explore`);
     }
     if (res.status === 400) {
       toast.error(response.message || "Review not submitted");
     }
-    if (googleReviewCount === 0) {
-      setShowGoogleReview(true);
-    } else {
-      setShowGoogleReview(false);
-      router.push(`/${customLink}/explore`);
-    }
+    // if (googleReviewCount === 0) {
+    //   setShowGoogleReview(true);
+    // } else {
+    //   setShowGoogleReview(false);
+    //   router.push(`/${customLink}/explore`);
+    // }
   };
 
   const getStaff = useCallback(async () => {
@@ -204,7 +205,7 @@ const MemoReviewPage = () => {
           Continue
         </button>
         <Ripples />
-        <GReview />
+        {/* <GReview /> */}
       </section>
     </>
   );
