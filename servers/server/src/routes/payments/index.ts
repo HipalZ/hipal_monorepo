@@ -1148,7 +1148,7 @@ const paymentsRouter = new Hono()
                 status: "SUCCESS",
                 order_id: getOrder?._id,
                 message: `Paid ${getOrder?.total}`,
-                tableName: getOrder?.tableName,
+                tableName: `T-${getOrder?.tableName?.slice(-2)}`,
                 isAccepted: false,
                 userId: getOrder?.userId,
                 posDiscount: posDiscount,
