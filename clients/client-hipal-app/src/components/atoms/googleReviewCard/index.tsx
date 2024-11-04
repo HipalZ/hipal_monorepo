@@ -86,26 +86,28 @@ const MemoGoogleReviewCard = () => {
       const url =
         businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
 
-      // Try to open the URL in a new tab
-      const newWindow = window.open(url, "_blank");
+      // // Try to open the URL in a new tab
+      // const newWindow = window.open(url, "_blank");
 
-      // If the new window is blocked or not created, fall back to changing the current window's location
-      if (
-        !newWindow ||
-        newWindow.closed ||
-        typeof newWindow.closed === "undefined"
-      ) {
-        // Create a temporary anchor element
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
+      // // If the new window is blocked or not created, fall back to changing the current window's location
+      // if (
+      //   !newWindow ||
+      //   newWindow.closed ||
+      //   typeof newWindow.closed === "undefined"
+      // ) {
+      //   // Create a temporary anchor element
+      //   const link = document.createElement("a");
+      //   link.href = url;
+      //   link.target = "_blank";
+      //   link.rel = "noopener noreferrer";
 
-        // Programmatically click the link
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      //   // Programmatically click the link
+      //   document.body.appendChild(link);
+      //   link.click();
+      //   document.body.removeChild(link);
+      // }
+
+      router.push(url);
       setReviewPopup(true);
       setShowGoogleReview(false);
       return user;
