@@ -107,7 +107,7 @@ const MemoGoogleReviewCard = () => {
       //   document.body.removeChild(link);
       // }
 
-      router.push(url);
+      location.href = url;
       setReviewPopup(true);
       setShowGoogleReview(false);
       return user;
