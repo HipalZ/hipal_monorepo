@@ -17,7 +17,9 @@ const Cart = () => {
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
+
   const openCallWaiterModal = useCallback(() => {
+    console.log("openCallWaiterModal");
     setCallWaiterModal(true);
   }, []);
 
@@ -53,7 +55,7 @@ const Cart = () => {
           ))}
         </div>
       )}
-      {accessToken && tableName && (
+      {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
         <button
           onClick={openCallWaiterModal}
           type="button"
@@ -62,7 +64,7 @@ const Cart = () => {
           Call Captain
         </button>
       )}
-      {callWaiterModal && outletInfo?.outLetType === "OTHER" && (
+      {callWaiterModal && (
         <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
           <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
         </MemoBottomPopUp>
