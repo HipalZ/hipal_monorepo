@@ -116,8 +116,9 @@ function OtpPage() {
       newUrl = invoiceUrl;
     } else if (direction === "couponz") {
       newUrl = urlFrom;
+    } else if (direction === "explore-googleReview") {
+      newUrl = `/${customLink}/explore`;
     }
-
     window.location.href = newUrl;
   }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
