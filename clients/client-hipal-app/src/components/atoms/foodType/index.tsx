@@ -4,7 +4,6 @@ import Mixed from "@/assets/svg/Mixed.svg";
 import Alcohol from "@/assets/alcohol.png";
 import NonAlcohol from "@/assets/NonAlcohol.png";
 import { useCart } from "@/components/store/useCart";
-import { cn } from "@/components/utils/helpers";
 
 export type FOOD_TYPES =
   | "VEG"
@@ -17,8 +16,6 @@ export type FOOD_TYPES =
   | "NON_ALCOHOL";
 
 const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
-  const { showCart } = useCart();
-
   const imageIcons: Record<string, { src: string; alt: string }> = {
     mixed: { src: Mixed, alt: "Mixed" },
     alcohol: { src: Alcohol, alt: "Alcohol" },
@@ -78,7 +75,6 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
           );
         }
 
-        // Render default circles for other types
         const { border, circle } = classes[currentType] || classes.other;
         return (
           <div
