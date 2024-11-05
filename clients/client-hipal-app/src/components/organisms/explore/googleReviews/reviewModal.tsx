@@ -1,29 +1,21 @@
 import Image from "next/image";
-import React, { memo, useEffect } from "react";
+import { memo, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SunlightReview from "@/assets/img/reviewEllipse.png";
 import ReviewCoinz from "@/assets/img/googleReviewStars.png";
-import { apiRpc } from "@hi/common";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { useLogin } from "@/components/store/useLogin";
-import { useErrorHandling } from "@/utils/helper";
 
 const MemoReviewModal = ({
   closeModal,
 }: {
   closeModal: () => void;
 }) => {
-  const { errorText } = useErrorHandling();
-  const { loyaltySetting } = useLoyaltyData((s) => ({
-    loyaltySetting: s.loyaltySetting,
-  }));
-
-  const { userDetails, googleReviewCount } = useLogin((s) => ({
-    userDetails: s.userDetails,
+  const { googleReviewCount } = useLogin((s) => ({
     googleReviewCount: s.googleReviewCount,
   }));
+
   function randomInRange(min: number, max: number) {
     return Math.random() * (max - min) + min;
   }
@@ -37,21 +29,7 @@ const MemoReviewModal = ({
     });
   }
 
-  const updateGoogleReviewCount = async () => {
-    const res = await apiRpc.reviews["update-googlreview"].$put({
-      json: {
-        loyaltyId: loyaltySetting?.loyaltyId,
-        userId: userDetails?._id,
-      },
-    });
-    await closeModal();
-    if (!res.ok) {
-      return errorText(res.status);
-    }
-  };
-
   useEffect(() => {
-    // if (googleReviewCount > 0) return null;
     triggerConfettiBlast();
   }, []);
 
@@ -66,7 +44,7 @@ const MemoReviewModal = ({
       <section className="flex items-center justify-between">
         <button
           type="button"
-          onClick={updateGoogleReviewCount}
+          onClick={closeModal}
           className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
         >
           <BiArrowBack className="text-black" size={20} />
@@ -76,7 +54,7 @@ const MemoReviewModal = ({
         </article>
       </section>
       <section className="absolute inset-0 flex items-center justify-center">
-        <center className="absolute w-[500px] opacity-50">
+        <center className="absolute w-[250px] opacity-50">
           <Image
             className="animate-spin"
             width={1080}
@@ -100,10 +78,10 @@ const MemoReviewModal = ({
                 style={{
                   fontSize: "28px",
                   fill: "white",
-                  letterSpacing: "0.2em",
+                  letterSpacing: "0.125em",
                 }}
               >
-                {googleReviewCount > 1 ? "" : "Thanks for the review"}
+                {googleReviewCount > 1 ? "" : "Thank you for your review!"}
               </textPath>
             </text>
           </svg>
@@ -114,18 +92,15 @@ const MemoReviewModal = ({
           </section>
         </section>
       </section>
-      <h1 className="poppins-regular absolute -mt-2 text-[2rem] font-bold -translate-x-1/2 top-2/3 left-1/2">
-        {googleReviewCount > 1 ? "" : "Congratulations!"}
-      </h1>
-      <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2 mt-12">
+      <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2">
         {googleReviewCount > 1
           ? "You Have Already Submitted"
-          : "You have won 40 Coinz"}
+          : "Your review is under process and will be credited within 24 hours. Thank you for your patience!"}
       </center>
       <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
         <button
           type="button"
-          onClick={updateGoogleReviewCount}
+          onClick={closeModal}
           className="bottom_btn bg-[#fff] text-black text-base"
         >
           Continue

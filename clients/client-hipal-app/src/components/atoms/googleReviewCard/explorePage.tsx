@@ -2,8 +2,9 @@ import Image from "next/image";
 import { LuArrowRight } from "react-icons/lu";
 import Star from "@/assets/svg/Star.svg";
 import googleImage from "@/assets/img/googleImg.png";
+import { memo } from "react";
 
-const ExplorePageReviewCard = ({
+const MemoExplorePageReviewCard = ({
   signInWithGoogle,
 }: { signInWithGoogle: () => void }) => {
   return (
@@ -57,4 +58,5 @@ const ExplorePageReviewCard = ({
   );
 };
 
+const ExplorePageReviewCard = memo(MemoExplorePageReviewCard);
 export default ExplorePageReviewCard;
