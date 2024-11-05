@@ -244,6 +244,16 @@ const reviewRouter = new Hono()
       const requestData = await c.req.json();
       const { userId, loyaltyId } = requestData;
 
+      const reviewAlreadyExist = await UserReward.findOne({
+        userId,
+        loyaltyId,
+        googleReviewCount: { $gt: 1 },
+      });
+
+      if (reviewAlreadyExist) {
+        return respond(c, "Google review already exist", true, 409, {});
+      }
+
       const userRewards = await UserReward.findOneAndUpdate(
         { userId, loyaltyId },
         {
@@ -269,7 +279,9 @@ const reviewRouter = new Hono()
         "Google review count updated successfully",
         false,
         200,
-        {},
+        {
+          googleReviewCount: userRewards.googleReviewCount,
+        },
       );
     },
   )
