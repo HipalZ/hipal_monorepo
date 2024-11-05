@@ -259,6 +259,7 @@ const reviewRouter = new Hono()
         {
           $inc: { googleReviewCount: 1 },
         },
+        { new: true },
       );
 
       if (!userRewards) {
