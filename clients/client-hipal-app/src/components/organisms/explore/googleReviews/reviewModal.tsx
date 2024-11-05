@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
@@ -7,14 +7,13 @@ import SunlightReview from "@/assets/img/reviewEllipse.png";
 import ReviewCoinz from "@/assets/img/googleReviewStars.png";
 import { useLogin } from "@/components/store/useLogin";
 
-const MemoReviewModal = ({
-  closeModal,
-}: {
-  closeModal: () => void;
-}) => {
+const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
   const { googleReviewCount } = useLogin((s) => ({
     googleReviewCount: s.googleReviewCount,
   }));
+  const [timer, setTimer] = useState(5);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   function randomInRange(min: number, max: number) {
     return Math.random() * (max - min) + min;
@@ -30,7 +29,21 @@ const MemoReviewModal = ({
   }
 
   useEffect(() => {
-    triggerConfettiBlast();
+    // Set up interval only once on initial mount
+    intervalRef.current = setInterval(() => {
+      setTimer((prevTimer) => {
+        if (prevTimer <= 1) {
+          clearInterval(intervalRef.current!);
+          setShowConfetti(true);
+          triggerConfettiBlast();
+          return 0;
+        }
+        return prevTimer - 1;
+      });
+    }, 1000);
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalRef.current!);
   }, []);
 
   return (
@@ -81,31 +94,82 @@ const MemoReviewModal = ({
                   letterSpacing: "0.125em",
                 }}
               >
-                {googleReviewCount > 1 ? "" : "Thank you for your review!"}
+                {timer > 0
+                  ? "Review in progress..."
+                  : googleReviewCount > 1
+                    ? ""
+                    : "Thank you for your review!"}
               </textPath>
             </text>
           </svg>
         </section>
         <section className="absolute inset-0 flex items-center justify-center">
           <section className="absolute">
-            <Image src={ReviewCoinz} alt="ReviewCoinz" />
+            {timer > 0 ? (
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#00E676"
+                  strokeWidth="10"
+                  strokeDasharray={`${((5 - timer) / 5) * 565} 565`}
+                  transform="rotate(-90 100 100)"
+                />
+                <text
+                  x="100"
+                  y="120"
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="60"
+                  fontWeight="bold"
+                >
+                  {timer}
+                </text>
+              </svg>
+            ) : (
+              <Image src={ReviewCoinz} alt="ReviewCoinz" />
+            )}
           </section>
         </section>
       </section>
       <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2">
-        {googleReviewCount > 1
-          ? "You Have Already Submitted"
-          : "Your review is under process and will be credited within 24 hours. Thank you for your patience!"}
+        {timer > 0 ? (
+          <div className="text-[1.5rem] font-bold text-white">
+            Processing...
+          </div>
+        ) : (
+          <span className="text-[2rem] font-bold text-white">
+            Congratulations!
+          </span>
+        )}
       </center>
-      <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
-        <button
-          type="button"
-          onClick={closeModal}
-          className="bottom_btn bg-[#fff] text-black text-base"
-        >
-          Continue
-        </button>
-      </article>
+      {showConfetti && (
+        <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="bottom_btn bg-[#fff] text-black text-base"
+          >
+            Continue
+          </button>
+        </article>
+      )}
+      <div className="absolute w-full p-2 text-xs text-center text-white -translate-x-1/2 bg-black bg-opacity-25 top-[80%] left-1/2">
+        <p>
+          Disclaimer: Coinz will be credited only after your review is
+          confirmed. If no review is detected, no Coinz will be awarded.
+        </p>
+      </div>
     </section>
   );
 };
