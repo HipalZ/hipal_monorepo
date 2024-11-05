@@ -11,10 +11,6 @@ import {
   User,
   UserReward,
 } from "@hi/db-models";
-import {
-  GoogleAuthUsersAttrs,
-  GoogleReviewsAttr,
-} from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -235,95 +231,49 @@ const reviewRouter = new Hono()
       });
     },
   )
-  .post(
-    "/storeGoogleAuthUser",
-    zValidator("json", GoogleAuthUsersAttrs),
-    async (c) => {
-      const requestData = await c.req.json();
-      const { userId, loyaltyId, businessId } = requestData;
-      console.log("requestData", requestData);
-
-      const existingUser = await User.findById(userId);
-
-      if (!existingUser) {
-        return respond(c, "User not found", true, 404, {});
-      }
-
-      const existingAuthUser = await GoogleAuthUser.findOne({
-        userId,
-        businessId: businessId,
-      });
-
-      console.log("existingAuthUser", existingAuthUser);
-
-      if (existingAuthUser) {
-        await UserReward.findOneAndUpdate(
-          { userId, loyaltyId },
-          {
-            $inc: { googleReviewCount: 1 },
-          },
-        );
-
-        return respond(
-          c,
-          "user already submitted reviews for this business",
-          true,
-          400,
-          {},
-        );
-      }
-
-      const saveUser = await GoogleAuthUser.create({
-        userId,
-        loyaltyId,
-        businessId,
-        authorName: requestData.authorName,
-      });
-
-      console.log("saveUser", saveUser);
-
-      if (!saveUser) {
-        return respond(c, "failed to save auth user", true, 400, {});
-      }
-
-      const rewards = await UserReward.findOneAndUpdate(
-        { userId, loyaltyId },
-        {
-          $inc: { rewards: 20, googleReviewCount: 1 },
-        },
-      );
-
-      console.log("rewardssave", rewards);
-
-      if (!rewards) {
-        return respond(c, "Rewards not found", true, 404, {});
-      }
-
-      return respond(c, "review post successFully", false, 200, {
-        user: existingUser,
-        count: rewards.scanCount,
-        googleReviewCount: rewards.googleReviewCount,
-        rewards: rewards.rewards,
-      });
-    },
-  )
   .put(
-    "/update-googlreview",
-    zValidator("json", GoogleReviewsAttr),
+    "/update-google-review",
+    zValidator(
+      "json",
+      z.object({
+        userId: z.string().min(1).max(100),
+        loyaltyId: z.string().min(1).max(100),
+      }),
+    ),
     async (c) => {
       const requestData = await c.req.json();
       const { userId, loyaltyId } = requestData;
 
-      await UserReward.findOneAndUpdate(
+      const userRewards = await UserReward.findOneAndUpdate(
         { userId, loyaltyId },
         {
           $inc: { googleReviewCount: 1 },
         },
       );
 
-      return respond(c, "review post successFully", false, 200, {});
+      if (!userRewards) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      if (userRewards.googleReviewCount === 1) {
+        await UserReward.findOneAndUpdate(
+          { userId, loyaltyId },
+          {
+            $inc: { rewards: 25 },
+          },
+        );
+      }
+
+      return respond(
+        c,
+        "Google review count updated successfully",
+        false,
+        200,
+        {},
+      );
     },
   )
+
   .get(
     "/staffReviews",
     zValidator(
