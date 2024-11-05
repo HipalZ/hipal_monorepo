@@ -1,11 +1,8 @@
-import { memo } from "react";
-import { useLogin, type IUserData } from "@/components/store/useLogin";
-import type { IResponse } from "@/components/types/businessData";
+import { memo, useMemo } from "react";
+import { useLogin } from "@/components/store/useLogin";
 import { apiRpc } from "@hi/common";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/components/utils/helpers";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "../loader/skeletonLoader";
@@ -28,71 +25,78 @@ const MemoGoogleReviewCard = () => {
   const router = useRouter();
   const { errorText } = useErrorHandling();
   const customLink = useParams()?.businessId as string;
-  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const { setShowGoogleReview } = useReview((s) => ({
     setShowGoogleReview: s.setShowGoogleReview,
   }));
   const { loyaltySetting } = useLoyaltyData();
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
-  const { userDetails, setReviewPopup, setGoogleReviewCount } = useLogin(
-    (s) => ({
-      userDetails: s.userDetails,
-      setReviewPopup: s.setReviewPopup,
-      setGoogleReviewCount: s.setGoogleReviewCount,
-    }),
-  );
+
+  const {
+    userDetails,
+    setReviewPopup,
+    googleReviewCount,
+    setGoogleReviewCount,
+  } = useLogin((s) => ({
+    userDetails: s.userDetails,
+    setReviewPopup: s.setReviewPopup,
+    googleReviewCount: s.googleReviewCount,
+    setGoogleReviewCount: s.setGoogleReviewCount,
+  }));
+
   const path = usePathname();
-  const isReviewPage = path.includes("review");
-  const isReviewGiven = async (userDetails: IUserData) => {
-    let res: IResponse;
-    const response = await apiRpc.subscribers.$get({
-      query: {
-        businessId: businessId.toString(),
-        userId: userDetails._id.toString(),
-        loyaltyId: loyaltySetting?.loyaltyId.toString(),
-      },
-    });
-    res = await response.json();
-    setGoogleReviewCount(res?.googleReviewCount);
-    return res?.googleReviewCount;
-  };
+  const isReviewPage = useMemo(() => path.includes("review"), [path]);
 
   const signInWithGoogle = async () => {
+    if (googleReviewCount && googleReviewCount > 1) {
+      setReviewPopup(true);
+      return;
+    }
+
+    // Open the intended URL immediately to avoid being blocked
+    const url =
+      businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
+    const newWindow = window.open(url, "_blank");
+
     try {
-      const count: number = await isReviewGiven(userDetails);
-      if (!!count && count > 1) return setReviewPopup(true);
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      if (user === undefined) return null;
-      const res = await apiRpc.reviews.storeGoogleAuthUser.$post({
+      const res = await apiRpc.reviews["update-google-review"].$put({
         json: {
-          businessId: businessId.toString(),
-          loyaltyId: loyaltySetting.loyaltyId.toString(),
+          loyaltyId: loyaltySetting?.loyaltyId.toString(),
           userId: userDetails._id.toString(),
-          authorName: user?.displayName || userDetails?.name,
         },
       });
-      if (res.status === 400) {
+
+      if (res.status === 409) {
         toast.error("Review Already Submitted");
         router.push(`/${customLink}/explore`);
         setShowGoogleReview(false);
-        return null;
-      }
-      if (res.status === 401) {
-        return errorText(res.status);
+        newWindow?.close();
+        return;
       }
 
-      // Redirect to the Google review page
-      const url =
-        businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-      window.open(url, "_blank");
-      setReviewPopup(true);
-      setShowGoogleReview(false);
-      return user;
+      if (res.status === 401 || res.status === 400) {
+        errorText(res.status);
+        newWindow?.close();
+        return;
+      }
+
+      const response = await res.json();
+      setGoogleReviewCount(response?.data?.googleReviewCount);
+
+      if (!newWindow) {
+        toast.error(
+          "Failed to open the new tab. Please enable pop-ups for this site and try again.",
+        );
+        alert("Please enable pop-ups for this site to proceed.");
+      }
     } catch (error) {
       console.error("Error during sign-in:", error);
+      newWindow?.close();
+    } finally {
+      setReviewPopup(true);
+      setShowGoogleReview(false);
     }
   };
+
   return (
     <>
       {isReviewPage ? (

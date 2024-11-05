@@ -2,14 +2,16 @@ import Image from "next/image";
 import { LuArrowRight } from "react-icons/lu";
 import Star from "@/assets/svg/Star.svg";
 import googleImage from "@/assets/img/googleImg.png";
+import { memo } from "react";
 
-const ExplorePageReviewCard = ({
+const MemoExplorePageReviewCard = ({
   signInWithGoogle,
 }: { signInWithGoogle: () => void }) => {
   return (
     <div className="p-4 mb-4">
       <div
         onClick={signInWithGoogle}
+        onKeyDown={signInWithGoogle}
         className="bg-[#FFC600] w-full min-h-full max-h-[11rem] rounded-2xl p-4 flex relative overflow-hidden"
       >
         <div className="z-10 space-y-4">
@@ -57,4 +59,5 @@ const ExplorePageReviewCard = ({
   );
 };
 
+const ExplorePageReviewCard = memo(MemoExplorePageReviewCard);
 export default ExplorePageReviewCard;

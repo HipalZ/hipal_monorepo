@@ -1,32 +1,25 @@
 import Image from "next/image";
-import React, { memo, useEffect } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SunlightReview from "@/assets/img/reviewEllipse.png";
 import ReviewCoinz from "@/assets/img/googleReviewStars.png";
-import { apiRpc } from "@hi/common";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { useLogin } from "@/components/store/useLogin";
-import { useErrorHandling } from "@/utils/helper";
 
-const MemoReviewModal = ({
-  closeModal,
-}: {
-  closeModal: () => void;
-}) => {
-  const { errorText } = useErrorHandling();
-  const { loyaltySetting } = useLoyaltyData((s) => ({
-    loyaltySetting: s.loyaltySetting,
-  }));
-
-  const { userDetails, googleReviewCount } = useLogin((s) => ({
-    userDetails: s.userDetails,
+const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
+  const { googleReviewCount } = useLogin((s) => ({
     googleReviewCount: s.googleReviewCount,
   }));
-  function randomInRange(min: number, max: number) {
+  const [timer, setTimer] = useState(15);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isTimerStarted, setIsTimerStarted] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const observerRef = useRef<HTMLDivElement | null>(null);
+
+  const randomInRange = useCallback((min: number, max: number) => {
     return Math.random() * (max - min) + min;
-  }
+  }, []);
 
   function triggerConfettiBlast() {
     confetti({
@@ -37,26 +30,33 @@ const MemoReviewModal = ({
     });
   }
 
-  const updateGoogleReviewCount = async () => {
-    const res = await apiRpc.reviews["update-googlreview"].$put({
-      json: {
-        loyaltyId: loyaltySetting?.loyaltyId,
-        userId: userDetails?._id,
-      },
-    });
-    await closeModal();
-    if (!res.ok) {
-      return errorText(res.status);
+  const startTimer = useCallback(() => {
+    if (!isTimerStarted) {
+      setIsTimerStarted(true);
+      intervalRef.current = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer <= 1) {
+            clearInterval(intervalRef.current!);
+            setShowConfetti(true);
+            triggerConfettiBlast();
+            return 0;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
     }
-  };
+  }, [isTimerStarted]);
 
   useEffect(() => {
-    // if (googleReviewCount > 0) return null;
-    triggerConfettiBlast();
+    startTimer();
+    return () => {
+      clearInterval(intervalRef.current!);
+    };
   }, []);
 
   return (
     <section
+      ref={observerRef}
       className="h-[100dvh] relative z-[50] overflow-y-hidden"
       style={{
         background:
@@ -66,7 +66,7 @@ const MemoReviewModal = ({
       <section className="flex items-center justify-between">
         <button
           type="button"
-          onClick={updateGoogleReviewCount}
+          onClick={closeModal}
           className="sticky z-20 px-4 py-2 mt-4 ml-4 bg-gray-100/50 w-[3.25rem] top-4 left-4 rounded-3xl"
         >
           <BiArrowBack className="text-black" size={20} />
@@ -75,8 +75,12 @@ const MemoReviewModal = ({
           <Image src={HipalWhiteLogo} alt="logo" className="w-auto h-auto" />
         </article>
       </section>
+      <h1 className="absolute text-2xl top-[25%] left-[13%]">
+        {" "}
+        {timer > 0 ? "Your Review in progress" : "Thank you for your review!"}
+      </h1>
       <section className="absolute inset-0 flex items-center justify-center">
-        <center className="absolute w-[500px] opacity-50">
+        <center className="absolute w-[250px] opacity-50">
           <Image
             className="animate-spin"
             width={1080}
@@ -85,52 +89,67 @@ const MemoReviewModal = ({
             alt="SunlightReview"
           />
         </center>
-        <section className="absolute inset-0 flex items-center justify-center inter">
-          <svg title="Curve" viewBox="0 0 500 500">
-            <path
-              id="curve"
-              fill="transparent"
-              d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"
-            />
-            <text width="500">
-              <textPath
-                xlinkHref="#curve"
-                startOffset="50%"
-                textAnchor="middle"
-                style={{
-                  fontSize: "28px",
-                  fill: "white",
-                  letterSpacing: "0.2em",
-                }}
-              >
-                {googleReviewCount > 1 ? "" : "Thanks for the review"}
-              </textPath>
-            </text>
-          </svg>
-        </section>
         <section className="absolute inset-0 flex items-center justify-center">
           <section className="absolute">
-            <Image src={ReviewCoinz} alt="ReviewCoinz" />
+            {timer > 0 ? (
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="10"
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#00E676"
+                  strokeWidth="10"
+                  strokeDasharray={`${((15 - timer) / 15) * 565} 565`}
+                  transform="rotate(-90 100 100)"
+                />
+                <text
+                  x="100"
+                  y="120"
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="60"
+                  fontWeight="bold"
+                >
+                  {timer}
+                </text>
+              </svg>
+            ) : (
+              <Image src={ReviewCoinz} alt="ReviewCoinz" />
+            )}
           </section>
         </section>
       </section>
-      <h1 className="poppins-regular absolute -mt-2 text-[2rem] font-bold -translate-x-1/2 top-2/3 left-1/2">
-        {googleReviewCount > 1 ? "" : "Congratulations!"}
-      </h1>
-      <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2 mt-12">
-        {googleReviewCount > 1
-          ? "You Have Already Submitted"
-          : "You have won 40 Coinz"}
+      <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2">
+        {timer > 0 ? (
+          <div className="text-[1rem] font-bold text-white">
+            Make sure to post review in google to get your coinz
+          </div>
+        ) : (
+          <span className="text-[1rem] font-bold text-white">
+            Thanks for your review! You have earned 40 Coinz
+          </span>
+        )}
       </center>
-      <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
-        <button
-          type="button"
-          onClick={updateGoogleReviewCount}
-          className="bottom_btn bg-[#fff] text-black text-base"
-        >
-          Continue
-        </button>
-      </article>
+      {showConfetti && (
+        <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="bottom_btn bg-[#fff] text-black text-base"
+          >
+            Continue
+          </button>
+        </article>
+      )}
     </section>
   );
 };
