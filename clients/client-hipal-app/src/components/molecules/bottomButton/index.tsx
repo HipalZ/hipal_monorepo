@@ -83,7 +83,7 @@ function BottomButton({
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "sticky z-10 bottom-3 py-2 pl-2 pr-2 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
+            "sticky z-10 bottom-3 py-3 pl-2 pr-2 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
           {children}
@@ -95,7 +95,7 @@ function BottomButton({
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "fixed z-10 bottom-3 py-2 px-6 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
+            "fixed z-10 bottom-3 py-4 px-6 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
           <center className="relative flex items-center justify-between text-xs">
