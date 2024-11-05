@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
@@ -11,13 +11,15 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
   const { googleReviewCount } = useLogin((s) => ({
     googleReviewCount: s.googleReviewCount,
   }));
-  const [timer, setTimer] = useState(5);
+  const [timer, setTimer] = useState(15);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isTimerStarted, setIsTimerStarted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-  function randomInRange(min: number, max: number) {
+  const randomInRange = useCallback((min: number, max: number) => {
     return Math.random() * (max - min) + min;
-  }
+  }, []);
 
   function triggerConfettiBlast() {
     confetti({
@@ -28,26 +30,33 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
     });
   }
 
-  useEffect(() => {
-    // Set up interval only once on initial mount
-    intervalRef.current = setInterval(() => {
-      setTimer((prevTimer) => {
-        if (prevTimer <= 1) {
-          clearInterval(intervalRef.current!);
-          setShowConfetti(true);
-          triggerConfettiBlast();
-          return 0;
-        }
-        return prevTimer - 1;
-      });
-    }, 1000);
+  const startTimer = useCallback(() => {
+    if (!isTimerStarted) {
+      setIsTimerStarted(true);
+      intervalRef.current = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer <= 1) {
+            clearInterval(intervalRef.current!);
+            setShowConfetti(true);
+            triggerConfettiBlast();
+            return 0;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+    }
+  }, [isTimerStarted]);
 
-    // Clear interval on component unmount
-    return () => clearInterval(intervalRef.current!);
+  useEffect(() => {
+    startTimer();
+    return () => {
+      clearInterval(intervalRef.current!);
+    };
   }, []);
 
   return (
     <section
+      ref={observerRef}
       className="h-[100dvh] relative z-[50] overflow-y-hidden"
       style={{
         background:
@@ -122,7 +131,7 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
                   fill="none"
                   stroke="#00E676"
                   strokeWidth="10"
-                  strokeDasharray={`${((5 - timer) / 5) * 565} 565`}
+                  strokeDasharray={`${((15 - timer) / 15) * 565} 565`}
                   transform="rotate(-90 100 100)"
                 />
                 <text
