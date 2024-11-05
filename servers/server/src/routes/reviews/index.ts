@@ -247,7 +247,7 @@ const reviewRouter = new Hono()
       const reviewAlreadyExist = await UserReward.findOne({
         userId,
         loyaltyId,
-        googleReviewCount: { $gt: 1 },
+        googleReviewCount: { $eq: 1 },
       });
 
       if (reviewAlreadyExist) {
