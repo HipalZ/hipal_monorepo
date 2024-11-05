@@ -47,36 +47,41 @@ const MemoGoogleReviewCard = () => {
   const isReviewPage = useMemo(() => path.includes("review"), [path]);
 
   const signInWithGoogle = async () => {
-    if (!!googleReviewCount && googleReviewCount > 1)
-      return setReviewPopup(true);
-    const res = await apiRpc.reviews["update-google-review"].$put({
-      json: {
-        loyaltyId: loyaltySetting?.loyaltyId.toString(),
-        userId: userDetails._id.toString(),
-      },
-    });
-    if (res.status === 409) {
-      toast.error("Review Already Submitted");
-      router.push(`/${customLink}/explore`);
-      setShowGoogleReview(false);
-      return null;
-    }
-    if (res.status === 401 || res.status === 400) {
-      return errorText(res.status);
-    }
-    const response = await res.json();
-    const count = response?.data?.googleReviewCount;
-    setGoogleReviewCount(count);
     const url =
       businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
-    const newWindow = window.open(url, "_blank");
-    if (newWindow) {
-      newWindow.focus();
-    } else {
-      toast.error(
-        "Failed to open the new tab. Please enable pop-ups for this site and try again.",
-      );
-    }
+    window.open(url, "_blank");
+    // if (!!googleReviewCount && googleReviewCount > 1) {
+    //   return setReviewPopup(true);
+    // }
+
+    // // Open a blank tab immediately to avoid being blocked
+    // let newWindow = window.open("about:blank", "_blank");
+
+    // const res = await apiRpc.reviews["update-google-review"].$put({
+    //   json: {
+    //     loyaltyId: loyaltySetting?.loyaltyId.toString(),
+    //     userId: userDetails._id.toString(),
+    //   },
+    // });
+
+    // if (res.status === 409) {
+    //   toast.error("Review Already Submitted");
+    //   router.push(`/${customLink}/explore`);
+    //   setShowGoogleReview(false);
+    //   newWindow?.close();
+    //   return null;
+    // }
+
+    // const url =
+    //   businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
+    // if (newWindow) {
+    //   newWindow.location.href = url;
+    //   newWindow.focus();
+    // } else {
+    //   toast.error(
+    //     "Failed to open the new tab. Please enable pop-ups for this site and try again.",
+    //   );
+    // }
     setReviewPopup(true);
     setShowGoogleReview(false);
   };
