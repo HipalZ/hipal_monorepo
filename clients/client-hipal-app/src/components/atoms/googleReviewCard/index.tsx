@@ -36,27 +36,35 @@ const MemoGoogleReviewCard = () => {
     setReviewPopup,
     googleReviewCount,
     setGoogleReviewCount,
+    isLogin,
+    setDirection,
   } = useLogin((s) => ({
     userDetails: s.userDetails,
     setReviewPopup: s.setReviewPopup,
     googleReviewCount: s.googleReviewCount,
     setGoogleReviewCount: s.setGoogleReviewCount,
+    isLogin: s.isLogin,
+    setDirection: s.setDirection,
   }));
 
   const path = usePathname();
   const isReviewPage = useMemo(() => path.includes("review"), [path]);
 
   const signInWithGoogle = async () => {
+    if (!isLogin) {
+      setDirection("explore-googleReview");
+      setReviewPopup(false);
+      return router.push(`/${customLink}/user/signup`);
+    }
     if (googleReviewCount && googleReviewCount > 1) {
-      setReviewPopup(true);
-      return;
+      setReviewPopup(false);
+      return toast.error("Review Already Submitted");
     }
 
     // Open the intended URL immediately to avoid being blocked
     const url =
       businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
     const newWindow = window.open(url, "_blank");
-
     try {
       const res = await apiRpc.reviews["update-google-review"].$put({
         json: {
@@ -69,17 +77,20 @@ const MemoGoogleReviewCard = () => {
         toast.error("Review Already Submitted");
         router.push(`/${customLink}/explore`);
         setShowGoogleReview(false);
-        newWindow?.close();
         return;
       }
 
       if (res.status === 401 || res.status === 400) {
         errorText(res.status);
+        setShowGoogleReview(false);
         newWindow?.close();
         return;
       }
 
       const response = await res.json();
+      if (res.status === 200) {
+        setReviewPopup(true);
+      }
       setGoogleReviewCount(response?.data?.googleReviewCount);
 
       if (!newWindow) {
@@ -91,9 +102,6 @@ const MemoGoogleReviewCard = () => {
     } catch (error) {
       console.error("Error during sign-in:", error);
       newWindow?.close();
-    } finally {
-      setReviewPopup(true);
-      setShowGoogleReview(false);
     }
   };
 

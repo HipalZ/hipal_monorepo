@@ -189,7 +189,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           )}
         </section>
       </section>
-      {isLogin ? <GoogleReviewCard /> : null}
+      <GoogleReviewCard />
     </div>
   );
 };
