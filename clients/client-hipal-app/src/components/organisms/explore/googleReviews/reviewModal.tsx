@@ -75,6 +75,10 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
           <Image src={HipalWhiteLogo} alt="logo" className="w-auto h-auto" />
         </article>
       </section>
+      <h1 className="absolute text-2xl top-[25%] left-[13%]">
+        {" "}
+        {timer > 0 ? "Your Review in progress" : "Thank you for your review!"}
+      </h1>
       <section className="absolute inset-0 flex items-center justify-center">
         <center className="absolute w-[250px] opacity-50">
           <Image
@@ -85,33 +89,6 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
             alt="SunlightReview"
           />
         </center>
-        <section className="absolute inset-0 flex items-center justify-center inter">
-          <svg title="Curve" viewBox="0 0 500 500">
-            <path
-              id="curve"
-              fill="transparent"
-              d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"
-            />
-            <text width="500">
-              <textPath
-                xlinkHref="#curve"
-                startOffset="50%"
-                textAnchor="middle"
-                style={{
-                  fontSize: "28px",
-                  fill: "white",
-                  letterSpacing: "0.125em",
-                }}
-              >
-                {timer > 0
-                  ? "Review in progress..."
-                  : googleReviewCount > 1
-                    ? ""
-                    : "Thank you for your review!"}
-              </textPath>
-            </text>
-          </svg>
-        </section>
         <section className="absolute inset-0 flex items-center justify-center">
           <section className="absolute">
             {timer > 0 ? (
@@ -153,12 +130,12 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
       </section>
       <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2">
         {timer > 0 ? (
-          <div className="text-[1.5rem] font-bold text-white">
-            Processing...
+          <div className="text-[1rem] font-bold text-white">
+            Make sure to post review in google to get your coinz
           </div>
         ) : (
-          <span className="text-[2rem] font-bold text-white">
-            Congratulations!
+          <span className="text-[1rem] font-bold text-white">
+            Thanks for your review! You have earned 40 Coinz
           </span>
         )}
       </center>
@@ -173,12 +150,6 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
           </button>
         </article>
       )}
-      <div className="absolute w-full p-2 text-xs text-center text-white -translate-x-1/2 bg-black bg-opacity-25 top-[80%] left-1/2">
-        <p>
-          Disclaimer: Coinz will be credited only after your review is
-          confirmed. If no review is detected, no Coinz will be awarded.
-        </p>
-      </div>
     </section>
   );
 };
