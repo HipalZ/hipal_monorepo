@@ -75,10 +75,10 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
           <Image src={HipalWhiteLogo} alt="logo" className="w-auto h-auto" />
         </article>
       </section>
-      <h1 className="absolute text-2xl top-[25%] left-[13%]">
+      <center className="absolute inset-0 text-2xl top-[25%]">
         {" "}
         {timer > 0 ? "Your Review in progress" : "Thank you for your review!"}
-      </h1>
+      </center>
       <section className="absolute inset-0 flex items-center justify-center">
         <center className="absolute w-[250px] opacity-50">
           <Image
@@ -129,15 +129,11 @@ const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
         </section>
       </section>
       <center className="inter absolute text-base text-[1.5rem] w-full -translate-x-1/2 top-2/3 left-1/2">
-        {timer > 0 ? (
-          <div className="text-[1rem] font-bold text-white">
-            Make sure to post review in google to get your coinz
-          </div>
-        ) : (
-          <span className="text-[1rem] font-bold text-white">
-            Thanks for your review! You have earned 40 Coinz
-          </span>
-        )}
+        <div className="text-[1rem] mx-2 text-white">
+          {timer > 0
+            ? "Make sure to post review in google to get your coinz"
+            : "Thanks for your review! You have earned 40 Coinz"}
+        </div>
       </center>
       {showConfetti && (
         <article className="fixed bottom-2 text-base text-[1.5rem] w-full -translate-x-1/2 top-3/4 left-1/2">
