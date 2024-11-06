@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { MdAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
+import { MdAccountBalanceWallet } from "react-icons/md";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
 import { LuScanLine } from "react-icons/lu";
@@ -79,11 +79,11 @@ function BottomButton({
       {children ? (
         <center
           style={{
-            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+            boxShadow: "0px 4px 4px 0px #00000040",
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "sticky z-10 bottom-3 py-3 pl-2 pr-2 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
+            "sticky z-10 bottom-2 py-4 pl-2 pr-2 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
           {children}
@@ -91,14 +91,14 @@ function BottomButton({
       ) : (
         <section
           style={{
-            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+            boxShadow: "0px 4px 4px 0px #00000040",
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
             "fixed z-10 bottom-3 py-4 px-6 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
-          <center className="relative flex items-center justify-between text-xs">
+          <center className="relative flex items-center justify-between text-sm">
             <Link href={`/${customLink}/explore`}>
               <center className={defaultStyle}>
                 <RiHome4Fill size={20} className="mb-1" />
@@ -140,7 +140,7 @@ function BottomButton({
             <Link href={`/${customLink}/category`}>
               <button
                 type="button"
-                className="px-6 py-3 -mr-4 rounded-full bg-base-100 text-primary"
+                className="px-6 py-4 -mr-2 rounded-full bg-base-100 text-primary"
               >
                 {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
               </button>

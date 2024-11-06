@@ -55,7 +55,7 @@ const MemoMainTypes = (props: IMainTypes) => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="fixed px-6 py-2 rounded-xl bottom-[5rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
+            className="fixed px-6 py-2 rounded-xl bottom-[6rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
           >
             {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
           </button>

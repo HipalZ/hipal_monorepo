@@ -111,7 +111,7 @@ const CategoryPageBtn = () => {
     <>
       {!isSearchActive && (
         <BottomButton>
-          <section className="relative flex items-center justify-between w-full gap-4 text-xs">
+          <section className="relative flex items-center justify-between w-full gap-4 text-sm">
             <Link href={`/${customLink}/explore`} className="w-full">
               <center className="font-light text-base-100">
                 <RiHome4Fill size={20} className="mb-1" />
@@ -161,7 +161,7 @@ const CategoryPageBtn = () => {
             <button
               type="button"
               onClick={proceedToPayment}
-              className="w-full px-4 py-3 font-semibold rounded-full text-primary bg-base-100"
+              className="w-full px-4 py-4 mr-2 font-semibold rounded-full text-primary bg-base-100"
             >
               Pay bill
             </button>

@@ -4,7 +4,6 @@ import type { IUniquelyDishes } from "@/components/types/businessData";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
