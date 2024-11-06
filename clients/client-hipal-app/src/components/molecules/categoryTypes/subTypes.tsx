@@ -6,6 +6,7 @@ import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import Image from "next/image";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface ISubTypes {
   childCategory: CategoryType[];
@@ -21,6 +22,8 @@ const MemoSubTypes = (props: ISubTypes) => {
     setActiveChildCategory,
     setObserverActive,
   } = useActiveClass();
+
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const subTypes = useMemo(() => {
     const hasVisibleDishesOfType = (category: CategoryType): boolean => {
@@ -81,62 +84,126 @@ const MemoSubTypes = (props: ISubTypes) => {
   }, [isActiveCategory, subTypes]);
 
   return (
-    <section className="overflow-x-auto border-b shadow-lg border-b-primary no-scrollbar bg-base-100 text-primary">
-      {subTypes.length > 0 && (
-        <Splide
-          ref={splideRef}
-          options={{
-            type: "slide",
-            pagination: false,
-            drag: "free",
-            snap: true,
-            arrows: false,
-            autoWidth: true,
-          }}
-          className="w-full no-scrollbar"
-        >
-          {subTypes.map((item: CategoryType, index: number) => (
-            <SplideSlide key={item._id?.toString()}>
-              <button
-                type="button"
-                id={item._id?.toString() + index.toString()}
-                className="relative h-[4rem] px-2 py-3 snap-center"
-                onClick={() => setActiveCategories(item)}
-              >
-                <article
-                  className={cn(
-                    isActiveCategory === item._id?.toString()
-                      ? "bg-primary text-base-100"
-                      : "text-primary",
-                    "flex border border-primary rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
-                    "h-[2rem]",
-                  )}
-                >
-                  {item?.coverImage ? (
-                    <figure className="flex-shrink-0 w-6 h-6 mr-2 overflow-hidden rounded-full aspect-square">
-                      <Image
-                        src={item.coverImage || ""}
-                        alt="dish"
-                        quality={95}
-                        width={35}
-                        height={35}
-                        blurDataURL={getRandomBlurImg(50, 50)}
-                        className="object-cover rounded-full aspect-square"
-                      />
-                    </figure>
-                  ) : (
-                    <figure className="flex-shrink-0 w-6 h-6 overflow-hidden rounded-full aspect-square">
-                      <PlaceholderImg className="mr-2 rounded-full" />
-                    </figure>
-                  )}
-                  <h6 className="w-full text-sm text-center">{item.name}</h6>
-                </article>
-              </button>
-            </SplideSlide>
-          ))}
-        </Splide>
+    <>
+      {outletInfo?.outLetType === "OTHER" ? (
+        <section className="pb-2 overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
+          {subTypes.length > 0 && (
+            <Splide
+              ref={splideRef}
+              options={{
+                type: "slide",
+                pagination: false,
+                drag: "free",
+                snap: true,
+                arrows: false,
+                autoWidth: true,
+              }}
+              className="w-full no-scrollbar"
+            >
+              {subTypes.map((item: CategoryType, index: number) => (
+                <SplideSlide key={item._id?.toString()}>
+                  <button
+                    type="button"
+                    id={item._id?.toString() + index.toString()}
+                    className="relative flex flex-col items-center px-2 py-3 snap-center"
+                    onClick={() => setActiveCategories(item)}
+                  >
+                    <article
+                      className={cn(
+                        isActiveCategory === item._id?.toString()
+                          ? " underline underline-offset-[0.75rem]"
+                          : "",
+                        "flex flex-col items-center justify-center transition-all duration-200 ease-in-out",
+                      )}
+                    >
+                      {item?.coverImage ? (
+                        <figure className="flex-shrink-0 h-[3.25rem] mb-1 overflow-hidden rounded-md w-[3.25rem] aspect-square">
+                          <Image
+                            src={item.coverImage || ""}
+                            alt="dish"
+                            quality={95}
+                            width={52}
+                            height={52}
+                            blurDataURL={getRandomBlurImg(50, 50)}
+                            className="object-cover rounded-md aspect-square"
+                          />
+                        </figure>
+                      ) : (
+                        <figure className="flex-shrink-0 w-[3.25rem] h-[3.25rem] mb-1 overflow-hidden rounded-full aspect-square">
+                          <PlaceholderImg className="rounded-full" />
+                        </figure>
+                      )}
+                      <h6 className="w-full text-sm text-center">
+                        {item.name}
+                      </h6>
+                    </article>
+                  </button>
+                </SplideSlide>
+              ))}
+            </Splide>
+          )}
+        </section>
+      ) : (
+        <section className="overflow-x-auto border-b shadow-lg border-b-primary no-scrollbar bg-base-100 text-primary">
+          {subTypes.length > 0 && (
+            <Splide
+              ref={splideRef}
+              options={{
+                type: "slide",
+                pagination: false,
+                drag: "free",
+                snap: true,
+                arrows: false,
+                autoWidth: true,
+              }}
+              className="w-full no-scrollbar"
+            >
+              {subTypes.map((item: CategoryType, index: number) => (
+                <SplideSlide key={item._id?.toString()}>
+                  <button
+                    type="button"
+                    id={item._id?.toString() + index.toString()}
+                    className="relative h-[4rem] px-2 py-3 snap-center"
+                    onClick={() => setActiveCategories(item)}
+                  >
+                    <article
+                      className={cn(
+                        isActiveCategory === item._id?.toString()
+                          ? "bg-primary text-base-100"
+                          : "text-primary",
+                        "flex border border-primary rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
+                        "h-[2rem]",
+                      )}
+                    >
+                      {item?.coverImage ? (
+                        <figure className="flex-shrink-0 w-6 h-6 mr-2 overflow-hidden rounded-full aspect-square">
+                          <Image
+                            src={item.coverImage || ""}
+                            alt="dish"
+                            quality={95}
+                            width={35}
+                            height={35}
+                            blurDataURL={getRandomBlurImg(50, 50)}
+                            className="object-cover rounded-full aspect-square"
+                          />
+                        </figure>
+                      ) : (
+                        <figure className="flex-shrink-0 w-6 h-6 overflow-hidden rounded-full aspect-square">
+                          <PlaceholderImg className="mr-2 rounded-full" />
+                        </figure>
+                      )}
+                      <h6 className="w-full text-sm text-center">
+                        {item.name}
+                      </h6>
+                    </article>
+                  </button>
+                </SplideSlide>
+              ))}
+            </Splide>
+          )}
+        </section>
       )}
-    </section>
+    </>
   );
 };
 

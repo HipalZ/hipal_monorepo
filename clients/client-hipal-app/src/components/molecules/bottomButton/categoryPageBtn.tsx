@@ -21,6 +21,8 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { MdConnectWithoutContact } from "react-icons/md";
+import { IoPersonAddSharp } from "react-icons/io5";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -118,7 +120,9 @@ const CategoryPageBtn = () => {
                 Home
               </center>
             </Link>
-            {outletInfo?.outLetType !== "OTHER" && (
+
+            {/* //<MdConnectWithoutContact /> */}
+            {outletInfo?.outLetType !== "OTHER" ? (
               <button
                 type="button"
                 onClick={triggerCallWaiter}
@@ -126,6 +130,15 @@ const CategoryPageBtn = () => {
               >
                 <FaConciergeBell size={20} className="mb-1" />
                 Call captain
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={triggerCallWaiter}
+                className="flex flex-col items-center justify-center w-full font-light text-base-100 text-nowrap"
+              >
+                <IoPersonAddSharp size={20} className="mb-1" />
+                Expert
               </button>
             )}
             <center

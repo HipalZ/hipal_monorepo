@@ -50,7 +50,7 @@ const MemoMainTypes = (props: IMainTypes) => {
 
   return (
     <>
-      {mainTypes.length > 0 ? (
+      {mainTypes.length > 0 && outletInfo?.outLetType !== "OTHER" ? (
         <>
           <button
             type="button"

@@ -1,7 +1,7 @@
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
 import { getPrice } from "@/components/utils/helpers";
 import { memo, useCallback, useMemo, useState } from "react";
-import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai";
+import { AiOutlineWarning } from "react-icons/ai";
 import FoodType from "../foodType";
 import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
