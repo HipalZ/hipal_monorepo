@@ -148,7 +148,7 @@ const DishesList: FC<IDishesProps> = (props) => {
 
   return (
     <>
-      <section className="sticky z-50 text-primary top-[3.125rem]">
+      <section className="sticky z-50 text-primary top-[3rem]">
         {!isSearchActive && (
           <>
             <MainTypes parentCategory={parentCategory} />

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { HiSearch } from "react-icons/hi";
 import QuickFilter from "@/components/atoms/quickFilter";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
