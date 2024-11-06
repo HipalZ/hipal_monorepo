@@ -35,7 +35,7 @@ function MemoizedPopUp({
           className="fixed inset-0 z-50 overflow-y-auto"
           onClose={stopClosing}
         >
-          <div className="fixed inset-0 flex px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
+          <div className="fixed inset-0 flex px-0 lg:px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
