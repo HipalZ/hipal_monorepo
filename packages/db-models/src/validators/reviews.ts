@@ -42,7 +42,7 @@ export const ReviewsSchema = z.object({
       message: "Service must be a number",
     })
     .optional(),
-  staffs: z.array(z.string()).optional(),
+  staffs: z.array(ObjectIdSchema).optional(),
   description: z.string().min(0).max(200).optional(),
   improvementAreas: z
     .array(

@@ -518,9 +518,15 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { order_id } = requestData;
 
-      const order = await Order.findOne({
-        $or: [{ order_id: order_id }, { _id: order_id }],
-      }).select("_id order_id");
+      let order = await Order.findOne({
+        order_id,
+      });
+
+      if (!order) {
+        order = await Order.findOne({
+          _id: order_id,
+        });
+      }
 
       if (!order) return respond(c, "Order not found", true, 400, {});
 
