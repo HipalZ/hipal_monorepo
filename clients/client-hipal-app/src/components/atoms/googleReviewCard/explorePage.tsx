@@ -38,7 +38,7 @@ const MemoExplorePageReviewCard = ({
               Leave a review on Google <br /> & Claim your reward.
             </p>
           </div>
-          <div className="w-full h-10">
+          <div className="w-full h-10 on_active_bounce">
             <button
               type="button"
               className="flex items-center px-4 py-1.5 -ml-4 text-sm font-bold text-white scale-90 rounded-full bg-black/60"

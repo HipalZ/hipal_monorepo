@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import { useChildCategories } from "@/hooks/useDishStore";
+import { useChildCategories } from "@/hooks/useDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import BottomButton from "@/components/atom/bottomButton";
 
@@ -134,7 +134,7 @@ const MemoLinkItems = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4 md:grid md:grid-cols-2">
+      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4 md:grid md:grid-cols-2 lg:grid-cols-3">
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}

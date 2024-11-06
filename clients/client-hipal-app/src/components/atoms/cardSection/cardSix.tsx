@@ -15,7 +15,7 @@ const MemoCardSixLayout = () => {
   const userDetails = useLogin((s) => s.userDetails);
   const userCoinZ = useLogin((state) => state.userCoinZ);
   return (
-    <section className="relative flex justify-between mx-auto min-w-auto w-[23.5rem] max-w-[28rem] h-[15.5rem] gap-4 overflow-hidden p-4 lg:rounded-2xl">
+    <section className="relative flex mx-auto min-w-auto justify-between w-[23.5rem] max-w-[28rem] h-[15.5rem] gap-4 overflow-hidden p-4 lg:rounded-2xl">
       <Image
         src={
           cardLayout === "LAYOUT_ONE"

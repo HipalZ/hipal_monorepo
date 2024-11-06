@@ -1,7 +1,7 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
@@ -40,9 +40,7 @@ const MemoMenu = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const navigate = useNavigate();
   const handleBack = () => {
-    startTransition(() => {
-      navigate(routeToDashboard(businessData?._id as string));
-    });
+    navigate(routeToDashboard(businessData?._id as string));
   };
   return (
     <main className="">

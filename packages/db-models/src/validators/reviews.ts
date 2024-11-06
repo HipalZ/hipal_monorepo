@@ -59,7 +59,8 @@ export const ReviewsSchema = z.object({
     )
     .optional(),
   date: z.coerce.number().optional(),
-  order_id: z.string(),
+  order_id: z.string().optional(),
+  seen: z.boolean().optional(),
 });
 
 export type ReviewsType = z.infer<typeof ReviewsSchema>;

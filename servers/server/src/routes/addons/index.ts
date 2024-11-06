@@ -58,15 +58,14 @@ const addonRouter = new Hono()
         const requestData = await c.req.json();
         const { dishIds = [], removeDishIds = [] } = requestData;
 
-        const addOn = await AddOn.findOne({
-          name: requestData.name,
-          isDeleted: false,
-          _id: { $ne: id },
-        });
+        // const addOn = await AddOn.findOne({
+        //   name: requestData.name,
+        //   businessId: requestData.businessId,
+        //   _id: { $ne: id },
+        //   isDeleted: false,
+        // });
 
-        console.log("yaha aya");
-
-        if (addOn) return respond(c, "add On already exist", true, 409, {});
+        // if (addOn) return respond(c, "add On already exist", true, 409, {});
 
         const updatedAddOn = await AddOn.findByIdAndUpdate(
           id,
@@ -83,8 +82,6 @@ const addonRouter = new Hono()
             session,
           },
         );
-
-        console.log("sssssss", updatedAddOn);
 
         if (!updatedAddOn) return respond(c, "failed", true, 400, {});
 

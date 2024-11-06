@@ -141,7 +141,7 @@ export const dishSchema = z.object({
       message: "description must be atleast 10 characters long",
     })
     .max(400, {
-      message: "description must be atmost 200 characters long",
+      message: "description must be atmost 400 characters long",
     })
     .optional(),
   calories: z

@@ -8,7 +8,7 @@ import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
-import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
+import { FaConciergeBell } from "react-icons/fa";
 import { BsBagHeartFill } from "react-icons/bs";
 import { useCart } from "@/components/store/useCart";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { IoPersonAddSharp } from "react-icons/io5";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -84,6 +85,7 @@ const CategoryPageBtn = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const triggerCallWaiter = useCallback(() => {
+    console.log("triggerCallWaiter");
     setDirection("category");
     if (!tableName) {
       return router.push(`/${customLink}/scan`);
@@ -110,21 +112,33 @@ const CategoryPageBtn = () => {
     <>
       {!isSearchActive && (
         <BottomButton>
-          <section className="relative flex items-center justify-between w-full gap-4 text-xs">
+          <section className="relative flex items-center justify-between w-full gap-4 text-sm">
             <Link href={`/${customLink}/explore`} className="w-full">
               <center className="font-light text-base-100">
-                <RiHome4Fill size={20} className="mb-2" />
+                <RiHome4Fill size={20} className="mb-1" />
                 Home
               </center>
             </Link>
-            {outletInfo?.outLetType !== "OTHER" && (
-              <center
+
+            {/* //<MdConnectWithoutContact /> */}
+            {outletInfo?.outLetType !== "OTHER" ? (
+              <button
+                type="button"
                 onClick={triggerCallWaiter}
-                className="w-full font-light text-base-100 "
+                className="flex flex-col items-center justify-center w-full font-light text-base-100 text-nowrap"
               >
-                <FaConciergeBell size={20} className="mb-2" />
+                <FaConciergeBell size={20} className="mb-1" />
                 Call captain
-              </center>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={triggerCallWaiter}
+                className="flex flex-col items-center justify-center w-full font-light text-base-100 text-nowrap"
+              >
+                <IoPersonAddSharp size={20} className="mb-1" />
+                Expert
+              </button>
             )}
             <center
               onClick={showingCart}
@@ -139,7 +153,7 @@ const CategoryPageBtn = () => {
                   transition={{ duration: 0.15 }}
                 >
                   <div className="relative">
-                    <BsBagHeartFill size={20} className="mb-2" />
+                    <BsBagHeartFill size={20} className="mb-1" />
                     {cart.length > 0 && (
                       <motion.span
                         className="absolute p-1 px-2 text-xs font-bold text-white bg-red-600 rounded-full left-1/2 -top-6"
@@ -156,13 +170,13 @@ const CategoryPageBtn = () => {
               </AnimatePresence>
               {showCart ? "Menu" : "Cart"}
             </center>
-            <center
+            <button
+              type="button"
               onClick={proceedToPayment}
-              className="w-full font-light text-base-100"
+              className="w-full px-4 py-4 mr-2 font-semibold rounded-full text-primary bg-base-100"
             >
-              <FaMoneyBillWave size={20} className="mb-2" />
               Pay bill
-            </center>
+            </button>
           </section>
         </BottomButton>
       )}

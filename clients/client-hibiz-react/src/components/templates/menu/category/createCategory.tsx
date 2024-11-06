@@ -23,6 +23,7 @@ const CreateCategoryMain = () => {
     openMenu,
     setIsCatDelete,
     isCatDelete,
+    categoryName,
   } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     categoryStep: s.categoryStep as CategoryStep,
@@ -31,6 +32,7 @@ const CreateCategoryMain = () => {
     isMainEditing: s.editingMainCat,
     isSubCategoryEditing: s.editingSubCat,
     catId: s.catId,
+    categoryName: s.categoryName,
     openMenu: s.openMenu,
     isCatDelete: s.isCatDelete,
     setIsCatDelete: s.setIsCatDelete,
@@ -97,7 +99,7 @@ const CreateCategoryMain = () => {
     <>
       <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
         <MemoizedHeader
-          title={catId !== "" ? "Edit Category" : "Create Category"}
+          title={catId !== "" ? `${categoryName}` : "Create Category"}
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}

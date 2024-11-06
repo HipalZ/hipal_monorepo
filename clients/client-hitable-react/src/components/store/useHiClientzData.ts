@@ -21,9 +21,6 @@ interface HiClientzStore {
 
   platform: string;
   setPlatform: (platform: string) => void;
-
-  registeredToken: boolean;
-  setRegisteredToken: (value: boolean) => void;
 }
 
 export const useHiClientZ = create(
@@ -47,9 +44,6 @@ export const useHiClientZ = create(
 
       platform: "android",
       setPlatform: (value: string) => set({ platform: value }),
-
-      registeredToken: false,
-      setRegisteredToken: (value: boolean) => set({ registeredToken: value }),
     }),
     {
       name: "hiClientZ-store",

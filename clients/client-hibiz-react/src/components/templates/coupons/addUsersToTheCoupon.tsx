@@ -98,6 +98,7 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
 
   const handleGroupClick = useCallback((groupId: string) => {
     setTempSelectedUserIds([]);
+    setTempSelectedUsers([]);
     setTempSelectedGroupIds((prev) =>
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
@@ -207,7 +208,7 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
                     style={{ backgroundColor: hexToRgba(group.groupColor) }}
                     key={group._id}
                     className={cn(
-                      "relative flex items-center gap-4 px-4 py-2 text-left w-full rounded-2xl md:max-w-[14rem] lg:max-w-[14.25rem]",
+                      "relative flex items-center gap-4 px-4 py-4 text-left w-full rounded-2xl md:max-w-[14rem] lg:max-w-[14.25rem]",
                       tempSelectedGroupIds.includes(group._id)
                         ? "border border-green-500"
                         : "",
@@ -220,11 +221,10 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
                       className="mr-2 text-black rounded-sm"
                       onClick={(e) => e.stopPropagation()}
                     />
-                    <div
-                      className="absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 mb-1 ml-[0.1rem] rounded-full"
-                      style={{ backgroundColor: group.groupColor }}
-                    />
-                    <h3 className="leading-5 w-[80%] ml-2">{group.name}</h3>
+
+                    <h3 className="leading-5 w-[90%] ml-2 line-clamp-2">
+                      {group.name}
+                    </h3>
                     <div className="flex items-center ml-4 left-6 top-3">
                       <MdPersonOutline size={20} />
                       {group.userIds.length > 0 && (

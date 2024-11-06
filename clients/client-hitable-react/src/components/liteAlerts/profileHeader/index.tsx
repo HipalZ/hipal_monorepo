@@ -9,10 +9,14 @@ import { RxDashboard } from "react-icons/rx";
 import { AiOutlineLogout } from "react-icons/ai";
 import { useUpdateNotifications } from "@/utils/apiService";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const ProfileHeader = () => {
   const location = useLocation();
-
+  const { setAccessToken, setRefreshToken } = useUserToken((s) => ({
+    setAccessToken: s.setAccessToken,
+    setRefreshToken: s.setRefreshToken,
+  }));
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
   const { notification, setNotification } = useHiClientZ((s) => ({
@@ -27,10 +31,12 @@ const ProfileHeader = () => {
     navigate("/businesses");
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/";
-  };
+  const handleLogout = useCallback(() => {
+    setAccessToken("");
+    setRefreshToken("");
+    navigate("/");
+  }, [navigate, setAccessToken, setRefreshToken]);
+
   const UpdateNotification = useCallback(async () => {
     const updatedNotification = !notification;
     setNotification(updatedNotification);

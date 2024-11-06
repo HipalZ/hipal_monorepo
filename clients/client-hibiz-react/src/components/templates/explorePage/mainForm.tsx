@@ -1,8 +1,7 @@
 import useShowErrorToasts from "@/components/atom/errorToasts";
-import { cropImage } from "@/components/cropper";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import type { IBizPayload } from "@/components/types/businessData";
-import { filterPayload, storeImageAfterSave } from "@/components/utils/helper";
+import type { CropperRef, IBizPayload } from "@/components/types/businessData";
+import { filterPayload } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import {
   type ChangeEvent,
@@ -13,23 +12,19 @@ import {
   useRef,
 } from "react";
 import toast from "react-hot-toast";
-import { IoMdArrowUp } from "react-icons/io";
 import { useNavigate, useParams } from "react-router-dom";
 import type { SocialMediaLink } from "@/components/types/businessData";
-import type Area from "react-easy-crop";
+import { useCheckValidations } from "../../helpers/bannersHelper";
 import EasyReactCropper from "@/components/cropper/cropper";
 import BottomButton from "@/components/atom/bottomButton";
-
-interface CropperRef {
-  getCroppedAreaPixels: () => Area | null;
-}
+import { useCroppedImg } from "@/components/helpers/explorePageHelpers";
 
 //lazy loads
+
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
 );
-const SubHeader = lazy(() => import("@/components/atom/subHeader"));
-const Paragraph = lazy(() => import("@/components/atom/paragraph"));
+
 const BannerSection = lazy(
   () => import("@/components/templates/explorePage/bannerSection"),
 );
@@ -39,12 +34,10 @@ const ExplorePageTopSection = lazy(
 const UniquelyYoursPopUp = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursPopUp"),
 );
-const CropperPopup = lazy(() => import("@/components/common/cropperPopup"));
-const ReactCropper = lazy(() => import("@/components/cropper"));
 
 const PopUp = lazy(() => import("@/components/atom/popUp"));
-const FooterBanner = lazy(
-  () => import("@/components/templates/explorePage/footerBanner"),
+const FooterSection = lazy(
+  () => import("@/components/templates/explorePage/footerSection"),
 );
 const UniquelyYoursSection = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursSection"),
@@ -56,39 +49,34 @@ type Props = {
 };
 const MemoMainForm = (props: Props) => {
   const { setSocialMediaLinks, socialMediaLinks } = props;
-  const navigate = useNavigate();
-  const businessId = useParams()?.businessId;
-  const showErrorToasts = useShowErrorToasts();
+  const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
   const {
-    cropping,
     bizInfo,
-    showCropper,
-    setShowCropper,
-    imageFiles,
     setIsLoading,
     showUniquePopUp,
     setShowUniquePopUp,
-    img,
-    setImg,
-    setImageFiles,
+    showCropper,
+    cropping,
+    setShowCropper,
   } = useExploreStore((s) => ({
-    cropping: s.cropping,
     bizInfo: s.bizInfo,
-    showCropper: s.showCropper,
-    setShowCropper: s.setShowCropper,
-    imageFiles: s.imageFiles,
     setIsLoading: s.setIsLoading,
     showUniquePopUp: s.showUniquePopUp,
+    showCropper: s.showCropper,
+    cropping: s.cropping,
+    setShowCropper: s.setShowCropper,
     setShowUniquePopUp: s.setShowUniquePopUp,
-    img: s.img,
-    setImg: s.setImg,
-    setImageFiles: s.setImageFiles,
   }));
-
   const { selectedSocialMedia } = useExploreStore((s) => ({
     selectedSocialMedia: s.selectedSocialMedia,
   }));
+  const navigate = useNavigate();
+  const businessId = useParams()?.businessId;
+  const { handleCrop } = useCroppedImg();
+  const showErrorToasts = useShowErrorToasts();
+
+  // Update the `socialMediaLinks` state by mapping over the previous links and updating the link that matches the selected social media icon.
 
   const handleSaveSocialMediaLink = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -108,35 +96,12 @@ const MemoMainForm = (props: Props) => {
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!businessId) return;
-    let bannerExplore: string | undefined;
-    let logoExplore: string | undefined;
-    let footerExplore: string | undefined;
-    if (imageFiles?.banner !== undefined && /base64/.test(img?.banner)) {
-      bannerExplore = await storeImageAfterSave(
-        imageFiles?.banner,
-        img?.banner,
-        setIsLoading,
-      );
-    }
+    const { bannerExplore, logoExplore, footerExplore } =
+      await checkValidations();
 
-    if (imageFiles?.logo !== undefined && /base64/.test(img?.logo)) {
-      logoExplore = await storeImageAfterSave(
-        imageFiles?.logo,
-        img?.logo,
-        setIsLoading,
-      );
-    }
-
-    if (imageFiles?.footer !== undefined && /base64/.test(img?.footer)) {
-      footerExplore = await storeImageAfterSave(
-        imageFiles?.footer,
-        img?.footer,
-        setIsLoading,
-      );
-    }
-
+    // valid social media links
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
-
+    // check if all social media links start with 'https://'
     for (const item of validSocialMediaLinks) {
       if (!item.link.startsWith("https://")) {
         toast.error(
@@ -146,6 +111,7 @@ const MemoMainForm = (props: Props) => {
       }
     }
 
+    // filter out empty social media links
     const filteredSocialMedia = validSocialMediaLinks.map((item) => ({
       icon: item.icon,
       link: item.link,
@@ -163,18 +129,22 @@ const MemoMainForm = (props: Props) => {
       footerDescription: bizInfo?.footerDescription,
     };
 
+    // filter out empty values undefined, null or not used keys
     const filteredPayload = filterPayload(payload);
 
     setIsLoading(true);
     let res: {
       status: number;
     };
+
+    // if there is no bizInfo?._id then create a new outlet
     if (bizInfo?._id === "") {
       res = await apiRpc.businesses.outletInfo.$post({
         json: filteredPayload,
       });
     }
 
+    // if there is bizInfo?._id then update the existing outlet
     if (bizInfo?._id !== "" || (res && res.status === 409)) {
       const outletInfo = await apiRpc.businesses.outletInfo.update[
         ":businessId"
@@ -195,109 +165,40 @@ const MemoMainForm = (props: Props) => {
     setIsLoading(false);
   };
 
-  const getCroppedImg = (
-    imageSrc,
-    pixelCrop,
-    mimeType = "image/webp",
-    quality = 1,
-  ) => {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.src = imageSrc;
-      image.crossOrigin = "anonymous";
-
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
-        const ctx = canvas.getContext("2d");
-
-        if (ctx) {
-          ctx.drawImage(
-            image,
-            pixelCrop.x,
-            pixelCrop.y,
-            pixelCrop.width,
-            pixelCrop.height,
-            0,
-            0,
-            pixelCrop.width,
-            pixelCrop.height,
-          );
-          resolve(canvas.toDataURL(mimeType, quality));
-        } else {
-          reject(new Error("Failed to get canvas context"));
-        }
-      };
-
-      image.onerror = (err) => {
-        reject(err);
-      };
-    });
-  };
-
-  const handleCrop = async () => {
-    const { image, type } = cropping;
-    if (image && type) {
-      const croppedAreaPixels = cropperRef.current?.getCroppedAreaPixels();
-      if (croppedAreaPixels) {
-        try {
-          const croppedDataUrl = await getCroppedImg(image, croppedAreaPixels);
-          if (typeof croppedDataUrl === "string") {
-            const blob = await (await fetch(croppedDataUrl)).blob();
-            const croppedFile = new File([blob], imageFiles[type]?.name, {
-              type: "image/png",
-            });
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setImg((prev) => ({ ...prev, [type]: reader.result }));
-              setImageFiles((prev) => ({ ...prev, [type]: croppedFile }));
-              setShowCropper(false);
-            };
-            reader.readAsDataURL(croppedFile);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    }
-  };
-
   return (
     <form onSubmit={handleSaveExplorePage} className="px-4 pb-[5rem]">
       <ExplorePageTopSection />
       <br />
       <BannerSection />
       <UniquelyYoursSection />
-      <FooterBanner />
+      <FooterSection />
       <SocialMediaLinks
         handleSaveSocialMediaLink={handleSaveSocialMediaLink}
         socialMediaLinks={socialMediaLinks}
       />
-      <section className="mt-4 opacity-30">
-        <SubHeader text="Terms & Condition" />
-        <article className="flex items-center justify-between p-4 bg-white rounded-2xl">
-          <Paragraph text="Add your terms and conditions here" />
-          <IoMdArrowUp size={20} className="rotate-45" />
-        </article>
-      </section>
       <button type="submit" className="cursor-pointer bottom_btn">
         Save
       </button>
-      <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
+      <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
           <EasyReactCropper
+            key={cropping.image}
             image={cropping.image}
             ref={cropperRef}
-            height={480}
-            width={480}
+            width={400}
+            height={400}
           />
         </section>
         <BottomButton
           buttons={[
             {
               text: "Crop",
-              onClick: handleCrop,
+              onClick: () => handleCrop(cropperRef),
+            },
+            {
+              text: "Cancel",
+              onClick: () => setShowCropper(false),
+              type: "button",
             },
           ]}
         />

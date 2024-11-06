@@ -18,11 +18,12 @@ import {
 } from "@/components/utils/helper";
 import type { DishType, DishTypeEnumType } from "@hi/db-models/src/validators";
 import useErrorToasts from "@/hooks/useError";
-import { postDishData } from "@/hooks/useDishStore";
+import { postDishData } from "@/hooks/useDish";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import SectionLoader from "@/components/atom/sectionLoader";
 import { useQueryClient } from "@tanstack/react-query";
+import BottomButton from "@/components/atom/bottomButton";
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
@@ -348,29 +349,20 @@ const MemoDishForm = () => {
           </Background>
         </section>
       </article>
-      <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button
-          type="submit"
-          className="w-full py-3 text-white bg-[#7D68FE] rounded-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <SectionLoader />
-              Loading...
-            </div>
-          ) : (
-            "Quick Save"
-          )}
-        </button>
-        <button
-          onClick={goToNextStep}
-          type="button"
-          className="w-full py-3 text-white bg-black rounded-full"
-        >
-          Next
-        </button>
-      </footer>
+      <BottomButton
+        buttons={[
+          {
+            text: "Quick Save",
+            isLoading: isLoading,
+            type: "submit",
+          },
+          {
+            text: "Next",
+            onClick: goToNextStep,
+            type: "button",
+          },
+        ]}
+      />
     </form>
   );
 };

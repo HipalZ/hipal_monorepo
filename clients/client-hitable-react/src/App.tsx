@@ -38,21 +38,14 @@ function App() {
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const {
-    selectedBiz,
-    platform,
-    pushToken,
-    notification,
-    registeredToken,
-    captainData,
-  } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    platform: s.platform,
-    pushToken: s.pushToken,
-    notification: s.notification,
-    registeredToken: s.registeredToken,
-    captainData: s.captainData,
-  }));
+  const { selectedBiz, platform, pushToken, notification } = useHiClientZ(
+    (s) => ({
+      selectedBiz: s.selectedBiz,
+      platform: s.platform,
+      pushToken: s.pushToken,
+      notification: s.notification,
+    }),
+  );
 
   const pushNotify = async () => {
     try {
@@ -67,13 +60,7 @@ function App() {
   };
 
   useEffect(() => {
-    if (
-      accessToken &&
-      captainData?._id &&
-      pushToken &&
-      selectedBiz?.businessId?.name &&
-      registeredToken
-    ) {
+    if (accessToken && pushToken && selectedBiz?.businessId?.name) {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
   }, []);

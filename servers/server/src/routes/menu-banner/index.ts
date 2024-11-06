@@ -4,6 +4,7 @@ import {
   menuBannerSchema,
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
 const menuBannerRouter = new Hono()
@@ -248,6 +249,67 @@ const menuBannerRouter = new Hono()
       );
     },
   )
+  .post("/whatsapp/template", async (c) => {
+    const body = await c.req.json();
+    const token =
+      "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
+    const phoneId = "365941956611521";
+    console.log("body", body);
+
+    try {
+      const response = await axios.post(
+        `https://graph.facebook.com/v20.0/${phoneId}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: `${body?.phone}`,
+          type: "template",
+          template: {
+            name: "couponz_template",
+            language: { code: "en_gb" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  // businessName
+                  {
+                    type: "text",
+                    text: "Rishabh",
+                  },
+                  {
+                    type: "text",
+                    text: "14 Oct",
+                  },
+                  {
+                    type: "text",
+                    text: "16 Oct",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      console.log("response", response);
+      return c.json(
+        {
+          message: "Whatsapp template sent",
+          err: false,
+          data: response.data,
+        },
+        200,
+      );
+    } catch (error) {
+      return c.json(
+        {
+          message: "Whatsapp template not sent",
+          err: true,
+          data: error,
+        },
+        400,
+      );
+    }
+  })
   .post("/saveBanner", zValidator("json", menuBannerSchema), async (c) => {
     const requestData = await c.req.json();
 

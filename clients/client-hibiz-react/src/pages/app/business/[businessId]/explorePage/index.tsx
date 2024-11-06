@@ -1,15 +1,11 @@
-import { memo, useCallback, useRef, Suspense, lazy, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { combineAllDishes } from "@/components/templates/explorePage/explorePageStore";
-import { apiRpc } from "@hi/common";
+import { memo, useCallback, Suspense, lazy, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import type { IBizInfo } from "@/components/types/businessData";
+import type { SocialMediaLink } from "@/components/types/businessData";
 import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
-import CreateBanner from "@/components/templates/explorePage/createBanner";
-import BannerLayouts from "@/components/templates/explorePage/bannerLayouts";
 import { FaArrowLeft } from "react-icons/fa";
 import MemoizedHeader from "@/components/molecules/header";
 import { BannerPage } from "@/components/utils/bannerLayouts";
@@ -19,51 +15,42 @@ import { CiFacebook } from "react-icons/ci";
 import { FaXTwitter } from "react-icons/fa6";
 import { TbBrandTelegram } from "react-icons/tb";
 import { RiDiscordLine } from "react-icons/ri";
+import {
+  useBanners,
+  useOutletInfo,
+  useUniquelyYours,
+} from "@/hooks/useExplore";
+import { useExploreNavigation } from "@/components/helpers/explorePageHelpers";
 
 // Lazy loading components
+const CreateBanner = lazy(
+  () => import("@/components/templates/explorePage/createBanner"),
+);
+const BannerLayouts = lazy(
+  () => import("@/components/templates/staticBannerLayouts"),
+);
 const Banners = lazy(() => import("@/components/templates/banners"));
-
 const MainForm = lazy(
   () => import("@/components/templates/explorePage/mainForm"),
 );
 const BizInformation = lazy(
   () => import("@/components/templates/explorePage/businessInformation"),
 );
-
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const MemoExplorePage = () => {
-  const navigate = useNavigate();
   const businessId = useParams()?.businessId;
   const {
-    setBizInfo,
-    originalDishes,
-    setBanners,
-    setUniquelyDishes,
-    setOriginalDishes,
-    clearOriginalDishes,
     isLoading,
     showUniquePopUp,
-    setDishes,
     toggleExplorePages,
     setToggleExplorePages,
-    setImg,
   } = useExploreStore((state) => ({
-    setBizInfo: state.setBizInfo,
-    originalDishes: state.originalDishes,
-    setOriginalDishes: state.setOriginalDishes,
-    setUniquelyDishes: state.setUniquelyDishes,
-    clearOriginalDishes: state.clearOriginalDishes,
-    setBanners: state.setBanners,
-    toggleBizInfo: state.toggleBizInfo,
     isLoading: state.isLoading,
-    setIsLoading: state.setIsLoading,
     showUniquePopUp: state.showUniquePopUp,
-    setDishes: state.setDishes,
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
-    setImg: state.setImg,
   }));
 
   const { bannerPage, setBannerPage } = useBannerStore((s) => ({
@@ -71,10 +58,18 @@ const MemoExplorePage = () => {
     setBannerPage: s.setBannerPage,
   }));
 
-  const bannersRef = useRef(false);
-  const uniquelyYoursRef = useRef(false);
+  // Fetch business info data
+  const { fetchBizInfo } = useOutletInfo();
+  // Fetch uniquely yours data
+  const { fetchUniquelyYours, getUniquelyDishes } = useUniquelyYours();
+  // Fetch banners data
+  const { fetchBanners } = useBanners();
 
-  const [socialMediaLinks, setSocialMediaLinks] = useState([
+  // explore navigation
+  const { handleNavigate } = useExploreNavigation();
+
+  // social media links state
+  const [socialMediaLinks, setSocialMediaLinks] = useState<SocialMediaLink[]>([
     { _id: 1, icon: "instagram", logo: <BsInstagram size={30} />, link: "" },
     { _id: 2, icon: "facebook", logo: <CiFacebook size={36} />, link: "" },
     { _id: 3, icon: "twitter", logo: <FaXTwitter size={30} />, link: "" },
@@ -82,125 +77,31 @@ const MemoExplorePage = () => {
     { _id: 5, icon: "discord", logo: <RiDiscordLine size={36} />, link: "" },
   ]);
 
-  const handleNavigate = useCallback(() => {
-    if (toggleExplorePages === ExplorePages.BIZINFO) {
-      setToggleExplorePages(ExplorePages.MAINFORM);
-    }
-    if (toggleExplorePages !== ExplorePages.BIZINFO) {
-      clearOriginalDishes();
-      setImg({});
-      navigate(`/app/business/${businessId}/hisite`);
-    }
-  }, [businessId, toggleExplorePages, clearOriginalDishes, originalDishes]);
-
-  const getAllCategoryData = async (businessId: string) => {
-    if (originalDishes.length > 0) return setDishes(originalDishes);
-    const categoryResponse = await apiRpc.categories.$get({
-      query: {
-        businessId: businessId,
-        dishes: "true",
-      },
-    });
-    const data = await categoryResponse.json();
-    const categories = data?.data;
-    const allDishes = await combineAllDishes(categories);
-    setDishes(allDishes);
-    setOriginalDishes(allDishes);
-    return allDishes;
-  };
-
-  const getAllBizInfo = async () => {
-    return await apiRpc.businesses.outletInfo[":businessId"].$get({
-      param: {
-        businessId,
-      },
-    });
-  };
-
-  const fetchUniquelyYours = async () => {
-    const res = await apiRpc.dishes.uniquelyDishes[":businessId"].$get({
-      param: {
-        businessId,
-      },
-    });
-    const response = await res.json();
-    if (res.status === 200) {
-      uniquelyYoursRef.current = true;
-      setUniquelyDishes(response?.data);
-    }
-    return response?.data;
-  };
-
-  const fetchBanners = async () => {
-    const res = await apiRpc.settings.banners[":businessId"].$get({
-      param: {
-        businessId,
-      },
-    });
-    const response = await res.json();
-    if (res.status === 200) {
-      bannersRef.current = true;
-      setBanners(response?.data);
-    }
-    return response?.data;
-  };
-
-  const { refetch } = useQuery({
+  // => Fetch business info
+  const { isLoading: isBizLoading, refetch } = useQuery({
     queryKey: ["bizInfo", businessId],
-    queryFn: async () => {
-      const res = await getAllBizInfo();
-      const response = await res.json();
-      if (response?.data?.specialBannerUrl) {
-        setImg((prevImg) => ({
-          ...prevImg,
-          banner: response?.data?.specialBannerUrl,
-        }));
-      }
-      if (response?.data?.logoUrl) {
-        setImg((prevImg) => ({
-          ...prevImg,
-          logo: response?.data?.logoUrl,
-        }));
-      }
-      if (response?.data?.endBannerUrl) {
-        setImg((prevImg) => ({
-          ...prevImg,
-          footer: response?.data?.endBannerUrl,
-        }));
-      }
-      setBizInfo(response?.data as IBizInfo);
-      setToggleExplorePages(ExplorePages.MAINFORM);
-      const updatedSocialMediaLinks = socialMediaLinks.map((link) => {
-        const matchedLink = response?.data?.socialMediaLinks?.find(
-          (item) => item.icon === link.icon,
-        );
-        return {
-          ...link,
-          link: matchedLink ? matchedLink.link : link.link,
-        };
-      });
-
-      setSocialMediaLinks(updatedSocialMediaLinks);
-      return response;
-    },
+    queryFn: () => fetchBizInfo(socialMediaLinks, setSocialMediaLinks),
     enabled: !!businessId,
   });
 
-  useQuery({
-    queryKey: ["banners", businessId, bannersRef.current],
+  // => Fetch banners
+  const { isLoading: bannersLoading } = useQuery({
+    queryKey: ["banners", businessId],
     queryFn: fetchBanners,
-    enabled: !!businessId && !bannersRef.current,
+    enabled: !!businessId,
   });
 
-  useQuery({
-    queryKey: ["categories", businessId, uniquelyYoursRef.current],
+  // => fetch uniquely yours
+  const { isLoading: uniquelyLoading } = useQuery({
+    queryKey: ["categories", businessId],
     queryFn: fetchUniquelyYours,
-    enabled: !!businessId && !uniquelyYoursRef.current,
+    enabled: !!businessId,
   });
 
-  useQuery({
+  // => fetch categories
+  const { isLoading: dishesLoading } = useQuery({
     queryKey: ["categoriez", businessId, showUniquePopUp],
-    queryFn: () => getAllCategoryData(businessId ?? ""),
+    queryFn: getUniquelyDishes,
     enabled: !!businessId && showUniquePopUp,
   });
 
@@ -208,6 +109,9 @@ const MemoExplorePage = () => {
     setToggleExplorePages(ExplorePages.BANNERS);
     setBannerPage(BannerPage.VIEW);
   }, [bannerPage, toggleExplorePages]);
+
+  if (isBizLoading || bannersLoading || uniquelyLoading || dishesLoading)
+    return <LoadingSpinner />;
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -240,7 +144,6 @@ const MemoExplorePage = () => {
                 title="Choose Layout"
                 onBack={handleBack}
                 leftIcon={<FaArrowLeft />}
-                isIconBusinessShow={false}
               />
             </header>
             <BannerLayouts />

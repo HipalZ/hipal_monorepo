@@ -1,4 +1,6 @@
-import SubHeader from "@/components/atom/subHeader";
+import { lazy } from "react";
+
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { preDefinedButtons } from "@/components/utils/helper";
 import { memo } from "react";
@@ -7,7 +9,7 @@ import {
   useButtonName,
   useCustomColor,
   useHandleDirections,
-} from "./bannerHelpers";
+} from "../../helpers/bannersHelper";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { useBannerTemp } from "@/components/store/useBannerTemp";
 

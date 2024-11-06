@@ -9,9 +9,10 @@ import LinkItems from "../dish/[editDish]/linkItems";
 import EditAddon from "./editAddon";
 
 const MemoAddonForm = () => {
-  const { addOnToggle, setAddOnToggle, setOpenMenu, addOnId } =
+  const { addOnToggle, addOnName, setAddOnToggle, setOpenMenu, addOnId } =
     useMenuPageStore((s) => ({
       addOnToggle: s.addOnToggle,
+      addOnName: s.addOnName,
       setAddOnToggle: s.setAddOnToggle,
       setOpenMenu: s.setOpenMenu,
       addOnId: s.addOnId,
@@ -44,7 +45,7 @@ const MemoAddonForm = () => {
       {" "}
       <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
         <MemoizedHeader
-          title={addOnId !== "" ? "Edit Addon" : "Create Addon"}
+          title={addOnId !== "" ? `${addOnName}` : "Create Addon"}
           onBack={goBack}
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}

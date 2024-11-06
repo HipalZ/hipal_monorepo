@@ -1,11 +1,7 @@
 import { useState, useRef, memo, Suspense, lazy } from "react";
-import { useEditCoupon, useSaveCoupon } from "@/hooks/useCoupon";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { cn } from "@hi/common";
 import { toPng } from "html-to-image";
-import useBusinessData from "@/components/store/useBusinessData";
-import { storeImageAfterSave } from "@/components/utils/helper";
-import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const AfterGrabbingCoupon = lazy(
@@ -29,75 +25,24 @@ const buttonData = [
 ];
 const MemoCustom = () => {
   const {
-    bgColor,
     promoteOnBill,
     promote,
     cashbackAvailable,
-    couponName,
-    couponType,
-    couponDiscount,
-    couponPrice,
-    startTime,
-    endTime,
-    when,
-    minimumBillAmount,
-    couponForEveryOne,
-    customDays,
-    couponStartDate,
-    couponEndDate,
-    expiryAfterGrabbed,
-    termsAndConditions,
-    selectedUserIds,
-    selectedGroupIds,
-    overAllLimit,
-    expiryClaimLimitValue,
-    couponId,
     setPromoteOnBill,
     setPromote,
     setCashbackAvailable,
-    requiredFields,
-    extendedEndTime,
-    couponImage,
+    setSelectedPage,
+    selectFlow,
   } = useCouponsStore((s) => ({
-    bgColor: s.bgColor,
     promoteOnBill: s.promoteOnBill,
     promote: s.promote,
     cashbackAvailable: s.cashbackAvailable,
-    couponName: s.couponName,
-    couponType: s.couponType,
-    couponDiscount: s.couponDiscount,
-    couponPrice: s.couponPrice,
-    startTime: s.startTime,
-    endTime: s.endTime,
-    when: s.when,
-    minimumBillAmount: s.minimumBillAmount,
-    couponForEveryOne: s.couponForEveryOne,
-    customDays: s.customDays,
-    couponStartDate: s.couponStartDate,
-    couponEndDate: s.couponEndDate,
-    expiryAfterGrabbed: s.expiryAfterGrabbed,
-    termsAndConditions: s.termsAndConditions,
-    selectedUserIds: s.selectedUserIds,
-    selectedGroupIds: s.selectedGroupIds,
-    overAllLimit: s.overAllLimit,
-    expiryClaimLimitValue: s.expiryClaimLimitValue,
-    couponId: s.couponId,
     setPromoteOnBill: s.setPromoteOnBill,
     setPromote: s.setPromote,
     setCashbackAvailable: s.setCashbackAvailable,
-    requiredFields: s.requiredFields,
-    extendedEndTime: s.extendedEndTime,
-    couponImage: s.couponImage,
+    setSelectedPage: s.setSelectedPage,
+    selectFlow: s.selectFlow,
   }));
-
-  const { selectedFile } = useMenuPageStore((s) => ({
-    selectedFile: s.selectedFile,
-  }));
-
-  const { saveCoupon, isPending: isSaving } = useSaveCoupon();
-  const { editCoupon, isPending: isUpdating } = useEditCoupon();
-  const businessData = useBusinessData((s) => s.businessData);
-  const [loading, setIsLoading] = useState(false);
 
   const [selectedPreview, setSelectedPreview] = useState("beforeGrabbing");
   const previewRef = useRef<HTMLDivElement>(null);
@@ -124,84 +69,6 @@ const MemoCustom = () => {
     }
   };
 
-  const saveCouponHandler = async (isPublishStatus: boolean) => {
-    let imageUrl = "";
-
-    try {
-      imageUrl = couponImage
-        ? await storeImageAfterSave(selectedFile, couponImage, setIsLoading)
-        : "";
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      return;
-    }
-
-    const availability =
-      when === "birthdayweek" || when === "birthdaymonth"
-        ? { when: "allthetime", customDays: [], startTime: 0, endTime: 0 }
-        : {
-            when: when,
-            customDays: customDays,
-            startTime: startTime,
-            endTime: extendedEndTime > 0 ? extendedEndTime : endTime,
-          };
-
-    const eligibleUser = couponForEveryOne
-      ? { allUsers: true }
-      : {
-          allUsers: false,
-          userIds: selectedUserIds.length ? selectedUserIds : undefined,
-          groupIds: selectedGroupIds.length ? selectedGroupIds : undefined,
-        };
-
-    const payload = {
-      businessId: businessData?._id || "",
-      name: couponName,
-      type: "FIX",
-      isPublish: isPublishStatus,
-      bgColour: bgColor,
-      promoteOnBill: promoteOnBill,
-      promote: promote,
-      cashbackAvailable: cashbackAvailable,
-      ...(imageUrl && { image: imageUrl }),
-      config: {
-        value: couponType === "PERCENTAGE" ? couponDiscount : couponPrice,
-        discountType: couponType,
-        upto: couponPrice || 0,
-      },
-      conditions: {
-        individualUserLimit: {
-          overAllLimit: expiryClaimLimitValue || 0,
-        },
-        billValue: minimumBillAmount || 0,
-        expiryClaimLimit: {
-          overAllLimit: overAllLimit || 0,
-        },
-        availability: availability,
-        eligibleUser: eligibleUser,
-        expiryAfterGrabbed: expiryAfterGrabbed,
-        couponStartDate: couponStartDate || 0,
-        couponEndDate: couponEndDate || 0,
-        requiredFields: requiredFields,
-        tc:
-          termsAndConditions ||
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      },
-    };
-
-    couponId
-      ? await editCoupon({ payload, couponId })
-      : await saveCoupon(payload);
-  };
-
-  if (loading || isSaving || isUpdating) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <section className="flex flex-col gap-6 lg:flex-row pb-[7rem]">
@@ -215,11 +82,11 @@ const MemoCustom = () => {
           </div>
           {selectedPreview === "storySize" ||
           selectedPreview === "socialMedia" ? (
-            <div className="w-[92%] mx-auto text-center bg-[#ffffff50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
+            <div className="w-[92%] mx-auto text-center bg-[#8C63FF50] border border-[#ffffff70] rounded-2xl px-2 py-2 mt-6">
               <button
                 type="button"
                 onClick={handleDownload}
-                className="flex-1 w-full px-2 py-2 text-sm text-black bg-white rounded-full"
+                className="flex-1 w-full px-2 py-2 text-sm text-black bg-[#8C63FF] text-white rounded-full"
               >
                 Download Preview
               </button>
@@ -247,36 +114,33 @@ const MemoCustom = () => {
           </div>
 
           <div className="flex flex-col gap-4 px-4">
-            {selectedUserIds?.length === 0 &&
-              selectedGroupIds?.length === 0 && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="promoteOnBill"
-                      checked={promoteOnBill}
-                      className="text-black rounded"
-                      onChange={(e) => setPromoteOnBill(e.target.checked)}
-                    />
-                    <label htmlFor="promoteOnBill">
-                      Promote this after every payment bill
-                    </label>
-                  </div>
+            {selectFlow === "GRAB" && (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="promoteOnBill"
+                    checked={promoteOnBill}
+                    className="text-black rounded"
+                    onChange={(e) => setPromoteOnBill(e.target.checked)}
+                  />
+                  <label htmlFor="promoteOnBill">
+                    Promote this after every payment bill
+                  </label>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="promote"
-                      checked={promote}
-                      className="text-black rounded"
-                      onChange={(e) => setPromote(e.target.checked)}
-                    />
-                    <label htmlFor="promote">
-                      Promote this in explore page
-                    </label>
-                  </div>
-                </>
-              )}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="promote"
+                    checked={promote}
+                    className="text-black rounded"
+                    onChange={(e) => setPromote(e.target.checked)}
+                  />
+                  <label htmlFor="promote">Promote this in explore page</label>
+                </div>
+              </>
+            )}
 
             <div className="flex items-center gap-2">
               <input
@@ -297,9 +161,12 @@ const MemoCustom = () => {
           fixed
           buttons={[
             {
-              text: couponId ? "Update" : "publish",
-              onClick: () => saveCouponHandler(true),
-              isLoading: isSaving || isUpdating,
+              text: "Back",
+              onClick: () => setSelectedPage("PREVIEW"),
+            },
+            {
+              text: "Save & Next",
+              onClick: () => setSelectedPage("Terms"),
             },
           ]}
         />

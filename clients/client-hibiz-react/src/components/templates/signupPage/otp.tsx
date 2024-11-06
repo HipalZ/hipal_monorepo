@@ -3,7 +3,7 @@ import useLoginStore from "@/components/store/useLogin";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
-import { startTransition, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { LuArrowLeft } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
@@ -53,7 +53,7 @@ const Otp = ({ login }: { login?: boolean }) => {
       return;
     }
 
-    if (res.status === 200) {
+    if (res.status === 200 || res.status === 201) {
       setAccessToken(response.data.accessToken);
       setRefreshToken(response.data.refreshToken);
       setUser(response.data.user);
@@ -61,9 +61,7 @@ const Otp = ({ login }: { login?: boolean }) => {
       setIsLogin(true);
 
       if (login) {
-        startTransition(() => {
-          navigate("/app/business");
-        });
+        navigate("/app/business");
         return;
       }
 

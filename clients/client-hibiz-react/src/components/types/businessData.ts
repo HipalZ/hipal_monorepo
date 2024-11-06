@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import type {
   businessType,
   exploreLayout,
@@ -6,6 +6,7 @@ import type {
 } from "../store/useBusinessCtrl";
 import type { User } from "../store/useOwnerLogin";
 import type { BannerType } from "../utils/bannerLayouts";
+import type Area from "react-easy-crop";
 
 interface IAcessControl {
   [key: string]: string;
@@ -740,4 +741,75 @@ export interface ICoupon {
   conditions: Conditions;
   __v: number;
   links: Link[];
+}
+
+export interface WhatsAppTemplateComponent {
+  type: string;
+  format?: string; // Optional, only applies to HEADER component
+  text?: string;
+  buttons?: WhatsAppTemplateButton[];
+}
+
+export interface WhatsAppTemplateButton {
+  type: string;
+  text: string;
+}
+
+export interface WhatsAppTemplate {
+  name: string;
+  parameter_format: string;
+  components: WhatsAppTemplateComponent[];
+  language: string;
+  status: string;
+  category: string;
+  id: string;
+}
+
+export interface CropperRef {
+  current: {
+    getCroppedAreaPixels: () => Area | null;
+  };
+}
+
+export interface IBizInfoResponse {
+  data: IBizInfo;
+  err: boolean;
+  message: string;
+}
+
+export interface IBannerResponse {
+  data: IBanner[];
+  err: boolean;
+  message: string;
+}
+
+export interface BannerProps {
+  banner: IBannerPayload;
+  layout: {
+    isPattern: boolean;
+    pattern: React.FC<PatternProps>;
+    isButton: boolean;
+    onlyImage: boolean;
+  };
+}
+
+export enum ViewType {
+  BANNERS = "Banners",
+  DRAFTS = "Drafts",
+}
+
+interface ButtonStyle {
+  color?: string;
+  buttonColor?: string;
+}
+
+interface ParagraphStyle {
+  color?: string;
+}
+
+export interface UseBannerStylesProps {
+  buttonStyle?: ButtonStyle;
+  paragraphStyle?: ParagraphStyle;
+  openPreview: boolean;
+  selectedBannerType: string;
 }

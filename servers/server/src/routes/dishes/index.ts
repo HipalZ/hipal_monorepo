@@ -35,9 +35,7 @@ const dishesRouter = new Hono()
         const existingDishes = await Dish.find({
           businessId,
           "categoryIds.0": { $exists: true },
-        }).select(
-          "_id businessId name availability tags images dishTypes visibility price categoryIds addOnIds recommendationIds",
-        );
+        }).select("_id name images dishTypes");
         return respond(
           c,
           "Dishes fetched successfully",

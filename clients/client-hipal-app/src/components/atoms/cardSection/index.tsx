@@ -19,7 +19,7 @@ const MemoCardSection = () => {
   }, [settings]);
   return (
     <section>
-      <center className="mx-auto overflow-hidden">
+      <center className="mx-auto">
         {cardType === "CARD_ONE" && <CardOneLayout />}
         {cardType === "CARD_TWO" && <CardTwoLayout />}
         {cardType === "CARD_THREE" && <CardThreeLayout />}

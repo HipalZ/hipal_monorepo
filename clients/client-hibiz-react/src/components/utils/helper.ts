@@ -5,7 +5,7 @@ import nonVeg from "@/assets/dishTypes/non_veg.png";
 import veg from "@/assets/dishTypes/veg.png";
 import vegan from "@/assets/dishTypes/vegan.png";
 import axios from "@/axios";
-import { DishTypeEnum } from "@hi/db-models/src/validators";
+import { DishTypeEnum, type ReviewsType } from "@hi/db-models/src/validators";
 import { type ClassValue, clsx } from "clsx";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
 import type { ChangeEvent } from "react";
@@ -143,10 +143,32 @@ export const TagsEnum = [
   "Popular",
 ];
 
-const MAX_WIDTH = 1000;
-const MAX_HEIGHT = 1000;
+const MAX_WIDTH = 500;
+const MAX_HEIGHT = 500;
 const MIME_TYPE = "image/webp";
-const QUALITY = 0.9;
+const QUALITY = 0.95;
+
+const calculateSize = (
+  img: HTMLImageElement,
+  maxWidth: number,
+  maxHeight: number,
+): [number, number] => {
+  let width = img.width;
+  let height = img.height;
+
+  if (width > height) {
+    if (width > maxWidth) {
+      height = Math.round((height * maxWidth) / width);
+      width = maxWidth;
+    }
+  } else {
+    if (height > maxHeight) {
+      width = Math.round((width * maxHeight) / height);
+      height = maxHeight;
+    }
+  }
+  return [width, height];
+};
 
 export const compressImage = (file, callback) => {
   const blobURL = URL.createObjectURL(file);
@@ -182,28 +204,6 @@ export const compressImage = (file, callback) => {
       );
     }
   };
-};
-
-const calculateSize = (
-  img: HTMLImageElement,
-  maxWidth: number,
-  maxHeight: number,
-): [number, number] => {
-  let width = img.width;
-  let height = img.height;
-
-  if (width > height) {
-    if (width > maxWidth) {
-      height = Math.round((height * maxWidth) / width);
-      width = maxWidth;
-    }
-  } else {
-    if (height > maxHeight) {
-      width = Math.round((width * maxHeight) / height);
-      height = maxHeight;
-    }
-  }
-  return [width, height];
 };
 
 export const handleCrop = async (
@@ -420,7 +420,8 @@ export const calculateFutureDate = (remainder, duration: string) => {
   return now;
 };
 
-export const formatDate = (date: Date) => {
+export const formatDate = (timestamp: number) => {
+  const date = new Date(timestamp);
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -460,28 +461,6 @@ export function hexToRGBA(hex: string, opacity: string) {
 
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
-
-export const handleImageChange = async (
-  event: ChangeEvent<HTMLInputElement>,
-) => {
-  const type = event.target.dataset.type as keyof ImageFiles;
-  const file = event.target.files?.[0];
-  if (file) {
-    return new Promise((resolve) => {
-      compressImage(file, (compressedFile) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onloadend = () => {
-          resolve({
-            image: reader.result,
-            type,
-            compressedFile,
-          });
-        };
-      });
-    });
-  }
-};
 
 export const formatNumber = (num: number): string => {
   if (num >= 10000000) {
@@ -545,4 +524,20 @@ export const getCroppedImg = async (imageSrc: string, pixelCrop) => {
       1,
     );
   });
+};
+
+export const truncateText = (text, maxLength) => {
+  if (text?.length > maxLength) {
+    return text?.substring(0, maxLength) + "...";
+  }
+  return text;
+};
+
+export const getReviewAttributes = (review: ReviewsType) => {
+  const attributes = [];
+  if (review?.foodTaste === 1) attributes.push("Food");
+  if (review?.ambience === 1) attributes.push("Ambience");
+  if (review?.hygiene === 1) attributes.push("Hygiene");
+  if (review?.service === 1) attributes.push("Service");
+  return attributes;
 };

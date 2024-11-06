@@ -4,7 +4,7 @@ import Hi from "@/assets/svg/hi.svg";
 import MenuBannerPreview from "@/components/templates/menuBanner/MenuBannerPreview";
 import { useMenuBanner } from "@/components/store/useMenuBanners";
 import AddDishesToMenuBanner from "@/components/templates/menuBanner/addDishesToMenuBanner";
-import { startTransition, useCallback } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import LinkDishes from "@/components/templates/menuBanner/linkDishes";
 import EmblaCarouselPreview from "@/components/templates/embla/emblaCarouselForPreviw";
@@ -42,9 +42,7 @@ const MenuManager = () => {
       case "CREATE":
         return setMenuBannerType("PREVIEW");
       case "PREVIEW":
-        return startTransition(() => {
-          navigate(-1);
-        });
+        return navigate(-1);
     }
   }, [menuBannerType]);
 

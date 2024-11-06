@@ -4,7 +4,6 @@ import { type FC, memo, useEffect, useMemo, useRef } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
-import { GiKnifeFork } from "react-icons/gi";
 import { InView } from "react-intersection-observer";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";
@@ -13,6 +12,8 @@ import type { TimingType } from "@/components/types/businessData";
 import EmblaCarouselPreview from "../embla/emblaCarousalPreview";
 import type { EmblaOptionsType } from "embla-carousel";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -41,6 +42,8 @@ const DishesList: FC<IDishesProps> = (props) => {
     setActiveChildCategory: state.setActiveChildCategory,
     setObserverActive: state.setObserverActive,
   }));
+
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const subTypes = useMemo(() => {
     const hasVisibleDishes = (category: CategoryType): boolean => {
       return (
@@ -222,14 +225,24 @@ const DishesList: FC<IDishesProps> = (props) => {
               )}
             </InView>
             <div className="flex flex-col divide-y divide-base-300">
-              {dishesToRender.length > 0
-                ? dishesToRender.map((dishData: DishType, dishIndex) => (
-                    <HorizontalCard
+              {dishesToRender.length > 0 &&
+              outletInfo?.outLetType !== "OTHER" ? (
+                dishesToRender.map((dishData: DishType, dishIndex) => (
+                  <HorizontalCard
+                    dishData={dishData}
+                    key={`${dishData._id}-${dishIndex}`}
+                  />
+                ))
+              ) : (
+                <section className="grid grid-cols-2 gap-4 px-4 mt-4">
+                  {dishesToRender.map((dishData: DishType, dishIndex) => (
+                    <OtherOutletCard
                       dishData={dishData}
                       key={`${dishData._id}-${dishIndex}`}
                     />
-                  ))
-                : null}
+                  ))}
+                </section>
+              )}
             </div>
           </section>
         );

@@ -4,7 +4,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishes, useLinkedDishes } from "@/hooks/useDishStore";
+import { useDishes, useLinkedDishes } from "@/hooks/useDish";
 import DishButton from "./dishesManagerCard";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";

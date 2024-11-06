@@ -46,7 +46,6 @@ const HiPeople = () => {
             title="Hi PplZ"
             leftIcon={<FaArrowLeft />}
             rightImage={Hi}
-            isIconBusinessShow={false}
             onBack={handleBack}
           />
         </article>

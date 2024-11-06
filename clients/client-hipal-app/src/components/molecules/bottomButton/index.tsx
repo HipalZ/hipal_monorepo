@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { MdAccountBalanceWallet, MdOutlineMenuBook } from "react-icons/md";
+import { MdAccountBalanceWallet } from "react-icons/md";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
 import { LuScanLine } from "react-icons/lu";
@@ -79,11 +79,11 @@ function BottomButton({
       {children ? (
         <center
           style={{
-            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+            boxShadow: "0px 4px 4px 0px #00000040",
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "sticky bottom-0 z-20 py-3 w-full max-w-[30rem]",
+            "sticky z-10 bottom-2 py-3 pl-2 pr-2 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
           {children}
@@ -91,17 +91,17 @@ function BottomButton({
       ) : (
         <section
           style={{
-            boxShadow: "0px -8px 16px 0px rgba(0, 0, 0, 0.14)",
+            boxShadow: "0px 4px 4px 0px #00000040",
           }}
           className={cn(
             noTheme ? "bg-white" : "bg-primary",
-            "fixed z-10 bottom-0 p-3 w-full max-w-[30rem] shadow-lg",
+            "fixed z-10 bottom-3 py-2 px-6 w-[100%] max-w-[30rem] shadow-lg rounded-full scale-[0.95]",
           )}
         >
-          <center className="relative flex items-center justify-between text-xs">
+          <center className="relative flex items-center justify-between text-sm">
             <Link href={`/${customLink}/explore`}>
               <center className={defaultStyle}>
-                <RiHome4Fill size={20} className="mb-2" />
+                <RiHome4Fill size={20} className="mb-1" />
                 Home
               </center>
             </Link>
@@ -109,7 +109,7 @@ function BottomButton({
               href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             >
               <center className={defaultStyle}>
-                <RiCouponFill size={20} className="mb-2" />
+                <RiCouponFill size={20} className="mb-1" />
                 Rewards
               </center>
             </Link>
@@ -123,7 +123,7 @@ function BottomButton({
                 }}
                 className={defaultStyle}
               >
-                <MdAccountBalanceWallet size={20} className="mb-2" />
+                <MdAccountBalanceWallet size={20} className="mb-1" />
                 <span className="w-full font-light text-base-100">
                   {!tableName ? "Scan" : "Pay Bill"}
                 </span>
@@ -132,16 +132,18 @@ function BottomButton({
             {!tableName && (
               <Link href={`/${customLink}/scan`}>
                 <center className={defaultStyle}>
-                  <LuScanLine size={20} className="mb-2" />
+                  <LuScanLine size={20} className="mb-1" />
                   {!tableName ? "Scan" : "Pay Bill"}
                 </center>
               </Link>
             )}
             <Link href={`/${customLink}/category`}>
-              <center className={defaultStyle}>
-                <MdOutlineMenuBook size={20} className="mb-2" />
+              <button
+                type="button"
+                className="px-6 py-4 -mr-2 rounded-full bg-base-100 text-primary"
+              >
                 {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-              </center>
+              </button>
             </Link>
           </center>
         </section>

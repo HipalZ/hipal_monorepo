@@ -1,10 +1,11 @@
-import { memo, useCallback } from "react";
+import { lazy, memo, useCallback } from "react";
 import dummyImage from "@/assets/hisite/placeholder.png";
-import SubHeader from "@/components/atom/subHeader";
-import Paragraph from "@/components/atom/paragraph";
-import PlusButton from "@/components/atom/plusButton";
 import type { IDish } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
+
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
+const Paragraph = lazy(() => import("@/components/atom/paragraph"));
+const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 
 const MemoUniquelyYoursSection = () => {
   const { uniquelyDishes, showUniquePopUp, setShowUniquePopUp } =
@@ -14,6 +15,7 @@ const MemoUniquelyYoursSection = () => {
       setShowUniquePopUp: s.setShowUniquePopUp,
     }));
 
+  // open popup
   const handleOpenPopUp = useCallback(() => {
     setShowUniquePopUp(true);
   }, [showUniquePopUp]);

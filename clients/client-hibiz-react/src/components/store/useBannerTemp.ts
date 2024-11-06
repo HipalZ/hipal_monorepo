@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { type CropperRef, ViewType } from "../types/businessData";
 
 interface IBannerTemp {
   itemName: string;
@@ -73,12 +74,43 @@ interface IBannerTemp {
     type: null | string;
   };
 
+  cropperRef: CropperRef | null;
+
   setCropping: (cropping: {
     image: null | string;
     type: null | string;
   }) => void;
 
   updateEditBanner: (editingBanner: any) => void;
+
+  // all banners
+
+  isModalOpen: boolean;
+  setIsModalOpen: (isOpen: boolean) => void;
+
+  selectedBannerId: string;
+  setSelectedBannerId: (id: string) => void;
+
+  view: ViewType.BANNERS;
+  setView: (view: ViewType.BANNERS) => void;
+
+  isArrangeMode: boolean;
+  setIsArrangeMode: (isArrange: boolean) => void;
+
+  firstCardIndex: number | null;
+  setFirstCardIndex: (index: number | null) => void;
+
+  openFilter: boolean;
+  setOpenFilter: (openFilter: boolean) => void;
+
+  selectedFilters: string[];
+  setSelectedFilters: (filters: string[]) => void;
+
+  toggleFilter: (filter: string) => void;
+
+  clearFilters: () => void;
+
+  handleOpenFilters: () => void;
 }
 
 export const useBannerTemp = create<IBannerTemp>((set) => ({
@@ -154,6 +186,8 @@ export const useBannerTemp = create<IBannerTemp>((set) => ({
     image: null,
     type: null,
   },
+
+  cropperRef: null,
   setCropping: (cropping) => set({ cropping }),
 
   updateEditBanner: (editingBanner) => {
@@ -179,4 +213,38 @@ export const useBannerTemp = create<IBannerTemp>((set) => ({
       },
     });
   },
+
+  // all banners
+
+  isModalOpen: false,
+  setIsModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
+
+  selectedBannerId: "",
+  setSelectedBannerId: (id) => set({ selectedBannerId: id }),
+
+  view: ViewType.BANNERS,
+  setView: (view) => set({ view }),
+
+  isArrangeMode: false,
+  setIsArrangeMode: (isArrange) => set({ isArrangeMode: isArrange }),
+
+  firstCardIndex: null,
+  setFirstCardIndex: (index) => set({ firstCardIndex: index }),
+
+  openFilter: false,
+  setOpenFilter: (openFilter) => set({ openFilter }),
+
+  selectedFilters: [],
+  setSelectedFilters: (filters) => set({ selectedFilters: filters }),
+
+  toggleFilter: (filter) =>
+    set((state) => ({
+      selectedFilters: state.selectedFilters.includes(filter)
+        ? state.selectedFilters.filter((f) => f !== filter)
+        : [...state.selectedFilters, filter],
+    })),
+
+  clearFilters: () => set({ selectedFilters: [] }),
+
+  handleOpenFilters: () => set((state) => ({ openFilter: !state.openFilter })),
 }));

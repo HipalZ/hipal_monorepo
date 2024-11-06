@@ -1,8 +1,8 @@
-import { apiRpc } from "@hi/common";
-import type { Alert } from "@/components/types/hiClientzData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
-import toast from "react-hot-toast";
+import type { Alert } from "@/components/types/hiClientzData";
 import { useErrorHandling } from "@/components/utils/helpers";
+import { apiRpc } from "@hi/common";
+import toast from "react-hot-toast";
 interface SavePushTokenResponse {
   message: string;
   err: boolean;
@@ -18,19 +18,14 @@ interface SavePushTokenResponse {
 
 export const usePushTokenApi = () => {
   const { errorText } = useErrorHandling();
-  const {
-    pushToken,
-    selectedBiz,
-    captainData,
-    setNotification,
-    setRegisteredToken,
-  } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    captainData: s.captainData,
-    pushToken: s.pushToken,
-    setNotification: s.setNotification,
-    setRegisteredToken: s.setRegisteredToken,
-  }));
+  const { pushToken, selectedBiz, captainData, setNotification } = useHiClientZ(
+    (s) => ({
+      selectedBiz: s.selectedBiz,
+      captainData: s.captainData,
+      pushToken: s.pushToken,
+      setNotification: s.setNotification,
+    }),
+  );
   const businessId = selectedBiz?.businessId?._id;
   const savePushToken = async (): Promise<SavePushTokenResponse | null> => {
     try {
@@ -47,7 +42,6 @@ export const usePushTokenApi = () => {
       const response: SavePushTokenResponse = await res.json();
       if (response.data) {
         setNotification(response.data.notification);
-        setRegisteredToken(true);
       }
       return response;
     } catch (error) {

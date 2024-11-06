@@ -7,31 +7,47 @@ import type { IBusinessData } from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { memo, startTransition } from "react";
+import { memo } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
+import type { LoyaltyType } from "@hi/db-models/src/validators";
 ///
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
+  const setExistingLoyalty = useBusinessData((s) => s.setExistingLoyalty);
   const { reset } = useBusinessCtrl();
   const user = useOwnerLogin((s) => s.user);
   const navigate = useNavigate();
+
+  const getLoyaltyData = async (business: IBusinessData) => {
+    const response = await apiRpc.businesses[":businessId"].loyalty.$get({
+      param: {
+        businessId: business?._id,
+      },
+    });
+    const loyaltyData = (await response.json()).data as LoyaltyType;
+    if (response.status === 200 || response.status === 201) {
+      setExistingLoyalty(loyaltyData);
+    }
+    if (response.status === 404) {
+      setExistingLoyalty(null);
+    }
+    return loyaltyData;
+  };
+
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
-    startTransition(() => {
-      navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
-    });
+    getLoyaltyData(business);
+    navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
   };
 
   function addBusiness() {
     reset();
-    startTransition(() => {
-      navigate("/app/business/add");
-    });
+    navigate("/app/business/add");
   }
 
   const { data: sample } = useQuery({
@@ -50,7 +66,6 @@ const Business = () => {
             leftIcon={<FaArrowLeft />}
             centerImage={HipeopleLogo}
             rightImage={HipeopleLogo}
-            isIconBusinessShow={false}
           />
         </section>
         <section className="business_gradient_hero_section">

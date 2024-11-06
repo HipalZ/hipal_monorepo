@@ -1,7 +1,7 @@
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
 import { getPrice } from "@/components/utils/helpers";
 import { memo, useCallback, useMemo, useState } from "react";
-import { AiOutlineRight, AiOutlineWarning } from "react-icons/ai";
+import { AiOutlineWarning } from "react-icons/ai";
 import FoodType from "../foodType";
 import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
@@ -54,7 +54,7 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-end py-4 prose">
+      <div className="flex flex-row items-end pt-2 pb-1 prose">
         <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
@@ -72,42 +72,34 @@ const MemoHorizontalCard = ({
             )}
           </div>
 
-          <div className="py-1 overflow-hidden text-lg font-medium leading-6 capitalize text-primary">
+          <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-primary">
             {dishData?.name || ""}
-          </div>
-          <div className="mt-1 text-sm">
-            <span className="text-base-content">
-              <span className="text-sm">₹</span> {price}
-            </span>
           </div>
 
           <button
             type="button"
             onClick={() => openModal(dishData)}
-            className="flex mt-2 space-x-1 text-primary"
+            className="flex items-center gap-4 mt-2 space-x-1 text-primary"
           >
-            <div className="underline on_active_bounce !text-sm">Know more</div>
-            <div>
-              <AiOutlineRight
-                size={17}
-                className="py-[0.125rem] mt-0.5 text-xl"
-              />
+            <div className="underline !underline-offset-4 on_active_bounce !text-sm">
+              Know more
             </div>
+            <div className="text-sm font-semibold opacity-70">₹ {price}</div>
           </button>
         </div>
         <div className={"flex flex-col"}>
           <div>
             {dishData?.images[0] ? (
               <div
-                className="relative w-[7.5rem] h-[7.5rem] overflow-hidden"
+                className="relative w-[6rem] h-[6rem] overflow-hidden"
                 onClick={() => openModal(dishData)}
               >
                 <ShimmerImage
                   src={dishData.images[0]}
                   alt="dish"
                   quality={95}
-                  width={125}
-                  height={125}
+                  width={96}
+                  height={96}
                   className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
                     dishData.availability ? "" : "grayscale"
                   }`}
@@ -123,11 +115,11 @@ const MemoHorizontalCard = ({
               </div>
             ) : !dishData.availability ? (
               <div className="pb-2">
-                <NotAvailable className="w-32 h-32 overflow-hidden rounded-xl" />
+                <NotAvailable className="w-24 h-24 overflow-hidden rounded-xl" />
               </div>
             ) : noDescription ? (
               <div>
-                <PlaceholderImg className="w-32 h-32 overflow-hidden rounded-xl" />
+                <PlaceholderImg className="w-24 h-24 overflow-hidden rounded-xl" />
               </div>
             ) : (
               <div className="mt-6" />
@@ -135,9 +127,9 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto ${
+              className={` flex flex-col items-center w-full mx-auto scale-75 ${
                 dishData?.images?.length > 0 || noDescription
-                  ? " -mt-6"
+                  ? " -mt-4"
                   : " -mt-4 -ml-6"
               }`}
             >

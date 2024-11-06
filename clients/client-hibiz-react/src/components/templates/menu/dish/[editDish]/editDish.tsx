@@ -12,10 +12,9 @@ import {
   useAddons,
   useChildCategories,
   useDishes,
-} from "@/hooks/useDishStore";
+} from "@/hooks/useDish";
 import LinkTags from "./linkTags";
 import LinkAddons from "./linkAddons";
-import ReactCropper from "@/components/cropper";
 import { cn, handleCrop } from "@/components/utils/helper";
 import DeleteDish from "./deleteDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
@@ -104,19 +103,19 @@ const MemoEditDish = () => {
   const handleHeader = () => {
     switch (dishStep) {
       case DishSteps.DISH_STEP_1:
-        return "Edit Dish";
+        return `${editDish?.name}`;
       case DishSteps.PORTION_STEP:
-        return "Edit Portions";
+        return `${editDish?.name}'s Portions`;
       case DishSteps.LINK_CATEGORY_STEP:
-        return "Link Category";
+        return `${editDish?.name}'s Categories`;
       case DishSteps.LINK_ADDON_STEP:
-        return "Link Addons";
+        return `${editDish?.name}'s Addons`;
       case DishSteps.LINK_RECOMMENDATION_STEP:
-        return "Recommendations";
+        return `${editDish?.name}`;
       case DishSteps.LINK_ADD_TAGS:
-        return "Add Tags";
+        return `${editDish?.name}'s Tags`;
       default:
-        return "Edit Dish";
+        return `${editDish?.name}`;
     }
   };
 

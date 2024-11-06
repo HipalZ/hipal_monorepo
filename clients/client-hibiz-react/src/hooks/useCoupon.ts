@@ -1,10 +1,6 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";
-import type {
-  ICoupon,
-  IUserGroup,
-  IUserId,
-} from "@/components/types/businessData";
+import type { ICoupon, IUserId } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";

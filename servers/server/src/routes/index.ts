@@ -16,6 +16,7 @@ import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import tagRouter from "./tags";
 import usersRouter from "./users";
+import whatsappRouter from "./whatsapp";
 
 //////
 const app = new Hono();
@@ -39,6 +40,7 @@ export const routes = app
   .route("/coupon-analytics", couponAnalytics)
   .route("/hipalz", hipalzRouter)
   .route("/pos", posRouter)
-  .route("/menu-banner", menuBannerRouter);
+  .route("/menu-banner", menuBannerRouter)
+  .route("/whatsapp", whatsappRouter);
 
 export type AppType = typeof routes;

@@ -5,7 +5,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishes } from "@/hooks/useDishStore";
+import { useDishes } from "@/hooks/useDish";
 
 const MemoListOfDishes = () => {
   const {
@@ -41,6 +41,7 @@ const MemoListOfDishes = () => {
     threshold: 0.1,
   });
 
+  // applying filters and using memo to avoid re-render
   const filteredDishes = useMemo(() => {
     let filtered = search
       ? fuse.search(search).map((result) => {
@@ -58,12 +59,13 @@ const MemoListOfDishes = () => {
       : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
   }, [search, fuse, visibilityFilter, sortOrder, dishes]);
 
+  // storing dish data for edit and opening edit menu popup
   const handleEditDish = useCallback(
     (dish: DishType) => {
       setEditDish(dish);
       setDishStep("DISH_STEP_1");
       setEditOpenMenu(true);
-      setEditDishFunction(dish);
+      setEditDishFunction(dish); // setting data for edit dish
     },
     [dishStep, editOpenMenu],
   );

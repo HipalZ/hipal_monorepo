@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Ubuntu } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import Loading from "./loading";
@@ -20,6 +21,11 @@ export const metadata: Metadata = {
   title: "Hipal App",
   description: "Menu Application for Restaurants",
 };
+
+const ubuntu = Ubuntu({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
 
 export default function RootLayout({
   children,
@@ -57,7 +63,8 @@ export default function RootLayout({
         />
         <GoogleAnalytics />
       </head>
-      <body>
+
+      <body className={`${ubuntu.className} antialiased`}>
         <Suspense fallback={<Loading />}>
           <DynamicToast />
           <DynamicQueryComponent>

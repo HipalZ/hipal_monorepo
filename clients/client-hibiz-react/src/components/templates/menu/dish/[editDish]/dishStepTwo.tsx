@@ -11,11 +11,12 @@ import {
   updateImage,
 } from "@/components/utils/helper";
 import useErrorToasts from "@/hooks/useError";
-import { putDishData } from "@/hooks/useDishStore";
+import { putDishData } from "@/hooks/useDish";
 import toast from "react-hot-toast";
 import { MdDelete } from "react-icons/md";
 import SectionLoader from "@/components/atom/sectionLoader";
 import { useQueryClient } from "@tanstack/react-query";
+import BottomButton from "@/components/atom/bottomButton";
 
 const MemoDishFormTwo = () => {
   const { businessId } = useParams<{ businessId?: string }>();
@@ -188,7 +189,7 @@ const MemoDishFormTwo = () => {
 
   const handleDescription = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
-      if (e.target.value.length > 100) return;
+      if (e.target.value.length > 350) return;
       setDishDescription(e.target.value);
     },
     [dishDescription],
@@ -246,7 +247,7 @@ const MemoDishFormTwo = () => {
             placeholder="Add description"
           />
           <small className="absolute bottom-6 right-6">
-            {dishDescription.length}/100
+            {dishDescription.length}/350
           </small>
         </div>
       </article>
@@ -293,23 +294,16 @@ const MemoDishFormTwo = () => {
           </Background>
         </section>
       </article>
-      <footer className="absolute bottom-4 flex w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button
-          type="button"
-          onClick={handleUpdateDish}
-          className="w-full py-3 text-white bg-black rounded-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <SectionLoader />
-              Loading...
-            </div>
-          ) : (
-            "Save"
-          )}
-        </button>
-      </footer>
+      <BottomButton
+        buttons={[
+          {
+            text: "Save",
+            onClick: handleUpdateDish,
+            isLoading: isLoading,
+            disable: isLoading,
+          },
+        ]}
+      />
     </>
   );
 };

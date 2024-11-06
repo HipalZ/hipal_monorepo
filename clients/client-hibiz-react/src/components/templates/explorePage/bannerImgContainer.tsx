@@ -1,7 +1,6 @@
-import PlusButton from "@/components/atom/plusButton";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { cn, handleClick } from "@/components/utils/helper";
-import { memo, useCallback, useRef } from "react";
+import { lazy, memo, useCallback, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
 import {
   preDefinedColors,
@@ -10,11 +9,12 @@ import {
   useImageChange,
   useParagraphChange,
   useRemoveImage,
-} from "./bannerHelpers";
+} from "../../helpers/bannersHelper";
 import { useBannerTemp } from "@/components/store/useBannerTemp";
 import { TfiPaintBucket } from "react-icons/tfi";
 import { CiNoWaitingSign } from "react-icons/ci";
-import SubHeader from "@/components/atom/subHeader";
+const PlusButton = lazy(() => import("@/components/atom/plusButton"));
+const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
 const MemoBannerImgContainer = () => {
   const { onlyImage } = useBannerStore((s) => ({

@@ -1,11 +1,10 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import {
   ExplorePages,
-  type ImageFiles,
   useExploreStore,
 } from "@/components/store/useExploreStore";
 import { basicInfos } from "@/components/templates/explorePage/explorePageStore";
-import { cn, compressImage, handleClick } from "@/components/utils/helper";
+import { cn, handleClick } from "@/components/utils/helper";
 import {
   lazy,
   memo,
@@ -16,6 +15,7 @@ import {
   type ChangeEvent,
 } from "react";
 import { CiEdit } from "react-icons/ci";
+import { useImageChange } from "../../helpers/explorePageHelpers";
 
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
@@ -29,10 +29,6 @@ const MemoExplorePageSection = () => {
     toggleBizInfo,
     setToggleBizInfo,
     setBizInfo,
-    setCropping,
-    setShowCropper,
-    imageFiles,
-    setImageFiles,
   } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
     toggleExplorePages: s.toggleExplorePages,
@@ -41,30 +37,9 @@ const MemoExplorePageSection = () => {
     toggleBizInfo: s.toggleBizInfo,
     setToggleBizInfo: s.setToggleBizInfo,
     setBizInfo: s.setBizInfo,
-    setCropping: s.setCropping,
-    setShowCropper: s.setShowCropper,
-    imageFiles: s.imageFiles,
-    setImageFiles: s.setImageFiles,
   }));
 
-  const handleImageChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const type = event.target.dataset.type as keyof ImageFiles;
-      const file = event.target.files?.[0];
-      if (file) {
-        compressImage(file, (compressedFile) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(compressedFile);
-          reader.onloadend = () => {
-            setCropping({ image: reader.result, type });
-            setShowCropper(true);
-            setImageFiles({ [type]: compressedFile });
-          };
-        });
-      }
-    },
-    [imageFiles],
-  );
+  const { handleImageChange } = useImageChange();
 
   const handleBizName = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -93,6 +68,7 @@ const MemoExplorePageSection = () => {
   });
 
   useEffect(() => {
+    // Check if the business info is filled
     if (bizInfo) {
       setBizInfoFilled({
         description: !!bizInfo.description && bizInfo.description.length > 0,
@@ -110,7 +86,7 @@ const MemoExplorePageSection = () => {
         <SubHeader text="Banner" />
         <article
           className={cn(
-            "relative rounded-xl h-[18rem]",
+            "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
             img?.banner?.length > 0
               ? ""
               : " border-dashed border-2 inline-block border-[#8C63FF]",
@@ -125,13 +101,13 @@ const MemoExplorePageSection = () => {
             onChange={handleImageChange}
             data-type="banner"
           />
-          <figure className="w-full max-w-[28rem] h-[320px] mx-auto lg:mx-0">
+          <figure className="w-[20rem] h-[20rem] mx-auto lg:mx-0">
             <label
               htmlFor="bannerInput"
               className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
             >
               {img.banner ? (
-                <div className="relative w-full max-w-[28rem] h-[320px]">
+                <div className="relative w-[20rem] h-[20rem]">
                   <figure className="w-full h-full min-w-[20rem]">
                     <img
                       src={img.banner}

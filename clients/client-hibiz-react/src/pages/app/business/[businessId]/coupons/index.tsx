@@ -5,23 +5,21 @@ import useCouponsStore, {
   type CouponFlow,
 } from "@/components/store/useCouponsStore";
 import Manage from "@/components/templates/coupons/Manage";
+import AllConditions from "@/components/templates/coupons/allConditions";
 import AllLinkChannels from "@/components/templates/coupons/allLinkChannels";
 import CouponAnalytics from "@/components/templates/coupons/analytics";
-import Available from "@/components/templates/coupons/available";
 import Channel from "@/components/templates/coupons/channel";
-import Condition from "@/components/templates/coupons/condition";
 import CouponAnalyticsInfo from "@/components/templates/coupons/couponAnalyticsInfo";
 import CouponDetails from "@/components/templates/coupons/couponDetails";
-import CreateCoupon from "@/components/templates/coupons/createCoupon";
+import CreateCouponPage from "@/components/templates/coupons/createCoupons";
 import Custom from "@/components/templates/coupons/custom";
-import Eligibility from "@/components/templates/coupons/eligibility";
-import Expiry from "@/components/templates/coupons/expiry";
 import Info from "@/components/templates/coupons/info";
 import Preview from "@/components/templates/coupons/preview";
+import Share from "@/components/templates/coupons/share";
 import Terms from "@/components/templates/coupons/terms";
 import { routeToDashboard } from "@/components/utils/routes";
 import { cn } from "@hi/common";
-import { memo, startTransition, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -30,11 +28,10 @@ const getPageHeading = (selectedPage: CouponFlow): string => {
     CREATE: "Create Coupon",
     EDIT: "Edit Coupon",
     MANAGE: "Manage Coupons",
-    DETAILS: "Coupon Details",
+    DETAILS: "Creation",
     AVAILABLE: "Coupon Availability",
-    EXPIRED: "Coupon Expiration",
+    EXPIRED: "Conditions",
     ELIGIBILITY: "Coupon Eligibility",
-    GRABBING: "Coupon Grabbing",
     Terms: "Couponz terms",
     PREVIEW: "Customize Coupon",
     CUSTOM: "Previews",
@@ -43,6 +40,7 @@ const getPageHeading = (selectedPage: CouponFlow): string => {
     ANALYTICS_INFO: "Coupon Info",
     LINK_CHANNELS: "Link Channels",
     CHANNELS: "Channels",
+    SHARE: "Share",
   };
   return headings[selectedPage] || "Coupon";
 };
@@ -62,15 +60,16 @@ const MemoCoupons = () => {
   const handleBack = useCallback(() => {
     switch (selectedPage) {
       case "MANAGE":
-        startTransition(() => {
-          navigate(routeToDashboard(businessData?._id as string));
-        });
+        navigate(routeToDashboard(businessData?._id as string));
         break;
       case "CREATE":
       case "EDIT":
       case "INFO":
         setSelectedPage("MANAGE");
         resetFunction();
+        break;
+      case "SHARE":
+        setSelectedPage("Terms");
         break;
       case "DETAILS":
         if (couponId) {
@@ -87,11 +86,8 @@ const MemoCoupons = () => {
       case "ELIGIBILITY":
         setSelectedPage("AVAILABLE");
         break;
-      case "GRABBING":
-        setSelectedPage("ELIGIBILITY");
-        break;
       case "Terms":
-        setSelectedPage("GRABBING");
+        setSelectedPage("CUSTOM");
         break;
       case "PREVIEW":
         setSelectedPage("Terms");
@@ -113,9 +109,7 @@ const MemoCoupons = () => {
         setSelectedPage("ANALYTICS_INFO");
         break;
       default:
-        startTransition(() => {
-          navigate(routeToDashboard(businessData?._id as string));
-        });
+        navigate(routeToDashboard(businessData?._id as string));
         break;
     }
   }, [selectedPage, businessData?._id]);
@@ -134,8 +128,6 @@ const MemoCoupons = () => {
         return <span className="text-xl font-semibold">2/5</span>;
       case "ELIGIBILITY":
         return <span className="text-xl font-semibold">4/5</span>;
-      case "GRABBING":
-        return <span className="text-xl font-semibold">5/5</span>;
 
       default:
         break;
@@ -159,15 +151,13 @@ const MemoCoupons = () => {
         />
       </section>
       {selectedPage === "MANAGE" && <Manage />}
-      {selectedPage === "CREATE" && <CreateCoupon />}
+      {selectedPage === "CREATE" && <CreateCouponPage />}
       {selectedPage === "DETAILS" && <CouponDetails />}
-      {selectedPage === "AVAILABLE" && <Available />}
-      {selectedPage === "EXPIRED" && <Expiry />}
-      {selectedPage === "ELIGIBILITY" && <Eligibility />}
-      {selectedPage === "GRABBING" && <Condition />}
+      {selectedPage === "EXPIRED" && <AllConditions />}
       {selectedPage === "PREVIEW" && <Preview />}
       {selectedPage === "Terms" && <Terms />}
       {selectedPage === "CUSTOM" && <Custom />}
+      {selectedPage === "SHARE" && <Share />}
       {selectedPage === "INFO" && <Info />}
       {selectedPage === "ANALYTICS" && <CouponAnalytics />}
       {selectedPage === "ANALYTICS_INFO" && <CouponAnalyticsInfo />}

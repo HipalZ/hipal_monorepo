@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, memo } from "react";
+import { type React, useRef, useState, useEffect, memo, lazy } from "react";
 import Background from "@/assets/color-wheel-min.png";
-import BottomButton from "@/components/atom/bottomButton";
+const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 interface ColorWheelProps {
   close: () => void;
@@ -68,7 +68,6 @@ const MemoColorWheel: React.FC<ColorWheelProps> = ({
   };
 
   const saveColor = () => {
-    console.log("colorType:", colorType);
     if (colorType === "backgroundColor") {
       setStyle({ bgColor: selectedColor });
     } else {
@@ -99,6 +98,7 @@ const MemoColorWheel: React.FC<ColorWheelProps> = ({
         width="330"
         height="330"
         onClick={getColorData}
+        onKeyDown={getColorData}
         style={{ cursor: "pointer" }}
       />
       <section className="flex items-center justify-center pb-[6rem] space-x-6">

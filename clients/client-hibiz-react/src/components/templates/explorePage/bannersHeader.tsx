@@ -1,4 +1,4 @@
-import { memo, startTransition } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
@@ -29,24 +29,18 @@ const MemoBannerHeader: React.FC<HeaderProps> = memo(
       if (onBack) {
         onBack();
       } else {
-        startTransition(() => {
-          navigate(-1);
-        });
+        navigate(-1);
       }
     };
 
-    const profile = () => {
-      startTransition(() => {
-        navigate("/app/business/profile");
-      });
-    };
+    const profile = useCallback(() => {
+      navigate("/app/business/profile");
+    }, [navigate]);
 
-    const logoutUser = () => {
+    const logoutUser = useCallback(() => {
       localStorage.clear();
-      startTransition(() => {
-        navigate("/");
-      });
-    };
+      navigate("/");
+    }, [navigate]);
 
     return (
       <>

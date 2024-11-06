@@ -1,7 +1,7 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import { memo, startTransition, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
@@ -49,9 +49,7 @@ const MemoiseManager = () => {
   }));
   const navigate = useNavigate();
   const handleBack = () => {
-    startTransition(() => {
-      navigate(routeToDashboard(businessData?._id as string));
-    });
+    navigate(routeToDashboard(businessData?._id as string));
   };
 
   const pathname = useLocation().pathname;

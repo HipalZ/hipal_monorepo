@@ -1,14 +1,7 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
-import {
-  type ChangeEvent,
-  memo,
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { type ChangeEvent, memo, useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import { FaArrowLeft } from "react-icons/fa";
@@ -35,6 +28,7 @@ import { useBulkUploadDishes } from "@/hooks/useCategory";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoizeDishAndCat = () => {
+  // imports
   const businessData = useBusinessData((s) => s.businessData);
   const {
     selectedPage,
@@ -74,13 +68,11 @@ const MemoizeDishAndCat = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, []);
+  }, [fileInputRef]);
 
   const navigate = useNavigate();
   const handleBack = () => {
-    startTransition(() => {
-      navigate(routeToDashboard(businessData?._id as string));
-    });
+    navigate(routeToDashboard(businessData?._id as string));
   };
 
   const pathname = useLocation().pathname;
@@ -130,8 +122,8 @@ const MemoizeDishAndCat = () => {
     { icon: Hi, text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
   ];
 
-  const dynamicHeading = useCallback(()=>{
-    switch(selectedPage){
+  const dynamicHeading = useCallback(() => {
+    switch (selectedPage) {
       case "DISHES":
         return "Dishes";
       case "MAIN_CATEGORY":
@@ -143,7 +135,7 @@ const MemoizeDishAndCat = () => {
       default:
         return "";
     }
-  },[selectedPage])
+  }, [selectedPage]);
 
   const removeAllUnwanted = useCallback((page: MenuPageType, text: string) => {
     const normalize = (str: string) =>
@@ -169,7 +161,6 @@ const MemoizeDishAndCat = () => {
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
             rightImage={Hi}
-            isIconBusinessShow={false}
           />
         </article>
         <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
@@ -207,7 +198,7 @@ const MemoizeDishAndCat = () => {
 
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
-          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+          <section className="min-h-[100dvh] max-h-[100dvh] lg:min-h-[70dvh] lg:max-h-[90dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
             {selectedPage !== "ALERT" && (
               <button
                 className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
@@ -225,7 +216,7 @@ const MemoizeDishAndCat = () => {
 
       {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>
-          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+          <section className="min-h-[100dvh] max-h-[100dvh] lg:min-h-[70dvh] lg:max-h-[90dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
             {selectedPage !== "ALERT" && (
               <button
                 className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"

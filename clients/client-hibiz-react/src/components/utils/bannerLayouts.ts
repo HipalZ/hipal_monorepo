@@ -240,6 +240,16 @@ export const bannerLayouts7 = [
   },
 ];
 
+export const allLayouts = [
+  ...bannerLayouts,
+  ...bannerLayouts2,
+  ...bannerLayouts3,
+  ...bannerLayouts4,
+  ...bannerLayouts5,
+  ...bannerLayouts6,
+  ...bannerLayouts7,
+];
+
 export const truncateDescription = (textContent: string) => {
   return textContent.length > 70
     ? `${textContent.substring(0, 70)}...`

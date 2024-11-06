@@ -6,6 +6,7 @@ import FixedDiscount from "./fixedDiscount";
 import BottomButton from "@/components/atom/bottomButton";
 import toast from "react-hot-toast";
 import { memo, useCallback } from "react";
+import SetValidity from "./setValidity";
 
 const MemoCouponDetails = () => {
   const {
@@ -19,6 +20,9 @@ const MemoCouponDetails = () => {
     minimumBillAmount,
     setSelectedPage,
     isUptoPriceActive,
+    isNoValidity,
+    couponStartDate,
+    couponEndDate,
   } = useCouponsStore((s) => ({
     couponName: s.couponName,
     setCouponName: s.setCouponName,
@@ -30,6 +34,9 @@ const MemoCouponDetails = () => {
     minimumBillAmount: s.minimumBillAmount,
     setSelectedPage: s.setSelectedPage,
     isUptoPriceActive: s.isUptoPriceActive,
+    isNoValidity: s.isNoValidity,
+    couponStartDate: s.couponStartDate,
+    couponEndDate: s.couponEndDate,
   }));
 
   const handleNextClick = useCallback(() => {
@@ -39,27 +46,21 @@ const MemoCouponDetails = () => {
       return showToast("Coupon name is required!");
     }
 
-    if (
-      (couponType === "PERCENTAGE" && !couponDiscount) ||
-      (couponType === "AMOUNT" && !couponPrice) ||
-      (isUptoPriceActive && !couponPrice)
-    ) {
+    if (couponType === "PERCENTAGE" && !couponDiscount) {
+      return showToast("Coupon discount is required for percentage type!");
+    }
+
+    if ((couponType === "AMOUNT" || isUptoPriceActive) && !couponPrice) {
       return showToast(
-        couponType === "PERCENTAGE"
-          ? "Coupon discount is required for discount type!"
+        isUptoPriceActive
+          ? "Please enter upto price!"
           : "Coupon price is required!",
       );
     }
 
-    if (addMinimumBillAmount && !minimumBillAmount) {
-      return showToast("Minimum bill amount is required!");
-    }
-
-    if (addMinimumBillAmount) {
-      if (couponPrice > minimumBillAmount) {
-        return showToast(
-          "Coupon price should be greater than minimum bill amount!",
-        );
+    if (!isNoValidity) {
+      if (!couponStartDate || !couponEndDate) {
+        return showToast("Please select the validity of the coupon!");
       }
     }
 
@@ -72,11 +73,15 @@ const MemoCouponDetails = () => {
     isUptoPriceActive,
     addMinimumBillAmount,
     minimumBillAmount,
+    isNoValidity,
+    couponStartDate,
+    couponEndDate,
+    setSelectedPage,
   ]);
 
   return (
     <>
-      <section className="flex flex-col gap-6 mx-6 lg:flex-row lg:mt-6">
+      <section className="flex flex-col mx-6 gap-x-6 gap-y-2 lg:flex-row lg:mt-6">
         <article className="flex-1">
           <label className="font-semibold opacity-50" htmlFor="name">
             Coupon Name*
@@ -95,51 +100,50 @@ const MemoCouponDetails = () => {
         </article>
         <section className="flex-1">
           <label className="font-semibold opacity-50" htmlFor="name">
-            Coupon type*
+            Set discount*
           </label>
-          <article className="p-4 mt-2 bg-white rounded-xl">
-            <label className="text-xs font-semibold opacity-50" htmlFor="name">
-              Select one type*
-            </label>
-            <article className="flex w-full mt-4">
-              <button
-                type="button"
-                className={cn(
-                  "p-6 rounded-2xl flex-1 mx-2 text-left",
-                  couponType === "PERCENTAGE"
-                    ? "bg-[#F1E9FB] text-[#8C63FF]"
-                    : "bg-[#f4f4f490]",
-                )}
-                onClick={() => setCouponType("PERCENTAGE")}
-              >
-                <h3 className="text-xl font-semibold">%</h3>
-                Fixed Discount
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "p-6 rounded-2xl flex-1 mx-2 text-left",
-                  couponType === "AMOUNT"
-                    ? "bg-[#F1E9FB] text-[#8C63FF]"
-                    : "bg-[#f4f4f490]",
-                )}
-                onClick={() => setCouponType("AMOUNT")}
-              >
-                <h3 className="text-xl font-semibold">₹</h3>
-                Fixed Price
-              </button>
-            </article>
+          <article className="flex flex-col gap-4 p-4 mt-2 bg-white md:flex-row lg:flex-col rounded-xl">
+            <section className="flex-1">
+              <label className="font-semibold opacity-50" htmlFor="name">
+                Select one type*
+              </label>
+              <article className="flex w-full mt-4">
+                <button
+                  type="button"
+                  className={cn(
+                    "p-6 rounded-2xl flex-1 mx-2 text-left",
+                    couponType === "PERCENTAGE"
+                      ? "bg-[#F1E9FB] text-[#8C63FF]"
+                      : "bg-[#f4f4f490]",
+                  )}
+                  onClick={() => setCouponType("PERCENTAGE")}
+                >
+                  <h3 className="text-xl font-semibold">%</h3>
+                  Fixed Discount
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "p-6 rounded-2xl flex-1 mx-2 text-left",
+                    couponType === "AMOUNT"
+                      ? "bg-[#F1E9FB] text-[#8C63FF]"
+                      : "bg-[#f4f4f490]",
+                  )}
+                  onClick={() => setCouponType("AMOUNT")}
+                >
+                  <h3 className="text-xl font-semibold">₹</h3>
+                  Fixed Price
+                </button>
+              </article>
+            </section>
+            <section className="flex-1">
+              {couponType === "PERCENTAGE" && <FixedDiscount />}
+              {couponType === "AMOUNT" && <FixedPrice />}
+            </section>
           </article>
         </section>
       </section>
-
-      {couponType === "AMOUNT" && (
-        <article className="flex-1 mx-6">
-          <FixedPrice />{" "}
-        </article>
-      )}
-      {couponType === "PERCENTAGE" && <FixedDiscount />}
-
+      <SetValidity />
       <BottomButton
         buttons={[
           {

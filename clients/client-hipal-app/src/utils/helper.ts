@@ -10,7 +10,7 @@ export const useErrorHandling = () => {
     switch (status) {
       case 400:
         message =
-          "Invalid Request: Please check the data you have entered and try again";
+          "Oops! Something went wrong with your request. Please check your input and try again.";
         break;
       case 401:
         router.push(`/${customLink}/user/signup`);

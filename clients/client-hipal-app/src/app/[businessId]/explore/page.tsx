@@ -19,18 +19,22 @@ const AllCouponz = dynamics(
 );
 const EmblaCarousel2 = dynamics(
   () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
-  { loading: () => <SkeletonLoader height={200} /> },
+  {
+    ssr: true,
+    loading: () => <SkeletonLoader height={200} />,
+  },
 );
 const BannerLayouts = dynamics(
   () => import("@/components/organisms/explore/bannerNewCards"),
   {
+    ssr: true,
     loading: () => <SkeletonLoader height={200} />,
   },
 );
 
 const MainBackground = dynamics(
   () => import("@/components/organisms/explore/mainBackground"),
-  { loading: () => <SkeletonLoader height={200} /> },
+  { ssr: true, loading: () => <SkeletonLoader height={200} /> },
 );
 const HeroSection = dynamics(
   () => import("@/components/organisms/explore/heroSection"),
@@ -39,6 +43,7 @@ const HeroSection = dynamics(
 
 const Footer = dynamics(() => import("@/components/molecules/footer"), {
   loading: () => <SkeletonLoader height={50} />,
+  ssr: true,
 });
 
 const SubLoyalty = dynamics(() => import("@/components/atoms/subLoyalty"), {

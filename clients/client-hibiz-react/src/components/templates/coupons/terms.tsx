@@ -1,116 +1,11 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import Background from "@/components/atom/feildBackground";
+import { formatDate } from "@/components/utils/helper";
+import useBusinessData from "@/components/store/useBusinessData";
 
-const MAX_TERMS = 10; // Max limit for terms and conditions
-
-const CouponConditionsBox = ({
-  couponType,
-  couponDiscount,
-  couponPrice,
-  minimumBillAmount,
-  overAllLimit,
-  expiryCoupon,
-  customDays,
-  couponStartDate,
-  couponEndDate,
-  termsAndConditions,
-  handleRemoveCondition,
-}: {
-  couponType: string;
-  couponDiscount: number;
-  couponPrice: number;
-  minimumBillAmount: number;
-  overAllLimit: number;
-  expiryCoupon: string;
-  customDays: string[];
-  couponStartDate: number | null;
-  couponEndDate: number | null;
-  termsAndConditions: string[];
-  handleRemoveCondition: (index: number) => void;
-}) => {
-  console.log(termsAndConditions);
-
-  const getExpiryMessage = useCallback(() => {
-    const now = new Date().getTime();
-
-    if (
-      couponStartDate === null &&
-      couponEndDate === null &&
-      overAllLimit > 0
-    ) {
-      return `Expires after ${overAllLimit} claims`;
-    }
-
-    if (couponStartDate === null && couponEndDate !== null) {
-      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days${
-        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
-      }`;
-    }
-
-    if (couponStartDate !== null && couponEndDate !== null) {
-      const daysLeft = Math.ceil((couponEndDate - now) / (1000 * 60 * 60 * 24));
-      return `Expires in ${daysLeft} days${
-        overAllLimit > 0 ? ` or after ${overAllLimit} claims` : ""
-      }`;
-    }
-
-    if (overAllLimit > 0) {
-      return `Expires after ${overAllLimit} claims`;
-    }
-    return "Expires: None";
-  }, [couponEndDate, couponStartDate, overAllLimit]);
-
-  return (
-    <div className="relative p-4 bg-white border border-gray-300 rounded-lg shadow-md w-[100%] max-w-[28rem]">
-      <ul className="ml-4 list-disc ">
-        <li>
-          <h3 className="text-lg font-semibold text-black">
-            {couponType === "PERCENTAGE" && couponDiscount
-              ? `${couponDiscount}% off on ${
-                  couponPrice > 0 ? `₹${couponPrice}` : "every bill"
-                }`
-              : `₹${couponPrice || "0"} off on ${
-                  minimumBillAmount > 0 ? `₹${minimumBillAmount}` : "up to bill"
-                }`}
-          </h3>
-        </li>
-        <li className="mt-2 text-sm">
-          {getExpiryMessage()}
-          {overAllLimit > 0 &&
-            expiryCoupon !==
-              "After Specific Use (e.g., Expires after it’s used 10 times)"}
-        </li>
-        {customDays && customDays.length > 0 ? (
-          <li className="mt-2 text-sm">
-            Valid on: {customDays.map((day) => day.slice(0, 2)).join(", ")}
-          </li>
-        ) : (
-          <li className="mt-2 text-sm">Valid all the time</li>
-        )}
-      </ul>
-      {termsAndConditions && termsAndConditions.length > 0 && (
-        <ul className="ml-4 list-disc ">
-          {termsAndConditions?.map((term, index) => (
-            <li key={index} className="relative flex justify-between space-y-3">
-              <div className="absolute w-1 h-1 bg-black rounded-full -left-4 top-[1.35rem]" />
-              <span className="w-[96%]">{term}</span>
-              <button
-                type="button"
-                className=" bg-[#9267EC] text-white w-5 h-5 rounded-full text-xs absolute -right-2 top-1"
-                onClick={() => handleRemoveCondition(index)}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
+const MAX_TERMS = 18;
 
 const MemoTerms = () => {
   const {
@@ -119,37 +14,65 @@ const MemoTerms = () => {
     setSelectedPage,
     selectedGroupIds,
     selectedUserIds,
-    couponType,
     couponPrice,
-    couponDiscount,
-    minimumBillAmount,
     customDays,
-    expiryCoupon,
-    overAllLimit,
     couponStartDate,
     couponEndDate,
     termsAndConditions,
     setTermsAndConditions,
+    startTime,
+    endTime,
+    selectFlow,
   } = useCouponsStore((s) => ({
     requiredFields: s.requiredFields,
     setRequiredFields: s.setRequiredFields,
     setSelectedPage: s.setSelectedPage,
     selectedGroupIds: s.selectedGroupIds,
     selectedUserIds: s.selectedUserIds,
-    couponType: s.couponType,
     couponPrice: s.couponPrice,
-    couponDiscount: s.couponDiscount,
-    minimumBillAmount: s.minimumBillAmount,
     customDays: s.customDays,
-    overAllLimit: s.overAllLimit,
-    expiryCoupon: s.expiryCoupon,
     couponStartDate: s.couponStartDate,
     couponEndDate: s.couponEndDate,
     termsAndConditions: s.termsAndConditions,
     setTermsAndConditions: s.setTermsAndConditions,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    selectFlow: s.selectFlow,
   }));
 
+  const dineInOnly = true;
+
   const [newCondition, setNewCondition] = useState("");
+
+  const businessName = useBusinessData((s) => s.businessData?.name);
+  const getExpiryMessage = useCallback(() => {
+    if (couponStartDate && couponEndDate) {
+      const startDateFormatted = formatDate(couponStartDate);
+      const endDateFormatted = formatDate(couponEndDate);
+      return `This coupon is only valid from ${startDateFormatted} to ${endDateFormatted}`;
+    }
+    return "No expiration details available";
+  }, [couponStartDate, couponEndDate]);
+
+  const generatedTerms = [
+    `This coupon is created by ${businessName?.toUpperCase()}  and has the final say in case of any disputes.`,
+    `This is an ${selectFlow} coupon, hence transferring it to anyone else is ${
+      selectFlow === "ASSIGN" ? "" : "not"
+    } acceptable.`,
+    couponPrice > 0
+      ? `This coupon works on bill value above "₹${couponPrice}" only.`
+      : null,
+    customDays && customDays.length > 0
+      ? `This coupon works only on ${customDays?.join(", ")}.`
+      : "All the time",
+    startTime !== null && endTime !== null
+      ? `This coupon works only between ${startTime}:00 AM to ${endTime}:00 AM.`
+      : null,
+    getExpiryMessage(),
+    dineInOnly ? "This coupon is applicable only on dine-in." : null,
+    "Hipalz has no role to play on issues, charges, refunds and other things related to this.",
+    "Other T&C may apply.",
+  ].filter(Boolean);
 
   const handleAddCondition = useCallback(() => {
     if (newCondition.trim() !== "" && termsAndConditions.length < MAX_TERMS) {
@@ -167,13 +90,17 @@ const MemoTerms = () => {
   );
 
   const handleNext = useCallback(() => {
-    setSelectedPage("PREVIEW");
+    setSelectedPage("SHARE");
+  }, []);
+
+  useEffect(() => {
+    setTermsAndConditions(generatedTerms);
   }, []);
 
   return (
     <>
       <section className="mx-6 mt-[2rem] lg:mt-4 lg:gap-10 gap-4 flex flex-col pb-[7rem]">
-        {selectedGroupIds.length === 0 && selectedUserIds.length === 0 ? (
+        {selectFlow === "GRAB" ? (
           <article className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -187,21 +114,35 @@ const MemoTerms = () => {
             </label>
           </article>
         ) : null}
+        <div className="relative p-4 bg-white border border-gray-300 rounded-lg shadow-md w-full max-w-[28rem]">
+          <ul className="ml-4 space-y-2 list-disc">
+            {generatedTerms.map((term, index) => (
+              <li key={index} className="text-sm">
+                {term}
+              </li>
+            ))}
+          </ul>
 
-        <CouponConditionsBox
-          couponDiscount={couponDiscount}
-          couponPrice={couponPrice}
-          couponType={couponType}
-          customDays={customDays}
-          expiryCoupon={expiryCoupon}
-          minimumBillAmount={minimumBillAmount}
-          overAllLimit={overAllLimit}
-          couponEndDate={couponEndDate}
-          couponStartDate={couponStartDate}
-          termsAndConditions={termsAndConditions}
-          handleRemoveCondition={handleRemoveCondition}
-        />
-
+          {termsAndConditions && termsAndConditions.length > 0 && (
+            <ul className="mt-4 ml-4 space-y-2 list-disc">
+              {termsAndConditions
+                .slice(generatedTerms.length || 8)
+                .map((term, index) => (
+                  <li key={index} className="relative flex items-start">
+                    <span className="w-full pr-6">{term}</span>
+                    <button
+                      type="button"
+                      className="absolute right-0 w-5 h-5 text-xs text-white bg-red-500 rounded-full"
+                      onClick={() => handleRemoveCondition(index)}
+                    >
+                      ✕
+                    </button>
+                    <div className="absolute -left-3.5 rounded-full w-1 h-1 bg-black top-[0.75rem]" />
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
         <section className="flex flex-col mt-4">
           <label htmlFor="terms" className="font-semibold opacity-50">
             Add Terms and Conditions (up to 10)
@@ -235,7 +176,7 @@ const MemoTerms = () => {
 
       <BottomButton
         buttons={[
-          { text: "Back", onClick: () => setSelectedPage("GRABBING") },
+          { text: "Back", onClick: () => setSelectedPage("CUSTOM") },
           { text: "Save and customize", onClick: handleNext },
         ]}
         fixed

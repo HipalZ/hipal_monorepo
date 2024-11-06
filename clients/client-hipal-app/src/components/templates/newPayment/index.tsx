@@ -305,18 +305,28 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const handlePaymentFailure = useCallback((response: any) => {
     setRazorPayOrderId(response.error.metadata.order_id);
   }, []);
-
   const creatingRazorPayOptions = async (orderId: string) => {
     if (!orderId) {
       setIsLoading(false); // Ensure isLoading is turned off if there's no orderId
       return;
     }
+    let isScriptLoaded = false;
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
 
+    const timeoutId = setTimeout(() => {
+      if (!isScriptLoaded) {
+        toast.error("Facing Internet Issue! Please try again.");
+        setIsLoading(false);
+        document.body.removeChild(script);
+      }
+    }, 5000);
+
     script.onload = () => {
+      isScriptLoaded = true;
+      clearTimeout(timeoutId);
       const options = {
         key: merchantDetails.razorpayKeyId,
         amount: calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips),
@@ -328,7 +338,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         handler: (response) => {
           handlePaymentSuccess(response);
           window.onpopstate = null;
-          // setIsLoading(false); // Set isLoading to false after successful payment
         },
         prefill: {
           name: userDetails.name,

@@ -82,11 +82,7 @@ export const colors = [
   },
 ];
 
-// export const combineAllDishes = async (categories: ICategory[]) => {
-//   return categories.reduce((dishes, category) => {
-//     return dishes.concat(category?.dishIds);
-//   }, []);
-// };
+// combining all dishes from all categories
 export const combineAllDishes = async (categories: ICategory[]) => {
   const uniqueDishesMap = new Map<string, IDish>();
 
@@ -101,6 +97,7 @@ export const combineAllDishes = async (categories: ICategory[]) => {
   return Array.from(uniqueDishesMap.values());
 };
 
+//
 export const getAllCategoryData = async (businessId: string) => {
   const categoryResponse = await apiRpc.categories.$get({
     query: {

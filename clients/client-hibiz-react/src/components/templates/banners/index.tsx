@@ -1,213 +1,91 @@
-import { lazy, memo, Suspense, useCallback, useMemo, useState } from "react";
+import { lazy, memo, Suspense } from "react";
 import { useParams } from "react-router-dom";
-import { useBannerStore } from "@/components/store/useBannerStore";
-import {
-  ExplorePages,
-  useExploreStore,
-} from "@/components/store/useExploreStore";
 import type { IBannerPayload } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
-import { BannerPage } from "@/components/utils/bannerLayouts";
-import { FaArrowLeft, FaTrash } from "react-icons/fa";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FaTrash } from "react-icons/fa";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { PiSealWarningFill } from "react-icons/pi";
-
-enum ViewType {
-  BANNERS = "Banners",
-  DRAFTS = "Drafts",
-}
+import { useBannersApi } from "@/hooks/useBanner";
+import {
+  useCardClickOperations,
+  useModalOperations,
+  useNewBanner,
+} from "@/components/helpers/allBannersHelper";
+import { useBannerTemp } from "@/components/store/useBannerTemp";
+import HeaderBannerSection from "./headerBanners";
+import DeleteConfirmPopup from "./deleteBannerPopup";
 
 // Lazy load components
-const BannersHeader = lazy(
-  () => import("@/components/templates/explorePage/bannersHeader"),
-);
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
-const CreatedBannersLayouts = lazy(
-  () => import("@/components/templates/explorePage/createdBannerLayouts"),
-);
-const MiddlePopUp = lazy(() => import("@/components/atom/middlePopUp"));
+const BannersExplorePage = lazy(() => import("../createdBannerLayouts"));
 
 const MemoBanners = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBannerId, setSelectedBannerId] = useState("");
-  const banners = useExploreStore((s) => s.banners) || [];
-  const [view, setView] = useState(ViewType.BANNERS);
-  const [isArrangeMode, setIsArrangeMode] = useState(false);
-  const [firstCardIndex, setFirstCardIndex] = useState<number | null>(null);
-
-  const { setBanners, setToggleExplorePages, toggleExplorePages } =
-    useExploreStore((s) => ({
-      setBanners: s.setBanners,
-      setToggleExplorePages: s.setToggleExplorePages,
-      toggleExplorePages: s.toggleExplorePages,
+  const { isArrangeMode, setIsArrangeMode, firstCardIndex, setFirstCardIndex } =
+    useBannerTemp((s) => ({
+      isArrangeMode: s.isArrangeMode,
+      setIsArrangeMode: s.setIsArrangeMode,
+      firstCardIndex: s.firstCardIndex,
+      setFirstCardIndex: s.setFirstCardIndex,
     }));
+
+  const { bannersApi } = useBannersApi();
   const businessId = useParams()?.businessId;
-  const { setSelectedBanner, setBannerPage, bannerPage, setEditBanner } =
-    useBannerStore((s) => ({
-      setSelectedBanner: s.setSelectedBanner,
-      setBannerPage: s.setBannerPage,
-      bannerPage: s.bannerPage,
-      setEditBanner: s.setEditBanner,
-    }));
+  // setting banner page and layout
+  const { handleNewBanner } = useNewBanner();
 
-  const { setSelectedBannerType } = useBannerStore((s) => ({
-    setSelectedBannerType: s.setSelectedBannerType,
-  }));
+  // filtering banners and card clicking functionalities
+  const { handleCardClick, filteredBanners, handleArrangeSequence } =
+    useCardClickOperations();
 
-  const handleNewBanner = useCallback(() => {
-    setBannerPage(BannerPage.VIEW);
-    setToggleExplorePages(ExplorePages.BANNERLAYOUTS);
-  }, [businessId, bannerPage, toggleExplorePages]);
+  // modal operations
+  const { openModal } = useModalOperations();
 
-  const handleEditBanner = useCallback((banner: IBannerPayload) => {
-    setSelectedBanner(banner);
-    setSelectedBannerType(banner?.layout || "");
-    setEditBanner(banner?._id || "");
-    setToggleExplorePages(ExplorePages.EDITBANNER);
-  }, []);
+  const queryClient = useQueryClient();
 
-  const handleNavigate = useCallback(() => {
-    setToggleExplorePages(ExplorePages.MAINFORM);
-  }, [businessId]);
-
-  const filteredBanners = useMemo(() => {
-    if (!Array.isArray(banners)) return [];
-    return banners.filter((banner) => {
-      return view === ViewType.BANNERS
-        ? banner.isPublished
-        : !banner.isPublished;
-    });
-  }, [banners, view]);
-
-  const handleArrangeSequence = useCallback(() => {
-    setIsArrangeMode(!isArrangeMode);
-    setFirstCardIndex(null);
-  }, [isArrangeMode]);
-
-  const handleSaveSequence = async () => {
-    const sequence = filteredBanners.map((banner) => banner._id);
-    setIsArrangeMode(false);
-    setFirstCardIndex(null);
+  const saveSequence = async (sequence: string[]) => {
     const response = await apiRpc.settings.banners.sequence.$put({
       json: {
         sequenceOfBannerIds: sequence,
       },
     });
-    if (response.status === 200) {
+    return response.json();
+  };
+
+  const { mutateAsync: saveSequenceMutation } = useMutation({
+    mutationFn: saveSequence,
+    onSuccess: () => {
       toast.success("Sequence saved successfully");
-    }
-  };
-
-  const handleCardClick = useCallback(
-    (index: number) => {
-      if (isArrangeMode) {
-        if (firstCardIndex === null) {
-          setFirstCardIndex(index);
-        } else {
-          const updatedBanners = [...filteredBanners];
-          [updatedBanners[firstCardIndex], updatedBanners[index]] = [
-            updatedBanners[index],
-            updatedBanners[firstCardIndex],
-          ];
-          setBanners(updatedBanners);
-          setFirstCardIndex(null);
-        }
-      }
+      queryClient.invalidateQueries({ queryKey: ["banners"] });
     },
-    [banners, isArrangeMode, firstCardIndex],
-  );
+    onError: (error) => {
+      toast.error("Failed to save sequence");
+      console.error("Error saving sequence:", error);
+    },
+  });
 
-  const deleteBanners = async (id: string) => {
-    const response = await apiRpc.settings.banners[":bannerId"].$delete({
-      param: {
-        bannerId: id,
-      },
-    });
-    await response.json();
-    if (response.status === 200) {
-      toast.success("Banner deleted successfully");
-      setBanners(banners.filter((banner) => banner._id !== id));
-    }
-  };
-  const openModal = (id: string) => {
-    setSelectedBannerId(id);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedBannerId("");
-  };
-
-  const handleDelete = () => {
-    if (selectedBannerId !== null) {
-      deleteBanners(selectedBannerId);
-      closeModal();
+  const handleSaveSequence = async () => {
+    const sequence = filteredBanners.map((banner) => banner._id);
+    setIsArrangeMode(false);
+    setFirstCardIndex(null);
+    try {
+      await saveSequenceMutation(sequence);
+    } catch (error) {
+      console.error("Error in handleSaveSequence:", error);
     }
   };
 
   useQuery({
     queryKey: ["banners", businessId],
-    queryFn: async () => {
-      const res = await apiRpc.settings.banners[":businessId"].$get({
-        param: {
-          businessId: businessId,
-        },
-      });
-      const response = (await res.json()).data;
-      setBanners(response);
-      setEditBanner("");
-      return response;
-    },
+    queryFn: bannersApi,
     enabled: !!businessId,
   });
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main className="relative h-screen mb-[2rem]">
-        <header
-          className={`sticky top-0 z-50 w-full bg-white rounded-t-2xl boxShadowCard ${
-            isArrangeMode ? "opacity-50 pointer-events-none" : ""
-          }`}
-        >
-          <BannersHeader
-            title="Banners"
-            onBack={handleNavigate}
-            leftIcon={<FaArrowLeft />}
-            isIconBusinessShow={false}
-          >
-            <p className="mx-4 mb-4 ml-8 text-xs text-gray-500 md:text-base lg:text-base">
-              Size matters! Express limitless with your customers about all the
-              happenings at your place.
-            </p>
-            <div className="flex justify-around pb-2 mb-4 md:justify-start md:space-x-10 md:ml-10">
-              <button
-                type="button"
-                onClick={() => setView(ViewType.BANNERS)}
-                className={`mr-2 text-base ${
-                  view === ViewType.BANNERS
-                    ? "font-bold underline underline-offset-8"
-                    : ""
-                }`}
-              >
-                Live Banners
-              </button>
-              <button
-                type="button"
-                onClick={() => setView(ViewType.DRAFTS)}
-                className={`text-base ${
-                  view === ViewType.DRAFTS
-                    ? "font-bold underline underline-offset-8"
-                    : ""
-                }`}
-              >
-                Drafts
-              </button>
-            </div>
-          </BannersHeader>
-        </header>
+        <HeaderBannerSection />
         <article className="max-w-[69rem] flex justify-end">
           <button
             type="button"
@@ -252,24 +130,7 @@ const MemoBanners = () => {
                 onClick={() => handleCardClick(index)}
                 onKeyDown={() => handleCardClick(index)}
               >
-                <CreatedBannersLayouts
-                  selectedLayout={banner?.layout || ""}
-                  heading={banner?.heading || ""}
-                  paragraph={banner?.paragraph || ""}
-                  callToAction={banner?.callToAction || ""}
-                  img={{ logo: banner?.bannerImage || "" }}
-                  selectedColor={{
-                    bgColor: banner?.backgroundColor || "",
-                    textColor: banner?.backgroundColor || "",
-                  }}
-                  paragraphStyle={{ color: banner?.paragraphColor || "" }}
-                  buttonStyle={{
-                    color: banner?.buttonColor || "",
-                    buttonColor: banner?.buttonTextColor || "",
-                  }}
-                  banner={banner}
-                  handleEditBanner={handleEditBanner}
-                />
+                <BannersExplorePage key={banner?._id} banner={banner} />
                 {isArrangeMode && (
                   <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white bg-gray-500 bg-opacity-50 z-1000 rounded-2xl">
                     {index + 1}
@@ -292,29 +153,7 @@ const MemoBanners = () => {
             </center>
           )}
         </section>
-        <MiddlePopUp show={isModalOpen} onClose={closeModal} onlyPopUp={true}>
-          <section className="h-[15rem] space-y-16 p-6">
-            <h1 className="text-2xl">
-              Are you sure you want to delete this banner?
-            </h1>
-            <div className="flex justify-between">
-              <button
-                type="button"
-                className="px-4 py-2 mr-2 bg-gray-300 rounded"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 text-white bg-red-600 rounded"
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
-            </div>
-          </section>
-        </MiddlePopUp>
+        <DeleteConfirmPopup />
       </main>
       <button
         type="button"

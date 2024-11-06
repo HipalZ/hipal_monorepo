@@ -11,13 +11,27 @@ import {
 } from "@/components/utils/bannerLayouts";
 
 const PopUp = lazy(() => import("@/components/atom/popUp"));
-const BannerLayout1 = lazy(() => import("./bannerLayout1"));
-const BannerLayout2 = lazy(() => import("./bannerLayout2"));
-const BannerLayout3 = lazy(() => import("./bannerLayout3"));
-const BannerLayout4 = lazy(() => import("./bannerLayout4"));
-const BannerLayout5 = lazy(() => import("./bannerLayout5"));
-const BannerLayouts6 = lazy(() => import("./bannerLayout6"));
-const BannerLayouts7 = lazy(() => import("./bannerLayout7"));
+const BannerLayout1 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout1"),
+);
+const BannerLayout2 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout2"),
+);
+const BannerLayout3 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout3"),
+);
+const BannerLayout4 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout4"),
+);
+const BannerLayout5 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout5"),
+);
+const BannerLayouts6 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout6"),
+);
+const BannerLayouts7 = lazy(
+  () => import("../staticBannerLayouts/bannerLayout7"),
+);
 
 const MemoBannerLayouts = () => {
   const [openFilter, setOpenFilter] = useState<boolean>(false);

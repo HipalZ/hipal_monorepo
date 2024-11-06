@@ -6,7 +6,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import type { CustomRole, UserProfile } from "@/components/types/businessData";
 import { routeToDashboard } from "@/components/utils/routes";
 import { useQuery } from "@tanstack/react-query";
-import { memo, startTransition, useState } from "react";
+import { memo, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import NoStaff from "@/assets/noStaff.png";
@@ -16,7 +16,6 @@ import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import {
   getUserPermissionsForRole,
-  type role,
   useAddStaffStore,
 } from "@/components/store/useAddStaffStore";
 import EditStaff from "@/components/molecules/addStaffpopup/editStaff";
@@ -118,9 +117,7 @@ const StaffPage = () => {
   };
 
   const handleBack = () => {
-    startTransition(() => {
-      navigate(routeToDashboard(businessData?._id as string));
-    });
+    navigate(routeToDashboard(businessData?._id as string));
   };
 
   const { isLoading, refetch } = useQuery({
@@ -137,7 +134,6 @@ const StaffPage = () => {
             title="Staff"
             onBack={handleBack}
             leftIcon={<FaArrowLeft />}
-            
             rightImage={Hi}
             isIconBusinessShow={false}
           />
