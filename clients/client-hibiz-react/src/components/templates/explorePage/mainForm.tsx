@@ -179,7 +179,7 @@ const MemoMainForm = (props: Props) => {
       <button type="submit" className="cursor-pointer bottom_btn">
         Save
       </button>
-      <PopUp show={showCropper} onClose={() => setShowCropper(false)}>
+      <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
           <EasyReactCropper
             key={cropping.image}
@@ -194,6 +194,11 @@ const MemoMainForm = (props: Props) => {
             {
               text: "Crop",
               onClick: () => handleCrop(cropperRef),
+            },
+            {
+              text: "Cancel",
+              onClick: () => setShowCropper(false),
+              type: "button",
             },
           ]}
         />
