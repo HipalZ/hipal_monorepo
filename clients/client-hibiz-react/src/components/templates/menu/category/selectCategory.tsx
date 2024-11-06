@@ -5,6 +5,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import BottomButton from "@/components/atom/bottomButton";
+import { useParentCategories } from "@/hooks/useCategory";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoSelectCategory = () => {
   const {
@@ -24,6 +26,8 @@ const MemoSelectCategory = () => {
     setSearch: state.setSearch,
     catId: state.catId,
   }));
+
+  const { isLoading } = useParentCategories();
 
   const { categories } = useCategoryStore((s) => ({
     categories: s.categories,
@@ -45,7 +49,14 @@ const MemoSelectCategory = () => {
     }
     setCategoryStep("CATEGORY_STEP_1");
   }, [catId, categoryStep]);
-  console.log(filteredCategories);
+
+  if (isLoading) {
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -56,11 +67,11 @@ const MemoSelectCategory = () => {
         onChange={(e) => setSearch(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-center gap-4 mx-4 mt-4 lg:mx-0">
+      <div className="grid grid-cols-1 gap-4 mx-4 mt-4 md:grid-cols-3 xl lg:grid-cols-3">
         {filteredCategories?.map((category: CategoryType) => (
           <div
             key={category._id?.toString()}
-            className="flex relative items-center justify-between w-full p-4 bg-white rounded-lg shadow md:max-w-[14rem] lg:max-w-[14rem]"
+            className="relative flex items-center justify-between w-full p-4 bg-white rounded-lg shadow"
           >
             <label className="flex items-center">
               <input

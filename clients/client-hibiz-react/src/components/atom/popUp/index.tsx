@@ -35,7 +35,7 @@ function MemoizedPopUp({
           className="fixed inset-0 z-50 overflow-y-auto"
           onClose={stopClosing}
         >
-          <div className="fixed inset-0 flex items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[4rem]">
+          <div className="fixed inset-0 flex px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -43,7 +43,7 @@ function MemoizedPopUp({
               transition={{ duration: 0.6, ease: "easeInOut" }}
               className={cn(
                 "bg-base-100 shadow-md relative",
-                width ? width : "w-full max-w-[48rem]",
+                width ? width : "w-full max-w-[69rem]",
                 height ? height : "h-auto",
                 !hide ? "rounded-t-[1.5rem] lg:rounded-2xl" : "lg:rounded-2xl",
               )}

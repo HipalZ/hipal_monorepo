@@ -134,7 +134,7 @@ const MemoLinkItems = () => {
         onChange={(e) => setSearchTerm(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"
       />
-      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4 md:grid md:grid-cols-2">
+      <div className="flex flex-wrap justify-start gap-4 mx-6 mt-4 md:grid md:grid-cols-2 lg:grid-cols-3">
         {filteredData?.map((data) => (
           <div
             key={data._id?.toString()}

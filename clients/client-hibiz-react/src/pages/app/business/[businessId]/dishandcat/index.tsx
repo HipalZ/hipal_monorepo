@@ -198,7 +198,7 @@ const MemoizeDishAndCat = () => {
 
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
-          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+          <section className="min-h-[100dvh] max-h-[100dvh] lg:min-h-[70dvh] lg:max-h-[90dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
             {selectedPage !== "ALERT" && (
               <button
                 className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"
@@ -216,7 +216,7 @@ const MemoizeDishAndCat = () => {
 
       {openMenu && (
         <PopUp show={openMenu} onClose={closeMenu} hide>
-          <section className="min-h-[90dvh] max-h-[90dvh] lg:min-h-[70dvh] lg:max-h-[70dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
+          <section className="min-h-[100dvh] max-h-[100dvh] lg:min-h-[70dvh] lg:max-h-[90dvh] overflow-y-auto pb-[5rem] hide-scrollbar">
             {selectedPage !== "ALERT" && (
               <button
                 className="absolute z-50 p-3 bg-white rounded-full top-6 right-4"

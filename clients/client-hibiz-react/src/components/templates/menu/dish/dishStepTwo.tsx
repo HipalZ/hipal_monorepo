@@ -162,7 +162,7 @@ const MemoDishFormTwo = () => {
 
   const handleDescription = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
-      if (e.target.value.length > 100) return;
+      if (e.target.value.length > 350) return;
       setDishDescription(e.target.value);
     },
     [dishDescription],
@@ -210,7 +210,7 @@ const MemoDishFormTwo = () => {
             placeholder="Add description"
           />
           <small className="absolute bottom-6 right-6">
-            {dishDescription.length}/100
+            {dishDescription.length}/350
           </small>
         </div>
       </article>
