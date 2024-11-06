@@ -518,7 +518,9 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { order_id } = requestData;
 
-      const order = await Order.findOne({ order_id: order_id }).select("_id");
+      const order = await Order.findOne({
+        $or: [{ order_id: order_id }, { _id: order_id }],
+      }).select("_id order_id");
 
       if (!order) return respond(c, "Order not found", true, 400, {});
 
@@ -530,7 +532,7 @@ const paymentsRouter = new Hono()
       if (!addReview) return respond(c, "Review not created", true, 400, {});
 
       await Payment.findOneAndUpdate(
-        { razorpayOrderId: order_id },
+        { razorpayOrderId: order.order_id },
         { reviewId: addReview._id },
       );
 
