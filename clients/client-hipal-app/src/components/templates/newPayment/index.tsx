@@ -318,11 +318,11 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
 
     const timeoutId = setTimeout(() => {
       if (!isScriptLoaded) {
-        toast.error("Something went wrong! Please try again.");
+        toast.error("Facing Internet Issue! Please try again.");
         setIsLoading(false);
         document.body.removeChild(script);
       }
-    }, 10000);
+    }, 5000);
 
     script.onload = () => {
       isScriptLoaded = true;
