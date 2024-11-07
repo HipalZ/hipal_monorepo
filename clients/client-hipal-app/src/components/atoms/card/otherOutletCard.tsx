@@ -56,7 +56,7 @@ const MemoOtherOutletCard = ({
             <AiOutlineExpand className="text-lg text-primary" />
           </button>
           {dishData.availability && (
-            <div>
+            <div className="absolute bottom-0 scale-75 -right-2">
               <DishQuantityButton dishData={dishData} />
             </div>
           )}

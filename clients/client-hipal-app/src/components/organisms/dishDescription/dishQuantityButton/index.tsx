@@ -135,30 +135,29 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     }
   }, [cartItemsForDish, updateCartItem, removeFromCart]);
   return (
-    <section>
-      <article className="absolute bottom-0 scale-75 -right-2">
-        {totalQuantity > 0 ? (
-          <div className="relative z-10 flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
-            <button type="button" onClick={handleDecreaseQuantity}>
-              <HiMinusSm size={16} />
-            </button>
-            <span className="w-1/3 px-2 text-xs font-bold text-center">
-              {totalQuantity}
-            </span>
-            <button type="button" onClick={handleIncreaseQuantity}>
-              <HiPlusSm size={16} />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => handleClick(dishData)}
-            type="button"
-            className="relative z-10 bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
-          >
-            Add
+    <>
+      {totalQuantity > 0 ? (
+        <div className="relative z-10 flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
+          <button type="button" onClick={handleDecreaseQuantity}>
+            <HiMinusSm size={16} />
           </button>
-        )}
-      </article>
+          <span className="w-1/3 px-2 text-xs font-bold text-center">
+            {totalQuantity}
+          </span>
+          <button type="button" onClick={handleIncreaseQuantity}>
+            <HiPlusSm size={16} />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => handleClick(dishData)}
+          type="button"
+          className="relative z-10 bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
+        >
+          Add
+        </button>
+      )}
+
       {openBottomPanel && selectedDish._id === dishData._id && (
         <MemoBottomPopUp show={openBottomPanel} onClose={closeModal}>
           {cartPopup === "BOTTOM_PANEL" && (
@@ -169,7 +168,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                 {displayAlert && <MemoAlertVariant />}
               </div>
               <button
-                className="absolute on_active_bounce z-[103] bottom-0 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-1.5"
+                className="absolute on_active_bounce z-[103] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-1.5"
                 type="button"
                 onClick={handleAddToCart}
               >
@@ -179,7 +178,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
           )}
         </MemoBottomPopUp>
       )}
-    </section>
+    </>
   );
 };
 
