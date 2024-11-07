@@ -1,9 +1,5 @@
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
-import type {
-  Coupon,
-  IBanner,
-  IUniquelyDishes,
-} from "@/components/types/businessData";
+import type { IBanner, IUniquelyDishes } from "@/components/types/businessData";
 import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { set } from "lodash-es";

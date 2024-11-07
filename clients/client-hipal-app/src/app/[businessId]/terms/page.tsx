@@ -1,20 +1,33 @@
 "use client";
-import React, { memo } from "react";
 import Logo from "@/assets/hipalNewLogo.svg";
 import { isEmpty } from "lodash-es";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { HiChevronLeft } from "react-icons/hi";
 import PlaceholderImg from "@/components/atoms/placeholder";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { termsApi } from "@/apis/terms";
+import { useQuery } from "@tanstack/react-query";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 const Terms = () => {
-  const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const router = useRouter();
+  const params = useParams();
+  const businessId = params.businessId;
   const onBack = () => {
     router.back();
   };
+
+  const getOutletInfo = async () => {
+    const data = await termsApi.all(businessId);
+    console.log(data);
+    return data.business;
+  };
+
+  const { data: businessDetails } = useQuery({
+    queryKey: ["getOutletInfo", businessId],
+    queryFn: getOutletInfo,
+    enabled: !!businessId,
+  });
   return (
     <main className="p-6 text-white bg-black">
       <div className="relative">
@@ -461,5 +474,4 @@ const Terms = () => {
   );
 };
 
-const MemoTerms = memo(Terms);
-export default MemoTerms;
+export default Terms;

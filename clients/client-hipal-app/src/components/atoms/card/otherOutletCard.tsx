@@ -4,9 +4,10 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineExpand } from "react-icons/ai";
 import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
-import PlaceholderImg from "../placeholder";
 import type { DishType } from "@hi/db-models/src/validators";
 import ShimmerImage from "../imageshimmer";
+import OtherPlaceholderImg from "../placeholder/othePlaceholder";
+import { cn } from "@hi/common";
 
 const MemoOtherOutletCard = ({
   dishData,
@@ -46,7 +47,7 @@ const MemoOtherOutletCard = ({
               }`}
             />
           ) : (
-            <PlaceholderImg className="object-cover w-full h-full" />
+            <OtherPlaceholderImg className="object-cover w-full h-full bg-base-200" />
           )}
           <button
             type="button"
@@ -56,7 +57,7 @@ const MemoOtherOutletCard = ({
             <AiOutlineExpand className="text-lg text-primary" />
           </button>
           {dishData.availability && (
-            <div>
+            <div className="absolute right-0 scale-75 bottom-2">
               <DishQuantityButton dishData={dishData} />
             </div>
           )}
@@ -74,7 +75,9 @@ const MemoOtherOutletCard = ({
             </section>
           )}
         </div>
-        <div className="mt-10 text-sm font-medium capitalize text-primary">
+        <div
+          className={cn("mt-10 text-sm font-medium capitalize text-primary")}
+        >
           {dishData?.name || ""}
         </div>
       </section>
