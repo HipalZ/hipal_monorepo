@@ -51,7 +51,6 @@ const BottomPopUp = ({ children, show, onClose, hide, linearGradTheme }) => {
       ),
   );
 
-  // Use createPortal to render the popup content at the root level
   return createPortal(popupContent, document.body);
 };
 
