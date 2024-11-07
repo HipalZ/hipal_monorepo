@@ -762,6 +762,7 @@ export interface WhatsAppTemplate {
   language: string;
   status: string;
   category: string;
+  bodyVariableSequence: string[];
   id: string;
 }
 

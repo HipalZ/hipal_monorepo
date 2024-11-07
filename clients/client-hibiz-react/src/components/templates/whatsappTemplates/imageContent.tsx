@@ -1,6 +1,6 @@
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import { memo, useCallback } from "react";
-import { BiPlus } from "react-icons/bi";
+import { BiPlus, BiX } from "react-icons/bi";
 
 const MemoImageContent = () => {
   const { setHeaderType, imagePreview, setImagePreview } = useWhatsapp((s) => ({
@@ -21,41 +21,46 @@ const MemoImageContent = () => {
         reader.readAsDataURL(file);
       }
     },
-    [],
+    [setHeaderType, setImagePreview],
   );
+
+  const handleRemoveImage = useCallback(() => {
+    setImagePreview("");
+    setHeaderType(HeaderInterface.Image);
+  }, [setHeaderType, setImagePreview]);
+
   return (
-    <div className="mb-4">
-      <label
-        htmlFor="headerImage"
-        className="block mb-1 text-sm font-medium text-gray-700"
-      >
-        Choose Image/Gif (optional)
-      </label>
-      <div className="relative h-40 overflow-hidden border-2 border-gray-300 border-dashed rounded-lg w-80">
-        <input
-          type="file"
-          id="headerImage"
-          className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
-          accept="image/*"
-          onChange={handleImageUpload}
-        />
-        {imagePreview ? (
+    <div className="relative w-64 h-56 mb-4 bg-white border-2 border-gray-300 border-dashed rounded-lg">
+      <input
+        type="file"
+        id="headerImage"
+        className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
+        accept="image/*"
+        onChange={handleImageUpload}
+      />
+      {imagePreview ? (
+        <div className="relative w-full h-full">
           <img
             src={imagePreview}
             alt="Header preview"
-            className="object-cover w-full h-40"
+            className="object-cover w-full h-full rounded-lg"
           />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full">
-            <div className="text-center">
-              <BiPlus className="w-12 h-12 mx-auto text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600">
-                Click to upload image
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+          <button
+            type="button"
+            className="absolute p-1 m-2 text-white bg-black rounded-full -top-4 -right-4 hover:bg-gray-700"
+            onClick={handleRemoveImage}
+          >
+            <BiX className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="absolute inset-0 w-full mt-16 transform -translate-x-1/2 -translate-y-1/2 min-h-56 left-1/2 top-1/2">
+          <BiPlus className="w-12 h-12 mx-auto text-gray-400" />
+          <p className="mt-2 text-sm text-center text-gray-600">
+            Click to upload image
+          </p>
+        </div>
+      )}
     </div>
   );
 };

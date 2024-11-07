@@ -3,6 +3,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp from "@/components/store/useWhatsapp";
 import type { WhatsAppTemplate } from "@/components/types/businessData";
 import { WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
+import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -115,6 +116,7 @@ export const useGetTemplate = () => {
     try {
       const response = await axios(config);
       setTemplateData(response?.data);
+      console.log(response?.data);
       return response?.data || {};
     } catch (error) {
       return error;
@@ -156,4 +158,16 @@ export const useDeleteTemplate = () => {
   };
 
   return { deleteTemplateApi };
+};
+
+export const useCreatingTemplate = () => {
+  const createTemplate = async (payload: any) => {
+    const res = await apiRpc.whatsapp.template.$post({
+      json: payload,
+    });
+    const response = await res.json();
+    console.log("response", response);
+  };
+
+  return { createTemplate };
 };

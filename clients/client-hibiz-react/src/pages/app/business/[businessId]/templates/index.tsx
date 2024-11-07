@@ -69,7 +69,7 @@ const MemoTemplates = () => {
     <main className="min-h-screen bg-gray-100">
       <div className="sticky top-0 z-50 w-full linear_gradient_background">
         <MemoizedHeader
-          title="WhatsApp"
+          title="WhatzApp"
           onBack={handleBack}
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}

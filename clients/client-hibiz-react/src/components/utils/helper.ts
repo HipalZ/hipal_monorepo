@@ -8,10 +8,9 @@ import axios from "@/axios";
 import { DishTypeEnum, type ReviewsType } from "@hi/db-models/src/validators";
 import { type ClassValue, clsx } from "clsx";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
-import type { ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
-import { DishSteps, type ImageFiles } from "../store/useMenuStorage";
+import { DishSteps } from "../store/useMenuStorage";
 
 export async function storeImageAfterSave(
   image: File,

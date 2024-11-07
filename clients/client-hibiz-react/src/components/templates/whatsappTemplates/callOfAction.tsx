@@ -24,9 +24,9 @@ const MemoCallOfAction = () => {
   }));
 
   return (
-    <div className="max-w-3xl p-4 mx-auto bg-white rounded-lg shadow">
+    <div className="max-w-3xl mx-auto rounded-lg">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">
+        <h2 className="font-medium">
           Call to action{" "}
           <span className="text-sm font-medium text-gray-700">(Optional)</span>
         </h2>
@@ -125,7 +125,7 @@ const MemoCallOfAction = () => {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 maxLength={15}
-                className="block w-full pr-16 border-gray-300 rounded-r-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full border-gray-300 min-w-28 rounded-r-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>

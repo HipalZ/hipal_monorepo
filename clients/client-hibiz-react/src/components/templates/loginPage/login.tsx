@@ -158,10 +158,10 @@ const Login: React.FC = () => {
       </section>
       <button
         type="button"
-        className="font-semibold action_btn"
+        className="font-semibold action_btn on_active_bounce"
         onClick={handleSubmit}
       >
-        Login
+        Enter In
       </button>
       <center className="mt-4">
         Forgot Password?{" "}

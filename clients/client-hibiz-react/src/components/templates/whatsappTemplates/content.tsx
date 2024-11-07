@@ -1,10 +1,20 @@
-import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
-import { memo } from "react";
-import CallOfAction from "./callOfAction";
-import { BiCross } from "react-icons/bi";
+import { lazy, memo } from "react";
+import { BiPlus } from "react-icons/bi";
 import { IoMdClose } from "react-icons/io";
-import TemplateName from "./templateName";
-import ImageContent from "./imageContent";
+import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
+
+const CallOfAction = lazy(() => import("./callOfAction"));
+const ImageContent = lazy(() => import("./imageContent"));
+
+const variableOptions = [
+  "name",
+  "email",
+  "businessName",
+  "phone",
+  "address",
+  "time",
+  "date",
+];
 
 const MemoContent = () => {
   const {
@@ -14,12 +24,14 @@ const MemoContent = () => {
     setHeaderText,
     bodyText,
     setBodyText,
-    footerText,
-    setFooterText,
-    variables,
+    bodyVariableSequence,
+    setBodyVariableSequence,
     addVariable,
-    updateVariable,
     removeVariable,
+    bodyVariables,
+    updateVariable,
+    setTemplateName,
+    updateBodySequenceVariable,
   } = useWhatsapp((s) => ({
     headerType: s.headerType,
     setHeaderType: s.setHeaderType,
@@ -29,165 +41,169 @@ const MemoContent = () => {
     setBodyText: s.setBodyText,
     footerText: s.footerText,
     setFooterText: s.setFooterText,
-    variables: s.bodyVariables,
+    bodyVariableSequence: s.bodyVariableSequence,
+    setBodyVariableSequence: s.setBodyVariableSequence,
     addVariable: s.addVariable,
-    updateVariable: s.updateVariable,
     removeVariable: s.removeVariable,
+    bodyVariables: s.bodyVariables,
+    updateVariable: s.updateVariable,
+    setTemplateName: s.setTemplateName,
+    updateBodySequenceVariable: s.updateBodySequenceVariable,
   }));
 
-  return (
-    <div>
-      <TemplateName />
-      <section>
-        <h2 className="mb-1 text-xl font-semibold">Content</h2>
-        <div>
-          <label
-            htmlFor="headerType"
-            className="block mb-4 text-sm font-medium text-gray-700"
-          >
-            Header (optional)
-          </label>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setHeaderType(HeaderInterface.None)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                headerType === HeaderInterface.None
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-            >
-              None
-            </button>
-            <button
-              type="button"
-              onClick={() => setHeaderType(HeaderInterface.Text)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                headerType === HeaderInterface.Text
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-            >
-              📝 Text
-            </button>
-            <button
-              type="button"
-              onClick={() => setHeaderType(HeaderInterface.Image)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                headerType === HeaderInterface.Image
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
-            >
-              🖼️ Image (or) GIF
-            </button>
-          </div>
-          <article className="relative">
-            <input
-              maxLength={512}
-              type="text"
-              className="w-full px-3 py-2 pr-16 my-4 border border-gray-300 rounded-md resize-none"
-              value={headerText}
-              placeholder="This is the header text"
-              onChange={(e) => setHeaderText(e.target.value)}
-            />
-            <small className="absolute bottom-6 right-3">
-              {headerText?.length}/{512}
-            </small>
-          </article>
-        </div>
-        {headerType === "image" && <ImageContent />}
-        <div className="mb-4">
-          <label
-            htmlFor="bodyText"
-            className="block mb-1 text-sm font-medium text-gray-700"
-          >
-            Body<small className="pl-1 text-xl text-red-500">*</small>
-          </label>
-          <div className="relative">
-            <textarea
-              id="bodyText"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
-              rows={4}
-              maxLength={1028}
-              placeholder="Please write content here"
-              value={bodyText}
-              onChange={(e) => setBodyText(e.target.value)}
-            />
-            <small className="absolute bottom-3 right-3">
-              {bodyText?.length}/{1028}
-            </small>
-          </div>
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={addVariable}
-              className="inline-flex items-center px-3 py-2 mt-2 text-sm font-medium leading-4 text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <BiCross className="w-4 h-4 mr-2" />
-              Add Variable
-            </button>
-          </div>
-        </div>
-        {variables && variables?.length > 0 ? (
-          <div className="mb-4">
-            <small className="block mt-2 text-yellow-600">
-              ⚠️ Adding the dynamic content in variables
-            </small>
-          </div>
-        ) : null}
+  const handleAddVariable = () => {
+    addVariable();
+    setBodyVariableSequence([...bodyVariableSequence, variableOptions[0]]);
+  };
 
-        {variables && variables.length > 0 && (
-          <section className="mt-8">
-            <h2 className="mb-4 text-xl font-semibold">Variables</h2>
-            {variables.map((variable, index) => (
-              <div key={index?.toString()} className="flex items-center mb-2">
-                <span className="mr-2 text-sm font-medium text-gray-700">
-                  {index + 1}
-                </span>
-                <input
-                  type="text"
-                  className="flex-grow px-3 py-2 border border-gray-300 rounded-md"
-                  value={variable}
-                  onChange={(e) => updateVariable(index, e.target.value)}
-                  placeholder={`Variable ${index + 1}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeVariable(index)}
-                  className="ml-2 text-red-600 hover:text-red-800"
-                >
-                  <IoMdClose className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </section>
-        )}
-        <div className="mb-4">
-          <label
-            htmlFor="footerText"
-            className="block mb-1 text-sm font-medium text-gray-700"
+  const handleRemoveVariable = (index: number) => {
+    removeVariable(index);
+    const newSequence = bodyVariableSequence.filter((_, i) => i !== index);
+    setBodyVariableSequence(newSequence);
+  };
+
+  const addTemplateName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/ /g, "_");
+    const regex = /^[a-z0-9_]*$/;
+
+    if (regex.test(value)) {
+      setTemplateName(value);
+    }
+  };
+
+  return (
+    <section className="max-w-2xl p-3 mx-auto mb-12 bg-white rounded-lg shadow-md">
+      <div className="mb-4">
+        <label htmlFor="templateName" className="block mb-2 font-medium">
+          Template Name <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <input
+            id="templateName"
+            type="text"
+            maxLength={100}
+            onChange={addTemplateName}
+            placeholder="Enter template name"
+            className="w-full px-3 py-2 lowercase border border-gray-300 rounded-md"
+          />
+          <small className="absolute text-gray-500 bottom-2 right-3">
+            0/100
+          </small>
+        </div>
+      </div>
+      <div className="mb-4">
+        <label htmlFor="headerType" className="block mb-2 font-medium">
+          Header (optional)
+        </label>
+        <div className="flex flex-wrap gap-3 mb-4">
+          <button
+            type="button"
+            onClick={() => setHeaderType(HeaderInterface.Text)}
+            className={`px-4 py-2 rounded-md ${
+              headerType === HeaderInterface.Text
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800"
+            }`}
           >
-            Footer (Optional)
-          </label>
+            📝 Text
+          </button>
+          <button
+            type="button"
+            onClick={() => setHeaderType(HeaderInterface.Image)}
+            className={`px-4 py-2 rounded-md ${
+              headerType === HeaderInterface.Image
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800"
+            }`}
+          >
+            🖼️ Image or GIF
+          </button>
+        </div>
+        {headerType === HeaderInterface.Text && (
           <div className="relative">
             <input
+              id="headerText"
               type="text"
-              id="footerText"
+              maxLength={512}
+              value={headerText}
+              placeholder="Enter header text"
+              onChange={(e) => setHeaderText(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              maxLength={60}
-              value={footerText}
-              placeholder="Powered by HipalZ"
-              onChange={(e) => setFooterText(e.target.value)}
             />
-            <small className="absolute bottom-2 right-4">
-              {footerText?.length || 0}/{60}
+            <small className="absolute text-gray-500 bottom-2 right-3">
+              {headerText?.length || 0}/512
             </small>
           </div>
+        )}
+      </div>
+
+      {headerType === HeaderInterface.Image && <ImageContent />}
+
+      <div>
+        <label htmlFor="bodyText" className="block mb-2 font-medium">
+          Message Body <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <textarea
+            id="bodyText"
+            rows={4}
+            maxLength={1028}
+            placeholder="Write your message content here"
+            value={bodyText}
+            onChange={(e) => setBodyText(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+          />
+          <small className="absolute text-gray-500 bottom-2 right-3">
+            {bodyText?.length || 0}/1028
+          </small>
         </div>
-        <CallOfAction />
-      </section>
-    </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <label className="font-medium">Dynamic Variables</label>
+          <button
+            type="button"
+            onClick={handleAddVariable}
+            className="flex items-center px-3 py-1 text-sm text-white bg-blue-600 rounded-md"
+          >
+            <BiPlus className="mr-1" /> Add Variable
+          </button>
+        </div>
+        {bodyVariables.map((variable, index) => (
+          <div key={index.toString()} className="mb-2 lg:space-x-1">
+            <select
+              value={bodyVariableSequence[index]}
+              onChange={(e) =>
+                updateBodySequenceVariable(index, e.target.value)
+              }
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              {variableOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder={`enter ${variable} value`}
+              value={variable}
+              onChange={(e) => updateVariable(index, e.target.value)}
+              className="px-3 py-2 mt-1 border border-gray-300 rounded-md w-36 md:w-48"
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveVariable(index)}
+              className="p-3 ml-1 text-white bg-red-600 rounded-md"
+            >
+              <IoMdClose />
+            </button>
+          </div>
+        ))}
+      </div>
+      <CallOfAction />
+    </section>
   );
 };
 

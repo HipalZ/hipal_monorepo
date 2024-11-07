@@ -1,5 +1,5 @@
 import BottomButton from "@/components/atom/bottomButton";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback } from "react";
 import useWhatsapp, {
   Step,
   TemplateType,

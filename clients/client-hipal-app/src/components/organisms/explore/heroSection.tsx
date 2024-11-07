@@ -18,7 +18,6 @@ import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useCartStore } from "@/components/store/useCartStore";
 import { type IUserData, useLogin } from "@/components/store/useLogin";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import { useParams, useRouter } from "next/navigation";
 import LoadingSpinnerCircle from "@/components/atoms/loader";

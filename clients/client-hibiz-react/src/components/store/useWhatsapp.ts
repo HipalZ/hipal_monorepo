@@ -8,12 +8,11 @@ export enum Step {
 }
 
 export enum HeaderInterface {
-  None = "none",
-  Text = "text",
-  Image = "image",
-  Video = "video",
-  Document = "document",
-  Location = "location",
+  None = "NONE",
+  Text = "TEXT",
+  Image = "IMAGE",
+  Video = "VIDEO",
+  Document = "DOCUMENT",
 }
 
 export enum TemplateType {
@@ -26,9 +25,42 @@ export enum ActionType {
   CallUs = "Call Us",
 }
 
+export enum whastappSteps {
+  MainForm = "MainForm",
+  TemplateForm = "TemplateForm",
+  ManageCampaign = "ManageCampaign",
+  Automation = "Automation",
+  Events = "Events",
+  Loyalty = "Loyalty",
+  Couponz = "Couponz",
+  Qrs = "Qrs",
+}
+
+export enum TemplateSteps {
+  CREATE_EDIT = "create_edit",
+  MODIFY = "modify",
+  SHOW_OPTIONS = "showOptions",
+  SEND = "send",
+}
+
+export interface Notification {
+  id: number;
+  message: string;
+  isRead: boolean;
+}
+
+export enum Tabs {
+  TEMPLATES = "templates",
+  CAMPAIGNS = "campaigns",
+  AUTOMATION = "automation",
+}
+
 interface whatsappTemplate {
   step: Step;
   setStep: (step: Step) => void;
+
+  whatzAppSteps: whastappSteps;
+  setWhatzAppSteps: (whatzAppSteps: whastappSteps) => void;
 
   templates: any[];
   setTemplates: (templates: any) => void;
@@ -51,6 +83,9 @@ interface whatsappTemplate {
   imagePreview: string;
   setImagePreview: (imagePreview: string) => void;
 
+  videoPreview: string;
+  setVideoPreview: (preview: string) => void;
+
   bodyText: string;
   setBodyText: (bodyText: string) => void;
 
@@ -66,6 +101,8 @@ interface whatsappTemplate {
   addVariable: () => void;
 
   updateVariable: (index: number, value: string) => void;
+
+  updateBodySequenceVariable: (index: number, value: string) => void;
 
   removeVariable: (index: number) => void;
 
@@ -90,6 +127,31 @@ interface whatsappTemplate {
   setTemplateData: (data: any) => void;
 
   resetTemplateData: () => void;
+
+  // revised whatsapp
+  notifications: Notification[];
+  setNotifications: (notifications: Notification[]) => void;
+
+  showNotifications: boolean;
+  setShowNotifications: (showNotifications: boolean) => void;
+
+  walletBalance: number;
+  setWalletBalance: (walletBalance: number) => void;
+
+  activeTab: Tabs;
+  setActiveTab: (activeTab: Tabs) => void;
+
+  notEditPopup: boolean;
+  setNotEditPopup: (notEditPopup: boolean) => void;
+
+  templateSteps: TemplateSteps;
+  setTemplateSteps: (templateSteps: TemplateSteps) => void;
+
+  bodyVariableSequence: string[];
+  setBodyVariableSequence: (bodyVariableSequence: string[]) => void;
+
+  preDefinedTemplate: boolean;
+  setPreDefinedTemplate: (modifyTemplate: boolean) => void;
 }
 
 export const useWhatsapp = create<whatsappTemplate>((set) => {
@@ -97,6 +159,9 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
   return {
     step: Step.SETUP,
     setStep: (step: Step) => set({ step }),
+
+    whatzAppSteps: whastappSteps.MainForm,
+    setWhatzAppSteps: (whatzAppSteps: whastappSteps) => set({ whatzAppSteps }),
 
     templates: [],
     setTemplates: (templates: any) => set({ templates }),
@@ -110,19 +175,22 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     language: "en_US",
     setLanguage: (language: string) => set({ language }),
 
-    headerType: HeaderInterface.Text,
+    headerType: HeaderInterface.Image,
     setHeaderType: (headerType: HeaderInterface) => set({ headerType }),
 
-    headerText: "Hello",
+    headerText: "",
     setHeaderText: (headerText: string) => set({ headerText }),
 
     imagePreview: "",
     setImagePreview: (imagePreview: string) => set({ imagePreview }),
 
-    bodyText: "",
+    videoPreview: "",
+    setVideoPreview: (preview: string) => set({ videoPreview: preview }),
+
+    bodyText: "Write your content here...",
     setBodyText: (bodyText: string) => set({ bodyText }),
 
-    footerText: "",
+    footerText: `Powered by ${businessName}`,
     setFooterText: (footerText: string) => set({ footerText }),
 
     headerVariables: [],
@@ -145,7 +213,19 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
       set((state) => {
         const newVariables = [...state.bodyVariables];
         newVariables[index] = value;
-        return { bodyVariables: newVariables };
+        return {
+          bodyVariables: newVariables,
+        };
+      });
+    },
+
+    updateBodySequenceVariable: (index: number, value: string) => {
+      set((state) => {
+        const newBodySequence = [...state.bodyVariableSequence];
+        newBodySequence[index] = value;
+        return {
+          bodyVariableSequence: newBodySequence,
+        };
       });
     },
 
@@ -188,14 +268,17 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
       const buttonsComponent = data.components.find(
         (component: any) => component.type === "BUTTONS",
       );
-
+      const variables =
+        bodyComponent?.example?.body_text[0]?.map((text: string) => text) || [];
+      const headerImage = headerComponent?.example?.header_handle[0];
       set({
         templateType: data.category,
         templateName: data.name,
         headerType: headerComponent?.format,
         headerText: headerComponent?.text,
-        imagePreview: headerComponent?.imagePreview,
+        imagePreview: headerImage || headerComponent?.imagePreview,
         bodyText: bodyComponent?.text,
+        bodyVariables: variables,
         footerText: footerComponent?.text,
         actionType:
           buttonsComponent?.buttons[0]?.type === "URL"
@@ -234,6 +317,36 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
         templateId: "",
       });
     },
+
+    notifications: [
+      { id: 1, message: "New template available!", isRead: false },
+      { id: 2, message: "Campaign completed successfully", isRead: false },
+    ],
+    setNotifications: (notifications: Notification[]) => set({ notifications }),
+
+    showNotifications: false,
+    setShowNotifications: (showNotifications: boolean) =>
+      set({ showNotifications }),
+
+    walletBalance: 500,
+    setWalletBalance: (walletBalance: number) => set({ walletBalance }),
+
+    activeTab: Tabs.TEMPLATES,
+    setActiveTab: (activeTab: Tabs) => set({ activeTab }),
+
+    notEditPopup: false,
+    setNotEditPopup: (notEditPopup: boolean) => set({ notEditPopup }),
+
+    templateSteps: TemplateSteps.SHOW_OPTIONS,
+    setTemplateSteps: (templateSteps: TemplateSteps) => set({ templateSteps }),
+
+    bodyVariableSequence: [],
+    setBodyVariableSequence: (bodyVariableSequence: string[]) =>
+      set({ bodyVariableSequence }),
+
+    preDefinedTemplate: false,
+    setPreDefinedTemplate: (modifyTemplate: boolean) =>
+      set({ preDefinedTemplate: modifyTemplate }),
   };
 });
 
