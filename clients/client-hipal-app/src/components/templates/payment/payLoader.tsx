@@ -14,7 +14,7 @@ const PayLoader = ({ selectedMode }) => {
       </center>
       <center className="mx-6 text-sm opacity-50">
         We are processing your payment{" "}
-        {`${selectedMode === "ONLINE" ? "by Razory pay" : ""}`} please wait.
+        {`${selectedMode === "ONLINE" ? "by Razor pay" : ""}`} please wait.
       </center>
     </section>
   );
