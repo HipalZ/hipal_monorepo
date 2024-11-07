@@ -54,8 +54,8 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-end pt-2 pb-1 prose">
-        <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
+      <div className="flex flex-row items-start py-4 prose">
+        <div className="flex flex-col py-1 mb-4 mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
               <div className="my-auto">
@@ -127,16 +127,16 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto scale-75 ${
+              className={` flex flex-col items-center w-full mx-auto scale-100 ${
                 dishData?.images?.length > 0 || noDescription
-                  ? " -mt-4"
-                  : " -mt-4 -ml-6"
+                  ? " mt-4"
+                  : "mt-4 mr-4"
               }`}
             >
               {dishData.availability && (
                 <div
                   className={`flex flex-col items-center w-full ${
-                    dishData?.images?.length > 0 ? "" : "-ml-6"
+                    dishData?.images?.length > 0 ? "mt-2" : "-mr-4"
                   }`}
                 >
                   <DishQuantityButton dishData={dishData} />
