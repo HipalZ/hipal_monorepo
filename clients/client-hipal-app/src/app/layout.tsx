@@ -64,7 +64,7 @@ export default function RootLayout({
         <GoogleAnalytics />
       </head>
 
-      <body className={`${ubuntu.className} antialiased`}>
+      <body className={`${ubuntu.className}`}>
         <Suspense fallback={<Loading />}>
           <DynamicToast />
           <DynamicQueryComponent>
