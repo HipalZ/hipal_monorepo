@@ -125,7 +125,7 @@ const MemoCallOfAction = () => {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 maxLength={15}
-                className="block w-full pr-16 border-gray-300 rounded-r-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full border-gray-300 min-w-28 rounded-r-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>

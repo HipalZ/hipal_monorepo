@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, useCallback, useState } from "react";
+import { lazy, memo, useCallback, useState } from "react";
 import { BsPlusLg, BsChevronLeft, BsChevronRight } from "react-icons/bs";
 import diwali from "@/assets/whatzapp/diwali.jpg";
 import couponImage from "@/assets/whatzapp/coupon.webp";
@@ -10,6 +10,7 @@ import useWhatsapp, {
   Step,
   Tabs,
   TemplateSteps,
+  TemplateType,
 } from "@/components/store/useWhatsapp";
 import { festival } from "@/components/helpers/whatzAppHelpers";
 
@@ -52,19 +53,23 @@ const templates: Template[] = [
   },
 ];
 
-export default function WhatsappDashboard() {
+const MemoWhatzappDashboard = () => {
   const {
     setStep,
     setTemplateSteps,
     activeTab,
     setActiveTab,
     setTemplateData,
+    setPreDefinedTemplate,
+    setTemplateType,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setTemplateSteps: s.setTemplateSteps,
     activeTab: s.activeTab,
     setActiveTab: s.setActiveTab,
     setTemplateData: s.setTemplateData,
+    setPreDefinedTemplate: s.setPreDefinedTemplate,
+    setTemplateType: s.setTemplateType,
   }));
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -76,14 +81,20 @@ export default function WhatsappDashboard() {
       }
       setStep(Step.CREATE_EDIT);
       setTemplateSteps(TemplateSteps.MODIFY);
+      setPreDefinedTemplate(true);
     },
-    [setStep, setTemplateData, setTemplateSteps],
+    [setStep, setTemplateData, setTemplateSteps, setPreDefinedTemplate],
   );
 
-  const handleCreateTemplate = useCallback(() => {
-    setStep(Step.CREATE_EDIT);
-    setTemplateSteps(TemplateSteps.CREATE_EDIT);
-  }, [setStep, setTemplateSteps]);
+  const handleCreateTemplate = useCallback(
+    (type: string) => {
+      setStep(Step.CREATE_EDIT);
+      setTemplateSteps(TemplateSteps.CREATE_EDIT);
+      setPreDefinedTemplate(false);
+      setTemplateType(type);
+    },
+    [setStep, setTemplateSteps, setPreDefinedTemplate, setTemplateType],
+  );
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % (templates.length + 1));
@@ -166,13 +177,29 @@ export default function WhatsappDashboard() {
                 <div className="flex-shrink-0 w-full px-2 md:w-1/4 lg:w-1/4">
                   <div className="bg-[#FFD4B3] rounded-lg shadow-md overflow-hidden aspect-[3/4] flex items-center justify-center hover:bg-[#FFE4C3] transition-colors duration-300">
                     <button
-                      onClick={handleCreateTemplate}
+                      onClick={() =>
+                        handleCreateTemplate(TemplateType.Marketing)
+                      }
                       type="button"
                       className="flex flex-col items-center gap-2 text-gray-800"
                     >
                       <BsPlusLg className="w-8 h-8" />
                       <span className="text-lg font-medium">
-                        Create Template
+                        Create Marketing Template
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 w-full px-2 md:w-1/4 lg:w-1/4">
+                  <div className="bg-blue-400 rounded-lg shadow-md overflow-hidden aspect-[3/4] flex items-center justify-center hover:bg-[#FFE4C3] transition-colors duration-300">
+                    <button
+                      onClick={() => handleCreateTemplate(TemplateType.Utility)}
+                      type="button"
+                      className="flex flex-col items-center gap-2 text-gray-800"
+                    >
+                      <BsPlusLg className="w-8 h-8" />
+                      <span className="text-lg font-medium">
+                        Create Utility Template
                       </span>
                     </button>
                   </div>
@@ -214,4 +241,7 @@ export default function WhatsappDashboard() {
       <WhatsappChat />
     </main>
   );
-}
+};
+
+const WhatzappDashboard = memo(MemoWhatzappDashboard);
+export default WhatzappDashboard;

@@ -3,10 +3,13 @@ import { cn } from "@/components/utils/helper";
 import { memo, useCallback } from "react";
 
 const MemoStepHeader = () => {
-  const { templateSteps, setTemplateSteps } = useWhatsapp((s) => ({
-    templateSteps: s.templateSteps,
-    setTemplateSteps: s.setTemplateSteps,
-  }));
+  const { templateSteps, setTemplateSteps, preDefinedTemplate } = useWhatsapp(
+    (s) => ({
+      templateSteps: s.templateSteps,
+      setTemplateSteps: s.setTemplateSteps,
+      preDefinedTemplate: s.preDefinedTemplate,
+    }),
+  );
 
   const handleTemplateStep = useCallback(
     (step: TemplateSteps) => {
@@ -18,7 +21,7 @@ const MemoStepHeader = () => {
   return (
     <nav aria-label="Progress" className="mb-8 overflow-x-auto">
       <ol className="flex text-sm font-medium">
-        {templateSteps === TemplateSteps.MODIFY && (
+        {preDefinedTemplate ? (
           <li
             onClick={() => handleTemplateStep(TemplateSteps.MODIFY)}
             onKeyDown={() => handleTemplateStep(TemplateSteps.MODIFY)}
@@ -41,8 +44,7 @@ const MemoStepHeader = () => {
             </span>
             <span>Modify template</span>
           </li>
-        )}
-        {templateSteps === TemplateSteps.CREATE_EDIT && (
+        ) : (
           <li
             onClick={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}
             onKeyDown={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}

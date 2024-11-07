@@ -102,6 +102,8 @@ interface whatsappTemplate {
 
   updateVariable: (index: number, value: string) => void;
 
+  updateBodySequenceVariable: (index: number, value: string) => void;
+
   removeVariable: (index: number) => void;
 
   actionType: string;
@@ -147,6 +149,9 @@ interface whatsappTemplate {
 
   bodyVariableSequence: string[];
   setBodyVariableSequence: (bodyVariableSequence: string[]) => void;
+
+  preDefinedTemplate: boolean;
+  setPreDefinedTemplate: (modifyTemplate: boolean) => void;
 }
 
 export const useWhatsapp = create<whatsappTemplate>((set) => {
@@ -207,11 +212,18 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     updateVariable: (index: number, value: string) => {
       set((state) => {
         const newVariables = [...state.bodyVariables];
-        const newBodySequence = [...state.bodyVariableSequence];
         newVariables[index] = value;
-        newBodySequence[index] = value;
         return {
           bodyVariables: newVariables,
+        };
+      });
+    },
+
+    updateBodySequenceVariable: (index: number, value: string) => {
+      set((state) => {
+        const newBodySequence = [...state.bodyVariableSequence];
+        newBodySequence[index] = value;
+        return {
           bodyVariableSequence: newBodySequence,
         };
       });
@@ -331,6 +343,10 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     bodyVariableSequence: [],
     setBodyVariableSequence: (bodyVariableSequence: string[]) =>
       set({ bodyVariableSequence }),
+
+    preDefinedTemplate: false,
+    setPreDefinedTemplate: (modifyTemplate: boolean) =>
+      set({ preDefinedTemplate: modifyTemplate }),
   };
 });
 

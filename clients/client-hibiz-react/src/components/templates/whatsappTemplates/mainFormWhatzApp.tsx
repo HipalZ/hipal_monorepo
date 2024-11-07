@@ -37,7 +37,10 @@ const MemoMainFormWhatzApp = () => {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    if (templateSteps === TemplateSteps.MODIFY) {
+    if (
+      templateSteps === TemplateSteps.MODIFY ||
+      templateSteps === TemplateSteps.CREATE_EDIT
+    ) {
       setStep(Step.SETUP);
       return;
     }

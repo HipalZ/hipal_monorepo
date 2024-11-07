@@ -31,6 +31,7 @@ const MemoContent = () => {
     bodyVariables,
     updateVariable,
     setTemplateName,
+    updateBodySequenceVariable,
   } = useWhatsapp((s) => ({
     headerType: s.headerType,
     setHeaderType: s.setHeaderType,
@@ -47,16 +48,9 @@ const MemoContent = () => {
     bodyVariables: s.bodyVariables,
     updateVariable: s.updateVariable,
     setTemplateName: s.setTemplateName,
+    updateBodySequenceVariable: s.updateBodySequenceVariable,
   }));
-  const optionsForSequence = [
-    "name",
-    "email",
-    "businessName",
-    "phone",
-    "address",
-    "time",
-    "date",
-  ];
+
   const handleAddVariable = () => {
     addVariable();
     setBodyVariableSequence([...bodyVariableSequence, variableOptions[0]]);
@@ -177,10 +171,12 @@ const MemoContent = () => {
           </button>
         </div>
         {bodyVariables.map((variable, index) => (
-          <div key={index.toString()} className="mb-2 space-x-1">
+          <div key={index.toString()} className="mb-2 lg:space-x-1">
             <select
-              value={optionsForSequence[index]}
-              onChange={(e) => updateVariable(index, e.target.value)}
+              value={bodyVariableSequence[index]}
+              onChange={(e) =>
+                updateBodySequenceVariable(index, e.target.value)
+              }
               className="px-3 py-2 border border-gray-300 rounded-md"
             >
               {variableOptions.map((option) => (
@@ -191,15 +187,15 @@ const MemoContent = () => {
             </select>
             <input
               type="text"
-              placeholder="Default Value"
+              placeholder={`enter ${variable} value`}
               value={variable}
               onChange={(e) => updateVariable(index, e.target.value)}
-              className="w-48 px-3 py-2 border border-gray-300 rounded-md"
+              className="px-3 py-2 mt-1 border border-gray-300 rounded-md w-36 md:w-48"
             />
             <button
               type="button"
               onClick={() => handleRemoveVariable(index)}
-              className="px-3 py-2 text-white bg-red-600 rounded-md"
+              className="p-3 ml-1 text-white bg-red-600 rounded-md"
             >
               <IoMdClose />
             </button>

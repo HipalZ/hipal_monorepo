@@ -27,7 +27,7 @@ const MemoTemplatePreview = () => {
   }));
 
   return (
-    <div className="lg:max-h-[600px] w-full max-w-[300px] mx-auto inter relative border-[10px] border-black rounded-[2rem] shadow-xl">
+    <div className="md:max-h-[600px] w-full max-w-[300px] mx-auto inter relative border-[10px] border-black rounded-[2rem] shadow-xl">
       {/* iPhone Notch */}
       <div className="absolute inset-x-0 top-0 h-6 rounded-b-3xl">
         <div className="absolute w-20 h-4 -translate-x-1/2 bg-black rounded-full top-1 left-1/2" />

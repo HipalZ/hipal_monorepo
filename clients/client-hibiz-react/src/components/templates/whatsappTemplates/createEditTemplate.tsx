@@ -1,12 +1,14 @@
 import { memo, lazy, useCallback } from "react";
 import useWhatsapp, {
   ActionType,
+  HeaderInterface,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import { useCreatingTemplate, useEditTemplate } from "@/hooks/useTemplates";
+import { useCreatingTemplate } from "@/hooks/useTemplates";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplate } from "@/components/types/businessData";
+import toast from "react-hot-toast";
 
 const Content = lazy(() => import("./content"));
 const ShowOptionsToSend = lazy(() => import("./showOptionsToSend"));
@@ -33,6 +35,7 @@ const MemoCreateEditTemplate = () => {
     templateSteps,
     setTemplateSteps,
     bodyVariableSequence,
+    imagePreview,
   } = useWhatsapp((s) => ({
     templateName: s.templateName,
     templateType: s.templateType,
@@ -48,10 +51,8 @@ const MemoCreateEditTemplate = () => {
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
     bodyVariableSequence: s.bodyVariableSequence,
+    imagePreview: s.imagePreview,
   }));
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const templateId = searchParams.get("id");
 
   const { createTemplate } = useCreatingTemplate();
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ const MemoCreateEditTemplate = () => {
   const handleSubmitReview = async () => {
     // payload structure for create/edit template
     const payload = {
+      businessId: businessId,
       name: templateName,
       language: "en_US",
       category: templateType,
@@ -68,15 +70,21 @@ const MemoCreateEditTemplate = () => {
           ? [
               {
                 type: "HEADER",
-                format: headerType,
-                text: headerText,
+                format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
+                ...(headerType === HeaderInterface.Text
+                  ? { text: headerText }
+                  : {
+                      example: {
+                        header_handle: [imagePreview],
+                      },
+                    }),
               },
             ]
           : []),
         {
           type: "BODY",
           text: bodyText,
-          ...(variables.length > 0 && { example: { body_text: variables } }),
+          ...(variables.length > 0 && { example: { body_text: [variables] } }),
         },
         ...(footerText
           ? [
@@ -110,14 +118,12 @@ const MemoCreateEditTemplate = () => {
       bodyVariableSequence: bodyVariableSequence,
     };
     console.log(payload);
-    // const response = await createTemplate(payload as WhatsAppTemplate);
-    // if (templateId) {
-    //   response = await editTemplateApi(payload as WhatsAppTemplate);
-    // } else {
-    // }
-    // if (response?.status === 200) {
-    //   return navigate(`/app/business/${businessId}/whatzapp`);
-    // }
+    const response = await createTemplate(payload as WhatsAppTemplate);
+
+    if (response?.status === 200) {
+      toast.success("Template created successfully");
+      // return navigate(`/app/business/${businessId}/whatzapp`);
+    }
   };
 
   const handleNext = useCallback(() => {
