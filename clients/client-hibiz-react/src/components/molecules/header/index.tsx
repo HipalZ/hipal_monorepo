@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@hi/common";
@@ -29,18 +29,18 @@ const Header: React.FC<HeaderProps> = memo(
   }) => {
     const navigate = useNavigate();
 
-    const handleBackClick = () => {
+    const handleBackClick = useCallback(() => {
       if (onBack) {
         onBack();
       } else {
         navigate(-1);
       }
-    };
+    }, [onBack, navigate]);
 
-    const logoutUser = () => {
+    const logoutUser = useCallback(() => {
       localStorage.clear();
       navigate("/");
-    };
+    }, [navigate]);
 
     return (
       <>
@@ -66,16 +66,17 @@ const Header: React.FC<HeaderProps> = memo(
                 color: headingColor ? headingColor : "#000000",
               }}
               onClick={logoutUser}
+              onKeyDown={logoutUser}
               className={cn(
                 centerImage
                   ? "mr-8"
                   : "absolute transform -translate-x-1/2 left-1/2 top-6",
-                "text-2xl font-medium capitalize truncate",
+                "text-2xl font-medium truncate",
                 headingColor && `text-[${headingColor}]`,
                 "max-w-[16ch]",
               )}
             >
-              {title?.toLowerCase()}
+              {title}
             </span>
           </div>
           <div className="absolute text-sm right-6">{rightButton}</div>

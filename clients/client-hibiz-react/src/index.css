@@ -238,6 +238,17 @@ input[type='color' i] {
   box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.1);
 }
 
+.whatzapp_gradient_background {
+	position: sticky;
+	top: 0;
+	background: linear-gradient(45deg, #075E54 25%, #25D366 75%);
+	z-index: 10;
+	width: 100%;
+	max-width: 69rem;
+	margin: 0 auto;
+	box-shadow: 0px 3px 2px rgba(0, 0, 0, 0.1);
+  }
+
 .business_system_cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
