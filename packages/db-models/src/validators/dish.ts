@@ -254,7 +254,7 @@ export const updateDishSchema = z.object({
     .min(10, {
       message: "description must be atleast 10 characters long",
     })
-    .max(200, {
+    .max(400, {
       message: "description must be atmost 200 characters long",
     })
     .optional(),
