@@ -44,3 +44,7 @@ export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userTag";
 export * from "./whatAppTemplate";
+export * from "./whatsAppTemplateAnalytics";
+export * from "./whatsAppTemplateLimit";
+export * from "./whatsAppWallet";
+export * from "./whatsAppWalletHistory";

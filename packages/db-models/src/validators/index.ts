@@ -59,3 +59,7 @@ export * from "./validate_signature";
 export * from "./validate_webhook";
 export * from "./waiterPaymentAlert";
 export * from "./whatAppTemplate";
+export * from "./whatsAppTemplateAnalytics";
+export * from "./whatsAppTemplateLimit";
+export * from "./whatsAppWallet";
+export * from "./whatsAppWalletHistory";

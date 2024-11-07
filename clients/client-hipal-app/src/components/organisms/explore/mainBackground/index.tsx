@@ -2,7 +2,7 @@
 import { memo, useEffect } from "react";
 import img from "@/assets/img/cut.png";
 import type { BusinessDetails } from "@/components/types/businessData";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
@@ -12,6 +12,7 @@ import ShimmerImage from "@/components/atoms/imageshimmer";
 
 const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   const searchParams = useSearchParams();
+  const pathName = usePathname();
   const explore = props?.explore;
   const params = useParams();
   const customLink = params?.businessId as string;
@@ -25,6 +26,9 @@ const MainBackground = (props: { explore: BusinessDetails | undefined }) => {
   useEffect(() => {
     if (tableName !== null) {
       setTableName(tableName || "");
+    }
+    if (pathName.includes("/packaging")) {
+      setTableName("");
     }
   }, [tableName]);
 

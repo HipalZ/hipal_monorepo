@@ -24,9 +24,11 @@ export const whatAppTemplateCategoryEnum = [
 
 export const whatAppTemplateSchema = z.object({
   businessId: ObjectIdSchema,
-  templateId: z.number().max(30),
+  templateId: z.number(),
   date: z.coerce.number().default(Date.now()),
-  variableSequence: z.array(z.string().min(1).max(150)),
+  headerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
+  bodyVariableSequence: z.array(z.string().min(1).max(100)).default([]),
+  footerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   isDeleted: z.boolean().default(false),
 });
 
@@ -130,6 +132,7 @@ export const validateWhatAppTemplateSchema = z.object({
   bodyVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   footerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   buttonVariableSequence: z.array(z.string().min(1).max(100)).default([]),
+  businessId: ObjectIdSchema,
 });
 
 export type WhatAppTemplateType = z.infer<typeof whatAppTemplateSchema>;
