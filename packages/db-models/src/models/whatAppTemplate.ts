@@ -15,7 +15,7 @@ const whatAppTemplateSchema = new mongoose.Schema<WhatAppTemplateType>(
     templateId: {
       type: Number,
       required: true,
-      max: 30,
+
       index: true,
       unique: true,
     },
@@ -25,14 +25,25 @@ const whatAppTemplateSchema = new mongoose.Schema<WhatAppTemplateType>(
       required: true,
       default: Date.now(),
     },
-    variableSequence: {
+    bodyVariableSequence: {
       type: [String],
       required: true,
+      default: [],
+    },
+    footerVariableSequence: {
+      type: [String],
+      required: true,
+      default: [],
     },
 
+    headerVariableSequence: {
+      type: [String],
+      required: true,
+      default: [],
+    },
     isDeleted: {
       type: Boolean,
-      required: false,
+      required: true,
       default: false,
     },
   },
