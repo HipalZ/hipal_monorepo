@@ -303,20 +303,20 @@ const whatsappRouter = new Hono()
           const allCustomersList = [
             {
               name: "YEYE",
-              phone: "919588413799",
+              phone: "9588413799",
             },
-            // {
-            //   name: "sankalesh",
-            //   phone: "8668229890",
-            // },
-            // {
-            //   name: "vamsi",
-            //   phone: "7702605494",
-            // },
-            // {
-            //   name: "abhishek",
-            //   phone: "9160787050",
-            // },
+            {
+              name: "sankalesh",
+              phone: "8668229890",
+            },
+            {
+              name: "vamsi",
+              phone: "7702605494",
+            },
+            {
+              name: "abhishek",
+              phone: "9160787050",
+            },
           ];
 
           // const sendTemplateMessageToCustomer = await axios.post(
@@ -369,11 +369,11 @@ const whatsappRouter = new Hono()
                       parameters: [
                         {
                           type: "text",
-                          text: "Happy Diwali",
+                          text: customer.phone.toString(),
                         },
                         {
                           type: "text",
-                          text: "Wishing you a very happy and prosperous Diwali",
+                          text: businessName.toString(),
                         },
                       ],
                     },
@@ -399,46 +399,55 @@ const whatsappRouter = new Hono()
             // }
           }
         }
+        if (customerPhone) {
+          const sendTemplateMessageToCustomer = await axios.post(
+            `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: customerPhone.toString(),
+              type: "template",
+              template: {
+                name: "festivals_template",
+                language: { code: "en_GB" },
+                components: [
+                  {
+                    type: "HEADER",
+                    parameters: [
+                      {
+                        type: "image",
+                        image: {
+                          link: "http://higssoftware.com/blog/images/happy-diwali.png",
+                        },
+                      },
+                    ],
+                  },
 
-        // const getTemplate = await WhatAppTemplate.findOne({
-        //   businessId,
-        //   templateId,
-        //   isDeleted: false,
-        // });
-
-        // if (!getTemplate) {
-        //   return c.json(
-        //     {
-        //       message: "Template not found",
-        //       err: true,
-        //       data: {},
-        //     },
-        //     404,
-        //   );
-        // }
-
-        const template = await axios.get(
-          `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+                  {
+                    type: "BODY",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: customerPhone.toString(),
+                      },
+                      {
+                        type: "text",
+                        text: businessName.toString(),
+                      },
+                    ],
+                  },
+                ],
+              },
             },
-          },
-        );
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+        }
 
-        // const sendTemplateMessageToCustomer = await axios.post(
-        //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-        //   {
-        //     messaging_product: "whatsapp",
-        //     to: `${customerPhone}`,
-        //     type: "template",
-        //     template: {
-        //       name: "hello_world",
-        //       language: { code: "en_US" },
-        //       components: [],
-        //     },
-        //   },
-
+        // const template = await axios.get(
+        //   `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
         //   {
         //     headers: {
         //       Authorization: `Bearer ${whatsAppConfig.token}`,
@@ -450,7 +459,9 @@ const whatsappRouter = new Hono()
           {
             message: "Template created successfully",
             err: false,
-            data: template.data,
+            data: {
+              success: true,
+            },
           },
           200,
         );
