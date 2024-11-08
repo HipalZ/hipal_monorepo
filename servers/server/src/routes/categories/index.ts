@@ -307,7 +307,7 @@ const categoriesRouter = new Hono()
           businessId,
           isDeleted: false,
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage businessId",
         );
 
         return respond(
@@ -332,7 +332,7 @@ const categoriesRouter = new Hono()
           hierarchy: hierarchy,
           isDeleted: false,
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage businessId",
         );
 
         return respond(
@@ -351,7 +351,7 @@ const categoriesRouter = new Hono()
         })
           .sort({ sequence: 1 })
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence businessId",
           );
 
         return respond(
