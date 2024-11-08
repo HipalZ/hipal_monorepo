@@ -1,5 +1,8 @@
 import { WhatAppTemplate } from "@hi/db-models";
-import { validateWhatAppTemplateSchema } from "@hi/db-models/src/validators";
+import {
+  campaignSchema,
+  validateWhatAppTemplateSchema,
+} from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
@@ -259,6 +262,195 @@ const whatsappRouter = new Hono()
             message: "Template deleted successfully",
             err: false,
             data: {},
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error creating template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
+  .post(
+    "/template/campaign",
+    zValidator("json", campaignSchema),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.MANAGER]),
+    async (c) => {
+      try {
+        const requestData = await c.req.json();
+        const {
+          businessId,
+          templateId,
+          allCustomers,
+          bulkCustomers,
+          customerPhone,
+          groupIds,
+          businessName,
+        } = requestData;
+
+        if (allCustomers) {
+          const allCustomersList = [
+            {
+              name: "YEYE",
+              phone: "919588413799",
+            },
+            // {
+            //   name: "sankalesh",
+            //   phone: "8668229890",
+            // },
+            // {
+            //   name: "vamsi",
+            //   phone: "7702605494",
+            // },
+            // {
+            //   name: "abhishek",
+            //   phone: "9160787050",
+            // },
+          ];
+
+          // const sendTemplateMessageToCustomer = await axios.post(
+          //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+          //   {
+          //     messaging_product: "whatsapp",
+          //     to: `${customerPhone}`,
+          //     type: "template",
+          //     template: {
+          //       name: "hello_world",
+          //       language: { code: "en_US" },
+          //       components: [],
+          //     },
+          //   },
+
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer ${whatsAppConfig.token}`,
+          //     },
+          //   },
+          // );
+
+          for (let i = 0; i < allCustomersList.length; i++) {
+            const customer = allCustomersList[i];
+            console.log("first customer", typeof customer.phone);
+            const sendTemplateMessageToCustomer = await axios.post(
+              `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+              {
+                messaging_product: "whatsapp",
+                to: customer.phone.toString(),
+                type: "template",
+                template: {
+                  name: "festivals_template",
+                  language: { code: "en_GB" },
+                  components: [
+                    {
+                      type: "HEADER",
+                      parameters: [
+                        {
+                          type: "image",
+                          image: {
+                            link: "http://higssoftware.com/blog/images/happy-diwali.png",
+                          },
+                        },
+                      ],
+                    },
+
+                    {
+                      type: "BODY",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: "Happy Diwali",
+                        },
+                        {
+                          type: "text",
+                          text: "Wishing you a very happy and prosperous Diwali",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${whatsAppConfig.token}`,
+                },
+              },
+            );
+
+            // if (!sendTemplateMessageToCustomer) {
+            //   return c.json(
+            //     {
+            //       message: "Error sending template",
+            //       err: true,
+            //       data: {},
+            //     },
+            //     400,
+            //   );
+            // }
+          }
+        }
+
+        // const getTemplate = await WhatAppTemplate.findOne({
+        //   businessId,
+        //   templateId,
+        //   isDeleted: false,
+        // });
+
+        // if (!getTemplate) {
+        //   return c.json(
+        //     {
+        //       message: "Template not found",
+        //       err: true,
+        //       data: {},
+        //     },
+        //     404,
+        //   );
+        // }
+
+        const template = await axios.get(
+          `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        // const sendTemplateMessageToCustomer = await axios.post(
+        //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+        //   {
+        //     messaging_product: "whatsapp",
+        //     to: `${customerPhone}`,
+        //     type: "template",
+        //     template: {
+        //       name: "hello_world",
+        //       language: { code: "en_US" },
+        //       components: [],
+        //     },
+        //   },
+
+        //   {
+        //     headers: {
+        //       Authorization: `Bearer ${whatsAppConfig.token}`,
+        //     },
+        //   },
+        // );
+
+        return c.json(
+          {
+            message: "Template created successfully",
+            err: false,
+            data: template.data,
           },
           200,
         );

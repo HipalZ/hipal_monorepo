@@ -10,6 +10,23 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
+export const campaignSchema = z.object({
+  businessId: ObjectIdSchema,
+  templateId: z.number(),
+  allCustomers: z.boolean().default(false),
+  bulkCustomers: z
+    .array(
+      z.object({
+        name: z.string().min(3).max(100),
+        phone: z.string().min(3).max(100),
+      }),
+    )
+    .default([]),
+  customerPhone: z.string().min(13).max(13).optional(),
+  groupIds: z.array(ObjectIdSchema).default([]),
+  businessName: z.string().min(3).max(100),
+});
+
 export const whatAppTemplateStatusEnum = [
   "APPROVED",
   "PENDING",
