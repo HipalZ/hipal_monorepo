@@ -15,6 +15,7 @@ import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import type { LoyaltyType } from "@hi/db-models/src/validators";
+import { useCategoryStore } from "@/components/store/useCategoryStore";
 ///
 const Business = () => {
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
@@ -42,6 +43,7 @@ const Business = () => {
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
     getLoyaltyData(business);
+    useCategoryStore.persist.clearStorage();
     navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
   };
 
