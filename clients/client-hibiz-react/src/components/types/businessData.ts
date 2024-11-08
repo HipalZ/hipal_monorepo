@@ -814,3 +814,20 @@ export interface UseBannerStylesProps {
   openPreview: boolean;
   selectedBannerType: string;
 }
+
+export interface WhatsAppTemplateComponent {
+  type: "HEADER" | "BODY" | "FOOTER";
+  format?: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
+  text?: string;
+  image?: { link: string };
+}
+
+export interface WhatsAppTemplatePayload {
+  name: string;
+  parameter_format: "POSITIONAL";
+  components: WhatsAppTemplateComponent[];
+  language: string;
+  status: "APPROVED" | "REJECTED" | "PENDING";
+  category: "UTILITY" | "MARKETING" | "TRANSACTIONAL";
+  id: string;
+}

@@ -1,5 +1,4 @@
 "use client";
-
 import { lazy, memo, useCallback, useState } from "react";
 import { BsPlusLg, BsChevronLeft, BsChevronRight } from "react-icons/bs";
 import diwali from "@/assets/whatzapp/diwali.jpg";
@@ -12,46 +11,14 @@ import useWhatsapp, {
   TemplateSteps,
   TemplateType,
 } from "@/components/store/useWhatsapp";
-import { festival } from "@/components/helpers/whatzAppHelpers";
+import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
+import { useFetchTemplates } from "@/hooks/useTemplates";
+import { useQuery } from "@tanstack/react-query";
+import useBusinessData from "@/components/store/useBusinessData";
+import { cn } from "@/components/utils/helper";
 
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
 const WhatsappChat = lazy(() => import("./whatsappbot"));
-
-interface Template {
-  id: string;
-  title: string;
-  image: string;
-  tag: string;
-  isCarousel?: boolean;
-}
-
-const templates: Template[] = [
-  {
-    id: "592109929915038",
-    title: "Festivals",
-    image: diwali,
-    tag: "festivalTemplate",
-  },
-  {
-    id: "2",
-    title: "Coupon",
-    image: couponImage,
-    tag: "couponTemplate",
-  },
-  {
-    id: "3",
-    title: "Loyalty",
-    image: loyaltyImage,
-    tag: "loyaltyTemplate",
-  },
-  {
-    id: "4",
-    title: "New Arrivals",
-    image: newArrivals,
-    tag: "newArrivalsTemplate",
-    isCarousel: true,
-  },
-];
 
 const MemoWhatzappDashboard = () => {
   const {
@@ -62,6 +29,8 @@ const MemoWhatzappDashboard = () => {
     setTemplateData,
     setPreDefinedTemplate,
     setTemplateType,
+    allTemplates,
+    resetTemplateData,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setTemplateSteps: s.setTemplateSteps,
@@ -70,15 +39,17 @@ const MemoWhatzappDashboard = () => {
     setTemplateData: s.setTemplateData,
     setPreDefinedTemplate: s.setPreDefinedTemplate,
     setTemplateType: s.setTemplateType,
+    allTemplates: s.allTemplates,
+    resetTemplateData: s.resetTemplateData,
   }));
+  const businessId = useBusinessData((s) => s.businessData?._id);
 
+  const { getTemplates } = useFetchTemplates();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleTemplateClick = useCallback(
-    (templateTag: string) => {
-      if (templateTag === "festivalTemplate") {
-        setTemplateData(festival);
-      }
+    (template: WhatsAppTemplatePayload) => {
+      setTemplateData(template);
       setStep(Step.CREATE_EDIT);
       setTemplateSteps(TemplateSteps.MODIFY);
       setPreDefinedTemplate(true);
@@ -88,24 +59,38 @@ const MemoWhatzappDashboard = () => {
 
   const handleCreateTemplate = useCallback(
     (type: string) => {
+      // reset old data and navigate inside
+      resetTemplateData();
       setStep(Step.CREATE_EDIT);
       setTemplateSteps(TemplateSteps.CREATE_EDIT);
       setPreDefinedTemplate(false);
       setTemplateType(type);
     },
-    [setStep, setTemplateSteps, setPreDefinedTemplate, setTemplateType],
+    [
+      setStep,
+      setTemplateSteps,
+      setPreDefinedTemplate,
+      setTemplateType,
+      resetTemplateData,
+    ],
   );
 
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % (templates.length + 1));
-  }, []);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % (allTemplates.length + 1));
+  }, [allTemplates]);
 
   const prevSlide = useCallback(() => {
     setCurrentIndex(
       (prevIndex) =>
-        (prevIndex - 1 + templates.length + 1) % (templates.length + 1),
+        (prevIndex - 1 + allTemplates.length + 1) % (allTemplates.length + 1),
     );
-  }, []);
+  }, [allTemplates]);
+
+  useQuery({
+    queryKey: ["templates"],
+    queryFn: getTemplates,
+    enabled: !!businessId && activeTab === Tabs.TEMPLATES,
+  });
 
   return (
     <main className="container relative px-2 mx-auto">
@@ -137,44 +122,52 @@ const MemoWhatzappDashboard = () => {
             Use these templates for sending to your customers instantly
           </p>
           <div className="relative">
-            <div className="overflow-hidden">
+            <div className="overflow-hidden md:overflow-visible">
               <div
-                className="flex transition-transform duration-300 ease-in-out"
+                className="flex gap-4 transition-transform duration-300 ease-in-out flex-nowrap md:grid md:grid-cols-4 xl:grid-cols-6 md:transform-none"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
-                {templates?.map((template) => (
+                {allTemplates?.map((template) => (
                   <div
                     key={template.id}
-                    className="flex-shrink-0 w-full px-2 md:w-1/4 lg:w-1/4"
+                    className="flex-shrink-0 w-full px-2 md:w-full md:px-0"
                   >
                     <section
                       className="overflow-hidden transition-shadow duration-300 bg-white rounded-lg shadow-md cursor-pointer hover:shadow-lg"
-                      onClick={() => handleTemplateClick(template.tag)}
-                      onKeyDown={() => handleTemplateClick(template.tag)}
+                      onClick={() => handleTemplateClick(template)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleTemplateClick(template)
+                      }
+                      aria-label={`Select ${template.name} template`}
                     >
                       <article className="relative aspect-[3/4]">
-                        <article className="absolute top-0 left-0 right-0 p-2">
-                          {template?.isCarousel && (
-                            <span className="px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full">
-                              Carousel
-                            </span>
-                          )}
+                        <article className="absolute top-0 left-0 right-0 px-2 py-1">
+                          <span
+                            className={cn(
+                              "px-2 py-1 text-xs font-semibold text-white rounded-full",
+                              template?.status === "APPROVED"
+                                ? " bg-green-500"
+                                : "bg-red-500",
+                            )}
+                          >
+                            {template?.status}
+                          </span>
                         </article>
                         <img
-                          src={template.image}
-                          alt={template.title}
+                          src={loyaltyImage}
+                          alt={template.name || "Template"}
                           className="object-cover w-full h-full"
                         />
                         <article className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                          <h3 className="text-lg font-semibold text-white">
-                            {template.title}
+                          <h3 className="text-lg font-semibold text-white truncate">
+                            {template.name}
                           </h3>
                         </article>
                       </article>
                     </section>
                   </div>
                 ))}
-                <div className="flex-shrink-0 w-full px-2 md:w-1/4 lg:w-1/4">
+                <div className="flex-shrink-0 w-full px-2 md:w-full md:px-0">
                   <div className="bg-[#FFD4B3] rounded-lg shadow-md overflow-hidden aspect-[3/4] flex items-center justify-center hover:bg-[#FFE4C3] transition-colors duration-300">
                     <button
                       onClick={() =>
@@ -190,8 +183,8 @@ const MemoWhatzappDashboard = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex-shrink-0 w-full px-2 md:w-1/4 lg:w-1/4">
-                  <div className="bg-blue-400 rounded-lg shadow-md overflow-hidden aspect-[3/4] flex items-center justify-center hover:bg-[#FFE4C3] transition-colors duration-300">
+                <div className="flex-shrink-0 w-full px-2 md:w-full md:px-0">
+                  <div className="bg-blue-400 rounded-lg shadow-md overflow-hidden aspect-[3/4] flex items-center justify-center hover:bg-blue-500 transition-colors duration-300">
                     <button
                       onClick={() => handleCreateTemplate(TemplateType.Utility)}
                       type="button"
@@ -208,7 +201,7 @@ const MemoWhatzappDashboard = () => {
             </div>
             <button
               type="button"
-              className="absolute left-0 p-2 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2"
+              className="absolute left-0 p-2 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2 md:hidden"
               onClick={prevSlide}
               aria-label="Previous slide"
             >
@@ -216,7 +209,7 @@ const MemoWhatzappDashboard = () => {
             </button>
             <button
               type="button"
-              className="absolute right-0 p-2 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2"
+              className="absolute right-0 p-2 -translate-y-1/2 bg-white rounded-full shadow-md top-1/2 md:hidden"
               onClick={nextSlide}
               aria-label="Next slide"
             >

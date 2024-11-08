@@ -2,9 +2,16 @@ import { create } from "zustand";
 import { toast } from "react-hot-toast";
 
 interface Group {
+  _id: string;
+  userIds: string[];
   id: string;
   name: string;
   memberCount: number;
+}
+
+interface BulkCustomer {
+  name: string;
+  phone: string;
 }
 
 interface MessageRecipientsState {
@@ -13,12 +20,16 @@ interface MessageRecipientsState {
   customerPhone: string;
   totalAvailableCustomers: number;
   groups: Group[];
+  setGroups: (groups: Group[]) => void;
   uploadedFileName: string | null;
+  setUploadedFileName: (name: string) => void;
+  bulkCustomers: BulkCustomer[];
   handleOptionChange: (option: string) => void;
   handleGroupToggle: (groupId: string) => void;
   setCustomerPhone: (phone: string) => void;
-  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileUpload: (file: File) => void;
   handleRemoveFile: () => void;
+  setBulkCustomers: (customers: BulkCustomer[]) => void;
 }
 
 export const useMessageRecipientsStore = create<MessageRecipientsState>(
@@ -27,13 +38,11 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
     selectedGroups: [],
     customerPhone: "",
     totalAvailableCustomers: 1234,
-    groups: [
-      { id: "1", name: "Regular Customers", memberCount: 150 },
-      { id: "2", name: "VIP Members", memberCount: 50 },
-      { id: "3", name: "New Customers", memberCount: 75 },
-      { id: "4", name: "Loyalty Program", memberCount: 200 },
-    ],
+    groups: [],
+    setGroups: (groups) => set({ groups }),
     uploadedFileName: null,
+    setUploadedFileName: (name) => set({ uploadedFileName: name }),
+    bulkCustomers: [],
     handleOptionChange: (option) => {
       set((state) => {
         const isSelected = state.selectedOptions.includes(option);
@@ -41,8 +50,8 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
           ? state.selectedOptions.filter((item) => item !== option)
           : [...state.selectedOptions, option];
 
-        if (newSelection.length > 2) {
-          toast.error("You can select only 2 options at a time.");
+        if (newSelection.length > 1) {
+          toast.error("You can select only 1 option at a time.");
           return state;
         }
 
@@ -86,13 +95,27 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
       });
     },
     setCustomerPhone: (phone) => set({ customerPhone: phone }),
-    handleFileUpload: (event) => {
-      const file = event.target.files?.[0];
-      if (file) {
-        set({ uploadedFileName: file.name });
-        toast.success(`${file.name} has been successfully uploaded.`);
-      }
+    handleFileUpload: (file) => {
+      set({ uploadedFileName: file.name });
+      toast.success(`${file.name} has been successfully uploaded.`);
     },
-    handleRemoveFile: () => set({ uploadedFileName: null }),
+    handleRemoveFile: () => set({ uploadedFileName: null, bulkCustomers: [] }),
+    setBulkCustomers: (customers) => {
+      set((state) => {
+        const newSelectedOptions = [...state.selectedOptions];
+        if (!newSelectedOptions.includes("bulkUploadCustomers")) {
+          newSelectedOptions.push("bulkUploadCustomers");
+        }
+        return {
+          bulkCustomers: customers,
+          selectedOptions: newSelectedOptions,
+          totalAvailableCustomers:
+            state.totalAvailableCustomers + customers.length,
+        };
+      });
+      toast.success(
+        `${customers.length} customers have been added to bulk upload.`,
+      );
+    },
   }),
 );

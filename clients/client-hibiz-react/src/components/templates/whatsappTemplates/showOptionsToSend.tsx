@@ -1,5 +1,6 @@
 "use client";
-import { Fragment, memo } from "react";
+
+import { type ChangeEvent, Fragment, memo, useCallback, useRef } from "react";
 import {
   Disclosure,
   DisclosureButton,
@@ -16,6 +17,12 @@ import {
 } from "react-icons/bi";
 import { FiSend, FiUpload, FiUserPlus, FiUsers } from "react-icons/fi";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import {
+  useBulkUploadContacts,
+  useGetAllGroups,
+} from "@/components/helpers/whatzAppHelpers";
+import { useQuery } from "@tanstack/react-query";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const options = [
   { value: "allCustomers", label: "All Customers", icon: FiUsers },
@@ -39,12 +46,29 @@ const MemoShowOptionsToSend = () => {
     handleOptionChange,
     handleGroupToggle,
     setCustomerPhone,
-    handleFileUpload,
     handleRemoveFile,
   } = useMessageRecipientsStore();
 
+  const businessId = useBusinessData((s) => s.businessData?._id);
+
+  const fileInputRef = useRef(null);
+  const { fetchAllGroups } = useGetAllGroups();
+  const { mutate: uploadContacts } = useBulkUploadContacts();
+
+  const bulkUpload = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, [fileInputRef]);
+
+  useQuery({
+    queryKey: ["groups", businessId],
+    queryFn: fetchAllGroups,
+    enabled: !!businessId,
+  });
+
   return (
-    <div className="p-6 space-y-8 bg-gray-100 lg:mx-auto">
+    <div className="space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">Message Recipients</h2>
       {options.map(({ value, label, icon: Icon }) => (
         <Disclosure key={value}>
@@ -82,14 +106,11 @@ const MemoShowOptionsToSend = () => {
                 leaveTo="transform opacity-0 scale-95"
               >
                 <DisclosurePanel className="border-t border-gray-200">
-                  <div className="p-4 text-sm text-gray-500">
+                  <div className="text-sm text-gray-500">
                     {value === "allCustomers" && (
                       <div className="p-4 text-center rounded-lg bg-gray-50">
                         <p className="text-sm text-gray-600">
-                          Total Available Customers
-                        </p>
-                        <p className="text-3xl font-bold text-green-600">
-                          {totalAvailableCustomers}
+                          All the customers of your business
                         </p>
                       </div>
                     )}
@@ -142,18 +163,30 @@ const MemoShowOptionsToSend = () => {
                               htmlFor="file-upload"
                               className="cursor-pointer"
                             >
-                              <div className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-100">
+                              <button
+                                type="button"
+                                onClick={bulkUpload}
+                                className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-100"
+                              >
                                 <BiUpload className="w-8 h-8 mb-2 text-gray-400" />
                                 <p className="text-sm text-gray-600">
                                   Upload your Excel file here
                                 </p>
-                              </div>
+                              </button>
                               <input
                                 id="file-upload"
                                 type="file"
                                 className="hidden"
                                 accept=".xlsx,.xls"
-                                onChange={handleFileUpload}
+                                ref={fileInputRef}
+                                onChange={(
+                                  e: ChangeEvent<HTMLInputElement>,
+                                ) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    uploadContacts(file);
+                                  }
+                                }}
                               />
                             </label>
                           )}
@@ -161,13 +194,13 @@ const MemoShowOptionsToSend = () => {
                       </div>
                     )}
                     {value === "sendCustomer" && (
-                      <div className="flex gap-2 p-4 rounded-lg bg-gray-50">
+                      <div className="flex gap-2 p-2 rounded-lg bg-gray-50">
                         <input
                           type="tel"
                           value={customerPhone}
                           onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="Enter customer phone number"
-                          className="flex-grow px-3 py-2 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          placeholder="Enter customer phone..."
+                          className="w-[90%] py-2 text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
                         <button
                           type="button"
@@ -178,45 +211,59 @@ const MemoShowOptionsToSend = () => {
                         </button>
                       </div>
                     )}
-                    {value === "addGroups" && (
-                      <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-gray-50">
-                        {groups.map((group) => (
-                          <div
-                            key={group.id}
-                            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedGroups.includes(group.id)
-                                ? "border-green-500 bg-green-50"
-                                : "border-gray-200 hover:border-green-300"
-                            }`}
-                          >
-                            <div className="flex items-center mb-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedGroups.includes(group.id)}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  handleGroupToggle(group.id);
-                                }}
-                                className="w-4 h-4 mr-2 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                              />
-                              <label
-                                htmlFor={`group-${group.id}`}
-                                className="flex-grow cursor-pointer"
-                                onClick={() => handleGroupToggle(group.id)}
-                                onKeyDown={() => handleGroupToggle(group.id)}
-                              >
-                                <h3 className="font-medium text-gray-900">
-                                  {group.name}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                  {group.memberCount} members
-                                </p>
-                              </label>
+                    <div className="w-full max-w-md mx-auto">
+                      {value === "addGroups" && (
+                        <div className="p-4 rounded-lg bg-gray-50 max-h-[400px] overflow-y-auto grid grid-cols-2 gap-4">
+                          {groups.map((group) => (
+                            <div
+                              key={group._id}
+                              className={`p-2 overflow-hidden flex flex-col justify-center rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedGroups.includes(group._id)
+                                  ? "border-green-500 bg-green-50"
+                                  : "border-gray-200 hover:border-green-300"
+                              }`}
+                              onClick={(e) => {
+                                if (e.target.type !== "checkbox") {
+                                  handleGroupToggle(group._id);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleGroupToggle(group._id);
+                                }
+                              }}
+                              tabIndex={0}
+                              role="checkbox"
+                              aria-checked={selectedGroups.includes(group._id)}
+                            >
+                              <div className="flex items-center mb-2">
+                                <input
+                                  type="checkbox"
+                                  id={`group-${group._id}`}
+                                  checked={selectedGroups.includes(group._id)}
+                                  onChange={() => handleGroupToggle(group._id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-4 h-4 mr-2 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                />
+                                <label
+                                  title={group.name}
+                                  htmlFor={`group-${group._id}`}
+                                  className="flex-grow cursor-pointer"
+                                >
+                                  <h3 className="font-medium text-gray-900 truncate">
+                                    {group.name}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {group?.userIds?.length} members
+                                  </p>
+                                </label>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </DisclosurePanel>
               </Transition>

@@ -75,7 +75,7 @@ const MemoTemplatePreview = () => {
             />
           )}
           <div className="p-4 space-y-2">
-            {headerText && (
+            {headerType === HeaderInterface.Text && (
               <h3 className="text-lg font-semibold">{headerText}</h3>
             )}
             {bodyText && (

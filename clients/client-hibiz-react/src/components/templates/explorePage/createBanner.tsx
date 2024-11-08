@@ -316,6 +316,10 @@ const MemoCreateBanner = () => {
               text: "Crop",
               onClick: () => handleCrop(cropperRef),
             },
+            {
+              text: "Cancel",
+              onClick: () => setShowCropper(false),
+            },
           ]}
         />
       </PopUp>

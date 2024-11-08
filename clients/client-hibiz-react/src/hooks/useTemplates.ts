@@ -2,8 +2,9 @@ import axios from "@/axios";
 import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp from "@/components/store/useWhatsapp";
 import type { WhatsAppTemplate } from "@/components/types/businessData";
-import { WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
+import { APP_ID, WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
 import { apiRpc } from "@hi/common";
+import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -166,8 +167,125 @@ export const useCreatingTemplate = () => {
       json: payload,
     });
     const response = await res.json();
-    console.log("response", response);
+    return response;
   };
 
   return { createTemplate };
+};
+
+export const useFetchTemplates = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setAllTemplates } = useWhatsapp((s) => ({
+    setAllTemplates: s.setAllTemplates,
+  }));
+  const getTemplates = async () => {
+    const res = await apiRpc.whatsapp.template.all[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    setAllTemplates(response?.data);
+    return response?.data || {};
+  };
+  return { getTemplates };
+};
+
+export const useMediaUpload = () => {
+  const { imageFiles } = useWhatsapp((s) => ({
+    imageFiles: s.imageFiles,
+  }));
+
+  const uploadMedia = async () => {
+    if (!imageFiles) return toast.error("No image files to upload");
+    console.log("typeof size", typeof imageFiles?.size);
+    // Step 1: Start upload session
+    try {
+      const sessionResponse = await axios({
+        method: "POST",
+        url: `https://graph.facebook.com/v21.0/${APP_ID}/uploads`,
+        params: {
+          file_name: imageFiles.name,
+          file_length: imageFiles.size,
+          file_type: imageFiles.type,
+          access_token: WHATSAPP_TOKEN,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const uploadSessionId = sessionResponse.data.id.split(":")[1];
+      // Step 2: Upload the file
+
+      const uploadResponse = await axios({
+        method: "POST",
+        url: "http://localhost:4500/whatsapp/template/uploadFile",
+        data: {
+          file_name: imageFiles.name,
+          file_length: imageFiles.sizetoString(),
+          file_type: imageFiles.type,
+          uploadSessionId,
+        },
+      });
+
+      // const uploadResponse = await axios({
+      //   method: "POST",
+      //   url: `http://localhost:4500/whatsapp/template/uploadFile`,
+      //   data: formData,
+      //   headers: {
+      //     Authorization: `OAuth ${WHATSAPP_TOKEN}`,
+      //     file_offset: "0",
+      //   },
+      // });
+
+      console.log("uploadResponse", uploadResponse);
+      return uploadResponse.h;
+    } catch (error) {
+      console.log("response", error.response);
+      toast.error(error.response?.data?.error?.message || "Upload failed");
+    }
+  };
+
+  return { uploadMedia };
+};
+
+export const useEditingTemplate = () => {
+  const editTemplate = useCallback(async (payload: any) => {
+    const res = await apiRpc.whatsapp.template[":templateid"].$put({
+      json: payload,
+      param: {
+        templateid: payload?.templateId,
+      },
+    });
+    const response = await res.json();
+    console.log("response", response);
+    return response;
+  }, []);
+
+  return { editTemplate };
+};
+
+export const useSendMessages = () => {
+  const sendMessage = useCallback(async (payload: any) => {
+    const res = await apiRpc.whatsapp.template.campaign.$post({
+      json: payload,
+    });
+    const response = await res.json();
+    return response;
+  }, []);
+
+  return { sendMessage };
+};
+
+export const useSendOptions = () => {
+  const sendOptions = useCallback(async (payload: any) => {
+    const res = await apiRpc.whatsapp.template.campaign.$post({
+      json: payload,
+    });
+    const response = await res.json();
+    console.log("response", response);
+    return response;
+  }, []);
+
+  return { sendOptions };
 };

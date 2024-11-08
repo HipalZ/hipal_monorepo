@@ -19,7 +19,7 @@ const MemoStepHeader = () => {
   );
 
   return (
-    <nav aria-label="Progress" className="mb-8 overflow-x-auto">
+    <nav aria-label="Progress" className="pb-4 overflow-x-auto md:pb-0">
       <ol className="flex text-sm font-medium">
         {preDefinedTemplate ? (
           <li

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import useBusinessData from "./useBusinessData";
+import type { WhatsAppTemplatePayload } from "../types/businessData";
 
 export enum Step {
   SETUP = "setup",
@@ -152,6 +153,29 @@ interface whatsappTemplate {
 
   preDefinedTemplate: boolean;
   setPreDefinedTemplate: (modifyTemplate: boolean) => void;
+
+  showCropper: boolean;
+  setShowCropper: (showCropper: boolean) => void;
+
+  cropping: {
+    image: any;
+    type: string;
+  };
+
+  setCropping: (cropping: { image: any; type: string }) => void;
+
+  imageFiles: File | null;
+
+  setImageFiles: (imageFiles: File | null) => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+
+  allTemplates: WhatsAppTemplatePayload[];
+  setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) => void;
+
+  isButtonEnabled: boolean;
+  setIsButtonEnabled: (isButtonEnabled: boolean) => void;
 }
 
 export const useWhatsapp = create<whatsappTemplate>((set) => {
@@ -240,7 +264,7 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     actionType: ActionType.VisitWebsite,
     setActionType: (actionType: string) => set({ actionType }),
 
-    buttonText: "",
+    buttonText: "Visit US",
     setButtonText: (buttonText: string) => set({ buttonText }),
 
     urlType: "Static",
@@ -316,6 +340,7 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
         phoneNumber: "",
         templateId: "",
       });
+      console.log("resetTemplateData");
     },
 
     notifications: [
@@ -347,6 +372,29 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     preDefinedTemplate: false,
     setPreDefinedTemplate: (modifyTemplate: boolean) =>
       set({ preDefinedTemplate: modifyTemplate }),
+
+    showCropper: false,
+    setShowCropper: (showCropper: boolean) => set({ showCropper }),
+
+    cropping: {
+      image: null,
+      type: null,
+    },
+
+    setCropping: (cropping) => set(() => ({ cropping })),
+
+    imageFiles: null,
+    setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
+
+    isLoading: false,
+    setIsLoading: (loading) => set({ isLoading: loading }),
+
+    allTemplates: [],
+    setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) =>
+      set({ allTemplates }),
+
+    isButtonEnabled: false,
+    setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
   };
 });
 
