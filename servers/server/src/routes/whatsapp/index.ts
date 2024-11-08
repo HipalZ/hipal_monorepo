@@ -369,7 +369,7 @@ const whatsappRouter = new Hono()
                       parameters: [
                         {
                           type: "text",
-                          text: customer.phone.toString(),
+                          text: customer.name.toString(),
                         },
                         {
                           type: "text",
