@@ -546,6 +546,106 @@ const whatsappRouter = new Hono()
             },
           );
         }
+        if (groupIds.length > 0) {
+          const groupIdsList = [
+            {
+              name: "Datta",
+              phone: "9588413799",
+            },
+            {
+              name: "sankalesh",
+              phone: "8668229890",
+            },
+            {
+              name: "Vamsi",
+              phone: "7702605494",
+            },
+            {
+              name: "Abhishek",
+              phone: "9160787050",
+            },
+          ];
+
+          // const sendTemplateMessageToCustomer = await axios.post(
+          //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+          //   {
+          //     messaging_product: "whatsapp",
+          //     to: `${customerPhone}`,
+          //     type: "template",
+          //     template: {
+          //       name: "hello_world",
+          //       language: { code: "en_US" },
+          //       components: [],
+          //     },
+          //   },
+
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer ${whatsAppConfig.token}`,
+          //     },
+          //   },
+          // );
+
+          for (let i = 0; i < groupIdsList.length; i++) {
+            const customer = groupIdsList[i];
+            console.log("first customer", typeof customer.phone);
+            const sendTemplateMessageToCustomer = await axios.post(
+              `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+              {
+                messaging_product: "whatsapp",
+                to: customer.phone.toString(),
+                type: "template",
+                template: {
+                  name: "festivals_template",
+                  language: { code: "en_GB" },
+                  components: [
+                    {
+                      type: "HEADER",
+                      parameters: [
+                        {
+                          type: "image",
+                          image: {
+                            link: "http://higssoftware.com/blog/images/happy-diwali.png",
+                          },
+                        },
+                      ],
+                    },
+
+                    {
+                      type: "BODY",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: customer.name.toString(),
+                        },
+                        {
+                          type: "text",
+                          text: businessName.toString(),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${whatsAppConfig.token}`,
+                },
+              },
+            );
+
+            // if (!sendTemplateMessageToCustomer) {
+            //   return c.json(
+            //     {
+            //       message: "Error sending template",
+            //       err: true,
+            //       data: {},
+            //     },
+            //     400,
+            //   );
+            // }
+          }
+        }
 
         // const template = await axios.get(
         //   `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
