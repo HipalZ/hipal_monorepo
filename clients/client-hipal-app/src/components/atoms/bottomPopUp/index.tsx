@@ -4,7 +4,19 @@ import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
 import { createPortal } from "react-dom"; // Import createPortal
 
-const BottomPopUp = ({ children, show, onClose, hide, linearGradTheme }) => {
+const BottomPopUp = ({
+  children,
+  show,
+  onClose,
+  hide,
+  linearGradTheme,
+}: {
+  children: React.ReactNode;
+  show: boolean;
+  onClose: () => void;
+  hide?: boolean;
+  linearGradTheme?: boolean;
+}) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
     enter: { transform: "translateY(0%)", opacity: 1 },

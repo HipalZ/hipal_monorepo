@@ -37,12 +37,14 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
           <div
             className={`w-full font-medium mt-1 
         ${dishData?.name?.length > 30 ? "text-lg" : "text-xl"}
-        ${isAvailable ? " -mt-1" : "mt-2"}`}
+        ${isAvailable ? "mt-4" : "mt-6"}`}
           >
             {dishData?.name || ""}
           </div>
           <div className="my-2">
-            <span className="text-base">₹ {price}</span>
+            <span className="text-base">
+              ₹ {Number(price).toLocaleString("en-IN")}
+            </span>
           </div>
         </div>
         {dishData?.description && (

@@ -19,7 +19,6 @@ const Terms = () => {
 
   const getOutletInfo = async () => {
     const data = await termsApi.all(businessId);
-    console.log(data);
     return data.business;
   };
 

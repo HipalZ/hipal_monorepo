@@ -86,7 +86,7 @@ const MemoSubTypes = (props: ISubTypes) => {
   return (
     <>
       {outletInfo?.outLetType === "OTHER" ? (
-        <section className="pb-2 overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
+        <section className="pb-1 overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
           {subTypes.length > 0 && (
             <Splide
               ref={splideRef}

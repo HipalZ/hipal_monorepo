@@ -2510,3 +2510,21 @@ input[type='password'] {
   .whatzapp-color{
 	background-color:'#075E54'
   }
+
+
+
+  .splide__arrow {
+	width: 28px !important;
+	height: 64px !important;
+	border-radius: 1rem !important;
+	background-color: #ffffff !important;
+  }
+  .splide__arrow:focus {
+	outline: none;
+  }
+  .splide__arrow--prev {
+	left: 0.5rem !important;
+  }
+  .splide__arrow--next {
+	right: 0.5rem !important;
+  }
