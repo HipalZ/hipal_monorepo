@@ -716,11 +716,82 @@ const whatsappRouter = new Hono()
           },
         );
 
+        let templateids = [];
+
+        let totalSent = 0;
+        let totalRead = 0;
+        let totalDelivered = 0;
+        let totalClicked = 0;
+        let totalCost = 0;
+        console.log(
+          "getWhatAppTemplate.data.data[0].data_points",
+          getWhatAppTemplate.data.data[0].data_points,
+        );
+
+        for (let i = 0; i < getWhatAppTemplate.data.data[0].data_points; i++) {
+          const templateid =
+            getWhatAppTemplate.data.data[0].data_points[i].template_id;
+
+          console.log("templateid", templateid);
+          const anaLyticsObject =
+            getWhatAppTemplate.data.data[0].data_points[i];
+
+          const getWhatAppTemplateName = await axios.get(
+            `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          let calculateTotalclicked = 0;
+
+          for (let i = 0; i < anaLyticsObject.clicked; i++) {
+            calculateTotalclicked += anaLyticsObject.clicked[i].count || 0;
+          }
+
+          let calculateTotalcost = 0;
+
+          for (let i = 0; i < anaLyticsObject.cost; i++) {
+            calculateTotalcost += anaLyticsObject.cost[i].value || 0;
+          }
+
+          const newObj = {
+            templateName: getWhatAppTemplateName.data.name,
+            sent: anaLyticsObject.sent,
+            read: anaLyticsObject.read,
+            delivered: anaLyticsObject.delivered,
+            clicked: calculateTotalclicked,
+            cost: calculateTotalcost,
+          };
+
+          console.log("newObj", newObj);
+
+          templateids.push(newObj);
+
+          totalSent += anaLyticsObject.sent;
+          totalRead += anaLyticsObject.read;
+          totalDelivered += anaLyticsObject.delivered;
+          totalClicked += calculateTotalclicked;
+          totalCost += calculateTotalcost;
+        }
+
+        const totalObj = {
+          totalSent,
+          totalRead,
+          totalDelivered,
+          totalClicked,
+          totalCost,
+        };
+
+        templateids.push(totalObj);
+
         return c.json(
           {
             message: "fetching all templates",
             err: false,
-            data: getWhatAppTemplate.data,
+            data: templateids,
           },
           200,
         );
