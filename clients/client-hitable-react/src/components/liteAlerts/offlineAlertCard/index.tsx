@@ -4,14 +4,17 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { Alert } from "@/components/types/hiClientzData";
 import {
+  cn,
   timestampToDateTime,
   useErrorHandling,
 } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
-import { memo } from "react";
+import { FiCopy } from "react-icons/fi";
+import { memo, useCallback, useState } from "react";
 import { CiGlobe } from "react-icons/ci";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { PiCoinsFill } from "react-icons/pi";
+import { MdOutlineCall } from "react-icons/md";
 
 interface IOfflineProp {
   offlineAlertData: Alert[];
@@ -19,6 +22,7 @@ interface IOfflineProp {
 
 const OfflineAlertCard = (props: IOfflineProp) => {
   const { errorText } = useErrorHandling();
+  const [numberTick, setNumberTick] = useState(false);
   const { offlineAlertData } = props;
   const {
     removeOfflineAlert,
@@ -58,6 +62,29 @@ const OfflineAlertCard = (props: IOfflineProp) => {
       console.error("Error removing alert:", error);
     }
   };
+
+  const copyText = useCallback((id: string, value?: string) => {
+    let text: string;
+    if (value) {
+      text = value;
+    } else {
+      text = document.querySelector(id)?.textContent || "";
+    }
+
+    const sanitizedText = text.replace(/[₹]/g, "");
+    navigator.clipboard
+      .writeText(sanitizedText)
+      .then(() => {
+        setNumberTick(true);
+        setTimeout(() => {
+          setNumberTick(false);
+        }, 3000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  }, []);
+
   return (
     <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? (
@@ -65,7 +92,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
           return (
             <section key={alert?._id}>
               {alert?.alertType === "WAITER" ? (
-                <div className="mx-4 my-4 h-[7rem] rounded-xl bg-white p-4">
+                <div className="mx-4 my-4 min-h-[9rem] rounded-xl bg-white p-3">
                   <section className="relative flex justify-between mb-2">
                     <article className="flex w-[8rem] items-center rounded-full bg-[#ffe9cf] px-2">
                       <img src={callwaiter} alt="callwaiter" loading="lazy" />
@@ -84,13 +111,34 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                     />
                   </section>
                   <div className="flex justify-between">
-                    <section>
-                      <article className="ml-2 space-y-1">
-                        <h1 className="text-base">
-                          User : {alert?.userId?.name || "Customer"}
-                        </h1>
-                        <p>{alert?.message}</p>
+                    <section className="ml-2 space-y-1">
+                      <h1 className="text-base">
+                        User: {alert?.userId?.name || "Customer"}
+                      </h1>
+                      <article className="flex items-center space-x-4">
+                        <h1>Phone: {alert?.userId?.phone || "NA"}</h1>
+                        <span
+                          className={cn(
+                            "rounded-2xl",
+                            numberTick
+                              ? "bg-green-500/20 text-green-500"
+                              : "bg-[#f3eeff] text-[#7f46ff]",
+                          )}
+                          onClick={() =>
+                            copyText("#phone", alert?.userId?.phone)
+                          }
+                          style={{ cursor: "pointer" }}
+                        >
+                          <FiCopy size={16} />
+                        </span>
+                        <a
+                          href={`tel:+91${alert?.userId?.phone}`}
+                          className="flex items-center rounded-full text-[#6f2eff]"
+                        >
+                          <MdOutlineCall size={16} />
+                        </a>
                       </article>
+                      <p>{alert?.message}</p>
                     </section>
                     <section className="text-right">
                       <h1>Table: {alert?.tableName}</h1>
@@ -98,7 +146,7 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 mx-4 my-4 bg-white rounded-xl">
+                <div className="p-3 mx-4 my-4 bg-white rounded-xl">
                   <section className="flex items-center justify-between mb-2">
                     <article className="flex w-[8.5rem] items-center rounded-full bg-[#ffe9cf] px-2">
                       <span>
