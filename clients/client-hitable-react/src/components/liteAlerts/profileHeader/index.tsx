@@ -60,7 +60,7 @@ const ProfileHeader = () => {
           <MenuItem>
             {({ active }) => (
               <a
-                href="https://t-static.blr1.digitaloceanspaces.com/hiclient-1.1.3.apk"
+                href="https://t-static.blr1.digitaloceanspaces.com/app-debug%20(4).apk"
                 className={cn(defaultClass, active ? "bg-gray-100" : "")}
               >
                 <FiDownload className="mr-2 text-blue-500" size={20} /> Download
