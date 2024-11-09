@@ -681,6 +681,64 @@ const whatsappRouter = new Hono()
         );
       }
     },
+  )
+  .get(
+    "/template/analytics/:businessId",
+
+    zValidator(
+      "query",
+      z.object({
+        start: z.string(),
+        end: z.string(),
+
+        template_ids: z.array(z.string()).optional(),
+      }),
+    ),
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      try {
+        const { start, end, granularity, metric_types, template_ids } =
+          c.req.query();
+        const { businessId } = c.req.param();
+
+        const getWhatAppTemplate = await axios.get(
+          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=1730979600&end=1731152438&granularity=daily&metric_types=cost,clicked,delivered,read,sent&template_ids=[592109929915038,959276612888339,1910900282755745,908434461247710,1669985623955620,8556358441124513,3623971124416248]`,
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        return c.json(
+          {
+            message: "fetching all templates",
+            err: false,
+            data: getWhatAppTemplate.data,
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error creating template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
   );
 
 export default whatsappRouter;
