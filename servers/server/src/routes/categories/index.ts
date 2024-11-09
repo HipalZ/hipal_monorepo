@@ -370,6 +370,7 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
         }).populate({
           path: "dishIds",
+          match: { businessId: businessId },
           populate: [
             { path: "addOnIds" },
             {
