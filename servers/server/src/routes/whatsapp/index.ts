@@ -723,12 +723,13 @@ const whatsappRouter = new Hono()
         let totalDelivered = 0;
         let totalClicked = 0;
         let totalCost = 0;
-        console.log(
-          "getWhatAppTemplate.data.data[0].data_points",
-          getWhatAppTemplate.data.data[0].data_points,
-        );
 
-        for (let i = 0; i < getWhatAppTemplate.data.data[0].data_points; i++) {
+        for (
+          let i = 0;
+          i < getWhatAppTemplate.data.data[0].data_points.length;
+          i++
+        ) {
+          console.log("getWhatAppTemplate.data.data[0].data_points", 1);
           const templateid =
             getWhatAppTemplate.data.data[0].data_points[i].template_id;
 
@@ -777,6 +778,28 @@ const whatsappRouter = new Hono()
           totalCost += calculateTotalcost;
         }
 
+        // Function to merge templates by name
+        const mergeTemplates = (templateids) => {
+          const result = {};
+
+          templateids.forEach((item) => {
+            if (!result[item.templateName]) {
+              result[item.templateName] = { ...item };
+            } else {
+              result[item.templateName].sent += item.sent;
+              result[item.templateName].read += item.read;
+              result[item.templateName].delivered += item.delivered;
+              result[item.templateName].clicked += item.clicked;
+              result[item.templateName].cost += item.cost;
+            }
+          });
+
+          return Object.values(result);
+        };
+
+        // Call the function and print the result
+        const mergedData = mergeTemplates(templateids);
+
         const totalObj = {
           totalSent,
           totalRead,
@@ -785,13 +808,13 @@ const whatsappRouter = new Hono()
           totalCost,
         };
 
-        templateids.push(totalObj);
+        mergedData.push(totalObj);
 
         return c.json(
           {
             message: "fetching all templates",
             err: false,
-            data: templateids,
+            data: mergedData,
           },
           200,
         );
