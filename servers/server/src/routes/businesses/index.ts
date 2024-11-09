@@ -667,8 +667,6 @@ const businessesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.param();
-      console.log("from fro", businessId);
-
       const existingTheme = await Theme.findOne({ businessId: businessId });
       if (!existingTheme) return respond(c, "theme not found", true, 404, {});
 
@@ -822,6 +820,22 @@ const businessesRouter = new Hono()
         status: 200,
         error: false,
       });
+    },
+  )
+  .get(
+    "/business_theme/:customLink",
+    zValidator(
+      "param",
+      z.object({
+        customLink: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { customLink } = c.req.param();
+      const existingTheme = await Theme.findOne({ customLink: customLink });
+      if (!existingTheme) return respond(c, "theme not found", true, 404, {});
+
+      return respond(c, "theme found", false, 200, existingTheme);
     },
   );
 
