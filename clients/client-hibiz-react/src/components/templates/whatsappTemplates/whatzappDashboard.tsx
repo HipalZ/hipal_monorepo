@@ -1,10 +1,7 @@
 "use client";
 import { lazy, memo, useCallback, useState } from "react";
 import { BsPlusLg, BsChevronLeft, BsChevronRight } from "react-icons/bs";
-import diwali from "@/assets/whatzapp/diwali.jpg";
-import couponImage from "@/assets/whatzapp/coupon.webp";
 import loyaltyImage from "@/assets/whatzapp/loyaltyImage.jpg";
-import newArrivals from "@/assets/whatzapp/newarrivals.jpeg";
 import useWhatsapp, {
   Step,
   Tabs,

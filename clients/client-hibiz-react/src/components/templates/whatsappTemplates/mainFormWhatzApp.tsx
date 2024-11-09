@@ -24,6 +24,7 @@ const MemoMainFormWhatzApp = () => {
     setNotEditPopup,
     templateSteps,
     setTemplateSteps,
+    preDefinedTemplate,
   } = useWhatsapp((s) => ({
     step: s.step,
     setStep: s.setStep,
@@ -31,29 +32,40 @@ const MemoMainFormWhatzApp = () => {
     setNotEditPopup: s.setNotEditPopup,
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
+    preDefinedTemplate: s.preDefinedTemplate,
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    if (
-      templateSteps === TemplateSteps.MODIFY ||
-      templateSteps === TemplateSteps.CREATE_EDIT
-    ) {
-      setStep(Step.SETUP);
-      return;
+    switch (templateSteps) {
+      case TemplateSteps.MODIFY:
+      case TemplateSteps.CREATE_EDIT:
+        setStep(Step.SETUP);
+        break;
+      case TemplateSteps.SHOW_OPTIONS:
+        if (preDefinedTemplate) {
+          setTemplateSteps(TemplateSteps.MODIFY);
+        } else {
+          setTemplateSteps(TemplateSteps.CREATE_EDIT);
+        }
+        break;
+      case TemplateSteps.SEND:
+        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+        break;
+      default:
+        navigate(`/app/business/${businessData?._id}/`);
+        break;
     }
-    if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
-      setTemplateSteps(TemplateSteps.MODIFY);
-      return;
-    }
-    if (templateSteps === TemplateSteps.SEND) {
-      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-      return;
-    }
-    navigate(`/app/business/${businessData?._id}/`);
-  }, [setStep, templateSteps, setTemplateSteps, navigate, businessData]);
+  }, [
+    setStep,
+    templateSteps,
+    setTemplateSteps,
+    navigate,
+    businessData,
+    preDefinedTemplate,
+  ]);
 
   return (
     <div className="mx-auto">

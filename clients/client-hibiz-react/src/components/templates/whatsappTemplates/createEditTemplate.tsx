@@ -4,11 +4,7 @@ import useWhatsapp, {
   HeaderInterface,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import {
-  useCreatingTemplate,
-  useEditingTemplate,
-  useSendOptions,
-} from "@/hooks/useTemplates";
+import { useCreatingTemplate, useEditingTemplate } from "@/hooks/useTemplates";
 import useBusinessData from "@/components/store/useBusinessData";
 import type {
   CropperRef,
@@ -19,8 +15,9 @@ import PopUp from "@/components/atom/popUp";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
 import CallOfAction from "./callOfAction";
-import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import TemplateButtons from "./templateButtons";
 
+const SuccessPopup = lazy(() => import("./successPopup"));
 const Content = lazy(() => import("./content"));
 const ShowOptionsToSend = lazy(() => import("./showOptionsToSend"));
 const StepHeader = lazy(() => import("./stepHeader"));
@@ -30,8 +27,7 @@ const PreDefinedContent = lazy(() => import("./preDefinedContent"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateEditTemplate = () => {
-  const { businessName, businessId } = useBusinessData((s) => ({
-    businessName: s.businessData?.name,
+  const { businessId } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
   }));
 
@@ -55,6 +51,8 @@ const MemoCreateEditTemplate = () => {
     cropping,
     imageFiles,
     templateId,
+    showSuccessPopup,
+    setShowSuccessPopup,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -75,10 +73,9 @@ const MemoCreateEditTemplate = () => {
     setShowCropper: s.setShowCropper,
     cropping: s.cropping,
     imageFiles: s.imageFiles,
+    showSuccessPopup: s.showSuccessPopup,
+    setShowSuccessPopup: s.setShowSuccessPopup,
   }));
-
-  const { selectedOptions, selectedGroups, customerPhone, bulkCustomers } =
-    useMessageRecipientsStore();
 
   const cropperRef = useRef<CropperRef>(null);
   const { handleCrop } = useWhatzappCroppedImg();
@@ -86,8 +83,7 @@ const MemoCreateEditTemplate = () => {
   const { createTemplate } = useCreatingTemplate();
   const { editTemplate } = useEditingTemplate();
 
-  const { sendOptions } = useSendOptions();
-
+  // handle form submit for create and edit template
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -95,112 +91,84 @@ const MemoCreateEditTemplate = () => {
     const imageUrl = {};
     console.log("imageUrl", imageUrl);
 
-    // Prepare the payload based on selected options
-    const payload = {
-      ...(selectedOptions.includes("allCustomers") && { allCustomers: true }),
-      ...(selectedOptions.includes("bulkUploadCustomers") && {
-        bulkCustomers: bulkCustomers,
-        templateId: Number(templateId),
-        businessId: businessId,
-        businessName: businessName,
-      }),
-      ...(selectedOptions.includes("sendCustomer") && { customerPhone }),
-      ...(selectedOptions.includes("addGroups") && {
-        groupIds: selectedGroups,
-        templateId: Number(templateId),
-        businessId: businessId,
-        businessName: businessName,
-        bulkCustomers: bulkCustomers,
-      }),
-    };
-    sendOptions(payload);
     // payload structure for create/edit template
-    // const payload = {
-    //   businessId: businessId,
-    //   name: templateName,
-    //   language: "en_GB",
-    //   ...(templateId?.length > 0 && { templateId: templateId }),
-    //   category: templateType,
-    //   components: [
-    //     ...(headerType && headerText
-    //       ? [
-    //           {
-    //             type: "HEADER",
-    //             format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
-    //             ...(headerType === HeaderInterface.Text
-    //               ? { text: headerText }
-    //               : imageUrl && {
-    //                   example: {
-    //                     header_handle: [imageUrl],
-    //                   },
-    //                 }),
-    //           },
-    //         ]
-    //       : []),
-    //     {
-    //       type: "BODY",
-    //       text: bodyText,
-    //       ...(variables.length > 0 && { example: { body_text: [variables] } }),
-    //     },
-    //     ...(footerText
-    //       ? [
-    //           {
-    //             type: "FOOTER",
-    //             text: footerText,
-    //           },
-    //         ]
-    //       : []),
-    //     ...(buttonText && (websiteUrl || phoneNumber)
-    //       ? [
-    //           {
-    //             type: "BUTTONS",
-    //             buttons: [
-    //               actionType === ActionType.VisitWebsite
-    //                 ? {
-    //                     type: "URL",
-    //                     text: buttonText,
-    //                     url: websiteUrl,
-    //                   }
-    //                 : {
-    //                     type: "PHONE_NUMBER",
-    //                     text: buttonText,
-    //                     phone_number: `+91${phoneNumber}`,
-    //                   },
-    //             ],
-    //           },
-    //         ]
-    //       : []),
-    //   ],
-    //   bodyVariableSequence: bodyVariableSequence,
-    // };
+    const payload = {
+      businessId: businessId,
+      name: templateName,
+      language: "en_US",
+      ...(templateId?.length > 0 && { templateId: templateId }),
+      category: templateType,
+      components: [
+        ...(headerType && headerText
+          ? [
+              {
+                type: "HEADER",
+                format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
+                ...(headerType === HeaderInterface.Text
+                  ? { text: headerText }
+                  : imageUrl && {
+                      example: {
+                        header_handle: [imageUrl],
+                      },
+                    }),
+              },
+            ]
+          : []),
+        {
+          type: "BODY",
+          text: bodyText,
+          ...(variables.length > 0 && { example: { body_text: [variables] } }),
+        },
+        ...(footerText
+          ? [
+              {
+                type: "FOOTER",
+                text: footerText,
+              },
+            ]
+          : []),
+        ...(buttonText && (websiteUrl || phoneNumber)
+          ? [
+              {
+                type: "BUTTONS",
+                buttons: [
+                  actionType === ActionType.VisitWebsite
+                    ? {
+                        type: "URL",
+                        text: buttonText,
+                        url: websiteUrl,
+                      }
+                    : {
+                        type: "PHONE_NUMBER",
+                        text: buttonText,
+                        phone_number: `+91${phoneNumber}`,
+                      },
+                ],
+              },
+            ]
+          : []),
+      ],
+      bodyVariableSequence: bodyVariableSequence,
+    };
 
-    console.log(payload);
-
-    //   let response;
-    //   if (templateId?.length > 0) {
-    //     response = await editTemplate(payload as unknown as WhatsAppTemplate);
-    //   } else {
-    //     response = await createTemplate(payload as unknown as WhatsAppTemplate);
-    //   }
-    //   if (response?.status === 200 || response?.status === 201) {
-    //     if (response?.data?.status !== "REJECTED") {
-    //       toast.success("Template created successfully");
-    //       setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-    //     } else {
-    //       toast.error("Template creation rejected");
-    //     }
-    //   } else {
-    //     toast.error(response?.message);
-    // }
+    let response;
+    if (templateId?.length > 0) {
+      response = await editTemplate(payload as unknown as WhatsAppTemplate);
+    } else {
+      response = await createTemplate(payload as unknown as WhatsAppTemplate);
+    }
+    if (response?.data?.status !== "REJECTED") {
+      setShowSuccessPopup(true);
+    } else {
+      toast.error("Template creation rejected please contact support");
+    }
   };
 
-  const handleNext = useCallback(() => {
-    if (templateSteps === TemplateSteps.MODIFY) {
-      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-    } else if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
-      setTemplateSteps(TemplateSteps.SEND);
-    }
-  }, [templateSteps, setTemplateSteps]);
+  // proceed forward after success popup
+  const handleProceed = useCallback(() => {
+    setShowSuccessPopup(false);
+    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+  }, [setTemplateSteps, setShowSuccessPopup]);
 
   return (
     <form onSubmit={handleSubmitReview}>
@@ -226,21 +194,7 @@ const MemoCreateEditTemplate = () => {
           {templateSteps === TemplateSteps.SEND && <SendTemplate />}
         </div>
       </div>
-      <BottomButton
-        fixed
-        buttons={[
-          {
-            text: "Update & Next",
-            type: "submit",
-            disable: !templateName || !bodyText,
-          },
-          {
-            text: "Proceed & Next",
-            onClick: handleNext,
-            type: "button",
-          },
-        ]}
-      />
+      <TemplateButtons />
       <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
           <EasyReactCropper
@@ -265,6 +219,13 @@ const MemoCreateEditTemplate = () => {
           ]}
         />
       </PopUp>
+      {showSuccessPopup && (
+        <SuccessPopup
+          show={showSuccessPopup}
+          onClose={() => setShowSuccessPopup(false)}
+          onProceed={handleProceed}
+        />
+      )}
     </form>
   );
 };

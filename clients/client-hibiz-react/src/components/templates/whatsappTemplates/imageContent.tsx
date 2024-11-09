@@ -51,7 +51,7 @@ const MemoImageContent = () => {
   return (
     <div
       className={cn(
-        "relative w-64 h-full mb-4 bg-white rounded-lg min-h-full max-h-56",
+        "relative w-64 mb-4 bg-white rounded-lg h-56",
         imagePreview ? "" : "border-2 border-gray-300 border-dashed",
       )}
     >

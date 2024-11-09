@@ -30,6 +30,16 @@ interface MessageRecipientsState {
   handleFileUpload: (file: File) => void;
   handleRemoveFile: () => void;
   setBulkCustomers: (customers: BulkCustomer[]) => void;
+  sendLaterTime: number;
+  setSendLaterTime: (time: number) => void;
+  sendOptions: string;
+  setSendOptions: (options: string) => void;
+  scheduledTime: string;
+  setScheduledTime: (time: string) => void;
+  scheduledDate: string;
+  setScheduledDate: (date: string) => void;
+  testNumber: string;
+  setTestNumber: (number: string) => void;
 }
 
 export const useMessageRecipientsStore = create<MessageRecipientsState>(
@@ -117,5 +127,20 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
         `${customers.length} customers have been added to bulk upload.`,
       );
     },
+
+    sendLaterTime: 0,
+    setSendLaterTime: (time) => set({ sendLaterTime: time }),
+
+    sendOptions: "sendNow",
+    setSendOptions: (options) => set({ sendOptions: options }),
+
+    scheduledTime: "",
+    setScheduledTime: (time) => set({ scheduledTime: time }),
+
+    scheduledDate: "",
+    setScheduledDate: (date) => set({ scheduledDate: date }),
+
+    testNumber: "",
+    setTestNumber: (number) => set({ testNumber: number }),
   }),
 );

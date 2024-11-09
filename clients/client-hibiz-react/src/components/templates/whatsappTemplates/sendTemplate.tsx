@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, memo, useCallback, useState } from "react";
+import { Fragment, memo, useCallback } from "react";
 import {
   Disclosure,
   Transition,
@@ -9,6 +9,7 @@ import {
 } from "@headlessui/react";
 import { BiChevronDown, BiChevronUp, BiSend } from "react-icons/bi";
 import { FiClock, FiSend, FiSmartphone } from "react-icons/fi";
+import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
 
 const sendingOptions = [
   { value: "sendTest", label: "Send Test Number", icon: FiSmartphone },
@@ -17,31 +18,50 @@ const sendingOptions = [
 ];
 
 const MemoSendTemplate = () => {
-  const [selectedOption, setSelectedOption] = useState(sendingOptions[0].value);
-  const [testNumber, setTestNumber] = useState("");
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
+  const {
+    setSendLaterTime,
+    sendOptions,
+    setSendOptions,
+    scheduledDate,
+    setScheduledDate,
+    scheduledTime,
+    setScheduledTime,
+    testNumber,
+    setTestNumber,
+  } = useMessageRecipientsStore((s) => ({
+    setSendLaterTime: s.setSendLaterTime,
+    sendOptions: s.sendOptions,
+    setSendOptions: s.setSendOptions,
+    scheduledDate: s.scheduledDate,
+    setScheduledDate: s.setScheduledDate,
+    scheduledTime: s.scheduledTime,
+    setScheduledTime: s.setScheduledTime,
+    testNumber: s.testNumber,
+    setTestNumber: s.setTestNumber,
+  }));
 
   const handleSend = useCallback(() => {
-    switch (selectedOption) {
+    switch (sendOptions) {
       case "sendTest":
-        console.log("Sending test to:", testNumber);
+        console.log("Sending test message", testNumber);
         break;
       case "sendNow":
         console.log("Sending now");
         break;
-      case "sendLater":
-        console.log("Scheduled for:", scheduledDate, scheduledTime);
+      case "sendLater": {
+        const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
+        const timestamp = new Date(dateTimeString).getTime();
+        setSendLaterTime(timestamp);
         break;
+      }
     }
-  }, [selectedOption, testNumber, scheduledDate, scheduledTime]);
-
+  }, [sendOptions, testNumber, scheduledDate, scheduledTime, setSendLaterTime]);
   return (
     <div className="space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">
         Message Sending Options
       </h2>
-      <RadioGroup value={selectedOption} onChange={setSelectedOption}>
+      <RadioGroup value={sendOptions} onChange={setSendOptions}>
         <div className="space-y-4">
           {sendingOptions.map(({ value, label, icon: Icon }) => (
             <Disclosure key={value}>
@@ -55,8 +75,8 @@ const MemoSendTemplate = () => {
                     <div className="flex items-center space-x-3">
                       <input
                         type="radio"
-                        checked={selectedOption === value}
-                        onChange={() => setSelectedOption(value)}
+                        checked={sendOptions === value}
+                        onChange={() => setSendOptions(value)}
                         className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                       />
                       <Icon className="w-5 h-5 text-gray-600" />

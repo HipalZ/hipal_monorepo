@@ -176,6 +176,9 @@ interface whatsappTemplate {
 
   isButtonEnabled: boolean;
   setIsButtonEnabled: (isButtonEnabled: boolean) => void;
+
+  showSuccessPopup: boolean;
+  setShowSuccessPopup: (showSuccessPopup: boolean) => void;
 }
 
 export const useWhatsapp = create<whatsappTemplate>((set) => {
@@ -395,6 +398,10 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
 
     isButtonEnabled: false,
     setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
+
+    showSuccessPopup: false,
+    setShowSuccessPopup: (showSuccessPopup: boolean) =>
+      set({ showSuccessPopup }),
   };
 });
 

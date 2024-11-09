@@ -31,7 +31,7 @@ const options = [
     label: "Bulk upload customers",
     icon: FiUpload,
   },
-  { value: "sendCustomer", label: "Send to a customer", icon: FiSend },
+  // { value: "sendCustomer", label: "Send to a customer", icon: FiSend },
   { value: "addGroups", label: "Add groups", icon: FiUserPlus },
 ];
 
