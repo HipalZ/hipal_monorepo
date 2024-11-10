@@ -107,7 +107,7 @@ export default async function Explore({
                             : "",
                         )}
                       >
-                        <div className="border border-black embla-_parallax">
+                        <div className="embla-_parallax">
                           <div className={cn("embla-_parallax__layer")}>
                             <BannerLayouts
                               redirectionId={banner?.redirectionId || ""}
