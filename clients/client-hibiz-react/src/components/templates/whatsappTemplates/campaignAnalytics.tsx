@@ -1,4 +1,3 @@
-"use client";
 import { memo, useCallback, useState } from "react";
 import CampaignDetails from "./campaignDetails";
 import { useQuery } from "@tanstack/react-query";

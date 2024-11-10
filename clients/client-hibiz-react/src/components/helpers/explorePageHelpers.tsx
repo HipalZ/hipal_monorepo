@@ -7,23 +7,25 @@ import { type ChangeEvent, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CropperRef } from "../types/businessData";
+import { useExploreTemp } from "../store/useExploreTemp";
 
 // Callbacks to handle navigation in the explore page
 export const useExploreNavigation = () => {
   const {
-    clearOriginalDishes,
     toggleExplorePages,
     setToggleExplorePages,
     setImg,
     clearBizInfo,
     clearImageFiles,
   } = useExploreStore((state) => ({
-    clearOriginalDishes: state.clearOriginalDishes,
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
     setImg: state.setImg,
     clearBizInfo: state.clearBizInfo,
     clearImageFiles: state.clearImageFiles,
+  }));
+  const { clearOriginalDishes } = useExploreTemp((s) => ({
+    clearOriginalDishes: s.clearOriginalDishes,
   }));
   const businessId = useParams()?.businessId;
   const navigate = useNavigate();

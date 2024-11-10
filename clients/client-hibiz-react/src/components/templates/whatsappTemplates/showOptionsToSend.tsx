@@ -1,5 +1,3 @@
-"use client";
-
 import { type ChangeEvent, Fragment, memo, useCallback, useRef } from "react";
 import {
   Disclosure,

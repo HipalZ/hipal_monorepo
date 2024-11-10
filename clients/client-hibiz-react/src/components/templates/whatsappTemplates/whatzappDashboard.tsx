@@ -1,4 +1,3 @@
-"use client";
 import { lazy, memo, useCallback } from "react";
 import useWhatsapp, {
   Step,

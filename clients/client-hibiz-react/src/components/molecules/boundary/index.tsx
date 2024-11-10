@@ -1,4 +1,3 @@
-"use client";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { type ReactNode, Suspense, useEffect, useRef } from "react";

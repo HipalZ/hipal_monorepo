@@ -2,6 +2,7 @@ import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
+import { useExploreTemp } from "@/components/store/useExploreTemp";
 import { combineAllDishes } from "@/components/templates/explorePage/explorePageStore";
 import type {
   IBannerResponse,
@@ -92,13 +93,13 @@ export const useOutletInfo = () => {
 
 export const useUniquelyYours = () => {
   const businessId = useParams()?.businessId;
-  const { setUniquelyDishes, setDishes, setOriginalDishes } = useExploreStore(
-    (s) => ({
-      setUniquelyDishes: s.setUniquelyDishes,
-      setDishes: s.setDishes,
-      setOriginalDishes: s.setOriginalDishes,
-    }),
-  );
+  const { setUniquelyDishes } = useExploreStore((s) => ({
+    setUniquelyDishes: s.setUniquelyDishes,
+  }));
+  const { setDishes, setOriginalDishes } = useExploreTemp((s) => ({
+    setDishes: s.setDishes,
+    setOriginalDishes: s.setOriginalDishes,
+  }));
   const fetchUniquelyYours = async () => {
     const res = await apiRpc.dishes.uniquelyDishes[":businessId"].$get({
       param: {
@@ -121,8 +122,11 @@ export const useUniquelyYours = () => {
     });
     const response = await res.json();
     if (res.status === 200) {
-      setDishes(response?.data);
-      setOriginalDishes(response?.data);
+      const filteredData = response?.data?.filter(
+        (dish) => dish?.images?.length > 0,
+      );
+      setDishes(filteredData);
+      setOriginalDishes(filteredData);
     }
     return response?.data;
   };
@@ -149,35 +153,4 @@ export const useBanners = () => {
   };
 
   return { fetchBanners };
-};
-
-export const useAllCategoryData = () => {
-  const businessId = useParams()?.businessId;
-  const { setDishes, originalDishes, setOriginalDishes } = useExploreStore(
-    (s) => ({
-      setDishes: s.setDishes,
-      originalDishes: s.originalDishes,
-      setOriginalDishes: s.setOriginalDishes,
-    }),
-  );
-  const getAllCategoryData = async () => {
-    if (originalDishes.length > 0) {
-      setDishes(originalDishes);
-      return originalDishes;
-    }
-    const categoryResponse = await apiRpc.categories.$get({
-      query: {
-        businessId,
-        dishes: "true",
-      },
-    });
-    const data = await categoryResponse.json();
-    const categories = data?.data;
-    const allDishes = await combineAllDishes(categories);
-    setDishes(allDishes);
-    setOriginalDishes(allDishes);
-    return allDishes;
-  };
-
-  return { getAllCategoryData };
 };
