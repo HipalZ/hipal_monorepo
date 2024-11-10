@@ -11,7 +11,6 @@ import type { CropperRef } from "../types/businessData";
 // Callbacks to handle navigation in the explore page
 export const useExploreNavigation = () => {
   const {
-    originalDishes,
     clearOriginalDishes,
     toggleExplorePages,
     setToggleExplorePages,
@@ -19,7 +18,6 @@ export const useExploreNavigation = () => {
     clearBizInfo,
     clearImageFiles,
   } = useExploreStore((state) => ({
-    originalDishes: state.originalDishes,
     clearOriginalDishes: state.clearOriginalDishes,
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
@@ -42,11 +40,13 @@ export const useExploreNavigation = () => {
     }
   }, [
     businessId,
+    clearBizInfo,
+    clearImageFiles,
+    setImg,
+    setToggleExplorePages,
     toggleExplorePages,
     clearOriginalDishes,
-    originalDishes,
     navigate,
-    businessId,
   ]);
 
   return { handleNavigate };
@@ -66,7 +66,7 @@ export const useImageChange = () => {
       const type = event.target.dataset.type as keyof ImageFiles;
       const file = event.target.files?.[0];
       if (file) {
-        const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
+        const maxSizeInBytes = 5 * 1024 * 1024; // 5MB in bytes
         if (file.size > maxSizeInBytes) {
           toast.error("File size exceeds 1MB. Please select a smaller file.");
           return;
