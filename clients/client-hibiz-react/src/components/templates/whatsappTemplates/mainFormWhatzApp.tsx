@@ -9,6 +9,7 @@ import MiddlePopUp from "@/components/atom/middlePopUp";
 import { useNavigate } from "react-router-dom";
 import bannerImage from "@/assets/whatzapp/whatzAppTemplates.jpg";
 import useBusinessData from "@/components/store/useBusinessData";
+import WalletHistory from "./walletHistory";
 
 const MemoizedHeader = lazy(() => import("@/components/molecules/header"));
 const NotifyAndWallet = lazy(() => import("./notifyAndWallet"));
@@ -93,6 +94,7 @@ const MemoMainFormWhatzApp = () => {
           <WhatzappDashboard />
         </>
       )}
+      {step === Step.WALLET_HISTORY && <WalletHistory />}
       {step === Step.CREATE_EDIT && <CreateEditTemplate />}
       {notEditPopup && (
         <MiddlePopUp show={notEditPopup} onClose={() => setNotEditPopup(false)}>

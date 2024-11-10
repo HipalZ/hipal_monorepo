@@ -1,76 +1,54 @@
-import useWhatsapp from "@/components/store/useWhatsapp";
-import { useCallback, useMemo } from "react";
-import { BsBell, BsWallet2 } from "react-icons/bs";
+import useBusinessData from "@/components/store/useBusinessData";
+import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
+import { useWalletBalance } from "@/hooks/useTemplates";
+import { useQuery } from "@tanstack/react-query";
+import { memo, useCallback } from "react";
+import { BsWallet2 } from "react-icons/bs";
+import { GrHistory } from "react-icons/gr";
 
-const NotifyAndWallet = () => {
-  const {
-    notifications,
-    setNotifications,
-    showNotifications,
-    setShowNotifications,
-    walletBalance,
-  } = useWhatsapp((s) => ({
-    notifications: s.notifications,
-    setNotifications: s.setNotifications,
+const MemoNotifyAndWallet = () => {
+  const { walletBalance, setStep } = useWhatsapp((s) => ({
     walletBalance: s.walletBalance,
-    showNotifications: s.showNotifications,
-    setShowNotifications: s.setShowNotifications,
+    setStep: s.setStep,
   }));
+  const businessData = useBusinessData((s) => s.businessData);
+  const { getWalletBalance, getWalletHistory } = useWalletBalance();
 
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.isRead).length,
-    [notifications],
-  );
+  const handleWallethistory = useCallback(() => {
+    setStep(Step.WALLET_HISTORY);
+  }, [setStep]);
 
-  const handleNotificationClick = useCallback(() => {
-    setShowNotifications(!showNotifications);
-    if (showNotifications) {
-      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
-    }
-  }, [
-    setShowNotifications,
-    showNotifications,
-    notifications,
-    setNotifications,
-  ]);
+  useQuery({
+    queryKey: ["walletBalance", businessData?._id],
+    queryFn: getWalletBalance,
+    enabled: !!businessData?._id,
+  });
+
+  useQuery({
+    queryKey: ["walletHistory", businessData?._id],
+    queryFn: getWalletHistory,
+    enabled: !!businessData?._id,
+  });
 
   return (
     <div className="flex items-center justify-end gap-2 -mr-4 lg:gap-4 md:mr-0">
       {/* Notifications */}
-      <div className="relative">
+      <div className="relative flex items-center">
         <button
+          title="Wallet History"
+          onClick={handleWallethistory}
           type="button"
-          className="relative p-2 rounded-full hover:bg-gray-100"
-          onClick={handleNotificationClick}
+          className="on_active_bounce"
         >
-          <BsBell className="text-xl" />
-          {unreadCount > 0 && (
-            <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-red-500 rounded-full -top-1 -right-1">
-              {unreadCount}
-            </span>
-          )}
+          <GrHistory size={22} />
         </button>
-
-        {showNotifications && (
-          <div className="absolute right-0 z-10 w-64 p-2 mt-2 bg-white rounded-lg shadow-lg">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-2 text-sm ${
-                  notification.isRead
-                    ? "text-gray-500"
-                    : "text-black font-medium"
-                }`}
-              >
-                {notification.message}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Wallet */}
-      <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow">
+      <div
+        title="Balance"
+        className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow"
+      >
         <BsWallet2 className="text-lg" />
         <span className="font-semibold">{walletBalance}</span>
       </div>
@@ -78,4 +56,5 @@ const NotifyAndWallet = () => {
   );
 };
 
+const NotifyAndWallet = memo(MemoNotifyAndWallet);
 export default NotifyAndWallet;

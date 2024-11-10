@@ -3,7 +3,7 @@ import { memo } from "react";
 
 const MemoWhatzapp = () => {
   return (
-    <main className="min-h-[100dvh]">
+    <main>
       <MainFormWhatzApp />
     </main>
   );

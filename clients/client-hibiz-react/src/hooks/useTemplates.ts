@@ -1,12 +1,12 @@
+import { apiRpc } from "@hi/common";
+import { APP_ID, WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "@/axios";
+import toast from "react-hot-toast";
+import type { WhatsAppTemplate } from "@/components/types/businessData";
 import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp from "@/components/store/useWhatsapp";
-import type { WhatsAppTemplate } from "@/components/types/businessData";
-import { APP_ID, WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
-import { apiRpc } from "@hi/common";
-import { useCallback } from "react";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 
 export const useTemplates = () => {
   const { setTemplates } = useWhatsapp((s) => ({
@@ -162,11 +162,15 @@ export const useDeleteTemplate = () => {
 };
 
 export const useCreatingTemplate = () => {
+  const { setTemplateId } = useWhatsapp((s) => ({
+    setTemplateId: s.setTemplateId,
+  }));
   const createTemplate = async (payload: any) => {
     const res = await apiRpc.whatsapp.template.$post({
       json: payload,
     });
     const response = await res.json();
+    setTemplateId(response?.data?.id);
     return response;
   };
 
@@ -198,7 +202,6 @@ export const useMediaUpload = () => {
 
   const uploadMedia = async () => {
     if (!imageFiles) return toast.error("No image files to upload");
-    console.log("typeof size", typeof imageFiles?.size);
     // Step 1: Start upload session
     try {
       const sessionResponse = await axios({
@@ -214,34 +217,19 @@ export const useMediaUpload = () => {
           "Content-Type": "application/json",
         },
       });
-      const uploadSessionId = sessionResponse.data.id.split(":")[1];
+
       // Step 2: Upload the file
+      const formData = new FormData();
+      formData.append("file", imageFiles);
+      formData.append("file_name", imageFiles.name);
 
-      const uploadResponse = await axios({
-        method: "POST",
-        url: "http://localhost:4500/whatsapp/template/uploadFile",
-        data: {
-          file_name: imageFiles.name,
-          file_length: imageFiles.sizetoString(),
-          file_type: imageFiles.type,
-          uploadSessionId,
-        },
-      });
-
-      // const uploadResponse = await axios({
-      //   method: "POST",
-      //   url: `http://localhost:4500/whatsapp/template/uploadFile`,
-      //   data: formData,
-      //   headers: {
-      //     Authorization: `OAuth ${WHATSAPP_TOKEN}`,
-      //     file_offset: "0",
-      //   },
-      // });
-
+      const uploadResponse = await axios.post(
+        `http://localhost:3000/upload?sessionId=${sessionResponse.data.id}`,
+        formData,
+      );
       console.log("uploadResponse", uploadResponse);
-      return uploadResponse.h;
+      return uploadResponse?.data?.h;
     } catch (error) {
-      console.log("response", error.response);
       toast.error(error.response?.data?.error?.message || "Upload failed");
     }
   };
@@ -258,7 +246,6 @@ export const useEditingTemplate = () => {
       },
     });
     const response = await res.json();
-    console.log("response", response);
     return response;
   }, []);
 
@@ -284,8 +271,72 @@ export const useSendOptions = () => {
     });
     const response = await res.json();
     console.log("response", response);
+    if (response?.data?.success) {
+      toast.success("Message sent successfully");
+    }
     return response;
   }, []);
 
   return { sendOptions };
+};
+
+export const useTemplateAnalytics = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setTemplateAnalytics, setTotalData } = useWhatsapp((s) => ({
+    setTemplateAnalytics: s.setTemplateAnalytics,
+    setTotalData: s.setTotalData,
+  }));
+  const getTemplateAnalytics = useCallback(async () => {
+    const res = await apiRpc.whatsapp.template.analytics[":businessId"].$get({
+      param: {
+        businessId,
+      },
+      query: {
+        start: "1111111111",
+        end: "1111111111",
+      },
+    });
+    const response = await res.json();
+    console.log("response", response);
+    const total = response?.data?.slice(0, -1);
+    setTemplateAnalytics(total);
+    const totalData = response?.data?.slice(-1);
+    setTotalData(totalData);
+    return response?.data;
+  }, [businessId, setTemplateAnalytics, setTotalData]);
+
+  return { getTemplateAnalytics };
+};
+
+export const useWalletBalance = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setWalletBalance, setWalletHistory } = useWhatsapp((s) => ({
+    setWalletBalance: s.setWalletBalance,
+    setWalletHistory: s.setWalletHistory,
+  }));
+  const getWalletBalance = useCallback(async () => {
+    const res = await apiRpc.whatsapp.whatsapp_wallet[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    setWalletBalance(response?.data?.currentBalance);
+    return response;
+  }, [businessId, setWalletBalance]);
+
+  const getWalletHistory = useCallback(async () => {
+    const res = await apiRpc.whatsapp.whatsapp_wallet.history[
+      ":businessId"
+    ].$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    setWalletHistory(response?.data);
+    return response;
+  }, [businessId, setWalletHistory]);
+
+  return { getWalletBalance, getWalletHistory };
 };

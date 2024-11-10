@@ -49,44 +49,49 @@ const MemoImageContent = () => {
   }, [setHeaderType, setImagePreview]);
 
   return (
-    <div
-      className={cn(
-        "relative w-64 mb-4 bg-white rounded-lg h-56",
-        imagePreview ? "" : "border-2 border-gray-300 border-dashed",
-      )}
-    >
-      <input
-        ref={templateImageRef}
-        type="file"
-        id="headerImage"
-        className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
-        accept="image/jpeg, image/png, image/jpg"
-        onChange={handleImageChange}
-      />
-      {imagePreview ? (
-        <div className="relative w-full h-full">
-          <img
-            src={imagePreview}
-            alt="Header preview"
-            className="object-cover w-full h-full rounded-lg"
-          />
-          <button
-            type="button"
-            className="absolute p-1 m-2 text-white bg-gray-700 rounded-full -top-4 -right-4 hover:bg-gray-700"
-            onClick={handleRemoveImage}
-          >
-            <BiX className="w-4 h-4" />
-          </button>
-        </div>
-      ) : (
-        <div className="absolute inset-0 w-full mt-16 transform -translate-x-1/2 -translate-y-1/2 min-h-56 left-1/2 top-1/2">
-          <BiPlus className="w-12 h-12 mx-auto text-gray-400" />
-          <p className="mt-2 text-sm text-center text-gray-600">
-            Click to upload image
-          </p>
-        </div>
-      )}
-    </div>
+    <>
+      <label className="block mb-1 text-base font-bold text-black">
+        Choose Image or Gif
+      </label>
+      <div
+        className={cn(
+          "relative w-64 mb-4 bg-white rounded-lg h-56",
+          imagePreview ? "" : "border-2 border-gray-300 border-dashed",
+        )}
+      >
+        <input
+          ref={templateImageRef}
+          type="file"
+          id="headerImage"
+          className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer"
+          accept="image/jpeg, image/png, image/jpg"
+          onChange={handleImageChange}
+        />
+        {imagePreview ? (
+          <div className="relative w-full h-full">
+            <img
+              src={imagePreview}
+              alt="Header preview"
+              className="object-cover w-full h-full rounded-lg"
+            />
+            <button
+              type="button"
+              className="absolute p-1 m-2 text-white bg-gray-700 rounded-full -top-4 -right-4 hover:bg-gray-700"
+              onClick={handleRemoveImage}
+            >
+              <BiX className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="absolute inset-0 w-full mt-16 transform -translate-x-1/2 -translate-y-1/2 min-h-56 left-1/2 top-1/2">
+            <BiPlus className="w-12 h-12 mx-auto text-gray-400" />
+            <p className="mt-2 text-sm text-center text-gray-600">
+              Click to upload image
+            </p>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

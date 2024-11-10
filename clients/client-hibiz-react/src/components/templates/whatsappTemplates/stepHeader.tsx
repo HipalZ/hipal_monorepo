@@ -1,15 +1,20 @@
+import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
 import useWhatsapp, { TemplateSteps } from "@/components/store/useWhatsapp";
 import { cn } from "@/components/utils/helper";
 import { memo, useCallback } from "react";
 
 const MemoStepHeader = () => {
-  const { templateSteps, setTemplateSteps, preDefinedTemplate } = useWhatsapp(
-    (s) => ({
+  const { templateSteps, templateId, setTemplateSteps, preDefinedTemplate } =
+    useWhatsapp((s) => ({
       templateSteps: s.templateSteps,
+      templateId: s.templateId,
       setTemplateSteps: s.setTemplateSteps,
       preDefinedTemplate: s.preDefinedTemplate,
-    }),
-  );
+    }));
+
+  const { selectedOptions } = useMessageRecipientsStore((s) => ({
+    selectedOptions: s.selectedOptions,
+  }));
 
   const handleTemplateStep = useCallback(
     (step: TemplateSteps) => {
@@ -78,6 +83,7 @@ const MemoStepHeader = () => {
             templateSteps === TemplateSteps.SHOW_OPTIONS
               ? "text-green-600"
               : "text-gray-400",
+            templateId?.length > 0 ? "" : "pointer-events-none",
             "flex items-center ml-4 hover:cursor-pointer",
           )}
         >
@@ -103,6 +109,9 @@ const MemoStepHeader = () => {
             templateSteps === TemplateSteps.SEND
               ? "text-green-600"
               : "text-gray-400",
+            selectedOptions.length > 0 && templateId?.length > 0
+              ? ""
+              : "pointer-events-none",
             "flex items-center ml-4 hover:cursor-pointer",
           )}
         >

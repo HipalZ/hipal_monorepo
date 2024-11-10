@@ -2,9 +2,14 @@ import { memo, lazy, useCallback, useRef, type FormEvent } from "react";
 import useWhatsapp, {
   ActionType,
   HeaderInterface,
+  Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import { useCreatingTemplate, useEditingTemplate } from "@/hooks/useTemplates";
+import {
+  useCreatingTemplate,
+  useEditingTemplate,
+  useMediaUpload,
+} from "@/hooks/useTemplates";
 import useBusinessData from "@/components/store/useBusinessData";
 import type {
   CropperRef,
@@ -49,10 +54,12 @@ const MemoCreateEditTemplate = () => {
     showCropper,
     setShowCropper,
     cropping,
-    imageFiles,
     templateId,
     showSuccessPopup,
     setShowSuccessPopup,
+    setStep,
+    templateStatus,
+    setTemplateStatus,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -72,24 +79,24 @@ const MemoCreateEditTemplate = () => {
     showCropper: s.showCropper,
     setShowCropper: s.setShowCropper,
     cropping: s.cropping,
-    imageFiles: s.imageFiles,
     showSuccessPopup: s.showSuccessPopup,
     setShowSuccessPopup: s.setShowSuccessPopup,
+    setStep: s.setStep,
+    templateStatus: s.templateStatus,
+    setTemplateStatus: s.setTemplateStatus,
   }));
 
   const cropperRef = useRef<CropperRef>(null);
   const { handleCrop } = useWhatzappCroppedImg();
-
   const { createTemplate } = useCreatingTemplate();
   const { editTemplate } = useEditingTemplate();
+  const { uploadMedia } = useMediaUpload();
 
   // handle form submit for create and edit template
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log("imageFiles", imageFiles);
-    const imageUrl = {};
-    console.log("imageUrl", imageUrl);
+    const imageUrl = await uploadMedia();
 
     // payload structure for create/edit template
     const payload = {
@@ -159,8 +166,13 @@ const MemoCreateEditTemplate = () => {
     }
     if (response?.data?.status !== "REJECTED") {
       setShowSuccessPopup(true);
+      setTemplateStatus(response?.data?.status);
     } else {
-      toast.error("Template creation rejected please contact support");
+      toast.error(
+        response?.data?.error?.error_user_msg ||
+          "Template creation rejected please contact support",
+      );
+      setStep(Step.SETUP);
     }
   };
 
@@ -194,6 +206,11 @@ const MemoCreateEditTemplate = () => {
           {templateSteps === TemplateSteps.SEND && <SendTemplate />}
         </div>
       </div>
+      {templateStatus === "REJECTED" ? (
+        <center className="text-red-500">
+          Your template is rejected first update the template before proceeding
+        </center>
+      ) : null}
       <TemplateButtons />
       <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">

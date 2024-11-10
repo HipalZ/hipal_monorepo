@@ -12,12 +12,14 @@ const MemoTemplateButtons = () => {
     bodyText,
     templateSteps,
     setTemplateSteps,
+    templateStatus,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
     bodyText: s.bodyText,
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
+    templateStatus: s.templateStatus,
   }));
   const { businessName, businessId } = useBusinessData((s) => ({
     businessName: s.businessData?.name,
@@ -30,6 +32,7 @@ const MemoTemplateButtons = () => {
     bulkCustomers,
     sendLaterTime,
     testNumber,
+    uploadedFileName,
   } = useMessageRecipientsStore((s) => ({
     selectedOptions: s.selectedOptions,
     selectedGroups: s.selectedGroups,
@@ -37,30 +40,18 @@ const MemoTemplateButtons = () => {
     bulkCustomers: s.bulkCustomers,
     sendLaterTime: s.sendLaterTime,
     testNumber: s.testNumber,
+    uploadedFileName: s.uploadedFileName,
   }));
   const { sendOptions } = useSendOptions();
   // send customers based on selected options
   const sendCustomers = useCallback(() => {
     const payload = {
-      // all customers
-      ...(selectedOptions.includes("allCustomers") && { allCustomers: true }),
-      // bulk uploaded customers
-      ...(selectedOptions.includes("bulkUploadCustomers") && {
-        bulkCustomers: bulkCustomers,
-        templateId: Number(templateId),
-        businessId: businessId,
-        businessName: businessName,
-      }),
-      // send to a customer
-      ...(selectedOptions.includes("sendCustomer") && { customerPhone }),
-      // send to a group
-      ...(selectedOptions.includes("addGroups") && {
-        groupIds: selectedGroups,
-        templateId: Number(templateId),
-        businessId: businessId,
-        businessName: businessName,
-        bulkCustomers: bulkCustomers,
-      }),
+      allCustomers: selectedOptions.includes("allCustomers"),
+      templateId: Number(templateId),
+      businessId: businessId,
+      businessName: businessName,
+      bulkCustomers: bulkCustomers,
+      groupIds: selectedGroups,
       ...(sendLaterTime && sendLaterTime > 0 && { time: sendLaterTime }),
       ...(testNumber?.length > 0 && { customerPhone: testNumber }),
     };
@@ -71,7 +62,6 @@ const MemoTemplateButtons = () => {
     templateId,
     businessId,
     businessName,
-    customerPhone,
     selectedGroups,
     sendLaterTime,
     sendOptions,
@@ -83,11 +73,25 @@ const MemoTemplateButtons = () => {
     if (templateSteps === TemplateSteps.MODIFY) {
       setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
     } else if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
+      if (
+        templateId?.length === 0 ||
+        selectedOptions?.length === 0 ||
+        (selectedOptions.includes("bulkUploadCustomers") &&
+          uploadedFileName?.length === 0)
+      )
+        return;
       setTemplateSteps(TemplateSteps.SEND);
     } else if (templateSteps === TemplateSteps.SEND) {
       sendCustomers();
     }
-  }, [templateSteps, setTemplateSteps, sendCustomers]);
+  }, [
+    templateSteps,
+    setTemplateSteps,
+    sendCustomers,
+    templateId,
+    selectedOptions,
+    uploadedFileName,
+  ]);
   return (
     <>
       {templateId ? (
@@ -100,9 +104,10 @@ const MemoTemplateButtons = () => {
               disable: !templateName || !bodyText,
             },
             {
-              text: "Proceed to Next",
+              text: "Save to Next ►",
               onClick: handleNext,
               type: "button",
+              disable: templateStatus === "REJECTED",
             },
           ]}
         />
@@ -115,11 +120,6 @@ const MemoTemplateButtons = () => {
               type: "submit",
               disable: !templateName || !bodyText,
             },
-            {
-              text: "Proceed to Next",
-              onClick: handleNext,
-              type: "button",
-            },
           ]}
         />
       ) : (
@@ -127,7 +127,7 @@ const MemoTemplateButtons = () => {
           fixed
           buttons={[
             {
-              text: "Proceed to Next",
+              text: "Save to Next",
               onClick: handleNext,
               type: "button",
             },

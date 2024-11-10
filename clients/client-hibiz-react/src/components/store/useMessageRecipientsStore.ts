@@ -60,8 +60,8 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
           ? state.selectedOptions.filter((item) => item !== option)
           : [...state.selectedOptions, option];
 
-        if (newSelection.length > 1) {
-          toast.error("You can select only 1 option at a time.");
+        if (newSelection.length > 2) {
+          toast.error("You can select only 2 option at a time.");
           return state;
         }
 
@@ -76,7 +76,7 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>(
           : [...state.selectedGroups, groupId];
 
         if (newSelection.length > 2) {
-          toast.error("You can select only 2 groups at a time.");
+          toast.error("You can select only 2 groups at a timez.");
           return state;
         }
 

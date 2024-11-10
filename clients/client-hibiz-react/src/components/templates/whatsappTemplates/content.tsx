@@ -3,6 +3,7 @@ import { BiPlus } from "react-icons/bi";
 import { IoMdClose } from "react-icons/io";
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import { useAddTemplate } from "@/components/helpers/whatzAppHelpers";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CallOfAction = lazy(() => import("./callOfAction"));
 const ImageContent = lazy(() => import("./imageContent"));
@@ -68,7 +69,7 @@ const MemoContent = () => {
   return (
     <section className="w-full max-w-2xl p-3 mx-auto mb-4 bg-white rounded-lg shadow-md">
       <div className="mb-4">
-        <label htmlFor="templateName" className="block mb-2 font-medium">
+        <label htmlFor="templateName" className="block mb-2 font-bold">
           Template Name <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -87,7 +88,7 @@ const MemoContent = () => {
         </div>
       </div>
       <div className="mb-4">
-        <label htmlFor="headerType" className="block mb-2 font-medium">
+        <label htmlFor="headerType" className="block mb-2 font-bold">
           Header (optional)
         </label>
         <div className="flex flex-wrap gap-3 mb-4">
@@ -135,7 +136,7 @@ const MemoContent = () => {
       {headerType === HeaderInterface.Image && <ImageContent />}
 
       <div>
-        <label htmlFor="bodyText" className="block mb-2 font-medium">
+        <label htmlFor="bodyText" className="block mb-2 font-bold">
           Message Body <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -157,54 +158,72 @@ const MemoContent = () => {
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
-          <label className="font-medium">Dynamic Variables</label>
+          <label className="font-bold">Dynamic Variables</label>
           <button
             type="button"
             onClick={handleAddVariable}
-            className="flex items-center px-3 py-1 text-sm text-white bg-blue-600 rounded-md"
+            className="flex items-center px-3 py-2 text-sm text-white bg-blue-600 rounded-md"
           >
             <BiPlus className="mr-1" /> Add Variable
           </button>
         </div>
-        {bodyVariables.map((variable, index) => (
-          <div
-            key={index.toString()}
-            className="flex flex-col items-start p-3 space-y-2 bg-white rounded-md shadow-sm sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2"
-          >
-            <select
-              value={bodyVariableSequence[index]}
-              onChange={(e) =>
-                updateBodySequenceVariable(index, e.target.value)
-              }
-              className="w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select variable</option>
-              {variableOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder={`Enter ${
-                bodyVariableSequence[index] || "variable"
-              } value`}
-              value={variable}
-              onChange={(e) => updateVariable(index, e.target.value)}
-              className="w-full px-3 py-2 text-gray-700 border border-gray-300 rounded-md shadow-sm sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button
-              type="button"
-              onClick={() => handleRemoveVariable(index)}
-              className="w-full px-3 py-2 text-white transition-colors bg-red-500 rounded-md sm:w-auto hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              aria-label="Remove variable"
-            >
-              <IoMdClose className="inline-block mr-1" />
-              <span className="sm:hidden">Remove</span>
-            </button>
-          </div>
-        ))}
+        <div className="space-y-3">
+          <AnimatePresence>
+            {bodyVariables?.map((variable, index) => (
+              <motion.div
+                key={index.toString()}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="relative p-3 transition-all bg-white border border-gray-200 rounded-lg shadow-sm group hover:shadow-md"
+              >
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center w-full gap-3 sm:w-auto">
+                    <div className="flex items-center justify-center w-8 h-8 text-sm font-medium text-gray-900 bg-gray-100 rounded-full shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="relative flex-1 sm:w-64 sm:flex-none">
+                      <select
+                        value={bodyVariableSequence[index]}
+                        onChange={(e) =>
+                          updateBodySequenceVariable(index, e.target.value)
+                        }
+                        className="block w-full px-3 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select variable</option>
+                        {variableOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center w-full gap-3 sm:flex-1">
+                    <input
+                      type="text"
+                      placeholder={`Enter ${
+                        bodyVariableSequence[index] || "variable"
+                      } value`}
+                      value={variable}
+                      onChange={(e) => updateVariable(index, e.target.value)}
+                      className="flex-1 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVariable(index)}
+                      className="inline-flex items-center justify-center text-red-600 transition-colors rounded-lg h-9 w-9 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      aria-label="Remove variable"
+                    >
+                      <IoMdClose className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-0.5 scale-x-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-transform group-hover:scale-x-100" />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
     </section>
   );

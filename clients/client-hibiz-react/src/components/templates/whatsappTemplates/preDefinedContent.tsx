@@ -116,9 +116,6 @@ const MemoPreDefinedContent = () => {
 
   return (
     <section className="w-full max-w-2xl p-3 mx-auto mb-4 bg-white rounded-lg shadow-md">
-      <label className="block mb-1 text-base font-bold text-black">
-        Choose Image or Gif
-      </label>
       {headerType === HeaderInterface.Text && <TextContent />}
       {headerType === HeaderInterface.Image && <ImageContent />}
       <div className="mb-4">

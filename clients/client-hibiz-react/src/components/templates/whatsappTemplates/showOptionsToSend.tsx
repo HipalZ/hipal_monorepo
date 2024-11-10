@@ -15,7 +15,7 @@ import {
   BiUpload,
   BiX,
 } from "react-icons/bi";
-import { FiSend, FiUpload, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiUpload, FiUserPlus, FiUsers } from "react-icons/fi";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
 import {
   useBulkUploadContacts,
@@ -40,7 +40,6 @@ const MemoShowOptionsToSend = () => {
     selectedOptions,
     selectedGroups,
     customerPhone,
-    totalAvailableCustomers,
     groups,
     uploadedFileName,
     handleOptionChange,
@@ -213,7 +212,7 @@ const MemoShowOptionsToSend = () => {
                     )}
                     <div className="w-full max-w-md mx-auto">
                       {value === "addGroups" && (
-                        <div className="p-4 rounded-lg bg-gray-50 max-h-[400px] overflow-y-auto grid grid-cols-2 gap-4">
+                        <div className="p-2 rounded-lg bg-gray-50 max-h-[400px] overflow-y-auto grid grid-cols-2 gap-4">
                           {groups.map((group) => (
                             <div
                               key={group._id}

@@ -744,6 +744,7 @@ export interface ICoupon {
 }
 
 export interface WhatsAppTemplateComponent {
+  example: any;
   type: string;
   format?: string; // Optional, only applies to HEADER component
   text?: string;

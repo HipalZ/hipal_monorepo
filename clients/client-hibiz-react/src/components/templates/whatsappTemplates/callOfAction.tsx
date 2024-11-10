@@ -1,10 +1,5 @@
 import { memo } from "react";
-import {
-  Switch,
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from "@headlessui/react";
+import { Switch, Disclosure, DisclosurePanel } from "@headlessui/react";
 import { BiChevronDown } from "react-icons/bi";
 import useWhatsapp, { ActionType } from "@/components/store/useWhatsapp";
 
@@ -100,6 +95,7 @@ const MemoCallOfAction = () => {
                     type="text"
                     id="buttonText"
                     value={buttonText}
+                    required={isButtonEnabled}
                     placeholder={
                       actionType === ActionType.VisitWebsite
                         ? ActionType.VisitWebsite
@@ -129,6 +125,10 @@ const MemoCallOfAction = () => {
                       type="url"
                       id="websiteUrl"
                       value={websiteUrl}
+                      required={
+                        isButtonEnabled &&
+                        actionType === ActionType.VisitWebsite
+                      }
                       onChange={(e) => setWebsiteUrl(e.target.value)}
                       maxLength={2000}
                       className="block w-full pr-16 border-gray-300 rounded-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
@@ -156,6 +156,9 @@ const MemoCallOfAction = () => {
                     <input
                       type="tel"
                       id="phoneNumber"
+                      required={
+                        isButtonEnabled && actionType === ActionType.CallUs
+                      }
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       maxLength={15}

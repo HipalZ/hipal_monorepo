@@ -7,9 +7,12 @@ import {
   DisclosureButton,
   DisclosurePanel,
 } from "@headlessui/react";
-import { BiChevronDown, BiChevronUp, BiSend } from "react-icons/bi";
+import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { FiClock, FiSend, FiSmartphone } from "react-icons/fi";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import { useSendOptions } from "@/hooks/useTemplates";
+import useWhatsapp from "@/components/store/useWhatsapp";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const sendingOptions = [
   { value: "sendTest", label: "Send Test Number", icon: FiSmartphone },
@@ -18,6 +21,13 @@ const sendingOptions = [
 ];
 
 const MemoSendTemplate = () => {
+  const { businessId, businessName } = useBusinessData((s) => ({
+    businessId: s.businessData?._id,
+    businessName: s.businessData?.name,
+  }));
+  const { templateId } = useWhatsapp((s) => ({
+    templateId: s.templateId,
+  }));
   const {
     setSendLaterTime,
     sendOptions,
@@ -39,14 +49,26 @@ const MemoSendTemplate = () => {
     testNumber: s.testNumber,
     setTestNumber: s.setTestNumber,
   }));
+  const { sendOptions: sendOptionsFunction } = useSendOptions();
 
+  // sending only to test customer
+  const sendToTestNumber = useCallback(() => {
+    const payload = {
+      templateId: Number(templateId),
+      businessId,
+      businessName,
+      customerPhone: testNumber,
+      bulkCustomers: [],
+      groupIds: [],
+    };
+    sendOptionsFunction(payload);
+  }, [templateId, businessId, businessName, testNumber, sendOptionsFunction]);
+
+  // handle send button click
   const handleSend = useCallback(() => {
     switch (sendOptions) {
       case "sendTest":
-        console.log("Sending test message", testNumber);
-        break;
-      case "sendNow":
-        console.log("Sending now");
+        sendToTestNumber();
         break;
       case "sendLater": {
         const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
@@ -55,7 +77,13 @@ const MemoSendTemplate = () => {
         break;
       }
     }
-  }, [sendOptions, testNumber, scheduledDate, scheduledTime, setSendLaterTime]);
+  }, [
+    sendOptions,
+    scheduledDate,
+    scheduledTime,
+    setSendLaterTime,
+    sendToTestNumber,
+  ]);
   return (
     <div className="space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">
@@ -99,7 +127,13 @@ const MemoSendTemplate = () => {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <DisclosurePanel className="border-t border-gray-200">
-                      <div className="text-sm text-gray-500">
+                      <div
+                        className={`text-sm text-gray-500 ${
+                          sendOptions === value
+                            ? "opacity-100 pointer-events-auto"
+                            : "opacity-50 pointer-events-none"
+                        }`}
+                      >
                         {value === "sendTest" && (
                           <div className="flex justify-between w-full gap-2 p-2 rounded-lg bg-gray-50">
                             <input
@@ -125,14 +159,6 @@ const MemoSendTemplate = () => {
                               Your message will be sent immediately to all
                               selected recipients.
                             </p>
-                            <button
-                              type="button"
-                              onClick={handleSend}
-                              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
-                            >
-                              <BiSend className="inline w-4 h-4 mr-2" />
-                              Send Now
-                            </button>
                           </div>
                         )}
                         {value === "sendLater" && (
@@ -176,10 +202,9 @@ const MemoSendTemplate = () => {
                             <button
                               type="button"
                               onClick={handleSend}
-                              className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+                              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
                             >
-                              <FiClock className="inline w-4 h-4 mr-2" />
-                              Schedule Send
+                              Save
                             </button>
                           </div>
                         )}
