@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import addonRouter from "./addons";
 import adminRouter from "./admin";
 import businessRouter from "./businesses";
+import cartRouter from "./cart";
 import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
@@ -41,6 +42,7 @@ export const routes = app
   .route("/hipalz", hipalzRouter)
   .route("/pos", posRouter)
   .route("/menu-banner", menuBannerRouter)
-  .route("/whatsapp", whatsappRouter);
+  .route("/whatsapp", whatsappRouter)
+  .route("/cart", cartRouter);
 
 export type AppType = typeof routes;
