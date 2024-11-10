@@ -1,7 +1,14 @@
-import { WhatAppTemplate } from "@hi/db-models";
+import {
+  WhatAppTemplate,
+  WhatsAppTemplateLimit,
+  WhatsAppWallet,
+  WhatsAppWalletHistory,
+} from "@hi/db-models";
 import {
   campaignSchema,
   validateWhatAppTemplateSchema,
+  whatsAppLimitSchema,
+  whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -729,11 +736,9 @@ const whatsappRouter = new Hono()
           i < getWhatAppTemplate.data.data[0].data_points.length;
           i++
         ) {
-          console.log("getWhatAppTemplate.data.data[0].data_points", 1);
           const templateid =
             getWhatAppTemplate.data.data[0].data_points[i].template_id;
 
-          console.log("templateid", templateid);
           const anaLyticsObject =
             getWhatAppTemplate.data.data[0].data_points[i];
 
@@ -832,6 +837,167 @@ const whatsappRouter = new Hono()
           400,
         );
       }
+    },
+  )
+  .get(
+    "/whatsapp_wallet/:businessId",
+    zValidator("param", z.object({ businessId: z.string() })),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const wallet = await WhatsAppWallet.findOne({
+        businessId,
+      });
+
+      if (!wallet) {
+        return c.json(
+          {
+            message: "Wallet not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json(
+        {
+          message: "Wallet found",
+          err: false,
+          data: wallet,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/whatsapp_wallet/history/:businessId",
+    zValidator("param", z.object({ businessId: z.string() })),
+    zValidator(
+      "query",
+      z.object({ from: z.string().optional(), to: z.string().optional() }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { from, to } = c.req.query();
+
+      const fromDate = from
+        ? new Date(Number(from))
+        : new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+      const toDate = to ? new Date(Number(to)) : new Date();
+
+      const walletHistory = await WhatsAppWalletHistory.find({
+        businessId,
+        date: { $gte: Number(fromDate), $lte: Number(toDate) },
+      });
+
+      return c.json(
+        {
+          message: "Wallet history",
+          err: false,
+          data: walletHistory,
+        },
+        200,
+      );
+    },
+  )
+  .post(
+    "/wallet/credit",
+
+    zValidator("json", whatsAppWalletHistorySchema),
+
+    async (c) => {
+      const { amount, userId, businessId } = await c.req.json();
+
+      const wallet = await WhatsAppWallet.findOneAndUpdate(
+        {
+          businessId,
+        },
+        {
+          $inc: { currentBalance: amount },
+        },
+        {
+          new: true,
+          upsert: true,
+        },
+      );
+
+      if (!wallet) {
+        return c.json(
+          {
+            message: "Wallet not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      await WhatsAppWalletHistory.create({
+        businessId,
+        amount,
+        userId,
+        date: Date.now(),
+      });
+
+      return c.json(
+        {
+          message: "Wallet credited",
+          err: false,
+          data: wallet,
+        },
+        200,
+      );
+    },
+  )
+  .post(
+    "/template_config",
+    zValidator("json", whatsAppLimitSchema),
+
+    async (c) => {
+      const {
+        businessId,
+        templateLimit,
+        marketingTemplateCharge,
+        utilityTemplateCharge,
+      } = await c.req.json();
+
+      const config = await WhatsAppTemplateLimit.findOneAndUpdate(
+        {
+          businessId,
+        },
+        {
+          templateLimit,
+          marketingTemplateCharge,
+          utilityTemplateCharge,
+        },
+        {
+          new: true,
+          upsert: true,
+        },
+      );
+
+      if (!config) {
+        return c.json(
+          {
+            message: "config not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json(
+        {
+          message: "config credited",
+          err: false,
+          data: config,
+        },
+        200,
+      );
     },
   );
 

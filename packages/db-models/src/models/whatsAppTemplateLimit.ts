@@ -23,6 +23,16 @@ const whatsAppTemplateLimitSchema = new mongoose.Schema<WhatsAppLimitType>(
       required: true,
       default: 1,
     },
+    marketingTemplateCharge: {
+      type: Number,
+      required: true,
+      default: 0.9,
+    },
+    utilityTemplateCharge: {
+      type: Number,
+      required: true,
+      default: 0.2,
+    },
   },
   {
     timestamps: true,

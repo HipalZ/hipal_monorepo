@@ -12,7 +12,7 @@ export const whatsAppWalletHistorySchema = z.object({
   businessId: ObjectIdSchema,
   userId: ObjectIdSchema,
   amount: z.number().default(0),
-  discount: z.number().default(0),
+  discount: z.number().default(0).optional(),
   date: z.number().default(Date.now()),
 });
 

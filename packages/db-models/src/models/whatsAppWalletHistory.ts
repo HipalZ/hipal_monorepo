@@ -21,7 +21,7 @@ const whatsAppWalletHistorySchema =
       },
       discount: {
         type: Number,
-        required: true,
+        required: false,
         default: 0,
       },
       date: {
