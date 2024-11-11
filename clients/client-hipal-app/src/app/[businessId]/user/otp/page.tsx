@@ -132,6 +132,10 @@ function OtpPage() {
       setError("Please enter your name.");
       return;
     }
+    if (customerName?.trim() === "") {
+      setError("Please enter valid name.");
+      return;
+    }
     if (loading) {
       return toast.error("Please wait for a moment");
     }
