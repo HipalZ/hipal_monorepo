@@ -1,4 +1,6 @@
 import {
+  CouponLink,
+  Couponz,
   WhatAppTemplate,
   WhatsAppTemplateLimit,
   WhatsAppWallet,
@@ -26,6 +28,7 @@ interface AxiosError {
   };
   message: string;
 }
+
 const whatsappRouter = new Hono()
   .get(
     "/template/all/:businessId",
@@ -231,7 +234,6 @@ const whatsappRouter = new Hono()
       }
     },
   )
-
   .delete(
     "/template/:template_name/:templateid",
 
@@ -704,8 +706,8 @@ const whatsappRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        start: z.string(),
-        end: z.string(),
+        start: z.string().optional(),
+        end: z.string().optional(),
 
         template_ids: z.array(z.string()).optional(),
       }),
@@ -768,8 +770,6 @@ const whatsappRouter = new Hono()
               },
             },
           );
-
-          console.log("getWhatAppTemplateName", anaLyticsObject);
 
           let calculateTotalclicked = 0;
           if (anaLyticsObject?.clicked) {
@@ -1015,6 +1015,43 @@ const whatsappRouter = new Hono()
           message: "config credited",
           err: false,
           data: config,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/coupon_link/:businessId",
+    zValidator("param", z.object({ businessId: z.string() })),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const couponLink = await Couponz.find({
+        businessId,
+        isDeleted: false,
+        isExpired: false,
+      }).select("name _id");
+
+      const couponLinkArray = [];
+
+      for (const coupon of couponLink) {
+        const couponLink = await CouponLink.findOne({
+          couponId: coupon._id,
+        }).select("link");
+        couponLinkArray.push({
+          name: coupon.name,
+          link: couponLink?.link,
+        });
+
+        couponLinkArray.push(couponLink);
+      }
+
+      return c.json(
+        {
+          message: "fetched successfully",
+          err: false,
+          data: couponLinkArray,
         },
         200,
       );
