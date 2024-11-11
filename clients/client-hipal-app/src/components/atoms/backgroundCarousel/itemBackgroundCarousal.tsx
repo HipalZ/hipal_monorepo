@@ -1,3 +1,4 @@
+"use client";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import { memo, useCallback, useState } from "react";
 import ShimmerImage from "../imageshimmer";
