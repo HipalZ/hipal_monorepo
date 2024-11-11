@@ -61,7 +61,7 @@ const whatsappRouter = new Hono()
 
       return c.json(
         {
-          message: "fetching all templates",
+          message: "fetched successfully",
           err: false,
           data: templatesArray,
         },
@@ -94,26 +94,27 @@ const whatsappRouter = new Hono()
           },
         );
 
-        const { id } = response.data;
+        if (response.status === 200 && response.data.status === "PENDING") {
+          const { id } = response.data;
+          const createTemplate = await WhatAppTemplate.create({
+            templateId: id,
+            bodyVariableSequence,
+            headerVariableSequence,
+            footerVariableSequence,
+            businessId,
+            date: Date.now(),
+          });
 
-        const createTemplate = await WhatAppTemplate.create({
-          templateId: id,
-          bodyVariableSequence,
-          headerVariableSequence,
-          footerVariableSequence,
-          businessId,
-          date: Date.now(),
-        });
-
-        if (!createTemplate) {
-          return c.json(
-            {
-              message: "Error creating template",
-              err: true,
-              data: {},
-            },
-            400,
-          );
+          if (!createTemplate) {
+            return c.json(
+              {
+                message: "Error creating template",
+                err: true,
+                data: {},
+              },
+              400,
+            );
+          }
         }
 
         return c.json(
@@ -148,34 +149,38 @@ const whatsappRouter = new Hono()
     async (c) => {
       const { templateid } = c.req.param();
 
-      const getWhatAppTemplate = await axios.get(
-        `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
-        {
-          headers: {
-            Authorization: `Bearer ${whatsAppConfig.token}`,
+      try {
+        const getWhatAppTemplate = await axios.get(
+          `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
           },
-        },
-      );
+        );
 
-      if (!getWhatAppTemplate) {
         return c.json(
           {
-            message: "Welcome to WhatsApp API",
-            err: true,
-            data: {},
+            message: "fetched successfully",
+            err: false,
+            data: getWhatAppTemplate.data,
           },
-          404,
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error fetching template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
         );
       }
-
-      return c.json(
-        {
-          message: "Welcome to WhatsApp API",
-          err: false,
-          data: getWhatAppTemplate.data,
-        },
-        200,
-      );
     },
   )
   .put(
@@ -189,37 +194,41 @@ const whatsappRouter = new Hono()
 
       const requestData = await c.req.json();
 
-      const updateWhatAppTemplate = await axios.post(
-        `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
-        {
-          ...requestData,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${whatsAppConfig.token}`,
+      try {
+        const updateWhatAppTemplate = await axios.post(
+          `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
+          {
+            ...requestData,
           },
-        },
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
 
-      if (!updateWhatAppTemplate) {
         return c.json(
           {
-            message: "error in updating",
-            err: true,
-            data: {},
+            message: "Edited successfully",
+            err: false,
+            data: updateWhatAppTemplate.data,
           },
-          404,
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error updating template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
         );
       }
-
-      return c.json(
-        {
-          message: "Welcome to WhatsApp API",
-          err: false,
-          data: updateWhatAppTemplate.data,
-        },
-        200,
-      );
     },
   )
 
