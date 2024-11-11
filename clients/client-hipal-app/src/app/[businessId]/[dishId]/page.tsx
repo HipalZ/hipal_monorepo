@@ -1,5 +1,5 @@
 "use client";
-
+import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { isEmpty } from "lodash-es";
@@ -18,6 +18,7 @@ import { useCallback } from "react";
 const Page = () => {
   const { businessId, dishId } = useParams();
   const router = useRouter();
+
   // Fetch dish data
   const fetchDishData = async (): Promise<IDish> => {
     const response = await apiRpc.dishes[":id"].$get({
@@ -95,7 +96,7 @@ const Page = () => {
     );
 
     // WhatsApp URL for a specific number
-    const whatsappUrl = `https://wa.me/9177914130?text=${message}`;
+    const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
 
     window.open(whatsappUrl, "_blank");
   };
@@ -105,48 +106,66 @@ const Page = () => {
   };
 
   return (
-    <div
-      className="relative w-full max-w-[30rem] bg-base-100 mx-auto overflow-auto text-primary hide-scrollbar"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Carousel or Placeholder */}
-      {!isEmpty(dishData.images) ? (
-        <div className="overflow-hidden rounded-2xl">
-          <ItemWallpaperCarousel
-            wallpapers={dishData.images}
-            isAvailable={isAvailable}
-          />
-        </div>
-      ) : !isAvailable ? (
-        <div className="pb-2 text-center">
-          <MemoNotAvailable className="w-full h-32 overflow-hidden rounded-xl" />
-        </div>
-      ) : (
-        <div className="pb-4">
-          <MemoPlaceholderImg className="w-full h-[10rem] bg-base-200" />
-        </div>
-      )}
+    <>
+      {/* Dynamic Meta Tags */}
+      <Head>
+        <meta property="og:title" content={dishData.name} />
+        <meta property="og:description" content={dishData.description} />
+        <meta property="og:image" content={dishData.images[0]} />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta
+          property="og:url"
+          content={`${BUSINESS_KEYID}/${businessId}/${dishId}`}
+        />
+        <meta property="og:type" content="website" />
+        <title>{dishData.name}</title>
+      </Head>
 
-      {/* Item Description */}
-      <section className="px-4 mt-4">
-        <IndividualItemDescription dishData={dishData} />
-      </section>
+      <div
+        className="relative w-full max-w-[30rem] bg-base-100 mx-auto overflow-auto text-primary hide-scrollbar"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Carousel or Placeholder */}
+        {!isEmpty(dishData.images) ? (
+          <div className="overflow-hidden rounded-2xl">
+            <ItemWallpaperCarousel
+              wallpapers={dishData.images}
+              isAvailable={isAvailable}
+            />
+          </div>
+        ) : !isAvailable ? (
+          <div className="pb-2 text-center">
+            <MemoNotAvailable className="w-full h-32 overflow-hidden rounded-xl" />
+          </div>
+        ) : (
+          <div className="pb-4">
+            <MemoPlaceholderImg className="w-full h-[10rem] bg-base-200" />
+          </div>
+        )}
 
-      {/* Bottom Buttons */}
-      <CommonBottomButton
-        fixed
-        buttons={[
-          {
-            text: "Explore More",
-            onClick: goToExplore,
-          },
-          {
-            text: "Chat on Whatsapp",
-            onClick: handleWhatsAppClick,
-          },
-        ]}
-      />
-    </div>
+        {/* Item Description */}
+        <section className="px-4 mt-4">
+          <IndividualItemDescription dishData={dishData} />
+        </section>
+
+        {/* Bottom Buttons */}
+        <CommonBottomButton
+          fixed
+          buttons={[
+            {
+              text: "Explore More",
+              onClick: goToExplore,
+            },
+            {
+              text: "Chat on Whatsapp",
+              onClick: handleWhatsAppClick,
+            },
+          ]}
+        />
+      </div>
+    </>
   );
 };
 
