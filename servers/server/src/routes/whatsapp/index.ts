@@ -719,12 +719,21 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       try {
-        const { start, end, granularity, metric_types, template_ids } =
-          c.req.query();
         const { businessId } = c.req.param();
 
+        let allTemplates = await WhatAppTemplate.find({
+          businessId,
+          isDeleted: false,
+        }).select("templateId");
+
+        allTemplates = allTemplates
+          .map((template) => template.templateId)
+          ?.slice(0, 10);
+
+        console.log("allTemplates", allTemplates);
+
         const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=1730979600&end=1731152438&granularity=daily&metric_types=cost,clicked,delivered,read,sent&template_ids=[592109929915038,959276612888339,1910900282755745,908434461247710,1669985623955620,8556358441124513,3623971124416248]`,
+          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=1730979600&end=1731152438&granularity=daily&metric_types=cost,clicked,delivered,read,sent&template_ids=${allTemplates}`,
           {
             headers: {
               Authorization: `Bearer ${whatsAppConfig.token}`,
@@ -732,7 +741,7 @@ const whatsappRouter = new Hono()
           },
         );
 
-        let templateids = [];
+        const templateids = [];
 
         let totalSent = 0;
         let totalRead = 0;
@@ -760,16 +769,20 @@ const whatsappRouter = new Hono()
             },
           );
 
-          let calculateTotalclicked = 0;
+          console.log("getWhatAppTemplateName", anaLyticsObject);
 
-          for (let i = 0; i < anaLyticsObject.clicked; i++) {
-            calculateTotalclicked += anaLyticsObject.clicked[i].count || 0;
+          let calculateTotalclicked = 0;
+          if (anaLyticsObject?.clicked) {
+            for (let j = 0; j < anaLyticsObject.clicked.length; j++) {
+              calculateTotalclicked += anaLyticsObject.clicked[j].count || 0;
+            }
           }
 
           let calculateTotalcost = 0;
-
-          for (let i = 0; i < anaLyticsObject.cost; i++) {
-            calculateTotalcost += anaLyticsObject.cost[i].value || 0;
+          if (anaLyticsObject?.cost) {
+            for (let j = 0; j < anaLyticsObject.cost.length; j++) {
+              calculateTotalcost += anaLyticsObject.cost[j].value || 0;
+            }
           }
 
           const newObj = {
@@ -778,10 +791,8 @@ const whatsappRouter = new Hono()
             read: anaLyticsObject.read,
             delivered: anaLyticsObject.delivered,
             clicked: calculateTotalclicked,
-            cost: calculateTotalcost,
+            cost: Math.round(calculateTotalcost),
           };
-
-          console.log("newObj", newObj);
 
           templateids.push(newObj);
 
