@@ -4,6 +4,7 @@ export * from "./banner";
 export * from "./business";
 export * from "./businessSetting";
 export * from "./category";
+export * from "./cart";
 export * from "./dish";
 export * from "./kitchen";
 
