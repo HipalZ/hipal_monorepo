@@ -8,7 +8,7 @@ import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
-import { FaConciergeBell, FaMoneyBillWave } from "react-icons/fa";
+import { FaConciergeBell } from "react-icons/fa";
 import { BsBagHeartFill } from "react-icons/bs";
 import { useCart } from "@/components/store/useCart";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +21,6 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { MdConnectWithoutContact } from "react-icons/md";
 import { IoPersonAddSharp } from "react-icons/io5";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {

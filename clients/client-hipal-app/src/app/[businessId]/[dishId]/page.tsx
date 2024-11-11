@@ -31,7 +31,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
           alt: name,
         },
       ],
-      url: `${BUSINESS_KEYID}/${businessId}/${dishId}`,
+      url: `${BUSINESS_KEYID}${businessId}/${dishId}`,
       type: "website",
     },
   };

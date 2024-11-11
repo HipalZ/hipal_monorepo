@@ -9,24 +9,77 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { useCart } from "@/components/store/useCart";
 import { BiArrowBack } from "react-icons/bi";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { apiRpc } from "@hi/common";
+import { useLogin } from "@/components/store/useLogin";
+import { useParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { BUSINESS_KEYID } from "@/configs";
 
 const Cart = () => {
-  const { cart } = useCartStore();
+  const { cart, setCartEmpty } = useCartStore();
   const { setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
+  const userDetails = useLogin((s) => s.userDetails);
+  const router = useRouter();
+  const customLink = useParams()?.businessId as string;
 
   const openCallWaiterModal = useCallback(() => {
-    console.log("openCallWaiterModal");
     setCallWaiterModal(true);
   }, []);
 
   const closeCallWaiterModal = useCallback(() => {
     setCallWaiterModal(false);
   }, []);
-  console.log(cart);
+
+  const shareTheCart = useCallback(async () => {
+    if (!accessToken) {
+      return router.push(`/${customLink}/user/signup`);
+    }
+
+    const sanitizedCart = cart.map((item) => {
+      const { recommendationIds, ...sanitizedDish } = item.dish;
+      return {
+        ...item,
+        dish: sanitizedDish,
+      };
+    });
+
+    try {
+      const response = await apiRpc.cart.create.$post({
+        json: {
+          businessId: outletInfo?.businessId,
+          userId: userDetails?._id,
+          cart: sanitizedCart,
+        },
+      });
+      const res = await response.json();
+
+      if (!res.err) {
+        setCartEmpty();
+        const cartID = res.data.cartID;
+        const shareURL = `${BUSINESS_KEYID}${customLink}/cart/${cartID}`;
+
+        if (navigator.share) {
+          await navigator.share({
+            title: "Check out my cart",
+            text: "Here's the cart I want to share with you.",
+            url: shareURL,
+          });
+        } else {
+          navigator.clipboard.writeText(shareURL);
+          toast.success("Share URL copied to clipboard");
+        }
+      } else {
+        toast.error(res.message || "Failed to share cart");
+      }
+    } catch (error) {
+      console.error("Error sharing cart:", error);
+      toast.error("An error occurred while sharing the cart");
+    }
+  }, [cart, userDetails?._id, outletInfo?.businessId, accessToken]);
 
   return (
     <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary bg-base-100 relative">
@@ -46,7 +99,9 @@ const Cart = () => {
           <div className="flex items-center justify-center w-20 h-20 rounded-full bg-base-100">
             <GiKnifeFork className="text-4xl text-primary-100" />
           </div>
-          <div className="mt-4 text-2xl font-bold">Your cart is empty</div>
+          <div className="mt-4 text-2xl font-bold">
+            Your {outletInfo?.outLetType !== "OTHER" ? "cart" : "cart"} is empty
+          </div>
         </div>
       ) : (
         <div className="w-full px-4">
@@ -54,6 +109,15 @@ const Cart = () => {
             <CartItem key={cartItem.id} cartItem={cartItem} />
           ))}
         </div>
+      )}
+      {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
+        <button
+          onClick={shareTheCart}
+          type="button"
+          className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
+        >
+          Share Cart
+        </button>
       )}
       {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
         <button
