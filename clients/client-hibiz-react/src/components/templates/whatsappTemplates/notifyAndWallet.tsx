@@ -7,8 +7,9 @@ import { BsWallet2 } from "react-icons/bs";
 import { GrHistory } from "react-icons/gr";
 
 const MemoNotifyAndWallet = () => {
-  const { walletBalance, setStep } = useWhatsapp((s) => ({
+  const { walletBalance, step, setStep } = useWhatsapp((s) => ({
     walletBalance: s.walletBalance,
+    step: s.step,
     setStep: s.setStep,
   }));
   const businessData = useBusinessData((s) => s.businessData);
@@ -25,24 +26,26 @@ const MemoNotifyAndWallet = () => {
   });
 
   useQuery({
-    queryKey: ["walletHistory", businessData?._id],
+    queryKey: ["walletHistory", businessData?._id, Step.WALLET_HISTORY],
     queryFn: getWalletHistory,
-    enabled: !!businessData?._id,
+    enabled: !!businessData?._id && step === Step.WALLET_HISTORY,
   });
 
   return (
     <div className="flex items-center justify-end gap-2 -mr-4 lg:gap-4 md:mr-0">
       {/* Notifications */}
-      <div className="relative flex items-center">
-        <button
-          title="Wallet History"
-          onClick={handleWallethistory}
-          type="button"
-          className="on_active_bounce"
-        >
-          <GrHistory size={22} />
-        </button>
-      </div>
+      {step === Step.SETUP && (
+        <div className="relative flex items-center">
+          <button
+            title="Wallet History"
+            onClick={handleWallethistory}
+            type="button"
+            className="on_active_bounce"
+          >
+            <GrHistory size={22} />
+          </button>
+        </div>
+      )}
 
       {/* Wallet */}
       <div

@@ -90,6 +90,7 @@ const MemoPreDefinedContent = () => {
         />
       );
     }
+    // splitting the body text into parts and rendering the variables as input fields
     return bodyText.split(/(\{\{\d+\}\})/).map((part, index) => {
       const match = part.match(/\{\{(\d+)\}\}/);
       if (match) {

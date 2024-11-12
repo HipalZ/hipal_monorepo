@@ -2,25 +2,21 @@ import { memo, lazy, useCallback, useRef, type FormEvent } from "react";
 import useWhatsapp, {
   ActionType,
   HeaderInterface,
-  Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
 import {
-  useCreatingTemplate,
-  useEditingTemplate,
+  useCreateTemplateMutation,
+  useEditTemplateMutation,
   useMediaUpload,
 } from "@/hooks/useTemplates";
 import useBusinessData from "@/components/store/useBusinessData";
-import type {
-  CropperRef,
-  WhatsAppTemplate,
-} from "@/components/types/businessData";
-import toast from "react-hot-toast";
+import type { CropperRef } from "@/components/types/businessData";
 import PopUp from "@/components/atom/popUp";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
 import CallOfAction from "./callOfAction";
 import TemplateButtons from "./templateButtons";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const SuccessPopup = lazy(() => import("./successPopup"));
 const Content = lazy(() => import("./content"));
@@ -57,7 +53,6 @@ const MemoCreateEditTemplate = () => {
     templateId,
     showSuccessPopup,
     setShowSuccessPopup,
-    setStep,
     templateStatus,
     setTemplateStatus,
   } = useWhatsapp((s) => ({
@@ -81,22 +76,24 @@ const MemoCreateEditTemplate = () => {
     cropping: s.cropping,
     showSuccessPopup: s.showSuccessPopup,
     setShowSuccessPopup: s.setShowSuccessPopup,
-    setStep: s.setStep,
     templateStatus: s.templateStatus,
     setTemplateStatus: s.setTemplateStatus,
   }));
 
   const cropperRef = useRef<CropperRef>(null);
   const { handleCrop } = useWhatzappCroppedImg();
-  const { createTemplate } = useCreatingTemplate();
-  const { editTemplate } = useEditingTemplate();
   const { uploadMedia } = useMediaUpload();
+
+  const createTemplateMutation = useCreateTemplateMutation();
+  const editTemplateMutation = useEditTemplateMutation();
 
   // handle form submit for create and edit template
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const imageUrl = await uploadMedia();
+    let imageUrl = "";
+    if (headerType === HeaderInterface.Image) {
+      imageUrl = await uploadMedia();
+    }
 
     // payload structure for create/edit template
     const payload = {
@@ -158,21 +155,24 @@ const MemoCreateEditTemplate = () => {
       bodyVariableSequence: bodyVariableSequence,
     };
 
-    let response;
     if (templateId?.length > 0) {
-      response = await editTemplate(payload as unknown as WhatsAppTemplate);
+      editTemplateMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (data?.status !== "REJECTED") {
+            setShowSuccessPopup(true);
+            setTemplateStatus(data?.status);
+          }
+        },
+      });
     } else {
-      response = await createTemplate(payload as unknown as WhatsAppTemplate);
-    }
-    if (response?.data?.status !== "REJECTED") {
-      setShowSuccessPopup(true);
-      setTemplateStatus(response?.data?.status);
-    } else {
-      toast.error(
-        response?.data?.error?.error_user_msg ||
-          "Template creation rejected please contact support",
-      );
-      setStep(Step.SETUP);
+      createTemplateMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (data?.status !== "REJECTED") {
+            setShowSuccessPopup(true);
+            setTemplateStatus(data?.status);
+          }
+        },
+      });
     }
   };
 
@@ -181,6 +181,9 @@ const MemoCreateEditTemplate = () => {
     setShowSuccessPopup(false);
     setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
   }, [setTemplateSteps, setShowSuccessPopup]);
+
+  if (createTemplateMutation.isPending || editTemplateMutation.isPending)
+    return <LoadingSpinner />;
 
   return (
     <form onSubmit={handleSubmitReview}>

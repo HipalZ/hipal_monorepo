@@ -1,7 +1,11 @@
 import BottomButton from "@/components/atom/bottomButton";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
-import useWhatsapp, { TemplateSteps } from "@/components/store/useWhatsapp";
+import useWhatsapp, {
+  Step,
+  TemplateSteps,
+} from "@/components/store/useWhatsapp";
 import { useSendOptions } from "@/hooks/useTemplates";
 import { memo, useCallback } from "react";
 
@@ -13,6 +17,7 @@ const MemoTemplateButtons = () => {
     templateSteps,
     setTemplateSteps,
     templateStatus,
+    setStep,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -20,6 +25,7 @@ const MemoTemplateButtons = () => {
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
     templateStatus: s.templateStatus,
+    setStep: s.setStep,
   }));
   const { businessName, businessId } = useBusinessData((s) => ({
     businessName: s.businessData?.name,
@@ -28,7 +34,6 @@ const MemoTemplateButtons = () => {
   const {
     selectedOptions,
     selectedGroups,
-    customerPhone,
     bulkCustomers,
     sendLaterTime,
     testNumber,
@@ -36,13 +41,12 @@ const MemoTemplateButtons = () => {
   } = useMessageRecipientsStore((s) => ({
     selectedOptions: s.selectedOptions,
     selectedGroups: s.selectedGroups,
-    customerPhone: s.customerPhone,
     bulkCustomers: s.bulkCustomers,
     sendLaterTime: s.sendLaterTime,
     testNumber: s.testNumber,
     uploadedFileName: s.uploadedFileName,
   }));
-  const { sendOptions } = useSendOptions();
+  const sendOptions = useSendOptions();
   // send customers based on selected options
   const sendCustomers = useCallback(() => {
     const payload = {
@@ -55,7 +59,14 @@ const MemoTemplateButtons = () => {
       ...(sendLaterTime && sendLaterTime > 0 && { time: sendLaterTime }),
       ...(testNumber?.length > 0 && { customerPhone: testNumber }),
     };
-    sendOptions(payload);
+    sendOptions.mutate(payload, {
+      onSuccess: () => {
+        setStep(Step.SETUP);
+      },
+      onError: () => {
+        console.log("Error sending message");
+      },
+    });
   }, [
     selectedOptions,
     bulkCustomers,
@@ -66,6 +77,7 @@ const MemoTemplateButtons = () => {
     sendLaterTime,
     sendOptions,
     testNumber,
+    setStep,
   ]);
 
   // handle next button click
@@ -134,6 +146,7 @@ const MemoTemplateButtons = () => {
           ]}
         />
       )}
+      {sendOptions?.isPending && <LoadingSpinner />}
     </>
   );
 };

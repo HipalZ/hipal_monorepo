@@ -3,19 +3,38 @@ import { BiPlus } from "react-icons/bi";
 import { IoMdClose } from "react-icons/io";
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import { useAddTemplate } from "@/components/helpers/whatzAppHelpers";
-import { motion, AnimatePresence } from "framer-motion";
 
-const CallOfAction = lazy(() => import("./callOfAction"));
 const ImageContent = lazy(() => import("./imageContent"));
 
 const variableOptions = [
-  "name",
-  "email",
-  "businessName",
-  "phone",
-  "address",
-  "time",
-  "date",
+  {
+    label: "name",
+    value: "Rajesh",
+  },
+  {
+    label: "email",
+    value: "rajesh@gmail.com",
+  },
+  {
+    label: "businessName",
+    value: "business name",
+  },
+  {
+    label: "phone",
+    value: "+913456789090",
+  },
+  {
+    label: "address",
+    value: "Bangalore",
+  },
+  {
+    label: "time",
+    value: "10:00 AM",
+  },
+  {
+    label: "date",
+    value: "31st Dec, 2024",
+  },
 ];
 
 const MemoContent = () => {
@@ -54,8 +73,19 @@ const MemoContent = () => {
 
   const handleAddVariable = useCallback(() => {
     addVariable();
-    setBodyVariableSequence([...bodyVariableSequence, variableOptions[0]]);
-  }, [addVariable, setBodyVariableSequence, bodyVariableSequence]);
+    updateBodySequenceVariable(0, "name");
+    updateVariable(0, "Rajesh");
+    setBodyVariableSequence([
+      ...bodyVariableSequence,
+      variableOptions?.[0]?.label,
+    ]);
+  }, [
+    addVariable,
+    setBodyVariableSequence,
+    bodyVariableSequence,
+    updateVariable,
+    updateBodySequenceVariable,
+  ]);
 
   const handleRemoveVariable = useCallback(
     (index: number) => {
@@ -150,6 +180,7 @@ const MemoContent = () => {
             onChange={handleBodyTextChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
           />
+
           <small className="absolute text-gray-500 bottom-2 right-3">
             {bodyText?.length || 0}/1028
           </small>
@@ -167,17 +198,10 @@ const MemoContent = () => {
             <BiPlus className="mr-1" /> Add Variable
           </button>
         </div>
-        <div className="space-y-3">
-          <AnimatePresence>
-            {bodyVariables?.map((variable, index) => (
-              <motion.div
-                key={index.toString()}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="relative p-3 transition-all bg-white border border-gray-200 rounded-lg shadow-sm group hover:shadow-md"
-              >
-                <div className="flex flex-col gap-3">
+        <div className="relative space-y-3 transition-all bg-white rounded-lg group">
+          {bodyVariables
+            ? bodyVariables?.map((_, index) => (
+                <div key={index?.toString()} className="flex flex-col gap-3">
                   <div className="flex items-center w-full gap-3 sm:w-auto">
                     <div className="flex items-center justify-center w-8 h-8 text-sm font-medium text-gray-900 bg-gray-100 rounded-full shrink-0">
                       {index + 1}
@@ -185,30 +209,19 @@ const MemoContent = () => {
                     <div className="relative flex-1 sm:w-64 sm:flex-none">
                       <select
                         value={bodyVariableSequence[index]}
-                        onChange={(e) =>
-                          updateBodySequenceVariable(index, e.target.value)
-                        }
+                        onChange={(e) => {
+                          updateBodySequenceVariable(index, e.target.value);
+                          updateVariable(index, e.target.value);
+                        }}
                         className="block w-full px-3 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
-                        <option value="">Select variable</option>
                         {variableOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
+                          <option key={option?.label} value={option?.value}>
+                            {option?.label}
                           </option>
                         ))}
                       </select>
                     </div>
-                  </div>
-                  <div className="flex items-center w-full gap-3 sm:flex-1">
-                    <input
-                      type="text"
-                      placeholder={`Enter ${
-                        bodyVariableSequence[index] || "variable"
-                      } value`}
-                      value={variable}
-                      onChange={(e) => updateVariable(index, e.target.value)}
-                      className="flex-1 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
                     <button
                       type="button"
                       onClick={() => handleRemoveVariable(index)}
@@ -219,10 +232,8 @@ const MemoContent = () => {
                     </button>
                   </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 h-0.5 scale-x-0 bg-gradient-to-r from-blue-500 to-purple-500 transition-transform group-hover:scale-x-100" />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              ))
+            : null}
         </div>
       </div>
     </section>

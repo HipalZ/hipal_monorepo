@@ -63,7 +63,8 @@ const MemoTemplatesCarousel = () => {
               </article>
               <ShimmerImage
                 src={
-                  template?.components[0]?.example?.header_handle[0] || diwali
+                  template?.components?.[0]?.example?.header_handle?.[0] ||
+                  diwali
                 }
                 alt={template.name || "Template"}
                 className="max-w-full max-h-[240px] md:max-w-[240px] md:max-h-[170px] object-cover w-full h-full"

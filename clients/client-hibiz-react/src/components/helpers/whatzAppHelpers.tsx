@@ -167,7 +167,6 @@ export const useBulkUploadContacts = () => {
               (item) => item.name && item.phone && Object.keys(item).length > 0,
             );
 
-            console.log("validData", validData);
             setBulkCustomers(validData);
           },
         });
