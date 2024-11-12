@@ -54,8 +54,8 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-end pt-2 pb-1 prose">
-        <div className="flex flex-col py-1 my-auto mr-auto space-y-1">
+      <div className="flex flex-row items-center pb-1 prose min-h-[9rem]">
+        <div className="flex flex-col py-1 mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
               <div className="my-auto">
@@ -87,11 +87,11 @@ const MemoHorizontalCard = ({
             <div className="text-sm font-semibold opacity-70">₹ {price}</div>
           </button>
         </div>
-        <div className={"flex flex-col"}>
+        <div className={"flex flex-col pt-2"}>
           <div>
-            {dishData?.images[0] ? (
+            {dishData?.images?.[0] ? (
               <div
-                className="relative w-[6rem] h-[6rem] overflow-hidden"
+                className="relative w-[6rem] h-[6rem] overflow-hidden "
                 onClick={() => openModal(dishData)}
               >
                 <ShimmerImage
@@ -106,20 +106,20 @@ const MemoHorizontalCard = ({
                 />
                 {!dishData.availability && (
                   <>
-                    <div className="absolute z-20 text-sm text-white bottom-4 left-2">
+                    <div className="absolute bottom-0 z-20 text-sm text-white left-2">
                       Not Available
                     </div>
-                    <div className="absolute w-full bottom-2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent h-1/2" />
+                    <div className="absolute bottom-0 w-full h-1/2 rounded-b-2xl bg-gradient-to-t from-black via-black/70 to-transparent" />
                   </>
                 )}
               </div>
             ) : !dishData.availability ? (
               <div className="pb-2">
-                <NotAvailable className="w-24 h-24 overflow-hidden rounded-xl" />
+                <NotAvailable className="!w-[6rem] !h-[6rem] overflow-hidden rounded-xl" />
               </div>
             ) : noDescription ? (
               <div>
-                <PlaceholderImg className="w-24 h-24 overflow-hidden rounded-xl" />
+                <PlaceholderImg className="w-[6rem] h-[6rem] overflow-hidden rounded-xl" />
               </div>
             ) : (
               <div className="mt-6" />
@@ -130,13 +130,13 @@ const MemoHorizontalCard = ({
               className={` flex flex-col items-center w-full mx-auto scale-75 ${
                 dishData?.images?.length > 0 || noDescription
                   ? " -mt-4"
-                  : " -mt-4 -ml-6"
+                  : " -mt-4"
               }`}
             >
               {dishData.availability && (
                 <div
                   className={`flex flex-col items-center w-full ${
-                    dishData?.images?.length > 0 ? "" : "-ml-6"
+                    dishData?.images?.length > 0 ? "" : "ml-2"
                   }`}
                 >
                   <DishQuantityButton dishData={dishData} />

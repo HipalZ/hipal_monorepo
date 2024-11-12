@@ -21,6 +21,28 @@ interface IDishesProps {
   timings: TimingType;
 }
 
+const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
+  const typeMap: Record<string, string[]> = {
+    all: [],
+    nonveg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
+    non_veg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
+    veg: ["VEG", "ALCOHOL", "NON_ALCOHOL"],
+    vegan: ["VEGAN", "ALCOHOL", "NON_ALCOHOL"],
+    alcoholic: ["ALCOHOL"],
+    nonalcoholic: ["NON_ALCOHOL"],
+  };
+
+  if (isActiveDishType.toLowerCase() === "all") {
+    return visibleDishes;
+  }
+
+  const allowedTypes = typeMap[isActiveDishType.toLowerCase()] || [];
+
+  return visibleDishes.filter((dish) =>
+    dish.dishTypes?.some((type) => allowedTypes.includes(type)),
+  );
+};
+
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, timings } = props;
   const { setDishes } = useDishesStore();
@@ -33,15 +55,7 @@ const DishesList: FC<IDishesProps> = (props) => {
     isActiveChildCategory,
     setActiveChildCategory,
     setObserverActive,
-  } = useActiveClass((state) => ({
-    isActiveDishType: state.isActiveDishType,
-    isActiveCategory: state.isActiveCategory,
-    setActiveCategory: state.setActiveCategory,
-    observerActive: state.observerActive,
-    isActiveChildCategory: state.isActiveChildCategory,
-    setActiveChildCategory: state.setActiveChildCategory,
-    setObserverActive: state.setObserverActive,
-  }));
+  } = useActiveClass();
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const subTypes = useMemo(() => {
@@ -174,13 +188,10 @@ const DishesList: FC<IDishesProps> = (props) => {
           (dish: DishType) => dish.visibility && !dish.isDeleted,
         );
 
-        const dishesToRender =
-          isActiveDishType.toLowerCase() === "all"
-            ? visibleDishes
-            : visibleDishes.filter((dish) =>
-                dish.dishTypes?.includes(isActiveDishType),
-              );
+        const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
+
         if (dishesToRender.length === 0) return null;
+
         return (
           <section
             key={`${category._id}${index}`}

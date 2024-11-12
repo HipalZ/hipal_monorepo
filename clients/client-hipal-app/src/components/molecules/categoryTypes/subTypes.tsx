@@ -12,6 +12,37 @@ interface ISubTypes {
   childCategory: CategoryType[];
 }
 
+const filterDishesByType = (
+  category: CategoryType,
+  activeDishType: string,
+): boolean => {
+  return (
+    category.hierarchy === "CHILD" &&
+    category.dishIds &&
+    category.dishIds.length > 0 &&
+    category.dishIds.some((dish: DishType) => {
+      const typeMap: Record<string, string[]> = {
+        all: [], // Show all dishes
+        nonveg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
+        non_veg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
+        veg: ["VEG", "ALCOHOL", "NON_ALCOHOL"],
+        vegan: ["VEGAN", "ALCOHOL", "NON_ALCOHOL"],
+        alcoholic: ["ALCOHOL"],
+        nonalcoholic: ["NON_ALCOHOL"],
+      };
+
+      const allowedTypes = typeMap[activeDishType.toLowerCase()] || [];
+
+      return (
+        !dish.isDeleted &&
+        dish.visibility &&
+        (activeDishType.toLowerCase() === "all" ||
+          dish.dishTypes?.some((type) => allowedTypes.includes(type)))
+      );
+    })
+  );
+};
+
 const MemoSubTypes = (props: ISubTypes) => {
   const { childCategory } = props;
   const {
@@ -26,23 +57,9 @@ const MemoSubTypes = (props: ISubTypes) => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const subTypes = useMemo(() => {
-    const hasVisibleDishesOfType = (category: CategoryType): boolean => {
-      return (
-        category.hierarchy === "CHILD" &&
-        category.dishIds &&
-        category.dishIds.length > 0 &&
-        category.dishIds.some((dish: DishType) => {
-          return (
-            !dish.isDeleted &&
-            dish.visibility &&
-            (isActiveDishType.toLowerCase() === "all" ||
-              dish.dishTypes?.includes(isActiveDishType))
-          );
-        })
-      );
-    };
-
-    return childCategory.filter(hasVisibleDishesOfType);
+    return childCategory.filter((category) =>
+      filterDishesByType(category, isActiveDishType),
+    );
   }, [childCategory, isActiveDishType]);
 
   const setActiveCategories = useCallback(

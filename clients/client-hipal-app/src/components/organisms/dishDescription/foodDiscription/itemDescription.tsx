@@ -27,9 +27,11 @@ function MemoIndividualItemDescription({ dishData }: { dishData: DishType }) {
           ))}
         </section>
       )}
-      <b className="text-base opacity-60">
-        ₹ {Number(price).toLocaleString("en-IN")}
-      </b>
+      {Number(price) > 0 && (
+        <b className="text-base opacity-60">
+          ₹ {Number(price).toLocaleString("en-IN")}
+        </b>
+      )}
       <div
         className={`w-full font-medium 
         ${dishData?.name?.length > 30 ? "text-lg" : "text-xl"}

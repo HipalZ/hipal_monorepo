@@ -108,7 +108,7 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
         ) : (
           <PlaceholderImg className="w-20 h-20 rounded-md" />
         )}
-        {hide && (
+        {!hide && (
           <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
             <div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
               <button

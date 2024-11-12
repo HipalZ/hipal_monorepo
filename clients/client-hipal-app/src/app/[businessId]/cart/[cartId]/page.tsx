@@ -1,26 +1,26 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { apiRpc } from "@hi/common";
+import { BUSINESS_KEYID } from "@/configs";
+import { updateTheme } from "@/components/utils/themes";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import MemoizedCartItem from "@/components/organisms/cart/cartItem";
-import { updateTheme } from "@/components/utils/themes";
-import { BUSINESS_KEYID } from "@/configs";
-import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import CountdownTimer from "@/components/atoms/timer";
 
 const CartPage = () => {
   const { businessId: customLink, cartId } = useParams();
   const router = useRouter();
+
   const fetchSettings = async () => {
     const response = await apiRpc.businesses.business_theme[":customLink"].$get(
       {
-        param: {
-          customLink: customLink,
-        },
+        param: { customLink },
       },
     );
-
     const res = await response.json();
     const themes = res.data?.theme;
     updateTheme(themes);
@@ -29,12 +29,13 @@ const CartPage = () => {
 
   const fetchCart = async () => {
     const response = await apiRpc.cart[":id"].$get({
-      param: {
-        id: cartId,
-      },
+      param: { id: cartId },
     });
-
     const res = await response.json();
+    if (res.err) {
+      throw new Error(res.message || "Failed to fetch cart");
+    }
+    console.log("Cart Data:", res.data);
     return res.data || {};
   };
 
@@ -44,44 +45,64 @@ const CartPage = () => {
     enabled: !!customLink,
   });
 
-  const { isLoading: cartLoading, data } = useQuery({
+  const {
+    isLoading: cartLoading,
+    data: cartData,
+    isError: cartError,
+    error: cartErrorMessage,
+  } = useQuery({
     queryKey: ["cart", cartId],
     queryFn: fetchCart,
     enabled: !!cartId,
   });
 
-  const goToExplore = () => {
+  const goToExplore = useCallback(() => {
     router.push(`/${customLink}/explore`);
-  };
+  }, [router, customLink]);
 
+  // Handle Loading State
   if (settingsLoading || cartLoading) {
     return <LoadingSpinnerCircle />;
   }
 
+  if (cartError || !cartData) {
+    console.error("Cart Error:", cartErrorMessage);
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen max-w-[30rem] px-4 mx-auto text-base-content bg-base-100">
+        <div className="mt-8 text-lg text-center">Time limit exceeded</div>
+        <CommonBottomButton
+          fixed={false}
+          buttons={[{ text: "Explore more", onClick: goToExplore }]}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-[30rem] mx-auto h-screen px-4 overflow-auto bg-base-100 text-base-content">
-      <header className="w-full mt-4 text-2xl font-semibold text-center">
-        Cart
-      </header>
-      {data?.cart.map((cartItem) => (
-        <MemoizedCartItem hide key={cartItem.id} cartItem={cartItem} />
-      ))}
+    <div className="w-full min-h-screen max-w-[30rem] pb-[5rem] px-4 mx-auto text-base-content bg-base-100">
+      <header className="pt-4 text-2xl font-semibold text-center">Cart</header>
+
+      <CountdownTimer expiryTimestamp={cartData?.date + 3 * 60 * 60 * 1000} />
+
+      {cartData?.cart?.length > 0 ? (
+        cartData.cart.map((cartItem) => (
+          <MemoizedCartItem hide key={cartItem.id} cartItem={cartItem} />
+        ))
+      ) : (
+        <div className="mt-8 text-lg text-center">Your cart is empty</div>
+      )}
+
       <CommonBottomButton
         fixed
         buttons={[
+          { text: "Explore more", onClick: goToExplore },
           {
-            text: "Explore more",
-            onClick: goToExplore,
-          },
-          {
-            text: "Chat on WatsApp",
+            text: "Chat on WhatsApp",
             onClick: () => {
               const message = encodeURIComponent(
-                `Hi, I am interested in this item. Can I know more details?\n*See the product:* ${BUSINESS_KEYID}${customLink}/cart/${cartId}`,
+                `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${BUSINESS_KEYID}/${customLink}/cart/${cartId}`,
               );
-
               const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
-
               window.open(whatsappUrl, "_blank");
             },
           },
