@@ -95,6 +95,7 @@ export const outLetInfoSchema = z.object({
   specialDay: z.number().optional(),
   serviceChargePercentage: z.coerce.number().default(0).optional(),
   gstPercentage: z.coerce.number().default(5).optional(),
+  outLetType: z.string().min(4).max(30).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

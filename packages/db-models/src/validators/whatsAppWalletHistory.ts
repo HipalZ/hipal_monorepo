@@ -11,9 +11,11 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 export const whatsAppWalletHistorySchema = z.object({
   businessId: ObjectIdSchema,
   userId: ObjectIdSchema,
-  amount: z.number().default(0),
-  discount: z.number().default(0),
   date: z.number().default(Date.now()),
+  order_id: ObjectIdSchema,
+  status: z.enum(["SUCCESS", "FAILED"]),
+  errorReason: z.string().optional(),
+  errorDescription: z.string().optional(),
 });
 
 export type WhatsAppWalletHistoryType = z.infer<

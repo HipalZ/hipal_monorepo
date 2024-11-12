@@ -7,7 +7,6 @@ import HiPeopleImage from "@/assets/services/hi ppl.png";
 import LoyaltyImage from "@/assets/services/loyalty.png";
 import MenuImage from "@/assets/services/menu.png";
 import StaffImage from "@/assets/services/staff.png";
-import Review from "@/assets/services/review.png";
 import Themes from "@/assets/services/themes.png";
 import Settings from "@/assets/services/setting.png";
 export interface ICardButton {

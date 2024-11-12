@@ -1,7 +1,7 @@
 import BottomButton from "@/components/atom/bottomButton";
 import PopUp from "@/components/atom/popUp";
 import type { CropperRef } from "@/components/types/businessData";
-import { memo, useCallback, useRef } from "react";
+import { memo, useRef } from "react";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useCroppedImg } from "@/components/helpers/explorePageHelpers";

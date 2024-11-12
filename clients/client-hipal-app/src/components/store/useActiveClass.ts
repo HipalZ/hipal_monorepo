@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
+import type { DishType } from "@hi/db-models/src/validators";
 interface IUseSettings {
   isActiveCategory: string;
   setActiveCategory: (categoryId: string) => void;
@@ -14,6 +14,8 @@ interface IUseSettings {
   setActiveChildCategory: (category: string) => void;
   isActiveChildCategoryName: string;
   setActiveChildCategoryName: (category: string) => void;
+  isSelectedDish: null | DishType;
+  setSelectedDish: (dish: DishType) => void;
 
   // banner redirections
   activeType: string;
@@ -50,6 +52,9 @@ export const useActiveClass = create(
 
       observerActive: false,
       setObserverActive: (value) => set(() => ({ observerActive: value })),
+
+      isSelectedDish: null,
+      setSelectedDish: (dish) => set(() => ({ isSelectedDish: dish })),
     }),
     {
       name: "activecategory",

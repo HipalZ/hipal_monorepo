@@ -1,25 +1,37 @@
-import { memo, lazy, useCallback } from "react";
+import { memo, lazy, useCallback, useRef, type FormEvent } from "react";
 import useWhatsapp, {
   ActionType,
   HeaderInterface,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import { useCreatingTemplate } from "@/hooks/useTemplates";
-import { useNavigate } from "react-router-dom";
+import {
+  useCreateTemplateMutation,
+  useEditTemplateMutation,
+  useMediaUpload,
+} from "@/hooks/useTemplates";
 import useBusinessData from "@/components/store/useBusinessData";
-import type { WhatsAppTemplate } from "@/components/types/businessData";
-import toast from "react-hot-toast";
+import type { CropperRef } from "@/components/types/businessData";
+import PopUp from "@/components/atom/popUp";
+import EasyReactCropper from "@/components/cropper/cropper";
+import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
+import CallOfAction from "./callOfAction";
+import TemplateButtons from "./templateButtons";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
+const SuccessPopup = lazy(() => import("./successPopup"));
 const Content = lazy(() => import("./content"));
 const ShowOptionsToSend = lazy(() => import("./showOptionsToSend"));
 const StepHeader = lazy(() => import("./stepHeader"));
 const SendTemplate = lazy(() => import("./sendTemplate"));
 const TemplatePreview = lazy(() => import("./templatePreview"));
-const PreDefinedCallOfAction = lazy(() => import("./preDefinedCOA"));
 const PreDefinedContent = lazy(() => import("./preDefinedContent"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateEditTemplate = () => {
+  const { businessId } = useBusinessData((s) => ({
+    businessId: s.businessData?._id,
+  }));
+
   const {
     templateName,
     templateType,
@@ -35,8 +47,16 @@ const MemoCreateEditTemplate = () => {
     templateSteps,
     setTemplateSteps,
     bodyVariableSequence,
-    imagePreview,
+    showCropper,
+    setShowCropper,
+    cropping,
+    templateId,
+    showSuccessPopup,
+    setShowSuccessPopup,
+    templateStatus,
+    setTemplateStatus,
   } = useWhatsapp((s) => ({
+    templateId: s.templateId,
     templateName: s.templateName,
     templateType: s.templateType,
     headerType: s.headerType,
@@ -51,19 +71,36 @@ const MemoCreateEditTemplate = () => {
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
     bodyVariableSequence: s.bodyVariableSequence,
-    imagePreview: s.imagePreview,
+    showCropper: s.showCropper,
+    setShowCropper: s.setShowCropper,
+    cropping: s.cropping,
+    showSuccessPopup: s.showSuccessPopup,
+    setShowSuccessPopup: s.setShowSuccessPopup,
+    templateStatus: s.templateStatus,
+    setTemplateStatus: s.setTemplateStatus,
   }));
 
-  const { createTemplate } = useCreatingTemplate();
-  const navigate = useNavigate();
-  const businessId = useBusinessData((s) => s.businessData?._id);
+  const cropperRef = useRef<CropperRef>(null);
+  const { handleCrop } = useWhatzappCroppedImg();
+  const { uploadMedia } = useMediaUpload();
 
-  const handleSubmitReview = async () => {
+  const createTemplateMutation = useCreateTemplateMutation();
+  const editTemplateMutation = useEditTemplateMutation();
+
+  // handle form submit for create and edit template
+  const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    let imageUrl = "";
+    if (headerType === HeaderInterface.Image) {
+      imageUrl = await uploadMedia();
+    }
+
     // payload structure for create/edit template
     const payload = {
       businessId: businessId,
       name: templateName,
       language: "en_US",
+      ...(templateId?.length > 0 && { templateId: templateId }),
       category: templateType,
       components: [
         ...(headerType && headerText
@@ -73,9 +110,9 @@ const MemoCreateEditTemplate = () => {
                 format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
                 ...(headerType === HeaderInterface.Text
                   ? { text: headerText }
-                  : {
+                  : imageUrl && {
                       example: {
-                        header_handle: [imagePreview],
+                        header_handle: [imageUrl],
                       },
                     }),
               },
@@ -117,36 +154,53 @@ const MemoCreateEditTemplate = () => {
       ],
       bodyVariableSequence: bodyVariableSequence,
     };
-    console.log(payload);
-    const response = await createTemplate(payload as WhatsAppTemplate);
 
-    if (response?.status === 200) {
-      toast.success("Template created successfully");
-      // return navigate(`/app/business/${businessId}/whatzapp`);
+    if (templateId?.length > 0) {
+      editTemplateMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (data?.status !== "REJECTED") {
+            setShowSuccessPopup(true);
+            setTemplateStatus(data?.status);
+          }
+        },
+      });
+    } else {
+      createTemplateMutation.mutate(payload, {
+        onSuccess: (data) => {
+          if (data?.status !== "REJECTED") {
+            setShowSuccessPopup(true);
+            setTemplateStatus(data?.status);
+          }
+        },
+      });
     }
   };
 
-  const handleNext = useCallback(() => {
-    if (templateSteps === TemplateSteps.MODIFY) {
-      setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-    }
-  }, [templateSteps, setTemplateSteps]);
+  // proceed forward after success popup
+  const handleProceed = useCallback(() => {
+    setShowSuccessPopup(false);
+    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+  }, [setTemplateSteps, setShowSuccessPopup]);
+
+  if (createTemplateMutation.isPending || editTemplateMutation.isPending)
+    return <LoadingSpinner />;
 
   return (
-    <>
+    <form onSubmit={handleSubmitReview}>
       <div className="container p-3 pb-24 font-sans lg:p-4">
         <StepHeader />
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:mt-4 md:grid-cols-2">
           <TemplatePreview />
           {templateSteps === TemplateSteps.MODIFY && (
             <section>
               <PreDefinedContent />
-              <PreDefinedCallOfAction />
+              <CallOfAction />
             </section>
           )}
           {templateSteps === TemplateSteps.CREATE_EDIT && (
             <section>
               <Content />
+              <CallOfAction />
             </section>
           )}
           {templateSteps === TemplateSteps.SHOW_OPTIONS && (
@@ -155,18 +209,44 @@ const MemoCreateEditTemplate = () => {
           {templateSteps === TemplateSteps.SEND && <SendTemplate />}
         </div>
       </div>
-      <BottomButton
-        fixed
-        buttons={[
-          {
-            text: "Next",
-            onClick: handleSubmitReview,
-            type: "button",
-            disable: !templateName || !bodyText,
-          },
-        ]}
-      />
-    </>
+      {templateStatus === "REJECTED" ? (
+        <center className="text-red-500">
+          Your template is rejected first update the template before proceeding
+        </center>
+      ) : null}
+      <TemplateButtons />
+      <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
+        <section className="my-[10rem]">
+          <EasyReactCropper
+            key={cropping.image}
+            image={cropping.image}
+            ref={cropperRef}
+            width={400}
+            height={400}
+          />
+        </section>
+        <BottomButton
+          buttons={[
+            {
+              text: "Crop",
+              onClick: () => handleCrop(cropperRef),
+            },
+            {
+              text: "Cancel",
+              onClick: () => setShowCropper(false),
+              type: "button",
+            },
+          ]}
+        />
+      </PopUp>
+      {showSuccessPopup && (
+        <SuccessPopup
+          show={showSuccessPopup}
+          onClose={() => setShowSuccessPopup(false)}
+          onProceed={handleProceed}
+        />
+      )}
+    </form>
   );
 };
 

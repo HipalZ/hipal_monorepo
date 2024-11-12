@@ -63,6 +63,7 @@ const businessesRouter = new Hono()
           message: "business not created !",
         });
       }
+      const outLetType = requestData.businessType === "FOOD" ? "MENU" : "OTHER";
       await OutLetInfo.findOneAndUpdate(
         {
           businessId: business._id,
@@ -70,6 +71,7 @@ const businessesRouter = new Hono()
         {
           $set: {
             name: business.name,
+            outLetType,
           },
         },
         { upsert: true, new: true },
@@ -445,6 +447,7 @@ const businessesRouter = new Hono()
         {
           logo: requestData.logoUrl,
           address: requestData.address,
+          name: requestData.name,
         },
         { new: true },
       );
@@ -635,8 +638,6 @@ const businessesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.param();
-      console.log("from fro", businessId);
-
       const existingTheme = await Theme.findOne({ businessId: businessId });
       if (!existingTheme) return respond(c, "theme not found", true, 404, {});
 
@@ -790,6 +791,22 @@ const businessesRouter = new Hono()
         status: 200,
         error: false,
       });
+    },
+  )
+  .get(
+    "/business_theme/:customLink",
+    zValidator(
+      "param",
+      z.object({
+        customLink: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { customLink } = c.req.param();
+      const existingTheme = await Theme.findOne({ customLink: customLink });
+      if (!existingTheme) return respond(c, "theme not found", true, 404, {});
+
+      return respond(c, "theme found", false, 200, existingTheme);
     },
   );
 

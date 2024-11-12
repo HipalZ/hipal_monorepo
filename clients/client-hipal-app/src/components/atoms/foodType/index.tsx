@@ -3,7 +3,6 @@ import { memo } from "react";
 import Mixed from "@/assets/svg/Mixed.svg";
 import Alcohol from "@/assets/alcohol.png";
 import NonAlcohol from "@/assets/NonAlcohol.png";
-import { useCart } from "@/components/store/useCart";
 
 export type FOOD_TYPES =
   | "VEG"
@@ -11,13 +10,11 @@ export type FOOD_TYPES =
   | "NON_VEG"
   | "VEGAN"
   | "OTHER"
-  | "MIXED"
   | "ALCOHOL"
   | "NON_ALCOHOL";
 
 const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
   const imageIcons: Record<string, { src: string; alt: string }> = {
-    mixed: { src: Mixed, alt: "Mixed" },
     alcohol: { src: Alcohol, alt: "Alcohol" },
     nonalcohol: { src: NonAlcohol, alt: "NonAlcohol" },
   };

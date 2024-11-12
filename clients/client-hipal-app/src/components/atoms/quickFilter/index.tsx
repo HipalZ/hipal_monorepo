@@ -18,17 +18,7 @@ export const foodTypeIcons = {
       <div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full" />
     </div>
   ),
-  mixed: (
-    <div className="w-4 h-4">
-      <Image
-        src={Mixed}
-        width={16}
-        height={16}
-        alt="Mixed"
-        className="w-full h-full"
-      />
-    </div>
-  ),
+
   alcohol: (
     <div className="w-4 h-4">
       <Image
@@ -161,7 +151,7 @@ const QuickFilter = () => {
       </section>
       {isModalOpen && (
         <QuickFilterPopup show={isModalOpen} onClose={closeModal}>
-          <div className="pt-4 pb-8 mb-4  text-base-content bg-base-100 rounded-xl">
+          <div className="pt-4 pb-8 mb-4 text-base-content bg-base-100 rounded-xl">
             <div className="mb-4 text-xl text-center text-primary">Filters</div>
             <div className="mx-[1rem] font-medium space-y-4">
               <FilterOption
@@ -191,12 +181,7 @@ const QuickFilter = () => {
                 icon={foodTypeIcons.nonalcohol}
                 label="Non Alcohol"
               />
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "mixed"}
-                onClick={() => handleFilter("MIXED")}
-                icon={foodTypeIcons.mixed}
-                label="Mixed"
-              />
+
               <FilterOption
                 isActive={isActiveDishType === "all"}
                 onClick={() => handleFilter("ALL")}

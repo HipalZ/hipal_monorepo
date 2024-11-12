@@ -1,4 +1,3 @@
-"use client";
 import { memo, useRef, useState, useCallback, lazy, Suspense } from "react";
 import { cn } from "@hi/common";
 import useCouponsStore from "@/components/store/useCouponsStore";

@@ -2,12 +2,13 @@ import DishQuantityButton from "@/components/organisms/dishDescription/dishQuant
 import { getPrice } from "@/components/utils/helpers";
 import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineExpand } from "react-icons/ai";
-import DishData from "../dishDescription";
-import DishPopup from "../dishPopup";
 import type { DishType } from "@hi/db-models/src/validators";
 import ShimmerImage from "../imageshimmer";
 import OtherPlaceholderImg from "../placeholder/othePlaceholder";
 import { cn } from "@hi/common";
+import ItemDescriptionPopup from "../dishDescription/itemDescription";
+import OutletItemInfo from "../dishPopup/outletcard";
+import { useActiveClass } from "@/components/store/useActiveClass";
 
 const MemoOtherOutletCard = ({
   dishData,
@@ -15,7 +16,7 @@ const MemoOtherOutletCard = ({
   dishData: DishType;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState({} as DishType);
+  const { isSelectedDish, setSelectedDish } = useActiveClass();
   const price = useMemo(
     () => getPrice(dishData?.price || 0),
     [dishData?.price],
@@ -51,7 +52,7 @@ const MemoOtherOutletCard = ({
           )}
           <button
             type="button"
-            className="absolute p-2 bg-white rounded-full shadow-md -top-2 -right-2"
+            className="absolute p-2 bg-white rounded-full -top-2 -right-2"
             onClick={openModal}
           >
             <AiOutlineExpand className="text-lg text-primary" />
@@ -61,31 +62,36 @@ const MemoOtherOutletCard = ({
               <DishQuantityButton dishData={dishData} />
             </div>
           )}
-
-          <div className="absolute right-0 font-medium -bottom-8 text-primary opacity-80">
-            ₹ {Number(price)?.toLocaleString("en-IN")}
-          </div>
-          {dishData.tags && dishData.tags.length > 0 && (
-            <section className="absolute left-0 -bottom-8">
-              {/* {dishData.tags.map((ele) => ( */}
-              <div className="text-sm font-semibold text-primary">
-                {dishData?.tags?.[0]}
-              </div>
-              {/* ))} */}
-            </section>
-          )}
+        </div>
+        {dishData.tags && dishData.tags.length > 0 && (
+          <section className="mt-2">
+            {/* {dishData.tags.map((ele) => ( */}
+            <div className="text-sm font-semibold text-primary">
+              {dishData?.tags?.[0]}
+            </div>
+            {/* ))} */}
+          </section>
+        )}
+        <div className="mt-1 ml-1 font-medium text-primary opacity-80">
+          ₹ {Number(price)?.toLocaleString("en-IN")}
         </div>
         <div
-          className={cn("mt-10 text-sm font-medium capitalize text-primary")}
+          className={cn(
+            "mt-1 ml-1 text-sm font-medium capitalize text-primary",
+          )}
         >
           {dishData?.name || ""}
         </div>
       </section>
 
       {isModalOpen && (
-        <DishData show={isModalOpen} onClose={closeModal}>
-          <DishPopup dishData={selectedDish} />
-        </DishData>
+        <ItemDescriptionPopup
+          heading={isSelectedDish?.name}
+          show={isModalOpen}
+          onClose={closeModal}
+        >
+          <OutletItemInfo dishData={isSelectedDish} />
+        </ItemDescriptionPopup>
       )}
     </div>
   );

@@ -341,7 +341,13 @@ const dishesRouter = new Hono()
     ),
     async (c) => {
       const { id } = c.req.param();
-      const existingDish = await Dish.findOne({ _id: id, isDeleted: false });
+      const existingDish = await Dish.findOne({
+        _id: id,
+        isDeleted: false,
+      }).populate({
+        path: "recommendationIds",
+        select: "name price images dishTypes _id",
+      });
       if (!existingDish) return respond(c, "Dish not found", true, 404, {});
       return respond(c, "Dish fetched successfully", false, 200, existingDish);
     },

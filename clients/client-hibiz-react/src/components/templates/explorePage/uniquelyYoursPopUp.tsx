@@ -10,22 +10,22 @@ import { useExploreTemp } from "@/components/store/useExploreTemp";
 
 const MemoUniquelyYoursPopUp = () => {
   const businessId = useParams()?.businessId;
+  const { setDishes, dishes } = useExploreTemp((s) => ({
+    setDishes: s.setDishes,
+    dishes: s.dishes,
+  }));
   const {
     originalDishes,
-    dishes,
     searchQuery,
     setSearchQuery,
-    setDishes,
     uniquelyDishes,
     setUniquelyDishes,
     showUniquePopUp,
     setShowUniquePopUp,
   } = useExploreStore((s) => ({
     originalDishes: s.originalDishes,
-    dishes: s.dishes,
     searchQuery: s.searchQuery,
     setSearchQuery: s.setSearchQuery,
-    setDishes: s.setDishes,
     uniquelyDishes: s.uniquelyDishes,
     setUniquelyDishes: s.setUniquelyDishes,
     showUniquePopUp: s.showUniquePopUp,

@@ -1,11 +1,13 @@
 "use client";
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import type { IUniquelyDishes } from "@/components/types/businessData";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@hi/common";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import ExploreItemDescription from "@/components/atoms/dishPopup/exploreItemDescription";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -20,22 +22,32 @@ const getFigureClass = (imageCount: number): string => {
 const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
   const figureClass = getFigureClass(images.length);
 
-  const { setActiveCategory, setObserverActive, setActiveChildCategory } =
-    useActiveClass((s) => ({
-      setActiveCategory: s.setActiveCategory,
-      setObserverActive: s.setObserverActive,
-      setActiveChildCategory: s.setActiveChildCategory,
-    }));
+  const {
+    setActiveCategory,
+    setObserverActive,
+    setActiveChildCategory,
+    isSelectedDish,
+    setSelectedDish,
+  } = useActiveClass();
 
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const handleRecommendedDishClick = (item: IUniquelyDishes) => {
-    setActiveChildCategory(item?.dishId);
-    setActiveCategory(item?.dishId);
-    setObserverActive(false);
-    console.log("customLink", item?.dishId);
-    router.push(`/${customLink}/category`);
+    if (outletInfo?.outLetType !== "OTHER") {
+      setActiveChildCategory(item?.dishId);
+      setActiveCategory(item?.dishId);
+      setObserverActive(false);
+      router.push(`/${customLink}/category`);
+    } else {
+      setSelectedDish(item);
+      setIsModalOpen(true);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -57,6 +69,13 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
           />
         </button>
       ))}
+      {isModalOpen && (
+        <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
+          <div className="relative">
+            <ExploreItemDescription dishData={isSelectedDish} />
+          </div>
+        </ItemDescriptionPopup>
+      )}
     </figure>
   );
 };
@@ -64,7 +83,6 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
 const MemoUniquelyDishes = (props: Props) => {
   const { uniquelyDishes } = props;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-
   return (
     <>
       <center className="pb-4 text-2xl text-primary">

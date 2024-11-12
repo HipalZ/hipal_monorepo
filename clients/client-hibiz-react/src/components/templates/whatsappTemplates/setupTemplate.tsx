@@ -4,8 +4,10 @@ import useWhatsapp, {
   Step,
   TemplateType,
 } from "@/components/store/useWhatsapp";
-import MarketingCustomTemp from "./staticTemplatePreview";
-import StepHeader from "./stepHeader";
+import { lazy } from "react";
+
+const MarketingCustomTemp = lazy(() => import("./staticTemplatePreview"));
+const StepHeader = lazy(() => import("./stepHeader"));
 
 const MemoSetupTemplate = () => {
   const { setStep, templateType, setTemplateType } = useWhatsapp((s) => ({
@@ -14,9 +16,12 @@ const MemoSetupTemplate = () => {
     setTemplateType: s.setTemplateType,
   }));
 
-  const handleStep = useCallback((step: Step) => {
-    setStep(step);
-  }, []);
+  const handleStep = useCallback(
+    (step: Step) => {
+      setStep(step);
+    },
+    [setStep],
+  );
 
   return (
     <>

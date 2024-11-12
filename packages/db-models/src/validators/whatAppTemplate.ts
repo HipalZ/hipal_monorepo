@@ -10,6 +10,23 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
 
+export const campaignSchema = z.object({
+  businessId: ObjectIdSchema,
+  templateId: z.number(),
+  allCustomers: z.boolean().default(false),
+  bulkCustomers: z
+    .array(
+      z.object({
+        name: z.string().min(3).max(100),
+        phone: z.string().min(3).max(100),
+      }),
+    )
+    .default([]),
+  customerPhone: z.string().min(10).max(13).optional(),
+  groupIds: z.array(ObjectIdSchema).default([]),
+  businessName: z.string().min(3).max(100),
+});
+
 export const whatAppTemplateStatusEnum = [
   "APPROVED",
   "PENDING",
@@ -37,7 +54,7 @@ export const headerSchemaForText = z
     text: z.string().min(3).max(100),
     example: z
       .object({
-        header_text: z.array(z.string().min(3).max(100)),
+        header_text: z.array(z.string().min(3).max(300)),
       })
       .optional(),
   })
@@ -47,7 +64,7 @@ export const headerSchemaForImage = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(100)),
+        header_handle: z.array(z.string().min(3).max(300)),
       })
       .optional(),
   })
@@ -57,7 +74,7 @@ export const headerSchemaForDocument = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(100)),
+        header_handle: z.array(z.string().min(3).max(300)),
       })
       .optional(),
   })

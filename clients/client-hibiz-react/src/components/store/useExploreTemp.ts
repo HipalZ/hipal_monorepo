@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { IDish } from "../types/businessData";
 
 interface DayTiming {
   day: string;
@@ -6,11 +7,15 @@ interface DayTiming {
   closeTime: string;
 }
 interface ExploreTempState {
+  clearOriginalDishes: () => void;
   selectedDishes: string[];
   setSelectedDishes: (dishes: string[]) => void;
+  dishes: IDish[];
+  setDishes: (dishes: IDish[]) => void;
   description: string;
   setDescription: (description: string) => void;
-
+  originalDishes: IDish[];
+  setOriginalDishes: (dishes: IDish[]) => void;
   phone: string;
   setPhone: (phone: string) => void;
 
@@ -51,6 +56,12 @@ interface ExploreTempState {
 export const useExploreTemp = create<ExploreTempState>((set, get) => ({
   selectedDishes: [],
   setSelectedDishes: (dishes: string[]) => set({ selectedDishes: dishes }),
+
+  dishes: [],
+  setDishes: (dishes) => set(() => ({ dishes })),
+  originalDishes: [],
+  setOriginalDishes: (dishes) => set(() => ({ originalDishes: dishes })),
+  clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
 
   description: "",
   setDescription: (description: string) => set({ description }),

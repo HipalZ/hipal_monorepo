@@ -67,7 +67,7 @@ const MemoMainTypes = (props: IMainTypes) => {
               </h2>
               <section className="mt-8 max-h-[50dvh] overflow-auto py-4 w-full hide-scrollbar">
                 {mainTypes.length > 0 && (
-                  <div className="flex flex-col items-center w-full space-y-2">
+                  <div className="flex flex-col items-center w-full space-y-4">
                     {mainTypes
                       .filter((item) => item?.visibility)
                       .map((item: CategoryType) => (

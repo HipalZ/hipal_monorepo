@@ -64,7 +64,6 @@ const Otp = ({ login }: { login?: boolean }) => {
         navigate("/app/business");
         return;
       }
-
       setStep(step + 1);
     }
   }, [step, name, phone, otp]);

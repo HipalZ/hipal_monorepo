@@ -22,15 +22,11 @@ interface ICropping {
 }
 
 interface IExploreStore {
-  clearOriginalDishes: () => void;
   clearBizInfo: () => void;
   clearImageFiles: () => void;
-  dishes: IDish[];
-  setDishes: (dishes: IDish[]) => void;
   bizInfo: IBizInfo;
   setBizInfo: (bizInfo: IBizInfo) => void;
-  originalDishes: IDish[];
-  setOriginalDishes: (dishes: IDish[]) => void;
+
   uniquelyDishes: IDish[];
   setUniquelyDishes: (dishes: IDish[]) => void;
   banners: IBanner[];
@@ -85,8 +81,6 @@ export type SetImagePreviewsFunction = (
 export const useExploreStore = create(
   persist<IExploreStore>(
     (set) => ({
-      dishes: [],
-      setDishes: (dishes) => set(() => ({ dishes })),
       bizInfo: {
         _id: "",
         amenities: [],
@@ -136,8 +130,6 @@ export const useExploreStore = create(
             address: newBizInfo.address || "",
           },
         })),
-      originalDishes: [],
-      setOriginalDishes: (dishes) => set(() => ({ originalDishes: dishes })),
       uniquelyDishes: [],
       setUniquelyDishes: (dishes) => set(() => ({ uniquelyDishes: dishes })),
       banners: [],
@@ -191,7 +183,6 @@ export const useExploreStore = create(
             paragraph: banner.paragraph || "",
           },
         })),
-      clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
       clearBizInfo: () =>
         set(() => ({
           bizInfo: {

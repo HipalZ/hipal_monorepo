@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import useBusinessData from "./useBusinessData";
+import type { WhatsAppTemplatePayload } from "../types/businessData";
 
 export enum Step {
   SETUP = "setup",
   CREATE_EDIT = "create_edit",
-  SUBMIT = "submit",
+  WALLET_HISTORY = "wallet_history",
 }
 
 export enum HeaderInterface {
@@ -52,7 +53,33 @@ export interface Notification {
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
-  AUTOMATION = "automation",
+}
+
+export interface ITotalData {
+  totalSent: number;
+  totalDelivered: number;
+  totalRead: number;
+  totalClicked: number;
+}
+
+export interface ITemplateAnalytics {
+  templateName: string;
+  sent: number;
+  delivered: number;
+  read: number;
+  clicked: number;
+  cost: number;
+}
+
+export interface WalletTransaction {
+  _id: string;
+  businessId: string;
+  userId: string;
+  amount: number;
+  discount: number;
+  date: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface whatsappTemplate {
@@ -126,6 +153,9 @@ interface whatsappTemplate {
 
   setTemplateData: (data: any) => void;
 
+  templateStatus: string;
+  setTemplateStatus: (status: string) => void;
+
   resetTemplateData: () => void;
 
   // revised whatsapp
@@ -152,6 +182,41 @@ interface whatsappTemplate {
 
   preDefinedTemplate: boolean;
   setPreDefinedTemplate: (modifyTemplate: boolean) => void;
+
+  showCropper: boolean;
+  setShowCropper: (showCropper: boolean) => void;
+
+  cropping: {
+    image: any;
+    type: string;
+  };
+
+  setCropping: (cropping: { image: any; type: string }) => void;
+
+  imageFiles: File | null;
+
+  setImageFiles: (imageFiles: File | null) => void;
+
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+
+  allTemplates: WhatsAppTemplatePayload[];
+  setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) => void;
+
+  isButtonEnabled: boolean;
+  setIsButtonEnabled: (isButtonEnabled: boolean) => void;
+
+  showSuccessPopup: boolean;
+  setShowSuccessPopup: (showSuccessPopup: boolean) => void;
+
+  templateAnalytics: ITemplateAnalytics[];
+  setTemplateAnalytics: (analytics: ITemplateAnalytics[]) => void;
+
+  totalData: ITotalData[];
+  setTotalData: (totalData: ITotalData) => void;
+
+  walletHistory: WalletTransaction[];
+  setWalletHistory: (walletHistory: WalletTransaction[]) => void;
 }
 
 export const useWhatsapp = create<whatsappTemplate>((set) => {
@@ -203,6 +268,9 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
 
     addVariable: () => {
       set((state) => {
+        if (state.bodyVariables.length >= 5) {
+          return state;
+        }
         const newVariables = [...state.bodyVariables, ""];
         const newBodyText = `${state.bodyText} {{${newVariables.length}}} `;
         return { bodyVariables: newVariables, bodyText: newBodyText };
@@ -240,7 +308,7 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     actionType: ActionType.VisitWebsite,
     setActionType: (actionType: string) => set({ actionType }),
 
-    buttonText: "",
+    buttonText: "Visit US",
     setButtonText: (buttonText: string) => set({ buttonText }),
 
     urlType: "Static",
@@ -293,8 +361,12 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
           "",
         ),
         templateId: data.id,
+        templateStatus: data?.status,
       });
     },
+
+    templateStatus: "",
+    setTemplateStatus: (status: string) => set({ templateStatus: status }),
 
     resetTemplateData: () => {
       set({
@@ -307,11 +379,12 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
         bodyText: "",
         footerText: "",
         bodyVariables: [],
+        bodyVariableSequence: [],
         actionType: ActionType.VisitWebsite,
         buttonText: "",
         urlType: "Static",
-        websiteUrl: `https://hipalz.com/${
-          useBusinessData.getState().businessData?.name || ""
+        websiteUrl: `https://hipal-test.hipalz.com/${
+          useBusinessData.getState().businessData?.customLink || ""
         }`,
         phoneNumber: "",
         templateId: "",
@@ -347,6 +420,44 @@ export const useWhatsapp = create<whatsappTemplate>((set) => {
     preDefinedTemplate: false,
     setPreDefinedTemplate: (modifyTemplate: boolean) =>
       set({ preDefinedTemplate: modifyTemplate }),
+
+    showCropper: false,
+    setShowCropper: (showCropper: boolean) => set({ showCropper }),
+
+    cropping: {
+      image: null,
+      type: null,
+    },
+
+    setCropping: (cropping) => set(() => ({ cropping })),
+
+    imageFiles: null,
+    setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
+
+    isLoading: false,
+    setIsLoading: (loading) => set({ isLoading: loading }),
+
+    allTemplates: [],
+    setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) =>
+      set({ allTemplates }),
+
+    isButtonEnabled: false,
+    setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
+
+    showSuccessPopup: false,
+    setShowSuccessPopup: (showSuccessPopup: boolean) =>
+      set({ showSuccessPopup }),
+
+    templateAnalytics: [],
+    setTemplateAnalytics: (analytics: ITemplateAnalytics[]) =>
+      set({ templateAnalytics: analytics }),
+
+    totalData: [],
+    setTotalData: (totalData: ITotalData[]) => set({ totalData }),
+
+    walletHistory: [],
+    setWalletHistory: (walletHistory: WalletTransaction[]) =>
+      set({ walletHistory }),
   };
 });
 

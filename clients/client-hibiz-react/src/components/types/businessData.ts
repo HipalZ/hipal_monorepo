@@ -744,6 +744,7 @@ export interface ICoupon {
 }
 
 export interface WhatsAppTemplateComponent {
+  example: any;
   type: string;
   format?: string; // Optional, only applies to HEADER component
   text?: string;
@@ -813,4 +814,21 @@ export interface UseBannerStylesProps {
   paragraphStyle?: ParagraphStyle;
   openPreview: boolean;
   selectedBannerType: string;
+}
+
+export interface WhatsAppTemplateComponent {
+  type: "HEADER" | "BODY" | "FOOTER";
+  format?: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
+  text?: string;
+  image?: { link: string };
+}
+
+export interface WhatsAppTemplatePayload {
+  name: string;
+  parameter_format: "POSITIONAL";
+  components: WhatsAppTemplateComponent[];
+  language: string;
+  status: "APPROVED" | "REJECTED" | "PENDING";
+  category: "UTILITY" | "MARKETING" | "TRANSACTIONAL";
+  id: string;
 }

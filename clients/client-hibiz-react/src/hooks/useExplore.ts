@@ -2,6 +2,7 @@ import {
   ExplorePages,
   useExploreStore,
 } from "@/components/store/useExploreStore";
+import { useExploreTemp } from "@/components/store/useExploreTemp";
 import type {
   IBannerResponse,
   IBizInfo,
@@ -91,13 +92,13 @@ export const useOutletInfo = () => {
 
 export const useUniquelyYours = () => {
   const businessId = useParams()?.businessId;
-  const { setUniquelyDishes, setDishes, setOriginalDishes } = useExploreStore(
-    (s) => ({
-      setUniquelyDishes: s.setUniquelyDishes,
-      setDishes: s.setDishes,
-      setOriginalDishes: s.setOriginalDishes,
-    }),
-  );
+  const { setUniquelyDishes } = useExploreStore((s) => ({
+    setUniquelyDishes: s.setUniquelyDishes,
+  }));
+  const { setDishes, setOriginalDishes } = useExploreTemp((s) => ({
+    setDishes: s.setDishes,
+    setOriginalDishes: s.setOriginalDishes,
+  }));
   const fetchUniquelyYours = async () => {
     const res = await apiRpc.dishes.uniquelyDishes[":businessId"].$get({
       param: {
@@ -121,7 +122,7 @@ export const useUniquelyYours = () => {
     const response = await res.json();
     if (res.status === 200) {
       const filteredData = response?.data?.filter(
-        (dish) => dish.images?.length > 0,
+        (dish) => dish?.images?.length > 0,
       );
       setDishes(filteredData);
       setOriginalDishes(filteredData);

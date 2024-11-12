@@ -10,6 +10,7 @@ import { cn } from "@/components/utils/helpers";
 const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
 
 interface CartItemProp {
+  hide?: boolean;
   cartItem: {
     id: string;
     dish: DishType;
@@ -24,7 +25,7 @@ interface CartItemProp {
   };
 }
 
-const CartItem = ({ cartItem }: CartItemProp) => {
+const CartItem = ({ cartItem, hide }: CartItemProp) => {
   const { updateCartItem, removeFromCart } = useCartStore();
   const imageUrl =
     cartItem?.dish?.images?.[0] ||
@@ -107,25 +108,27 @@ const CartItem = ({ cartItem }: CartItemProp) => {
         ) : (
           <PlaceholderImg className="w-20 h-20 rounded-md" />
         )}
-        <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
-          <div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
-            <button
-              type="button"
-              onClick={decreaseQuantity}
-              className="px-2 py-1"
-            >
-              -
-            </button>
-            <span className="mx-2">{cartItem.quantity}</span>
-            <button
-              type="button"
-              onClick={increaseQuantity}
-              className="px-2 py-1"
-            >
-              +
-            </button>
+        {!hide && (
+          <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
+            <div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
+              <button
+                type="button"
+                onClick={decreaseQuantity}
+                className="px-2 py-1"
+              >
+                -
+              </button>
+              <span className="mx-2">{cartItem.quantity}</span>
+              <button
+                type="button"
+                onClick={increaseQuantity}
+                className="px-2 py-1"
+              >
+                +
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

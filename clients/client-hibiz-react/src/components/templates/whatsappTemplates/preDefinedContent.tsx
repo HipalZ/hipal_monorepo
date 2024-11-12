@@ -9,7 +9,6 @@ import {
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 
 const TextContent = lazy(() => import("./textContent"));
-const VideoContent = lazy(() => import("./videoContent"));
 const ImageContent = lazy(() => import("./imageContent"));
 interface DynamicWidthInputProps {
   value: string;
@@ -91,6 +90,7 @@ const MemoPreDefinedContent = () => {
         />
       );
     }
+    // splitting the body text into parts and rendering the variables as input fields
     return bodyText.split(/(\{\{\d+\}\})/).map((part, index) => {
       const match = part.match(/\{\{(\d+)\}\}/);
       if (match) {
@@ -116,18 +116,17 @@ const MemoPreDefinedContent = () => {
   }, [setNotEditPopup]);
 
   return (
-    <>
+    <section className="w-full max-w-2xl p-3 mx-auto mb-4 bg-white rounded-lg shadow-md">
       {headerType === HeaderInterface.Text && <TextContent />}
       {headerType === HeaderInterface.Image && <ImageContent />}
-      {headerType === HeaderInterface.Video && <VideoContent />}
       <div className="mb-4">
         <label
           htmlFor="bodyText"
-          className="block mb-1 text-xl font-bold text-black"
+          className="block mb-1 text-base font-bold text-black"
         >
           Message
         </label>
-        <div className="w-full px-3 py-2 overflow-hidden bg-white border border-gray-300 rounded-md shadow-md min-h-36">
+        <div className="w-full px-3 py-2 overflow-hidden bg-white border border-gray-300 rounded-md min-h-36">
           {parsedBodyText}
         </div>
         <button
@@ -140,7 +139,7 @@ const MemoPreDefinedContent = () => {
         </button>
         <br />
       </div>
-    </>
+    </section>
   );
 };
 
