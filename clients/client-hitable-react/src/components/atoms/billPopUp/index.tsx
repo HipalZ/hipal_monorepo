@@ -211,25 +211,37 @@ const BillPopUpMemo = () => {
             </div>
           </div>
           <div className="flex flex-col p-4 m-6 bg-gray-300 rounded-2xl">
-            <h1 id="discount-reason">
-              <p>
-                User : <b>{viewData?.userId?.name}; </b>
+            <div id="discount-reason" className="space-y-2">
+              <p className="text-sm text-gray-600">
+                User: &nbsp;
+                <span className="font-semibold">{viewData?.userId?.name} </span>
               </p>
-              <p>Transaction Id : {viewData?._id}; </p>
-              <p>
-                Total Bill : <b>₹ {viewData?.order_id?.billValue}; </b>
+              <p className="text-sm text-gray-600">
+                Transaction ID: {viewData?._id}{" "}
               </p>
-              <p>
-                Applied Coinz : <b>{viewData?.order_id?.claimedCoins}; </b>
+              <p className="text-sm text-gray-600">
+                Total Bill:&nbsp;
+                <span className="font-semibold">
+                  ₹ {viewData?.order_id?.billValue}{" "}
+                </span>
               </p>
-              <p>
-                Paid Money : <b>₹ {viewData?.order_id?.total}; </b>
+              <p className="text-sm text-gray-600">
+                Applied Coinz:&nbsp;
+                <span className="font-semibold">
+                  {viewData?.order_id?.claimedCoins}{" "}
+                </span>
               </p>
-              <p>
-                Final Discount to Apply in POS:{" "}
-                <b>₹ {viewData?.posDiscount} </b>
+              <p className="text-sm text-gray-600">
+                Paid Money: &nbsp;
+                <span className="font-semibold">
+                  ₹ {viewData?.order_id?.total}{" "}
+                </span>
               </p>
-            </h1>
+              <p className="mt-4 !text-base font-bold text-black">
+                Final Discount to Apply in POS:
+                <span> ₹ {viewData?.posDiscount} </span>
+              </p>
+            </div>
             <div className="flex self-end">
               <span
                 className={cn(
