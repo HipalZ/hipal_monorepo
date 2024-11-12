@@ -14,6 +14,7 @@ import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { BUSINESS_KEYID } from "@/configs";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const Cart = () => {
   const { cart, setCartEmpty } = useCartStore();
@@ -34,9 +35,10 @@ const Cart = () => {
     setCallWaiterModal(false);
   }, []);
 
-  const shareTheCart = useCallback(async () => {
+  const generateCartLink = useCallback(async () => {
     if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
+      router.push(`/${customLink}/user/signup`);
+      return null;
     }
 
     const sanitizedCart = cart.map((item) => {
@@ -58,28 +60,45 @@ const Cart = () => {
       const res = await response.json();
 
       if (!res.err) {
-        setCartEmpty();
-        const cartID = res.data.cartID;
-        const shareURL = `${BUSINESS_KEYID}${customLink}/cart/${cartID}`;
+        return `${BUSINESS_KEYID}${customLink}/cart/${res.data.cartID}`;
+      } else {
+        toast.error(res.message || "Failed to create cart link");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error creating cart link:", error);
+      toast.error("An error occurred while creating the cart link");
+      return null;
+    }
+  }, [cart, userDetails?._id, outletInfo?.businessId, accessToken]);
 
-        if (navigator.share) {
-          await navigator.share({
+  const shareWithFriends = useCallback(async () => {
+    const shareURL = await generateCartLink();
+    if (shareURL) {
+      if (navigator.share) {
+        navigator
+          .share({
             title: "Check out my cart",
             text: "Here's the cart I want to share with you.",
             url: shareURL,
-          });
-        } else {
-          navigator.clipboard.writeText(shareURL);
-          toast.success("Share URL copied to clipboard");
-        }
+          })
+          .catch((error) => console.error("Error sharing:", error));
       } else {
-        toast.error(res.message || "Failed to share cart");
+        navigator.clipboard.writeText(shareURL);
+        toast.success("Share URL copied to clipboard");
       }
-    } catch (error) {
-      console.error("Error sharing cart:", error);
-      toast.error("An error occurred while sharing the cart");
     }
-  }, [cart, userDetails?._id, outletInfo?.businessId, accessToken]);
+  }, [generateCartLink]);
+
+  const shareWithUs = useCallback(async () => {
+    const shareURL = await generateCartLink();
+    if (shareURL) {
+      const whatsappLink = `https://wa.me/8668229890?text=Check out my cart: ${encodeURIComponent(
+        shareURL,
+      )}`;
+      window.open(whatsappLink, "_blank");
+    }
+  }, [generateCartLink]);
 
   return (
     <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary bg-base-100 relative">
@@ -111,13 +130,19 @@ const Cart = () => {
         </div>
       )}
       {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
-        <button
-          onClick={shareTheCart}
-          type="button"
-          className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
-        >
-          Share Cart
-        </button>
+        <CommonBottomButton
+          fixed
+          buttons={[
+            {
+              text: "Share with Friends",
+              onClick: shareWithFriends,
+            },
+            {
+              text: "Share with Us",
+              onClick: shareWithUs,
+            },
+          ]}
+        />
       )}
       {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
         <button
