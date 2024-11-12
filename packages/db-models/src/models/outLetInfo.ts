@@ -150,6 +150,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Number,
     default: 5,
   },
+  outLetType: {
+    type: String,
+    required: false,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

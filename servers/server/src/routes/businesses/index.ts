@@ -65,6 +65,7 @@ const businessesRouter = new Hono()
           message: "business not created !",
         });
       }
+      const outLetType = requestData.businessType === "FOOD" ? "MENU" : "OTHER";
       await OutLetInfo.findOneAndUpdate(
         {
           businessId: business._id,
@@ -72,6 +73,7 @@ const businessesRouter = new Hono()
         {
           $set: {
             name: business.name,
+            outLetType,
           },
         },
         { upsert: true, new: true },
@@ -482,6 +484,7 @@ const businessesRouter = new Hono()
         {
           logo: requestData.logoUrl,
           address: requestData.address,
+          name: requestData.name,
         },
         { new: true },
       );
