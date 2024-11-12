@@ -54,7 +54,7 @@ const OnlineAlertCard = (props: IOnlineProp) => {
   };
 
   return (
-    <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <main className="pb-[5rem] lg:gap-2 lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
         onlineAlertData.map((alert: Alert) => {
           return (
