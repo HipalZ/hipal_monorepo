@@ -13,11 +13,14 @@ import {
   RazorpayWebhookHeadersSchema,
   WhatAppRazorpayWebhookBodySchema,
   campaignSchema,
+  validatePaymentSchema,
   validateWhatAppTemplateSchema,
   whatsAppLimitSchema,
   whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
+import { createHmac } from "node:crypto";
+
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
@@ -1270,6 +1273,70 @@ const whatsappRouter = new Hono()
 
       return respond(c, "whatsapp webhook recieved ", false, 200, {});
     });
-  });
+  })
+
+  .post(
+    "/whatsapp_valid_payment/:merchantId",
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
+    zValidator("json", validatePaymentSchema),
+    zValidator("param", z.object({ merchantId: z.string() })),
+
+    async (c) => {
+      const requestData = await c.req.json();
+      const { response } = requestData;
+      const { merchantId } = c.req.param();
+
+      const merchantConfig = (await getMerchantConfig(
+        merchantId,
+      )) as MerchantConfig;
+      let RAZORPAY_SECRET = "";
+
+      if (!merchantConfig) {
+        const merchant = await BusinessSettings.findOne({
+          razorpayMerchantId: merchantId,
+        }).select("razorpayKeySecret");
+        RAZORPAY_SECRET = merchant?.razorpayKeySecret as string;
+      } else {
+        RAZORPAY_SECRET = merchantConfig.razorpayKeySecret;
+      }
+
+      if (!RAZORPAY_SECRET)
+        return respond(
+          c,
+          "razorpay_secret missing while validating payments",
+          true,
+          400,
+          {},
+        );
+
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+        response;
+
+      const signature = createHmac("sha256", RAZORPAY_SECRET)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+
+      if (signature === razorpay_signature) {
+        return c.json({
+          err: false,
+          message: "Payment is valid",
+          data: razorpay_order_id,
+        });
+      }
+      return c.json(
+        {
+          err: true,
+          message: "Payment is invalid",
+          data: {},
+        },
+        400,
+      );
+    },
+  );
 
 export default whatsappRouter;
