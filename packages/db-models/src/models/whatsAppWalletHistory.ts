@@ -14,20 +14,31 @@ const whatsAppWalletHistorySchema =
         required: true,
       },
 
-      amount: {
-        type: Number,
-        required: true,
-        default: 0,
-      },
-      discount: {
-        type: Number,
-        required: false,
-        default: 0,
-      },
       date: {
         type: Number,
         required: true,
         default: Date.now(),
+      },
+
+      status: {
+        type: String,
+        enum: ["SUCCESS", "FAILED"],
+        required: true,
+      },
+
+      order_id: {
+        type: ObjectId,
+        required: true,
+        ref: "whatsAppOrder",
+        unique: true,
+      },
+      errorReason: {
+        type: String,
+        required: false,
+      },
+      errorDescription: {
+        type: String,
+        required: false,
       },
     },
     {

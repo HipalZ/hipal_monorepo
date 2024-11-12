@@ -3,8 +3,8 @@ export * from "./appConfig";
 export * from "./banner";
 export * from "./business";
 export * from "./businessSetting";
-export * from "./category";
 export * from "./cart";
+export * from "./category";
 export * from "./dish";
 export * from "./kitchen";
 
@@ -45,6 +45,8 @@ export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userTag";
 export * from "./whatAppTemplate";
+export * from "./whatsAppOrder";
+export * from "./whatsAppPayment";
 export * from "./whatsAppTemplateAnalytics";
 export * from "./whatsAppTemplateLimit";
 export * from "./whatsAppWallet";

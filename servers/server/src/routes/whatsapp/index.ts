@@ -1,21 +1,34 @@
 import {
+  BusinessSettings,
   CouponLink,
   Couponz,
+  WhatAppOrder,
   WhatAppTemplate,
+  WhatsAppPayment,
   WhatsAppTemplateLimit,
   WhatsAppWallet,
   WhatsAppWalletHistory,
 } from "@hi/db-models";
 import {
+  RazorpayWebhookHeadersSchema,
+  WhatAppRazorpayWebhookBodySchema,
   campaignSchema,
   validateWhatAppTemplateSchema,
   whatsAppLimitSchema,
+  whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
+import { getMerchantConfig } from "../../utils/cacheHelper";
+import {
+  type MerchantConfig,
+  razorpayWrapper,
+} from "../../utils/razorpay-wrapper";
+import { respond } from "../../utils/response";
 import { whatsAppConfig } from "../../utils/whatAppTemplate";
 interface AxiosError {
   response?: {
@@ -1056,6 +1069,207 @@ const whatsappRouter = new Hono()
         200,
       );
     },
-  );
+  )
+  .post(
+    "/create_whatsapp_order/:merchantId",
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
+    zValidator("json", whatsAppOrderSchema),
+    zValidator("param", z.object({ merchantId: z.string() })),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+        const {
+          total,
+          billValue,
+          currency,
+          userId,
+          businessId,
+          couponId,
+          channelId,
+        } = requestData;
+        const { merchantId } = c.req.param();
+        const uniqueOrderId = nanoid(15);
+
+        const client = await razorpayWrapper.getClient(merchantId);
+        const response = await client.orders.create({
+          amount: total * 100, // Fixed multiplication logic
+          currency: currency,
+          receipt: uniqueOrderId,
+        });
+        const saveOrder = await WhatAppOrder.create(
+          [
+            {
+              total,
+              currency,
+              billValue,
+              businessId,
+              receipt: uniqueOrderId,
+              userId,
+              order_id: response.id,
+              couponId,
+              channelId,
+              date: Date.now(),
+            },
+          ],
+          { session },
+        );
+        if (!saveOrder || !response)
+          return respond(c, "Order not created", true, 400, {});
+
+        return respond(c, "Order created successfully", false, 200, {
+          order_id: response.id,
+        });
+      });
+    },
+  )
+  .post("/whatsapp_webhook/:merchantId", async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { merchantId } = c.req.param();
+      const merchantConfig = (await getMerchantConfig(
+        merchantId,
+      )) as MerchantConfig;
+
+      let RAZORPAY_WEBHOOK_SECRET = "";
+      const body = await c.req.json();
+      if (!merchantConfig) {
+        const merchant = await BusinessSettings.findOne({
+          razorpayMerchantId: merchantId,
+        }).select("razorpayWebhookSecret");
+        RAZORPAY_WEBHOOK_SECRET = merchant?.razorpayWebhookSecret || "";
+      } else {
+        RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
+      }
+
+      if (!RAZORPAY_WEBHOOK_SECRET) {
+        console.log("razorpay_webhook_secret missing");
+      }
+
+      const headersResult = RazorpayWebhookHeadersSchema.safeParse(
+        c.req.header(),
+      );
+      if (!headersResult.success) {
+        console.log("Invalid headers");
+        return respond(c, "Invalid headers", true, 200, {});
+      }
+
+      const {
+        "x-razorpay-signature": razorpaySignature,
+        "x-razorpay-event-id": razorpayEventId,
+      } = headersResult.data;
+
+      const isSignatureValid = validateWebhookSignature(
+        JSON.stringify(body),
+        razorpaySignature,
+        RAZORPAY_WEBHOOK_SECRET,
+      );
+      if (!isSignatureValid) {
+        console.log("Invalid signature");
+        return respond(c, "Invalid signature", true, 200, {});
+      }
+
+      const bodyResult = WhatAppRazorpayWebhookBodySchema.safeParse(body);
+
+      if (!bodyResult.success) {
+        console.log("Invalid body", bodyResult);
+
+        return respond(c, "Invalid body", true, 200, {});
+      }
+      //@ts-ignore
+      const { event, payload } = bodyResult.data;
+
+      const getOrder = await WhatAppOrder.findOne({
+        order_id: payload.payment.entity.order_id,
+      });
+
+      if (event === "payment.failed") {
+        const alertExist = await WhatsAppWalletHistory.findOne({
+          order_id: getOrder?._id,
+        });
+        if (!alertExist) {
+          await WhatsAppWalletHistory.create(
+            [
+              {
+                errorReason: payload.payment.entity.error_reason,
+                errorDescription: payload.payment.entity.error_description,
+                businessId: payload.payment.entity.notes.businessId,
+                order_id: getOrder?._id,
+                userId: getOrder?.userId,
+
+                status: "FAILED",
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+        }
+      }
+
+      if (event === "payment.captured") {
+        const paymentAlreadyExist = await WhatsAppPayment.findOne({
+          razorpayEventId: razorpayEventId,
+        });
+
+        if (!paymentAlreadyExist && getOrder) {
+          await WhatsAppPayment.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                total: getOrder?.total,
+                billValue: getOrder?.billValue,
+                mode: payload.payment.entity.method,
+                userId: getOrder?.userId,
+                order_id: getOrder?._id,
+                paymentMode: "online",
+                razorpayPaymentId: payload.payment.entity.id,
+                razorpayOrderId: payload.payment.entity.order_id,
+                razorpayAcquirerData: payload.payment.entity.acquirer_data,
+                razorpayEventId: razorpayEventId,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+
+          await WhatsAppWalletHistory.create(
+            [
+              {
+                businessId: getOrder?.businessId,
+                status: "SUCCESS",
+                order_id: getOrder?._id,
+                userId: getOrder?.userId,
+
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+
+          await WhatsAppWallet.findOneAndUpdate(
+            {
+              businessId: getOrder?.businessId,
+            },
+            {
+              $inc: { currentBalance: getOrder?.total },
+            },
+            {
+              new: true,
+              upsert: true,
+              session,
+            },
+          );
+        }
+      }
+
+      return respond(c, "whatsapp webhook recieved ", false, 200, {});
+    });
+  });
 
 export default whatsappRouter;
