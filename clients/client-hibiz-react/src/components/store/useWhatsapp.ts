@@ -1,11 +1,16 @@
 import { create } from "zustand";
 import useBusinessData from "./useBusinessData";
-import type { WhatsAppTemplatePayload } from "../types/businessData";
+import type {
+  ICouponzLinks,
+  WhatsAppTemplatePayload,
+} from "../types/businessData";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export enum Step {
   SETUP = "setup",
   CREATE_EDIT = "create_edit",
   WALLET_HISTORY = "wallet_history",
+  TRANSACTIONS = "transactions",
 }
 
 export enum HeaderInterface {
@@ -38,6 +43,7 @@ export enum whastappSteps {
 }
 
 export enum TemplateSteps {
+  NONE = "none",
   CREATE_EDIT = "create_edit",
   MODIFY = "modify",
   SHOW_OPTIONS = "showOptions",
@@ -80,6 +86,11 @@ export interface WalletTransaction {
   date: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface defaultOptions {
+  value: string;
+  label: string;
 }
 
 interface whatsappTemplate {
@@ -127,9 +138,13 @@ interface whatsappTemplate {
 
   addVariable: () => void;
 
+  addCouponzText: (couponz: ICouponzLinks) => void;
+
   updateVariable: (index: number, value: string) => void;
 
   updateBodySequenceVariable: (index: number, value: string) => void;
+
+  updateDisplayBodySequenceVariable: (index: number, value: string) => void;
 
   removeVariable: (index: number) => void;
 
@@ -180,6 +195,11 @@ interface whatsappTemplate {
   bodyVariableSequence: string[];
   setBodyVariableSequence: (bodyVariableSequence: string[]) => void;
 
+  displayBodyVariableSequence: string[];
+  setDisplayBodyVariableSequence: (
+    displayBodyVariableSequence: string[],
+  ) => void;
+
   preDefinedTemplate: boolean;
   setPreDefinedTemplate: (modifyTemplate: boolean) => void;
 
@@ -196,9 +216,6 @@ interface whatsappTemplate {
   imageFiles: File | null;
 
   setImageFiles: (imageFiles: File | null) => void;
-
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
 
   allTemplates: WhatsAppTemplatePayload[];
   setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) => void;
@@ -217,248 +234,373 @@ interface whatsappTemplate {
 
   walletHistory: WalletTransaction[];
   setWalletHistory: (walletHistory: WalletTransaction[]) => void;
+
+  couponzLinks: ICouponzLinks[];
+  setCouponzLinks: (couponzLinks: ICouponzLinks) => void;
+
+  selectedCoupon: string;
+  setSelectedCoupon: (selectedCoupon: string) => void;
+
+  confirmCreate: boolean;
+  setConfirmCreate: (confirmCreate: boolean) => void;
+
+  merchantDetails: any;
+  setMerchantDetails: (merchantDetails: any) => void;
+
+  showError: boolean;
+  setShowError: (showError: boolean) => void;
+
+  imageUrl: string;
+  setImageUrl: (imageUrl: string) => void;
+
+  variableOptions: defaultOptions[];
+  setVariableOptions: (variableOptions: defaultOptions[]) => void;
 }
 
-export const useWhatsapp = create<whatsappTemplate>((set) => {
-  const businessName = useBusinessData.getState().businessData?.name || "";
-  return {
-    step: Step.SETUP,
-    setStep: (step: Step) => set({ step }),
-
-    whatzAppSteps: whastappSteps.MainForm,
-    setWhatzAppSteps: (whatzAppSteps: whastappSteps) => set({ whatzAppSteps }),
-
-    templates: [],
-    setTemplates: (templates: any) => set({ templates }),
-
-    templateType: TemplateType?.Marketing,
-    setTemplateType: (templateType: string) => set({ templateType }),
-
-    templateName: "",
-    setTemplateName: (templateName: string) => set({ templateName }),
-
-    language: "en_US",
-    setLanguage: (language: string) => set({ language }),
-
-    headerType: HeaderInterface.Image,
-    setHeaderType: (headerType: HeaderInterface) => set({ headerType }),
-
-    headerText: "",
-    setHeaderText: (headerText: string) => set({ headerText }),
-
-    imagePreview: "",
-    setImagePreview: (imagePreview: string) => set({ imagePreview }),
-
-    videoPreview: "",
-    setVideoPreview: (preview: string) => set({ videoPreview: preview }),
-
-    bodyText: "Write your content here...",
-    setBodyText: (bodyText: string) => set({ bodyText }),
-
-    footerText: `Powered by ${businessName}`,
-    setFooterText: (footerText: string) => set({ footerText }),
-
-    headerVariables: [],
-    setHeaderVariables: (variables: string[]) =>
-      set({ headerVariables: variables }),
-
-    bodyVariables: [],
-    setBodyVariables: (variables: string[]) =>
-      set({ bodyVariables: variables }),
-
-    addVariable: () => {
-      set((state) => {
-        if (state.bodyVariables.length >= 5) {
-          return state;
-        }
-        const newVariables = [...state.bodyVariables, ""];
-        const newBodyText = `${state.bodyText} {{${newVariables.length}}} `;
-        return { bodyVariables: newVariables, bodyText: newBodyText };
-      });
-    },
-
-    updateVariable: (index: number, value: string) => {
-      set((state) => {
-        const newVariables = [...state.bodyVariables];
-        newVariables[index] = value;
-        return {
-          bodyVariables: newVariables,
-        };
-      });
-    },
-
-    updateBodySequenceVariable: (index: number, value: string) => {
-      set((state) => {
-        const newBodySequence = [...state.bodyVariableSequence];
-        newBodySequence[index] = value;
-        return {
-          bodyVariableSequence: newBodySequence,
-        };
-      });
-    },
-
-    removeVariable: (index: number) => {
-      set((state) => {
-        const newVariables = state.bodyVariables.filter((_, i) => i !== index);
-        const newBodyText = state.bodyText.replace(`{{${index + 1}}}`, "");
-        return { bodyVariables: newVariables, bodyText: newBodyText };
-      });
-    },
-
-    actionType: ActionType.VisitWebsite,
-    setActionType: (actionType: string) => set({ actionType }),
-
-    buttonText: "Visit US",
-    setButtonText: (buttonText: string) => set({ buttonText }),
-
-    urlType: "Static",
-    setUrlType: (urlType: string) => set({ urlType }),
-
-    websiteUrl: `https://hipalz.com/${businessName}`,
-    setWebsiteUrl: (websiteUrl: string) => set({ websiteUrl }),
-
-    phoneNumber: "",
-    setPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
-
-    templateId: "",
-    setTemplateId: (templateId: string) => set({ templateId }),
-
-    setTemplateData: (data: any) => {
-      const headerComponent = data.components.find(
-        (component: any) => component.type === "HEADER",
-      );
-      const bodyComponent = data.components.find(
-        (component: any) => component.type === "BODY",
-      );
-      const footerComponent = data.components.find(
-        (component: any) => component.type === "FOOTER",
-      );
-      const buttonsComponent = data.components.find(
-        (component: any) => component.type === "BUTTONS",
-      );
-      const variables =
-        bodyComponent?.example?.body_text[0]?.map((text: string) => text) || [];
-      const headerImage = headerComponent?.example?.header_handle[0];
-      set({
-        templateType: data.category,
-        templateName: data.name,
-        headerType: headerComponent?.format,
-        headerText: headerComponent?.text,
-        imagePreview: headerImage || headerComponent?.imagePreview,
-        bodyText: bodyComponent?.text,
-        bodyVariables: variables,
-        footerText: footerComponent?.text,
-        actionType:
-          buttonsComponent?.buttons[0]?.type === "URL"
-            ? ActionType.VisitWebsite
-            : ActionType.CallUs,
-        buttonText: buttonsComponent?.buttons[0]?.text,
-        urlType:
-          buttonsComponent?.buttons[0]?.type === "URL" ? "Static" : undefined,
-        websiteUrl: buttonsComponent?.buttons[0]?.url,
-        phoneNumber: buttonsComponent?.buttons[0]?.phone_number?.replace(
-          /^\+91/,
-          "",
-        ),
-        templateId: data.id,
-        templateStatus: data?.status,
-      });
-    },
-
-    templateStatus: "",
-    setTemplateStatus: (status: string) => set({ templateStatus: status }),
-
-    resetTemplateData: () => {
-      set({
+export const useWhatsapp = create(
+  persist<whatsappTemplate>(
+    (set, get) => {
+      const businessName = useBusinessData.getState().businessData?.name || "";
+      return {
         step: Step.SETUP,
-        templateType: TemplateType.Marketing,
+        setStep: (step: Step) => set({ step }),
+
+        whatzAppSteps: whastappSteps.MainForm,
+        setWhatzAppSteps: (whatzAppSteps: whastappSteps) =>
+          set({ whatzAppSteps }),
+
+        templates: [],
+        setTemplates: (templates: any) => set({ templates }),
+
+        templateType: TemplateType?.Marketing,
+        setTemplateType: (templateType: string) => set({ templateType }),
+
         templateName: "",
-        headerType: HeaderInterface.Text,
-        headerText: "Hello",
+        setTemplateName: (templateName: string) => set({ templateName }),
+
+        language: "en_US",
+        setLanguage: (language: string) => set({ language }),
+
+        headerType: HeaderInterface.Image,
+        setHeaderType: (headerType: HeaderInterface) => set({ headerType }),
+
+        headerText: "",
+        setHeaderText: (headerText: string) => set({ headerText }),
+
         imagePreview: "",
-        bodyText: "",
-        footerText: "",
+        setImagePreview: (imagePreview: string) => set({ imagePreview }),
+
+        videoPreview: "",
+        setVideoPreview: (preview: string) => set({ videoPreview: preview }),
+
+        bodyText: "Write your content here...",
+        setBodyText: (bodyText: string) => set({ bodyText }),
+
+        addCouponzText: (couponz) => {
+          set((state) => {
+            const newBodyText = `${state.bodyText} ${couponz?.name} ${couponz?.link}`;
+            return { bodyText: newBodyText };
+          });
+        },
+
+        footerText: `Powered by ${businessName}`,
+        setFooterText: (footerText: string) => set({ footerText }),
+
+        headerVariables: [],
+        setHeaderVariables: (variables: string[]) =>
+          set({ headerVariables: variables }),
+
         bodyVariables: [],
-        bodyVariableSequence: [],
+        setBodyVariables: (variables: string[]) =>
+          set({ bodyVariables: variables }),
+
+        addVariable: () => {
+          set((state) => {
+            if (state.bodyVariables.length >= 5) {
+              return state;
+            }
+            const newVariables = [...state.bodyVariables, ""];
+            const newBodyText = `${state.bodyText} {{${newVariables.length}}} `;
+            return { bodyVariables: newVariables, bodyText: newBodyText };
+          });
+        },
+
+        updateVariable: (index: number, value: string) => {
+          set((state) => {
+            const newVariables = [...state.bodyVariables];
+            newVariables[index] = value || "rajesh";
+            return {
+              bodyVariables: newVariables,
+            };
+          });
+        },
+
+        updateBodySequenceVariable: (index: number, value: string) => {
+          set((state) => {
+            const newBodySequence = [...state.bodyVariableSequence];
+            newBodySequence[index] = value;
+            return {
+              bodyVariableSequence: newBodySequence,
+            };
+          });
+        },
+
+        updateDisplayBodySequenceVariable: (index: number, value: string) => {
+          set((state) => {
+            const newBodySequence = [...state.displayBodyVariableSequence];
+            newBodySequence[index] = value;
+            return {
+              displayBodyVariableSequence: newBodySequence,
+            };
+          });
+        },
+
+        removeVariable: (index: number) => {
+          set((state) => {
+            const newVariables = state.bodyVariables.filter(
+              (_, i) => i !== index,
+            );
+            const newBodyText = state.bodyText.replace(`{{${index + 1}}}`, "");
+            return { bodyVariables: newVariables, bodyText: newBodyText };
+          });
+        },
+
         actionType: ActionType.VisitWebsite,
-        buttonText: "",
+        setActionType: (actionType: string) => set({ actionType }),
+
+        buttonText: "Visit US",
+        setButtonText: (buttonText: string) => set({ buttonText }),
+
         urlType: "Static",
-        websiteUrl: `https://hipal-test.hipalz.com/${
-          useBusinessData.getState().businessData?.customLink || ""
-        }`,
+        setUrlType: (urlType: string) => set({ urlType }),
+
+        websiteUrl: `https://hipalz.com/${businessName}`,
+        setWebsiteUrl: (websiteUrl: string) => set({ websiteUrl }),
+
         phoneNumber: "",
+        setPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
+
         templateId: "",
-      });
+        setTemplateId: (templateId: string) => set({ templateId }),
+
+        setTemplateData: (data: any) => {
+          const headerComponent = data.components.find(
+            (component: any) => component.type === "HEADER",
+          );
+          const bodyComponent = data.components.find(
+            (component: any) => component.type === "BODY",
+          );
+          const footerComponent = data.components.find(
+            (component: any) => component.type === "FOOTER",
+          );
+          const buttonsComponent = data.components.find(
+            (component: any) => component.type === "BUTTONS",
+          );
+
+          const variables =
+            bodyComponent?.example?.body_text[0]?.map((text: string) => text) ||
+            [];
+          const headerImage = headerComponent?.example?.header_handle[0] || "";
+          set({
+            templateType: data.category,
+            templateName: data.name,
+            headerType: headerComponent?.format,
+            headerText: headerComponent?.text,
+            imagePreview: headerImage || headerComponent?.imagePreview,
+            bodyText: bodyComponent?.text,
+            bodyVariables: variables,
+            footerText: footerComponent?.text,
+            actionType:
+              buttonsComponent?.buttons[0]?.type === "URL"
+                ? ActionType.VisitWebsite
+                : ActionType.CallUs,
+            buttonText: buttonsComponent?.buttons[0]?.text || "",
+            urlType:
+              buttonsComponent?.buttons[0]?.type === "URL"
+                ? "Static"
+                : undefined,
+            websiteUrl: buttonsComponent?.buttons[0]?.url,
+            phoneNumber: buttonsComponent?.buttons[0]?.phone_number?.replace(
+              /^\+91/,
+              "",
+            ),
+            templateId: data.id,
+            templateStatus: data?.status,
+            bodyVariableSequence: variables,
+            isButtonEnabled: buttonsComponent?.buttons[0]?.text?.length > 0,
+            displayBodyVariableSequence: variables.map(
+              (variable: string) =>
+                get().variableOptions.find(
+                  (option) => option.label === variable,
+                )?.value || variable,
+            ),
+          });
+        },
+
+        templateStatus: "",
+        setTemplateStatus: (status: string) => set({ templateStatus: status }),
+
+        resetTemplateData: () => {
+          set({
+            step: Step.SETUP,
+            templateType: TemplateType.Marketing,
+            templateName: "",
+            headerType: HeaderInterface.Text,
+            headerText: "Hello",
+            imagePreview: "",
+            bodyText: "",
+            footerText: "",
+            bodyVariables: [],
+            bodyVariableSequence: [],
+            actionType: ActionType.VisitWebsite,
+            buttonText: "",
+            urlType: "Static",
+            websiteUrl: `https://hipal-test.hipalz.com/${
+              useBusinessData.getState().businessData?.customLink || ""
+            }`,
+            phoneNumber: "",
+            templateId: "",
+            imageFiles: null,
+            cropping: {
+              image: null,
+              type: null,
+            },
+            templateStatus: "",
+            imageUrl: "",
+            couponzLinks: [],
+          });
+        },
+
+        notifications: [
+          { id: 1, message: "New template available!", isRead: false },
+          { id: 2, message: "Campaign completed successfully", isRead: false },
+        ],
+        setNotifications: (notifications: Notification[]) =>
+          set({ notifications }),
+
+        showNotifications: false,
+        setShowNotifications: (showNotifications: boolean) =>
+          set({ showNotifications }),
+
+        walletBalance: 500,
+        setWalletBalance: (walletBalance: number) => set({ walletBalance }),
+
+        activeTab: Tabs.TEMPLATES,
+        setActiveTab: (activeTab: Tabs) => set({ activeTab }),
+
+        notEditPopup: false,
+        setNotEditPopup: (notEditPopup: boolean) => set({ notEditPopup }),
+
+        templateSteps: TemplateSteps.SHOW_OPTIONS,
+        setTemplateSteps: (templateSteps: TemplateSteps) =>
+          set({ templateSteps }),
+
+        bodyVariableSequence: [],
+        setBodyVariableSequence: (bodyVariableSequence: string[]) =>
+          set({ bodyVariableSequence }),
+
+        displayBodyVariableSequence: [],
+        setDisplayBodyVariableSequence: (
+          displayBodyVariableSequence: string[],
+        ) => set({ displayBodyVariableSequence }),
+
+        preDefinedTemplate: false,
+        setPreDefinedTemplate: (modifyTemplate: boolean) =>
+          set({ preDefinedTemplate: modifyTemplate }),
+
+        showCropper: false,
+        setShowCropper: (showCropper: boolean) => set({ showCropper }),
+
+        cropping: {
+          image: null,
+          type: null,
+        },
+
+        setCropping: (cropping) => set(() => ({ cropping })),
+
+        imageFiles: null,
+        setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
+
+        allTemplates: [],
+        setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) =>
+          set({ allTemplates }),
+
+        isButtonEnabled: false,
+        setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
+
+        showSuccessPopup: false,
+        setShowSuccessPopup: (showSuccessPopup: boolean) =>
+          set({ showSuccessPopup }),
+
+        templateAnalytics: [],
+        setTemplateAnalytics: (analytics: ITemplateAnalytics[]) =>
+          set({ templateAnalytics: analytics }),
+
+        totalData: [],
+        setTotalData: (totalData: ITotalData[]) => set({ totalData }),
+
+        walletHistory: [],
+        setWalletHistory: (walletHistory: WalletTransaction[]) =>
+          set({ walletHistory }),
+
+        couponzLinks: [],
+        setCouponzLinks: (data: ICouponzLinks[]) => set({ couponzLinks: data }),
+
+        selectedCoupon: "",
+        setSelectedCoupon: (selectedCoupon: string) => set({ selectedCoupon }),
+
+        confirmCreate: false,
+        setConfirmCreate: (confirmCreate: boolean) => set({ confirmCreate }),
+
+        merchantDetails: {},
+        setMerchantDetails: (merchantDetails: any) => set({ merchantDetails }),
+
+        showError: false,
+        setShowError: (showError: boolean) => set({ showError }),
+
+        imageUrl: "",
+        setImageUrl: (imageUrl: string) => set({ imageUrl }),
+
+        variableOptions: [
+          {
+            label: "name",
+            value: "Rajesh",
+          },
+          {
+            label: "email",
+            value: "rajesh@gmail.com",
+          },
+          {
+            label: "businessName",
+            value: businessName,
+          },
+          {
+            label: "phone",
+            value: "+913456789090",
+          },
+          {
+            label: "address",
+            value: "Bangalore",
+          },
+          {
+            label: "time",
+            value: "10:00 AM",
+          },
+          {
+            label: "date",
+            value: "31st Dec, 2024",
+          },
+        ],
+
+        setVariableOptions: (variableOptions: defaultOptions[]) =>
+          set({ variableOptions }),
+      };
     },
-
-    notifications: [
-      { id: 1, message: "New template available!", isRead: false },
-      { id: 2, message: "Campaign completed successfully", isRead: false },
-    ],
-    setNotifications: (notifications: Notification[]) => set({ notifications }),
-
-    showNotifications: false,
-    setShowNotifications: (showNotifications: boolean) =>
-      set({ showNotifications }),
-
-    walletBalance: 500,
-    setWalletBalance: (walletBalance: number) => set({ walletBalance }),
-
-    activeTab: Tabs.TEMPLATES,
-    setActiveTab: (activeTab: Tabs) => set({ activeTab }),
-
-    notEditPopup: false,
-    setNotEditPopup: (notEditPopup: boolean) => set({ notEditPopup }),
-
-    templateSteps: TemplateSteps.SHOW_OPTIONS,
-    setTemplateSteps: (templateSteps: TemplateSteps) => set({ templateSteps }),
-
-    bodyVariableSequence: [],
-    setBodyVariableSequence: (bodyVariableSequence: string[]) =>
-      set({ bodyVariableSequence }),
-
-    preDefinedTemplate: false,
-    setPreDefinedTemplate: (modifyTemplate: boolean) =>
-      set({ preDefinedTemplate: modifyTemplate }),
-
-    showCropper: false,
-    setShowCropper: (showCropper: boolean) => set({ showCropper }),
-
-    cropping: {
-      image: null,
-      type: null,
+    {
+      name: "whatsapp-storage",
+      storage: createJSONStorage(() => localStorage),
     },
-
-    setCropping: (cropping) => set(() => ({ cropping })),
-
-    imageFiles: null,
-    setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
-
-    isLoading: false,
-    setIsLoading: (loading) => set({ isLoading: loading }),
-
-    allTemplates: [],
-    setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) =>
-      set({ allTemplates }),
-
-    isButtonEnabled: false,
-    setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
-
-    showSuccessPopup: false,
-    setShowSuccessPopup: (showSuccessPopup: boolean) =>
-      set({ showSuccessPopup }),
-
-    templateAnalytics: [],
-    setTemplateAnalytics: (analytics: ITemplateAnalytics[]) =>
-      set({ templateAnalytics: analytics }),
-
-    totalData: [],
-    setTotalData: (totalData: ITotalData[]) => set({ totalData }),
-
-    walletHistory: [],
-    setWalletHistory: (walletHistory: WalletTransaction[]) =>
-      set({ walletHistory }),
-  };
-});
+  ),
+);
 
 export default useWhatsapp;

@@ -61,7 +61,7 @@ const MemoShowOptionsToSend = () => {
   useQuery({
     queryKey: ["groups", businessId],
     queryFn: fetchAllGroups,
-    enabled: !!businessId,
+    enabled: !!businessId && selectedOptions.includes("addGroups"),
   });
 
   return (
@@ -174,7 +174,7 @@ const MemoShowOptionsToSend = () => {
                                 id="file-upload"
                                 type="file"
                                 className="hidden"
-                                accept=".xlsx,.xls"
+                                accept=".xlsx,.xls, .csv"
                                 ref={fileInputRef}
                                 onChange={(
                                   e: ChangeEvent<HTMLInputElement>,

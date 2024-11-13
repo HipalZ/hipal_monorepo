@@ -82,7 +82,7 @@ const MemoTemplateButtons = () => {
 
   // handle next button click
   const handleNext = useCallback(() => {
-    if (templateSteps === TemplateSteps.MODIFY) {
+    if (templateSteps === TemplateSteps.CREATE_EDIT) {
       setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
     } else if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
       if (
@@ -113,10 +113,14 @@ const MemoTemplateButtons = () => {
             {
               text: "Update & Next",
               type: "submit",
-              disable: !templateName || !bodyText,
+              disable:
+                !templateName ||
+                !bodyText ||
+                templateSteps === TemplateSteps.SEND ||
+                templateSteps === TemplateSteps.SHOW_OPTIONS,
             },
             {
-              text: "Save to Next ►",
+              text: "Proceed to Next ►",
               onClick: handleNext,
               type: "button",
               disable: templateStatus === "REJECTED",

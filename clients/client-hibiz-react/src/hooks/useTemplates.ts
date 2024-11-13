@@ -1,77 +1,99 @@
 import { apiRpc } from "@hi/common";
 import { APP_ID, WHATSAPP_TOKEN } from "@/configs";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import axios from "@/axios";
 import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { WhatsAppTemplate } from "@/components/types/businessData";
-import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import type {
+  MainResponseHandling,
+  WhatsAppTemplatePayload,
+} from "@/components/types/businessData";
+import { useTempStore } from "@/components/store/useTempStore";
 
-export const useCreatingTemplate = () => {
-  const { setTemplateId } = useWhatsapp((s) => ({
+export const useCreateTemplate = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const setIsLoading = useTempStore((s) => s.setIsLoading);
+  const {
+    setStep,
+    setShowSuccessPopup,
+    setTemplateStatus,
+    setTemplateData,
+    setTemplateId,
+  } = useWhatsapp((s) => ({
+    setStep: s.setStep,
+    setShowSuccessPopup: s.setShowSuccessPopup,
+    setTemplateStatus: s.setTemplateStatus,
+    setTemplateData: s.setTemplateData,
     setTemplateId: s.setTemplateId,
   }));
-  const createTemplate = async (payload: any) => {
+
+  const createTemplate = async (payload: WhatsAppTemplatePayload) => {
+    // API call to create template
+    if (!businessId) return null;
     const res = await apiRpc.whatsapp.template.$post({
-      json: payload,
+      json: {
+        ...payload,
+        businessId: businessId,
+      },
     });
-    const response = await res.json();
-    setTemplateId(response?.data?.id);
-    return response;
+
+    const data = (await res.json()) as MainResponseHandling;
+    setIsLoading(false);
+    if (data?.err) {
+      setStep(Step.SETUP);
+      return toast.error(
+        data?.data?.error?.error_user_msg || "Failed to create template",
+      );
+    }
+    // Handle success response
+    setTemplateId(data?.data?.id);
+    setShowSuccessPopup(true);
+    setTemplateStatus(data?.data?.status);
+    toast.success("Template created successfully");
+    console.log("data", data);
+    setTemplateData(data?.data);
+    return data;
   };
 
   return { createTemplate };
 };
 
-export const useCreateTemplateMutation = () => {
-  const queryClient = useQueryClient();
-  const setTemplateId = useWhatsapp((s) => s.setTemplateId);
-  const setStep = useWhatsapp((s) => s.setStep);
+export const useEditTemplate = () => {
+  const { setStep, setShowSuccessPopup, setTemplateStatus } = useWhatsapp(
+    (s) => ({
+      setStep: s.setStep,
+      setShowSuccessPopup: s.setShowSuccessPopup,
+      setTemplateStatus: s.setTemplateStatus,
+    }),
+  );
+  const setIsLoading = useTempStore((s) => s.setIsLoading);
+  const editTemplate = async (payload: WhatsAppTemplatePayload) => {
+    // API call to edit template
+    const res = await apiRpc.whatsapp.template[":templateid"].$put({
+      json: payload,
+      param: { templateid: payload.templateId },
+    });
 
-  return useMutation({
-    mutationFn: async (payload: WhatsAppTemplate) => {
-      const res = await apiRpc.whatsapp.template.$post({
-        json: payload,
-      });
-      return res.json();
-    },
-    onSuccess: (data) => {
-      setTemplateId(data?.data?.id);
-      queryClient.invalidateQueries(["templates"]);
-      toast.success("Template created successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to create template");
+    const data = await res.json();
+    setIsLoading(false);
+    // Handle error response
+    if (data?.err) {
       setStep(Step.SETUP);
-    },
-  });
-};
+      toast.error(
+        data?.data?.error?.error_user_msg || "Failed to update template",
+      );
+      return null;
+    }
+    setShowSuccessPopup(true);
+    setTemplateStatus(data?.data?.status);
+    toast.success("Template updated successfully");
+    return data;
+  };
 
-export const useEditTemplateMutation = () => {
-  const queryClient = useQueryClient();
-  const setStep = useWhatsapp((s) => s.setStep);
-
-  return useMutation({
-    mutationFn: async (payload: WhatsAppTemplate) => {
-      const res = await apiRpc.whatsapp.template[":templateid"].$put({
-        json: payload,
-        param: {
-          templateid: payload.templateId,
-        },
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["templates"]);
-      toast.success("Template updated successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update template");
-      setStep(Step.SETUP);
-    },
-  });
+  return { editTemplate };
 };
 
 export const useFetchTemplates = () => {
@@ -93,62 +115,80 @@ export const useFetchTemplates = () => {
 };
 
 export const useMediaUpload = () => {
-  const { imageFiles } = useWhatsapp((s) => ({
+  const { imageFiles, setImageUrl } = useWhatsapp((s) => ({
     imageFiles: s.imageFiles,
+    setImageUrl: s.setImageUrl,
   }));
 
-  const uploadMedia = async () => {
-    if (!imageFiles) return toast.error("No image files to upload");
-    // Step 1: Start upload session
-    try {
-      const sessionResponse = await axios({
-        method: "POST",
-        url: `https://graph.facebook.com/v21.0/${APP_ID}/uploads`,
-        params: {
-          file_name: imageFiles.name,
-          file_length: imageFiles.size,
-          file_type: imageFiles.type,
-          access_token: WHATSAPP_TOKEN,
-        },
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+  const [isUploading, setIsUploading] = useState(false);
 
-      // Step 2: Upload the file
+  const uploadMedia = async (): Promise<string> => {
+    try {
+      if (!imageFiles) {
+        throw new Error("No image files to upload");
+      }
+
+      setIsUploading(true);
+
+      // Step 1: Start upload session
+      const sessionResponse = await axios.post(
+        `https://graph.facebook.com/v21.0/${APP_ID}/uploads`,
+        null,
+        {
+          params: {
+            file_name: imageFiles.name,
+            file_length: imageFiles.size,
+            file_type: imageFiles.type,
+            access_token: WHATSAPP_TOKEN,
+          },
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      // Step 2: Upload to custom storage
+      const imageId = crypto.randomUUID();
+      const storageFormData = new FormData();
+      storageFormData.append("fileData", imageFiles);
+      storageFormData.append("fileName", `${imageId}`);
+      storageFormData.append("bucketName", "assets");
+
+      const storageResponse = await axios.post(
+        "https://storage.test.hipalz.com/upload",
+        storageFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      if (storageResponse.status === 201 || storageResponse.status === 200) {
+        setImageUrl(storageResponse.data.url);
+      }
+
+      // Step 3: Upload the file
       const formData = new FormData();
       formData.append("file", imageFiles);
       formData.append("file_name", imageFiles.name);
 
       const uploadResponse = await axios.post(
-        `http://localhost:3000/upload?sessionId=${sessionResponse.data.id}`,
+        `https://temp-storage-six.vercel.app/upload?sessionId=${sessionResponse.data.id}`,
         formData,
       );
-      console.log("uploadResponse", uploadResponse);
-      return uploadResponse?.data?.h;
+
+      setIsUploading(false);
+
+      return uploadResponse.data.h; // Return the final handle
     } catch (error) {
-      toast.error(error.response?.data?.error?.message || "Upload failed");
+      setIsUploading(false);
+      console.error("Upload failed:", error);
+      throw error;
     }
   };
 
-  return { uploadMedia };
+  return {
+    uploadMedia,
+    isUploading,
+  };
 };
-
-export const useEditingTemplate = () => {
-  const editTemplate = useCallback(async (payload: any) => {
-    const res = await apiRpc.whatsapp.template[":templateid"].$put({
-      json: payload,
-      param: {
-        templateid: payload?.templateId,
-      },
-    });
-    const response = await res.json();
-    return response;
-  }, []);
-
-  return { editTemplate };
-};
-
 export const useSendMessages = () => {
   const sendMessage = useCallback(async (payload: any) => {
     const res = await apiRpc.whatsapp.template.campaign.$post({
@@ -163,6 +203,9 @@ export const useSendMessages = () => {
 
 export const useSendOptions = () => {
   const setStep = useWhatsapp((s) => s.setStep);
+  const clearMessageRecipientsStore = useMessageRecipientsStore(
+    (s) => s.clearMessageRecipientsStore,
+  );
   return useMutation({
     mutationFn: async (payload: any) => {
       const res = await apiRpc.whatsapp.template.campaign.$post({
@@ -174,8 +217,8 @@ export const useSendOptions = () => {
     onSuccess: (response) => {
       if (response?.data?.success) {
         toast.success("Message sent successfully");
+        clearMessageRecipientsStore();
       }
-
       setStep(Step.SETUP);
     },
     onError: (error) => {
@@ -239,4 +282,24 @@ export const useWalletBalance = () => {
   }, [businessId, setWalletHistory]);
 
   return { getWalletBalance, getWalletHistory };
+};
+
+export const useCouponzLinks = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setCouponzLinks } = useWhatsapp((s) => ({
+    setCouponzLinks: s.setCouponzLinks,
+  }));
+
+  const getCouponzLinks = useCallback(async () => {
+    const res = await apiRpc.whatsapp.coupon_link[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    setCouponzLinks(response?.data);
+    return response;
+  }, [businessId, setCouponzLinks]);
+
+  return { getCouponzLinks };
 };

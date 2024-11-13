@@ -744,9 +744,11 @@ export interface ICoupon {
 }
 
 export interface WhatsAppTemplateComponent {
-  example: any;
+  example?: {
+    header_handle?: string[];
+  };
   type: string;
-  format?: string; // Optional, only applies to HEADER component
+  format?: string;
   text?: string;
   buttons?: WhatsAppTemplateButton[];
 }
@@ -754,17 +756,22 @@ export interface WhatsAppTemplateComponent {
 export interface WhatsAppTemplateButton {
   type: string;
   text: string;
+  url?: string; // Optional, only applies to URL button
+  phone_number?: string; // Optional, only applies to PHONE_NUMBER button
 }
 
-export interface WhatsAppTemplate {
-  name: string;
+export interface WhatsAppTemplatePayload {
   parameter_format: string;
-  components: WhatsAppTemplateComponent[];
-  language: string;
   status: string;
-  category: string;
-  bodyVariableSequence: string[];
   id: string;
+  businessId: string;
+  name: string;
+  language: string;
+  templateId?: string; // Optional, only applies to existing templates
+  category: string;
+  components: WhatsAppTemplateComponent[];
+  imageUrl?: string; // Optional, only applies if imageUrl is present
+  bodyVariableSequence: string[];
 }
 
 export interface CropperRef {
@@ -816,19 +823,31 @@ export interface UseBannerStylesProps {
   selectedBannerType: string;
 }
 
-export interface WhatsAppTemplateComponent {
-  type: "HEADER" | "BODY" | "FOOTER";
-  format?: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
-  text?: string;
-  image?: { link: string };
+export interface ICouponzLinks {
+  name: string;
+  link: string;
 }
 
-export interface WhatsAppTemplatePayload {
-  name: string;
-  parameter_format: "POSITIONAL";
-  components: WhatsAppTemplateComponent[];
-  language: string;
-  status: "APPROVED" | "REJECTED" | "PENDING";
-  category: "UTILITY" | "MARKETING" | "TRANSACTIONAL";
+export interface WhatsappError {
+  error_user_msg: string;
+  error_user_title?: string;
+  message?: string;
+  type?: string;
+  code?: number;
+  error_subcode?: number;
+  is_transient?: boolean;
+  fbtrace_id?: string;
+}
+
+export interface WhatsappResponseErrorData {
+  error: WhatsappError;
   id: string;
+  status: string;
+  err: boolean;
+}
+
+export interface MainResponseHandling {
+  data: WhatsappResponseErrorData;
+  err: boolean;
+  message: string;
 }

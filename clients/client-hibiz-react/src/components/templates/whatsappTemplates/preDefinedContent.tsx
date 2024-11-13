@@ -104,7 +104,7 @@ const MemoPreDefinedContent = () => {
         );
       }
       return (
-        <span key={index?.toString()} className="text-gray-700">
+        <span key={index?.toString()} className="text-gray-700 break-words">
           {part}
         </span>
       );

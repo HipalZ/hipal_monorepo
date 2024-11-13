@@ -10,6 +10,10 @@ import useWhatsapp, {
 import { lazy, memo, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+const WhatzappPayment = lazy(
+  () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
+);
 const CreateEditTemplate = lazy(
   () => import("@/components/templates/whatsappTemplates/createEditTemplate"),
 );
@@ -49,27 +53,43 @@ const MemoWhatzapp = () => {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    switch (templateSteps) {
-      case TemplateSteps.MODIFY:
-      case TemplateSteps.CREATE_EDIT:
-        setStep(Step.SETUP);
-        break;
-      case TemplateSteps.SHOW_OPTIONS:
-        if (preDefinedTemplate) {
-          setTemplateSteps(TemplateSteps.MODIFY);
-        } else {
-          setTemplateSteps(TemplateSteps.CREATE_EDIT);
-        }
-        break;
-      case TemplateSteps.SEND:
-        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-        break;
-      default:
-        navigate(`/app/business/${businessData?._id}/`);
-        break;
+    if (templateSteps !== TemplateSteps.NONE) {
+      switch (templateSteps) {
+        case TemplateSteps.MODIFY:
+        case TemplateSteps.CREATE_EDIT:
+          setTemplateSteps(TemplateSteps.NONE);
+          setStep(Step.SETUP);
+          break;
+        case TemplateSteps.SHOW_OPTIONS:
+          if (preDefinedTemplate) {
+            setTemplateSteps(TemplateSteps.MODIFY);
+          } else {
+            setTemplateSteps(TemplateSteps.CREATE_EDIT);
+          }
+          break;
+        case TemplateSteps.SEND:
+          setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+          break;
+        default:
+          setTemplateSteps(TemplateSteps.NONE);
+          setStep(Step.SETUP);
+          break;
+      }
+    } else {
+      switch (step) {
+        case Step.WALLET_HISTORY:
+        case Step.CREATE_EDIT:
+        case Step.TRANSACTIONS:
+          setStep(Step.SETUP);
+          break;
+        default:
+          navigate(`/app/business/${businessData?._id}/`);
+          break;
+      }
     }
   }, [
     setStep,
+    step,
     templateSteps,
     setTemplateSteps,
     navigate,
@@ -105,6 +125,7 @@ const MemoWhatzapp = () => {
         )}
         {step === Step.WALLET_HISTORY && <WalletHistory />}
         {step === Step.CREATE_EDIT && <CreateEditTemplate />}
+        {step === Step.TRANSACTIONS && <WhatzappPayment />}
         {notEditPopup && (
           <MiddlePopUp
             show={notEditPopup}
