@@ -57,7 +57,7 @@ function MemoOutletItemInfo({ dishData }: { dishData: IDish }) {
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
-      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData.name}\n*Dish ID:* ${dishData._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData._id}\n*Image Preview:* ${dishData.images[0]}`,
+      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData.name}\n*Dish ID:* ${dishData._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData._id}`,
     );
 
     const whatsappUrl = `https://wa.me/9177914130?text=${message}`;

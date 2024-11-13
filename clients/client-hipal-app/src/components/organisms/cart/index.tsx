@@ -1,5 +1,6 @@
 import { memo, useCallback, useState } from "react";
 import { GiKnifeFork } from "react-icons/gi";
+import { FiShare, FiUsers, FiBriefcase } from "react-icons/fi";
 import CartItem from "./cartItem";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
 import MemoCallTheWaiterComponent from "@/components/molecules/bottomButton/callTheWaiter";
@@ -14,15 +15,14 @@ import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { BUSINESS_KEYID } from "@/configs";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-
-type ClickedButton = "US" | "FRENDZ";
 
 const Cart = () => {
   const { cart } = useCartStore();
   const { setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [shareURL, setShareURL] = useState("");
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((s) => s.userDetails);
@@ -62,18 +62,10 @@ const Cart = () => {
     window.open(whatsappUrl, "_blank");
   };
 
-  const shareTheUrl = (str: ClickedButton, shareURL: string) => {
-    if (str === "US") {
-      shareWithUs(shareURL);
-    } else {
-      shareWithFriends(shareURL);
-    }
-  };
-
-  const generateCartLink = async (selectedButton: ClickedButton) => {
+  const generateCartLink = async () => {
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
-      return null;
+      return;
     }
 
     const sanitizedCart = cart.map((item) => {
@@ -95,16 +87,15 @@ const Cart = () => {
       const res = await response.json();
 
       if (!res.err) {
-        const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res.data.cartID}`;
-        shareTheUrl(selectedButton, newShareURL);
+        const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res?.data?.cartID}`;
+        setShareURL(newShareURL);
+        setShowShareOptions(true);
       } else {
         toast.error(res.message || "Failed to create cart link");
-        return null;
       }
     } catch (error) {
       console.error("Error creating cart link:", error);
       toast.error("An error occurred while creating the cart link");
-      return null;
     }
   };
 
@@ -137,20 +128,55 @@ const Cart = () => {
           ))}
         </div>
       )}
-      {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
-        <CommonBottomButton
-          fixed
-          buttons={[
-            {
-              text: "Share with Friends",
-              onClick: () => generateCartLink("FRENDZ"),
-            },
-            {
-              text: "Share with Us",
-              onClick: () => generateCartLink("US"),
-            },
-          ]}
-        />
+      {cart.length > 0 && (
+        <>
+          <button
+            onClick={generateCartLink}
+            type="button"
+            className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100 flex items-center justify-center"
+          >
+            <FiShare className="mr-2 text-xl" />
+            Share
+          </button>
+          {showShareOptions && (
+            <MemoBottomPopUp
+              show={showShareOptions}
+              onClose={() => setShowShareOptions(false)}
+            >
+              <div className="p-4">
+                <div className="mb-4 text-xl font-semibold text-center">
+                  Share
+                </div>
+                <div className="flex justify-around">
+                  <button
+                    onClick={() => {
+                      shareWithFriends(shareURL);
+                      setShowShareOptions(false);
+                    }}
+                    className="flex flex-col items-center space-y-2"
+                  >
+                    <FiUsers className="text-4xl text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Share with Friends
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      shareWithUs(shareURL);
+                      setShowShareOptions(false);
+                    }}
+                    className="flex flex-col items-center space-y-2"
+                  >
+                    <FiBriefcase className="text-4xl text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Share with Business
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </MemoBottomPopUp>
+          )}
+        </>
       )}
       {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
         <button
