@@ -82,7 +82,7 @@ const CartPage = () => {
     <div className="w-full min-h-screen max-w-[30rem] pb-[5rem] px-4 mx-auto text-base-content bg-base-100">
       <header className="pt-4 text-2xl font-semibold text-center">Cart</header>
 
-      <CountdownTimer expiryTimestamp={cartData?.date + 3 * 60 * 60 * 1000} />
+      <CountdownTimer startTime={cartData?.date} />
 
       {cartData?.cart?.length > 0 ? (
         cartData.cart.map((cartItem) => (
