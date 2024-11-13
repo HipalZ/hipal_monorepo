@@ -1,10 +1,10 @@
+import { Cart } from "@hi/db-models";
 import { cartSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
-import { Cart } from "@hi/db-models";
-//
+///
 const cartRouter = new Hono()
   .get(
     "/:id",
