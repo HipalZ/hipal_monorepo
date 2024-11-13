@@ -45,6 +45,108 @@ interface AxiosError {
   message: string;
 }
 
+const functionToCheckBodyVariable = async (
+  businessName: string,
+  address: string,
+  bodyvariblesequence: string[],
+  customer: {
+    _id: string;
+    userId: {
+      _id: string;
+      name: string;
+      phone: string;
+      email?: string;
+    };
+  },
+) => {
+  const ans = [];
+
+  for (const variable of bodyvariblesequence) {
+    let value: string | undefined;
+
+    switch (variable) {
+      case "name":
+        value = customer?.userId?.name?.toString();
+        break;
+      case "phone":
+        value = customer?.userId?.phone?.toString();
+        break;
+      case "businessName":
+        value = businessName?.toString();
+        break;
+      case "email":
+        value = customer?.userId?.email?.toString();
+        break;
+      case "address":
+        value = address?.toString();
+        break;
+      case "time":
+        value = new Date().toLocaleString();
+        break;
+      case "date":
+        value = new Date().toLocaleDateString("en-GB");
+        break;
+      default:
+        value = "";
+        break;
+    }
+
+    ans.push({
+      type: "text",
+      text: value, // Fallback to "N/A" if value is undefined
+    });
+  }
+
+  return ans;
+};
+
+const outPut = async (
+  businessName: string,
+  address: string,
+  bodyvariblesequence: string[],
+  customer: {
+    name: string;
+    phone: string;
+  },
+) => {
+  const ans = [];
+
+  for (const variable of bodyvariblesequence) {
+    let value: string | undefined;
+
+    switch (variable) {
+      case "name":
+        value = customer.name?.toString() || "Hipal";
+        break;
+      case "phone":
+        value = customer?.phone?.toString();
+        break;
+      case "businessName":
+        value = businessName?.toString();
+        break;
+      case "address":
+        value = address?.toString();
+        break;
+      case "time":
+        value = new Date().toLocaleString();
+        break;
+      case "date":
+        value = new Date().toLocaleDateString("en-GB");
+        break;
+      default:
+        value = "";
+        break;
+    }
+
+    ans.push({
+      type: "text",
+      text: value, // Fallback to "N/A" if value is undefined
+    });
+  }
+
+  return ans;
+};
+
 const whatsappRouter = new Hono()
   .get(
     "/template/all/:businessId",
@@ -91,8 +193,6 @@ const whatsappRouter = new Hono()
   .post(
     "/template",
     zValidator("json", validateWhatAppTemplateSchema),
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.OWNER, ClientRoles.MANAGER]),
     async (c) => {
       try {
         const requestData = await c.req.json();
@@ -103,8 +203,23 @@ const whatsappRouter = new Hono()
           businessId,
         } = requestData;
 
-        const response = await axios.post(
-          "https://graph.facebook.com/v21.0/378623998675618/message_templates",
+        const templateNameAlreadyExist = await WhatAppTemplate.findOne({
+          templateName: requestData.name,
+        }).select("templateName");
+
+        if (templateNameAlreadyExist) {
+          return c.json(
+            {
+              message: "Template name already exist",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        const { status, data } = await axios.post(
+          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/message_templates`,
           requestData,
           {
             headers: {
@@ -113,45 +228,71 @@ const whatsappRouter = new Hono()
           },
         );
 
-        if (response.status === 200 && response.data.status === "PENDING") {
-          const { id } = response.data;
-          const createTemplate = await WhatAppTemplate.create({
-            templateId: id,
-            bodyVariableSequence,
-            headerVariableSequence,
-            footerVariableSequence,
-            businessId,
-            date: Date.now(),
-          });
-
-          if (!createTemplate) {
+        if (status === 200) {
+          if (data.status === "REJECTED") {
             return c.json(
               {
-                message: "Error creating template",
+                message: "Your template has been rejected!",
                 err: true,
                 data: {},
               },
               400,
             );
           }
+
+          if (data.status === "PENDING") {
+            const { id } = data;
+
+            const createTemplate = await WhatAppTemplate.create({
+              templateId: id,
+              bodyVariableSequence,
+              headerVariableSequence,
+              footerVariableSequence,
+              businessId,
+              date: Date.now(),
+              templateName: requestData?.name,
+              languageCode: requestData?.language,
+              imageUrl: requestData?.imageUrl,
+            });
+
+            if (!createTemplate) {
+              return c.json(
+                {
+                  message: "Error creating template",
+                  err: true,
+                  data: {},
+                },
+                400,
+              );
+            }
+          }
+
+          return c.json(
+            {
+              message: "Template created successfully",
+              err: false,
+              data,
+            },
+            201,
+          );
         }
 
         return c.json(
           {
-            message: "Template created successfully",
-            err: false,
-            data: response.data,
+            message: "Unexpected response status",
+            err: true,
+            data: {},
           },
-          201,
+          500,
         );
       } catch (error) {
         const axiosError = error as AxiosError;
-        const message =
+        const errorMessage =
           axiosError.response?.data?.error?.message || axiosError.message;
 
         return c.json(
           {
-            message: `Error creating template: ${message}`,
+            message: `Error creating template: ${errorMessage}`,
             err: true,
             data: axiosError.response?.data || {},
           },
@@ -160,6 +301,7 @@ const whatsappRouter = new Hono()
       }
     },
   )
+
   .get(
     "/template/:templateid",
 
@@ -331,106 +473,139 @@ const whatsappRouter = new Hono()
           customerPhone,
           groupIds,
           businessName,
+          sendLaterTime,
+          address,
         } = requestData;
 
+        const template = await WhatAppTemplate.findOne({
+          businessId,
+          templateId,
+        });
+
+        const bodyVariableSequence = template?.bodyVariableSequence as string[];
+        const imageUrl = template?.imageUrl || "https://picsum.photos/200/300";
+
+        if (!template) {
+          return c.json(
+            {
+              message: "Template not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
         if (allCustomers) {
+          // const allCustomersList = await Subscriber.find({
+          //   businessId,
+          // })
+          //   .select("userId")
+          //   .populate({
+          //     path: "userId",
+          //     select: "phone name",
+          //   });
+
           const allCustomersList = [
             {
-              name: "YEYE",
-              phone: "9588413799",
+              _id: "66b5e75e9bc1f065777a46cd",
+              userId: {
+                _id: "665ee8aab437be96f17c6f64",
+                name: "Datta",
+                phone: "9588413799",
+              },
             },
             {
-              name: "sankalesh",
-              phone: "8668229890",
+              _id: "66b5e75e9bc1f065777a46d0",
+              userId: {
+                _id: "665ee910b437be96f17c6f68",
+                name: "vamsi",
+                phone: "7702605494",
+              },
             },
             {
-              name: "vamsi",
-              phone: "7702605494",
+              _id: "66b5e75e9bc1f065777a46d3",
+              userId: {
+                _id: "666007fb241426acafd47fb0",
+                name: "Sankalesh",
+                phone: "8668229890",
+              },
             },
             {
-              name: "abhishek",
-              phone: "9160787050",
+              _id: "66b5e75e9bc1f065777a46d6",
+              userId: {
+                _id: "667670781570550c31c59526",
+                name: "Abhishek",
+                phone: "9160787050",
+              },
+            },
+            {
+              _id: "66b5e75e9bc1f065777a46d9",
+              userId: {
+                _id: "6690e44b80e8eae20f9ac7be",
+                name: "Rishabh",
+                phone: "9177914130",
+              },
+            },
+            {
+              _id: "66b5e75e9bc1f065777a46d9",
+              userId: {
+                _id: "6690e44b80e8eae20f9ac7be",
+                name: "Ravi",
+                phone: "7731843582",
+              },
             },
           ];
 
-          // const sendTemplateMessageToCustomer = await axios.post(
-          //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: `${customerPhone}`,
-          //     type: "template",
-          //     template: {
-          //       name: "hello_world",
-          //       language: { code: "en_US" },
-          //       components: [],
-          //     },
-          //   },
-
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          for (let i = 0; i < allCustomersList.length; i++) {
-            const customer = allCustomersList[i];
-            console.log("first customer", typeof customer.phone);
-            const sendTemplateMessageToCustomer = await axios.post(
-              `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-              {
-                messaging_product: "whatsapp",
-                to: customer.phone.toString(),
-                type: "template",
-                template: {
-                  name: "festivals_template",
-                  language: { code: "en_GB" },
-                  components: [
-                    {
-                      type: "HEADER",
-                      parameters: [
-                        {
-                          type: "image",
-                          image: {
-                            link: "http://higssoftware.com/blog/images/happy-diwali.png",
-                          },
-                        },
-                      ],
-                    },
-
-                    {
-                      type: "BODY",
-                      parameters: [
-                        {
-                          type: "text",
-                          text: customer.name.toString(),
-                        },
-                        {
-                          type: "text",
-                          text: businessName.toString(),
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${whatsAppConfig.token}`,
-                },
-              },
+          for (const customer of allCustomersList) {
+            const parameters = await functionToCheckBodyVariable(
+              businessName,
+              address,
+              bodyVariableSequence,
+              customer,
             );
 
-            // if (!sendTemplateMessageToCustomer) {
-            //   return c.json(
-            //     {
-            //       message: "Error sending template",
-            //       err: true,
-            //       data: {},
-            //     },
-            //     400,
-            //   );
-            // }
+            try {
+              await axios.post(
+                `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: customer?.userId?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: template.templateName || "festivals_template",
+                    language: { code: template.languageCode || "en_GB" },
+                    components: [
+                      {
+                        type: "HEADER",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: imageUrl,
+                            },
+                          },
+                        ],
+                      },
+                      {
+                        type: "BODY",
+                        parameters: parameters,
+                      },
+                    ],
+                  },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  },
+                },
+              );
+            } catch (error) {
+              console.error(
+                `Failed to send message to ${customer?.userId?.phone?.toString()}:`,
+                error,
+              );
+            }
           }
         }
 
@@ -453,88 +628,64 @@ const whatsappRouter = new Hono()
               phone: "9160787050",
             },
           ];
-
-          // const sendTemplateMessageToCustomer = await axios.post(
-          //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: `${customerPhone}`,
-          //     type: "template",
-          //     template: {
-          //       name: "hello_world",
-          //       language: { code: "en_US" },
-          //       components: [],
-          //     },
-          //   },
-
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          for (let i = 0; i < bulkCustomersList.length; i++) {
-            const customer = bulkCustomersList[i];
-            console.log("first customer", typeof customer.phone);
-            const sendTemplateMessageToCustomer = await axios.post(
-              `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-              {
-                messaging_product: "whatsapp",
-                to: customer.phone.toString(),
-                type: "template",
-                template: {
-                  name: "festivals_template",
-                  language: { code: "en_GB" },
-                  components: [
-                    {
-                      type: "HEADER",
-                      parameters: [
-                        {
-                          type: "image",
-                          image: {
-                            link: "http://higssoftware.com/blog/images/happy-diwali.png",
-                          },
-                        },
-                      ],
-                    },
-
-                    {
-                      type: "BODY",
-                      parameters: [
-                        {
-                          type: "text",
-                          text: customer.name.toString(),
-                        },
-                        {
-                          type: "text",
-                          text: businessName.toString(),
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${whatsAppConfig.token}`,
-                },
-              },
+          for (const customer of bulkCustomersList) {
+            const parameters = await outPut(
+              businessName,
+              address,
+              bodyVariableSequence,
+              customer,
             );
 
-            // if (!sendTemplateMessageToCustomer) {
-            //   return c.json(
-            //     {
-            //       message: "Error sending template",
-            //       err: true,
-            //       data: {},
-            //     },
-            //     400,
-            //   );
-            // }
+            try {
+              await axios.post(
+                `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: customer?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: template.templateName || "festivals_template",
+                    language: { code: template.languageCode || "en_GB" },
+                    components: [
+                      {
+                        type: "HEADER",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: imageUrl,
+                            },
+                          },
+                        ],
+                      },
+                      {
+                        type: "BODY",
+                        parameters: parameters,
+                      },
+                    ],
+                  },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  },
+                },
+              );
+            } catch (error) {
+              console.error(
+                `Failed to send message to ${customer?.phone?.toString()}:`,
+                error,
+              );
+            }
           }
         }
         if (customerPhone) {
+          const parameters = await outPut(
+            businessName,
+            address,
+            bodyVariableSequence,
+            customerPhone,
+          );
           const sendTemplateMessageToCustomer = await axios.post(
             `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
             {
@@ -542,8 +693,8 @@ const whatsappRouter = new Hono()
               to: customerPhone.toString(),
               type: "template",
               template: {
-                name: "festivals_template",
-                language: { code: "en_GB" },
+                name: template.templateName || "festivals_template",
+                language: { code: template.languageCode || "en_GB" },
                 components: [
                   {
                     type: "HEADER",
@@ -551,24 +702,14 @@ const whatsappRouter = new Hono()
                       {
                         type: "image",
                         image: {
-                          link: "http://higssoftware.com/blog/images/happy-diwali.png",
+                          link: imageUrl,
                         },
                       },
                     ],
                   },
-
                   {
                     type: "BODY",
-                    parameters: [
-                      {
-                        type: "text",
-                        text: customerPhone.toString(),
-                      },
-                      {
-                        type: "text",
-                        text: businessName.toString(),
-                      },
-                    ],
+                    parameters: parameters,
                   },
                 ],
               },
@@ -600,102 +741,70 @@ const whatsappRouter = new Hono()
             },
           ];
 
-          // const sendTemplateMessageToCustomer = await axios.post(
-          //   `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: `${customerPhone}`,
-          //     type: "template",
-          //     template: {
-          //       name: "hello_world",
-          //       language: { code: "en_US" },
-          //       components: [],
-          //     },
-          //   },
+          for (const customer of groupIdsList) {
+            try {
+              const parameters = await outPut(
+                businessName,
+                address,
+                bodyVariableSequence,
+                customerPhone,
+              );
 
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          for (let i = 0; i < groupIdsList.length; i++) {
-            const customer = groupIdsList[i];
-            console.log("first customer", typeof customer.phone);
-            const sendTemplateMessageToCustomer = await axios.post(
-              `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-              {
-                messaging_product: "whatsapp",
-                to: customer.phone.toString(),
-                type: "template",
-                template: {
-                  name: "festivals_template",
-                  language: { code: "en_GB" },
-                  components: [
-                    {
-                      type: "HEADER",
-                      parameters: [
-                        {
-                          type: "image",
-                          image: {
-                            link: "http://higssoftware.com/blog/images/happy-diwali.png",
+              const sendTemplateMessageToCustomer = await axios.post(
+                `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: customer.phone.toString(),
+                  type: "template",
+                  template: {
+                    name: template.templateName || "festivals_template",
+                    language: { code: template.languageCode || "en_GB" },
+                    components: [
+                      {
+                        type: "HEADER",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: imageUrl,
+                            },
                           },
-                        },
-                      ],
-                    },
-
-                    {
-                      type: "BODY",
-                      parameters: [
-                        {
-                          type: "text",
-                          text: customer.name.toString(),
-                        },
-                        {
-                          type: "text",
-                          text: businessName.toString(),
-                        },
-                      ],
-                    },
-                  ],
+                        ],
+                      },
+                      {
+                        type: "BODY",
+                        parameters: parameters,
+                      },
+                    ],
+                  },
                 },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${whatsAppConfig.token}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  },
                 },
-              },
-            );
+              );
 
-            // if (!sendTemplateMessageToCustomer) {
-            //   return c.json(
-            //     {
-            //       message: "Error sending template",
-            //       err: true,
-            //       data: {},
-            //     },
-            //     400,
-            //   );
-            // }
+              // Handle the response if needed
+              console.log(
+                `Message sent to ${customer.phone}:`,
+                sendTemplateMessageToCustomer.data,
+              );
+            } catch (error) {
+              console.error(
+                `Failed to send message to ${customer.phone}:`,
+                error.message,
+              );
+            }
           }
         }
-
-        // const template = await axios.get(
-        //   `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${whatsAppConfig.token}`,
-        //     },
-        //   },
-        // );
 
         return c.json(
           {
             message: "Template created successfully",
             err: false,
             data: {
-              success: true,
+              success: bodyVariableSequence,
             },
           },
           200,
@@ -927,7 +1036,15 @@ const whatsappRouter = new Hono()
       const walletHistory = await WhatsAppWalletHistory.find({
         businessId,
         date: { $gte: Number(fromDate), $lte: Number(toDate) },
-      });
+      })
+        .populate({
+          path: "userId",
+          select: "name",
+        })
+        .populate({
+          path: "order_id",
+          select: "total billValue",
+        });
 
       return c.json(
         {
