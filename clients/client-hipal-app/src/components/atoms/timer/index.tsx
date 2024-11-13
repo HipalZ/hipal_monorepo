@@ -1,20 +1,22 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { intervalToDuration } from "date-fns";
 
 interface CountdownTimerProps {
-  expiryTimestamp: number;
+  startTime: number; // Start time in milliseconds
 }
 
-const CountdownTimer: React.FC<CountdownTimerProps> = ({ expiryTimestamp }) => {
-  const [remainingTime, setRemainingTime] = useState(
-    () => expiryTimestamp - Date.now(),
-  );
+const CountdownTimer: React.FC<CountdownTimerProps> = ({ startTime }) => {
+  // Calculate the end time as 24 hours after the start time
+  const endTime = startTime + 24 * 60 * 60 * 1000;
+
+  const [remainingTime, setRemainingTime] = useState(endTime - Date.now());
 
   useEffect(() => {
     if (remainingTime <= 0) return;
 
     const intervalId = setInterval(() => {
-      const timeLeft = expiryTimestamp - Date.now();
+      const timeLeft = endTime - Date.now();
+
       if (timeLeft <= 0) {
         setRemainingTime(0);
         clearInterval(intervalId);
@@ -24,9 +26,8 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ expiryTimestamp }) => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [expiryTimestamp, remainingTime]);
+  }, [endTime]);
 
-  // If the timer has expired, show a message or return null
   if (remainingTime <= 0) {
     return (
       <div className="flex flex-col items-center mt-4">
@@ -35,10 +36,11 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ expiryTimestamp }) => {
     );
   }
 
-  // Format remaining time
-  const { hours, minutes, seconds } = useMemo(() => {
-    return intervalToDuration({ start: 0, end: remainingTime });
-  }, [remainingTime]);
+  // Convert the remaining time into hours, minutes, and seconds
+  const duration = intervalToDuration({
+    start: 0,
+    end: remainingTime,
+  });
 
   return (
     <div className="flex flex-col items-center mt-4 mb-6">
@@ -46,21 +48,21 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ expiryTimestamp }) => {
       <div className="flex items-center justify-center mt-2 space-x-4">
         <div className="flex flex-col items-center">
           <div className="text-3xl font-bold text-primary">
-            {String(hours || 0).padStart(2, "0")}
+            {String(duration.hours || 0).padStart(2, "0")}
           </div>
           <div className="text-xs text-gray-500">Hours</div>
         </div>
         <div className="text-2xl font-bold text-primary">:</div>
         <div className="flex flex-col items-center">
           <div className="text-3xl font-bold text-primary">
-            {String(minutes || 0).padStart(2, "0")}
+            {String(duration.minutes || 0).padStart(2, "0")}
           </div>
           <div className="text-xs text-gray-500">Minutes</div>
         </div>
         <div className="text-2xl font-bold text-primary">:</div>
         <div className="flex flex-col items-center">
           <div className="text-3xl font-bold text-primary">
-            {String(seconds || 0).padStart(2, "0")}
+            {String(duration.seconds || 0).padStart(2, "0")}
           </div>
           <div className="text-xs text-gray-500">Seconds</div>
         </div>

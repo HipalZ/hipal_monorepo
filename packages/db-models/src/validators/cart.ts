@@ -31,7 +31,7 @@ export const cartSchema = z.object({
   userId: ObjectIdSchema,
   tableName: z.string().min(1).max(50).optional(),
   cart: z.array(CartItemSchema),
-  date: z.number().default(Date.now()),
+  date: z.number().optional(),
   createdAt: z.date().optional(),
 });
 

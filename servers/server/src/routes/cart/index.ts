@@ -4,7 +4,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
-///
 const cartRouter = new Hono()
   .get(
     "/:id",

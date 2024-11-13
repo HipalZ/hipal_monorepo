@@ -85,7 +85,7 @@ const MemoUniquelyDishes = (props: Props) => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   return (
     <>
-      <center className="pb-4 text-2xl text-primary">
+      <center className="relative pb-4 text-2xl text-primary">
         {outletInfo?.outLetType !== "OTHER"
           ? "Must Try Dishes"
           : "Our Favourites"}

@@ -2,7 +2,7 @@ import { memo } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
-import { createPortal } from "react-dom"; // Import createPortal
+import { createPortal } from "react-dom";
 
 const BottomPopUp = ({
   children,

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { GiKnifeFork } from "react-icons/gi";
 import CartItem from "./cartItem";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
@@ -16,8 +16,10 @@ import toast from "react-hot-toast";
 import { BUSINESS_KEYID } from "@/configs";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 
+type ClickedButton = "US" | "FRENDZ";
+
 const Cart = () => {
-  const { cart, setCartEmpty } = useCartStore();
+  const { cart } = useCartStore();
   const { setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
@@ -35,7 +37,42 @@ const Cart = () => {
     setCallWaiterModal(false);
   }, []);
 
-  const generateCartLink = useCallback(async () => {
+  const shareWithFriends = async (shareURL: string) => {
+    if (shareURL) {
+      if (navigator.share) {
+        navigator
+          .share({
+            title: "Check out my cart",
+            text: "Here's the cart I want to share with you.",
+            url: shareURL,
+          })
+          .catch((error) => console.error("Error sharing:", error));
+      } else {
+        navigator.clipboard.writeText(shareURL);
+        toast.success("Share URL copied to clipboard");
+      }
+    }
+  };
+
+  const shareWithUs = async (shareURL: string) => {
+    if (shareURL) {
+      const message = encodeURIComponent(
+        `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareURL}`,
+      );
+      const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+      window.open(whatsappUrl, "_blank");
+    }
+  };
+
+  const shareTheUrl = (str: ClickedButton, shareURL: string) => {
+    if (str === "US") {
+      shareWithUs(shareURL);
+    } else {
+      shareWithFriends(shareURL);
+    }
+  };
+
+  const generateCartLink = async (selectedButton: ClickedButton) => {
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
       return null;
@@ -60,7 +97,8 @@ const Cart = () => {
       const res = await response.json();
 
       if (!res.err) {
-        return `${BUSINESS_KEYID}${customLink}/cart/${res.data.cartID}`;
+        const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res.data.cartID}`;
+        shareTheUrl(selectedButton, newShareURL);
       } else {
         toast.error(res.message || "Failed to create cart link");
         return null;
@@ -70,35 +108,7 @@ const Cart = () => {
       toast.error("An error occurred while creating the cart link");
       return null;
     }
-  }, [cart, userDetails?._id, outletInfo?.businessId, accessToken]);
-
-  const shareWithFriends = useCallback(async () => {
-    const shareURL = await generateCartLink();
-    if (shareURL) {
-      if (navigator.share) {
-        navigator
-          .share({
-            title: "Check out my cart",
-            text: "Here's the cart I want to share with you.",
-            url: shareURL,
-          })
-          .catch((error) => console.error("Error sharing:", error));
-      } else {
-        navigator.clipboard.writeText(shareURL);
-        toast.success("Share URL copied to clipboard");
-      }
-    }
-  }, [generateCartLink]);
-
-  const shareWithUs = useCallback(async () => {
-    const shareURL = await generateCartLink();
-    if (shareURL) {
-      const whatsappLink = `https://wa.me/8668229890?text=Check out my cart: ${encodeURIComponent(
-        shareURL,
-      )}`;
-      window.open(whatsappLink, "_blank");
-    }
-  }, [generateCartLink]);
+  };
 
   return (
     <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary bg-base-100 relative">
@@ -135,11 +145,11 @@ const Cart = () => {
           buttons={[
             {
               text: "Share with Friends",
-              onClick: shareWithFriends,
+              onClick: () => generateCartLink("FRENDZ"),
             },
             {
               text: "Share with Us",
-              onClick: shareWithUs,
+              onClick: () => generateCartLink("US"),
             },
           ]}
         />
