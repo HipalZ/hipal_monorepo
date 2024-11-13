@@ -580,8 +580,8 @@ const whatsappRouter = new Hono()
                   to: customer?.userId?.phone?.toString(),
                   type: "template",
                   template: {
-                    name: "festivals_template",
-                    language: { code: "en_GB" },
+                    name: template.templateName || "festivals_template",
+                    language: { code: template.languageCode || "en_GB" },
                     components: [
                       {
                         type: "HEADER",
@@ -589,23 +589,14 @@ const whatsappRouter = new Hono()
                           {
                             type: "image",
                             image: {
-                              link: "https://assets.hipalz.com/3.png",
+                              link: imageUrl,
                             },
                           },
                         ],
                       },
                       {
                         type: "BODY",
-                        parameters: [
-                          {
-                            type: "text",
-                            text: "Hipal",
-                          },
-                          {
-                            type: "text",
-                            text: "9588413799",
-                          },
-                        ],
+                        parameters: parameters,
                       },
                     ],
                   },
