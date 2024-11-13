@@ -64,37 +64,28 @@ const functionToCheckBodyVariable = async (
   for (const variable of bodyvariblesequence) {
     let value: string | undefined;
 
-    switch (variable) {
-      case "name":
-        value = customer?.userId?.name?.toString();
-        break;
-      case "phone":
-        value = customer?.userId?.phone?.toString();
-        break;
-      case "businessName":
-        value = businessName?.toString();
-        break;
-      case "email":
-        value = customer?.userId?.email?.toString();
-        break;
-      case "address":
-        value = address?.toString();
-        break;
-      case "time":
-        value = new Date().toLocaleString();
-        break;
-      case "date":
-        value = new Date().toLocaleDateString("en-GB");
-        break;
-      default:
-        value = "";
-        break;
+    if (variable === "name") {
+      value = customer?.userId?.name?.toString();
+    } else if (variable === "phone") {
+      value = customer?.userId?.phone?.toString();
+    } else if (variable === "businessName") {
+      value = businessName?.toString();
+    } else if (variable === "email") {
+      value = customer?.userId?.email?.toString();
+    } else if (variable === "address") {
+      value = address?.toString();
+    } else if (variable === "time") {
+      value = new Date().toLocaleString();
+    } else if (variable === "date") {
+      value = new Date().toLocaleDateString("en-GB");
     }
 
-    ans.push({
-      type: "text",
-      text: value, // Fallback to "N/A" if value is undefined
-    });
+    if (value !== undefined) {
+      ans.push({
+        type: "text",
+        text: value,
+      });
+    }
   }
 
   return ans;
@@ -114,34 +105,26 @@ const outPut = async (
   for (const variable of bodyvariblesequence) {
     let value: string | undefined;
 
-    switch (variable) {
-      case "name":
-        value = customer.name?.toString() || "Hipal";
-        break;
-      case "phone":
-        value = customer?.phone?.toString();
-        break;
-      case "businessName":
-        value = businessName?.toString();
-        break;
-      case "address":
-        value = address?.toString();
-        break;
-      case "time":
-        value = new Date().toLocaleString();
-        break;
-      case "date":
-        value = new Date().toLocaleDateString("en-GB");
-        break;
-      default:
-        value = "";
-        break;
+    if (variable === "name") {
+      value = customer?.name?.toString();
+    } else if (variable === "phone") {
+      value = customer?.phone?.toString();
+    } else if (variable === "businessName") {
+      value = businessName?.toString();
+    } else if (variable === "address") {
+      value = address?.toString();
+    } else if (variable === "time") {
+      value = new Date().toLocaleString();
+    } else if (variable === "date") {
+      value = new Date().toLocaleDateString("en-GB");
     }
 
-    ans.push({
-      type: "text",
-      text: value, // Fallback to "N/A" if value is undefined
-    });
+    if (value !== undefined) {
+      ans.push({
+        type: "text",
+        text: value,
+      });
+    }
   }
 
   return ans;
@@ -489,8 +472,8 @@ const whatsappRouter = new Hono()
         });
 
         const bodyVariableSequence = template?.bodyVariableSequence as string[];
-        const imageUrl =
-          template?.imageUrl || "https://assets.hipalz.com/3.png";
+
+        const imageUrl = template?.imageUrl;
 
         if (!template) {
           return c.json(
@@ -572,6 +555,28 @@ const whatsappRouter = new Hono()
               customer,
             );
 
+            const components = [];
+
+            // Conditionally add HEADER component
+            if (imageUrl) {
+              components.push({
+                type: "HEADER",
+                parameters: [
+                  {
+                    type: "image",
+                    image: {
+                      link: imageUrl,
+                    },
+                  },
+                ],
+              });
+            }
+
+            components.push({
+              type: "BODY",
+              parameters: parameters,
+            });
+
             try {
               const res = await axios.post(
                 `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
@@ -582,23 +587,7 @@ const whatsappRouter = new Hono()
                   template: {
                     name: template.templateName || "festivals_template",
                     language: { code: template.languageCode || "en_GB" },
-                    components: [
-                      {
-                        type: "HEADER",
-                        parameters: [
-                          {
-                            type: "image",
-                            image: {
-                              link: imageUrl,
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        type: "BODY",
-                        parameters: parameters,
-                      },
-                    ],
+                    components: components,
                   },
                 },
                 {
@@ -607,7 +596,6 @@ const whatsappRouter = new Hono()
                   },
                 },
               );
-              console.log("res", res.data);
             } catch (error) {
               const axiosError = error as AxiosError;
               const message =
@@ -652,6 +640,27 @@ const whatsappRouter = new Hono()
               customer,
             );
 
+            const components = [];
+            // Conditionally add HEADER component
+            if (imageUrl) {
+              components.push({
+                type: "HEADER",
+                parameters: [
+                  {
+                    type: "image",
+                    image: {
+                      link: imageUrl,
+                    },
+                  },
+                ],
+              });
+            }
+
+            components.push({
+              type: "BODY",
+              parameters: parameters,
+            });
+
             try {
               await axios.post(
                 `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
@@ -662,23 +671,7 @@ const whatsappRouter = new Hono()
                   template: {
                     name: template.templateName || "festivals_template",
                     language: { code: template.languageCode || "en_GB" },
-                    components: [
-                      {
-                        type: "HEADER",
-                        parameters: [
-                          {
-                            type: "image",
-                            image: {
-                              link: imageUrl,
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        type: "BODY",
-                        parameters: parameters,
-                      },
-                    ],
+                    components: components,
                   },
                 },
                 {
@@ -754,6 +747,27 @@ const whatsappRouter = new Hono()
                 customerPhone,
               );
 
+              const components = [];
+
+              if (imageUrl) {
+                components.push({
+                  type: "HEADER",
+                  parameters: [
+                    {
+                      type: "image",
+                      image: {
+                        link: imageUrl,
+                      },
+                    },
+                  ],
+                });
+              }
+
+              components.push({
+                type: "BODY",
+                parameters: parameters,
+              });
+
               const sendTemplateMessageToCustomer = await axios.post(
                 `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
                 {
@@ -763,23 +777,7 @@ const whatsappRouter = new Hono()
                   template: {
                     name: template.templateName || "festivals_template",
                     language: { code: template.languageCode || "en_GB" },
-                    components: [
-                      {
-                        type: "HEADER",
-                        parameters: [
-                          {
-                            type: "image",
-                            image: {
-                              link: imageUrl,
-                            },
-                          },
-                        ],
-                      },
-                      {
-                        type: "BODY",
-                        parameters: parameters,
-                      },
-                    ],
+                    components: components,
                   },
                 },
                 {
@@ -810,7 +808,7 @@ const whatsappRouter = new Hono()
             message: "Template created successfully",
             err: false,
             data: {
-              success: bodyVariableSequence,
+              success: true,
             },
           },
           200,
