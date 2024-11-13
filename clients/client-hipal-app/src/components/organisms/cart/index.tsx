@@ -55,13 +55,11 @@ const Cart = () => {
   };
 
   const shareWithUs = async (shareURL: string) => {
-    if (shareURL) {
-      const message = encodeURIComponent(
-        `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareURL}`,
-      );
-      const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
-      window.open(whatsappUrl, "_blank");
-    }
+    const message = encodeURIComponent(
+      `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareURL}`,
+    );
+    const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const shareTheUrl = (str: ClickedButton, shareURL: string) => {
