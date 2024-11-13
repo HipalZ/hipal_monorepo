@@ -154,40 +154,55 @@ const whatsappRouter = new Hono()
     zValidator("param", z.object({ businessId: z.string() })),
 
     async (c) => {
-      const { businessId } = c.req.param();
+      try {
+        const { businessId } = c.req.param();
 
-      const getWhatAppTemplate = await WhatAppTemplate.find({
-        businessId,
-        isDeleted: false,
-      }).select("templateId");
+        const getWhatAppTemplate = await WhatAppTemplate.find({
+          businessId,
+          isDeleted: false,
+        }).select("templateId");
 
-      const templateIds = getWhatAppTemplate.map(
-        (template) => template.templateId,
-      );
-
-      const templatesArray = [];
-
-      for (const templateId of templateIds) {
-        const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
-            },
-          },
+        const templateIds = getWhatAppTemplate.map(
+          (template) => template.templateId,
         );
 
-        templatesArray.push(getWhatAppTemplate.data);
-      }
+        const templatesArray = [];
 
-      return c.json(
-        {
-          message: "fetched successfully",
-          err: false,
-          data: templatesArray,
-        },
-        200,
-      );
+        for (const templateId of templateIds) {
+          const getWhatAppTemplate = await axios.get(
+            `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          templatesArray.push(getWhatAppTemplate.data);
+        }
+
+        return c.json(
+          {
+            message: "fetched successfully",
+            err: false,
+            data: templatesArray,
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error fetching template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
     },
   )
   .post(
@@ -276,15 +291,6 @@ const whatsappRouter = new Hono()
             201,
           );
         }
-
-        return c.json(
-          {
-            message: "Unexpected response status",
-            err: true,
-            data: {},
-          },
-          500,
-        );
       } catch (error) {
         const axiosError = error as AxiosError;
         const errorMessage =
@@ -483,7 +489,8 @@ const whatsappRouter = new Hono()
         });
 
         const bodyVariableSequence = template?.bodyVariableSequence as string[];
-        const imageUrl = template?.imageUrl || "https://picsum.photos/200/300";
+        const imageUrl =
+          template?.imageUrl || "https://assets.hipalz.com/3.png";
 
         if (!template) {
           return c.json(
@@ -566,15 +573,15 @@ const whatsappRouter = new Hono()
             );
 
             try {
-              await axios.post(
+              const res = await axios.post(
                 `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
                   to: customer?.userId?.phone?.toString(),
                   type: "template",
                   template: {
-                    name: template.templateName || "festivals_template",
-                    language: { code: template.languageCode || "en_GB" },
+                    name: "festivals_template",
+                    language: { code: "en_GB" },
                     components: [
                       {
                         type: "HEADER",
@@ -582,14 +589,23 @@ const whatsappRouter = new Hono()
                           {
                             type: "image",
                             image: {
-                              link: imageUrl,
+                              link: "https://assets.hipalz.com/3.png",
                             },
                           },
                         ],
                       },
                       {
                         type: "BODY",
-                        parameters: parameters,
+                        parameters: [
+                          {
+                            type: "text",
+                            text: "Hipal",
+                          },
+                          {
+                            type: "text",
+                            text: "9588413799",
+                          },
+                        ],
                       },
                     ],
                   },
@@ -600,10 +616,19 @@ const whatsappRouter = new Hono()
                   },
                 },
               );
+              console.log("res", res.data);
             } catch (error) {
-              console.error(
-                `Failed to send message to ${customer?.userId?.phone?.toString()}:`,
-                error,
+              const axiosError = error as AxiosError;
+              const message =
+                axiosError.response?.data?.error?.message || axiosError.message;
+
+              return c.json(
+                {
+                  message: `Error creating template: ${message}`,
+                  err: true,
+                  data: axiosError.response?.data || {},
+                },
+                400,
               );
             }
           }
@@ -672,59 +697,26 @@ const whatsappRouter = new Hono()
                 },
               );
             } catch (error) {
-              console.error(
-                `Failed to send message to ${customer?.phone?.toString()}:`,
-                error,
+              const axiosError = error as AxiosError;
+              const message =
+                axiosError.response?.data?.error?.message || axiosError.message;
+
+              return c.json(
+                {
+                  message: `Error creating template: ${message}`,
+                  err: true,
+                  data: axiosError.response?.data || {},
+                },
+                400,
               );
             }
           }
         }
-        if (customerPhone) {
-          const parameters = await outPut(
-            businessName,
-            address,
-            bodyVariableSequence,
-            customerPhone,
-          );
-          const sendTemplateMessageToCustomer = await axios.post(
-            `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-            {
-              messaging_product: "whatsapp",
-              to: customerPhone.toString(),
-              type: "template",
-              template: {
-                name: template.templateName || "festivals_template",
-                language: { code: template.languageCode || "en_GB" },
-                components: [
-                  {
-                    type: "HEADER",
-                    parameters: [
-                      {
-                        type: "image",
-                        image: {
-                          link: imageUrl,
-                        },
-                      },
-                    ],
-                  },
-                  {
-                    type: "BODY",
-                    parameters: parameters,
-                  },
-                ],
-              },
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${whatsAppConfig.token}`,
-              },
-            },
-          );
-        }
+
         if (groupIds.length > 0) {
           const groupIdsList = [
             {
-              name: "Datta",
+              name: "YEYE",
               phone: "9588413799",
             },
             {
@@ -732,14 +724,35 @@ const whatsappRouter = new Hono()
               phone: "8668229890",
             },
             {
-              name: "Vamsi",
+              name: "vamsi",
               phone: "7702605494",
             },
             {
-              name: "Abhishek",
+              name: "abhishek",
               phone: "9160787050",
             },
           ];
+
+          // for (let i = 0; i < groupIds.length; i++) {
+          //   const group = await GroupModel.findOne({
+          //     _id: groupIds[i],
+          //   }).select("userIds");
+
+          //   for (const user of group.userIds || []) {
+          //     const findUser = await Subscriber.findOne({
+          //       userId: user,
+          //     })
+          //       .select("userId")
+          //       .populate({
+          //         path: "userId",
+          //         select: "phone name",
+          //       });
+          //     groupIdsList.push({
+          //       name: findUser?.userId?.name,
+          //       phone: findUser?.userId?.phone,
+          //     });
+          //   }
+          // }
 
           for (const customer of groupIdsList) {
             try {
@@ -784,16 +797,18 @@ const whatsappRouter = new Hono()
                   },
                 },
               );
-
-              // Handle the response if needed
-              console.log(
-                `Message sent to ${customer.phone}:`,
-                sendTemplateMessageToCustomer.data,
-              );
             } catch (error) {
-              console.error(
-                `Failed to send message to ${customer.phone}:`,
-                error.message,
+              const axiosError = error as AxiosError;
+              const message =
+                axiosError.response?.data?.error?.message || axiosError.message;
+
+              return c.json(
+                {
+                  message: `Error creating template: ${message}`,
+                  err: true,
+                  data: axiosError.response?.data || {},
+                },
+                400,
               );
             }
           }
@@ -812,7 +827,7 @@ const whatsappRouter = new Hono()
       } catch (error) {
         const axiosError = error as AxiosError;
         const message =
-          axiosError.response?.data?.error?.message || axiosError.message;
+          axiosError.response?.data?.error?.message ?? axiosError.message;
 
         return c.json(
           {
@@ -857,8 +872,6 @@ const whatsappRouter = new Hono()
           .map((template) => template.templateId)
           ?.slice(0, 10);
 
-        console.log("allTemplates", allTemplates);
-
         const getWhatAppTemplate = await axios.get(
           `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=1730979600&end=1731152438&granularity=daily&metric_types=cost,clicked,delivered,read,sent&template_ids=${allTemplates}`,
           {
@@ -876,16 +889,10 @@ const whatsappRouter = new Hono()
         let totalClicked = 0;
         let totalCost = 0;
 
-        for (
-          let i = 0;
-          i < getWhatAppTemplate.data.data[0].data_points.length;
-          i++
-        ) {
-          const templateid =
-            getWhatAppTemplate.data.data[0].data_points[i].template_id;
+        for (const dataPoint of getWhatAppTemplate.data.data[0].data_points) {
+          const templateid = dataPoint.template_id;
 
-          const anaLyticsObject =
-            getWhatAppTemplate.data.data[0].data_points[i];
+          const anaLyticsObject = dataPoint;
 
           const getWhatAppTemplateName = await axios.get(
             `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
@@ -898,15 +905,15 @@ const whatsappRouter = new Hono()
 
           let calculateTotalclicked = 0;
           if (anaLyticsObject?.clicked) {
-            for (let j = 0; j < anaLyticsObject.clicked.length; j++) {
-              calculateTotalclicked += anaLyticsObject.clicked[j].count || 0;
+            for (const click of anaLyticsObject.clicked) {
+              calculateTotalclicked += click.count || 0;
             }
           }
 
           let calculateTotalcost = 0;
           if (anaLyticsObject?.cost) {
-            for (let j = 0; j < anaLyticsObject.cost.length; j++) {
-              calculateTotalcost += anaLyticsObject.cost[j].value || 0;
+            for (const cost of anaLyticsObject.cost) {
+              calculateTotalcost += cost.value || 0;
             }
           }
 
@@ -928,26 +935,33 @@ const whatsappRouter = new Hono()
           totalCost += calculateTotalcost;
         }
 
-        // Function to merge templates by name
+        // @ts-ignore
         const mergeTemplates = (templateids) => {
           const result = {};
 
-          templateids.forEach((item) => {
+          // Using for...of to iterate through templateids
+          for (const item of templateids) {
+            // @ts-ignore
             if (!result[item.templateName]) {
+              // @ts-ignore
               result[item.templateName] = { ...item };
             } else {
+              // @ts-ignore
               result[item.templateName].sent += item.sent;
+              // @ts-ignore
               result[item.templateName].read += item.read;
+              // @ts-ignore
               result[item.templateName].delivered += item.delivered;
+              // @ts-ignore
               result[item.templateName].clicked += item.clicked;
+              // @ts-ignore
               result[item.templateName].cost += item.cost;
             }
-          });
+          }
 
           return Object.values(result);
         };
 
-        // Call the function and print the result
         const mergedData = mergeTemplates(templateids);
 
         const totalObj = {
